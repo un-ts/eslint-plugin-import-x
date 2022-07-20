@@ -1,0 +1,25 @@
+name: Rebase
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  rebase:
+    name: Rebase and Push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: fork-release
+
+      - name: Set Remote Upstream
+        run: git remote add upstream https://github.com/import-js/eslint-plugin-import.git
+
+      - name: Rebase and Push
+        run: |
+          git fetch upstream main:main
+          git rebase upstream/main
+          git push -f
