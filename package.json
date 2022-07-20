@@ -1,7 +1,8 @@
 {
-  "name": "eslint-plugin-import",
-  "version": "2.27.5",
-  "description": "Import with sanity.",
+  "name": "eslint-plugin-i",
+  "version": "2.27.5-2",
+  "description": "A fork of `eslint-plugin-import` using `get-tsconfig` to replace `tsconfig-paths` and heavy `typescript` under the hood.",
+  "funding": "https://opencollective.com/unts",
   "engines": {
     "node": ">=4"
   },
@@ -18,13 +19,14 @@
     "memo-parser/{*.js,LICENSE,*.md}"
   ],
   "scripts": {
-    "prebuild": "rimraf lib",
+    "downlevel-get-tsconfig": "sed 's/catch{/catch(_){/g;' node_modules/get-tsconfig/dist/index.cjs > src/get-tsconfig.js",
+    "prebuild": "rimraf lib && npm run downlevel-get-tsconfig",
     "build": "babel --quiet --out-dir lib src",
     "postbuild": "npm run copy-metafiles",
     "copy-metafiles": "node --require babel-register ./scripts/copyMetafiles",
     "watch": "npm run tests-only -- -- --watch",
     "pretest": "linklocal",
-    "posttest": "eslint . && npm run update:eslint-docs -- --check",
+    "posttest": "eslint .",
     "mocha": "cross-env BABEL_ENV=test nyc mocha",
     "tests-only": "npm run mocha tests/src",
     "test": "npm run tests-only",
@@ -37,7 +39,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/import-js/eslint-plugin-import"
+    "url": "https://github.com/un-es/eslint-plugin-i"
   },
   "keywords": [
     "eslint",
@@ -49,11 +51,10 @@
     "export"
   ],
   "author": "Ben Mosher <me@benmosher.com>",
+  "contributors": [
+    "JounQin (https://www.1stG.me) <admin@1stg.me>"
+  ],
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/import-js/eslint-plugin-import/issues"
-  },
-  "homepage": "https://github.com/import-js/eslint-plugin-import",
   "devDependencies": {
     "@angular-eslint/template-parser": "^13.5.0",
     "@eslint/import-test-order-redirect-scoped": "file:./tests/files/order-redirect-scoped",
@@ -82,6 +83,7 @@
     "eslint-plugin-import": "2.x",
     "eslint-plugin-json": "^2.1.2",
     "fs-copy-file-sync": "^1.1.1",
+    "get-tsconfig": "^4.6.0",
     "glob": "^7.2.3",
     "in-publish": "^2.0.1",
     "linklocal": "^2.8.2",
@@ -113,7 +115,6 @@
     "minimatch": "^3.1.2",
     "object.values": "^1.1.6",
     "resolve": "^1.22.3",
-    "semver": "^6.3.0",
-    "tsconfig-paths": "^3.14.2"
+    "semver": "^6.3.0"
   }
 }
