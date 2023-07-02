@@ -4,7 +4,7 @@
   "description": "A fork of `eslint-plugin-import` using `get-tsconfig` to replace `tsconfig-paths` and heavy `typescript` under the hood.",
   "funding": "https://opencollective.com/unts",
   "engines": {
-    "node": ">=4"
+    "node": ">=12"
   },
   "main": "lib/index.js",
   "directories": {
