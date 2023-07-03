@@ -1,8 +1,9 @@
 import { RuleTester } from 'eslint';
-import flatMap from 'array.prototype.flatmap';
 import rule from 'rules/no-internal-modules';
 
 import { test, testFilePath, getTSParsers } from '../utils';
+
+const flatMap = Function.bind.bind(Function.prototype.call)(Array.prototype.flatMap);
 
 const ruleTester = new RuleTester();
 
