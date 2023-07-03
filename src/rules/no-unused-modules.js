@@ -11,8 +11,9 @@ import visit from 'eslint-module-utils/visit';
 import docsUrl from '../docsUrl';
 import { dirname, join } from 'path';
 import readPkgUp from 'eslint-module-utils/readPkgUp';
-import values from 'object.values';
 import includes from 'array-includes';
+
+const { values } = Object;
 
 let FileEnumerator;
 let listFilesToProcess;

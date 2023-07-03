@@ -1,6 +1,7 @@
 import docsUrl from '../docsUrl';
-import values from 'object.values';
 import flat from 'array.prototype.flat';
+
+const { values } = Object;
 
 const meta = {
   type: 'suggestion',
