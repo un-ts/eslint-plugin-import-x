@@ -1,7 +1,7 @@
 import docsUrl from '../docsUrl';
-import flat from 'array.prototype.flat';
 
 const { values } = Object;
+const flat = Function.bind.bind(Function.prototype.call)(Array.prototype.flat);
 
 const meta = {
   type: 'suggestion',
