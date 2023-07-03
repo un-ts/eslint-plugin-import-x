@@ -1,7 +1,8 @@
 import ExportMap, { recursivePatternCapture } from '../ExportMap';
 import docsUrl from '../docsUrl';
-import includes from 'array-includes';
 import flatMap from 'array.prototype.flatmap';
+
+const includes = Function.bind.bind(Function.prototype.call)(Array.prototype.includes);
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:
