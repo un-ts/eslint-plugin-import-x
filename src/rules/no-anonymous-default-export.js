@@ -4,7 +4,8 @@
  */
 
 import docsUrl from '../docsUrl';
-import has from 'has';
+
+const has = Function.bind.bind(Function.prototype.call)(Object.prototype.hasOwnProperty);
 
 const defs = {
   ArrayExpression: {
