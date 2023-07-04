@@ -1,11 +1,12 @@
 'use strict';
 
 import minimatch from 'minimatch';
-import includes from 'array-includes';
 
 import importType from '../core/importType';
 import isStaticRequire from '../core/staticRequire';
 import docsUrl from '../docsUrl';
+
+const includes = Function.bind.bind(Function.prototype.call)(Array.prototype.includes);
 
 const defaultGroups = ['builtin', 'external', 'parent', 'sibling', 'index'];
 

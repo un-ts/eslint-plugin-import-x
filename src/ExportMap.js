@@ -17,7 +17,7 @@ import * as unambiguous from 'eslint-module-utils/unambiguous';
 
 import { getTsconfig } from 'get-tsconfig';
 
-import includes from 'array-includes';
+const includes = Function.bind.bind(Function.prototype.call)(Array.prototype.includes);
 
 const log = debug('eslint-plugin-import:ExportMap');
 
