@@ -10,8 +10,9 @@ const fs = require('fs');
 const isCore = require('is-core-module');
 const resolve = require('resolve');
 const semver = require('semver');
-const has = require('has');
 const isRegex = require('is-regex');
+
+const has = Function.bind.bind(Function.prototype.call)(Object.prototype.hasOwnProperty);
 
 const log = require('debug')('eslint-plugin-import:resolver:webpack');
 
