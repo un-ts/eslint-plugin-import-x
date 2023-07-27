@@ -561,7 +561,7 @@ ExportMap.parse = function (path, content, context) {
       if (project) {
         const projects = Array.isArray(project) ? project : [project];
         for (const project of projects) {
-          tsconfigResult = getTsconfig(pathResolve(tsconfigRootDir, project));
+          tsconfigResult = getTsconfig(project === true ? context.filename : pathResolve(tsconfigRootDir, project));
           if (tsconfigResult) {
             break;
           }
@@ -782,7 +782,7 @@ let prevSettings = '';
  * also calculate a cacheKey, where parts of the cacheKey hash are memoized
  */
 function childContext(path, context) {
-  const { settings, parserOptions, parserPath } = context;
+  const { settings, parserOptions, parserPath, filename } = context;
 
   if (JSON.stringify(settings) !== prevSettings) {
     settingsHash = hashObject({ settings }).digest('hex');
@@ -800,6 +800,7 @@ function childContext(path, context) {
     parserOptions,
     parserPath,
     path,
+    filename
   };
 }
 
