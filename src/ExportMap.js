@@ -782,7 +782,7 @@ let prevSettings = '';
  * also calculate a cacheKey, where parts of the cacheKey hash are memoized
  */
 function childContext(path, context) {
-  const { settings, parserOptions, parserPath, filename } = context;
+  const { settings, parserOptions, parserPath } = context;
 
   if (JSON.stringify(settings) !== prevSettings) {
     settingsHash = hashObject({ settings }).digest('hex');
@@ -800,7 +800,13 @@ function childContext(path, context) {
     parserOptions,
     parserPath,
     path,
-    filename
+    filename: typeof context.getPhysicalFilename === 'function'
+      ? context.getPhysicalFilename()
+      : context.physicalFilename != null
+        ? context.physicalFilename
+        : typeof context.getFilename === 'function'
+          ? context.getFilename()
+          : context.filename,
   };
 }
 
