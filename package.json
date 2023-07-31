@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-i",
-  "version": "2.28.0",
+  "version": "2.28.0-1",
   "description": "A fork of `eslint-plugin-import` using `get-tsconfig` to replace `tsconfig-paths` and heavy `typescript` under the hood.",
   "funding": "https://opencollective.com/unts",
   "engines": {
