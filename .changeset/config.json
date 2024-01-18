@@ -3,7 +3,7 @@
   "commit": false,
   "linked": [],
   "access": "public",
-  "baseBranch": "fork-release",
+  "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": []
 }
