@@ -5,6 +5,8 @@ test/fixtures/malformed.js
 test/fixtures/with-syntax-error
 test/fixtures/just-json-files/invalid.json
 test/fixtures/typescript-d-ts/
-# we want to ignore "tests/fixtures" here, but unfortunately doing so would
-# interfere with unit test and fail it for some reason.
-# tests/fixtures
+# unexpected - TODO: report to eslint-plugin-ft-flow
+test/fixtures/cycles/flow-typeof.js
+test/fixtures/flowtypes.js
+# unexpected - TODO: report to babel
+test/fixtures/jsx.js

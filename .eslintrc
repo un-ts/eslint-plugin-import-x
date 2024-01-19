@@ -1,10 +1,6 @@
 {
   "root": true,
-  "plugins": [
-    "eslint-plugin",
-    "i",
-    "prettier"
-  ],
+  "parser": "@babel/eslint-parser",
   "extends": [
     "eslint:recommended",
     "plugin:eslint-plugin/recommended",
@@ -12,13 +8,15 @@
     "plugin:prettier/recommended"
   ],
   "env": {
-    "node": true,
     "es6": true,
-    "es2017": true
+    "node": true
   },
   "parserOptions": {
     "sourceType": "module",
-    "ecmaVersion": 2020
+    "ecmaVersion": "latest",
+    "ecmaFeatures": {
+      "jsx": true
+    }
   },
   "overrides": [
     {

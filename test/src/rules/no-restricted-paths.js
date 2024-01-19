@@ -760,7 +760,7 @@ ruleTester.run('no-restricted-paths', rule, {
   ),
 })
 
-context('Typescript', function () {
+describe('Typescript', function () {
   getTSParsers().forEach(parser => {
     const settings = {
       'i/parsers': { [parser]: ['.ts'] },

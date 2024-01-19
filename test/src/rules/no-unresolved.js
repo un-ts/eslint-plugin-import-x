@@ -545,7 +545,7 @@ ruleTester.run('import() with built-in parser', rule, {
   ),
 })
 
-context('TypeScript', () => {
+describe('TypeScript', () => {
   // Type-only imports were added in TypeScript ESTree 2.23.0
   getTSParsers()
     .filter(x => x !== parsers.TS_OLD)

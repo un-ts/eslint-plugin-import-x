@@ -684,7 +684,7 @@ import {x,y} from './foo'
   ],
 })
 
-context('TypeScript', function () {
+describe('TypeScript', function () {
   getNonDefaultParsers()
     // Type-only imports were added in TypeScript ESTree 2.23.0
     .filter(parser => parser !== parsers.TS_OLD)

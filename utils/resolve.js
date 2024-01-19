@@ -3,58 +3,23 @@
 exports.__esModule = true
 
 const fs = require('fs')
-const Module = require('module')
+const { isBuiltin } = require('module')
 const path = require('path')
+
+const enhancedResolve = require('enhanced-resolve')
 
 const { hashObject } = require('./hash')
 const ModuleCache = require('./ModuleCache').default
-const pkgDir = require('./pkgDir').default
 
 const CASE_SENSITIVE_FS = !fs.existsSync(
   path.join(__dirname.toUpperCase(), 'reSOLVE.js'),
 )
+
 exports.CASE_SENSITIVE_FS = CASE_SENSITIVE_FS
 
 const ERROR_NAME = 'EslintPluginImportResolveError'
 
 const fileExistsCache = new ModuleCache()
-
-// Polyfill Node's `Module.createRequireFromPath` if not present (added in Node v10.12.0)
-// Use `Module.createRequire` if available (added in Node v12.2.0)
-const createRequire =
-  Module.createRequire ||
-  Module.createRequireFromPath ||
-  function (filename) {
-    const mod = new Module(filename, null)
-    mod.filename = filename
-    mod.paths = Module._nodeModulePaths(path.dirname(filename))
-
-    mod._compile(`module.exports = require;`, filename)
-
-    return mod.exports
-  }
-
-function tryRequire(target, sourceFile) {
-  let resolved
-  try {
-    // Check if the target exists
-    if (sourceFile != null) {
-      try {
-        resolved = createRequire(path.resolve(sourceFile)).resolve(target)
-      } catch (e) {
-        resolved = require.resolve(target)
-      }
-    } else {
-      resolved = require.resolve(target)
-    }
-  } catch (e) {
-    // If the target does not exist then just return undefined
-    return undefined
-  }
-
-  // If the target exists then return the loaded module
-  return require(resolved)
-}
 
 // https://stackoverflow.com/a/27382838
 exports.fileExistsWithCaseSync = function fileExistsWithCaseSync(
@@ -101,9 +66,84 @@ function relative(modulePath, sourceFile, settings) {
   return fullResolve(modulePath, sourceFile, settings).path
 }
 
+const defaultConditionNames = [
+  'types',
+  'import',
+
+  // APF: https://angular.io/guide/angular-package-format
+  'esm2022',
+  'fesm2022',
+  'esm2020',
+  'es2020',
+  'fesm2020',
+  'es2015',
+  'fesm2015',
+
+  'require',
+  'node',
+  'node-addons',
+  'browser',
+  'default',
+]
+
+/**
+ * `.mts`, `.cts`, `.d.mts`, `.d.cts`, `.mjs`, `.cjs` are not included because `.cjs` and `.mjs` must be used explicitly
+ */
+const defaultExtensions = [
+  '.ts',
+  '.tsx',
+  '.d.ts',
+  '.js',
+  '.jsx',
+  '.json',
+  '.node',
+]
+
+const defaultExtensionAlias = {
+  '.js': [
+    '.ts',
+    // `.tsx` can also be compiled as `.js`
+    '.tsx',
+    '.d.ts',
+    '.js',
+  ],
+  '.jsx': ['.tsx', '.d.ts', '.jsx'],
+  '.cjs': ['.cts', '.d.cts', '.cjs'],
+  '.mjs': ['.mts', '.d.mts', '.mjs'],
+}
+
+const defaultMainFields = [
+  'types',
+  'typings',
+
+  // APF: https://angular.io/guide/angular-package-format
+  'esm2022',
+  'fesm2022',
+  'esm2020',
+  'es2020',
+  'fesm2020',
+  'es2015',
+  'fesm2015',
+
+  'module',
+  'jsnext:main',
+
+  'main',
+]
+
 let prevSettings = null
 let memoizedHash = ''
+
+/**
+ * @type {import('enhanced-resolve').Resolver}
+ */
+let resolver
+
 function fullResolve(modulePath, sourceFile, settings) {
+  if (isBuiltin(modulePath)) {
+    return { found: true, path: null }
+  }
+
   // check if this is a bonus core module
   const coreSet = new Set(settings['i/core-modules'])
   if (coreSet.has(modulePath)) {
@@ -130,39 +170,31 @@ function fullResolve(modulePath, sourceFile, settings) {
     fileExistsCache.set(cacheKey, resolvedPath)
   }
 
-  function withResolver(resolver, config) {
-    if (resolver.interfaceVersion === 2) {
-      return resolver.resolve(modulePath, sourceFile, config)
-    }
-
-    try {
-      const resolved = resolver.resolveImport(modulePath, sourceFile, config)
-      if (resolved === undefined) {
-        return { found: false }
-      }
-      return { found: true, path: resolved }
-    } catch (err) {
-      return { found: false }
-    }
+  if (!resolver) {
+    resolver = enhancedResolve.ResolverFactory.createResolver({
+      conditionNames: defaultConditionNames,
+      extensions: defaultExtensions,
+      extensionAlias: defaultExtensionAlias,
+      mainFields: defaultMainFields,
+      fileSystem: new enhancedResolve.CachedInputFileSystem(fs, 5 * 1000),
+      useSyncFileSystemCalls: true,
+    })
   }
 
-  const configResolvers = settings['i/resolver'] || {
-    node: settings['i/resolve'],
-  } // backward compatibility
+  let foundNodePath
 
-  const resolvers = resolverReducer(configResolvers, new Map())
+  try {
+    foundNodePath = resolver.resolveSync({}, sourceDir, modulePath) || null
+  } catch {
+    foundNodePath = null
+  }
 
-  for (const pair of resolvers) {
-    const name = pair[0]
-    const config = pair[1]
-    const resolver = requireResolver(name, sourceFile)
-    const resolved = withResolver(resolver, config)
+  const resolved = {
+    found: !!foundNodePath,
+    path: foundNodePath,
+  }
 
-    if (!resolved.found) {
-      continue
-    }
-
-    // else, counts
+  if (resolved) {
     cache(resolved.path)
     return resolved
   }
@@ -172,63 +204,6 @@ function fullResolve(modulePath, sourceFile, settings) {
   return { found: false }
 }
 exports.relative = relative
-
-function resolverReducer(resolvers, map) {
-  if (Array.isArray(resolvers)) {
-    resolvers.forEach(r => resolverReducer(r, map))
-    return map
-  }
-
-  if (typeof resolvers === 'string') {
-    map.set(resolvers, null)
-    return map
-  }
-
-  if (typeof resolvers === 'object') {
-    for (const key in resolvers) {
-      map.set(key, resolvers[key])
-    }
-    return map
-  }
-
-  const err = new Error('invalid resolver config')
-  err.name = ERROR_NAME
-  throw err
-}
-
-function getBaseDir(sourceFile) {
-  return pkgDir(sourceFile) || process.cwd()
-}
-function requireResolver(name, sourceFile) {
-  // Try to resolve package with conventional name
-  const resolver =
-    tryRequire(`eslint-import-resolver-${name}`, sourceFile) ||
-    tryRequire(name, sourceFile) ||
-    tryRequire(path.resolve(getBaseDir(sourceFile), name))
-
-  if (!resolver) {
-    const err = new Error(`unable to load resolver "${name}".`)
-    err.name = ERROR_NAME
-    throw err
-  }
-  if (!isResolverValid(resolver)) {
-    const err = new Error(`${name} with invalid interface loaded as resolver`)
-    err.name = ERROR_NAME
-    throw err
-  }
-
-  return resolver
-}
-
-function isResolverValid(resolver) {
-  if (resolver.interfaceVersion === 2) {
-    return resolver.resolve && typeof resolver.resolve === 'function'
-  } else {
-    return (
-      resolver.resolveImport && typeof resolver.resolveImport === 'function'
-    )
-  }
-}
 
 const erroredContexts = new Set()
 

@@ -1,3 +1,6 @@
+/**
+ * @type {import('@babel/core').TransformOptions}
+ */
 module.exports = {
   presets: [
     [
@@ -8,4 +11,10 @@ module.exports = {
     ],
   ],
   plugins: ['@babel/proposal-export-default-from'],
+  overrides: [
+    {
+      test: './test/fixtures/jsx.js',
+      presets: ['@babel/react'],
+    },
+  ],
 }
