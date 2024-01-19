@@ -1,3 +1,6 @@
+import { RuleTester } from 'eslint'
+import rule from 'rules/namespace'
+
 import {
   test,
   SYNTAX_CASES,
@@ -6,14 +9,12 @@ import {
   testFilePath,
   parsers,
 } from '../utils'
-import { RuleTester } from 'eslint'
 
 const flatMap = Function.bind.bind(Function.prototype.call)(
   Array.prototype.flatMap,
 )
 
 const ruleTester = new RuleTester({ env: { es6: true } })
-import rule from 'rules/namespace'
 
 function error(name, namespace) {
   return {

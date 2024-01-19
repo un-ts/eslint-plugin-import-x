@@ -1,3 +1,11 @@
+import fs from 'fs'
+
+import { RuleTester } from 'eslint'
+import eslintPkg from 'eslint/package.json'
+import semver from 'semver'
+import rule from 'rules/no-unused-modules'
+
+import jsxConfig from '../../../config/react'
 import {
   test,
   testVersion,
@@ -5,15 +13,10 @@ import {
   getTSParsers,
   parsers,
 } from '../utils'
-import jsxConfig from '../../../config/react'
 import typescriptConfig from '../../../config/typescript'
 
-import { RuleTester } from 'eslint'
-import fs from 'fs'
-import eslintPkg from 'eslint/package.json'
-import semver from 'semver'
-
 let FlatRuleTester
+
 try {
   ;({ FlatRuleTester } = require('eslint/use-at-your-own-risk'))
 } catch (e) {
@@ -26,7 +29,6 @@ const isESLint4TODO = semver.satisfies(eslintPkg.version, '^4 || ^5')
 const ruleTester = new RuleTester()
 const typescriptRuleTester = new RuleTester(typescriptConfig)
 const jsxRuleTester = new RuleTester(jsxConfig)
-import rule from 'rules/no-unused-modules'
 
 const error = message => ({ message })
 

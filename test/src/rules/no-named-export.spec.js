@@ -1,8 +1,9 @@
 import { RuleTester } from 'eslint'
+import rule from 'rules/no-named-export'
+
 import { parsers, test, testVersion } from '../utils'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/no-named-export'
 
 ruleTester.run('no-named-export', rule, {
   valid: [].concat(

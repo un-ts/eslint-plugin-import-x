@@ -1,9 +1,9 @@
+import * as utils from '../utils'
+
 import isIgnored, {
   getFileExtensions,
   hasValidExtension,
 } from 'eslint-module-utils/ignore'
-
-import * as utils from '../utils'
 
 describe('ignore', function () {
   describe('isIgnored', function () {

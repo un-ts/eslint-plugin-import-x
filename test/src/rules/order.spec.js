@@ -1,3 +1,12 @@
+import { resolve } from 'path'
+import { isBuiltin } from 'module'
+
+import semver from 'semver'
+import eslintPkg from 'eslint/package.json'
+import { RuleTester } from 'eslint'
+import babelPresetFlow from '@babel/preset-flow'
+import rule from 'rules/order'
+
 import {
   test,
   getTSParsers,
@@ -5,13 +14,6 @@ import {
   testFilePath,
   parsers,
 } from '../utils'
-
-import { RuleTester } from 'eslint'
-import eslintPkg from 'eslint/package.json'
-import semver from 'semver'
-import { resolve } from 'path'
-import isCoreModule from 'is-core-module'
-import { default as babelPresetFlow } from 'babel-preset-flow'
 
 const flatMap = Function.bind.bind(Function.prototype.call)(
   Array.prototype.flatMap,
@@ -28,7 +30,6 @@ const flowRuleTester = new RuleTester({
     },
   },
 })
-import rule from 'rules/order'
 
 function withoutAutofixOutput(test) {
   return { ...test, output: test.code }
@@ -3283,7 +3284,7 @@ describe('TypeScript', function () {
               },
             ],
           }),
-          isCoreModule('node:child_process') && isCoreModule('node:fs/promises')
+          isBuiltin('node:child_process') && isBuiltin('node:fs/promises')
             ? [
                 test({
                   code: `
@@ -3573,7 +3574,7 @@ describe('TypeScript', function () {
             ],
           }),
 
-          isCoreModule('node:child_process') && isCoreModule('node:fs/promises')
+          isBuiltin('node:child_process') && isBuiltin('node:fs/promises')
             ? [
                 test({
                   code: `

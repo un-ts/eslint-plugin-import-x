@@ -1,5 +1,4 @@
 import { RuleTester } from 'eslint'
-
 import rule from 'rules/no-cycle'
 
 import {

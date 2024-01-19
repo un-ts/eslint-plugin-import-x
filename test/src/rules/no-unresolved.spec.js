@@ -1,5 +1,8 @@
 import path from 'path'
 
+import { RuleTester } from 'eslint'
+import rule from 'rules/no-unresolved'
+
 import {
   getTSParsers,
   test,
@@ -10,10 +13,7 @@ import {
 
 import { CASE_SENSITIVE_FS } from 'eslint-module-utils/resolve'
 
-import { RuleTester } from 'eslint'
-
 const ruleTester = new RuleTester()
-import rule from 'rules/no-unresolved'
 
 function runResolverTests(resolver) {
   // redefine 'test' to set a resolver

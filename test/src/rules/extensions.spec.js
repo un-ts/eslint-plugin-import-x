@@ -1,5 +1,6 @@
 import { RuleTester } from 'eslint'
 import rule from 'rules/extensions'
+
 import { getTSParsers, test, testFilePath, parsers } from '../utils'
 
 const ruleTester = new RuleTester()

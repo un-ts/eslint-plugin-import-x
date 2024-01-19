@@ -1,10 +1,11 @@
-import { test } from '../utils'
 import * as path from 'path'
 
 import { RuleTester } from 'eslint'
+import rule from 'rules/no-unassigned-import'
+
+import { test } from '../utils'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/no-unassigned-import'
 
 const error = {
   message: 'Imported module should be assigned',

@@ -1,8 +1,9 @@
-import { parsers, test } from '../utils'
 import { RuleTester } from 'eslint'
+import rule from 'rules/no-useless-path-segments'
+
+import { parsers, test } from '../utils'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/no-useless-path-segments'
 
 function runResolverTests(resolver) {
   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {

@@ -1,4 +1,10 @@
 import path from 'path'
+
+import { RuleTester } from 'eslint'
+import semver from 'semver'
+import { version as tsEslintVersion } from 'typescript-eslint-parser/package.json'
+import rule from 'rules/default'
+
 import {
   test,
   testVersion,
@@ -6,14 +12,10 @@ import {
   getTSParsers,
   parsers,
 } from '../utils'
-import { RuleTester } from 'eslint'
-import semver from 'semver'
-import { version as tsEslintVersion } from 'typescript-eslint-parser/package.json'
 
 import { CASE_SENSITIVE_FS } from 'eslint-module-utils/resolve'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/default'
 
 ruleTester.run('default', rule, {
   valid: [].concat(

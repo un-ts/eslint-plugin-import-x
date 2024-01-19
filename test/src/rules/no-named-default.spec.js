@@ -1,8 +1,9 @@
-import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
 import { RuleTester } from 'eslint'
+import rule from 'rules/no-named-default'
+
+import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/no-named-default'
 
 ruleTester.run('no-named-default', rule, {
   valid: [

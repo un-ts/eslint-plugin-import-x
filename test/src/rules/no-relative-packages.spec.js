@@ -1,6 +1,7 @@
+import { normalize } from 'path'
+
 import { RuleTester } from 'eslint'
 import rule from 'rules/no-relative-packages'
-import { normalize } from 'path'
 
 import { test, testFilePath } from '../utils'
 

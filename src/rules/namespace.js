@@ -1,7 +1,8 @@
-import declaredScope from 'eslint-module-utils/declaredScope'
 import Exports from '../ExportMap'
 import importDeclaration from '../importDeclaration'
 import docsUrl from '../docsUrl'
+
+import declaredScope from 'eslint-module-utils/declaredScope'
 
 function processBodyStatement(context, namespaces, declaration) {
   if (declaration.type !== 'ImportDeclaration') {

@@ -1,8 +1,9 @@
-import { SYNTAX_CASES, getTSParsers, parsers } from '../utils'
 import { RuleTester } from 'eslint'
 import semver from 'semver'
-
 import rule from 'rules/dynamic-import-chunkname'
+
+import { SYNTAX_CASES, getTSParsers, parsers } from '../utils'
+
 const ruleTester = new RuleTester()
 
 const commentFormat = '([0-9a-zA-Z-_/.]|\\[(request|index)\\])+'

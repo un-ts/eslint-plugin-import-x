@@ -1,4 +1,5 @@
 import path from 'path'
+
 import minimatch from 'minimatch'
 
 import isStaticRequire from '../core/staticRequire'

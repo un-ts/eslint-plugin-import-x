@@ -1,7 +1,4 @@
-/**
- * @fileOverview Ensures that an imported path exists, given resolution rules.
- * @author Ben Mosher
- */
+import docsUrl from '../docsUrl'
 
 import resolve, {
   CASE_SENSITIVE_FS,
@@ -11,7 +8,6 @@ import ModuleCache from 'eslint-module-utils/ModuleCache'
 import moduleVisitor, {
   makeOptionsSchema,
 } from 'eslint-module-utils/moduleVisitor'
-import docsUrl from '../docsUrl'
 
 module.exports = {
   meta: {

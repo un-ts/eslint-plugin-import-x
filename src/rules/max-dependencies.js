@@ -1,5 +1,6 @@
-import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 import docsUrl from '../docsUrl'
+
+import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 
 const DEFAULT_MAX = 10
 const DEFAULT_IGNORE_TYPE_IMPORTS = false

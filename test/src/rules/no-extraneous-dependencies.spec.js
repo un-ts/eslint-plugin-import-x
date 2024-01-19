@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 
 import { RuleTester } from 'eslint'
+import rule from 'rules/no-extraneous-dependencies'
 
 import { getTSParsers, parsers, test, testFilePath } from '../utils'
 import typescriptConfig from '../../../config/typescript'
@@ -12,8 +13,6 @@ const flatMap = Function.bind.bind(Function.prototype.call)(
 
 const ruleTester = new RuleTester()
 const typescriptRuleTester = new RuleTester(typescriptConfig)
-
-import rule from 'rules/no-extraneous-dependencies'
 
 const packageDirWithSyntaxError = path.join(
   __dirname,

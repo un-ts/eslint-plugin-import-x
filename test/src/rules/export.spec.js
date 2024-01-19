@@ -1,3 +1,9 @@
+import { RuleTester } from 'eslint'
+import eslintPkg from 'eslint/package.json'
+import semver from 'semver'
+import { version as tsEslintVersion } from 'typescript-eslint-parser/package.json'
+import rule from 'rules/export'
+
 import {
   test,
   testFilePath,
@@ -6,13 +12,7 @@ import {
   testVersion,
 } from '../utils'
 
-import { RuleTester } from 'eslint'
-import eslintPkg from 'eslint/package.json'
-import semver from 'semver'
-import { version as tsEslintVersion } from 'typescript-eslint-parser/package.json'
-
 const ruleTester = new RuleTester()
-import rule from 'rules/export'
 
 ruleTester.run('export', rule, {
   valid: [].concat(

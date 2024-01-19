@@ -1,13 +1,11 @@
-/**
- * @fileOverview Ensures that modules contain exports and/or all
- * modules are consumed within other modules.
- * @author René Fermann
- */
+import { dirname, join } from 'path'
+
+import Exports, { recursivePatternCapture } from '../ExportMap'
+import docsUrl from '../docsUrl'
 
 import { getFileExtensions } from 'eslint-module-utils/ignore'
 import resolve from 'eslint-module-utils/resolve'
 import visit from 'eslint-module-utils/visit'
-import { dirname, join } from 'path'
 import readPkgUp from 'eslint-module-utils/readPkgUp'
 
 const { values } = Object
@@ -17,9 +15,6 @@ const includes = Function.bind.bind(Function.prototype.call)(
 const flatMap = Function.bind.bind(Function.prototype.call)(
   Array.prototype.flatMap,
 )
-
-import Exports, { recursivePatternCapture } from '../ExportMap'
-import docsUrl from '../docsUrl'
 
 let FileEnumerator
 let listFilesToProcess

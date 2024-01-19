@@ -1,5 +1,4 @@
 import { RuleTester } from 'eslint'
-
 import rule from 'rules/no-empty-named-blocks'
 
 import { parsers, test } from '../utils'

@@ -3,6 +3,7 @@
 exports.__esModule = true
 
 const fs = require('fs')
+
 const pkgUp = require('./pkgUp').default
 
 function stripBOM(str) {

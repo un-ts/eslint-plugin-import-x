@@ -1,4 +1,5 @@
 import path from 'path'
+
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'

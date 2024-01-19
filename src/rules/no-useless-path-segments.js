@@ -1,13 +1,10 @@
-/**
- * @fileOverview Ensures that there are no useless path segments
- * @author Thomas Grainger
- */
+import path from 'path'
+
+import docsUrl from '../docsUrl'
 
 import { getFileExtensions } from 'eslint-module-utils/ignore'
 import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 import resolve from 'eslint-module-utils/resolve'
-import path from 'path'
-import docsUrl from '../docsUrl'
 
 /**
  * convert a potentially relative path from node utils into a true

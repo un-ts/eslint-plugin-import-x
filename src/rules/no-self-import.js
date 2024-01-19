@@ -1,11 +1,7 @@
-/**
- * @fileOverview Forbids a module from importing itself
- * @author Gio d'Amelio
- */
+import docsUrl from '../docsUrl'
 
 import resolve from 'eslint-module-utils/resolve'
 import moduleVisitor from 'eslint-module-utils/moduleVisitor'
-import docsUrl from '../docsUrl'
 
 function isImportingSelf(context, node, requireName) {
   const filePath = context.getPhysicalFilename

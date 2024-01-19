@@ -1,15 +1,14 @@
-import semver from 'semver'
+import fs from 'fs'
+import fsP from 'fs/promises'
 
+import semver from 'semver'
 import eslintPkg from 'eslint/package.json'
 import typescriptPkg from 'typescript/package.json'
 import * as getTsconfig from 'get-tsconfig'
 
 import ExportMap from '../../../src/ExportMap'
-
-import fs from 'fs'
-import fsP from 'fs/promises'
-
 import { getFilename } from '../utils'
+
 import { test as testUnambiguous } from 'eslint-module-utils/unambiguous'
 
 describe('ExportMap', function () {

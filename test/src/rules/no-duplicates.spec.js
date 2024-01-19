@@ -3,6 +3,7 @@ import path from 'path'
 import semver from 'semver'
 import { RuleTester } from 'eslint'
 import eslintPkg from 'eslint/package.json'
+import rule from 'rules/no-duplicates'
 
 import {
   test as testUtil,
@@ -18,7 +19,6 @@ const flatMap = Function.bind.bind(Function.prototype.call)(
 )
 
 const ruleTester = new RuleTester()
-import rule from 'rules/no-duplicates'
 
 // autofix only possible with eslint 4+
 const test = semver.satisfies(eslintPkg.version, '< 4')

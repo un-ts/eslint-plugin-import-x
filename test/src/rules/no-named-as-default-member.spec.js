@@ -1,6 +1,7 @@
-import { test, testVersion, SYNTAX_CASES } from '../utils'
 import { RuleTester } from 'eslint'
 import rule from 'rules/no-named-as-default-member'
+
+import { test, testVersion, SYNTAX_CASES } from '../utils'
 
 const ruleTester = new RuleTester()
 

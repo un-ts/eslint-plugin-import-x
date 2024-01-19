@@ -1,5 +1,5 @@
 import path from 'path'
-import isCoreModule from 'is-core-module'
+import { isBuiltin } from 'module'
 
 import importType, {
   isExternalModule,
@@ -21,10 +21,10 @@ describe('importType(name)', function () {
 
   it("should return 'builtin' for node.js modules", function () {
     ;['fs', 'fs/promises', 'path']
-      .filter(x => isCoreModule(x))
+      .filter(x => isBuiltin(x))
       .forEach(x => {
         expect(importType(x, context)).toEqual('builtin')
-        if (isCoreModule(`node:${x}`)) {
+        if (isBuiltin(`node:${x}`)) {
           // eslint-disable-next-line jest/no-conditional-expect
           expect(importType(`node:${x}`, context)).toEqual('builtin')
         }

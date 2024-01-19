@@ -3,10 +3,11 @@
  * @author Radek Benkel
  */
 
+import debug from 'debug'
+
 import isStaticRequire from '../core/staticRequire'
 import docsUrl from '../docsUrl'
 
-import debug from 'debug'
 const log = debug('eslint-plugin-i:rules:newline-after-import')
 
 //------------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 import { RuleTester } from 'eslint'
 import rule from 'rules/no-relative-parent-imports'
+
 import { parsers, test as _test, testFilePath } from '../utils'
 
 const test = def =>

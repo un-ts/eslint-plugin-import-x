@@ -1,7 +1,8 @@
-import resolve from 'eslint-module-utils/resolve'
 import semver from 'semver'
 
 import docsUrl from '../docsUrl'
+
+import resolve from 'eslint-module-utils/resolve'
 
 const flatMap = Function.bind.bind(Function.prototype.call)(
   Array.prototype.flatMap,

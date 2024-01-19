@@ -1,10 +1,6 @@
-/**
- * @fileOverview Report modules that could parse incorrectly as scripts.
- * @author Ben Mosher
- */
+import docsUrl from '../docsUrl'
 
 import { isModule } from 'eslint-module-utils/unambiguous'
-import docsUrl from '../docsUrl'
 
 module.exports = {
   meta: {

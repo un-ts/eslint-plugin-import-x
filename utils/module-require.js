@@ -13,7 +13,7 @@ function createModule(filename) {
   return mod
 }
 
-exports.default = function moduleRequire(p) {
+module.exports = function moduleRequire(p) {
   try {
     // attempt to get espree relative to eslint
     const eslintPath = require.resolve('eslint')

@@ -1,5 +1,4 @@
 import { RuleTester } from 'eslint'
-
 import rule from 'rules/no-deprecated'
 
 import { test, SYNTAX_CASES, getTSParsers } from '../utils'

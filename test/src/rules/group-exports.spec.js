@@ -1,8 +1,10 @@
-import { test } from '../utils'
+import { resolve } from 'path'
+
 import { RuleTester } from 'eslint'
 import rule from 'rules/group-exports'
-import { resolve } from 'path'
 import { default as babelPresetFlow } from 'babel-preset-flow'
+
+import { test } from '../utils'
 
 /* eslint-disable max-len */
 const errors = {

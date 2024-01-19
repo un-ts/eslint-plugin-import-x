@@ -1,12 +1,13 @@
 'use strict'
 
-exports.__esModule = true
-
-const moduleRequire = require('./module-require').default
 const { extname } = require('path')
 const fs = require('fs')
 
 const log = require('debug')('eslint-plugin-i:parse')
+
+const moduleRequire = require('./module-require')
+
+exports.__esModule = true
 
 function getBabelEslintVisitorKeys(parserPath) {
   if (parserPath.endsWith('index.js')) {

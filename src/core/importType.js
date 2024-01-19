@@ -3,10 +3,11 @@ import {
   relative,
   resolve as nodeResolve,
 } from 'path'
+import { Module } from 'module'
+
+import { getContextPackagePath } from './packagePath'
 
 import resolve from 'eslint-module-utils/resolve'
-import { getContextPackagePath } from './packagePath'
-import { Module } from 'module'
 
 const isCoreModule = pkg =>
   Module.builtinModules.includes(pkg.startsWith('node:') ? pkg.slice(5) : pkg)

@@ -1,7 +1,7 @@
-import { test } from '../utils'
-
 import { RuleTester } from 'eslint'
 import rule from 'rules/exports-last'
+
+import { test } from '../utils'
 
 const ruleTester = new RuleTester()
 

@@ -18,6 +18,14 @@
       "jsx": true
     }
   },
+  "rules": {
+    "i/order": [
+      "error",
+      {
+        "newlines-between": "always"
+      }
+    ]
+  },
   "overrides": [
     {
       "files": "test/src/**/*.spec.js",

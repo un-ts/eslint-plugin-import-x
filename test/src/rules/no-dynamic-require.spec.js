@@ -1,13 +1,13 @@
-import { parsers, test, testVersion } from '../utils'
-
 import { RuleTester } from 'eslint'
+import rule from 'rules/no-dynamic-require'
+
+import { parsers, test, testVersion } from '../utils'
 
 const flatMap = Function.bind.bind(Function.prototype.call)(
   Array.prototype.flatMap,
 )
 
 const ruleTester = new RuleTester()
-import rule from 'rules/no-dynamic-require'
 
 const error = {
   message: 'Calls to require() should use string literals',

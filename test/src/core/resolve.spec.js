@@ -5,12 +5,12 @@ import { setTimeout } from 'timers/promises'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 
+import * as utils from '../utils.spec'
+
 import resolve, {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
 } from 'eslint-module-utils/resolve'
-
-import * as utils from '../utils.spec'
 
 describe('resolve', function () {
   // We don't want to test for a specific stack, just that it was there in the error message.

@@ -1,6 +1,7 @@
 import { RuleTester } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
+
 import { test } from '../utils'
 
 const ERROR_MESSAGE = 'Unexpected namespace import.'

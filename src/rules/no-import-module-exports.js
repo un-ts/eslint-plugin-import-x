@@ -1,5 +1,7 @@
-import minimatch from 'minimatch'
 import path from 'path'
+
+import minimatch from 'minimatch'
+
 import pkgUp from 'eslint-module-utils/pkgUp'
 
 function getEntryPoint(context) {

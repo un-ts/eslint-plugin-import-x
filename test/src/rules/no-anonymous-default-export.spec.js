@@ -1,9 +1,9 @@
+import { RuleTester } from 'eslint'
+import rule from 'rules/no-anonymous-default-export'
+
 import { test, testVersion, SYNTAX_CASES } from '../utils'
 
-import { RuleTester } from 'eslint'
-
 const ruleTester = new RuleTester()
-import rule from 'rules/no-anonymous-default-export'
 
 ruleTester.run('no-anonymous-default-export', rule, {
   valid: [].concat(

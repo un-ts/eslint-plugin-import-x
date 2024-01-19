@@ -1,9 +1,10 @@
 import minimatch from 'minimatch'
 
-import resolve from 'eslint-module-utils/resolve'
 import importType from '../core/importType'
-import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 import docsUrl from '../docsUrl'
+
+import resolve from 'eslint-module-utils/resolve'
+import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 
 module.exports = {
   meta: {

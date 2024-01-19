@@ -1,15 +1,11 @@
-/**
- * @fileOverview Ensures that no imported module imports the linted module.
- * @author Ben Mosher
- */
-
-import resolve from 'eslint-module-utils/resolve'
 import Exports from '../ExportMap'
 import { isExternalModule } from '../core/importType'
+import docsUrl from '../docsUrl'
+
 import moduleVisitor, {
   makeOptionsSchema,
 } from 'eslint-module-utils/moduleVisitor'
-import docsUrl from '../docsUrl'
+import resolve from 'eslint-module-utils/resolve'
 
 const traversed = new Set()
 

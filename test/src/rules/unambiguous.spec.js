@@ -1,8 +1,9 @@
 import { RuleTester } from 'eslint'
+import rule from 'rules/unambiguous'
+
 import { parsers } from '../utils'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/unambiguous'
 
 ruleTester.run('unambiguous', rule, {
   valid: [

@@ -4,6 +4,7 @@
  */
 
 import minimatch from 'minimatch'
+
 import docsUrl from '../docsUrl'
 
 //------------------------------------------------------------------------------

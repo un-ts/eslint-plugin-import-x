@@ -1,14 +1,15 @@
 import fs from 'fs'
 import path from 'path'
 
-import pkgUp from 'eslint-module-utils/pkgUp'
 import minimatch from 'minimatch'
-import resolve from 'eslint-module-utils/resolve'
-import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 
 import importType from '../core/importType'
 import { getFilePackageName } from '../core/packagePath'
 import docsUrl from '../docsUrl'
+
+import moduleVisitor from 'eslint-module-utils/moduleVisitor'
+import resolve from 'eslint-module-utils/resolve'
+import pkgUp from 'eslint-module-utils/pkgUp'
 
 const depFieldCache = new Map()
 

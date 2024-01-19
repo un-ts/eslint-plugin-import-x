@@ -1,6 +1,7 @@
 import importType from '../core/importType'
-import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 import docsUrl from '../docsUrl'
+
+import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 
 function reportIfMissing(context, node, allowed, name) {
   if (allowed.indexOf(name) === -1 && importType(name, context) === 'builtin') {

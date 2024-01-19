@@ -1,11 +1,12 @@
+import { basename, dirname, relative } from 'path'
+
+import docsUrl from '../docsUrl'
+import importType from '../core/importType'
+
 import moduleVisitor, {
   makeOptionsSchema,
 } from 'eslint-module-utils/moduleVisitor'
-import docsUrl from '../docsUrl'
-import { basename, dirname, relative } from 'path'
 import resolve from 'eslint-module-utils/resolve'
-
-import importType from '../core/importType'
 
 module.exports = {
   meta: {

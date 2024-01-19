@@ -1,12 +1,13 @@
 import path from 'path'
-import readPkgUp from 'eslint-module-utils/readPkgUp'
 
+import importType from '../core/importType'
+import docsUrl from '../docsUrl'
+
+import readPkgUp from 'eslint-module-utils/readPkgUp'
 import resolve from 'eslint-module-utils/resolve'
 import moduleVisitor, {
   makeOptionsSchema,
 } from 'eslint-module-utils/moduleVisitor'
-import importType from '../core/importType'
-import docsUrl from '../docsUrl'
 
 /** @param {string} filePath */
 function toPosixPath(filePath) {

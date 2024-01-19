@@ -1,9 +1,10 @@
 import path from 'path'
 
-import resolve from 'eslint-module-utils/resolve'
 import { isBuiltIn, isExternalModule, isScoped } from '../core/importType'
-import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 import docsUrl from '../docsUrl'
+
+import resolve from 'eslint-module-utils/resolve'
+import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 
 const enumValues = { enum: ['always', 'ignorePackages', 'never'] }
 const patternProperties = {

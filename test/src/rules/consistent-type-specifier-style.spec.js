@@ -1,4 +1,6 @@
 import { RuleTester } from 'eslint'
+import rule from 'rules/consistent-type-specifier-style'
+
 import {
   test,
   parsers,
@@ -6,8 +8,6 @@ import {
   eslintVersionSatisfies,
   typescriptEslintParserSatisfies,
 } from '../utils'
-
-import rule from 'rules/consistent-type-specifier-style'
 
 const COMMON_TESTS = {
   valid: [

@@ -1,8 +1,8 @@
 import fs from 'fs/promises'
 
-import parse from 'eslint-module-utils/parse'
-
 import { getFilename } from '../utils'
+
+import parse from 'eslint-module-utils/parse'
 
 describe('parse(content, { settings, ecmaFeatures })', function () {
   const path = getFilename('jsx.js')

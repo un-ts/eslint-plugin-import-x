@@ -1,3 +1,8 @@
+import path from 'path'
+
+import { RuleTester } from 'eslint'
+import rule from 'rules/named'
+
 import {
   test,
   SYNTAX_CASES,
@@ -6,13 +11,10 @@ import {
   testVersion,
   parsers,
 } from '../utils'
-import { RuleTester } from 'eslint'
-import path from 'path'
 
 import { CASE_SENSITIVE_FS } from 'eslint-module-utils/resolve'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/named'
 
 function error(name, module, type = 'Identifier') {
   return { message: `${name} not found in '${module}'`, type }

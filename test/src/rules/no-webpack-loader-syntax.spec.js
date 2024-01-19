@@ -1,10 +1,10 @@
-import { test, getTSParsers, parsers } from '../utils'
-
 import { RuleTester } from 'eslint'
 import semver from 'semver'
+import rule from 'rules/no-webpack-loader-syntax'
+
+import { test, getTSParsers, parsers } from '../utils'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/no-webpack-loader-syntax'
 
 const message = 'Do not use import syntax to configure webpack loaders.'
 

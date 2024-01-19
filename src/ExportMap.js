@@ -2,20 +2,16 @@ import fs from 'fs'
 import { resolve as pathResolve } from 'path'
 
 import doctrine from 'doctrine'
-
 import debug from 'debug'
-
 import { SourceCode } from 'eslint'
+import { getTsconfig } from 'get-tsconfig'
 
 import parse from 'eslint-module-utils/parse'
 import visit from 'eslint-module-utils/visit'
 import resolve from 'eslint-module-utils/resolve'
 import isIgnored, { hasValidExtension } from 'eslint-module-utils/ignore'
-
 import { hashObject } from 'eslint-module-utils/hash'
 import * as unambiguous from 'eslint-module-utils/unambiguous'
-
-import { getTsconfig } from 'get-tsconfig'
 
 const includes = Function.bind.bind(Function.prototype.call)(
   Array.prototype.includes,

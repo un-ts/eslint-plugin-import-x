@@ -1,10 +1,11 @@
-import { test } from '../utils'
+import { isBuiltin } from 'module'
 
 import { RuleTester } from 'eslint'
-const isCore = require('is-core-module')
+import rule from 'rules/no-nodejs-modules'
+
+import { test } from '../utils'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/no-nodejs-modules'
 
 const error = message => ({
   message,
@@ -66,7 +67,7 @@ ruleTester.run('no-nodejs-modules', rule, {
         },
       ],
     }),
-    isCore('node:events')
+    isBuiltin('node:events')
       ? [
           test({
             code: 'import events from "node:events"',
@@ -86,7 +87,7 @@ ruleTester.run('no-nodejs-modules', rule, {
           }),
         ]
       : [],
-    isCore('node:path')
+    isBuiltin('node:path')
       ? [
           test({
             code: 'import path from "node:path"',
@@ -106,7 +107,7 @@ ruleTester.run('no-nodejs-modules', rule, {
           }),
         ]
       : [],
-    isCore('node:path') && isCore('node:events')
+    isBuiltin('node:path') && isBuiltin('node:events')
       ? test({
           code: 'import path from "node:path";import events from "node:events"',
           options: [
@@ -143,7 +144,7 @@ ruleTester.run('no-nodejs-modules', rule, {
       ],
       errors: [error('Do not import Node.js builtin module "fs"')],
     }),
-    isCore('node:path')
+    isBuiltin('node:path')
       ? [
           test({
             code: 'import path from "node:path"',
@@ -155,7 +156,7 @@ ruleTester.run('no-nodejs-modules', rule, {
           }),
         ]
       : [],
-    isCore('node:fs')
+    isBuiltin('node:fs')
       ? [
           test({
             code: 'import fs from "node:fs"',

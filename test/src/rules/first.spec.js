@@ -1,11 +1,12 @@
-import { test, getTSParsers, testVersion } from '../utils'
 import fs from 'fs'
 import path from 'path'
 
 import { RuleTester } from 'eslint'
+import rule from 'rules/first'
+
+import { test, getTSParsers, testVersion } from '../utils'
 
 const ruleTester = new RuleTester()
-import rule from 'rules/first'
 
 ruleTester.run('first', rule, {
   valid: [].concat(

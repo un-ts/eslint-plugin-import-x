@@ -1,6 +1,7 @@
-import declaredScope from 'eslint-module-utils/declaredScope'
 import Exports from '../ExportMap'
 import docsUrl from '../docsUrl'
+
+import declaredScope from 'eslint-module-utils/declaredScope'
 
 function message(deprecation) {
   return `Deprecated${deprecation.description ? `: ${deprecation.description}` : '.'}`

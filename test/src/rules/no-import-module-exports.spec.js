@@ -1,12 +1,13 @@
 import path from 'path'
+
 import { RuleTester } from 'eslint'
+import rule from 'rules/no-import-module-exports'
 
 import { eslintVersionSatisfies, test, testVersion } from '../utils'
 
 const ruleTester = new RuleTester({
   parserOptions: { ecmaVersion: 6, sourceType: 'module' },
 })
-import rule from 'rules/no-import-module-exports'
 
 const error = {
   message: `Cannot use import declarations in modules that export using CommonJS (module.exports = 'foo' or exports.bar = 'hi')`,

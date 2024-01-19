@@ -1,8 +1,8 @@
-import { test, testVersion, getNonDefaultParsers, parsers } from '../utils'
-
 import { RuleTester } from 'eslint'
 import semver from 'semver'
 import { version as tsEslintVersion } from 'typescript-eslint-parser/package.json'
+
+import { test, testVersion, getNonDefaultParsers, parsers } from '../utils'
 
 const ruleTester = new RuleTester()
 const rule = require('../../../src/rules/prefer-default-export')

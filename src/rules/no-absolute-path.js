@@ -1,9 +1,11 @@
 import path from 'path'
+
+import { isAbsolute } from '../core/importType'
+import docsUrl from '../docsUrl'
+
 import moduleVisitor, {
   makeOptionsSchema,
 } from 'eslint-module-utils/moduleVisitor'
-import { isAbsolute } from '../core/importType'
-import docsUrl from '../docsUrl'
 
 module.exports = {
   meta: {

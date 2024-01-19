@@ -1,4 +1,5 @@
 import { dirname } from 'path'
+
 import pkgUp from 'eslint-module-utils/pkgUp'
 import readPkgUp from 'eslint-module-utils/readPkgUp'
 

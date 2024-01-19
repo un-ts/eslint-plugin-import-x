@@ -1,9 +1,9 @@
+import { RuleTester } from 'eslint'
+import rule from 'rules/no-absolute-path'
+
 import { test } from '../utils'
 
-import { RuleTester } from 'eslint'
-
 const ruleTester = new RuleTester()
-import rule from 'rules/no-absolute-path'
 
 const error = {
   message: 'Do not import modules using an absolute path',

@@ -1,4 +1,5 @@
 import eslint from 'eslint'
+
 import fileA from './file-a'
 import { b } from './file-b'
 import { c1, c2 } from './file-c'
