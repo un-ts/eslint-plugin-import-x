@@ -24,7 +24,7 @@ describe('CLI regression tests', function () {
               named: 2,
             },
           },
-          plugins: { 'eslint-plugin-import': importPlugin },
+          plugins: { 'eslint-plugin-i': importPlugin },
         })
       } else {
         cli = new CLIEngine({
@@ -35,7 +35,7 @@ describe('CLI regression tests', function () {
             named: 2,
           },
         })
-        cli.addPlugin('eslint-plugin-import', importPlugin)
+        cli.addPlugin('eslint-plugin-i', importPlugin)
       }
     })
     it("doesn't throw an error on gratuitous, erroneous self-reference", function () {
@@ -64,7 +64,7 @@ describe('CLI regression tests', function () {
             overrideConfigFile: './tests/files/just-json-files/.eslintrc.json',
             rulePaths: ['./src/rules'],
             ignore: false,
-            plugins: { 'eslint-plugin-import': importPlugin },
+            plugins: { 'eslint-plugin-i': importPlugin },
           })
         } else {
           cli = new CLIEngine({
@@ -73,7 +73,7 @@ describe('CLI regression tests', function () {
             rulePaths: ['./src/rules'],
             ignore: false,
           })
-          cli.addPlugin('eslint-plugin-import', importPlugin)
+          cli.addPlugin('eslint-plugin-i', importPlugin)
         }
       }
     })

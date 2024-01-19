@@ -21,7 +21,7 @@ const includes = Function.bind.bind(Function.prototype.call)(
   Array.prototype.includes,
 )
 
-const log = debug('eslint-plugin-import:ExportMap')
+const log = debug('eslint-plugin-i:ExportMap')
 
 const exportCache = new Map()
 const tsconfigCache = new Map()

@@ -6,7 +6,7 @@ const moduleRequire = require('./module-require').default
 const { extname } = require('path')
 const fs = require('fs')
 
-const log = require('debug')('eslint-plugin-import:parse')
+const log = require('debug')('eslint-plugin-i:parse')
 
 function getBabelEslintVisitorKeys(parserPath) {
   if (parserPath.endsWith('index.js')) {

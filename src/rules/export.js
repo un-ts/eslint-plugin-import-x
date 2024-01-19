@@ -13,7 +13,7 @@ Notes on TypeScript namespaces aka TSModuleDeclaration:
 
 There are two forms:
 - active namespaces: namespace Foo {} / module Foo {}
-- ambient modules; declare module "eslint-plugin-import" {}
+- ambient modules; declare module "eslint-plugin-i" {}
 
 active namespaces:
 - cannot contain a default export
