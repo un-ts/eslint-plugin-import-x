@@ -83,8 +83,8 @@ describe('TypeScript', function () {
     const parserConfig = {
       parser,
       settings: {
-        'import/parsers': { [parser]: ['.ts'] },
-        'import/resolver': { 'eslint-import-resolver-typescript': true },
+        'i/parsers': { [parser]: ['.ts'] },
+        'i/resolver': { 'eslint-import-resolver-typescript': true },
       },
     }
     // @typescript-eslint/parser@5+ throw error for invalid module specifiers at parsing time.

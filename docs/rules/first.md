@@ -1,4 +1,4 @@
-# import/first
+# i/first
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -28,7 +28,7 @@ import bar from './bar'
 import * as _ from 'lodash' // <- reported
 ```
 
-If you really want import type ordering, check out [`import/order`].
+If you really want import type ordering, check out [`i/order`].
 
 Notably, `import`s are hoisted, which means the imported modules will be evaluated
 before any of the statements interspersed between them. Keeping all `import`s together
@@ -68,8 +68,8 @@ enable this rule.
 
 ## Further Reading
 
-- [`import/order`]: a major step up from `absolute-first`
+- [`i/order`]: a major step up from `absolute-first`
 - Issue [#255]
 
-[`import/order`]: ./order.md
+[`i/order`]: ./order.md
 [#255]: https://github.com/import-js/eslint-plugin-import/issues/255

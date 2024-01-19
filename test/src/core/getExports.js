@@ -398,7 +398,7 @@ describe('ExportMap', function () {
   describe('issue #478: never parse non-whitelist extensions', function () {
     const context = {
       ...fakeContext,
-      settings: { 'import/extensions': ['.js'] },
+      settings: { 'i/extensions': ['.js'] },
     }
 
     let imports
@@ -438,8 +438,8 @@ describe('ExportMap', function () {
         const context = {
           ...fakeContext,
           settings: {
-            'import/extensions': ['.js'],
-            'import/parsers': parserConfig,
+            'i/extensions': ['.js'],
+            'i/parsers': parserConfig,
           },
         }
 

@@ -9,7 +9,7 @@ const flatMap = Function.bind.bind(Function.prototype.call)(
 
 let typescriptPkg
 try {
-  typescriptPkg = require('typescript/package.json') // eslint-disable-line import/no-extraneous-dependencies
+  typescriptPkg = require('typescript/package.json') // eslint-disable-line i/no-extraneous-dependencies
 } catch (e) {
   /**/
 }

@@ -1,4 +1,4 @@
-# import/no-useless-path-segments
+# i/no-useless-path-segments
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -64,7 +64,7 @@ import fs from 'fs'
 If you want to detect unnecessary `/index` or `/index.js` (depending on the specified file extensions, see below) imports in your paths, you can enable the option `noUselessIndex`. By default it is set to `false`:
 
 ```js
-"import/no-useless-path-segments": ["error", {
+"i/no-useless-path-segments": ["error", {
   noUselessIndex: true,
 }]
 ```
@@ -78,7 +78,7 @@ import './pages/index' // should be "./pages" (auto-fixable)
 import './pages/index.js' // should be "./pages" (auto-fixable)
 ```
 
-Note: `noUselessIndex` only avoids ambiguous imports for `.js` files if you haven't specified other resolved file extensions. See [Settings: import/extensions](https://github.com/import-js/eslint-plugin-import#importextensions) for details.
+Note: `noUselessIndex` only avoids ambiguous imports for `.js` files if you haven't specified other resolved file extensions. See [Settings: i/extensions](https://github.com/import-js/eslint-plugin-import#importextensions) for details.
 
 ### commonjs
 

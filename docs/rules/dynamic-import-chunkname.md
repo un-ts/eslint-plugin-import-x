@@ -1,4 +1,4 @@
-# import/dynamic-import-chunkname
+# i/dynamic-import-chunkname
 
 <!-- end auto-generated rule header -->
 

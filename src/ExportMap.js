@@ -481,8 +481,9 @@ ExportMap.parse = function (path, content, context) {
     return null
   }
 
-  const docstyle = (context.settings &&
-    context.settings['import/docstyle']) || ['jsdoc']
+  const docstyle = (context.settings && context.settings['i/docstyle']) || [
+    'jsdoc',
+  ]
   const docStyleParsers = {}
   docstyle.forEach(style => {
     docStyleParsers[style] = availableDocStyleParsers[style]

@@ -1,4 +1,4 @@
-# import/no-unassigned-import
+# i/no-unassigned-import
 
 <!-- end auto-generated rule header -->
 

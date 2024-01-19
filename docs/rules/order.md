@@ -1,4 +1,4 @@
-# import/order
+# i/order
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -102,7 +102,7 @@ The default value is `["builtin", "external", "parent", "sibling", "index"]`.
 You can set the options like this:
 
 ```ts
-"import/order": [
+"i/order": [
   "error",
   {
     "groups": [
@@ -134,7 +134,7 @@ Properties of the objects
 
 ```json
 {
-  "import/order": [
+  "i/order": [
     "error",
     {
       "pathGroups": [
@@ -160,7 +160,7 @@ Example:
 
 ```json
 {
-  "import/order": [
+  "i/order": [
     "error",
     {
       "newlines-between": "always",
@@ -186,7 +186,7 @@ Example:
 
 ```json
 {
-  "import/order": [
+  "i/order": [
     "error",
     {
       "pathGroups": [
@@ -208,7 +208,7 @@ Example:
 
 ```json
 {
-  "import/order": [
+  "i/order": [
     "error",
     {
       "pathGroups": [
@@ -240,7 +240,7 @@ The default value is `"ignore"`.
 With the default group setting, the following will be invalid:
 
 ```ts
-/* eslint import/order: ["error", {"newlines-between": "always"}] */
+/* eslint i/order: ["error", {"newlines-between": "always"}] */
 import fs from 'fs'
 import path from 'path'
 import index from './'
@@ -248,7 +248,7 @@ import sibling from './foo'
 ```
 
 ```ts
-/* eslint import/order: ["error", {"newlines-between": "always-and-inside-groups"}] */
+/* eslint i/order: ["error", {"newlines-between": "always-and-inside-groups"}] */
 import fs from 'fs'
 
 import path from 'path'
@@ -257,7 +257,7 @@ import sibling from './foo'
 ```
 
 ```ts
-/* eslint import/order: ["error", {"newlines-between": "never"}] */
+/* eslint i/order: ["error", {"newlines-between": "never"}] */
 import fs from 'fs'
 import path from 'path'
 
@@ -269,7 +269,7 @@ import sibling from './foo'
 while those will be valid:
 
 ```ts
-/* eslint import/order: ["error", {"newlines-between": "always"}] */
+/* eslint i/order: ["error", {"newlines-between": "always"}] */
 import fs from 'fs'
 import path from 'path'
 
@@ -279,7 +279,7 @@ import sibling from './foo'
 ```
 
 ```ts
-/* eslint import/order: ["error", {"newlines-between": "always-and-inside-groups"}] */
+/* eslint i/order: ["error", {"newlines-between": "always-and-inside-groups"}] */
 import fs from 'fs'
 
 import path from 'path'
@@ -290,7 +290,7 @@ import sibling from './foo'
 ```
 
 ```ts
-/* eslint import/order: ["error", {"newlines-between": "never"}] */
+/* eslint i/order: ["error", {"newlines-between": "never"}] */
 import fs from 'fs'
 import path from 'path'
 import index from './'
@@ -317,7 +317,7 @@ alphabetize: {
 This will fail the rule check:
 
 ```ts
-/* eslint import/order: ["error", {"alphabetize": {"order": "asc", "caseInsensitive": true}}] */
+/* eslint i/order: ["error", {"alphabetize": {"order": "asc", "caseInsensitive": true}}] */
 import React, { PureComponent } from 'react'
 import aTypes from 'prop-types'
 import { compose, apply } from 'xcompose'
@@ -328,7 +328,7 @@ import blist from 'BList'
 While this will pass:
 
 ```ts
-/* eslint import/order: ["error", {"alphabetize": {"order": "asc", "caseInsensitive": true}}] */
+/* eslint i/order: ["error", {"alphabetize": {"order": "asc", "caseInsensitive": true}}] */
 import blist from 'BList'
 import * as classnames from 'classnames'
 import aTypes from 'prop-types'
@@ -348,7 +348,7 @@ way that is safe.
 This will fail the rule check:
 
 ```ts
-/* eslint import/order: ["error", {"warnOnUnassignedImports": true}] */
+/* eslint i/order: ["error", {"warnOnUnassignedImports": true}] */
 import fs from 'fs'
 import './styles.css'
 import path from 'path'
@@ -357,7 +357,7 @@ import path from 'path'
 While this will pass:
 
 ```ts
-/* eslint import/order: ["error", {"warnOnUnassignedImports": true}] */
+/* eslint i/order: ["error", {"warnOnUnassignedImports": true}] */
 import fs from 'fs'
 import path from 'path'
 import './styles.css'
@@ -365,9 +365,9 @@ import './styles.css'
 
 ## Related
 
-- [`import/external-module-folders`] setting
+- [`i/external-module-folders`] setting
 
-- [`import/internal-regex`] setting
+- [`i/internal-regex`] setting
 
-[`import/external-module-folders`]: ../../README.md#importexternal-module-folders
-[`import/internal-regex`]: ../../README.md#importinternal-regex
+[`i/external-module-folders`]: ../../README.md#importexternal-module-folders
+[`i/internal-regex`]: ../../README.md#importinternal-regex

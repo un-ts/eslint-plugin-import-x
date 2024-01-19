@@ -1,4 +1,4 @@
-# import/extensions
+# i/extensions
 
 <!-- end auto-generated rule header -->
 
@@ -11,13 +11,13 @@ In order to provide a consistent use of file extensions across your code base, t
 This rule either takes one string option, one object option, or a string and an object option. If it is the string `"never"` (the default value), then the rule forbids the use for any extension. If it is the string `"always"`, then the rule enforces the use of extensions for all import statements. If it is the string `"ignorePackages"`, then the rule enforces the use of extensions for all import statements except package imports.
 
 ```json
-"import/extensions": [<severity>, "never" | "always" | "ignorePackages"]
+"i/extensions": [<severity>, "never" | "always" | "ignorePackages"]
 ```
 
 By providing an object you can configure each extension separately.
 
 ```json
-"import/extensions": [<severity>, {
+"i/extensions": [<severity>, {
   <extension>: "never" | "always" | "ignorePackages"
 }]
 ```
@@ -27,7 +27,7 @@ For example `{ "js": "always", "json": "never" }` would always enforce the use 
 By providing both a string and an object, the string will set the default setting for all extensions, and the object can be used to set granular overrides for specific extensions.
 
 ```json
-"import/extensions": [
+"i/extensions": [
   <severity>,
   "never" | "always" | "ignorePackages",
   {
@@ -41,7 +41,7 @@ For example, `["error", "never", { "svg": "always" }]` would require that all ex
 `ignorePackages` can be set as a separate boolean option like this:
 
 ```json
-"import/extensions": [
+"i/extensions": [
   <severity>,
   "never" | "always" | "ignorePackages",
   {

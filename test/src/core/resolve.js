@@ -25,7 +25,7 @@ describe('resolve', function () {
 
   it('resolves via a custom resolver with interface version 1', function () {
     const testContext = utils.testContext({
-      'import/resolver': './foo-bar-resolver-v1',
+      'i/resolver': './foo-bar-resolver-v1',
     })
 
     expect(
@@ -58,7 +58,7 @@ describe('resolve', function () {
 
   it('resolves via a custom resolver with interface version 1 assumed if not specified', function () {
     const testContext = utils.testContext({
-      'import/resolver': './foo-bar-resolver-no-version',
+      'i/resolver': './foo-bar-resolver-no-version',
     })
 
     expect(
@@ -91,7 +91,7 @@ describe('resolve', function () {
 
   it('resolves via a custom resolver with interface version 2', function () {
     const testContext = utils.testContext({
-      'import/resolver': './foo-bar-resolver-v2',
+      'i/resolver': './foo-bar-resolver-v2',
     })
     const testContextReports = []
     testContext.report = function (reportInfo) {
@@ -134,9 +134,9 @@ describe('resolve', function () {
     expect(testContextReports.length).to.equal(0)
   })
 
-  it('respects import/resolver as array of strings', function () {
+  it('respects i/resolver as array of strings', function () {
     const testContext = utils.testContext({
-      'import/resolver': ['./foo-bar-resolver-v2', './foo-bar-resolver-v1'],
+      'i/resolver': ['./foo-bar-resolver-v2', './foo-bar-resolver-v1'],
     })
 
     expect(
@@ -149,9 +149,9 @@ describe('resolve', function () {
     ).to.equal(utils.testFilePath('./bar.jsx'))
   })
 
-  it('respects import/resolver as object', function () {
+  it('respects i/resolver as object', function () {
     const testContext = utils.testContext({
-      'import/resolver': { './foo-bar-resolver-v2': {} },
+      'i/resolver': { './foo-bar-resolver-v2': {} },
     })
 
     expect(
@@ -164,9 +164,9 @@ describe('resolve', function () {
     ).to.equal(utils.testFilePath('./bar.jsx'))
   })
 
-  it('respects import/resolver as array of objects', function () {
+  it('respects i/resolver as array of objects', function () {
     const testContext = utils.testContext({
-      'import/resolver': [
+      'i/resolver': [
         { './foo-bar-resolver-v2': {} },
         { './foo-bar-resolver-v1': {} },
       ],
@@ -183,7 +183,7 @@ describe('resolve', function () {
   })
 
   it('finds resolvers from the source files rather than eslint-module-utils', function () {
-    const testContext = utils.testContext({ 'import/resolver': { foo: {} } })
+    const testContext = utils.testContext({ 'i/resolver': { foo: {} } })
 
     expect(
       resolve('../files/foo', {
@@ -195,8 +195,8 @@ describe('resolve', function () {
     ).to.equal(utils.testFilePath('./bar.jsx'))
   })
 
-  it('reports invalid import/resolver config', function () {
-    const testContext = utils.testContext({ 'import/resolver': 123.456 })
+  it('reports invalid i/resolver config', function () {
+    const testContext = utils.testContext({ 'i/resolver': 123.456 })
     const testContextReports = []
     testContext.report = function (reportInfo) {
       testContextReports.push(reportInfo)
@@ -220,7 +220,7 @@ describe('resolve', function () {
 
   it('reports loaded resolver with invalid interface', function () {
     const resolverName = './foo-bar-resolver-invalid'
-    const testContext = utils.testContext({ 'import/resolver': resolverName })
+    const testContext = utils.testContext({ 'i/resolver': resolverName })
     const testContextReports = []
     testContext.report = function (reportInfo) {
       testContextReports.push(reportInfo)
@@ -241,9 +241,9 @@ describe('resolve', function () {
     expect(testContextReports[0].loc).to.eql({ line: 1, column: 0 })
   })
 
-  it('respects import/resolve extensions', function () {
+  it('respects i/resolve extensions', function () {
     const testContext = utils.testContext({
-      'import/resolve': { extensions: ['.jsx'] },
+      'i/resolve': { extensions: ['.jsx'] },
     })
 
     expect(resolve('./jsx/MyCoolComponent', testContext)).to.equal(
@@ -253,7 +253,7 @@ describe('resolve', function () {
 
   it('reports load exception in a user resolver', function () {
     const testContext = utils.testContext({
-      'import/resolver': './load-error-resolver',
+      'i/resolver': './load-error-resolver',
     })
     const testContextReports = []
     testContext.report = function (reportInfo) {
@@ -287,7 +287,7 @@ describe('resolve', function () {
 
       it('resolves via a custom resolver with interface version 1', function () {
         const testContext = utils.testContext({
-          'import/resolver': './foo-bar-resolver-v1',
+          'i/resolver': './foo-bar-resolver-v1',
         })
 
         expect(
@@ -323,7 +323,7 @@ describe('resolve', function () {
 
       it('resolves via a custom resolver with interface version 1 assumed if not specified', function () {
         const testContext = utils.testContext({
-          'import/resolver': './foo-bar-resolver-no-version',
+          'i/resolver': './foo-bar-resolver-no-version',
         })
 
         expect(
@@ -359,7 +359,7 @@ describe('resolve', function () {
 
       it('resolves via a custom resolver with interface version 2', function () {
         const testContext = utils.testContext({
-          'import/resolver': './foo-bar-resolver-v2',
+          'i/resolver': './foo-bar-resolver-v2',
         })
         const testContextReports = []
         testContext.report = function (reportInfo) {
@@ -407,9 +407,9 @@ describe('resolve', function () {
         expect(testContextReports.length).to.equal(0)
       })
 
-      it('respects import/resolver as array of strings', function () {
+      it('respects i/resolver as array of strings', function () {
         const testContext = utils.testContext({
-          'import/resolver': ['./foo-bar-resolver-v2', './foo-bar-resolver-v1'],
+          'i/resolver': ['./foo-bar-resolver-v2', './foo-bar-resolver-v1'],
         })
 
         expect(
@@ -423,9 +423,9 @@ describe('resolve', function () {
         ).to.equal(utils.testFilePath('./bar.jsx'))
       })
 
-      it('respects import/resolver as object', function () {
+      it('respects i/resolver as object', function () {
         const testContext = utils.testContext({
-          'import/resolver': { './foo-bar-resolver-v2': {} },
+          'i/resolver': { './foo-bar-resolver-v2': {} },
         })
 
         expect(
@@ -439,9 +439,9 @@ describe('resolve', function () {
         ).to.equal(utils.testFilePath('./bar.jsx'))
       })
 
-      it('respects import/resolver as array of objects', function () {
+      it('respects i/resolver as array of objects', function () {
         const testContext = utils.testContext({
-          'import/resolver': [
+          'i/resolver': [
             { './foo-bar-resolver-v2': {} },
             { './foo-bar-resolver-v1': {} },
           ],
@@ -460,7 +460,7 @@ describe('resolve', function () {
 
       it('finds resolvers from the source files rather than eslint-module-utils', function () {
         const testContext = utils.testContext({
-          'import/resolver': { foo: {} },
+          'i/resolver': { foo: {} },
         })
 
         expect(
@@ -474,8 +474,8 @@ describe('resolve', function () {
         ).to.equal(utils.testFilePath('./bar.jsx'))
       })
 
-      it('reports invalid import/resolver config', function () {
-        const testContext = utils.testContext({ 'import/resolver': 123.456 })
+      it('reports invalid i/resolver config', function () {
+        const testContext = utils.testContext({ 'i/resolver': 123.456 })
         const testContextReports = []
         testContext.report = function (reportInfo) {
           testContextReports.push(reportInfo)
@@ -501,7 +501,7 @@ describe('resolve', function () {
       it('reports loaded resolver with invalid interface', function () {
         const resolverName = './foo-bar-resolver-invalid'
         const testContext = utils.testContext({
-          'import/resolver': resolverName,
+          'i/resolver': resolverName,
         })
         const testContextReports = []
         testContext.report = function (reportInfo) {
@@ -524,9 +524,9 @@ describe('resolve', function () {
         expect(testContextReports[0].loc).to.eql({ line: 1, column: 0 })
       })
 
-      it('respects import/resolve extensions', function () {
+      it('respects i/resolve extensions', function () {
         const testContext = utils.testContext({
-          'import/resolve': { extensions: ['.jsx'] },
+          'i/resolve': { extensions: ['.jsx'] },
         })
 
         expect(resolve('./jsx/MyCoolComponent', testContext)).to.equal(
@@ -536,7 +536,7 @@ describe('resolve', function () {
 
       it('reports load exception in a user resolver', function () {
         const testContext = utils.testContext({
-          'import/resolver': './load-error-resolver',
+          'i/resolver': './load-error-resolver',
         })
         const testContextReports = []
         testContext.report = function (reportInfo) {
@@ -567,8 +567,8 @@ describe('resolve', function () {
   caseDescribe('case sensitivity', function () {
     let file
     const testContext = utils.testContext({
-      'import/resolve': { extensions: ['.jsx'] },
-      'import/cache': { lifetime: 0 },
+      'i/resolve': { extensions: ['.jsx'] },
+      'i/cache': { lifetime: 0 },
     })
     const testSettings = testContext.settings
     beforeEach('resolve', function () {
@@ -602,13 +602,13 @@ describe('resolve', function () {
 
   describe('rename cache correctness', function () {
     const context = utils.testContext({
-      'import/cache': { lifetime: 1 },
+      'i/cache': { lifetime: 1 },
     })
 
     const infiniteContexts = ['∞', 'Infinity'].map(inf => [
       inf,
       utils.testContext({
-        'import/cache': { lifetime: inf },
+        'i/cache': { lifetime: inf },
       }),
     ])
 

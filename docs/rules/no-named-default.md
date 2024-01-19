@@ -1,4 +1,4 @@
-# import/no-named-default
+# i/no-named-default
 
 <!-- end auto-generated rule header -->
 

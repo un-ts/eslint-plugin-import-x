@@ -1,4 +1,4 @@
-# import/namespace
+# i/namespace
 
 💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
 
@@ -83,7 +83,7 @@ function deepTrouble() {
 Defaults to `false`. When false, will report the following:
 
 ```js
-/*eslint import/namespace: [2, { allowComputed: false }]*/
+/*eslint i/namespace: [2, { allowComputed: false }]*/
 import * as a from './a'
 
 function f(x) {
@@ -97,9 +97,9 @@ still can't be statically analyzed any further.
 ## Further Reading
 
 - Lee Byron's [ES7] export proposal
-- [`import/ignore`] setting
+- [`i/ignore`] setting
 - [`jsnext:main`](Rollup)
 
 [ES7]: https://github.com/leebyron/ecmascript-more-export-from
-[`import/ignore`]: ../../README.md#importignore
+[`i/ignore`]: ../../README.md#importignore
 [`jsnext:main`]: https://github.com/rollup/rollup/wiki/jsnext:main

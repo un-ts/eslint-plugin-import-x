@@ -1,4 +1,4 @@
-# import/no-default-export
+# i/no-default-export
 
 <!-- end auto-generated rule header -->
 

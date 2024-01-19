@@ -1,4 +1,4 @@
-# import/consistent-type-specifier-style
+# i/consistent-type-specifier-style
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -29,9 +29,9 @@ import {typeof Bar} from 'Bar';
 
 This rule either enforces or bans the use of inline type-only markers for named imports.
 
-This rule includes a fixer that will automatically convert your specifiers to the correct form - however the fixer will not respect your preferences around de-duplicating imports. If this is important to you, consider using the [`import/no-duplicates`] rule.
+This rule includes a fixer that will automatically convert your specifiers to the correct form - however the fixer will not respect your preferences around de-duplicating imports. If this is important to you, consider using the [`i/no-duplicates`] rule.
 
-[`import/no-duplicates`]: ./no-duplicates.md
+[`i/no-duplicates`]: ./no-duplicates.md
 
 ## Options
 

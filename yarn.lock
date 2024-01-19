@@ -3002,9 +3002,9 @@ prettier-plugin-ini@^1.1.0:
     prettier ">=2.3"
 
 prettier-plugin-pkg@^0.18.0:
-  version "0.18.0"
-  resolved "https://registry.yarnpkg.com/prettier-plugin-pkg/-/prettier-plugin-pkg-0.18.0.tgz#c0b9158416c50b0c0414faccb650fd82e3abd0fc"
-  integrity sha512-cme+OUHj25cVj3HwGK6ek/GkCHhlhM1u/IYspOHYsFImaXMJCmjs8xeCcvLreD0HMX5QxObot+3TtQR3Bd2wHw==
+  version "0.18.1"
+  resolved "https://registry.yarnpkg.com/prettier-plugin-pkg/-/prettier-plugin-pkg-0.18.1.tgz#e70f669ae9edad137c3b78675104c57df820ca89"
+  integrity sha512-FuUxvsYZR/8rsLH8s/jbPQmgYvv0yxW8LoIHCy6+Q7p4FBjjdP3DNKx8fMTOsc0SlEB1skB4o1LcahRceIh87A==
 
 prettier-plugin-properties@^0.3.0:
   version "0.3.0"

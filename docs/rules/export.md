@@ -1,4 +1,4 @@
-# import/export
+# i/export
 
 💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
 

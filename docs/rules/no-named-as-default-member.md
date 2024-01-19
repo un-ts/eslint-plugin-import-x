@@ -1,4 +1,4 @@
-# import/no-named-as-default-member
+# i/no-named-as-default-member
 
 ⚠️ This rule _warns_ in the following configs: ☑️ `recommended`, 🚸 `warnings`.
 

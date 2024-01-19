@@ -40,7 +40,7 @@ ModuleCache.getSettings = function (settings) {
     {
       lifetime: 30, // seconds
     },
-    settings['import/cache'],
+    settings['i/cache'],
   )
 
   // parse infinity

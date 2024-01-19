@@ -1,4 +1,4 @@
-# import/no-duplicates
+# i/no-duplicates
 
 ⚠️ This rule _warns_ in the following configs: ☑️ `recommended`, 🚸 `warnings`.
 
@@ -49,7 +49,7 @@ By default, this rule ignores query strings (i.e. paths followed by a question m
 Config:
 
 ```json
-"import/no-duplicates": ["error", {"considerQueryString": true}]
+"i/no-duplicates": ["error", {"considerQueryString": true}]
 ```
 
 And then the following code becomes valid:
@@ -76,7 +76,7 @@ TypeScript 4.5 introduced a new [feature](https://devblogs.microsoft.com/typescr
 Config:
 
 ```json
-"import/no-duplicates": ["error", {"prefer-inline": true}]
+"i/no-duplicates": ["error", {"prefer-inline": true}]
 ```
 
 <!--tabs-->
@@ -103,7 +103,7 @@ import { CValue, type CType } from './papa-mia'
 
 ## When Not To Use It
 
-If the core ESLint version is good enough (i.e. you're _not_ using Flow and you _are_ using [`import/extensions`](./extensions.md)), keep it and don't use this.
+If the core ESLint version is good enough (i.e. you're _not_ using Flow and you _are_ using [`i/extensions`](./extensions.md)), keep it and don't use this.
 
 If you like to split up imports across lines or may need to import a default and a namespace,
 you may not want to enable this rule.

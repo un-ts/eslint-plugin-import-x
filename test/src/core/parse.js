@@ -120,7 +120,7 @@ describe('parse(content, { settings, ecmaFeatures })', function () {
     parseStubParser.parse = parseSpy
     expect(
       parse.bind(null, path, content, {
-        settings: { 'import/parsers': { [parseStubParserPath]: ['.js'] } },
+        settings: { 'i/parsers': { [parseStubParserPath]: ['.js'] } },
         parserPath: null,
         parserOptions,
       }),
@@ -225,7 +225,7 @@ describe('parse(content, { settings, ecmaFeatures })', function () {
     parseStubParser.parse = parseSpy
     expect(
       parse.bind(null, path, content, {
-        settings: { 'import/parsers': { [parseStubParserPath]: ['.js'] } },
+        settings: { 'i/parsers': { [parseStubParserPath]: ['.js'] } },
         parserPath: null,
         languageOptions: { parser: { parse() {} } },
       }),

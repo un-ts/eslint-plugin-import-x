@@ -1,4 +1,4 @@
-# import/prefer-default-export
+# i/prefer-default-export
 
 <!-- end auto-generated rule header -->
 
@@ -9,7 +9,7 @@ In exporting files, this rule checks if there is default export or not.
 ### rule schema
 
 ```javascript
-"import/prefer-default-export": [
+"i/prefer-default-export": [
     ( "off" | "warn" | "error" ),
     { "target": "single" | "any" } // default is "single"
 ]
@@ -28,7 +28,7 @@ How to setup config file for this rule:
 ```javascript
 // you can manually specify it
 "rules": {
-    "import/prefer-default-export": [
+    "i/prefer-default-export": [
         ( "off" | "warn" | "error" ),
         { "target": "single" }
     ]
@@ -36,7 +36,7 @@ How to setup config file for this rule:
 
 // config setup below will also work
 "rules": {
-    "import/prefer-default-export": "off" | "warn" | "error"
+    "i/prefer-default-export": "off" | "warn" | "error"
 }
 ```
 
@@ -101,7 +101,7 @@ How to setup config file for this rule:
 ```javascript
 // you have to manually specify it
 "rules": {
-    "import/prefer-default-export": [
+    "i/prefer-default-export": [
         ( "off" | "warn" | "error" ),
         { "target": "any" }
     ]

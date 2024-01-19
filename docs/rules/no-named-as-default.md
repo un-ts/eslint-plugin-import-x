@@ -1,4 +1,4 @@
-# import/no-named-as-default
+# i/no-named-as-default
 
 ⚠️ This rule _warns_ in the following configs: ☑️ `recommended`, 🚸 `warnings`.
 

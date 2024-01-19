@@ -1,4 +1,4 @@
-# import/no-unused-modules
+# i/no-unused-modules
 
 <!-- end auto-generated rule header -->
 
@@ -19,7 +19,7 @@ Example:
 ```json
 "rules: {
   ...otherRules,
-  "import/no-unused-modules": [1, {"unusedExports": true}]
+  "i/no-unused-modules": [1, {"unusedExports": true}]
 }
 ```
 

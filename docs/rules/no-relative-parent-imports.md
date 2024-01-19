@@ -1,4 +1,4 @@
-# import/no-relative-parent-imports
+# i/no-relative-parent-imports
 
 <!-- end auto-generated rule header -->
 
@@ -21,7 +21,7 @@ export default function (numbers) {
 }
 
 // ./numbers/three.js
-import add from '../add'; // violates import/no-relative-parent-imports
+import add from '../add'; // violates i/no-relative-parent-imports
 
 export default function three() {
   return add([1, 2]);
@@ -90,7 +90,7 @@ And the .eslintrc file:
 {
   ...
   "rules": {
-    "import/no-relative-parent-imports": "error"
+    "i/no-relative-parent-imports": "error"
   }
 }
 ```

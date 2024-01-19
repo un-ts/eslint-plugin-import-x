@@ -156,7 +156,7 @@ function getParser(path, context) {
 }
 
 function getParserPath(path, context) {
-  const parsers = context.settings['import/parsers']
+  const parsers = context.settings['i/parsers']
   if (parsers != null) {
     const extension = extname(path)
     for (const parserPath in parsers) {

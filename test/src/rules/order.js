@@ -456,8 +456,8 @@ ruleTester.run('order', rule, {
         },
       ],
       settings: {
-        'import/resolver': 'webpack',
-        'import/external-module-folders': ['node_modules', 'symlinked-module'],
+        'i/resolver': 'webpack',
+        'i/external-module-folders': ['node_modules', 'symlinked-module'],
       },
     }),
     // Monorepo setup, using Node resolver (doesn't resolve symlinks)
@@ -474,8 +474,8 @@ ruleTester.run('order', rule, {
         },
       ],
       settings: {
-        'import/resolver': 'node',
-        'import/external-module-folders': ['node_modules', 'symlinked-module'],
+        'i/resolver': 'node',
+        'i/external-module-folders': ['node_modules', 'symlinked-module'],
       },
     }),
     // Option: newlines-between: 'always'
@@ -1000,7 +1000,7 @@ ruleTester.run('order', rule, {
         },
       ],
       settings: {
-        'import/resolver': {
+        'i/resolver': {
           webpack: {
             config: {
               resolve: {
@@ -2563,7 +2563,7 @@ ruleTester.run('order', rule, {
         },
       ],
       settings: {
-        'import/internal-regex': '^(a|b|c|d|e|f|g|h|i|j|k)(\\/|$)',
+        'i/internal-regex': '^(a|b|c|d|e|f|g|h|i|j|k)(\\/|$)',
       },
       errors: Array.from(
         { length: 11 },
@@ -3059,8 +3059,8 @@ describe('TypeScript', function () {
       const parserConfig = {
         parser,
         settings: {
-          'import/parsers': { [parser]: ['.ts'] },
-          'import/resolver': { 'eslint-import-resolver-typescript': true },
+          'i/parsers': { [parser]: ['.ts'] },
+          'i/resolver': { 'eslint-import-resolver-typescript': true },
         },
       }
 

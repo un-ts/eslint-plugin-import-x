@@ -1,3 +1,7 @@
 test/fixtures/cycles/flow-typeof.js
+test/fixtures/just-json-files/invalid.json
+test/fixtures/malformed.js
 test/fixtures/no-unused-modules/flow/flow-0.js
 test/fixtures/no-unused-modules/flow/flow-3.js
+test/fixtures/with-flow-typed/flow-typed/npm/myflowtyped_v1.x.x.js
+test/fixtures/with-syntax-error/package.json

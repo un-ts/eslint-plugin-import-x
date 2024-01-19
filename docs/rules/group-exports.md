@@ -1,4 +1,4 @@
-# import/group-exports
+# i/group-exports
 
 <!-- end auto-generated rule header -->
 

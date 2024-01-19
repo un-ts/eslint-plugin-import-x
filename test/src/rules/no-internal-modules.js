@@ -381,7 +381,7 @@ ruleTester.run('no-internal-modules', rule, {
         },
       ],
       settings: {
-        'import/resolver': {
+        'i/resolver': {
           webpack: {
             config: {
               resolve: {

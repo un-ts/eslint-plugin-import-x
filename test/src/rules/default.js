@@ -97,12 +97,12 @@ ruleTester.run('default', rule, {
     }),
     test({
       code: "import bar from './default-export-from-ignored.js';",
-      settings: { 'import/ignore': ['common'] },
+      settings: { 'i/ignore': ['common'] },
       parser: parsers.BABEL_OLD,
     }),
     test({
       code: "export bar from './default-export-from-ignored.js';",
-      settings: { 'import/ignore': ['common'] },
+      settings: { 'i/ignore': ['common'] },
       parser: parsers.BABEL_OLD,
     }),
 
@@ -196,24 +196,24 @@ describe('TypeScript', function () {
           code: `import foobar from "./typescript-default"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
         }),
         test({
           code: `import foobar from "./typescript-export-assign-default"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
         }),
         test({
           code: `import foobar from "./typescript-export-assign-function"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
         }),
         semver.satisfies(tsEslintVersion, '>= 22')
@@ -221,8 +221,8 @@ describe('TypeScript', function () {
               code: `import foobar from "./typescript-export-assign-mixed"`,
               parser,
               settings: {
-                'import/parsers': { [parser]: ['.ts'] },
-                'import/resolver': {
+                'i/parsers': { [parser]: ['.ts'] },
+                'i/resolver': {
                   'eslint-import-resolver-typescript': true,
                 },
               },
@@ -232,16 +232,16 @@ describe('TypeScript', function () {
           code: `import foobar from "./typescript-export-assign-default-reexport"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
         }),
         test({
           code: `import React from "./typescript-export-assign-default-namespace"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
           parserOptions: {
             tsconfigRootDir: path.resolve(
@@ -254,8 +254,8 @@ describe('TypeScript', function () {
           code: `import Foo from "./typescript-export-as-default-namespace"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
           parserOptions: {
             tsconfigRootDir: path.resolve(
@@ -268,8 +268,8 @@ describe('TypeScript', function () {
           code: `import Foo from "./typescript-export-react-test-renderer"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
           parserOptions: {
             tsconfigRootDir: path.resolve(
@@ -282,8 +282,8 @@ describe('TypeScript', function () {
           code: `import Foo from "./typescript-extended-config"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
           parserOptions: {
             tsconfigRootDir: path.resolve(
@@ -296,8 +296,8 @@ describe('TypeScript', function () {
           code: `import foobar from "./typescript-export-assign-property"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
         }),
       ),
@@ -307,8 +307,8 @@ describe('TypeScript', function () {
           code: `import foobar from "./typescript"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
           errors: [
             'No default export found in imported module "./typescript".',
@@ -318,8 +318,8 @@ describe('TypeScript', function () {
           code: `import React from "./typescript-export-assign-default-namespace"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
           errors: [
             'No default export found in imported module "./typescript-export-assign-default-namespace".',
@@ -329,8 +329,8 @@ describe('TypeScript', function () {
           code: `import FooBar from "./typescript-export-as-default-namespace"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
           errors: [
             'No default export found in imported module "./typescript-export-as-default-namespace".',
@@ -340,8 +340,8 @@ describe('TypeScript', function () {
           code: `import Foo from "./typescript-export-as-default-namespace"`,
           parser,
           settings: {
-            'import/parsers': { [parser]: ['.ts'] },
-            'import/resolver': { 'eslint-import-resolver-typescript': true },
+            'i/parsers': { [parser]: ['.ts'] },
+            'i/resolver': { 'eslint-import-resolver-typescript': true },
           },
           parserOptions: {
             tsconfigRootDir: path.resolve(

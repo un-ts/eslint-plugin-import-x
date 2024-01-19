@@ -1,4 +1,4 @@
-# import/no-cycle
+# i/no-cycle
 
 <!-- end auto-generated rule header -->
 
@@ -39,7 +39,7 @@ cycles created by `require` within imported modules may not be detected.
 There is a `maxDepth` option available to prevent full expansion of very deep dependency trees:
 
 ```js
-/*eslint import/no-cycle: [2, { maxDepth: 1 }]*/
+/*eslint i/no-cycle: [2, { maxDepth: 1 }]*/
 
 // dep-c.js
 import './dep-a.js'
@@ -67,7 +67,7 @@ for reducing total project lint time, if needed.
 An `ignoreExternal` option is available to prevent the cycle detection to expand to external modules:
 
 ```js
-/*eslint import/no-cycle: [2, { ignoreExternal: true }]*/
+/*eslint i/no-cycle: [2, { ignoreExternal: true }]*/
 
 // dep-a.js
 import 'module-b/dep-b.js'
@@ -112,7 +112,7 @@ this rule enabled.
 
 - [Original inspiring issue](https://github.com/import-js/eslint-plugin-import/issues/941)
 - Rule to detect that module imports itself: [`no-self-import`]
-- [`import/external-module-folders`] setting
+- [`i/external-module-folders`] setting
 
 [`no-self-import`]: ./no-self-import.md
-[`import/external-module-folders`]: ../../README.md#importexternal-module-folders
+[`i/external-module-folders`]: ../../README.md#importexternal-module-folders

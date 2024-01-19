@@ -101,7 +101,7 @@ This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, a
 | [extensions](docs/rules/extensions.md)                                           | Ensure consistent use of file extension within the import path.            |     |       |     |     |     |     |
 | [first](docs/rules/first.md)                                                     | Ensure all imports appear before other statements.                         |     |       |     | 🔧  |     |     |
 | [group-exports](docs/rules/group-exports.md)                                     | Prefer named exports to be grouped together in a single export declaration |     |       |     |     |     |     |
-| [imports-first](docs/rules/imports-first.md)                                     | Replaced by `import/first`.                                                |     |       |     | 🔧  |     | ❌  |
+| [imports-first](docs/rules/imports-first.md)                                     | Replaced by `i/first`.                                                     |     |       |     | 🔧  |     | ❌  |
 | [max-dependencies](docs/rules/max-dependencies.md)                               | Enforce the maximum number of dependencies a module can have.              |     |       |     |     |     |     |
 | [newline-after-import](docs/rules/newline-after-import.md)                       | Enforce a newline after import statements.                                 |     |       |     | 🔧  |     |     |
 | [no-anonymous-default-export](docs/rules/no-anonymous-default-export.md)         | Forbid anonymous values as default exports.                                |     |       |     |     |     |     |
@@ -138,21 +138,21 @@ in your `.eslintrc.(yml|json|js)`, or extend one of the canned configs:
 ---
 extends:
   - eslint:recommended
-  - plugin:import/recommended
+  - plugin:i/recommended
   # alternatively, 'recommended' is the combination of these two rule sets:
-  - plugin:import/errors
-  - plugin:import/warnings
+  - plugin:i/errors
+  - plugin:i/warnings
 
 # or configure manually:
 plugins:
   - import
 
 rules:
-  import/no-unresolved: [2, { commonjs: true, amd: true }]
-  import/named: 2
-  import/namespace: 2
-  import/default: 2
-  import/export: 2
+  i/no-unresolved: [2, { commonjs: true, amd: true }]
+  i/named: 2
+  i/namespace: 2
+  i/default: 2
+  i/export: 2
   # etc...
 ```
 
@@ -165,11 +165,11 @@ Make sure you have installed [`@typescript-eslint/parser`] and [`eslint-import-r
 ```yaml
 extends:
   - eslint:recommended
-  - plugin:import/recommended
+  - plugin:i/recommended
   # the following lines do the trick
-  - plugin:import/typescript
+  - plugin:i/typescript
 settings:
-  import/resolver:
+  i/resolver:
     # You will also need to install and configure the TypeScript resolver
     # See also https://github.com/import-js/eslint-import-resolver-typescript#configuration
     typescript: true
@@ -206,14 +206,14 @@ You can reference resolvers in several ways (in order of precedence):
 # .eslintrc.yml
 settings:
   # uses 'eslint-import-resolver-foo':
-  import/resolver: foo
+  i/resolver: foo
 ```
 
 ```js
 // .eslintrc.js
 module.exports = {
   settings: {
-    'import/resolver': {
+    'i/resolver': {
       foo: { someConfig: value },
     },
   },
@@ -225,14 +225,14 @@ module.exports = {
 ```yaml
 # .eslintrc.yml
 settings:
-  import/resolver: 'my-awesome-npm-module'
+  i/resolver: 'my-awesome-npm-module'
 ```
 
 ```js
 // .eslintrc.js
 module.exports = {
   settings: {
-    'import/resolver': {
+    'i/resolver': {
       'my-awesome-npm-module': { someConfig: value },
     },
   },
@@ -245,7 +245,7 @@ module.exports = {
 // .eslintrc.js
 module.exports = {
   settings: {
-    'import/resolver': {
+    'i/resolver': {
       [path.resolve('../../../my-resolver')]: { someConfig: value },
     },
   },
@@ -266,20 +266,20 @@ If you are interesting in writing a resolver, see the [spec](./resolvers/README.
 
 You may set the following settings in your `.eslintrc`:
 
-### `import/extensions`
+### `i/extensions`
 
 A list of file extensions that will be parsed as modules and inspected for
 `export`s.
 
 This defaults to `['.js']`, unless you are using the `react` shared config,
 in which case it is specified as `['.js', '.jsx']`. Despite the default,
-if you are using TypeScript (without the `plugin:import/typescript` config
+if you are using TypeScript (without the `plugin:i/typescript` config
 described above) you must specify the new extensions (`.ts`, and also `.tsx`
 if using React).
 
 ```js
 "settings": {
-  "import/extensions": [
+  "i/extensions": [
     ".js",
     ".jsx"
   ]
@@ -290,7 +290,7 @@ If you require more granular extension definitions, you can use:
 
 ```js
 "settings": {
-  "import/resolver": {
+  "i/resolver": {
     "node": {
       "extensions": [
         ".js",
@@ -301,13 +301,13 @@ If you require more granular extension definitions, you can use:
 }
 ```
 
-Note that this is different from (and likely a subset of) any `import/resolver`
+Note that this is different from (and likely a subset of) any `i/resolver`
 extensions settings, which may include `.json`, `.coffee`, etc. which will still
 factor into the `no-unresolved` rule.
 
-Also, the following `import/ignore` patterns will overrule this list.
+Also, the following `i/ignore` patterns will overrule this list.
 
-### `import/ignore`
+### `i/ignore`
 
 A list of regex strings that, if matched by a path, will
 not report the matching module if no `export`s are found.
@@ -318,12 +318,12 @@ In practice, this means rules other than [`no-unresolved`](./docs/rules/no-unres
 
 ```yaml
 settings:
-  import/ignore:
+  i/ignore:
     - \.coffee$ # fraught with parse errors
     - \.(scss|less|css)$ # can't parse unprocessed CSS modules, either
 ```
 
-### `import/core-modules`
+### `i/core-modules`
 
 An array of additional modules to consider as "core" modules--modules that should
 be considered resolved but have no path on the filesystem. Your resolver may
@@ -342,7 +342,7 @@ core module:
 ```yaml
 # .eslintrc.yml
 settings:
-  import/core-modules: [electron]
+  i/core-modules: [electron]
 ```
 
 In Electron's specific case, there is a shared config named `electron`
@@ -350,7 +350,7 @@ that specifies this for you.
 
 Contribution of more such shared configs for other platforms are welcome!
 
-### `import/external-module-folders`
+### `i/external-module-folders`
 
 An array of folders. Resolved modules only from those folders will be considered as "external". By default - `["node_modules"]`. Makes sense if you have configured your path or webpack to handle your internal paths differently and want to consider modules from some folders, for example `bower_components` or `jspm_modules`, as "external".
 
@@ -368,7 +368,7 @@ Each item in this array is either a folder's name, its subpath, or its absolute 
 
 Please note that incomplete names are not allowed here so `components` won't match `bower_components` and `packages/ui` won't match `packages/ui-utils` (but will match `packages/ui/utils`).
 
-### `import/parsers`
+### `i/parsers`
 
 A map from parsers to file extension arrays. If a file extension is matched, the
 dependency parser will require and use the map key as the parser instead of the
@@ -378,7 +378,7 @@ directly using webpack, for example:
 ```yaml
 # .eslintrc.yml
 settings:
-  import/parsers:
+  i/parsers:
     '@typescript-eslint/parser': [.ts, .tsx]
 ```
 
@@ -395,11 +395,11 @@ depending on how far down the rabbit hole goes. Submit an issue if you find stra
 behavior beyond here, but steel your heart against the likely outcome of closing
 with `wontfix`.
 
-### `import/resolver`
+### `i/resolver`
 
 See [resolvers](#resolvers).
 
-### `import/cache`
+### `i/cache`
 
 Settings for cache behavior. Memoization is used at various levels to avoid the copious amount of `fs.statSync`/module parse calls required to correctly report errors.
 
@@ -412,7 +412,7 @@ If you never use [`eslint_d`] or [`eslint-loader`], you may set the cache lifeti
 ```yaml
 # .eslintrc.yml
 settings:
-  import/cache:
+  i/cache:
     lifetime: ∞ # or Infinity
 ```
 
@@ -421,25 +421,25 @@ Otherwise, set some integer, and cache entries will be evicted after that many s
 ```yaml
 # .eslintrc.yml
 settings:
-  import/cache:
+  i/cache:
     lifetime: 5 # 30 is the default
 ```
 
 [`eslint_d`]: https://www.npmjs.com/package/eslint_d
 [`eslint-loader`]: https://www.npmjs.com/package/eslint-loader
 
-### `import/internal-regex`
+### `i/internal-regex`
 
 A regex for packages should be treated as internal. Useful when you are utilizing a monorepo setup or developing a set of packages that depend on each other.
 
-By default, any package referenced from [`import/external-module-folders`](#importexternal-module-folders) will be considered as "external", including packages in a monorepo like yarn workspace or lerna environment. If you want to mark these packages as "internal" this will be useful.
+By default, any package referenced from [`i/external-module-folders`](#importexternal-module-folders) will be considered as "external", including packages in a monorepo like yarn workspace or lerna environment. If you want to mark these packages as "internal" this will be useful.
 
-For example, if your packages in a monorepo are all in `@scope`, you can configure `import/internal-regex` like this
+For example, if your packages in a monorepo are all in `@scope`, you can configure `i/internal-regex` like this
 
 ```yaml
 # .eslintrc.yml
 settings:
-  import/internal-regex: ^@scope/
+  i/internal-regex: ^@scope/
 ```
 
 ## SublimeLinter-eslint

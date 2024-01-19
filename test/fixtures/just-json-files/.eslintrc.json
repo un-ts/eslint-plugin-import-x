@@ -1,9 +1,6 @@
 {
   "root": true,
-  "plugins": [
-    "i",
-    "json"
-  ],
+  "plugins": ["i", "json"],
   "rules": {
     "i/no-unused-modules": [
       "error",

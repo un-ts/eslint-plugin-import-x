@@ -7,5 +7,11 @@ export default {
       files: '*.js',
       parser: 'babel-flow',
     },
+    {
+      files: 'tsconfig.json',
+      options: {
+        trailingComma: 'none',
+      },
+    },
   ],
 }

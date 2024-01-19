@@ -1,4 +1,4 @@
-# import/unambiguous
+# i/unambiguous
 
 <!-- end auto-generated rule header -->
 

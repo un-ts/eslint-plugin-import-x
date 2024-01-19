@@ -1,4 +1,4 @@
-# import/no-absolute-path
+# i/no-absolute-path
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -46,7 +46,7 @@ If `{ amd: true }` is provided, dependency paths for AMD-style `define` and `req
 calls will be resolved:
 
 ```js
-/*eslint import/no-absolute-path: [2, { commonjs: false, amd: true }]*/
+/*eslint i/no-absolute-path: [2, { commonjs: false, amd: true }]*/
 define(['/foo'], function (foo) {
   /*...*/
 }) // reported

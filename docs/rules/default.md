@@ -1,4 +1,4 @@
-# import/default
+# i/default
 
 💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
 
@@ -72,9 +72,9 @@ either, so such a situation will be reported in the importing module.
 ## Further Reading
 
 - Lee Byron's [ES7] export proposal
-- [`import/ignore`] setting
+- [`i/ignore`] setting
 - [`jsnext:main`] (Rollup)
 
 [ES7]: https://github.com/leebyron/ecmascript-more-export-from
-[`import/ignore`]: ../../README.md#importignore
+[`i/ignore`]: ../../README.md#importignore
 [`jsnext:main`]: https://github.com/rollup/rollup/wiki/jsnext:main

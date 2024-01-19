@@ -1,4 +1,4 @@
-# import/no-self-import
+# i/no-self-import
 
 <!-- end auto-generated rule header -->
 

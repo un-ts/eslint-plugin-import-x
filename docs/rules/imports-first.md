@@ -1,4 +1,4 @@
-# import/imports-first
+# i/imports-first
 
 ❌ This rule is deprecated.
 

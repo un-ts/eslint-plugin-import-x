@@ -1,4 +1,4 @@
-# import/no-nodejs-modules
+# i/no-nodejs-modules
 
 <!-- end auto-generated rule header -->
 
@@ -33,7 +33,7 @@ var _ = require('lodash')
 var foo = require('foo')
 var foo = require('./foo')
 
-/* eslint import/no-nodejs-modules: ["error", {"allow": ["path"]}] */
+/* eslint i/no-nodejs-modules: ["error", {"allow": ["path"]}] */
 import path from 'path'
 ```
 

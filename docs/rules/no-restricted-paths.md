@@ -1,4 +1,4 @@
-# import/no-restricted-paths
+# i/no-restricted-paths
 
 <!-- end auto-generated rule header -->
 

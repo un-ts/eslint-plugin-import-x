@@ -76,7 +76,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
 
     test({
       code: 'import "electron"',
-      settings: { 'import/core-modules': ['electron'] },
+      settings: { 'i/core-modules': ['electron'] },
     }),
     test({
       code: 'import "eslint"',
@@ -87,7 +87,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import "importType"',
       settings: {
-        'import/resolver': {
+        'i/resolver': {
           node: { paths: [path.join(__dirname, '../../files')] },
         },
       },
@@ -179,15 +179,15 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       code: 'import "not-a-dependency"',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
       options: [{ packageDir: packageDirMonoRepoRoot }],
-      settings: { 'import/core-modules': ['not-a-dependency'] },
+      settings: { 'i/core-modules': ['not-a-dependency'] },
     }),
     test({
       code: 'import "@generated/bar/module"',
-      settings: { 'import/core-modules': ['@generated/bar'] },
+      settings: { 'i/core-modules': ['@generated/bar'] },
     }),
     test({
       code: 'import "@generated/bar/and/sub/path"',
-      settings: { 'import/core-modules': ['@generated/bar'] },
+      settings: { 'i/core-modules': ['@generated/bar'] },
     }),
     // check if "rxjs" dependency declaration fix the "rxjs/operators subpackage
     test({
@@ -203,13 +203,13 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         import "alias/esm-package/esm-module";
         import 'expose-loader?exposes[]=$&exposes[]=jQuery!jquery';
       `,
-      settings: { 'import/resolver': 'webpack' },
+      settings: { 'i/resolver': 'webpack' },
     }),
 
     test({
       code: 'import "@custom-internal-alias/api/service";',
       settings: {
-        'import/resolver': {
+        'i/resolver': {
           webpack: {
             config: {
               resolve: {
@@ -487,7 +487,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     }),
     test({
       code: 'import chai from "alias/chai";',
-      settings: { 'import/resolver': 'webpack' },
+      settings: { 'i/resolver': 'webpack' },
       errors: [
         {
           // missing dependency is chai not alias
@@ -520,10 +520,10 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import "not-a-dependency"',
       settings: {
-        'import/resolver': {
+        'i/resolver': {
           node: { paths: [path.join(__dirname, '../../files')] },
         },
-        'import/internal-regex': '^not-a-dependency.*',
+        'i/internal-regex': '^not-a-dependency.*',
       },
       options: [{ includeInternal: true }],
       errors: [
@@ -544,8 +544,8 @@ describe('TypeScript', () => {
       const parserConfig = {
         parser,
         settings: {
-          'import/parsers': { [parser]: ['.ts'] },
-          'import/resolver': ['node', 'typescript'],
+          'i/parsers': { [parser]: ['.ts'] },
+          'i/resolver': ['node', 'typescript'],
         },
       }
 

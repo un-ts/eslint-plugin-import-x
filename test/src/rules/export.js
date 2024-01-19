@@ -169,8 +169,8 @@ describe('TypeScript', function () {
     const parserConfig = {
       parser,
       settings: {
-        'import/parsers': { [parser]: ['.ts'] },
-        'import/resolver': { 'eslint-import-resolver-typescript': true },
+        'i/parsers': { [parser]: ['.ts'] },
+        'i/resolver': { 'eslint-import-resolver-typescript': true },
       },
     }
 
@@ -355,7 +355,7 @@ describe('TypeScript', function () {
               filename: testFilePath('export-star-4/index.js'),
               settings: {
                 ...parserConfig.settings,
-                'import/extensions': ['.js', '.ts', '.jsx'],
+                'i/extensions': ['.js', '.ts', '.jsx'],
               },
             }),
       ),

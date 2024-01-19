@@ -1,4 +1,4 @@
-# import/no-deprecated
+# i/no-deprecated
 
 <!-- end auto-generated rule header -->
 
@@ -43,12 +43,12 @@ export function multiply(six, nine) {
 ```
 
 Only JSDoc is enabled by default. Other documentation styles can be enabled with
-the `import/docstyle` setting.
+the `i/docstyle` setting.
 
 ```yaml
 # .eslintrc.yml
 settings:
-  import/docstyle: ['jsdoc', 'tomdoc']
+  i/docstyle: ['jsdoc', 'tomdoc']
 ```
 
 ## Worklist

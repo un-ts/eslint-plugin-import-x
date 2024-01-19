@@ -1,4 +1,4 @@
-# import/newline-after-import
+# i/newline-after-import
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -148,7 +148,7 @@ const FOO = 'BAR'
 ```json
 {
   "rules": {
-    "import/newline-after-import": ["error", { "count": 2 }]
+    "i/newline-after-import": ["error", { "count": 2 }]
   }
 }
 ```

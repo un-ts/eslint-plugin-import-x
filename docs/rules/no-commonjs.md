@@ -1,4 +1,4 @@
-# import/no-commonjs
+# i/no-commonjs
 
 <!-- end auto-generated rule header -->
 

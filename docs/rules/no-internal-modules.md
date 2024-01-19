@@ -1,4 +1,4 @@
-# import/no-internal-modules
+# i/no-internal-modules
 
 <!-- end auto-generated rule header -->
 
@@ -38,7 +38,7 @@ And the .eslintrc file:
 {
   ...
   "rules": {
-    "import/no-internal-modules": [ "error", {
+    "i/no-internal-modules": [ "error", {
       "allow": [ "**/actions/*", "source-map-support/*" ],
     } ]
   }
@@ -100,7 +100,7 @@ And the .eslintrc file:
 {
   ...
   "rules": {
-    "import/no-internal-modules": [ "error", {
+    "i/no-internal-modules": [ "error", {
       "forbid": [ "**/actions/*", "source-map-support/*" ],
     } ]
   }

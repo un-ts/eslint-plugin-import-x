@@ -105,7 +105,7 @@ let prevSettings = null
 let memoizedHash = ''
 function fullResolve(modulePath, sourceFile, settings) {
   // check if this is a bonus core module
-  const coreSet = new Set(settings['import/core-modules'])
+  const coreSet = new Set(settings['i/core-modules'])
   if (coreSet.has(modulePath)) {
     return { found: true, path: null }
   }
@@ -146,8 +146,8 @@ function fullResolve(modulePath, sourceFile, settings) {
     }
   }
 
-  const configResolvers = settings['import/resolver'] || {
-    node: settings['import/resolve'],
+  const configResolvers = settings['i/resolver'] || {
+    node: settings['i/resolve'],
   } // backward compatibility
 
   const resolvers = resolverReducer(configResolvers, new Map())

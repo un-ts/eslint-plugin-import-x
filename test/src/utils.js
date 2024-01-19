@@ -112,29 +112,29 @@ export const SYNTAX_CASES = [
   // issue #267: parser opt-in extension list
   test({
     code: 'import json from "./data.json"',
-    settings: { 'import/extensions': ['.js'] }, // breaking: remove for v2
+    settings: { 'i/extensions': ['.js'] }, // breaking: remove for v2
   }),
 
   // JSON
   test({
     code: 'import foo from "./foobar.json";',
-    settings: { 'import/extensions': ['.js'] }, // breaking: remove for v2
+    settings: { 'i/extensions': ['.js'] }, // breaking: remove for v2
   }),
   test({
     code: 'import foo from "./foobar";',
-    settings: { 'import/extensions': ['.js'] }, // breaking: remove for v2
+    settings: { 'i/extensions': ['.js'] }, // breaking: remove for v2
   }),
 
   // issue #370: deep commonjs import
   test({
     code: 'import { foo } from "./issue-370-commonjs-namespace/bar"',
-    settings: { 'import/ignore': ['foo'] },
+    settings: { 'i/ignore': ['foo'] },
   }),
 
   // issue #348: deep commonjs re-export
   test({
     code: 'export * from "./issue-370-commonjs-namespace/bar"',
-    settings: { 'import/ignore': ['foo'] },
+    settings: { 'i/ignore': ['foo'] },
   }),
 
   test({

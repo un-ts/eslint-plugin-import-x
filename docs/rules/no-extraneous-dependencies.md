@@ -1,4 +1,4 @@
-# import/no-extraneous-dependencies
+# i/no-extraneous-dependencies
 
 <!-- end auto-generated rule header -->
 
@@ -23,13 +23,13 @@ Type imports are ignored by default.
 You can set the options like this:
 
 ```js
-"import/no-extraneous-dependencies": ["error", {"devDependencies": false, "optionalDependencies": false, "peerDependencies": false}]
+"i/no-extraneous-dependencies": ["error", {"devDependencies": false, "optionalDependencies": false, "peerDependencies": false}]
 ```
 
 You can also use an array of globs instead of literal booleans:
 
 ```js
-"import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.js", "**/*.spec.js"]}]
+"i/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.js", "**/*.spec.js"]}]
 ```
 
 When using an array of globs, the setting will be set to `true` (no errors reported) if the name of the file being linted (i.e. not the imported file/module) matches a single glob in the array, and `false` otherwise.
@@ -37,7 +37,7 @@ When using an array of globs, the setting will be set to `true` (no errors repor
 There are 2 boolean options to opt into checking extra imports that are normally ignored: `includeInternal`, which enables the checking of internal modules, and `includeTypes`, which enables checking of type imports in TypeScript.
 
 ```js
-"import/no-extraneous-dependencies": ["error", {"includeInternal": true, "includeTypes": true}]
+"i/no-extraneous-dependencies": ["error", {"includeInternal": true, "includeTypes": true}]
 ```
 
 Also there is one more option called `packageDir`, this option is to specify the path to the folder containing package.json.
@@ -45,16 +45,16 @@ Also there is one more option called `packageDir`, this option is to specify the
 If provided as a relative path string, will be computed relative to the current working directory at linter execution time. If this is not ideal (does not work with some editor integrations), consider using `__dirname` to provide a path relative to your configuration.
 
 ```js
-"import/no-extraneous-dependencies": ["error", {"packageDir": './some-dir/'}]
+"i/no-extraneous-dependencies": ["error", {"packageDir": './some-dir/'}]
 // or
-"import/no-extraneous-dependencies": ["error", {"packageDir": path.join(__dirname, 'some-dir')}]
+"i/no-extraneous-dependencies": ["error", {"packageDir": path.join(__dirname, 'some-dir')}]
 ```
 
 It may also be an array of multiple paths, to support monorepos or other novel project
 folder layouts:
 
 ```js
-"import/no-extraneous-dependencies": ["error", {"packageDir": ['./some-dir/', './root-pkg']}]
+"i/no-extraneous-dependencies": ["error", {"packageDir": ['./some-dir/', './root-pkg']}]
 ```
 
 ## Rule Details
@@ -95,23 +95,23 @@ import _ from 'lodash';
 
 import react from 'react';
 
-/* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": false}] */
+/* eslint i/no-extraneous-dependencies: ["error", {"devDependencies": false}] */
 import test from 'ava';
 var test = require('ava');
 
-/* eslint import/no-extraneous-dependencies: ["error", {"optionalDependencies": false}] */
+/* eslint i/no-extraneous-dependencies: ["error", {"optionalDependencies": false}] */
 import isArray from 'lodash.isarray';
 var isArray = require('lodash.isarray');
 
-/* eslint import/no-extraneous-dependencies: ["error", {"bundledDependencies": false}] */
+/* eslint i/no-extraneous-dependencies: ["error", {"bundledDependencies": false}] */
 import foo from '"@generated/foo"';
 var foo = require('"@generated/foo"');
 
-/* eslint import/no-extraneous-dependencies: ["error", {"includeInternal": true}] */
+/* eslint i/no-extraneous-dependencies: ["error", {"includeInternal": true}] */
 import foo from './foo';
 var foo = require('./foo');
 
-/* eslint import/no-extraneous-dependencies: ["error", {"includeTypes": true}] */
+/* eslint i/no-extraneous-dependencies: ["error", {"includeTypes": true}] */
 import type { MyType } from 'foo';
 ```
 
@@ -128,7 +128,7 @@ import isArray from 'lodash.isarray';
 import foo from '"@generated/foo"';
 import type { MyType } from 'foo';
 
-/* eslint import/no-extraneous-dependencies: ["error", {"peerDependencies": true}] */
+/* eslint i/no-extraneous-dependencies: ["error", {"peerDependencies": true}] */
 import react from 'react';
 ```
 

@@ -21,7 +21,7 @@ function baseModule(name) {
 }
 
 function isInternalRegexMatch(name, settings) {
-  const internalScope = settings && settings['import/internal-regex']
+  const internalScope = settings && settings['i/internal-regex']
   return internalScope && new RegExp(internalScope).test(name)
 }
 
@@ -35,7 +35,7 @@ export function isBuiltIn(name, settings, path) {
     return false
   }
   const base = baseModule(name)
-  const extras = (settings && settings['import/core-modules']) || []
+  const extras = (settings && settings['i/core-modules']) || []
   return isCoreModule(base) || extras.indexOf(base) > -1
 }
 
@@ -105,7 +105,7 @@ function isExternalPath(path, context) {
     return true
   }
 
-  const folders = (settings && settings['import/external-module-folders']) || [
+  const folders = (settings && settings['i/external-module-folders']) || [
     'node_modules',
   ]
   return folders.some(folder => {

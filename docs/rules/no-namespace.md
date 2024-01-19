@@ -1,4 +1,4 @@
-# import/no-namespace
+# i/no-namespace
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -25,7 +25,7 @@ import defaultExport, { a, b } from './foobar'
 ```
 
 ```js
-/* eslint import/no-namespace: ["error", {ignore: ['*.ext']}] */
+/* eslint i/no-namespace: ["error", {ignore: ['*.ext']}] */
 import * as bar from './ignored-module.ext'
 ```
 

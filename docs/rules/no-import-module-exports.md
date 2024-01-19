@@ -1,4 +1,4 @@
-# import/no-import-module-exports
+# i/no-import-module-exports
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -19,7 +19,7 @@ If you have multiple entry points or are using `js:next` this rule includes an
   in the `some-file.js` file.
 
 ```json
-"import/no-import-module-exports": ["error", {
+"i/no-import-module-exports": ["error", {
     "exceptions": ["**/*/some-file.js"]
 }]
 ```
@@ -71,7 +71,7 @@ import foo from 'path'
 module.exports = foo
 
 // in some-file.js
-// eslint import/no-import-module-exports: ["error", {"exceptions": ["**/*/some-file.js"]}]
+// eslint i/no-import-module-exports: ["error", {"exceptions": ["**/*/some-file.js"]}]
 import foo from 'path'
 module.exports = foo
 ```

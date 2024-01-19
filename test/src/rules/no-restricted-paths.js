@@ -763,8 +763,8 @@ ruleTester.run('no-restricted-paths', rule, {
 context('Typescript', function () {
   getTSParsers().forEach(parser => {
     const settings = {
-      'import/parsers': { [parser]: ['.ts'] },
-      'import/resolver': { 'eslint-import-resolver-typescript': true },
+      'i/parsers': { [parser]: ['.ts'] },
+      'i/resolver': { 'eslint-import-resolver-typescript': true },
     }
     ruleTester.run('no-restricted-paths', rule, {
       valid: [
