@@ -20,7 +20,8 @@
   },
   "overrides": [
     {
-      "files": "test/src/**/*.js",
+      "files": "test/src/**/*.spec.js",
+      "extends": "plugin:jest/recommended",
       "env": {
         "jest": true
       }
