@@ -11,7 +11,7 @@ const flatMap = Function.bind.bind(Function.prototype.call)(
 let typescriptPkg
 try {
   typescriptPkg = require('typescript/package.json') // eslint-disable-line i/no-extraneous-dependencies
-} catch (e) {
+} catch {
   /**/
 }
 
@@ -47,7 +47,7 @@ function getFix(first, rest, sourceCode, context) {
   // `sourceCode.getCommentsBefore` was added in 4.0, so that's an easy thing to
   // check for.
   if (typeof sourceCode.getCommentsBefore !== 'function') {
-    return undefined
+    return
   }
 
   // Adjusting the first import might make it multiline, which could break
@@ -55,7 +55,7 @@ function getFix(first, rest, sourceCode, context) {
   // import has comments. Also, if the first import is `import * as ns from
   // './foo'` there's nothing we can do.
   if (hasProblematicComments(first, sourceCode) || hasNamespace(first)) {
-    return undefined
+    return
   }
 
   const defaultImportNames = new Set(
@@ -65,7 +65,7 @@ function getFix(first, rest, sourceCode, context) {
   // Bail if there are multiple different default import names – it's up to the
   // user to choose which one to keep.
   if (defaultImportNames.size > 1) {
-    return undefined
+    return
   }
 
   // Leave it to the user to handle comments. Also skip `import * as ns from
@@ -81,7 +81,7 @@ function getFix(first, rest, sourceCode, context) {
       const closeBrace = tokens.find(token => isPunctuator(token, '}'))
 
       if (openBrace == null || closeBrace == null) {
-        return undefined
+        return
       }
 
       return {
@@ -107,7 +107,7 @@ function getFix(first, rest, sourceCode, context) {
   const shouldRemoveUnnecessary = unnecessaryImports.length > 0
 
   if (!(shouldAddDefault || shouldAddSpecifiers || shouldRemoveUnnecessary)) {
-    return undefined
+    return
   }
 
   return fixer => {
@@ -225,7 +225,7 @@ function getFix(first, rest, sourceCode, context) {
         importNode.range[1],
         importNode.range[1] + 1,
       ]
-      const charAfterImport = sourceCode.text.substring(
+      const charAfterImport = sourceCode.text.slice(
         charAfterImportRange[0],
         charAfterImportRange[1],
       )
@@ -241,7 +241,7 @@ function getFix(first, rest, sourceCode, context) {
       fixes.push(fixer.remove(node))
 
       const charAfterImportRange = [node.range[1], node.range[1] + 1]
-      const charAfterImport = sourceCode.text.substring(
+      const charAfterImport = sourceCode.text.slice(
         charAfterImportRange[0],
         charAfterImportRange[1],
       )
@@ -263,7 +263,7 @@ function getDefaultImportName(node) {
   const defaultSpecifier = node.specifiers.find(
     specifier => specifier.type === 'ImportDefaultSpecifier',
   )
-  return defaultSpecifier != null ? defaultSpecifier.local.name : undefined
+  return defaultSpecifier == null ? undefined : defaultSpecifier.local.name
 }
 
 // Checks whether `node` has a namespace import.

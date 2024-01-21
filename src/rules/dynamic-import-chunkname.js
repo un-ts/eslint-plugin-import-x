@@ -40,9 +40,9 @@ module.exports = {
       webpackChunknameFormat = '([0-9a-zA-Z-_/.]|\\[(request|index)\\])+',
     } = config || {}
 
-    const paddedCommentRegex = /^ (\S[\s\S]+\S) $/
+    const paddedCommentRegex = /^ (\S[\S\s]+\S) $/
     const commentStyleRegex =
-      /^( ((webpackChunkName: .+)|((webpackPrefetch|webpackPreload): (true|false|-?[0-9]+))|(webpackIgnore: (true|false))|((webpackInclude|webpackExclude): \/.*\/)|(webpackMode: ["'](lazy|lazy-once|eager|weak)["'])|(webpackExports: (['"]\w+['"]|\[(['"]\w+['"], *)+(['"]\w+['"]*)\]))),?)+ $/
+      /^( ((webpackChunkName: .+)|((webpackPrefetch|webpackPreload): (true|false|-?\d+))|(webpackIgnore: (true|false))|((webpackInclude|webpackExclude): \/.*\/)|(webpackMode: ["'](lazy|lazy-once|eager|weak)["'])|(webpackExports: (["']\w+["']|\[(["']\w+["'], *)+(["']\w+["']*)]))),?)+ $/
     const chunkSubstrFormat = ` webpackChunkName: ["']${webpackChunknameFormat}["'],? `
     const chunkSubstrRegex = new RegExp(chunkSubstrFormat)
 
@@ -84,7 +84,7 @@ module.exports = {
         try {
           // just like webpack itself does
           vm.runInNewContext(`(function() {return {${comment.value}}})()`)
-        } catch (error) {
+        } catch {
           context.report({
             node,
             message: `dynamic imports require a "webpack" comment with valid syntax`,
@@ -121,7 +121,7 @@ module.exports = {
       CallExpression(node) {
         if (
           node.callee.type !== 'Import' &&
-          importFunctions.indexOf(node.callee.name) < 0
+          !importFunctions.includes(node.callee.name)
         ) {
           return
         }

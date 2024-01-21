@@ -6,7 +6,7 @@ exports.default = function declaredScope(context, name) {
   const { references } = context.getScope()
   const reference = references.find(x => x.identifier.name === name)
   if (!reference) {
-    return undefined
+    return
   }
   return reference.resolved.scope.type
 }

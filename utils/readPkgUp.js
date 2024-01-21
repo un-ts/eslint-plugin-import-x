@@ -45,10 +45,10 @@ exports.default = function readPkgUp(opts) {
 
   try {
     return {
-      pkg: JSON.parse(stripBOM(fs.readFileSync(fp, { encoding: 'utf-8' }))),
+      pkg: JSON.parse(stripBOM(fs.readFileSync(fp, { encoding: 'utf8' }))),
       path: fp,
     }
-  } catch (e) {
+  } catch {
     return {}
   }
 }

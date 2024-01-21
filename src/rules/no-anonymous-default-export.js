@@ -1,8 +1,3 @@
-/**
- * @fileoverview Rule to disallow anonymous default exports.
- * @author Duncan Beevers
- */
-
 import docsUrl from '../docsUrl'
 
 const hasOwn = Function.bind.bind(Function.prototype.call)(

@@ -1,13 +1,13 @@
 import docsUrl from '../docsUrl'
 
-import resolve, {
-  CASE_SENSITIVE_FS,
-  fileExistsWithCaseSync,
-} from 'eslint-module-utils/resolve'
 import ModuleCache from 'eslint-module-utils/ModuleCache'
 import moduleVisitor, {
   makeOptionsSchema,
 } from 'eslint-module-utils/moduleVisitor'
+import resolve, {
+  CASE_SENSITIVE_FS,
+  fileExistsWithCaseSync,
+} from 'eslint-module-utils/resolve'
 
 module.exports = {
   meta: {
@@ -43,6 +43,7 @@ module.exports = {
 
       const resolvedPath = resolve(source.value, context)
 
+      // `null` means builtin core module
       if (resolvedPath === undefined) {
         context.report(
           source,

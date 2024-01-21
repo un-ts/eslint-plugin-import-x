@@ -6,6 +6,14 @@ function getImportValue(node) {
     : node.moduleReference.expression.value
 }
 
+function isPossibleDirective(node) {
+  return (
+    node.type === 'ExpressionStatement' &&
+    node.expression.type === 'Literal' &&
+    typeof node.expression.value === 'string'
+  )
+}
+
 module.exports = {
   meta: {
     type: 'suggestion',
@@ -24,14 +32,6 @@ module.exports = {
   },
 
   create(context) {
-    function isPossibleDirective(node) {
-      return (
-        node.type === 'ExpressionStatement' &&
-        node.expression.type === 'Literal' &&
-        typeof node.expression.value === 'string'
-      )
-    }
-
     return {
       Program(n) {
         const body = n.body
@@ -49,9 +49,9 @@ module.exports = {
         const errorInfos = []
         let shouldSort = true
         let lastSortNodesIndex = 0
-        body.forEach(function (node, index) {
+        for (const [index, node] of body.entries()) {
           if (!anyExpressions && isPossibleDirective(node)) {
-            return
+            continue
           }
 
           anyExpressions = true
@@ -80,7 +80,7 @@ module.exports = {
                   break
                 }
                 const references = variable.references
-                if (references.length) {
+                if (references.length > 0) {
                   for (const reference of references) {
                     if (reference.identifier.range[0] < node.range[1]) {
                       shouldSort = false
@@ -100,11 +100,11 @@ module.exports = {
           } else {
             nonImportCount++
           }
-        })
-        if (!errorInfos.length) {
+        }
+        if (errorInfos.length === 0) {
           return
         }
-        errorInfos.forEach(function (errorInfo, index) {
+        for (const [index, errorInfo] of errorInfos.entries()) {
           const node = errorInfo.node
           const infos = {
             node,
@@ -143,20 +143,20 @@ module.exports = {
                 ? fixer.insertTextAfter(lastLegalImp, insertSourceCode)
                 : fixer.insertTextBefore(body[0], insertSourceCode)
 
-              const fixers = [insertFixer].concat(removeFixers)
-              fixers.forEach((computedFixer, i) => {
+              const fixers = [insertFixer, ...removeFixers]
+              for (const [i, computedFixer] of fixers.entries()) {
                 replaceSourceCode +=
                   originSourceCode.slice(
                     fixers[i - 1] ? fixers[i - 1].range[1] : 0,
                     computedFixer.range[0],
                   ) + computedFixer.text
-              })
+              }
 
               return fixer.replaceTextRange(range, replaceSourceCode)
             }
           }
           context.report(infos)
-        })
+        }
       },
     }
   },

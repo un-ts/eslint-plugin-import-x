@@ -5,7 +5,7 @@ exports.__esModule = true
 const Module = require('module')
 const path = require('path')
 
-// borrowed from babel-eslint
+// borrowed from @babel/eslint-parser
 function createModule(filename) {
   const mod = new Module(filename)
   mod.filename = filename
@@ -13,20 +13,25 @@ function createModule(filename) {
   return mod
 }
 
+/**
+ * @template T
+ * @param {string} p
+ * @returns {T}
+ */
 module.exports = function moduleRequire(p) {
   try {
     // attempt to get espree relative to eslint
     const eslintPath = require.resolve('eslint')
     const eslintModule = createModule(eslintPath)
     return require(Module._resolveFilename(p, eslintModule))
-  } catch (err) {
+  } catch {
     /* ignore */
   }
 
   try {
     // try relative to entry point
     return require.main.require(p)
-  } catch (err) {
+  } catch {
     /* ignore */
   }
 

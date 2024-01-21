@@ -58,7 +58,9 @@ module.exports = {
 
     const options = context.options[0] || {}
     const maxDepth =
-      typeof options.maxDepth === 'number' ? options.maxDepth : Infinity
+      typeof options.maxDepth === 'number'
+        ? options.maxDepth
+        : Number.POSITIVE_INFINITY
     const ignoreModule = name =>
       options.ignoreExternal &&
       isExternalModule(name, resolve(name, context), context)

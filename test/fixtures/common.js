@@ -3,6 +3,6 @@ module.exports = {
   b: 2,
 }
 
-var c = 3
+let c = 3
 
 exports.d = c

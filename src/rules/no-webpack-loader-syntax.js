@@ -3,7 +3,7 @@ import docsUrl from '../docsUrl'
 import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 
 function reportIfNonStandard(context, node, name) {
-  if (name && name.indexOf('!') !== -1) {
+  if (name && name.includes('!')) {
     context.report(
       node,
       `Unexpected '!' in '${name}'. Do not use import syntax to configure webpack loaders.`,

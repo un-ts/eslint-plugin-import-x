@@ -106,58 +106,58 @@ function create(context) {
     'Program:exit': function onExit() {
       // Report multiple `export` declarations (ES2015 modules)
       if (nodes.modules.set.size > 1) {
-        nodes.modules.set.forEach(node => {
+        for (const node of nodes.modules.set) {
           context.report({
             node,
             message: errors[node.type],
           })
-        })
+        }
       }
 
       // Report multiple `aggregated exports` from the same module (ES2015 modules)
-      flat(
+      for (const node of flat(
         values(nodes.modules.sources).filter(
           nodesWithSource =>
             Array.isArray(nodesWithSource) && nodesWithSource.length > 1,
         ),
-      ).forEach(node => {
+      )) {
         context.report({
           node,
           message: errors[node.type],
         })
-      })
+      }
 
       // Report multiple `export type` declarations (FLOW ES2015 modules)
       if (nodes.types.set.size > 1) {
-        nodes.types.set.forEach(node => {
+        for (const node of nodes.types.set) {
           context.report({
             node,
             message: errors[node.type],
           })
-        })
+        }
       }
 
       // Report multiple `aggregated type exports` from the same module (FLOW ES2015 modules)
-      flat(
+      for (const node of flat(
         values(nodes.types.sources).filter(
           nodesWithSource =>
             Array.isArray(nodesWithSource) && nodesWithSource.length > 1,
         ),
-      ).forEach(node => {
+      )) {
         context.report({
           node,
           message: errors[node.type],
         })
-      })
+      }
 
       // Report multiple `module.exports` assignments (CommonJS)
       if (nodes.commonjs.set.size > 1) {
-        nodes.commonjs.set.forEach(node => {
+        for (const node of nodes.commonjs.set) {
           context.report({
             node,
             message: errors[node.type],
           })
-        })
+        }
       }
     },
   }

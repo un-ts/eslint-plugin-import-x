@@ -10,3 +10,4 @@ test/fixtures/cycles/flow-typeof.js
 test/fixtures/flowtypes.js
 # unexpected - TODO: report to babel
 test/fixtures/jsx.js
+!/.*.js

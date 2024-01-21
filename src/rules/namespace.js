@@ -1,6 +1,6 @@
 import Exports from '../ExportMap'
-import importDeclaration from '../importDeclaration'
 import docsUrl from '../docsUrl'
+import importDeclaration from '../importDeclaration'
 
 import declaredScope from 'eslint-module-utils/declaredScope'
 
@@ -23,10 +23,10 @@ function processBodyStatement(context, namespaces, declaration) {
     return
   }
 
-  declaration.specifiers.forEach(specifier => {
+  for (const specifier of declaration.specifiers) {
     switch (specifier.type) {
-      case 'ImportNamespaceSpecifier':
-        if (!imports.size) {
+      case 'ImportNamespaceSpecifier': {
+        if (imports.size === 0) {
           context.report(
             specifier,
             `No exported names found in module '${declaration.source.value}'.`,
@@ -34,6 +34,7 @@ function processBodyStatement(context, namespaces, declaration) {
         }
         namespaces.set(specifier.local.name, imports)
         break
+      }
       case 'ImportDefaultSpecifier':
       case 'ImportSpecifier': {
         const meta = imports.get(
@@ -50,7 +51,11 @@ function processBodyStatement(context, namespaces, declaration) {
       }
       default:
     }
-  })
+  }
+}
+
+function makeMessage(last, namepath) {
+  return `'${last.name}' not found in ${namepath.length > 1 ? 'deeply ' : ''}imported namespace '${namepath.join('.')}'.`
 }
 
 module.exports = {
@@ -85,16 +90,12 @@ module.exports = {
 
     const namespaces = new Map()
 
-    function makeMessage(last, namepath) {
-      return `'${last.name}' not found in ${namepath.length > 1 ? 'deeply ' : ''}imported namespace '${namepath.join('.')}'.`
-    }
-
     return {
       // pick up all imports at body entry time, to properly respect hoisting
       Program({ body }) {
-        body.forEach(x => {
+        for (const x of body) {
           processBodyStatement(context, namespaces, x)
-        })
+        }
       },
 
       // same as above, but does not add names to local map
@@ -106,12 +107,12 @@ module.exports = {
           return null
         }
 
-        if (imports.errors.length) {
+        if (imports.errors.length > 0) {
           imports.reportErrors(context, declaration)
           return
         }
 
-        if (!imports.size) {
+        if (imports.size === 0) {
           context.report(
             namespace,
             `No exported names found in module '${declaration.source.value}'.`,

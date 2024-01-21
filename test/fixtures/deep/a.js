@@ -1,2 +1,1 @@
-import * as b from './b'
-export { b }
+export * as b from './b'

@@ -79,8 +79,8 @@ and the current configuration is set to:
 {
   "zones": [
     {
-      "target": "./tests/files/restricted-paths/server/one",
-      "from": "./tests/files/restricted-paths/server",
+      "target": "./test/fixtures/restricted-paths/server/one",
+      "from": "./test/fixtures/restricted-paths/server",
       "except": ["./one"]
     }
   ]
@@ -119,8 +119,8 @@ and the current configuration is set to:
 {
   "zones": [
     {
-      "target": "./tests/files/restricted-paths/client/!(sub-module)/**/*",
-      "from": "./tests/files/restricted-paths/client/sub-module/**/*"
+      "target": "./test/fixtures/restricted-paths/client/!(sub-module)/**/*",
+      "from": "./test/fixtures/restricted-paths/client/sub-module/**/*"
     }
   ]
 }
@@ -162,12 +162,12 @@ and the current configuration is set to:
   "zones": [
     {
       "target": [
-        "./tests/files/restricted-paths/two/*",
-        "./tests/files/restricted-paths/three/*"
+        "./test/fixtures/restricted-paths/two/*",
+        "./test/fixtures/restricted-paths/three/*"
       ],
       "from": [
-        "./tests/files/restricted-paths/one",
-        "./tests/files/restricted-paths/three"
+        "./test/fixtures/restricted-paths/one",
+        "./test/fixtures/restricted-paths/three"
       ]
     }
   ]

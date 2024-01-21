@@ -20,7 +20,7 @@ import resolve from 'eslint-module-utils/resolve'
  * @returns {string} relative posix path that always starts with a ./
  **/
 function toRelativePath(relativePath) {
-  const stripped = relativePath.replace(/\/$/g, '') // Remove trailing /
+  const stripped = relativePath.replaceAll(/\/$/g, '') // Remove trailing /
 
   return /^((\.\.)|(\.))($|\/)/.test(stripped) ? stripped : `./${stripped}`
 }
@@ -94,7 +94,7 @@ module.exports = {
 
       const fileExtensions = getFileExtensions(context.settings)
       const regexUnnecessaryIndex = new RegExp(
-        `.*\\/index(\\${Array.from(fileExtensions).join('|\\')})?$`,
+        `.*\\/index(\\${[...fileExtensions].join('|\\')})?$`,
       )
 
       // Check if path contains unnecessary index (including a configured extension)
@@ -123,6 +123,7 @@ module.exports = {
       }
 
       // Path is not existing --> Return directly (following code requires path to be defined)
+      // `null` means builtin core module
       if (resolvedPath === undefined) {
         return
       }

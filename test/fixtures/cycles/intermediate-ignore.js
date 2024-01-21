@@ -1,2 +1,1 @@
-import foo from './ignore'
-export { foo }
+export { default as foo } from './ignore'

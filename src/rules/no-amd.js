@@ -1,8 +1,3 @@
-/**
- * @fileoverview Rule to prefer imports to AMD
- * @author Jamund Ferguson
- */
-
 import docsUrl from '../docsUrl'
 
 //------------------------------------------------------------------------------

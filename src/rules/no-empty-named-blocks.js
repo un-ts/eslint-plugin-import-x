@@ -50,8 +50,8 @@ module.exports = {
           ),
         ])
 
-        importsTokens.forEach(([node, tokens]) => {
-          tokens.forEach(token => {
+        for (const [node, tokens] of importsTokens) {
+          for (const token of tokens) {
             const idx = program.tokens.indexOf(token)
             const nextToken = program.tokens[idx + 1]
 
@@ -66,7 +66,17 @@ module.exports = {
 
               // If it has no other identifiers it's the only thing in the import, so we can either remove the import
               // completely or transform it in a side-effects only import
-              if (!hasOtherIdentifiers) {
+              if (hasOtherIdentifiers) {
+                context.report({
+                  node,
+                  message: 'Unexpected empty named import block',
+                  fix(fixer) {
+                    return fixer.removeRange(
+                      getEmptyBlockRange(program.tokens, idx),
+                    )
+                  },
+                })
+              } else {
                 context.report({
                   node,
                   message: 'Unexpected empty named import block',
@@ -111,20 +121,10 @@ module.exports = {
                     },
                   ],
                 })
-              } else {
-                context.report({
-                  node,
-                  message: 'Unexpected empty named import block',
-                  fix(fixer) {
-                    return fixer.removeRange(
-                      getEmptyBlockRange(program.tokens, idx),
-                    )
-                  },
-                })
               }
             }
-          })
-        })
+          }
+        }
       },
     }
   },

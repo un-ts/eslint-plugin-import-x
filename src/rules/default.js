@@ -27,9 +27,9 @@ module.exports = {
         return
       }
 
-      if (imports.errors.length) {
+      if (imports.errors.length > 0) {
         imports.reportErrors(context, node)
-      } else if (imports.get('default') === undefined) {
+      } else if (imports.get('default') == null) {
         context.report({
           node: defaultSpecifier,
           message: `No default export found in imported module "${node.source.value}".`,

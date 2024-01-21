@@ -1,8 +1,3 @@
-/**
- * @fileoverview Rule to disallow namespace import
- * @author Radek Benkel
- */
-
 import minimatch from 'minimatch'
 
 import docsUrl from '../docsUrl'
@@ -43,8 +38,7 @@ module.exports = {
     return {
       ImportNamespaceSpecifier(node) {
         if (
-          ignoreGlobs &&
-          ignoreGlobs.find(glob =>
+          ignoreGlobs?.some(glob =>
             minimatch(node.parent.source.value, glob, { matchBase: true }),
           )
         ) {
@@ -75,7 +69,7 @@ module.exports = {
               // Pass 1: Collect variable names that are already in scope for each reference we want
               // to transform, so that we can be sure that we choose non-conflicting import names
               const importNameConflicts = {}
-              namespaceIdentifiers.forEach(identifier => {
+              for (const identifier of namespaceIdentifiers) {
                 const parent = identifier.parent
                 if (parent && parent.type === 'MemberExpression') {
                   const importName = getMemberPropertyName(parent)
@@ -83,15 +77,14 @@ module.exports = {
                     scopeManager,
                     parent,
                   )
-                  if (!importNameConflicts[importName]) {
-                    importNameConflicts[importName] = localConflicts
+                  if (importNameConflicts[importName]) {
+                    for (const c of localConflicts)
+                      importNameConflicts[importName].add(c)
                   } else {
-                    localConflicts.forEach(c =>
-                      importNameConflicts[importName].add(c),
-                    )
+                    importNameConflicts[importName] = localConflicts
                   }
                 }
-              })
+              }
 
               // Choose new names for each import
               const importNames = Object.keys(importNameConflicts)
@@ -115,7 +108,7 @@ module.exports = {
               )
 
               // Pass 2: Replace references to the namespace with references to the named imports
-              namespaceIdentifiers.forEach(identifier => {
+              for (const identifier of namespaceIdentifiers) {
                 const parent = identifier.parent
                 if (parent && parent.type === 'MemberExpression') {
                   const importName = getMemberPropertyName(parent)
@@ -123,7 +116,7 @@ module.exports = {
                     fixer.replaceText(parent, importLocalNames[importName]),
                   )
                 }
-              })
+              }
 
               return fixes
             }),
@@ -188,21 +181,21 @@ function getVariableNamesInScope(scopeManager, node) {
  */
 function generateLocalNames(names, nameConflicts, namespaceName) {
   const localNames = {}
-  names.forEach(name => {
+  for (const name of names) {
     let localName
     if (!nameConflicts[name].has(name)) {
       localName = name
-    } else if (!nameConflicts[name].has(`${namespaceName}_${name}`)) {
-      localName = `${namespaceName}_${name}`
-    } else {
-      for (let i = 1; i < Infinity; i++) {
+    } else if (nameConflicts[name].has(`${namespaceName}_${name}`)) {
+      for (let i = 1; i < Number.POSITIVE_INFINITY; i++) {
         if (!nameConflicts[name].has(`${namespaceName}_${name}_${i}`)) {
           localName = `${namespaceName}_${name}_${i}`
           break
         }
       }
+    } else {
+      localName = `${namespaceName}_${name}`
     }
     localNames[name] = localName
-  })
+  }
   return localNames
 }

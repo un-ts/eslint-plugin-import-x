@@ -41,7 +41,7 @@ const tsTypePrefix = 'type:'
  * @returns {boolean}
  */
 function isTypescriptFunctionOverloads(nodes) {
-  const nodesArr = Array.from(nodes)
+  const nodesArr = [...nodes]
 
   const idents = flatMap(nodesArr, node =>
     node.declaration &&
@@ -78,7 +78,7 @@ function isTypescriptFunctionOverloads(nodes) {
  */
 function isTypescriptNamespaceMerging(nodes) {
   const types = new Set(Array.from(nodes, node => node.parent.type))
-  const noNamespaceNodes = Array.from(nodes).filter(
+  const noNamespaceNodes = [...nodes].filter(
     node => node.parent.type !== 'TSModuleDeclaration',
   )
 
@@ -233,7 +233,7 @@ module.exports = {
           return
         }
 
-        if (remoteExports.errors.length) {
+        if (remoteExports.errors.length > 0) {
           remoteExports.reportErrors(context, node)
           return
         }
@@ -241,12 +241,12 @@ module.exports = {
         const parent = getParent(node)
 
         let any = false
-        remoteExports.forEach((v, name) => {
+        for (const name of Object.keys(remoteExports)) {
           if (name !== 'default') {
             any = true // poor man's filter
             addNamed(name, node, parent)
           }
-        })
+        }
 
         if (!any) {
           context.report(

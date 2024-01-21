@@ -1,9 +1,9 @@
 // see issue #36
 
 // Foo.jsx
-class Foo {
+const Foo = {
   // ES7 static members
-  static bar = true
+  bar: true,
 }
 
 export default Foo

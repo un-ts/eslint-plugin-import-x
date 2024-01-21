@@ -8,8 +8,8 @@ import { getFilePackageName } from '../core/packagePath'
 import docsUrl from '../docsUrl'
 
 import moduleVisitor from 'eslint-module-utils/moduleVisitor'
-import resolve from 'eslint-module-utils/resolve'
 import pkgUp from 'eslint-module-utils/pkgUp'
+import resolve from 'eslint-module-utils/resolve'
 
 const depFieldCache = new Map()
 
@@ -26,9 +26,9 @@ function arrayOrKeys(arrayOrObject) {
 function readJSON(jsonPath, throwException) {
   try {
     return JSON.parse(fs.readFileSync(jsonPath, 'utf8'))
-  } catch (err) {
+  } catch (error) {
     if (throwException) {
-      throw err
+      throw error
     }
   }
 }
@@ -68,22 +68,20 @@ function getDependencies(context, packageDir) {
     }
 
     if (packageDir && packageDir.length > 0) {
-      if (!Array.isArray(packageDir)) {
-        paths = [path.resolve(packageDir)]
-      } else {
-        paths = packageDir.map(dir => path.resolve(dir))
-      }
+      paths = Array.isArray(packageDir)
+        ? packageDir.map(dir => path.resolve(dir))
+        : [path.resolve(packageDir)]
     }
 
     if (paths.length > 0) {
       // use rule config to find package.json
-      paths.forEach(dir => {
+      for (const dir of paths) {
         const packageJsonPath = path.join(dir, 'package.json')
         const _packageContent = getPackageDepFields(packageJsonPath, true)
-        Object.keys(packageContent).forEach(depsKey => {
+        for (const depsKey of Object.keys(packageContent)) {
           Object.assign(packageContent[depsKey], _packageContent[depsKey])
-        })
-      })
+        }
+      }
     } else {
       const packageJsonPath = pkgUp({
         cwd: context.getPhysicalFilename
@@ -109,16 +107,16 @@ function getDependencies(context, packageDir) {
     }
 
     return packageContent
-  } catch (e) {
-    if (paths.length > 0 && e.code === 'ENOENT') {
+  } catch (error) {
+    if (paths.length > 0 && error.code === 'ENOENT') {
       context.report({
         message: 'The package.json file could not be found.',
         loc: { line: 0, column: 0 },
       })
     }
-    if (e.name === 'JSONError' || e instanceof SyntaxError) {
+    if (error.name === 'JSONError' || error instanceof SyntaxError) {
       context.report({
-        message: `The package.json file could not be parsed: ${e.message}`,
+        message: `The package.json file could not be parsed: ${error.message}`,
         loc: { line: 0, column: 0 },
       })
     }
@@ -161,12 +159,12 @@ function checkDependencyDeclaration(deps, packageName, declarationStatus) {
   // check the dependencies on all hierarchy
   const packageHierarchy = []
   const packageNameParts = packageName ? packageName.split('/') : []
-  packageNameParts.forEach((namePart, index) => {
+  for (const [index, namePart] of packageNameParts.entries()) {
     if (!namePart.startsWith('@')) {
       const ancestor = packageNameParts.slice(0, index + 1).join('/')
       packageHierarchy.push(ancestor)
     }
-  })
+  }
 
   return packageHierarchy.reduce(
     (result, ancestorName) => ({
@@ -182,7 +180,7 @@ function checkDependencyDeclaration(deps, packageName, declarationStatus) {
         deps.peerDependencies[ancestorName] !== undefined,
       isInBundledDeps:
         result.isInBundledDeps ||
-        deps.bundledDependencies.indexOf(ancestorName) !== -1,
+        deps.bundledDependencies.includes(ancestorName),
     }),
     newDeclarationStatus,
   )
@@ -196,7 +194,7 @@ function reportIfMissing(context, deps, depsOptions, node, name) {
       node.importKind === 'typeof' ||
       node.exportKind === 'type' ||
       (Array.isArray(node.specifiers) &&
-        node.specifiers.length &&
+        node.specifiers.length > 0 &&
         node.specifiers.every(
           specifier =>
             specifier.importKind === 'type' ||
@@ -278,7 +276,7 @@ function reportIfMissing(context, deps, depsOptions, node, name) {
 
 function testConfig(config, filename) {
   // Simplest configuration first, either a boolean or nothing.
-  if (typeof config === 'boolean' || typeof config === 'undefined') {
+  if (typeof config === 'boolean' || config == null) {
     return config
   }
   // Array of globs.

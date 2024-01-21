@@ -1,6 +1,6 @@
 import Exports from '../ExportMap'
-import importDeclaration from '../importDeclaration'
 import docsUrl from '../docsUrl'
+import importDeclaration from '../importDeclaration'
 
 module.exports = {
   meta: {
@@ -28,7 +28,7 @@ module.exports = {
         return
       }
 
-      if (imports.errors.length) {
+      if (imports.errors.length > 0) {
         imports.reportErrors(context, declaration)
         return
       }

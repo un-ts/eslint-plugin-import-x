@@ -14,9 +14,9 @@ module.exports = {
   create(context) {
     return {
       ImportDeclaration(node) {
-        node.specifiers.forEach(function (im) {
+        for (const im of node.specifiers) {
           if (im.importKind === 'type' || im.importKind === 'typeof') {
-            return
+            continue
           }
 
           if (
@@ -28,7 +28,7 @@ module.exports = {
               message: `Use default import syntax to import '${im.local.name}'.`,
             })
           }
-        })
+        }
       },
     }
   },

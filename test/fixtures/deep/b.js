@@ -1,3 +1,3 @@
-import * as c from './c'
-export { c }
 export default 'b'
+
+export * as c from './c'

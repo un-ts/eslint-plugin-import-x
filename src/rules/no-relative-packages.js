@@ -3,15 +3,15 @@ import path from 'path'
 import importType from '../core/importType'
 import docsUrl from '../docsUrl'
 
-import readPkgUp from 'eslint-module-utils/readPkgUp'
-import resolve from 'eslint-module-utils/resolve'
 import moduleVisitor, {
   makeOptionsSchema,
 } from 'eslint-module-utils/moduleVisitor'
+import readPkgUp from 'eslint-module-utils/readPkgUp'
+import resolve from 'eslint-module-utils/resolve'
 
 /** @param {string} filePath */
 function toPosixPath(filePath) {
-  return filePath.replace(/\\/g, '/')
+  return filePath.replaceAll('\\', '/')
 }
 
 function findNamedPackage(filePath) {
@@ -24,7 +24,7 @@ function findNamedPackage(filePath) {
 
 function checkImportForRelativePackage(context, importPath, node) {
   const potentialViolationTypes = ['parent', 'index', 'sibling']
-  if (potentialViolationTypes.indexOf(importType(importPath, context)) === -1) {
+  if (!potentialViolationTypes.includes(importType(importPath, context))) {
     return
   }
 

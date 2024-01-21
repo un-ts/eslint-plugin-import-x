@@ -1,28 +1,26 @@
 'use strict'
 
-exports.__esModule = true
-
 const fs = require('fs')
 const { isBuiltin } = require('module')
 const path = require('path')
 
 const enhancedResolve = require('enhanced-resolve')
 
+const ModuleCache = require('./ModuleCache')
 const { hashObject } = require('./hash')
-const ModuleCache = require('./ModuleCache').default
+
+module.exports = resolve
 
 const CASE_SENSITIVE_FS = !fs.existsSync(
   path.join(__dirname.toUpperCase(), 'reSOLVE.js'),
 )
 
-exports.CASE_SENSITIVE_FS = CASE_SENSITIVE_FS
-
-const ERROR_NAME = 'EslintPluginImportResolveError'
+resolve.CASE_SENSITIVE_FS = CASE_SENSITIVE_FS
 
 const fileExistsCache = new ModuleCache()
 
 // https://stackoverflow.com/a/27382838
-exports.fileExistsWithCaseSync = function fileExistsWithCaseSync(
+resolve.fileExistsWithCaseSync = function fileExistsWithCaseSync(
   filepath,
   cacheSettings,
   strict,
@@ -33,14 +31,14 @@ exports.fileExistsWithCaseSync = function fileExistsWithCaseSync(
   }
 
   // null means it resolved to a builtin
-  if (filepath === null) {
+  if (filepath == null) {
     return true
   }
   if (filepath.toLowerCase() === process.cwd().toLowerCase() && !strict) {
     return true
   }
   const parsedPath = path.parse(filepath)
-  const { dir } = parsedPath
+  const { dir, root, base } = parsedPath
 
   let result = fileExistsCache.get(filepath, cacheSettings)
   if (result != null) {
@@ -48,15 +46,13 @@ exports.fileExistsWithCaseSync = function fileExistsWithCaseSync(
   }
 
   // base case
-  if (dir === '' || parsedPath.root === filepath) {
+  if (dir === '' || root === filepath) {
     result = true
   } else {
     const filenames = fs.readdirSync(dir)
-    if (filenames.indexOf(parsedPath.base) === -1) {
-      result = false
-    } else {
-      result = fileExistsWithCaseSync(dir, cacheSettings, strict)
-    }
+    result = filenames.includes(base)
+      ? fileExistsWithCaseSync(dir, cacheSettings, strict)
+      : false
   }
   fileExistsCache.set(filepath, result)
   return result
@@ -135,9 +131,31 @@ let prevSettings = null
 let memoizedHash = ''
 
 /**
+ * @type {string}
+ */
+let prevResolverOptionsHash
+/**
+ * @type {string}
+ */
+let resolverOptionsHash
+
+/**
+ * @type {import('enhanced-resolve').Resolver}
+ */
+let cachedResolverOptions
+/**
+ * @type {import('enhanced-resolve').Resolver}
+ */
+let resolverCachedOptions
+
+/**
  * @type {import('enhanced-resolve').Resolver}
  */
 let resolver
+
+const { toString } = Object.prototype
+
+const isPlainObject = value => toString.call(value) === '[object Object]'
 
 function fullResolve(modulePath, sourceFile, settings) {
   if (isBuiltin(modulePath)) {
@@ -162,6 +180,7 @@ function fullResolve(modulePath, sourceFile, settings) {
   const cacheSettings = ModuleCache.getSettings(settings)
 
   const cachedPath = fileExistsCache.get(cacheKey, cacheSettings)
+
   if (cachedPath !== undefined) {
     return { found: true, path: cachedPath }
   }
@@ -170,27 +189,61 @@ function fullResolve(modulePath, sourceFile, settings) {
     fileExistsCache.set(cacheKey, resolvedPath)
   }
 
-  if (!resolver) {
-    resolver = enhancedResolve.ResolverFactory.createResolver({
-      conditionNames: defaultConditionNames,
-      extensions: defaultExtensions,
-      extensionAlias: defaultExtensionAlias,
-      mainFields: defaultMainFields,
-      fileSystem: new enhancedResolve.CachedInputFileSystem(fs, 5 * 1000),
-      useSyncFileSystemCalls: true,
-    })
+  /**
+   * @type {Omit<enhancedResolve.ResolveOptions, 'fileSystem' | 'useSyncFileSystemCalls'>}
+   */
+  let resolverOptions = settings['i/resolver']
+
+  if (resolverOptions == null) {
+    resolverOptions = {}
   }
 
+  if (!isPlainObject(resolverOptions)) {
+    throw new TypeError(
+      `Expected \`resolver\` setting to be an options object, got \`${typeof resolverOptions}\``,
+    )
+  }
+
+  if (
+    !cachedResolverOptions ||
+    prevResolverOptionsHash !==
+      (resolverOptionsHash = hashObject(resolverOptions).digest('hex'))
+  ) {
+    prevResolverOptionsHash = resolverOptionsHash
+    cachedResolverOptions = {
+      ...resolverOptions,
+      conditionNames: resolverOptions.conditionNames || defaultConditionNames,
+      extensions: resolverOptions.extensions || defaultExtensions,
+      extensionAlias: resolverOptions.extensionAlias || defaultExtensionAlias,
+      mainFields: resolverOptions.mainFields || defaultMainFields,
+      fileSystem: new enhancedResolve.CachedInputFileSystem(fs, 5 * 1000),
+      useSyncFileSystemCalls: true,
+    }
+  }
+
+  if (!resolver || resolverCachedOptions !== cachedResolverOptions) {
+    resolver = enhancedResolve.ResolverFactory.createResolver(
+      cachedResolverOptions,
+    )
+    resolverCachedOptions = cachedResolverOptions
+  }
+
+  /**
+   * @type {string | false}
+   */
   let foundNodePath
 
   try {
-    foundNodePath = resolver.resolveSync({}, sourceDir, modulePath) || null
+    foundNodePath = resolver.resolveSync({}, sourceDir, modulePath)
   } catch {
-    foundNodePath = null
+    // do nothing
   }
 
-  const resolved = {
-    found: !!foundNodePath,
+  /**
+   * @type {false | {found: true, path: string}}
+   */
+  const resolved = foundNodePath !== false && {
+    found: true,
     path: foundNodePath,
   }
 
@@ -203,34 +256,35 @@ function fullResolve(modulePath, sourceFile, settings) {
   // cache(undefined)
   return { found: false }
 }
+
 exports.relative = relative
 
 const erroredContexts = new Set()
 
 /**
  * Given
- * @param  {string} p - module path
+ * @param  {string} modulePath - module path
  * @param  {object} context - ESLint context
  * @return {string} - the full module filesystem path;
  *                    null if package is core;
  *                    undefined if not found
  */
-function resolve(p, context) {
+function resolve(modulePath, context) {
   try {
     return relative(
-      p,
+      modulePath,
       context.getPhysicalFilename
         ? context.getPhysicalFilename()
         : context.getFilename(),
       context.settings,
     )
-  } catch (err) {
+  } catch (error) {
+    console.error(error)
     if (!erroredContexts.has(context)) {
       // The `err.stack` string starts with `err.name` followed by colon and `err.message`.
-      // We're filtering out the default `err.name` because it adds little value to the message.
-      let errMessage = err.message
-      if (err.name !== ERROR_NAME && err.stack) {
-        errMessage = err.stack.replace(/^Error: /, '')
+      let errMessage = error.message
+      if (error.stack) {
+        errMessage = error.stack.replace(/^(\w+)Error: /, '')
       }
       context.report({
         message: `Resolve error: ${errMessage}`,
@@ -240,5 +294,5 @@ function resolve(p, context) {
     }
   }
 }
+
 resolve.relative = relative
-exports.default = resolve

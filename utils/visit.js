@@ -14,11 +14,11 @@ exports.default = function visit(node, keys, visitorSpec) {
   if (!childFields) {
     return
   }
-  childFields.forEach(fieldName => {
-    ;[].concat(node[fieldName]).forEach(item => {
+  for (const fieldName of childFields) {
+    for (const item of [node[fieldName]].flat()) {
       visit(item, keys, visitorSpec)
-    })
-  })
+    }
+  }
   if (typeof visitorSpec[`${type}:Exit`] === 'function') {
     visitorSpec[`${type}:Exit`](node)
   }

@@ -1,2 +1,1 @@
-import * as two from './depth-two'
-export { two }
+export * as two from './depth-two'

@@ -1,7 +1,5 @@
 'use strict'
 
-exports.__esModule = true
-
 const fs = require('fs')
 const path = require('path')
 
@@ -31,11 +29,16 @@ const path = require('path')
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+/**
+ * @param {string} filename
+ * @param {string} [cwd]
+ */
 function findUp(filename, cwd) {
   let dir = path.resolve(cwd || '')
   const { root } = path.parse(dir)
 
-  const filenames = [].concat(filename)
+  const filenames = [filename].flat()
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -52,6 +55,9 @@ function findUp(filename, cwd) {
   }
 }
 
-exports.default = function pkgUp(opts) {
+/**
+ * @param {{cwd?: string}} opts
+ */
+module.exports = function pkgUp(opts) {
   return findUp('package.json', opts && opts.cwd)
 }

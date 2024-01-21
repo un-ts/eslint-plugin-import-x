@@ -34,8 +34,8 @@ function hashArray(array, hash) {
   }
 
   hash.update('[')
-  for (let i = 0; i < array.length; i++) {
-    hashify(array[i], hash)
+  for (const element of array) {
+    hashify(element, hash)
     hash.update(',')
   }
   hash.update(']')
@@ -45,20 +45,24 @@ function hashArray(array, hash) {
 hashify.array = hashArray
 exports.hashArray = hashArray
 
+/**
+ *
+ * @param {object} object
+ * @param {import('crypto').Hash} [hash]
+ * @returns
+ */
 function hashObject(object, hash) {
   if (!hash) {
     hash = createHash('sha256')
   }
 
   hash.update('{')
-  Object.keys(object)
-    .sort()
-    .forEach(key => {
-      hash.update(stringify(key))
-      hash.update(':')
-      hashify(object[key], hash)
-      hash.update(',')
-    })
+  for (const key of Object.keys(object).sort()) {
+    hash.update(stringify(key))
+    hash.update(':')
+    hashify(object[key], hash)
+    hash.update(',')
+  }
   hash.update('}')
 
   return hash

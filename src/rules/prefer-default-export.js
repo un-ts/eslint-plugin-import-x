@@ -42,9 +42,9 @@ module.exports = {
     function captureDeclaration(identifierOrPattern) {
       if (identifierOrPattern && identifierOrPattern.type === 'ObjectPattern') {
         // recursively capture
-        identifierOrPattern.properties.forEach(function (property) {
+        for (const property of identifierOrPattern.properties) {
           captureDeclaration(property.value)
-        })
+        }
       } else if (
         identifierOrPattern &&
         identifierOrPattern.type === 'ArrayPattern'
@@ -76,7 +76,7 @@ module.exports = {
           return
         }
 
-        const { type } = node.declaration
+        const { type, declarations } = node.declaration
 
         if (
           type === 'TSTypeAliasDeclaration' ||
@@ -89,10 +89,10 @@ module.exports = {
           return
         }
 
-        if (node.declaration.declarations) {
-          node.declaration.declarations.forEach(function (declaration) {
+        if (declarations) {
+          for (const declaration of declarations) {
             captureDeclaration(declaration.id)
-          })
+          }
         } else {
           // captures 'export function foo() {}' syntax
           specifierExportCount++

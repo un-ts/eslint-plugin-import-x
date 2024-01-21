@@ -6,7 +6,7 @@ function isRequire(node) {
     node.callee &&
     node.callee.type === 'Identifier' &&
     node.callee.name === 'require' &&
-    node.arguments.length >= 1
+    node.arguments.length > 0
   )
 }
 

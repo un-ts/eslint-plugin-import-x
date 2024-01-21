@@ -12,7 +12,7 @@ function getEntryPoint(context) {
   })
   try {
     return require.resolve(path.dirname(pkgPath))
-  } catch (error) {
+  } catch {
     // Assume the package has no entrypoint (e.g. CLI packages)
     // in which case require.resolve would throw.
     return null
@@ -24,8 +24,7 @@ function findScope(context, identifier) {
 
   return (
     scopeManager &&
-    scopeManager.scopes
-      .slice()
+    [...scopeManager.scopes]
       .reverse()
       .find(scope =>
         scope.variables.some(variable =>
@@ -92,12 +91,12 @@ module.exports = {
         !isException &&
         !isImportBinding
       ) {
-        importDeclarations.forEach(importDeclaration => {
+        for (const importDeclaration of importDeclarations) {
           context.report({
             node: importDeclaration,
             message: `Cannot use import declarations in modules that export using CommonJS (module.exports = 'foo' or exports.bar = 'hi')`,
           })
-        })
+        }
         alreadyReported = true
       }
     }

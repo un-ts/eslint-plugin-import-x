@@ -5,10 +5,11 @@
     "eslint:recommended",
     "plugin:eslint-plugin/recommended",
     "plugin:i/recommended",
+    "plugin:unicorn/recommended",
     "plugin:prettier/recommended"
   ],
   "env": {
-    "es6": true,
+    "es2023": true,
     "node": true
   },
   "parserOptions": {
@@ -19,19 +20,51 @@
     }
   },
   "rules": {
+    "no-var": "error",
     "i/order": [
       "error",
       {
+        "alphabetize": {
+          "order": "asc",
+          "orderImportKind": "asc"
+        },
         "newlines-between": "always"
       }
-    ]
+    ],
+    "i/no-self-import": "error",
+    "unicorn/filename-case": "off",
+    "unicorn/no-array-callback-reference": "off",
+    "unicorn/no-array-for-each": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/no-null": "off",
+    "unicorn/prefer-at": "off",
+    "unicorn/prefer-module": "off",
+    "unicorn/prefer-node-protocol": "off",
+    "unicorn/prevent-abbreviations": "off",
+    "unicorn/prefer-spread": "off"
   },
   "overrides": [
     {
-      "files": "test/src/**/*.spec.js",
+      "files": "test/**/*.spec.js",
+      "excludedFiles": "test/fixtures/**/*.js",
       "extends": "plugin:jest/recommended",
       "env": {
         "jest": true
+      }
+    },
+    {
+      "files": "test/fixtures/**/*.js",
+      "rules": {
+        "no-undef": "off",
+        "no-unused-modules": "off",
+        "no-unused-vars": "off",
+        "i/default": "off",
+        "i/export": "off",
+        "i/named": "off",
+        "i/no-duplicates": "off",
+        "i/no-self-import": "off",
+        "i/no-unresolved": "off",
+        "unicorn/no-empty-file": "off"
       }
     }
   ]

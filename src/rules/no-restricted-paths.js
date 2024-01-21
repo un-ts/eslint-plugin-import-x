@@ -3,8 +3,8 @@ import path from 'path'
 import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
 
-import docsUrl from '../docsUrl'
 import importType from '../core/importType'
+import docsUrl from '../docsUrl'
 
 import moduleVisitor from 'eslint-module-utils/moduleVisitor'
 import resolve from 'eslint-module-utils/resolve'
@@ -12,6 +12,27 @@ import resolve from 'eslint-module-utils/resolve'
 const containsPath = (filepath, target) => {
   const relative = path.relative(target, filepath)
   return relative === '' || !relative.startsWith('..')
+}
+
+function isMatchingTargetPath(filename, targetPath) {
+  if (isGlob(targetPath)) {
+    const mm = new Minimatch(targetPath)
+    return mm.match(filename)
+  }
+
+  return containsPath(filename, targetPath)
+}
+
+function areBothGlobPatternAndAbsolutePath(areGlobPatterns) {
+  return (
+    areGlobPatterns.some(Boolean) && areGlobPatterns.some(isGlob => !isGlob)
+  )
+}
+
+function reportInvalidExceptions(validators, node) {
+  for (const validator of validators) {
+    validator.reportInvalidException(node)
+  }
 }
 
 module.exports = {
@@ -82,20 +103,11 @@ module.exports = {
       ? context.getPhysicalFilename()
       : context.getFilename()
     const matchingZones = restrictedPaths.filter(zone =>
-      []
-        .concat(zone.target)
+      [zone.target]
+        .flat()
         .map(target => path.resolve(basePath, target))
         .some(targetPath => isMatchingTargetPath(currentFilename, targetPath)),
     )
-
-    function isMatchingTargetPath(filename, targetPath) {
-      if (isGlob(targetPath)) {
-        const mm = new Minimatch(targetPath)
-        return mm.match(filename)
-      }
-
-      return containsPath(filename, targetPath)
-    }
 
     function isValidExceptionPath(absoluteFromPath, absoluteExceptionPath) {
       const relativeExceptionPath = path.relative(
@@ -104,13 +116,6 @@ module.exports = {
       )
 
       return importType(relativeExceptionPath, context) !== 'parent'
-    }
-
-    function areBothGlobPatternAndAbsolutePath(areGlobPatterns) {
-      return (
-        areGlobPatterns.some(isGlob => isGlob) &&
-        areGlobPatterns.some(isGlob => !isGlob)
-      )
     }
 
     function reportInvalidExceptionPath(node) {
@@ -200,10 +205,6 @@ module.exports = {
       }
     }
 
-    function reportInvalidExceptions(validators, node) {
-      validators.forEach(validator => validator.reportInvalidException(node))
-    }
-
     function reportImportsInRestrictedZone(
       validators,
       node,
@@ -220,14 +221,14 @@ module.exports = {
     }
 
     const makePathValidators = (zoneFrom, zoneExcept = []) => {
-      const allZoneFrom = [].concat(zoneFrom)
+      const allZoneFrom = [zoneFrom].flat()
       const areGlobPatterns = allZoneFrom.map(isGlob)
 
       if (areBothGlobPatternAndAbsolutePath(areGlobPatterns)) {
         return [computeMixedGlobAndAbsolutePathValidator()]
       }
 
-      const isGlobPattern = areGlobPatterns.every(isGlob => isGlob)
+      const isGlobPattern = areGlobPatterns.every(Boolean)
 
       return allZoneFrom.map(singleZoneFrom => {
         const absoluteFrom = path.resolve(basePath, singleZoneFrom)
@@ -248,7 +249,7 @@ module.exports = {
         return
       }
 
-      matchingZones.forEach((zone, index) => {
+      for (const [index, zone] of matchingZones.entries()) {
         if (!validators[index]) {
           validators[index] = makePathValidators(zone.from, zone.except)
         }
@@ -275,7 +276,7 @@ module.exports = {
           importPath,
           zone.message,
         )
-      })
+      }
     }
 
     return moduleVisitor(

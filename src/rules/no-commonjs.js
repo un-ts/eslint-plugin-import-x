@@ -1,15 +1,10 @@
-/**
- * @fileoverview Rule to prefer ES6 to CJS
- * @author Jamund Ferguson
- */
-
 import docsUrl from '../docsUrl'
 
 const EXPORT_MESSAGE = 'Expected "export" or "export default"'
 const IMPORT_MESSAGE = 'Expected "import" instead of "require()"'
 
 function normalizeLegacyOptions(options) {
-  if (options.indexOf('allow-primitive-modules') >= 0) {
+  if (options.includes('allow-primitive-modules')) {
     return { allowPrimitiveModules: true }
   }
   return options[0] || {}

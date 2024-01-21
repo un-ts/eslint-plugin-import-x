@@ -82,7 +82,6 @@ module.exports = {
             },
             fix(fixer) {
               const kindToken = sourceCode.getFirstToken(node, { skip: 1 })
-
               return [].concat(
                 kindToken ? fixer.remove(kindToken) : [],
                 node.specifiers.map(specifier =>
@@ -154,10 +153,10 @@ module.exports = {
           node.specifiers.length
         ) {
           // all specifiers have inline specifiers - so we replace the entire import
-          const kind = [].concat(
-            typeSpecifiers.length > 0 ? 'type' : [],
-            typeofSpecifiers.length > 0 ? 'typeof' : [],
-          )
+          const kind = [
+            ...(typeSpecifiers.length > 0 ? 'type' : []),
+            ...(typeofSpecifiers.length > 0 ? 'typeof' : []),
+          ]
 
           context.report({
             node,
@@ -172,7 +171,7 @@ module.exports = {
           })
         } else {
           // remove specific specifiers and insert new imports for them
-          for (const specifier of typeSpecifiers.concat(typeofSpecifiers)) {
+          for (const specifier of [...typeSpecifiers, ...typeofSpecifiers]) {
             context.report({
               node: specifier,
               message:

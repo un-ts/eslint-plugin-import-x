@@ -3,8 +3,26 @@ import minimatch from 'minimatch'
 import importType from '../core/importType'
 import docsUrl from '../docsUrl'
 
-import resolve from 'eslint-module-utils/resolve'
 import moduleVisitor from 'eslint-module-utils/moduleVisitor'
+import resolve from 'eslint-module-utils/resolve'
+
+// minimatch patterns are expected to use / path separators, like import
+// statements, so normalize paths to use the same
+function normalizeSep(somePath) {
+  return somePath.split('\\').join('/')
+}
+
+function toSteps(somePath) {
+  return normalizeSep(somePath)
+    .split('/')
+    .filter(step => step && step !== '.')
+    .reduce((acc, step) => {
+      if (step === '..') {
+        return acc.slice(0, -1)
+      }
+      return acc.concat(step)
+    }, [])
+}
 
 module.exports = {
   meta: {
@@ -51,24 +69,6 @@ module.exports = {
     const options = context.options[0] || {}
     const allowRegexps = (options.allow || []).map(p => minimatch.makeRe(p))
     const forbidRegexps = (options.forbid || []).map(p => minimatch.makeRe(p))
-
-    // minimatch patterns are expected to use / path separators, like import
-    // statements, so normalize paths to use the same
-    function normalizeSep(somePath) {
-      return somePath.split('\\').join('/')
-    }
-
-    function toSteps(somePath) {
-      return normalizeSep(somePath)
-        .split('/')
-        .filter(step => step && step !== '.')
-        .reduce((acc, step) => {
-          if (step === '..') {
-            return acc.slice(0, -1)
-          }
-          return acc.concat(step)
-        }, [])
-    }
 
     // test if reaching to this destination is allowed
     function reachingAllowed(importPath) {
@@ -143,8 +143,7 @@ module.exports = {
         'internal',
       ]
       if (
-        potentialViolationTypes.indexOf(importType(importPath, context)) !==
-          -1 &&
+        potentialViolationTypes.includes(importType(importPath, context)) &&
         isReachViolation(importPath)
       ) {
         context.report({

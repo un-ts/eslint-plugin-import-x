@@ -1,7 +1,5 @@
 'use strict'
 
-exports.__esModule = true
-
 const log = require('debug')('eslint-module-utils:ModuleCache')
 
 class ModuleCache {
@@ -31,7 +29,7 @@ class ModuleCache {
       log('cache miss for', cacheKey)
     }
     // cache miss
-    return undefined
+    return
   }
 }
 
@@ -45,10 +43,10 @@ ModuleCache.getSettings = function (settings) {
 
   // parse infinity
   if (cacheSettings.lifetime === '∞' || cacheSettings.lifetime === 'Infinity') {
-    cacheSettings.lifetime = Infinity
+    cacheSettings.lifetime = Number.POSITIVE_INFINITY
   }
 
   return cacheSettings
 }
 
-exports.default = ModuleCache
+module.exports = ModuleCache

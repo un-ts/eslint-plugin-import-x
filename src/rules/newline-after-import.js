@@ -1,8 +1,3 @@
-/**
- * @fileoverview Rule to enforce new line after import not followed by another import.
- * @author Radek Benkel
- */
-
 import debug from 'debug'
 
 import isStaticRequire from '../core/staticRequire'
@@ -47,7 +42,7 @@ function isClassWithDecorator(node) {
   return (
     node.type === 'ClassDeclaration' &&
     node.decorators &&
-    node.decorators.length
+    node.decorators.length > 0
   )
 }
 
@@ -179,7 +174,7 @@ module.exports = {
     }
 
     function checkImport(node) {
-      const { parent } = node
+      const { isExport, loc, parent } = node
 
       if (!parent || !parent.body) {
         return
@@ -187,10 +182,10 @@ module.exports = {
 
       const nodePosition = parent.body.indexOf(node)
       const nextNode = parent.body[nodePosition + 1]
-      const endLine = node.loc.end.line
+      const endLine = loc.end.line
       let nextComment
 
-      if (typeof parent.comments !== 'undefined' && options.considerComments) {
+      if (parent.comments !== undefined && options.considerComments) {
         nextComment = parent.comments.find(
           o =>
             o.loc.start.line >= endLine &&
@@ -199,11 +194,11 @@ module.exports = {
       }
 
       // skip "export import"s
-      if (node.type === 'TSImportEqualsDeclaration' && node.isExport) {
+      if (node.type === 'TSImportEqualsDeclaration' && isExport) {
         return
       }
 
-      if (nextComment && typeof nextComment !== 'undefined') {
+      if (nextComment && nextComment !== undefined) {
         commentAfterImport(node, nextComment)
       } else if (
         nextNode &&
@@ -232,7 +227,7 @@ module.exports = {
         const scopeBody = getScopeBody(context.getScope())
         log('got scope:', scopeBody)
 
-        requireCalls.forEach((node, index) => {
+        for (const [index, node] of requireCalls.entries()) {
           const nodePosition = findNodeIndexInScopeBody(scopeBody, node)
           log('node position in scope:', nodePosition)
 
@@ -244,7 +239,7 @@ module.exports = {
             nextRequireCall &&
             containsNodeOrEqual(statementWithRequireCall, nextRequireCall)
           ) {
-            return
+            continue
           }
 
           if (
@@ -254,7 +249,7 @@ module.exports = {
           ) {
             checkForNewLine(statementWithRequireCall, nextStatement, 'require')
           }
-        })
+        }
       },
       FunctionDeclaration: incrementLevel,
       FunctionExpression: incrementLevel,

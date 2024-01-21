@@ -1,7 +1,7 @@
-import { basename, dirname, relative } from 'path'
+import path from 'path'
 
-import docsUrl from '../docsUrl'
 import importType from '../core/importType'
+import docsUrl from '../docsUrl'
 
 import moduleVisitor, {
   makeOptionsSchema,
@@ -42,12 +42,12 @@ module.exports = {
         return
       }
 
-      const relDepPath = relative(dirname(myPath), absDepPath)
+      const relDepPath = path.relative(path.dirname(myPath), absDepPath)
 
       if (importType(relDepPath, context) === 'parent') {
         context.report({
           node: sourceNode,
-          message: `Relative imports from parent directories are not allowed. Please either pass what you're importing through at runtime (dependency injection), move \`${basename(myPath)}\` to same directory as \`${depPath}\` or consider making \`${depPath}\` a package.`,
+          message: `Relative imports from parent directories are not allowed. Please either pass what you're importing through at runtime (dependency injection), move \`${path.basename(myPath)}\` to same directory as \`${depPath}\` or consider making \`${depPath}\` a package.`,
         })
       }
     }

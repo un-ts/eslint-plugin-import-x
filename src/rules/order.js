@@ -58,9 +58,9 @@ function getTokensOrCommentsBefore(sourceCode, node, count) {
 function takeTokensAfterWhile(sourceCode, node, condition) {
   const tokens = getTokensOrCommentsAfter(sourceCode, node, 100)
   const result = []
-  for (let i = 0; i < tokens.length; i++) {
-    if (condition(tokens[i])) {
-      result.push(tokens[i])
+  for (const token of tokens) {
+    if (condition(token)) {
+      result.push(token)
     } else {
       break
     }
@@ -250,7 +250,7 @@ function fixOutOfOrder(context, firstNode, secondNode, order) {
   const secondRootEnd = findEndOfLineWithComments(sourceCode, secondRoot)
   const canFix = canReorderItems(firstRoot, secondRoot)
 
-  let newCode = sourceCode.text.substring(secondRootStart, secondRootEnd)
+  let newCode = sourceCode.text.slice(secondRootStart, secondRootEnd)
   if (newCode[newCode.length - 1] !== '\n') {
     newCode = `${newCode}\n`
   }
@@ -268,8 +268,7 @@ function fixOutOfOrder(context, firstNode, secondNode, order) {
         (fixer =>
           fixer.replaceTextRange(
             [firstRootStart, secondRootEnd],
-            newCode +
-              sourceCode.text.substring(firstRootStart, secondRootStart),
+            newCode + sourceCode.text.slice(firstRootStart, secondRootStart),
           )),
     })
   } else if (order === 'after') {
@@ -281,7 +280,7 @@ function fixOutOfOrder(context, firstNode, secondNode, order) {
         (fixer =>
           fixer.replaceTextRange(
             [secondRootStart, firstRootEnd],
-            sourceCode.text.substring(secondRootEnd, firstRootEnd) + newCode,
+            sourceCode.text.slice(secondRootEnd, firstRootEnd) + newCode,
           )),
     })
   }
@@ -298,7 +297,7 @@ function reportOutOfOrder(context, imported, outOfOrder, order) {
 
 function makeOutOfOrderReport(context, imported) {
   const outOfOrder = findOutOfOrder(imported)
-  if (!outOfOrder.length) {
+  if (outOfOrder.length === 0) {
     return
   }
 
@@ -403,7 +402,7 @@ function mutateRanksToAlphabetize(imported, alphabetizeOptions) {
   const alphabetizedRanks = groupRanks.reduce(function (acc, groupRank) {
     groupedByRanks[groupRank].forEach(function (importedItem) {
       acc[`${importedItem.value}|${importedItem.node.importKind}`] =
-        parseInt(groupRank, 10) + newRank
+        Number.parseInt(groupRank, 10) + newRank
       newRank += 1
     })
     return acc
@@ -434,7 +433,7 @@ function computeRank(context, ranks, importEntry, excludedImportTypes) {
     impType = 'object'
   } else if (
     importEntry.node.importKind === 'type' &&
-    ranks.omittedTypes.indexOf('type') === -1
+    !ranks.omittedTypes.includes('type')
   ) {
     impType = 'type'
   } else {
@@ -448,7 +447,7 @@ function computeRank(context, ranks, importEntry, excludedImportTypes) {
       ranks.maxPosition,
     )
   }
-  if (typeof rank === 'undefined') {
+  if (rank == null) {
     rank = ranks.groups[impType]
   }
   if (
@@ -510,8 +509,8 @@ const types = [
 // Will throw an error if it contains a type that does not exist, or has a duplicate
 function convertGroupsToRanks(groups) {
   const rankObject = groups.reduce(function (res, group, index) {
-    ;[].concat(group).forEach(function (groupItem) {
-      if (types.indexOf(groupItem) === -1) {
+    ;[group].flat().forEach(function (groupItem) {
+      if (!types.includes(groupItem)) {
         throw new Error(
           `Incorrect configuration of the rule: Unknown type \`${JSON.stringify(groupItem)}\``,
         )
@@ -527,7 +526,7 @@ function convertGroupsToRanks(groups) {
   }, {})
 
   const omittedTypes = types.filter(function (type) {
-    return typeof rankObject[type] === 'undefined'
+    return rankObject[type] == null
   })
 
   const ranks = omittedTypes.reduce(function (res, type) {
@@ -606,13 +605,13 @@ function removeNewLineAfterImport(context, currentImport, previousImport) {
     findEndOfLineWithComments(sourceCode, prevRoot),
     findStartOfLineWithComments(sourceCode, currRoot),
   ]
-  if (
-    /^\s*$/.test(sourceCode.text.substring(rangeToRemove[0], rangeToRemove[1]))
-  ) {
+  if (/^\s*$/.test(sourceCode.text.slice(rangeToRemove[0], rangeToRemove[1]))) {
     return fixer => fixer.removeRange(rangeToRemove)
   }
-  return undefined
 }
+
+const getIsStartOfDistinctGroup = (currentImport, previousImport) =>
+  currentImport.rank - 1 >= previousImport.rank
 
 function makeNewlinesBetweenReport(
   context,
@@ -628,10 +627,9 @@ function makeNewlinesBetweenReport(
         currentImport.node.loc.start.line - 1,
       )
 
-    return linesBetweenImports.filter(line => !line.trim().length).length
+    return linesBetweenImports.filter(line => line.trim().length === 0).length
   }
-  const getIsStartOfDistinctGroup = (currentImport, previousImport) =>
-    currentImport.rank - 1 >= previousImport.rank
+
   let previousImport = imported[0]
 
   imported.slice(1).forEach(function (currentImport) {
@@ -664,6 +662,7 @@ function makeNewlinesBetweenReport(
         emptyLinesBetween > 0 &&
         newlinesBetweenImports !== 'always-and-inside-groups'
       ) {
+        // eslint-disable-next-line unicorn/no-lonely-if
         if (
           (distinctGroup && currentImport.rank === previousImport.rank) ||
           (!distinctGroup && !isStartOfDistinctGroup)
@@ -832,7 +831,7 @@ module.exports = {
     return {
       ImportDeclaration: function handleImports(node) {
         // Ignoring unassigned imports unless warnOnUnassignedImports is set
-        if (node.specifiers.length || options.warnOnUnassignedImports) {
+        if (node.specifiers.length > 0 || options.warnOnUnassignedImports) {
           const name = node.source.value
           registerNode(
             context,

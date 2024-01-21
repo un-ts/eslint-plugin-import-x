@@ -101,7 +101,7 @@ import Component from './Component'
 
 import express from 'express/index'
 
-import * as path from 'path'
+import path from 'path'
 ```
 
 The following patterns are considered problems when configuration set to "always":
@@ -125,7 +125,7 @@ import bar from './bar.json'
 
 import Component from './Component.jsx'
 
-import * as path from 'path'
+import path from 'path'
 
 import foo from '@/foo.js'
 ```

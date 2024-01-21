@@ -50,41 +50,44 @@ module.exports = {
         context.report({ node, message: message(moduleDeprecation) })
       }
 
-      if (imports.errors.length) {
+      if (imports.errors.length > 0) {
         imports.reportErrors(context, node)
         return
       }
 
-      node.specifiers.forEach(function (im) {
+      for (const im of node.specifiers) {
         let imported
         let local
         switch (im.type) {
           case 'ImportNamespaceSpecifier': {
-            if (!imports.size) {
-              return
+            if (imports.size === 0) {
+              continue
             }
             namespaces.set(im.local.name, imports)
-            return
+            continue
           }
 
-          case 'ImportDefaultSpecifier':
+          case 'ImportDefaultSpecifier': {
             imported = 'default'
             local = im.local.name
             break
+          }
 
-          case 'ImportSpecifier':
+          case 'ImportSpecifier': {
             imported = im.imported.name
             local = im.local.name
             break
+          }
 
-          default:
-            return // can't handle this one
+          default: {
+            continue
+          } // can't handle this one
         }
 
         // unknown thing can't be deprecated
         const exported = imports.get(imported)
         if (exported == null) {
-          return
+          continue
         }
 
         // capture import of deep namespace
@@ -94,13 +97,13 @@ module.exports = {
 
         const deprecation = getDeprecation(imports.get(imported))
         if (!deprecation) {
-          return
+          continue
         }
 
         context.report({ node: im, message: message(deprecation) })
 
         deprecated.set(local, deprecation)
-      })
+      }
     }
 
     return {

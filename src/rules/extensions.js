@@ -3,8 +3,8 @@ import path from 'path'
 import { isBuiltIn, isExternalModule, isScoped } from '../core/importType'
 import docsUrl from '../docsUrl'
 
-import resolve from 'eslint-module-utils/resolve'
 import moduleVisitor from 'eslint-module-utils/moduleVisitor'
+import resolve from 'eslint-module-utils/resolve'
 
 const enumValues = { enum: ['always', 'ignorePackages', 'never'] }
 const patternProperties = {
@@ -26,17 +26,17 @@ function buildProperties(context) {
     ignorePackages: false,
   }
 
-  context.options.forEach(obj => {
+  for (const obj of context.options) {
     // If this is a string, set defaultConfig to its value
     if (typeof obj === 'string') {
       result.defaultConfig = obj
-      return
+      continue
     }
 
     // If this is not the new structure, transfer all props to result.pattern
-    if (obj.pattern === undefined && obj.ignorePackages === undefined) {
+    if (obj.pattern == null && obj.ignorePackages == null) {
       Object.assign(result.pattern, obj)
-      return
+      continue
     }
 
     // If pattern is provided, transfer all props
@@ -48,7 +48,7 @@ function buildProperties(context) {
     if (obj.ignorePackages !== undefined) {
       result.ignorePackages = obj.ignorePackages
     }
-  })
+  }
 
   if (result.defaultConfig === 'ignorePackages') {
     result.defaultConfig = 'always'
@@ -56,6 +56,21 @@ function buildProperties(context) {
   }
 
   return result
+}
+
+function isExternalRootModule(file) {
+  if (file === '.' || file === '..') {
+    return false
+  }
+  const slashCount = file.split('/').length - 1
+
+  if (slashCount === 0) {
+    return true
+  }
+  if (isScoped(file) && slashCount <= 1) {
+    return true
+  }
+  return false
 }
 
 module.exports = {
@@ -128,21 +143,6 @@ module.exports = {
       return resolvedFileWithoutExtension === resolve(file, context)
     }
 
-    function isExternalRootModule(file) {
-      if (file === '.' || file === '..') {
-        return false
-      }
-      const slashCount = file.split('/').length - 1
-
-      if (slashCount === 0) {
-        return true
-      }
-      if (isScoped(file) && slashCount <= 1) {
-        return true
-      }
-      return false
-    }
-
     function checkFileExtension(source, node) {
       // bail if the declaration doesn't have a source, e.g. "export { foo };", or if it's only partially typed like in an editor
       if (!source || !source.value) {
@@ -168,7 +168,7 @@ module.exports = {
 
       // get extension from resolved path, if possible.
       // for unresolved, use source value.
-      const extension = path.extname(resolvedPath || importPath).substring(1)
+      const extension = path.extname(resolvedPath || importPath).slice(1)
 
       // determine if this is a module
       const isPackage =
@@ -188,16 +188,15 @@ module.exports = {
             message: `Missing file extension ${extension ? `"${extension}" ` : ''}for "${importPathWithQueryString}"`,
           })
         }
-      } else if (extension) {
-        if (
-          isUseOfExtensionForbidden(extension) &&
-          isResolvableWithoutExtension(importPath)
-        ) {
-          context.report({
-            node: source,
-            message: `Unexpected use of file extension "${extension}" for "${importPathWithQueryString}"`,
-          })
-        }
+      } else if (
+        extension &&
+        isUseOfExtensionForbidden(extension) &&
+        isResolvableWithoutExtension(importPath)
+      ) {
+        context.report({
+          node: source,
+          message: `Unexpected use of file extension "${extension}" for "${importPathWithQueryString}"`,
+        })
       }
     }
 

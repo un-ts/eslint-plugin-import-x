@@ -2,7 +2,7 @@
 
 exports.__esModule = true
 
-const { extname } = require('path')
+const path = require('path')
 
 const log = require('debug')('eslint-plugin-i:utils:ignore')
 
@@ -30,7 +30,7 @@ function makeValidExtensionSet(settings) {
       if (!Array.isArray(parserSettings)) {
         throw new TypeError('"settings" for ' + parser + ' must be an array')
       }
-      parserSettings.forEach(ext => exts.add(ext))
+      for (const ext of parserSettings) exts.add(ext)
     }
   }
 
@@ -49,10 +49,10 @@ exports.default = function ignore(path, context) {
   }
   const ignoreStrings = context.settings['i/ignore']
 
-  for (let i = 0; i < ignoreStrings.length; i++) {
-    const regex = new RegExp(ignoreStrings[i])
+  for (const ignoreString of ignoreStrings) {
+    const regex = new RegExp(ignoreString)
     if (regex.test(path)) {
-      log(`ignoring ${path}, matched pattern /${ignoreStrings[i]}/`)
+      log(`ignoring ${path}, matched pattern /${ignoreString}/`)
       return true
     }
   }
@@ -60,7 +60,7 @@ exports.default = function ignore(path, context) {
   return false
 }
 
-function hasValidExtension(path, context) {
-  return validExtensions(context).has(extname(path))
+function hasValidExtension(filepath, context) {
+  return validExtensions(context).has(path.extname(filepath))
 }
 exports.hasValidExtension = hasValidExtension

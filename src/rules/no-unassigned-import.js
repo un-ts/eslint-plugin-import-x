@@ -17,21 +17,16 @@ function testIsAllow(globs, filename, source) {
     return false // default doesn't allow any patterns
   }
 
-  let filePath
-
-  if (source[0] !== '.' && source[0] !== '/') {
+  const filePath =
     // a node module
-    filePath = source
-  } else {
-    filePath = path.resolve(path.dirname(filename), source) // get source absolute path
-  }
+    source[0] !== '.' && source[0] !== '/'
+      ? source
+      : path.resolve(path.dirname(filename), source) // get source absolute path
 
-  return (
-    globs.find(
-      glob =>
-        minimatch(filePath, glob) ||
-        minimatch(filePath, path.join(process.cwd(), glob)),
-    ) !== undefined
+  return globs.some(
+    glob =>
+      minimatch(filePath, glob) ||
+      minimatch(filePath, path.join(process.cwd(), glob)),
   )
 }
 

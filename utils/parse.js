@@ -1,14 +1,25 @@
+/**
+ * @typedef {import('eslint').Linter.ParserModule} ParserModule
+ * @typedef {import('eslint').Rule.RuleContext} RuleContext
+ * @typedef {import('eslint').AST.Program} Program
+ * @typedef {import('eslint').SourceCode.VisitorKeys} VisitorKeys
+ * @typedef {import('eslint').Linter.ESLintParseResult} ESLintParseResult
+ */
+
 'use strict'
 
-const { extname } = require('path')
 const fs = require('fs')
+const path = require('path')
 
 const log = require('debug')('eslint-plugin-i:parse')
 
 const moduleRequire = require('./module-require')
 
-exports.__esModule = true
-
+/**
+ *
+ * @param {string} parserPath
+ * @returns {VisitorKeys}
+ */
 function getBabelEslintVisitorKeys(parserPath) {
   if (parserPath.endsWith('index.js')) {
     const hypotheticalLocation = parserPath.replace(
@@ -23,39 +34,67 @@ function getBabelEslintVisitorKeys(parserPath) {
   return null
 }
 
+/**
+ *
+ * @param {string} parserPath
+ * @param {ParserModule} parserInstance
+ * @param {ESLintParseResult} [parsedResult]
+ * @returns
+ */
 function keysFromParser(parserPath, parserInstance, parsedResult) {
   // Exposed by @typescript-eslint/parser and @babel/eslint-parser
   if (parsedResult && parsedResult.visitorKeys) {
     return parsedResult.visitorKeys
   }
-  if (typeof parserPath === 'string' && /.*espree.*/.test(parserPath)) {
-    return parserInstance.VisitorKeys
+  if (typeof parserPath === 'string' && /([/\\])espree\1/.test(parserPath)) {
+    return /** @type {VisitorKeys} */ (parserInstance.VisitorKeys)
   }
-  if (typeof parserPath === 'string' && /.*babel-eslint.*/.test(parserPath)) {
+  if (
+    typeof parserPath === 'string' &&
+    (/([/\\])babel-eslint\1/.test(parserPath) ||
+      /([/\\])@babel\/eslint-parser\1/.test(parserPath))
+  ) {
     return getBabelEslintVisitorKeys(parserPath)
   }
   return null
 }
 
-// this exists to smooth over the unintentional breaking change in v2.7.
-// TODO, semver-major: avoid mutating `ast` and return a plain object instead.
+/**
+ * this exists to smooth over the unintentional breaking change in v2.7.
+ *
+ * @param {Program | ESLintParseResult | null} ast
+ * @param {VisitorKeys} visitorKeys
+ */
 function makeParseReturn(ast, visitorKeys) {
-  if (ast) {
-    ast.visitorKeys = visitorKeys
-    ast.ast = ast
+  if (!ast) {
+    return ast
   }
-  return ast
+
+  if ('ast' in ast) {
+    return ast
+  }
+
+  return {
+    ast,
+    visitorKeys,
+  }
 }
 
 function stripUnicodeBOM(text) {
-  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
+  return text.codePointAt(0) === 0xfe_ff ? text.slice(1) : text
 }
 
 function transformHashbang(text) {
   return text.replace(/^#!([^\r\n]+)/u, (_, captured) => `//${captured}`)
 }
 
-exports.default = function parse(path, content, context) {
+/**
+ * @param {string} path
+ * @param {string} content
+ * @param {RuleContext} context
+ * @returns
+ */
+module.exports = function parse(path, content, context) {
   if (context == null) {
     throw new Error('need context to parse properly')
   }
@@ -64,6 +103,7 @@ exports.default = function parse(path, content, context) {
   let parserOptions =
     (context.languageOptions && context.languageOptions.parserOptions) ||
     context.parserOptions
+
   const parserOrPath = getParser(path, context)
 
   if (!parserOrPath) {
@@ -97,27 +137,38 @@ exports.default = function parse(path, content, context) {
   // require the parser relative to the main module (i.e., ESLint)
   const parser =
     typeof parserOrPath === 'string'
-      ? moduleRequire(parserOrPath)
+      ? /** @type {ParserModule} */ (moduleRequire(parserOrPath))
       : parserOrPath
 
   // replicate bom strip and hashbang transform of ESLint
   // https://github.com/eslint/eslint/blob/b93af98b3c417225a027cabc964c38e779adb945/lib/linter/linter.js#L779
   content = transformHashbang(stripUnicodeBOM(String(content)))
 
-  if (typeof parser.parseForESLint === 'function') {
+  if (
+    'parseForESLint' in parser &&
+    typeof parser.parseForESLint === 'function'
+  ) {
+    /**
+     * @type {Program | undefined}
+     */
     let ast
     try {
       const parserRaw = parser.parseForESLint(content, parserOptions)
       ast = parserRaw.ast
       return makeParseReturn(
-        ast,
+        parserRaw,
         keysFromParser(parserOrPath, parser, parserRaw),
       )
-    } catch (e) {
+    } catch (error) {
       console.warn()
       console.warn('Error while parsing ' + parserOptions.filePath)
       console.warn(
-        'Line ' + e.lineNumber + ', column ' + e.column + ': ' + e.message,
+        'Line ' +
+          error.lineNumber +
+          ', column ' +
+          error.column +
+          ': ' +
+          error.message,
       )
     }
     if (!ast || typeof ast !== 'object') {
@@ -130,19 +181,20 @@ exports.default = function parse(path, content, context) {
           '` is invalid and will just be ignored',
       )
     } else {
-      return makeParseReturn(
-        ast,
-        keysFromParser(parserOrPath, parser, undefined),
-      )
+      return makeParseReturn(ast, keysFromParser(parserOrPath, parser))
     }
   }
 
-  const ast = parser.parse(content, parserOptions)
-  return makeParseReturn(ast, keysFromParser(parserOrPath, parser, undefined))
+  const ast = 'parse' in parser ? parser.parse(content, parserOptions) : null
+  return makeParseReturn(ast, keysFromParser(parserOrPath, parser))
 }
 
-function getParser(path, context) {
-  const parserPath = getParserPath(path, context)
+/**
+ * @param {string} filepath
+ * @param {RuleContext} context
+ */
+function getParser(filepath, context) {
+  const parserPath = getParserPath(filepath, context)
   if (parserPath) {
     return parserPath
   }
@@ -156,12 +208,16 @@ function getParser(path, context) {
   return isFlat ? context.languageOptions.parser : null
 }
 
-function getParserPath(path, context) {
+/**
+ * @param {string} filepath
+ * @param {RuleContext} context
+ */
+function getParserPath(filepath, context) {
   const parsers = context.settings['i/parsers']
   if (parsers != null) {
-    const extension = extname(path)
+    const extension = path.extname(filepath)
     for (const parserPath in parsers) {
-      if (parsers[parserPath].indexOf(extension) > -1) {
+      if (parsers[parserPath].includes(extension)) {
         // use this alternate parser
         log('using alt parser:', parserPath)
         return parserPath

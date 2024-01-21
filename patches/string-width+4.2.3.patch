@@ -1,0 +1,11 @@
+diff --git a/node_modules/string-width/index.js b/node_modules/string-width/index.js
+index f4d261a..7ea642a 100644
+--- a/node_modules/string-width/index.js
++++ b/node_modules/string-width/index.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+-const stripAnsi = require('strip-ansi');
++const stripAnsi = require('strip-ansi-cjs');
+ const isFullwidthCodePoint = require('is-fullwidth-code-point');
+ const emojiRegex = require('emoji-regex');
+ 

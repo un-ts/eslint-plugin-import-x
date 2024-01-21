@@ -1,12 +1,6 @@
-/**
- * @fileoverview Rule to warn about potentially confused use of name exports
- * @author Desmond Brand
- * @copyright 2016 Desmond Brand. All rights reserved.
- * See LICENSE in root directory for full license.
- */
 import Exports from '../ExportMap'
-import importDeclaration from '../importDeclaration'
 import docsUrl from '../docsUrl'
+import importDeclaration from '../importDeclaration'
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -41,7 +35,7 @@ module.exports = {
           return
         }
 
-        if (exportMap.errors.length) {
+        if (exportMap.errors.length > 0) {
           exportMap.reportErrors(context, declaration)
           return
         }
@@ -77,10 +71,10 @@ module.exports = {
       },
 
       'Program:exit'() {
-        allPropertyLookups.forEach((lookups, objectName) => {
+        for (const [objectName, lookups] of allPropertyLookups.entries()) {
           const fileImport = fileImports.get(objectName)
           if (fileImport == null) {
-            return
+            continue
           }
 
           for (const { propName, node } of lookups) {
@@ -97,7 +91,7 @@ module.exports = {
               message: `Caution: \`${objectName}\` also has a named export \`${propName}\`. Check if you meant to write \`import {${propName}} from '${fileImport.sourcePath}'\` instead.`,
             })
           }
-        })
+        }
       },
     }
   },

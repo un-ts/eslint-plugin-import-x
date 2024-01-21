@@ -1,2 +1,1 @@
-import foo from '../depth-zero'
-export { foo }
+export { default as foo } from '../depth-zero'

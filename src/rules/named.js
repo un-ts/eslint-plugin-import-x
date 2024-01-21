@@ -1,4 +1,4 @@
-import * as path from 'path'
+import path from 'path'
 
 import Exports from '../ExportMap'
 import docsUrl from '../docsUrl'
@@ -48,19 +48,19 @@ module.exports = {
         return
       }
 
-      if (imports.errors.length) {
+      if (imports.errors.length > 0) {
         imports.reportErrors(context, node)
         return
       }
 
-      node.specifiers.forEach(function (im) {
+      for (const im of node.specifiers) {
         if (
           im.type !== type ||
           // ignore type imports
           im.importKind === 'type' ||
           im.importKind === 'typeof'
         ) {
-          return
+          continue
         }
 
         const name = im[key].name || im[key].value
@@ -90,7 +90,7 @@ module.exports = {
             )
           }
         }
-      })
+      }
     }
 
     function checkRequire(node) {
@@ -126,14 +126,14 @@ module.exports = {
         return
       }
 
-      if (variableExports.errors.length) {
+      if (variableExports.errors.length > 0) {
         variableExports.reportErrors(context, node)
         return
       }
 
-      variableImports.forEach(function (im) {
+      for (const im of variableImports) {
         if (im.type !== 'Property' || !im.key || im.key.type !== 'Identifier') {
-          return
+          continue
         }
 
         const deepLookup = variableExports.hasDeep(im.key.name)
@@ -154,7 +154,7 @@ module.exports = {
             )
           }
         }
-      })
+      }
     }
 
     return {
