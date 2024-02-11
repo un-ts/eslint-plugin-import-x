@@ -1,6 +1,6 @@
 # eslint-plugin-i
 
-A fork of [`eslint-plugin-import`] using [`get-tsconfig`] to replace [`tsconfig-paths`](https://github.com/dividab/tsconfig-paths) and heavy [`typescript`](https://github.com/microsoft/TypeScript) under the hood.
+A fork of [`eslint-plugin-import`] using [`get-tsconfig`] to replace [`tsconfig-paths`](https://github.com/dividab/tsconfig-paths) and heavy [`typescript`](https://github.com/microsoft/TypeScript) under the hood, making it faster, through less heavy dependency on Typescript, and cleaner dependencies altogether.
 
 It will rebase and try to release in order to sync with the upstream every day, see [.github/workflows/rebase-upstream.yml](.github/workflows/rebase-upstream.yml) for details.
 
