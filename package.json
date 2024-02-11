@@ -1,7 +1,7 @@
 {
   "name": "eslint-plugin-i",
   "version": "2.29.1",
-  "description": "A fork of `eslint-plugin-import` using `get-tsconfig` to replace `tsconfig-paths` and heavy `typescript` under the hood.",
+  "description": "A fork of `eslint-plugin-import` using `get-tsconfig` to replace `tsconfig-paths` and heavy `typescript` under the hood, making it faster, through less heavy dependency on Typescript, and cleaner dependencies altogether.",
   "funding": "https://opencollective.com/unts",
   "engines": {
     "node": ">=12"
