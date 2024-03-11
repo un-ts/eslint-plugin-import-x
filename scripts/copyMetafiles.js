@@ -3,7 +3,7 @@ import copyFileSync from "fs-copy-file-sync";
 
 const files = ["LICENSE", ".npmrc"];
 
-const directories = [].concat("memo-parser", "utils");
+const directories = ["utils"];
 
 for (const directory of directories) {
   for (const file of files) {

@@ -20,11 +20,9 @@ coverage
 build/Release
 
 # Copied from ./LICENSE for the npm module releases
-memo-parser/LICENSE
 resolvers/node/LICENSE
 resolvers/webpack/LICENSE
 utils/LICENSE
-memo-parser/.npmrc
 resolvers/node/.npmrc
 resolvers/webpack/.npmrc
 utils/.npmrc

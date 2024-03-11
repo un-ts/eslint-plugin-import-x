@@ -15,8 +15,7 @@
     "LICENSE",
     "docs",
     "lib",
-    "config",
-    "memo-parser/{*.js,LICENSE,*.md}"
+    "config"
   ],
   "scripts": {
     "prebuild": "rimraf lib",

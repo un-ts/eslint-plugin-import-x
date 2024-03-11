@@ -34,7 +34,6 @@ jobs:
         package:
           - resolvers/node
           - resolvers/webpack
-          # - memo-parser
           # - utils
 
     steps:
