@@ -8,8 +8,7 @@ import '@babel/eslint-parser';
 
 export const parsers = {
   ESPREE: require.resolve('espree'),
-  TS_OLD: semver.satisfies(eslintPkg.version, '>=4.0.0 <6.0.0') && semver.satisfies(typescriptPkg.version, '<4') && require.resolve('typescript-eslint-parser'),
-  TS_NEW: semver.satisfies(eslintPkg.version, '> 5') && require.resolve('@typescript-eslint/parser'),
+  TS: require.resolve('@typescript-eslint/parser'),
   BABEL: require.resolve('@babel/eslint-parser'),
 };
 
@@ -18,22 +17,21 @@ export function tsVersionSatisfies(specifier) {
 }
 
 export function typescriptEslintParserSatisfies(specifier) {
-  return parsers.TS_NEW && semver.satisfies(require('@typescript-eslint/parser/package.json').version, specifier);
+  return (
+    parsers.TS
+    && semver.satisfies(
+      require('@typescript-eslint/parser/package.json').version,
+      specifier,
+    )
+  );
 }
 
 export function testFilePath(relativePath) {
   return path.join(process.cwd(), './tests/files', relativePath);
 }
 
-export function getTSParsers() {
-  return [
-    parsers.TS_OLD,
-    parsers.TS_NEW,
-  ].filter(Boolean);
-}
-
 export function getNonDefaultParsers() {
-  return getTSParsers().concat(parsers.BABEL).filter(Boolean);
+  return [parsers.TS, parsers.BABEL].filter(Boolean);
 }
 
 export const FILENAME = testFilePath('foo.js');
@@ -62,8 +60,12 @@ export function test(t) {
 }
 
 export function testContext(settings) {
-  return { getFilename() { return FILENAME; },
-    settings: settings || {} };
+  return {
+    getFilename() {
+      return FILENAME;
+    },
+    settings: settings || {},
+  };
 }
 
 export function getFilename(file) {
@@ -76,7 +78,6 @@ export function getFilename(file) {
  * @type {Array}
  */
 export const SYNTAX_CASES = [
-
   test({ code: 'for (let { foo, bar } of baz) {}' }),
   test({ code: 'for (let [ foo, bar ] of baz) {}' }),
 

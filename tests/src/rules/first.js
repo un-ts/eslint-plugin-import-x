@@ -1,4 +1,4 @@
-import { test, getTSParsers, testVersion } from '../utils';
+import { test, parsers, testVersion } from '../utils';
 import fs from 'fs';
 import path from 'path';
 
@@ -25,7 +25,9 @@ ruleTester.run('first', rule, {
     }),
     testVersion('>= 7', () => ({
       // issue #2210
-      code: String(fs.readFileSync(path.join(__dirname, '../../files/component.html'))),
+      code: String(
+        fs.readFileSync(path.join(__dirname, '../../files/component.html')),
+      ),
       parser: require.resolve('@angular-eslint/template-parser'),
     })),
   ),
@@ -35,7 +37,8 @@ ruleTester.run('first', rule, {
               export { x };\
               import { y } from './bar';",
       errors: 1,
-      output: "import { x } from './foo';\
+      output:
+        "import { x } from './foo';\
               import { y } from './bar';\
               export { x };",
     }),
@@ -45,7 +48,8 @@ ruleTester.run('first', rule, {
               import { y } from './bar';\
               import { z } from './baz';",
       errors: 2,
-      output: "import { x } from './foo';\
+      output:
+        "import { x } from './foo';\
               import { y } from './bar';\
               import { z } from './baz';\
               export { x };",
@@ -60,7 +64,8 @@ ruleTester.run('first', rule, {
               'use directive';\
               import { y } from 'bar';",
       errors: 1,
-      output: "import { x } from 'foo';\
+      output:
+        "import { x } from 'foo';\
               import { y } from 'bar';\
               'use directive';",
     }),
@@ -71,7 +76,8 @@ ruleTester.run('first', rule, {
               import { x } from './foo';\
               import { z } from './baz';",
       errors: 3,
-      output: "import { y } from './bar';\
+      output:
+        "import { y } from './bar';\
               var a = 1;\
               if (true) { x() };\
               import { x } from './foo';\
@@ -86,42 +92,41 @@ ruleTester.run('first', rule, {
 });
 
 context('TypeScript', function () {
-  getTSParsers()
-    .forEach((parser) => {
-      const parserConfig = {
-        parser,
-        settings: {
-          'import-x/parsers': { [parser]: ['.ts'] },
-          'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-        },
-      };
+  const parser = parsers.TS;
 
-      ruleTester.run('order', rule, {
-        valid: [
-          test({
-            code: `
-              import y = require('bar');
-              import { x } from 'foo';
-              import z = require('baz');
-            `,
-            ...parserConfig,
-          }),
+  const parserConfig = {
+    parser,
+    settings: {
+      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+    },
+  };
+
+  ruleTester.run('order', rule, {
+    valid: [
+      test({
+        code: `
+          import y = require('bar');
+          import { x } from 'foo';
+          import z = require('baz');
+        `,
+        ...parserConfig,
+      }),
+    ],
+    invalid: [
+      test({
+        code: `
+          import { x } from './foo';
+          import y = require('bar');
+        `,
+        options: ['absolute-first'],
+        ...parserConfig,
+        errors: [
+          {
+            message: 'Absolute imports should come before relative imports.',
+          },
         ],
-        invalid: [
-          test({
-            code: `
-              import { x } from './foo';
-              import y = require('bar');
-            `,
-            options: ['absolute-first'],
-            ...parserConfig,
-            errors: [
-              {
-                message: 'Absolute imports should come before relative imports.',
-              },
-            ],
-          }),
-        ],
-      });
-    });
+      }),
+    ],
+  });
 });

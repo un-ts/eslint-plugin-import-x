@@ -1,13 +1,11 @@
 import {
   test,
   SYNTAX_CASES,
-  getTSParsers,
   testVersion,
   testFilePath,
   parsers,
 } from '../utils';
 import { RuleTester } from 'eslint';
-import flatMap from 'array.prototype.flatmap';
 
 const ruleTester = new RuleTester({ env: { es6: true } });
 const rule = require('rules/namespace');
@@ -177,46 +175,44 @@ const valid = [
   }),
 
   // Typescript
-  ...flatMap(getTSParsers(), (parser) => [
-    test({
-      code: `
-        import * as foo from "./typescript-declare-nested"
-        foo.bar.MyFunction()
-      `,
-      parser,
-      settings: {
-        'import-x/parsers': { [parser]: ['.ts'] },
-        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-      },
-    }),
+  test({
+    code: `
+      import * as foo from "./typescript-declare-nested"
+      foo.bar.MyFunction()
+    `,
+    parser: parsers.TS,
+    settings: {
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
+      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+    },
+  }),
 
-    test({
-      code: `import { foobar } from "./typescript-declare-interface"`,
-      parser,
-      settings: {
-        'import-x/parsers': { [parser]: ['.ts'] },
-        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-      },
-    }),
+  test({
+    code: `import { foobar } from "./typescript-declare-interface"`,
+    parser: parsers.TS,
+    settings: {
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
+      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+    },
+  }),
 
-    test({
-      code: 'export * from "typescript/lib/typescript.d"',
-      parser,
-      settings: {
-        'import-x/parsers': { [parser]: ['.ts'] },
-        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-      },
-    }),
+  test({
+    code: 'export * from "typescript/lib/typescript.d"',
+    parser: parsers.TS,
+    settings: {
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
+      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+    },
+  }),
 
-    test({
-      code: 'export = function name() {}',
-      parser,
-      settings: {
-        'import-x/parsers': { [parser]: ['.ts'] },
-        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-      },
-    }),
-  ]),
+  test({
+    code: 'export = function name() {}',
+    parser: parsers.TS,
+    settings: {
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
+      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+    },
+  }),
 
   ...SYNTAX_CASES,
 

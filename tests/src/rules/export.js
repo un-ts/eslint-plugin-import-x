@@ -1,9 +1,14 @@
-import { test, testFilePath, SYNTAX_CASES, getTSParsers, testVersion } from '../utils';
+import {
+  test,
+  testFilePath,
+  SYNTAX_CASES,
+  parsers,
+  testVersion,
+} from '../utils';
 
 import { RuleTester } from 'eslint';
 import eslintPkg from 'eslint/package.json';
 import semver from 'semver';
-import { version as tsEslintVersion } from 'typescript-eslint-parser/package.json';
 
 const ruleTester = new RuleTester();
 const rule = require('rules/export');
@@ -46,7 +51,7 @@ ruleTester.run('export', rule, {
       },
     })) || [],
 
-    getTSParsers().map((parser) => ({
+    {
       code: `
         export default function foo(param: string): boolean;
         export default function foo(param: string, param1: number): boolean;
@@ -54,8 +59,8 @@ ruleTester.run('export', rule, {
           return param && param1;
         }
       `,
-      parser,
-    })),
+      parser: parsers.TS,
+    },
   ),
 
   invalid: [].concat(
@@ -94,8 +99,8 @@ ruleTester.run('export', rule, {
     test({
       code: 'let foo; export { foo }; export * from "./export-all"',
       errors: [
-        'Multiple exports of name \'foo\'.',
-        'Multiple exports of name \'foo\'.',
+        "Multiple exports of name 'foo'.",
+        "Multiple exports of name 'foo'.",
       ],
     }),
     // test({
@@ -114,7 +119,8 @@ ruleTester.run('export', rule, {
       code: 'export * from "./malformed.js"',
       errors: [
         {
-          message: "Parse errors in imported module './malformed.js': 'return' outside of function (1:1)",
+          message:
+            "Parse errors in imported module './malformed.js': 'return' outside of function (1:1)",
           type: 'Literal',
         },
       ],
@@ -147,8 +153,8 @@ ruleTester.run('export', rule, {
     testVersion('>= 8.7', () => ({
       code: 'let foo; export { foo as "foo" }; export * from "./export-all"',
       errors: [
-        'Multiple exports of name \'foo\'.',
-        'Multiple exports of name \'foo\'.',
+        "Multiple exports of name 'foo'.",
+        "Multiple exports of name 'foo'.",
       ],
       parserOptions: {
         ecmaVersion: 2022,
@@ -158,290 +164,318 @@ ruleTester.run('export', rule, {
 });
 
 context('TypeScript', function () {
-  getTSParsers().forEach((parser) => {
-    const parserConfig = {
-      parser,
-      settings: {
-        'import-x/parsers': { [parser]: ['.ts'] },
-        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-      },
-    };
+  const parser = parsers.TS;
 
-    ruleTester.run('export', rule, {
-      valid: [].concat(
-        // type/value name clash
-        test({
-          code: `
-            export const Foo = 1;
-            export type Foo = number;
-          `,
-          ...parserConfig,
-        }),
-        test({
-          code: `
-            export const Foo = 1;
-            export interface Foo {}
-          `,
-          ...parserConfig,
-        }),
+  const parserConfig = {
+    parser,
+    settings: {
+      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+    },
+  };
 
-        semver.satisfies(tsEslintVersion, '>= 22') ? test({
-          code: `
-            export function fff(a: string);
-            export function fff(a: number);
-          `,
-          ...parserConfig,
-        }) : [],
+  ruleTester.run('export', rule, {
+    valid: [].concat(
+      // type/value name clash
+      test({
+        code: `
+          export const Foo = 1;
+          export type Foo = number;
+        `,
+        ...parserConfig,
+      }),
+      test({
+        code: `
+          export const Foo = 1;
+          export interface Foo {}
+        `,
+        ...parserConfig,
+      }),
 
-        semver.satisfies(tsEslintVersion, '>= 22') ? test({
-          code: `
-            export function fff(a: string);
-            export function fff(a: number);
-            export function fff(a: string|number) {};
-          `,
-          ...parserConfig,
-        }) : [],
+      test({
+        code: `
+          export function fff(a: string);
+          export function fff(a: number);
+        `,
+        ...parserConfig,
+      }),
 
-        // namespace
-        test({
-          code: `
+      test({
+        code: `
+          export function fff(a: string);
+          export function fff(a: number);
+          export function fff(a: string|number) {};
+        `,
+        ...parserConfig,
+      }),
+
+      // namespace
+      test({
+        code: `
+          export const Bar = 1;
+          export namespace Foo {
             export const Bar = 1;
-            export namespace Foo {
-              export const Bar = 1;
-            }
-          `,
-          ...parserConfig,
-        }),
-        test({
-          code: `
+          }
+        `,
+        ...parserConfig,
+      }),
+      test({
+        code: `
+          export type Bar = string;
+          export namespace Foo {
             export type Bar = string;
-            export namespace Foo {
-              export type Bar = string;
-            }
-          `,
-          ...parserConfig,
-        }),
-        test({
-          code: `
+          }
+        `,
+        ...parserConfig,
+      }),
+      test({
+        code: `
+          export const Bar = 1;
+          export type Bar = string;
+          export namespace Foo {
             export const Bar = 1;
             export type Bar = string;
+          }
+        `,
+        ...parserConfig,
+      }),
+      test({
+        code: `
+          export namespace Foo {
+            export const Foo = 1;
+            export namespace Bar {
+              export const Foo = 2;
+            }
+            export namespace Baz {
+              export const Foo = 3;
+            }
+          }
+        `,
+        ...parserConfig,
+      }),
+      semver.satisfies(eslintPkg.version, '>= 6')
+        ? [
+          test({
+            code: `
+            export class Foo { }
+            export namespace Foo { }
             export namespace Foo {
-              export const Bar = 1;
-              export type Bar = string;
+              export class Bar {}
             }
           `,
-          ...parserConfig,
-        }),
-        test({
-          code: `
-            export namespace Foo {
-              export const Foo = 1;
-              export namespace Bar {
-                export const Foo = 2;
-              }
-              export namespace Baz {
-                export const Foo = 3;
-              }
-            }
+            ...parserConfig,
+          }),
+          test({
+            code: `
+            export function Foo();
+            export namespace Foo { }
           `,
-          ...parserConfig,
-        }),
-        semver.satisfies(eslintPkg.version, '>= 6') ? [
-          test({
-            code: `
-              export class Foo { }
-              export namespace Foo { }
-              export namespace Foo {
-                export class Bar {}
-              }
-            `,
             ...parserConfig,
           }),
           test({
             code: `
-              export function Foo();
-              export namespace Foo { }
-            `,
+            export function Foo(a: string);
+            export namespace Foo { }
+          `,
             ...parserConfig,
           }),
           test({
             code: `
-              export function Foo(a: string);
-              export namespace Foo { }
-            `,
+            export function Foo(a: string);
+            export function Foo(a: number);
+            export namespace Foo { }
+          `,
             ...parserConfig,
           }),
           test({
             code: `
-              export function Foo(a: string);
-              export function Foo(a: number);
-              export namespace Foo { }
-            `,
+            export enum Foo { }
+            export namespace Foo { }
+          `,
             ...parserConfig,
           }),
-          test({
-            code: `
-              export enum Foo { }
-              export namespace Foo { }
-            `,
-            ...parserConfig,
-          }),
-        ] : [],
-        test({
-          code: 'export * from "./file1.ts"',
-          filename: testFilePath('typescript-d-ts/file-2.ts'),
-          ...parserConfig,
-        }),
+        ]
+        : [],
+      test({
+        code: 'export * from "./file1.ts"',
+        filename: testFilePath('typescript-d-ts/file-2.ts'),
+        ...parserConfig,
+      }),
 
-        semver.satisfies(eslintPkg.version, '>= 6') ? [
+      semver.satisfies(eslintPkg.version, '>= 6')
+        ? [
           test({
             code: `
-              export * as A from './named-export-collision/a';
-              export * as B from './named-export-collision/b';
-            `,
+            export * as A from './named-export-collision/a';
+            export * as B from './named-export-collision/b';
+          `,
             parser,
           }),
-        ] : [],
+        ]
+        : [],
 
-        // Exports in ambient modules
-        test({
-          code: `
-            declare module "a" {
-              const Foo = 1;
-              export {Foo as default};
-            }
-            declare module "b" {
-              const Bar = 2;
-              export {Bar as default};
-            }
-          `,
-          ...parserConfig,
-        }),
-        test({
-          code: `
-            declare module "a" {
-              const Foo = 1;
-              export {Foo as default};
-            }
+      // Exports in ambient modules
+      test({
+        code: `
+          declare module "a" {
+            const Foo = 1;
+            export {Foo as default};
+          }
+          declare module "b" {
             const Bar = 2;
             export {Bar as default};
-          `,
-          ...parserConfig,
-        }),
+          }
+        `,
+        ...parserConfig,
+      }),
+      test({
+        code: `
+          declare module "a" {
+            const Foo = 1;
+            export {Foo as default};
+          }
+          const Bar = 2;
+          export {Bar as default};
+        `,
+        ...parserConfig,
+      }),
 
-        semver.satisfies(process.version, '< 8') && semver.satisfies(eslintPkg.version, '< 6') ? [] : test({
+      semver.satisfies(process.version, '< 8')
+        && semver.satisfies(eslintPkg.version, '< 6')
+        ? []
+        : test({
           ...parserConfig,
           code: `
-            export * from './module';
-          `,
+          export * from './module';
+        `,
           filename: testFilePath('export-star-4/index.js'),
           settings: {
             ...parserConfig.settings,
             'import-x/extensions': ['.js', '.ts', '.jsx'],
           },
         }),
-      ),
-      invalid: [].concat(
-        // type/value name clash
-        test({
-          code: `
-            export type Foo = string;
-            export type Foo = number;
-          `,
-          errors: [
-            {
-              message: `Multiple exports of name 'Foo'.`,
-              line: 2,
-            },
-            {
-              message: `Multiple exports of name 'Foo'.`,
-              line: 3,
-            },
-          ],
-          ...parserConfig,
-        }),
+    ),
+    invalid: [].concat(
+      // type/value name clash
+      test({
+        code: `
+          export type Foo = string;
+          export type Foo = number;
+        `,
+        errors: [
+          {
+            message: `Multiple exports of name 'Foo'.`,
+            line: 2,
+          },
+          {
+            message: `Multiple exports of name 'Foo'.`,
+            line: 3,
+          },
+        ],
+        ...parserConfig,
+      }),
 
-        // namespace
-        test({
-          code: `
-            export const a = 1
-            export namespace Foo {
-              export const a = 2;
-              export const a = 3;
+      // namespace
+      test({
+        code: `
+          export const a = 1
+          export namespace Foo {
+            export const a = 2;
+            export const a = 3;
+          }
+        `,
+        errors: [
+          {
+            message: `Multiple exports of name 'a'.`,
+            line: 4,
+          },
+          {
+            message: `Multiple exports of name 'a'.`,
+            line: 5,
+          },
+        ],
+        ...parserConfig,
+      }),
+      test({
+        code: `
+          declare module 'foo' {
+            const Foo = 1;
+            export default Foo;
+            export default Foo;
+          }
+        `,
+        errors: [
+          {
+            message: 'Multiple default exports.',
+            line: 4,
+          },
+          {
+            message: 'Multiple default exports.',
+            line: 5,
+          },
+        ],
+        ...parserConfig,
+      }),
+      test({
+        code: `
+          export namespace Foo {
+            export namespace Bar {
+              export const Foo = 1;
+              export const Foo = 2;
             }
-          `,
-          errors: [
-            {
-              message: `Multiple exports of name 'a'.`,
-              line: 4,
-            },
-            {
-              message: `Multiple exports of name 'a'.`,
-              line: 5,
-            },
-          ],
-          ...parserConfig,
-        }),
-        test({
-          code: `
-            declare module 'foo' {
-              const Foo = 1;
-              export default Foo;
-              export default Foo;
+            export namespace Baz {
+              export const Bar = 3;
+              export const Bar = 4;
             }
+          }
+        `,
+        errors: [
+          {
+            message: `Multiple exports of name 'Foo'.`,
+            line: 4,
+          },
+          {
+            message: `Multiple exports of name 'Foo'.`,
+            line: 5,
+          },
+          {
+            message: `Multiple exports of name 'Bar'.`,
+            line: 8,
+          },
+          {
+            message: `Multiple exports of name 'Bar'.`,
+            line: 9,
+          },
+        ],
+        ...parserConfig,
+      }),
+      semver.satisfies(eslintPkg.version, '< 6')
+        ? []
+        : [
+          test({
+            code: `
+            export class Foo { }
+            export class Foo { }
+            export namespace Foo { }
           `,
-          errors: [
-            {
-              message: 'Multiple default exports.',
-              line: 4,
-            },
-            {
-              message: 'Multiple default exports.',
-              line: 5,
-            },
-          ],
-          ...parserConfig,
-        }),
-        test({
-          code: `
-            export namespace Foo {
-              export namespace Bar {
-                export const Foo = 1;
-                export const Foo = 2;
-              }
-              export namespace Baz {
-                export const Bar = 3;
-                export const Bar = 4;
-              }
-            }
+            errors: [
+              {
+                message: `Multiple exports of name 'Foo'.`,
+                line: 2,
+              },
+              {
+                message: `Multiple exports of name 'Foo'.`,
+                line: 3,
+              },
+            ],
+            ...parserConfig,
+          }),
+          test({
+            code: `
+            export enum Foo { }
+            export enum Foo { }
+            export namespace Foo { }
           `,
-          errors: [
-            {
-              message: `Multiple exports of name 'Foo'.`,
-              line: 4,
-            },
-            {
-              message: `Multiple exports of name 'Foo'.`,
-              line: 5,
-            },
-            {
-              message: `Multiple exports of name 'Bar'.`,
-              line: 8,
-            },
-            {
-              message: `Multiple exports of name 'Bar'.`,
-              line: 9,
-            },
-          ],
-          ...parserConfig,
-        }),
-        semver.satisfies(eslintPkg.version, '< 6') ? [] : [
-          test({
-            code: `
-              export class Foo { }
-              export class Foo { }
-              export namespace Foo { }
-            `,
             errors: [
               {
                 message: `Multiple exports of name 'Foo'.`,
@@ -456,10 +490,10 @@ context('TypeScript', function () {
           }),
           test({
             code: `
-              export enum Foo { }
-              export enum Foo { }
-              export namespace Foo { }
-            `,
+            export enum Foo { }
+            export class Foo { }
+            export namespace Foo { }
+          `,
             errors: [
               {
                 message: `Multiple exports of name 'Foo'.`,
@@ -474,10 +508,10 @@ context('TypeScript', function () {
           }),
           test({
             code: `
-              export enum Foo { }
-              export class Foo { }
-              export namespace Foo { }
-            `,
+            export const Foo = 'bar';
+            export class Foo { }
+            export namespace Foo { }
+          `,
             errors: [
               {
                 message: `Multiple exports of name 'Foo'.`,
@@ -492,10 +526,10 @@ context('TypeScript', function () {
           }),
           test({
             code: `
-              export const Foo = 'bar';
-              export class Foo { }
-              export namespace Foo { }
-            `,
+            export function Foo();
+            export class Foo { }
+            export namespace Foo { }
+          `,
             errors: [
               {
                 message: `Multiple exports of name 'Foo'.`,
@@ -510,10 +544,10 @@ context('TypeScript', function () {
           }),
           test({
             code: `
-              export function Foo();
-              export class Foo { }
-              export namespace Foo { }
-            `,
+            export const Foo = 'bar';
+            export function Foo();
+            export namespace Foo { }
+          `,
             errors: [
               {
                 message: `Multiple exports of name 'Foo'.`,
@@ -528,27 +562,9 @@ context('TypeScript', function () {
           }),
           test({
             code: `
-              export const Foo = 'bar';
-              export function Foo();
-              export namespace Foo { }
-            `,
-            errors: [
-              {
-                message: `Multiple exports of name 'Foo'.`,
-                line: 2,
-              },
-              {
-                message: `Multiple exports of name 'Foo'.`,
-                line: 3,
-              },
-            ],
-            ...parserConfig,
-          }),
-          test({
-            code: `
-              export const Foo = 'bar';
-              export namespace Foo { }
-            `,
+            export const Foo = 'bar';
+            export namespace Foo { }
+          `,
             errors: [
               {
                 message: `Multiple exports of name 'Foo'.`,
@@ -563,31 +579,30 @@ context('TypeScript', function () {
           }),
         ],
 
-        // Exports in ambient modules
-        test({
-          code: `
-            declare module "a" {
-              const Foo = 1;
-              export {Foo as default};
-            }
-            const Bar = 2;
-            export {Bar as default};
-            const Baz = 3;
-            export {Baz as default};
-          `,
-          errors: [
-            {
-              message: 'Multiple default exports.',
-              line: 7,
-            },
-            {
-              message: 'Multiple default exports.',
-              line: 9,
-            },
-          ],
-          ...parserConfig,
-        }),
-      ),
-    });
+      // Exports in ambient modules
+      test({
+        code: `
+          declare module "a" {
+            const Foo = 1;
+            export {Foo as default};
+          }
+          const Bar = 2;
+          export {Bar as default};
+          const Baz = 3;
+          export {Baz as default};
+        `,
+        errors: [
+          {
+            message: 'Multiple default exports.',
+            line: 7,
+          },
+          {
+            message: 'Multiple default exports.',
+            line: 9,
+          },
+        ],
+        ...parserConfig,
+      }),
+    ),
   });
 });

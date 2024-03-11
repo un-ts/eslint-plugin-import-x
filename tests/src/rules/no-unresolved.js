@@ -1,6 +1,11 @@
 import path from 'path';
 
-import { getTSParsers, test, SYNTAX_CASES, testVersion, parsers } from '../utils';
+import {
+  test,
+  SYNTAX_CASES,
+  testVersion,
+  parsers,
+} from '../utils';
 
 import { CASE_SENSITIVE_FS } from 'eslint-module-utils/resolve';
 
@@ -40,7 +45,8 @@ function runResolverTests(resolver) {
       testVersion('>= 7', () => rest({
         code: "import('fs');",
         parserOptions: { ecmaVersion: 2021 },
-      })) || [],
+      }),
+      ) || [],
 
       rest({ code: 'import * as foo from "a"' }),
 
@@ -132,7 +138,9 @@ function runResolverTests(resolver) {
         code: 'import reallyfake from "./reallyfake/module"',
         settings: { 'import-x/ignore': ['^\\./fake/'] },
         errors: [
-          { message: 'Unable to resolve path to module \'./reallyfake/module\'.' },
+          {
+            message: "Unable to resolve path to module './reallyfake/module'.",
+          },
         ],
       }),
 
@@ -169,7 +177,7 @@ function runResolverTests(resolver) {
         code: "import { DEEP } from 'in-alternate-root';",
         errors: [
           {
-            message: 'Unable to resolve path to module \'in-alternate-root\'.',
+            message: "Unable to resolve path to module 'in-alternate-root'.",
             type: 'Literal',
           },
         ],
@@ -178,7 +186,7 @@ function runResolverTests(resolver) {
         code: "import('in-alternate-root').then(function({DEEP}) {});",
         errors: [
           {
-            message: 'Unable to resolve path to module \'in-alternate-root\'.',
+            message: "Unable to resolve path to module 'in-alternate-root'.",
             type: 'Literal',
           },
         ],
@@ -199,12 +207,13 @@ function runResolverTests(resolver) {
         code: "import('in-alternate-root').then(function({DEEP}) {});",
         errors: [
           {
-            message: 'Unable to resolve path to module \'in-alternate-root\'.',
+            message: "Unable to resolve path to module 'in-alternate-root'.",
             type: 'Literal',
           },
         ],
         parserOptions: { ecmaVersion: 2021 },
-      })) || [],
+      }),
+      ) || [],
 
       // export symmetry proposal
       rest({
@@ -302,25 +311,34 @@ function runResolverTests(resolver) {
   if (!CASE_SENSITIVE_FS) {
     const relativePath = './tests/files/jsx/MyUnCoolComponent.jsx';
     const cwd = process.cwd();
-    const mismatchedPath = path.join(cwd.toUpperCase(), relativePath).replace(/\\/g, '/');
+    const mismatchedPath = path
+      .join(cwd.toUpperCase(), relativePath)
+      .replace(/\\/g, '/');
 
     ruleTester.run('case sensitivity', rule, {
       valid: [
-        rest({ // test with explicit flag
+        rest({
+          // test with explicit flag
           code: 'import foo from "./jsx/MyUncoolComponent.jsx"',
           options: [{ caseSensitive: false }],
         }),
       ],
 
       invalid: [
-        rest({ // test default
+        rest({
+          // test default
           code: 'import foo from "./jsx/MyUncoolComponent.jsx"',
-          errors: [`Casing of ./jsx/MyUncoolComponent.jsx does not match the underlying filesystem.`],
+          errors: [
+            `Casing of ./jsx/MyUncoolComponent.jsx does not match the underlying filesystem.`,
+          ],
         }),
-        rest({ // test with explicit flag
+        rest({
+          // test with explicit flag
           code: 'import foo from "./jsx/MyUncoolComponent.jsx"',
           options: [{ caseSensitive: true }],
-          errors: [`Casing of ./jsx/MyUncoolComponent.jsx does not match the underlying filesystem.`],
+          errors: [
+            `Casing of ./jsx/MyUncoolComponent.jsx does not match the underlying filesystem.`,
+          ],
         }),
       ],
     });
@@ -328,27 +346,33 @@ function runResolverTests(resolver) {
     ruleTester.run('case sensitivity strict', rule, {
       valid: [
         // #1259 issue
-        rest({ // caseSensitiveStrict is disabled by default
+        rest({
+          // caseSensitiveStrict is disabled by default
           code: `import foo from "${mismatchedPath}"`,
         }),
       ],
 
       invalid: [
         // #1259 issue
-        rest({ // test with enabled caseSensitiveStrict option
+        rest({
+          // test with enabled caseSensitiveStrict option
           code: `import foo from "${mismatchedPath}"`,
           options: [{ caseSensitiveStrict: true }],
-          errors: [`Casing of ${mismatchedPath} does not match the underlying filesystem.`],
+          errors: [
+            `Casing of ${mismatchedPath} does not match the underlying filesystem.`,
+          ],
         }),
-        rest({ // test with enabled caseSensitiveStrict option and disabled caseSensitive
+        rest({
+          // test with enabled caseSensitiveStrict option and disabled caseSensitive
           code: `import foo from "${mismatchedPath}"`,
           options: [{ caseSensitiveStrict: true, caseSensitive: false }],
-          errors: [`Casing of ${mismatchedPath} does not match the underlying filesystem.`],
+          errors: [
+            `Casing of ${mismatchedPath} does not match the underlying filesystem.`,
+          ],
         }),
       ],
     });
   }
-
 }
 
 ['node', 'webpack'].forEach(runResolverTests);
@@ -359,9 +383,7 @@ ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
       code: "import { DEEP } from 'in-alternate-root';",
       settings: {
         'import-x/resolve': {
-          paths: [
-            path.join(process.cwd(), 'tests', 'files', 'alternate-root'),
-          ],
+          paths: [path.join(process.cwd(), 'tests', 'files', 'alternate-root')],
         },
       },
     }),
@@ -458,7 +480,6 @@ ruleTester.run('no-unresolved unknown resolver', rule, {
   valid: [],
 
   invalid: [
-
     // logs resolver load error
     test({
       code: 'import "./malformed.js"',
@@ -514,37 +535,38 @@ ruleTester.run('import() with built-in parser', rule, {
     testVersion('>=7', () => ({
       code: 'import("./does-not-exist-l0w9ssmcqy9").then(() => {})',
       parserOptions: { ecmaVersion: 2021 },
-      errors: ["Unable to resolve path to module './does-not-exist-l0w9ssmcqy9'."],
+      errors: [
+        "Unable to resolve path to module './does-not-exist-l0w9ssmcqy9'.",
+      ],
     })) || [],
   ),
 });
 
 context('TypeScript', () => {
   // Type-only imports were added in TypeScript ESTree 2.23.0
-  getTSParsers().filter((x) => x !== parsers.TS_OLD).forEach((parser) => {
-    ruleTester.run(`${parser}: no-unresolved ignore type-only`, rule, {
-      valid: [
-        test({
-          code: 'import type { JSONSchema7Type } from "@types/json-schema";',
-          parser,
-        }),
-        test({
-          code: 'export type { JSONSchema7Type } from "@types/json-schema";',
-          parser,
-        }),
-      ],
-      invalid: [
-        test({
-          code: 'import { JSONSchema7Type } from "@types/json-schema";',
-          errors: ["Unable to resolve path to module '@types/json-schema'."],
-          parser,
-        }),
-        test({
-          code: 'export { JSONSchema7Type } from "@types/json-schema";',
-          errors: ["Unable to resolve path to module '@types/json-schema'."],
-          parser,
-        }),
-      ],
-    });
+  const parser = parsers.TS;
+  ruleTester.run(`${parser}: no-unresolved ignore type-only`, rule, {
+    valid: [
+      test({
+        code: 'import type { JSONSchema7Type } from "@types/json-schema";',
+        parser,
+      }),
+      test({
+        code: 'export type { JSONSchema7Type } from "@types/json-schema";',
+        parser,
+      }),
+    ],
+    invalid: [
+      test({
+        code: 'import { JSONSchema7Type } from "@types/json-schema";',
+        errors: ["Unable to resolve path to module '@types/json-schema'."],
+        parser,
+      }),
+      test({
+        code: 'export { JSONSchema7Type } from "@types/json-schema";',
+        errors: ["Unable to resolve path to module '@types/json-schema'."],
+        parser,
+      }),
+    ],
   });
 });

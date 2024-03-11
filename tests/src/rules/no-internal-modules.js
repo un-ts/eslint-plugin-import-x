@@ -1,8 +1,7 @@
 import { RuleTester } from 'eslint';
-import flatMap from 'array.prototype.flatmap';
 import rule from 'rules/no-internal-modules';
 
-import { test, testFilePath, getTSParsers } from '../utils';
+import { test, testFilePath, parsers } from '../utils';
 
 const ruleTester = new RuleTester();
 
@@ -130,18 +129,16 @@ ruleTester.run('no-internal-modules', rule, {
         }
       `,
     }),
-    ...flatMap(getTSParsers(), (parser) => [
-      test({
-        code: `
-          export class AuthHelper {
+    test({
+      code: `
+        export class AuthHelper {
 
-            public static checkAuth(auth?: string): boolean {
-            }
+          public static checkAuth(auth?: string): boolean {
           }
-        `,
-        parser,
-      }),
-    ]),
+        }
+      `,
+      parser: parsers.TS,
+    }),
     test({
       code: 'export * from "./plugin2/thing"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),

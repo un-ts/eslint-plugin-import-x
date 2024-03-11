@@ -164,7 +164,7 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS_NEW,
+      parser: parsers.TS,
     }),
 
     // #2347: duplicate identifiers should be removed
@@ -176,7 +176,7 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS_NEW,
+      parser: parsers.TS,
     }),
 
     // #2347: duplicate identifiers should be removed, but not if they are adjacent to comments
@@ -187,7 +187,7 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS_NEW,
+      parser: parsers.TS,
     }),
 
     test({
@@ -672,7 +672,7 @@ export default TestComponent;
 });
 
 context('TypeScript', function () {
-  const parser = parsers.TS_NEW;
+  const parser = parsers.TS;
 
   const parserConfig = {
     parser,

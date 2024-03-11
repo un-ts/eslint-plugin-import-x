@@ -1,8 +1,6 @@
 import { test, testVersion, getNonDefaultParsers, parsers } from '../utils';
 
 import { RuleTester } from 'eslint';
-import semver from 'semver';
-import { version as tsEslintVersion } from 'typescript-eslint-parser/package.json';
 
 const ruleTester = new RuleTester();
 const rule = require('../../../src/rules/prefer-default-export');
@@ -345,14 +343,6 @@ context('TypeScript', function () {
     ruleTester.run('prefer-default-export', rule, {
       valid: [].concat(
         // Exporting types
-        semver.satisfies(tsEslintVersion, '>= 22') ? test({
-          code: `
-            export type foo = string;
-            export type bar = number;
-            /* ${parser.replace(process.cwd(), '$$PWD')} */
-          `,
-          ...parserConfig,
-        }) : [],
         test({
           code: `
             export type foo = string;
@@ -361,14 +351,22 @@ context('TypeScript', function () {
           `,
           ...parserConfig,
         }),
-        semver.satisfies(tsEslintVersion, '>= 22') ? test({
+        test({
+          code: `
+            export type foo = string;
+            export type bar = number;
+            /* ${parser.replace(process.cwd(), '$$PWD')} */
+          `,
+          ...parserConfig,
+        }),
+        test({
           code: `export type foo = string /* ${parser.replace(process.cwd(), '$$PWD')}*/`,
           ...parserConfig,
-        }) : [],
-        semver.satisfies(tsEslintVersion, '> 20') ? test({
+        }),
+        test({
           code: `export interface foo { bar: string; } /* ${parser.replace(process.cwd(), '$$PWD')}*/`,
           ...parserConfig,
-        }) : [],
+        }),
         test({
           code: `export interface foo { bar: string; }; export function goo() {} /* ${parser.replace(process.cwd(), '$$PWD')}*/`,
           ...parserConfig,

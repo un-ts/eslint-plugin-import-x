@@ -1,9 +1,8 @@
-import { test, getTSParsers, getNonDefaultParsers, testFilePath, parsers } from '../utils';
+import { test, parsers, getNonDefaultParsers, testFilePath } from '../utils';
 
 import { RuleTester } from 'eslint';
 import eslintPkg from 'eslint/package.json';
 import semver from 'semver';
-import flatMap from 'array.prototype.flatmap';
 import { resolve } from 'path';
 import isCoreModule from 'is-core-module';
 import babelPresetFlow from '@babel/preset-flow';
@@ -194,29 +193,27 @@ ruleTester.run('order', rule, {
         var index = require('./');
       `,
     }),
-    ...flatMap(getTSParsers(), (parser) => [
-      // Export equals expressions should be on top alongside with ordinary import-statements.
-      test({
-        code: `
-          import async, {foo1} from 'async';
-          import relParent2, {foo2} from '../foo/bar';
-          import sibling, {foo3} from './foo';
-          var fs = require('fs');
-          var util = require("util");
-          var relParent1 = require('../foo');
-          var relParent3 = require('../');
-          var index = require('./');
-        `,
-        parser,
-      }),
+    // Export equals expressions should be on top alongside with ordinary import-statements.
+    test({
+      code: `
+        import async, {foo1} from 'async';
+        import relParent2, {foo2} from '../foo/bar';
+        import sibling, {foo3} from './foo';
+        var fs = require('fs');
+        var util = require("util");
+        var relParent1 = require('../foo');
+        var relParent3 = require('../');
+        var index = require('./');
+      `,
+      parser: parsers.TS,
+    }),
 
-      test({
-        code: `
-          export import CreateSomething = _CreateSomething;
-        `,
-        parser,
-      }),
-    ]),
+    test({
+      code: `
+        export import CreateSomething = _CreateSomething;
+      `,
+      parser: parsers.TS,
+    }),
     // Adding unknown import types (e.g. using a resolver alias via babel) to the groups.
     test({
       code: `
@@ -830,78 +827,76 @@ ruleTester.run('order', rule, {
         pathGroupsExcludedImportTypes: [],
       }],
     }),
-    ...flatMap(getTSParsers, (parser) => [
-      // Order of the `import ... = require(...)` syntax
-      test({
-        code: `
-          import blah = require('./blah');
-          import { hello } from './hello';`,
-        parser,
-        options: [
-          {
-            alphabetize: {
-              order: 'asc',
-            },
+    // Order of the `import ... = require(...)` syntax
+    test({
+      code: `
+        import blah = require('./blah');
+        import { hello } from './hello';`,
+      parser: parsers.TS,
+      options: [
+        {
+          alphabetize: {
+            order: 'asc',
           },
-        ],
-      }),
-      // Order of object-imports
-      test({
-        code: `
-          import blah = require('./blah');
-          import log = console.log;`,
-        parser,
-        options: [
-          {
-            alphabetize: {
-              order: 'asc',
-            },
+        },
+      ],
+    }),
+    // Order of object-imports
+    test({
+      code: `
+        import blah = require('./blah');
+        import log = console.log;`,
+      parser: parsers.TS,
+      options: [
+        {
+          alphabetize: {
+            order: 'asc',
           },
-        ],
-      }),
-      // Object-imports should not be forced to be alphabetized
-      test({
-        code: `
-          import debug = console.debug;
-          import log = console.log;`,
-        parser,
-        options: [
-          {
-            alphabetize: {
-              order: 'asc',
-            },
+        },
+      ],
+    }),
+    // Object-imports should not be forced to be alphabetized
+    test({
+      code: `
+        import debug = console.debug;
+        import log = console.log;`,
+      parser: parsers.TS,
+      options: [
+        {
+          alphabetize: {
+            order: 'asc',
           },
-        ],
-      }),
-      test({
-        code: `
-          import log = console.log;
-          import debug = console.debug;`,
-        parser,
-        options: [
-          {
-            alphabetize: {
-              order: 'asc',
-            },
+        },
+      ],
+    }),
+    test({
+      code: `
+        import log = console.log;
+        import debug = console.debug;`,
+      parser: parsers.TS,
+      options: [
+        {
+          alphabetize: {
+            order: 'asc',
           },
-        ],
-      }),
-      test({
-        code: `
-          import { a } from "./a";
-          export namespace SomeNamespace {
-              export import a2 = a;
-          }
-        `,
-        parser,
-        options: [
-          {
-            groups: ['external', 'index'],
-            alphabetize: { order: 'asc' },
-          },
-        ],
-      }),
-    ]),
+        },
+      ],
+    }),
+    test({
+      code: `
+        import { a } from "./a";
+        export namespace SomeNamespace {
+            export import a2 = a;
+        }
+      `,
+      parser: parsers.TS,
+      options: [
+        {
+          groups: ['external', 'index'],
+          alphabetize: { order: 'asc' },
+        },
+      ],
+    }),
     // Using `@/*` to alias internal modules
     test({
       code: `
@@ -1555,71 +1550,69 @@ ruleTester.run('order', rule, {
         message: '`fs` import should occur after import of `../foo/bar`',
       }],
     }),
-    ...flatMap(getTSParsers(), (parser) => [
-      // Order of the `import ... = require(...)` syntax
-      test({
-        code: `
-          var fs = require('fs');
-          import async, {foo1} from 'async';
-          import bar = require("../foo/bar");
-        `,
-        output: `
-          import async, {foo1} from 'async';
-          import bar = require("../foo/bar");
-          var fs = require('fs');
-        `,
-        parser,
-        errors: [{
-          message: '`fs` import should occur after import of `../foo/bar`',
-        }],
-      }),
-      test({
-        code: `
-          var async = require('async');
-          var fs = require('fs');
-        `,
-        output: `
-          var fs = require('fs');
-          var async = require('async');
-        `,
-        parser,
-        errors: [{
-          message: '`fs` import should occur before import of `async`',
-        }],
-      }),
-      test({
-        code: `
-          import sync = require('sync');
-          import async, {foo1} from 'async';
+    // Order of the `import ... = require(...)` syntax
+    test({
+      code: `
+        var fs = require('fs');
+        import async, {foo1} from 'async';
+        import bar = require("../foo/bar");
+      `,
+      output: `
+        import async, {foo1} from 'async';
+        import bar = require("../foo/bar");
+        var fs = require('fs');
+      `,
+      parser: parsers.TS,
+      errors: [{
+        message: '`fs` import should occur after import of `../foo/bar`',
+      }],
+    }),
+    test({
+      code: `
+        var async = require('async');
+        var fs = require('fs');
+      `,
+      output: `
+        var fs = require('fs');
+        var async = require('async');
+      `,
+      parser: parsers.TS,
+      errors: [{
+        message: '`fs` import should occur before import of `async`',
+      }],
+    }),
+    test({
+      code: `
+        import sync = require('sync');
+        import async, {foo1} from 'async';
 
-          import index from './';
-        `,
-        output: `
-          import async, {foo1} from 'async';
-          import sync = require('sync');
+        import index from './';
+      `,
+      output: `
+        import async, {foo1} from 'async';
+        import sync = require('sync');
 
-          import index from './';
-        `,
-        options: [{
-          groups: ['external', 'index'],
-          alphabetize: { order: 'asc' },
-        }],
-        parser,
-        errors: [{
-          message: '`async` import should occur before import of `sync`',
-        }],
-      }),
-      // Order of object-imports
-      test({
-        code: `
-          import log = console.log;
-          import blah = require('./blah');`,
-        parser,
-        errors: [{
-          message: '`./blah` import should occur before import of `console.log`',
-        }],
-      }),
-    ]),
+        import index from './';
+      `,
+      options: [{
+        groups: ['external', 'index'],
+        alphabetize: { order: 'asc' },
+      }],
+      parser: parsers.TS,
+      errors: [{
+        message: '`async` import should occur before import of `sync`',
+      }],
+    }),
+    // Order of object-imports
+    test({
+      code: `
+        import log = console.log;
+        import blah = require('./blah');`,
+      parser: parsers.TS,
+      errors: [{
+        message: '`./blah` import should occur before import of `console.log`',
+      }],
+    }),
     // Default order using import with custom import alias
     test({
       code: `
@@ -2743,7 +2736,6 @@ ruleTester.run('order', rule, {
 context('TypeScript', function () {
   getNonDefaultParsers()
     // Type-only imports were added in TypeScript ESTree 2.23.0
-    .filter((parser) => parser !== parsers.TS_OLD)
     .forEach((parser) => {
       const parserConfig = {
         parser,

@@ -33,11 +33,11 @@ ruleTester.run('no-empty-named-blocks', rule, {
     test({ code: `import * as Namespace from 'mod';` }),
 
     // Typescript
-    parsers.TS_NEW ? [
-      test({ code: `import type Default from 'mod';`, parser: parsers.TS_NEW }),
-      test({ code: `import type { Named } from 'mod';`, parser: parsers.TS_NEW }),
-      test({ code: `import type Default, { Named } from 'mod';`, parser: parsers.TS_NEW }),
-      test({ code: `import type * as Namespace from 'mod';`, parser: parsers.TS_NEW }),
+    parsers.TS ? [
+      test({ code: `import type Default from 'mod';`, parser: parsers.TS }),
+      test({ code: `import type { Named } from 'mod';`, parser: parsers.TS }),
+      test({ code: `import type Default, { Named } from 'mod';`, parser: parsers.TS }),
+      test({ code: `import type * as Namespace from 'mod';`, parser: parsers.TS }),
     ] : [],
 
     // Flow
@@ -77,7 +77,7 @@ ruleTester.run('no-empty-named-blocks', rule, {
     ]),
 
     // Typescript
-    parsers.TS_NEW ? [].concat(
+    parsers.TS ? [].concat(
       generateSuggestionsTestCases(
         [
           `import type {} from 'mod';`,
@@ -85,12 +85,12 @@ ruleTester.run('no-empty-named-blocks', rule, {
           `import type{}from 'mod';`,
           `import type {}from'mod';`,
         ],
-        parsers.TS_NEW,
+        parsers.TS,
       ),
       test({
         code: `import type Default, {} from 'mod';`,
         output: `import type Default from 'mod';`,
-        parser: parsers.TS_NEW,
+        parser: parsers.TS,
         errors: ['Unexpected empty named import block'],
       }),
     ) : [],

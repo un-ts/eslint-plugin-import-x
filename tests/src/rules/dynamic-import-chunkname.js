@@ -1,6 +1,5 @@
-import { SYNTAX_CASES, getTSParsers, parsers } from '../utils';
+import { SYNTAX_CASES, parsers } from '../utils';
 import { RuleTester } from 'eslint';
-import semver from 'semver';
 
 const rule = require('rules/dynamic-import-chunkname');
 const ruleTester = new RuleTester();
@@ -8,23 +7,29 @@ const ruleTester = new RuleTester();
 const commentFormat = '([0-9a-zA-Z-_/.]|\\[(request|index)\\])+';
 const pickyCommentFormat = '[a-zA-Z-_/.]+';
 const options = [{ importFunctions: ['dynamicImport'] }];
-const pickyCommentOptions = [{
-  importFunctions: ['dynamicImport'],
-  webpackChunknameFormat: pickyCommentFormat,
-}];
-const allowEmptyOptions = [{
-  importFunctions: ['dynamicImport'],
-  allowEmpty: true,
-}];
-const multipleImportFunctionOptions = [{
-  importFunctions: ['dynamicImport', 'definitelyNotStaticImport'],
-}];
+const pickyCommentOptions = [
+  {
+    importFunctions: ['dynamicImport'],
+    webpackChunknameFormat: pickyCommentFormat,
+  },
+];
+const allowEmptyOptions = [
+  {
+    importFunctions: ['dynamicImport'],
+    allowEmpty: true,
+  },
+];
+const multipleImportFunctionOptions = [
+  {
+    importFunctions: ['dynamicImport', 'definitelyNotStaticImport'],
+  },
+];
 const parser = parsers.BABEL;
 
-const noLeadingCommentError = 'dynamic imports require a leading comment with the webpack chunkname';
-const nonBlockCommentError = 'dynamic imports require a /* foo */ style comment, not a // foo comment';
-const noPaddingCommentError = 'dynamic imports require a block comment padded with spaces - /* foo */';
-const invalidSyntaxCommentError = 'dynamic imports require a "webpack" comment with valid syntax';
+const noLeadingCommentError =  'dynamic imports require a leading comment with the webpack chunkname';
+const nonBlockCommentError =  'dynamic imports require a /* foo */ style comment, not a // foo comment';
+const noPaddingCommentError =  'dynamic imports require a block comment padded with spaces - /* foo */';
+const invalidSyntaxCommentError =  'dynamic imports require a "webpack" comment with valid syntax';
 const commentFormatError = `dynamic imports require a "webpack" comment with valid syntax`;
 const chunkNameFormatError = `dynamic imports require a leading comment in the form /* webpackChunkName: ["']${commentFormat}["'],? */`;
 const pickyChunkNameFormatError = `dynamic imports require a leading comment in the form /* webpackChunkName: ["']${pickyCommentFormat}["'],? */`;
@@ -434,20 +439,24 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         // webpackChunkName: "someModule"
         'someModule'
       )`,
-      errors: [{
-        message: nonBlockCommentError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: nonBlockCommentError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
-      code: 'import(\'test\')',
+      code: "import('test')",
       options,
       parser,
-      output: 'import(\'test\')',
-      errors: [{
-        message: noLeadingCommentError,
-        type: 'ImportExpression',
-      }],
+      output: "import('test')",
+      errors: [
+        {
+          message: noLeadingCommentError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -460,10 +469,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: someModule */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -476,10 +487,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: "someModule' */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -492,10 +505,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: 'someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -508,10 +523,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -524,10 +541,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName:"someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -540,10 +559,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: true */
         'someModule'
       )`,
-      errors: [{
-        message: chunkNameFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: chunkNameFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -556,10 +577,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: "my-module-[id]" */
         'someModule'
       )`,
-      errors: [{
-        message: chunkNameFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: chunkNameFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -572,10 +595,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: ["request"] */
         'someModule'
       )`,
-      errors: [{
-        message: chunkNameFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: chunkNameFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -588,10 +613,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /*webpackChunkName: "someModule"*/
         'someModule'
       )`,
-      errors: [{
-        message: noPaddingCommentError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: noPaddingCommentError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -604,10 +631,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName  :  "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -620,10 +649,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: "someModule" ; */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -636,10 +667,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* totally not webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -654,10 +687,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunk: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -670,10 +705,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackPrefetch: true, webpackChunk: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -686,10 +723,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: "someModule123" */
         'someModule'
       )`,
-      errors: [{
-        message: pickyChunkNameFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: pickyChunkNameFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -702,10 +741,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackPrefetch: "module", webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -718,10 +759,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackPreload: "module", webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -734,10 +777,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackIgnore: "no", webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -750,10 +795,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackInclude: "someModule", webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -766,10 +813,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackInclude: true, webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -782,10 +831,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackExclude: "someModule", webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -798,10 +849,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackExclude: true, webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -814,10 +867,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackMode: "fast", webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -830,10 +885,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackMode: true, webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -846,10 +903,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackExports: true, webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `import(
@@ -862,10 +921,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackExports: /default/, webpackChunkName: "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'ImportExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'ImportExpression',
+        },
+      ],
     },
     {
       code: `dynamicImport(
@@ -877,10 +938,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'CallExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'CallExpression',
+        },
+      ],
     },
     {
       code: `definitelyNotStaticImport(
@@ -892,10 +955,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'CallExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'CallExpression',
+        },
+      ],
     },
     {
       code: `dynamicImport(
@@ -907,19 +972,23 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         // webpackChunkName: "someModule"
         'someModule'
       )`,
-      errors: [{
-        message: nonBlockCommentError,
-        type: 'CallExpression',
-      }],
+      errors: [
+        {
+          message: nonBlockCommentError,
+          type: 'CallExpression',
+        },
+      ],
     },
     {
-      code: 'dynamicImport(\'test\')',
+      code: "dynamicImport('test')",
       options,
-      output: 'dynamicImport(\'test\')',
-      errors: [{
-        message: noLeadingCommentError,
-        type: 'CallExpression',
-      }],
+      output: "dynamicImport('test')",
+      errors: [
+        {
+          message: noLeadingCommentError,
+          type: 'CallExpression',
+        },
+      ],
     },
     {
       code: `dynamicImport(
@@ -931,10 +1000,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: someModule */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'CallExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'CallExpression',
+        },
+      ],
     },
     {
       code: `dynamicImport(
@@ -946,10 +1017,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName "someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: invalidSyntaxCommentError,
-        type: 'CallExpression',
-      }],
+      errors: [
+        {
+          message: invalidSyntaxCommentError,
+          type: 'CallExpression',
+        },
+      ],
     },
     {
       code: `dynamicImport(
@@ -961,10 +1034,12 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName:"someModule" */
         'someModule'
       )`,
-      errors: [{
-        message: commentFormatError,
-        type: 'CallExpression',
-      }],
+      errors: [
+        {
+          message: commentFormatError,
+          type: 'CallExpression',
+        },
+      ],
     },
     {
       code: `dynamicImport(
@@ -976,323 +1051,323 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackChunkName: "someModule123" */
         'someModule'
       )`,
-      errors: [{
-        message: pickyChunkNameFormatError,
-        type: 'CallExpression',
-      }],
+      errors: [
+        {
+          message: pickyChunkNameFormatError,
+          type: 'CallExpression',
+        },
+      ],
     },
   ],
 });
 
 context('TypeScript', () => {
-  getTSParsers().forEach((typescriptParser) => {
-    const nodeType = typescriptParser === parsers.TS_OLD || typescriptParser === parsers.TS_NEW && semver.satisfies(require('@typescript-eslint/parser/package.json').version, '^2')
-      ? 'CallExpression'
-      : 'ImportExpression';
+  const typescriptParser = parsers.TS;
+  const nodeType = 'ImportExpression';
 
-    ruleTester.run('dynamic-import-chunkname', rule, {
-      valid: [
-        {
-          code: `import('test')`,
-          options: allowEmptyOptions,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+  ruleTester.run('dynamic-import-chunkname', rule, {
+    valid: [
+      {
+        code: `import('test')`,
+        options: allowEmptyOptions,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackMode: "lazy" */
             'test'
           )`,
-          options: allowEmptyOptions,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options: allowEmptyOptions,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "Some_Other_Module" */
             "test"
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "SomeModule123" */
             "test"
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule", webpackPrefetch: true */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule", webpackPrefetch: true, */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackPrefetch: true, webpackChunkName: "someModule" */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackPrefetch: true, webpackChunkName: "someModule", */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackPrefetch: true */
             /* webpackChunkName: "someModule" */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackPrefetch: true */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackPrefetch: 11 */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackPrefetch: -11 */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options: pickyCommentOptions,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options: pickyCommentOptions,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: 'someModule' */
             'test'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "[request]" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "my-chunk-[request]-custom" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: '[index]' */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: 'my-chunk.[index].with-index' */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackInclude: /\\.json$/ */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule", webpackInclude: /\\.json$/ */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackExclude: /\\.json$/ */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule", webpackExclude: /\\.json$/ */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackPreload: true */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule", webpackPreload: false */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackIgnore: false */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule", webpackIgnore: true */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackMode: "lazy" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: 'someModule', webpackMode: 'lazy' */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackMode: "lazy-once" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackMode: "eager" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackMode: "weak" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackExports: "default" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule", webpackExports: "named" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackExports: ["default", "named"] */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: 'someModule', webpackExports: ['default', 'named'] */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" */
             /* webpackInclude: /\\.json$/ */
             /* webpackExclude: /\\.json$/ */
@@ -1303,456 +1378,511 @@ context('TypeScript', () => {
             /* webpackExports: ["default", "named"] */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-        },
-      ],
-      invalid: [
-        {
-          code: `import(
+        options,
+        parser: typescriptParser,
+      },
+    ],
+    invalid: [
+      {
+        code: `import(
             // webpackChunkName: "someModule"
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             // webpackChunkName: "someModule"
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: nonBlockCommentError,
             type: nodeType,
-          }],
-        },
-        {
-          code: 'import(\'test\')',
-          options,
-          parser: typescriptParser,
-          output: 'import(\'test\')',
-          errors: [{
+          },
+        ],
+      },
+      {
+        code: "import('test')",
+        options,
+        parser: typescriptParser,
+        output: "import('test')",
+        errors: [
+          {
             message: noLeadingCommentError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName: someModule */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName: someModule */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: invalidSyntaxCommentError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName "someModule' */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName "someModule' */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: invalidSyntaxCommentError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName 'someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName 'someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: invalidSyntaxCommentError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: invalidSyntaxCommentError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName:"someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName:"someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /*webpackChunkName: "someModule"*/
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /*webpackChunkName: "someModule"*/
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: noPaddingCommentError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName  :  "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName  :  "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule" ; */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName: "someModule" ; */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: invalidSyntaxCommentError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* totally not webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* totally not webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: invalidSyntaxCommentError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackPrefetch: true */
             /* webpackChunk: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackPrefetch: true */
             /* webpackChunk: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackPrefetch: true, webpackChunk: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackPrefetch: true, webpackChunk: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName: true */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName: true */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: chunkNameFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName: "my-module-[id]" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName: "my-module-[id]" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: chunkNameFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName: ["request"] */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName: ["request"] */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: chunkNameFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackChunkName: "someModule123" */
             'someModule'
           )`,
-          options: pickyCommentOptions,
-          parser: typescriptParser,
-          output: `import(
+        options: pickyCommentOptions,
+        parser: typescriptParser,
+        output: `import(
             /* webpackChunkName: "someModule123" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: pickyChunkNameFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackPrefetch: "module", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackPrefetch: "module", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackPreload: "module", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackPreload: "module", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackIgnore: "no", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackIgnore: "no", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackInclude: "someModule", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackInclude: "someModule", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackInclude: true, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackInclude: true, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackExclude: "someModule", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackExclude: "someModule", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackExclude: true, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackExclude: true, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackMode: "fast", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackMode: "fast", webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackMode: true, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackMode: true, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackExports: true, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackExports: true, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-        {
-          code: `import(
+          },
+        ],
+      },
+      {
+        code: `import(
             /* webpackExports: /default/, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          options,
-          parser: typescriptParser,
-          output: `import(
+        options,
+        parser: typescriptParser,
+        output: `import(
             /* webpackExports: /default/, webpackChunkName: "someModule" */
             'someModule'
           )`,
-          errors: [{
+        errors: [
+          {
             message: commentFormatError,
             type: nodeType,
-          }],
-        },
-      ],
-    });
+          },
+        ],
+      },
+    ],
   });
 });

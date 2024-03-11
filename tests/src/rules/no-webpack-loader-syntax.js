@@ -1,4 +1,4 @@
-import { test, getTSParsers, parsers } from '../utils';
+import { test, parsers } from '../utils';
 
 import { RuleTester } from 'eslint';
 import semver from 'semver';
@@ -25,14 +25,14 @@ ruleTester.run('no-webpack-loader-syntax', rule, {
   invalid: [
     test({
       code: 'import _ from "babel!lodash"',
-      errors: [
-        { message: `Unexpected '!' in 'babel!lodash'. ${message}` },
-      ],
+      errors: [{ message: `Unexpected '!' in 'babel!lodash'. ${message}` }],
     }),
     test({
       code: 'import find from "-babel-loader!lodash.find"',
       errors: [
-        { message: `Unexpected '!' in '-babel-loader!lodash.find'. ${message}` },
+        {
+          message: `Unexpected '!' in '-babel-loader!lodash.find'. ${message}`,
+        },
       ],
     }),
     test({
@@ -44,19 +44,21 @@ ruleTester.run('no-webpack-loader-syntax', rule, {
     test({
       code: 'import data from "json!@scope/my-package/data.json"',
       errors: [
-        { message: `Unexpected '!' in 'json!@scope/my-package/data.json'. ${message}` },
+        {
+          message: `Unexpected '!' in 'json!@scope/my-package/data.json'. ${message}`,
+        },
       ],
     }),
     test({
       code: 'var _ = require("babel!lodash")',
-      errors: [
-        { message: `Unexpected '!' in 'babel!lodash'. ${message}` },
-      ],
+      errors: [{ message: `Unexpected '!' in 'babel!lodash'. ${message}` }],
     }),
     test({
       code: 'var find = require("-babel-loader!lodash.find")',
       errors: [
-        { message: `Unexpected '!' in '-babel-loader!lodash.find'. ${message}` },
+        {
+          message: `Unexpected '!' in '-babel-loader!lodash.find'. ${message}`,
+        },
       ],
     }),
     test({
@@ -68,31 +70,41 @@ ruleTester.run('no-webpack-loader-syntax', rule, {
     test({
       code: 'var data = require("json!@scope/my-package/data.json")',
       errors: [
-        { message: `Unexpected '!' in 'json!@scope/my-package/data.json'. ${message}` },
+        {
+          message: `Unexpected '!' in 'json!@scope/my-package/data.json'. ${message}`,
+        },
       ],
     }),
   ],
 });
 
 context('TypeScript', function () {
-  getTSParsers().forEach((parser) => {
-    const parserConfig = {
-      parser,
-      settings: {
-        'import-x/parsers': { [parser]: ['.ts'] },
-        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-      },
-    };
-    // @typescript-eslint/parser@5+ throw error for invalid module specifiers at parsing time.
-    // https://github.com/typescript-eslint/typescript-eslint/releases/tag/v5.0.0
-    if (!(parser === parsers.TS_NEW && semver.satisfies(require('@typescript-eslint/parser/package.json').version, '>= 5'))) {
-      ruleTester.run('no-webpack-loader-syntax', rule, {
-        valid: [
-          test({ code: 'import { foo } from\nalert()', ...parserConfig }),
-          test({ code: 'import foo from\nalert()', ...parserConfig }),
-        ],
-        invalid: [],
-      });
-    }
-  });
+  const parser = parsers.TS;
+
+  const parserConfig = {
+    parser,
+    settings: {
+      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+    },
+  };
+  // @typescript-eslint/parser@5+ throw error for invalid module specifiers at parsing time.
+  // https://github.com/typescript-eslint/typescript-eslint/releases/tag/v5.0.0
+  if (
+    !(
+      parser === parsers.TS
+      && semver.satisfies(
+        require('@typescript-eslint/parser/package.json').version,
+        '>= 5',
+      )
+    )
+  ) {
+    ruleTester.run('no-webpack-loader-syntax', rule, {
+      valid: [
+        test({ code: 'import { foo } from\nalert()', ...parserConfig }),
+        test({ code: 'import foo from\nalert()', ...parserConfig }),
+      ],
+      invalid: [],
+    });
+  }
 });

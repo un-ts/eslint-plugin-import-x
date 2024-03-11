@@ -1,4 +1,10 @@
-import { test, SYNTAX_CASES, getTSParsers, testFilePath, testVersion, parsers } from '../utils';
+import {
+  test,
+  SYNTAX_CASES,
+  testFilePath,
+  testVersion,
+  parsers,
+} from '../utils';
 import { RuleTester } from 'eslint';
 import path from 'path';
 
@@ -22,22 +28,30 @@ ruleTester.run('named', rule, {
     test({ code: 'import {a, b, d} from "./named-exports"' }),
     test({ code: 'import {ExportedClass} from "./named-exports"' }),
     test({ code: 'import { destructingAssign } from "./named-exports"' }),
-    test({ code: 'import { destructingRenamedAssign } from "./named-exports"' }),
+    test({
+      code: 'import { destructingRenamedAssign } from "./named-exports"',
+    }),
     test({ code: 'import { ActionTypes } from "./qc"' }),
     test({ code: 'import {a, b, c, d} from "./re-export"' }),
     test({ code: 'import {a, b, c} from "./re-export-common-star"' }),
     test({ code: 'import {RuleTester} from "./re-export-node_modules"' }),
 
-    test({ code: 'import { jsxFoo } from "./jsx/AnotherComponent"',
-      settings: { 'import-x/resolve': { extensions: ['.js', '.jsx'] } } }),
+    test({
+      code: 'import { jsxFoo } from "./jsx/AnotherComponent"',
+      settings: { 'import-x/resolve': { extensions: ['.js', '.jsx'] } },
+    }),
 
     // validate that eslint-disable-line silences this properly
-    test({ code: 'import {a, b, d} from "./common"; // eslint-disable-line named' }),
+    test({
+      code: 'import {a, b, d} from "./common"; // eslint-disable-line named',
+    }),
 
     test({ code: 'import { foo, bar } from "./re-export-names"' }),
 
-    test({ code: 'import { foo, bar } from "./common"',
-      settings: { 'import-x/ignore': ['common'] } }),
+    test({
+      code: 'import { foo, bar } from "./common"',
+      settings: { 'import-x/ignore': ['common'] },
+    }),
 
     // ignore core modules by default
     test({ code: 'import { foo } from "crypto"' }),
@@ -181,53 +195,75 @@ ruleTester.run('named', rule, {
 
     ...SYNTAX_CASES,
 
-    ...[].concat(testVersion('>= 6', () => ({
-      code: `import { ExtfieldModel, Extfield2Model } from './models';`,
-      filename: testFilePath('./export-star/downstream.js'),
-      parserOptions: {
-        sourceType: 'module',
-        ecmaVersion: 2020,
-      },
-    })),
+    ...[].concat(
+      testVersion('>= 6', () => ({
+        code: `import { ExtfieldModel, Extfield2Model } from './models';`,
+        filename: testFilePath('./export-star/downstream.js'),
+        parserOptions: {
+          sourceType: 'module',
+          ecmaVersion: 2020,
+        },
+      })),
 
-    testVersion('>=7.8.0', () => ({ code: 'const { something } = require("./dynamic-import-in-commonjs")',
-      parserOptions: { ecmaVersion: 2021 },
-      options: [{ commonjs: true }],
-    })),
+      testVersion('>=7.8.0', () => ({
+        code: 'const { something } = require("./dynamic-import-in-commonjs")',
+        parserOptions: { ecmaVersion: 2021 },
+        options: [{ commonjs: true }],
+      })),
 
-    testVersion('>=7.8.0', () => ({ code: 'import { something } from "./dynamic-import-in-commonjs"',
-      parserOptions: { ecmaVersion: 2021 } })),
+      testVersion('>=7.8.0', () => ({
+        code: 'import { something } from "./dynamic-import-in-commonjs"',
+        parserOptions: { ecmaVersion: 2021 },
+      })),
 
-    // es2022: Arbitrary module namespace identifier names
-    testVersion('>= 8.7', () => ({
-      code: 'import { "foo" as foo } from "./bar"', parserOptions: { ecmaVersion: 2022 } })),
-    testVersion('>= 8.7', () => ({
-      code: 'import { "foo" as foo } from "./empty-module"', parserOptions: { ecmaVersion: 2022 } })),
+      // es2022: Arbitrary module namespace identifier names
+      testVersion('>= 8.7', () => ({
+        code: 'import { "foo" as foo } from "./bar"',
+        parserOptions: { ecmaVersion: 2022 },
+      })),
+      testVersion('>= 8.7', () => ({
+        code: 'import { "foo" as foo } from "./empty-module"',
+        parserOptions: { ecmaVersion: 2022 },
+      })),
     ),
   ],
 
   invalid: [].concat(
-    test({ code: 'import { somethingElse } from "./test-module"',
-      errors: [error('somethingElse', './test-module')] }),
+    test({
+      code: 'import { somethingElse } from "./test-module"',
+      errors: [error('somethingElse', './test-module')],
+    }),
 
-    test({ code: 'import { baz } from "./bar"',
-      errors: [error('baz', './bar')] }),
+    test({
+      code: 'import { baz } from "./bar"',
+      errors: [error('baz', './bar')],
+    }),
 
     // test multiple
-    test({ code: 'import { baz, bop } from "./bar"',
-      errors: [error('baz', './bar'), error('bop', './bar')] }),
+    test({
+      code: 'import { baz, bop } from "./bar"',
+      errors: [error('baz', './bar'), error('bop', './bar')],
+    }),
 
-    test({ code: 'import {a, b, c} from "./named-exports"',
-      errors: [error('c', './named-exports')] }),
+    test({
+      code: 'import {a, b, c} from "./named-exports"',
+      errors: [error('c', './named-exports')],
+    }),
 
-    test({ code: 'import { a } from "./default-export"',
-      errors: [error('a', './default-export')] }),
+    test({
+      code: 'import { a } from "./default-export"',
+      errors: [error('a', './default-export')],
+    }),
 
-    test({ code: 'import { ActionTypess } from "./qc"',
-      errors: [error('ActionTypess', './qc')] }),
+    test({
+      code: 'import { ActionTypess } from "./qc"',
+      errors: [error('ActionTypess', './qc')],
+    }),
 
-    test({ code: 'import {a, b, c, d, e} from "./re-export"',
-      errors: [error('e', './re-export')] }),
+    test({
+      code: 'import {a, b, c, d, e} from "./re-export"',
+      errors: [error('e', './re-export')],
+    }),
 
     test({
       code: 'import { a } from "./re-export-names"',
@@ -271,7 +307,11 @@ ruleTester.run('named', rule, {
 
     test({
       code: 'const { baz: bar, bop } = require("./bar"), { a } = require("./re-export-names")',
-      errors: [error('baz', './bar'), error('bop', './bar'), error('a', './re-export-names')],
+      errors: [
+        error('baz', './bar'),
+        error('bop', './bar'),
+        error('a', './re-export-names'),
+      ],
       options: [{ commonjs: true }],
     }),
 
@@ -335,7 +375,10 @@ ruleTester.run('named', rule, {
     })),
     testVersion('>= 8.7', () => ({
       code: 'import { "baz" as baz, "bop" as bop } from "./bar"',
-      errors: [error('baz', './bar', 'Literal'), error('bop', './bar', 'Literal')],
+      errors: [
+        error('baz', './bar', 'Literal'),
+        error('bop', './bar', 'Literal'),
+      ],
       parserOptions: { ecmaVersion: 2022 },
     })),
     testVersion('>= 8.7', () => ({
@@ -379,142 +422,158 @@ ruleTester.run('named (export *)', rule, {
 });
 
 context('TypeScript', function () {
-  getTSParsers().forEach((parser) => {
-    const settings = {
-      'import-x/parsers': { [parser]: ['.ts'] },
-      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-    };
+  const parser = parsers.TS;
 
-    let valid = [
-      test({
-        code: `import x from './typescript-export-assign-object'`,
-        parser,
-        parserOptions: {
-          tsconfigRootDir: path.resolve(__dirname, '../../files/typescript-export-assign-object/'),
-        },
-        settings,
-      }),
-    ];
-    const invalid = [
-      // TODO: uncomment this test
-      // test({
-      //   code: `import {a} from './export-star-3/b';`,
-      //   filename: testFilePath('./export-star-3/a.js'),
-      //   parser,
-      //   settings,
-      //   errors: [
-      //     { message: 'a not found in ./export-star-3/b' },
-      //   ],
-      // }),
-      test({
-        code: `import { NotExported } from './typescript-export-assign-object'`,
-        parser,
-        parserOptions: {
-          tsconfigRootDir: path.resolve(__dirname, '../../files/typescript-export-assign-object/'),
-        },
-        settings,
-        errors: [{
+  const settings = {
+    'import-x/parsers': { [parser]: ['.ts'] },
+    'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+  };
+
+  let valid = [
+    test({
+      code: `import x from './typescript-export-assign-object'`,
+      parser,
+      parserOptions: {
+        tsconfigRootDir: path.resolve(
+          __dirname,
+          '../../files/typescript-export-assign-object/',
+        ),
+      },
+      settings,
+    }),
+  ];
+  const invalid = [
+    // TODO: uncomment this test
+    // test({
+    //   code: `import {a} from './export-star-3/b';`,
+    //   filename: testFilePath('./export-star-3/a.js'),
+    //   parser,
+    //   settings,
+    //   errors: [
+    //     { message: 'a not found in ./export-star-3/b' },
+    //   ],
+    // }),
+    test({
+      code: `import { NotExported } from './typescript-export-assign-object'`,
+      parser,
+      parserOptions: {
+        tsconfigRootDir: path.resolve(
+          __dirname,
+          '../../files/typescript-export-assign-object/',
+        ),
+      },
+      settings,
+      errors: [
+        {
           message: `NotExported not found in './typescript-export-assign-object'`,
           type: 'Identifier',
-        }],
-      }),
-      test({
-        // `export =` syntax creates a default export only
-        code: `import { FooBar } from './typescript-export-assign-object'`,
-        parser,
-        parserOptions: {
-          tsconfigRootDir: path.resolve(__dirname, '../../files/typescript-export-assign-object/'),
         },
-        settings,
-        errors: [{
+      ],
+    }),
+    test({
+      // `export =` syntax creates a default export only
+      code: `import { FooBar } from './typescript-export-assign-object'`,
+      parser,
+      parserOptions: {
+        tsconfigRootDir: path.resolve(
+          __dirname,
+          '../../files/typescript-export-assign-object/',
+        ),
+      },
+      settings,
+      errors: [
+        {
           message: `FooBar not found in './typescript-export-assign-object'`,
           type: 'Identifier',
-        }],
+        },
+      ],
+    }),
+  ];
+
+  [
+    'typescript',
+    'typescript-declare',
+    'typescript-export-assign-namespace',
+    'typescript-export-assign-namespace-merged',
+  ].forEach((source) => {
+    valid = valid.concat(
+      test({
+        code: `import { MyType } from "./${source}"`,
+        parser,
+        settings,
       }),
-    ];
+      test({
+        code: `import { Foo } from "./${source}"`,
+        parser,
+        settings,
+      }),
+      test({
+        code: `import { Bar } from "./${source}"`,
+        parser,
+        settings,
+      }),
+      source === 'typescript-declare'
+        ? testVersion('> 5', () => ({
+          code: `import { getFoo } from "./${source}"`,
+          parser,
+          settings,
+        }))
+        : test({
+          code: `import { getFoo } from "./${source}"`,
+          parser,
+          settings,
+        }),
+      test({
+        code: `import { MyEnum } from "./${source}"`,
+        parser,
+        settings,
+      }),
+      test({
+        code: `
+            import { MyModule } from "./${source}"
+            MyModule.ModuleFunction()
+          `,
+        parser,
+        settings,
+      }),
+      test({
+        code: `
+            import { MyNamespace } from "./${source}"
+            MyNamespace.NSModule.NSModuleFunction()
+          `,
+        parser,
+        settings,
+      }),
+    );
 
-    [
-      'typescript',
-      'typescript-declare',
-      'typescript-export-assign-namespace',
-      'typescript-export-assign-namespace-merged',
-    ].forEach((source) => {
-      valid = valid.concat(
-        test({
-          code: `import { MyType } from "./${source}"`,
-          parser,
-          settings,
-        }),
-        test({
-          code: `import { Foo } from "./${source}"`,
-          parser,
-          settings,
-        }),
-        test({
-          code: `import { Bar } from "./${source}"`,
-          parser,
-          settings,
-        }),
-        source === 'typescript-declare'
-          ? testVersion('> 5', () => ({
-            code: `import { getFoo } from "./${source}"`,
-            parser,
-            settings,
-          }))
-          : test({
-            code: `import { getFoo } from "./${source}"`,
-            parser,
-            settings,
-          })
-        ,
-        test({
-          code: `import { MyEnum } from "./${source}"`,
-          parser,
-          settings,
-        }),
-        test({
-          code: `
-              import { MyModule } from "./${source}"
-              MyModule.ModuleFunction()
-            `,
-          parser,
-          settings,
-        }),
-        test({
-          code: `
-              import { MyNamespace } from "./${source}"
-              MyNamespace.NSModule.NSModuleFunction()
-            `,
-          parser,
-          settings,
-        }),
-      );
-
-      invalid.push(
-        test({
-          code: `import { MissingType } from "./${source}"`,
-          parser,
-          settings,
-          errors: [{
+    invalid.push(
+      test({
+        code: `import { MissingType } from "./${source}"`,
+        parser,
+        settings,
+        errors: [
+          {
             message: `MissingType not found in './${source}'`,
             type: 'Identifier',
-          }],
-        }),
-        test({
-          code: `import { NotExported } from "./${source}"`,
-          parser,
-          settings,
-          errors: [{
+          },
+        ],
+      }),
+      test({
+        code: `import { NotExported } from "./${source}"`,
+        parser,
+        settings,
+        errors: [
+          {
             message: `NotExported not found in './${source}'`,
             type: 'Identifier',
-          }],
-        }),
-      );
-    });
+          },
+        ],
+      }),
+    );
+  });
 
-    ruleTester.run(`named [TypeScript]`, rule, {
-      valid,
-      invalid,
-    });
+  ruleTester.run(`named [TypeScript]`, rule, {
+    valid,
+    invalid,
   });
 });

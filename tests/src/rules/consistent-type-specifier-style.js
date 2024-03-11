@@ -382,12 +382,12 @@ const FLOW_ONLY = {
 
 context('TypeScript', () => {
   // inline type specifiers weren't supported prior to TS v4.5
-  if (!parsers.TS_NEW || !tsVersionSatisfies('>= 4.5') || !typescriptEslintParserSatisfies('>= 5.7.0')) {
+  if (!parsers.TS || !tsVersionSatisfies('>= 4.5') || !typescriptEslintParserSatisfies('>= 5.7.0')) {
     return;
   }
 
   const ruleTester = new RuleTester({
-    parser: parsers.TS_NEW,
+    parser: parsers.TS,
     parserOptions: {
       ecmaVersion: 6,
       sourceType: 'module',
