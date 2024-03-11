@@ -45,10 +45,5 @@ node_modules
 lib/
 **/.nyc_output/
 
-# Only apps should have lockfiles
-yarn.lock
-package-lock.json
-npm-shrinkwrap.json
-
 # macOS
 .DS_Store

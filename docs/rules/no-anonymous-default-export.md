@@ -1,4 +1,4 @@
-# import/no-anonymous-default-export
+# import-x/no-anonymous-default-export
 
 <!-- end auto-generated rule header -->
 

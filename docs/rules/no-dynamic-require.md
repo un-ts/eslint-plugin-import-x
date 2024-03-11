@@ -1,4 +1,4 @@
-# import/no-dynamic-require
+# import-x/no-dynamic-require
 
 <!-- end auto-generated rule header -->
 

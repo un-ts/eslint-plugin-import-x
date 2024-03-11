@@ -1,6 +1,4 @@
-# import/no-unresolved
-
-💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
+# import-x/no-unresolved
 
 <!-- end auto-generated rule header -->
 

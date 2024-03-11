@@ -1,4 +1,4 @@
-# import/no-nodejs-modules
+# import-x/no-nodejs-modules
 
 <!-- end auto-generated rule header -->
 

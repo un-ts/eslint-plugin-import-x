@@ -1,4 +1,4 @@
-# import/no-amd
+# import-x/no-amd
 
 <!-- end auto-generated rule header -->
 

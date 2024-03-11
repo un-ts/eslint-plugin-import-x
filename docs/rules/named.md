@@ -1,6 +1,4 @@
-# import/named
-
-💼🚫 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`. This rule is _disabled_ in the ⌨️ `typescript` config.
+# import-x/named
 
 <!-- end auto-generated rule header -->
 

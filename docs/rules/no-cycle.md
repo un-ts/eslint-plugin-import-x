@@ -1,4 +1,4 @@
-# import/no-cycle
+# import-x/no-cycle
 
 <!-- end auto-generated rule header -->
 

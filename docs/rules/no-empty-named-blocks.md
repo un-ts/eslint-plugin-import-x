@@ -1,4 +1,4 @@
-# import/no-empty-named-blocks
+# import-x/no-empty-named-blocks
 
 🔧💡 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix) and manually fixable by [editor suggestions](https://eslint.org/docs/latest/use/core-concepts#rule-suggestions).
 

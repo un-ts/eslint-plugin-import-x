@@ -1,4 +1,4 @@
-# import/no-deprecated
+# import-x/no-deprecated
 
 <!-- end auto-generated rule header -->
 

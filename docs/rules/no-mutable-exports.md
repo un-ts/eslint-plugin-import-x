@@ -1,4 +1,4 @@
-# import/no-mutable-exports
+# import-x/no-mutable-exports
 
 <!-- end auto-generated rule header -->
 

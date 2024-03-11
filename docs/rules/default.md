@@ -1,6 +1,4 @@
-# import/default
-
-💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
+# import-x/default
 
 <!-- end auto-generated rule header -->
 

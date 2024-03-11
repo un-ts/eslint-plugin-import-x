@@ -1,4 +1,4 @@
-# import/extensions
+# import-x/extensions
 
 <!-- end auto-generated rule header -->
 

@@ -1,4 +1,4 @@
-# import/no-webpack-loader-syntax
+# import-x/no-webpack-loader-syntax
 
 <!-- end auto-generated rule header -->
 

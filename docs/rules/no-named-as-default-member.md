@@ -1,6 +1,4 @@
-# import/no-named-as-default-member
-
-⚠️ This rule _warns_ in the following configs: ☑️ `recommended`, 🚸 `warnings`.
+# import-x/no-named-as-default-member
 
 <!-- end auto-generated rule header -->
 

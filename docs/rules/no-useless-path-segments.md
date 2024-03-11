@@ -1,4 +1,4 @@
-# import/no-useless-path-segments
+# import-x/no-useless-path-segments
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 

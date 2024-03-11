@@ -1,6 +1,4 @@
-# import/no-duplicates
-
-⚠️ This rule _warns_ in the following configs: ☑️ `recommended`, 🚸 `warnings`.
+# import-x/no-duplicates
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 

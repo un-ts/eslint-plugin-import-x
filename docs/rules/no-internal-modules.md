@@ -1,4 +1,4 @@
-# import/no-internal-modules
+# import-x/no-internal-modules
 
 <!-- end auto-generated rule header -->
 

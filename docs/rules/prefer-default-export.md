@@ -1,4 +1,4 @@
-# import/prefer-default-export
+# import-x/prefer-default-export
 
 <!-- end auto-generated rule header -->
 

@@ -1,4 +1,4 @@
-# import/no-extraneous-dependencies
+# import-x/no-extraneous-dependencies
 
 <!-- end auto-generated rule header -->
 

@@ -1,4 +1,4 @@
-# import/max-dependencies
+# import-x/max-dependencies
 
 <!-- end auto-generated rule header -->
 

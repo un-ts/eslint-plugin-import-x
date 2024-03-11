@@ -1,4 +1,4 @@
-# import/no-unused-modules
+# import-x/no-unused-modules
 
 <!-- end auto-generated rule header -->
 

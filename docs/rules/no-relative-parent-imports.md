@@ -1,4 +1,4 @@
-# import/no-relative-parent-imports
+# import-x/no-relative-parent-imports
 
 <!-- end auto-generated rule header -->
 

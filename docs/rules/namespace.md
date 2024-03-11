@@ -1,6 +1,4 @@
-# import/namespace
-
-💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
+# import-x/namespace
 
 <!-- end auto-generated rule header -->
 

@@ -1,4 +1,4 @@
-# import/no-absolute-path
+# import-x/no-absolute-path
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 

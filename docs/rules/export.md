@@ -1,6 +1,4 @@
-# import/export
-
-💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
+# import-x/export
 
 <!-- end auto-generated rule header -->
 

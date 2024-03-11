@@ -1,4 +1,4 @@
-# import/no-relative-packages
+# import-x/no-relative-packages
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 

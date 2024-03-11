@@ -1,4 +1,4 @@
-# import/no-import-module-exports
+# import-x/no-import-module-exports
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
