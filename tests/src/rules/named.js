@@ -29,7 +29,7 @@ ruleTester.run('named', rule, {
     test({ code: 'import {RuleTester} from "./re-export-node_modules"' }),
 
     test({ code: 'import { jsxFoo } from "./jsx/AnotherComponent"',
-      settings: { 'import/resolve': { extensions: ['.js', '.jsx'] } } }),
+      settings: { 'import-x/resolve': { extensions: ['.js', '.jsx'] } } }),
 
     // validate that eslint-disable-line silences this properly
     test({ code: 'import {a, b, d} from "./common"; // eslint-disable-line named' }),
@@ -37,7 +37,7 @@ ruleTester.run('named', rule, {
     test({ code: 'import { foo, bar } from "./re-export-names"' }),
 
     test({ code: 'import { foo, bar } from "./common"',
-      settings: { 'import/ignore': ['common'] } }),
+      settings: { 'import-x/ignore': ['common'] } }),
 
     // ignore core modules by default
     test({ code: 'import { foo } from "crypto"' }),
@@ -114,7 +114,7 @@ ruleTester.run('named', rule, {
     // jsnext
     test({
       code: '/*jsnext*/ import { createStore } from "redux"',
-      settings: { 'import/ignore': [] },
+      settings: { 'import-x/ignore': [] },
     }),
     // should work without ignore
     test({
@@ -131,14 +131,14 @@ ruleTester.run('named', rule, {
     test({ code: 'import { foo, bar, baz } from "./re-export-default"' }),
     test({
       code: 'import { common } from "./re-export-default"',
-      settings: { 'import/ignore': ['common'] },
+      settings: { 'import-x/ignore': ['common'] },
     }),
 
     // ignore CJS by default. always ignore ignore list
     test({ code: 'import {a, b, d} from "./common"' }),
     test({
       code: 'import { baz } from "./bar"',
-      settings: { 'import/ignore': ['bar'] },
+      settings: { 'import-x/ignore': ['bar'] },
     }),
     test({
       code: 'import { common } from "./re-export-default"',
@@ -284,7 +284,7 @@ ruleTester.run('named', rule, {
     // parse errors
     // test({
     //   code: "import { a } from './test.coffee';",
-    //   settings: { 'import/extensions': ['.js', '.coffee'] },
+    //   settings: { 'import-x/extensions': ['.js', '.coffee'] },
     //   errors: [{
     //     message: "Parse errors in imported module './test.coffee': Unexpected token > (1:20)",
     //     type: 'Literal',
@@ -300,7 +300,7 @@ ruleTester.run('named', rule, {
     // jsnext
     test({
       code: '/*jsnext*/ import { createSnorlax } from "redux"',
-      settings: { 'import/ignore': [] },
+      settings: { 'import-x/ignore': [] },
       errors: ["createSnorlax not found in 'redux'"],
     }),
     // should work without ignore
@@ -381,8 +381,8 @@ ruleTester.run('named (export *)', rule, {
 context('TypeScript', function () {
   getTSParsers().forEach((parser) => {
     const settings = {
-      'import/parsers': { [parser]: ['.ts'] },
-      'import/resolver': { 'eslint-import-resolver-typescript': true },
+      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     };
 
     let valid = [

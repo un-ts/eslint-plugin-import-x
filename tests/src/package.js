@@ -47,7 +47,7 @@ describe('package', function () {
 
   it('has configs only for rules that exist', function () {
     for (const configFile in module.configs) {
-      const preamble = 'import/';
+      const preamble = 'import-x/';
 
       for (const rule in module.configs[configFile].rules) {
         expect(() => require(getRulePath(rule.slice(preamble.length))))

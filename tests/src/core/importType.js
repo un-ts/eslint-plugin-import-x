@@ -49,23 +49,23 @@ describe('importType(name)', function () {
   });
 
   it("should return 'internal' for non-builtins resolved outside of node_modules", function () {
-    const pathContext = testContext({ 'import/resolver': { node: { paths: [pathToTestFiles] } } });
+    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFiles] } } });
     expect(importType('importType', pathContext)).to.equal('internal');
   });
 
   it("should return 'internal' for scoped packages resolved outside of node_modules", function () {
-    const pathContext = testContext({ 'import/resolver': { node: { paths: [pathToTestFiles] } } });
+    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFiles] } } });
     expect(importType('@importType/index', pathContext)).to.equal('internal');
   });
 
   it("should return 'internal' for internal modules that are referenced by aliases", function () {
-    const pathContext = testContext({ 'import/resolver': { node: { paths: [pathToTestFiles] } } });
+    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFiles] } } });
     expect(importType('@my-alias/fn', pathContext)).to.equal('internal');
     expect(importType('@importType', pathContext)).to.equal('internal');
   });
 
   it("should return 'internal' for aliased internal modules that look like core modules (node resolver)", function () {
-    const pathContext = testContext({ 'import/resolver': { node: { paths: [pathToTestFiles] } } });
+    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFiles] } } });
     expect(importType('constants/index', pathContext)).to.equal('internal');
     expect(importType('constants/', pathContext)).to.equal('internal');
     // resolves exact core modules over internal modules
@@ -74,7 +74,7 @@ describe('importType(name)', function () {
 
   it("should return 'internal' for aliased internal modules that look like core modules (webpack resolver)", function () {
     const webpackConfig = { resolve: { modules: [pathToTestFiles, 'node_modules'] } };
-    const pathContext = testContext({ 'import/resolver': { webpack: { config: webpackConfig } } });
+    const pathContext = testContext({ 'import-x/resolver': { webpack: { config: webpackConfig } } });
     expect(importType('constants/index', pathContext)).to.equal('internal');
     expect(importType('constants/', pathContext)).to.equal('internal');
     expect(importType('constants', pathContext)).to.equal('internal');
@@ -86,7 +86,7 @@ describe('importType(name)', function () {
     // as an alias by itelf is the full root name (e.g. `@/some-file.js`).
     const alias = { '@': path.join(pathToTestFiles, 'internal-modules') };
     const webpackConfig = { resolve: { alias } };
-    const pathContext = testContext({ 'import/resolver': { webpack: { config: webpackConfig } } });
+    const pathContext = testContext({ 'import-x/resolver': { webpack: { config: webpackConfig } } });
     expect(importType('@/api/service', pathContext)).to.equal('internal');
     expect(importType('@/does-not-exist', pathContext)).to.equal('unknown');
   });
@@ -124,18 +124,18 @@ describe('importType(name)', function () {
     expect(importType('electron', context)).to.equal('external');
     expect(importType('@org/foobar', context)).to.equal('external');
 
-    const electronContext = testContext({ 'import/core-modules': ['electron'] });
+    const electronContext = testContext({ 'import-x/core-modules': ['electron'] });
     expect(importType('electron', electronContext)).to.equal('builtin');
 
-    const scopedContext = testContext({ 'import/core-modules': ['@org/foobar'] });
+    const scopedContext = testContext({ 'import-x/core-modules': ['@org/foobar'] });
     expect(importType('@org/foobar', scopedContext)).to.equal('builtin');
   });
 
   it("should return 'builtin' for resources inside additional core modules", function () {
-    const electronContext = testContext({ 'import/core-modules': ['electron'] });
+    const electronContext = testContext({ 'import-x/core-modules': ['electron'] });
     expect(importType('electron/some/path/to/resource.json', electronContext)).to.equal('builtin');
 
-    const scopedContext = testContext({ 'import/core-modules': ['@org/foobar'] });
+    const scopedContext = testContext({ 'import-x/core-modules': ['@org/foobar'] });
     expect(importType('@org/foobar/some/path/to/resource.json', scopedContext)).to.equal('builtin');
   });
 
@@ -144,29 +144,29 @@ describe('importType(name)', function () {
   });
 
   it("should return 'internal' for module from 'node_modules' if 'node_modules' missed in 'external-module-folders'", function () {
-    const foldersContext = testContext({ 'import/external-module-folders': [] });
+    const foldersContext = testContext({ 'import-x/external-module-folders': [] });
     expect(importType('chai', foldersContext)).to.equal('internal');
   });
 
   it("should return 'internal' for module from 'node_modules' if its name matched 'internal-regex'", function () {
-    const foldersContext = testContext({ 'import/internal-regex': '^@org' });
+    const foldersContext = testContext({ 'import-x/internal-regex': '^@org' });
     expect(importType('@org/foobar', foldersContext)).to.equal('internal');
   });
 
   it("should return 'external' for module from 'node_modules' if its name did not match 'internal-regex'", function () {
-    const foldersContext = testContext({ 'import/internal-regex': '^@bar' });
+    const foldersContext = testContext({ 'import-x/internal-regex': '^@bar' });
     expect(importType('@org/foobar', foldersContext)).to.equal('external');
   });
 
   it("should return 'external' for module from 'node_modules' if 'node_modules' contained in 'external-module-folders'", function () {
-    const foldersContext = testContext({ 'import/external-module-folders': ['node_modules'] });
+    const foldersContext = testContext({ 'import-x/external-module-folders': ['node_modules'] });
     expect(importType('resolve', foldersContext)).to.equal('external');
   });
 
   it('returns "external" for a scoped symlinked module', function () {
     const foldersContext = testContext({
-      'import/resolver': 'node',
-      'import/external-module-folders': ['node_modules'],
+      'import-x/resolver': 'node',
+      'import-x/external-module-folders': ['node_modules'],
     });
     expect(importType('@test-scope/some-module', foldersContext)).to.equal('external');
   });
@@ -176,74 +176,74 @@ describe('importType(name)', function () {
   // actual directory inside 'files' instead
   it('returns "external" for a scoped module from a symlinked directory which name is contained in "external-module-folders" (webpack resolver)', function () {
     const foldersContext = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': ['symlinked-module'],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': ['symlinked-module'],
     });
     expect(importType('@test-scope/some-module', foldersContext)).to.equal('external');
   });
 
   it('returns "internal" for a scoped module from a symlinked directory which incomplete name is contained in "external-module-folders" (webpack resolver)', function () {
     const foldersContext_1 = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': ['symlinked-mod'],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': ['symlinked-mod'],
     });
     expect(importType('@test-scope/some-module', foldersContext_1)).to.equal('internal');
 
     const foldersContext_2 = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': ['linked-module'],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': ['linked-module'],
     });
     expect(importType('@test-scope/some-module', foldersContext_2)).to.equal('internal');
   });
 
   it('returns "external" for a scoped module from a symlinked directory which partial path is contained in "external-module-folders" (webpack resolver)', function () {
     const originalFoldersContext = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': [],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': [],
     });
     expect(importType('@test-scope/some-module', originalFoldersContext)).to.equal('internal');
 
     const foldersContext = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': ['symlinked-module'],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': ['symlinked-module'],
     });
     expect(importType('@test-scope/some-module', foldersContext)).to.equal('external');
   });
 
   it('returns "internal" for a scoped module from a symlinked directory which partial path w/ incomplete segment is contained in "external-module-folders" (webpack resolver)', function () {
     const foldersContext_1 = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': ['files/symlinked-mod'],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': ['files/symlinked-mod'],
     });
     expect(importType('@test-scope/some-module', foldersContext_1)).to.equal('internal');
 
     const foldersContext_2 = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': ['ymlinked-module'],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': ['ymlinked-module'],
     });
     expect(importType('@test-scope/some-module', foldersContext_2)).to.equal('internal');
   });
 
   it('returns "external" for a scoped module from a symlinked directory which partial path ending w/ slash is contained in "external-module-folders" (webpack resolver)', function () {
     const foldersContext = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': ['symlinked-module/'],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': ['symlinked-module/'],
     });
     expect(importType('@test-scope/some-module', foldersContext)).to.equal('external');
   });
 
   it('returns "internal" for a scoped module from a symlinked directory when "external-module-folders" contains an absolute path resembling directory‘s relative path (webpack resolver)', function () {
     const foldersContext = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': ['/symlinked-module'],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': ['/symlinked-module'],
     });
     expect(importType('@test-scope/some-module', foldersContext)).to.equal('internal');
   });
 
   it('returns "external" for a scoped module from a symlinked directory which absolute path is contained in "external-module-folders" (webpack resolver)', function () {
     const foldersContext = testContext({
-      'import/resolver': 'webpack',
-      'import/external-module-folders': [testFilePath('symlinked-module')],
+      'import-x/resolver': 'webpack',
+      'import-x/external-module-folders': [testFilePath('symlinked-module')],
     });
     expect(importType('@test-scope/some-module', foldersContext)).to.equal('external');
   });
@@ -253,7 +253,7 @@ describe('importType(name)', function () {
     expect(isExternalModule('foo', 'E:\\path\\to\\node_modules\\foo', context)).to.equal(true);
     expect(isExternalModule('@foo/bar', 'E:\\path\\to\\node_modules\\@foo\\bar', context)).to.equal(true);
     expect(isExternalModule('foo', 'E:\\path\\to\\node_modules\\foo', testContext({
-      settings: { 'import/external-module-folders': ['E:\\path\\to\\node_modules'] },
+      settings: { 'import-x/external-module-folders': ['E:\\path\\to\\node_modules'] },
     }))).to.equal(true);
   });
 
@@ -262,7 +262,7 @@ describe('importType(name)', function () {
     expect(isExternalModule('foo', '/path/to/node_modules/foo', context)).to.equal(true);
     expect(isExternalModule('@foo/bar', '/path/to/node_modules/@foo/bar', context)).to.equal(true);
     expect(isExternalModule('foo', '/path/to/node_modules/foo', testContext({
-      settings: { 'import/external-module-folders': ['/path/to/node_modules'] },
+      settings: { 'import-x/external-module-folders': ['/path/to/node_modules'] },
     }))).to.equal(true);
   });
 

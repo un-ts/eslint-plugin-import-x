@@ -34,12 +34,12 @@ ruleTester.run('no-duplicates', rule, {
     test({
       code: "import x from './bar?optionX'; import y from './bar?optionY';",
       options: [{ considerQueryString: true }],
-      settings: { 'import/resolver': 'webpack' },
+      settings: { 'import-x/resolver': 'webpack' },
     }),
     test({
       code: "import x from './foo'; import y from './bar';",
       options: [{ considerQueryString: true }],
-      settings: { 'import/resolver': 'webpack' },
+      settings: { 'import-x/resolver': 'webpack' },
     }),
 
     // #1538: It is impossible to import namespace and other in one line, so allow this.
@@ -68,7 +68,7 @@ ruleTester.run('no-duplicates', rule, {
       code: "import { x } from './bar'; import { y } from 'bar';",
       output: "import { x , y } from './bar'; ",
       settings: {
-        'import/resolve': {
+        'import-x/resolve': {
           paths: [path.join(process.cwd(), 'tests', 'files')],
         },
       },
@@ -78,12 +78,12 @@ ruleTester.run('no-duplicates', rule, {
     // #1107: Using different query strings that trigger different webpack loaders.
     test({
       code: "import x from './bar.js?optionX'; import y from './bar?optionX';",
-      settings: { 'import/resolver': 'webpack' },
+      settings: { 'import-x/resolver': 'webpack' },
       errors: 2, // path ends up hardcoded
     }),
     test({
       code: "import x from './bar?optionX'; import y from './bar?optionY';",
-      settings: { 'import/resolver': 'webpack' },
+      settings: { 'import-x/resolver': 'webpack' },
       errors: 2, // path ends up hardcoded
     }),
 
@@ -91,7 +91,7 @@ ruleTester.run('no-duplicates', rule, {
     test({
       code: "import x from './bar?optionX'; import y from './bar.js?optionX';",
       options: [{ considerQueryString: true }],
-      settings: { 'import/resolver': 'webpack' },
+      settings: { 'import-x/resolver': 'webpack' },
       errors: 2, // path ends up hardcoded
     }),
 
@@ -447,37 +447,37 @@ import {x,y} from './foo'
 
     test({
       code: `
-        import {
-          DEFAULT_FILTER_KEYS,
-          BULK_DISABLED,
-        } from '../constants';
-        import React from 'react';
-        import {
-          BULK_ACTIONS_ENABLED
-        } from '../constants';
-        
-        const TestComponent = () => {
-          return <div>
-          </div>;
-        }
-        
-        export default TestComponent;
+import {
+  DEFAULT_FILTER_KEYS,
+  BULK_DISABLED,
+} from '../constants';
+import React from 'react';
+import {
+  BULK_ACTIONS_ENABLED
+} from '../constants';
+
+const TestComponent = () => {
+  return <div>
+  </div>;
+}
+
+export default TestComponent;
       `,
       output: `
-        import {
-          DEFAULT_FILTER_KEYS,
-          BULK_DISABLED,
-        
-          BULK_ACTIONS_ENABLED
-        } from '../constants';
-        import React from 'react';
-                
-        const TestComponent = () => {
-          return <div>
-          </div>;
-        }
-        
-        export default TestComponent;
+import {
+  DEFAULT_FILTER_KEYS,
+  BULK_DISABLED,
+
+  BULK_ACTIONS_ENABLED
+} from '../constants';
+import React from 'react';
+
+const TestComponent = () => {
+  return <div>
+  </div>;
+}
+
+export default TestComponent;
       `,
       errors: ["'../constants' imported multiple times.", "'../constants' imported multiple times."],
       ...jsxConfig,
@@ -555,8 +555,8 @@ context('TypeScript', function () {
       const parserConfig = {
         parser,
         settings: {
-          'import/parsers': { [parser]: ['.ts'] },
-          'import/resolver': { 'eslint-import-resolver-typescript': true },
+          'import-x/parsers': { [parser]: ['.ts'] },
+          'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
       };
 

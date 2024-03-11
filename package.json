@@ -21,18 +21,17 @@
   "scripts": {
     "prebuild": "rimraf lib",
     "build": "babel --quiet --out-dir lib src",
-    "postbuild": "npm run copy-metafiles",
+    "postbuild": "yarn copy-metafiles",
     "copy-metafiles": "node --require babel-register ./scripts/copyMetafiles",
-    "watch": "npm run tests-only -- -- --watch",
-    "posttest": "eslint . && npm run update:eslint-docs -- --check && markdownlint \"**/*.md\"",
-    "mocha": "cross-env BABEL_ENV=test nyc mocha",
-    "test": "npm run test-compiled",
-    "test-compiled": "npm run prepublish && BABEL_ENV=testCompiled mocha --compilers js:babel-register tests/src",
+    "watch": "yarn tests-only --watch",
+    "lint": "eslint . && yarn update:eslint-docs --check && markdownlint \"**/*.md\"",
+    "mocha": "cross-env BABEL_ENV=test mocha",
+    "test": "yarn build && yarn test-compiled",
+    "tests-only": "yarn mocha --compilers js:babel-register tests/src",
+    "test-compiled": "yarn build && BABEL_ENV=testCompiled yarn mocha --compilers js:babel-register tests/src",
     "test-all": "node --require babel-register ./scripts/testAll",
-    "prepublishOnly": "safe-publish-latest && npm run build",
-    "prepublish": "not-in-publish || npm run prepublishOnly",
-    "preupdate:eslint-docs": "npm run build",
-    "update:eslint-docs": "eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️"
+    "prepublishOnly": "yarn build",
+    "update:eslint-docs": "yarn build && eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️"
   },
   "repository": "git+https://github.com/un-es/eslint-plugin-i",
   "keywords": [
@@ -66,27 +65,21 @@
     "escope": "^3.6.0",
     "eslint": "^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8",
     "eslint-doc-generator": "^1.6.1",
-    "eslint-import-resolver-node": "link:./resolvers/node",
     "eslint-import-resolver-typescript": "^1.0.2 || ^1.1.1",
     "eslint-import-resolver-webpack": "link:./resolvers/webpack",
     "eslint-import-test-order-redirect": "link:./tests/files/order-redirect",
-    "eslint-module-utils": "link:./utils",
     "eslint-plugin-eslint-plugin": "^2.3.0",
-    "eslint-plugin-import": "2.x",
+    "eslint-plugin-import-x": "link:.",
     "eslint-plugin-json": "^2.1.2",
     "fs-copy-file-sync": "^1.1.1",
     "glob": "^7.2.3",
-    "in-publish": "^2.0.1",
-    "jackspeak": "=2.1.1",
     "jsonc-parser": "=3.2.0",
     "lodash.isarray": "^4.0.0",
     "markdownlint-cli": "~0.35",
     "mocha": "^3.5.3",
     "npm-which": "^3.0.1",
-    "nyc": "^11.9.0",
     "redux": "^3.7.2",
     "rimraf": "^2.7.1",
-    "safe-publish-latest": "^2.0.0",
     "sinon": "^2.4.1",
     "typescript": "^2.8.1 || ~3.9.5 || ~4.5.2",
     "typescript-eslint-parser": "^15 || ^20 || ^22"
@@ -112,5 +105,9 @@
     "object.values": "^1.1.7",
     "semver": "^6.3.1",
     "tsconfig-paths": "^3.15.0"
+  },
+  "resolutions": {
+    "eslint-import-resolver-node": "link:./resolvers/node",
+    "eslint-module-utils": "link:./utils"
   }
 }

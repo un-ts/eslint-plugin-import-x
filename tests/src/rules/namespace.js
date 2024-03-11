@@ -32,7 +32,7 @@ const valid = [
       console.log(foo.jsxFoo);
     `,
     settings: {
-      'import/extensions': ['.js', '.jsx'],
+      'import-x/extensions': ['.js', '.jsx'],
     },
   }),
   // import re-exported jsx files, where jsx files export functions that return html tags
@@ -45,7 +45,7 @@ const valid = [
       console.log(foo.Qux2);
     `,
     settings: {
-      'import/extensions': ['.js', '.jsx'],
+      'import-x/extensions': ['.js', '.jsx'],
     },
     parserOptions: {
       ecmaFeatures: {
@@ -151,8 +151,8 @@ const valid = [
       `,
       parser,
       settings: {
-        'import/parsers': { [parser]: ['.ts'] },
-        'import/resolver': { 'eslint-import-resolver-typescript': true },
+        'import-x/parsers': { [parser]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
     }),
 
@@ -160,8 +160,8 @@ const valid = [
       code: `import { foobar } from "./typescript-declare-interface"`,
       parser,
       settings: {
-        'import/parsers': { [parser]: ['.ts'] },
-        'import/resolver': { 'eslint-import-resolver-typescript': true },
+        'import-x/parsers': { [parser]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
     }),
 
@@ -169,8 +169,8 @@ const valid = [
       code: 'export * from "typescript/lib/typescript.d"',
       parser,
       settings: {
-        'import/parsers': { [parser]: ['.ts'] },
-        'import/resolver': { 'eslint-import-resolver-typescript': true },
+        'import-x/parsers': { [parser]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
     }),
 
@@ -178,8 +178,8 @@ const valid = [
       code: 'export = function name() {}',
       parser,
       settings: {
-        'import/parsers': { [parser]: ['.ts'] },
-        'import/resolver': { 'eslint-import-resolver-typescript': true },
+        'import-x/parsers': { [parser]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
     }),
   ]),

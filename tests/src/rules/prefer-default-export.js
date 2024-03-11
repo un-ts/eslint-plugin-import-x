@@ -337,8 +337,8 @@ context('TypeScript', function () {
     const parserConfig = {
       parser,
       settings: {
-        'import/parsers': { [parser]: ['.ts'] },
-        'import/resolver': { 'eslint-import-resolver-typescript': true },
+        'import-x/parsers': { [parser]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
     };
 

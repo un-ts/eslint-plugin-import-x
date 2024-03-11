@@ -17,8 +17,8 @@ function runResolverTests(resolver) {
       ...specs,
       settings: {
         ...specs.settings,
-        'import/resolver': resolver,
-        'import/cache': { lifetime: 0 },
+        'import-x/resolver': resolver,
+        'import-x/cache': { lifetime: 0 },
       },
     });
   }
@@ -130,7 +130,7 @@ function runResolverTests(resolver) {
     invalid: [].concat(
       rest({
         code: 'import reallyfake from "./reallyfake/module"',
-        settings: { 'import/ignore': ['^\\./fake/'] },
+        settings: { 'import-x/ignore': ['^\\./fake/'] },
         errors: [
           { message: 'Unable to resolve path to module \'./reallyfake/module\'.' },
         ],
@@ -284,11 +284,11 @@ function runResolverTests(resolver) {
       rest({ code: 'import foo from "./bar"' }),
       rest({
         code: 'import foo from "./bar.json"',
-        settings: { 'import/extensions': ['.js'] },
+        settings: { 'import-x/extensions': ['.js'] },
       }),
       rest({
         code: 'import foo from "./bar"',
-        settings: { 'import/extensions': ['.js'] },
+        settings: { 'import-x/extensions': ['.js'] },
       }),
     ],
     invalid: [
@@ -353,12 +353,12 @@ function runResolverTests(resolver) {
 
 ['node', 'webpack'].forEach(runResolverTests);
 
-ruleTester.run('no-unresolved (import/resolve legacy)', rule, {
+ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
   valid: [
     test({
       code: "import { DEEP } from 'in-alternate-root';",
       settings: {
-        'import/resolve': {
+        'import-x/resolve': {
           paths: [
             path.join(process.cwd(), 'tests', 'files', 'alternate-root'),
           ],
@@ -369,7 +369,7 @@ ruleTester.run('no-unresolved (import/resolve legacy)', rule, {
     test({
       code: "import { DEEP } from 'in-alternate-root'; import { bar } from 'src-bar';",
       settings: {
-        'import/resolve': {
+        'import-x/resolve': {
           paths: [
             path.join('tests', 'files', 'src-root'),
             path.join('tests', 'files', 'alternate-root'),
@@ -380,7 +380,7 @@ ruleTester.run('no-unresolved (import/resolve legacy)', rule, {
 
     test({
       code: 'import * as foo from "jsx-module/foo"',
-      settings: { 'import/resolve': { extensions: ['.jsx'] } },
+      settings: { 'import-x/resolve': { extensions: ['.jsx'] } },
     }),
   ],
 
@@ -397,12 +397,12 @@ ruleTester.run('no-unresolved (webpack-specific)', rule, {
     test({
       // default webpack config in files/webpack.config.js knows about jsx
       code: 'import * as foo from "jsx-module/foo"',
-      settings: { 'import/resolver': 'webpack' },
+      settings: { 'import-x/resolver': 'webpack' },
     }),
     test({
       // should ignore loaders
       code: 'import * as foo from "some-loader?with=args!jsx-module/foo"',
-      settings: { 'import/resolver': 'webpack' },
+      settings: { 'import-x/resolver': 'webpack' },
     }),
   ],
   invalid: [
@@ -410,7 +410,7 @@ ruleTester.run('no-unresolved (webpack-specific)', rule, {
       // default webpack config in files/webpack.config.js knows about jsx
       code: 'import * as foo from "jsx-module/foo"',
       settings: {
-        'import/resolver': { webpack: { config: 'webpack.empty.config.js' } },
+        'import-x/resolver': { webpack: { config: 'webpack.empty.config.js' } },
       },
       errors: ["Unable to resolve path to module 'jsx-module/foo'."],
     }),
@@ -462,7 +462,7 @@ ruleTester.run('no-unresolved unknown resolver', rule, {
     // logs resolver load error
     test({
       code: 'import "./malformed.js"',
-      settings: { 'import/resolver': 'doesnt-exist' },
+      settings: { 'import-x/resolver': 'doesnt-exist' },
       errors: [
         `Resolve error: unable to load resolver "doesnt-exist".`,
         `Unable to resolve path to module './malformed.js'.`,
@@ -472,7 +472,7 @@ ruleTester.run('no-unresolved unknown resolver', rule, {
     // only logs resolver message once
     test({
       code: 'import "./malformed.js"; import "./fake.js"',
-      settings: { 'import/resolver': 'doesnt-exist' },
+      settings: { 'import-x/resolver': 'doesnt-exist' },
       errors: [
         `Resolve error: unable to load resolver "doesnt-exist".`,
         `Unable to resolve path to module './malformed.js'.`,
@@ -486,7 +486,7 @@ ruleTester.run('no-unresolved electron', rule, {
   valid: [
     test({
       code: 'import "electron"',
-      settings: { 'import/core-modules': ['electron'] },
+      settings: { 'import-x/core-modules': ['electron'] },
     }),
   ],
   invalid: [
@@ -502,7 +502,7 @@ ruleTester.run('no-unresolved syntax verification', rule, {
   invalid: [],
 });
 
-// https://github.com/import-js/eslint-plugin-import/issues/2024
+// https://github.com/import-js/eslint-plugin-import-x/issues/2024
 ruleTester.run('import() with built-in parser', rule, {
   valid: [].concat(
     testVersion('>=7', () => ({

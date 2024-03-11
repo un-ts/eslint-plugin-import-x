@@ -4,15 +4,10 @@
   "retainLines": true,
   "env": {
     "test": {
-      "plugins": [
-        "istanbul",
-        ["module-resolver", { "root": ["./src/"] }],
-      ]
+      "plugins": ["istanbul", ["module-resolver", { "root": ["./src/"] }]]
     },
     "testCompiled": {
-      "plugins": [
-        ["module-resolver", { "root": ["./lib/"] }],
-      ]
+      "plugins": [["module-resolver", { "root": ["./lib/"] }]]
     }
   }
 }

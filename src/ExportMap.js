@@ -418,7 +418,7 @@ ExportMap.parse = function (path, content, context) {
   const unambiguouslyESM = unambiguous.isModule(ast);
   if (!unambiguouslyESM && !hasDynamicImports) { return null; }
 
-  const docstyle = context.settings && context.settings['import/docstyle'] || ['jsdoc'];
+  const docstyle = context.settings && context.settings['import-x/docstyle'] || ['jsdoc'];
   const docStyleParsers = {};
   docstyle.forEach((style) => {
     docStyleParsers[style] = availableDocStyleParsers[style];
@@ -556,7 +556,7 @@ ExportMap.parse = function (path, content, context) {
     try {
       if (tsconfigInfo.tsConfigPath !== undefined) {
         // Projects not using TypeScript won't have `typescript` installed.
-        if (!ts) { ts = require('typescript'); } // eslint-disable-line import/no-extraneous-dependencies
+        if (!ts) { ts = require('typescript'); } // eslint-disable-line import-x/no-extraneous-dependencies
 
         const configFile = ts.readConfigFile(tsconfigInfo.tsConfigPath, ts.sys.readFile);
         return ts.parseJsonConfigFileContent(

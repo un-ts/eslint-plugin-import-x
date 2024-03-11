@@ -3,13 +3,13 @@
 exports.__esModule = true;
 
 /** @typedef {`.${string}`} Extension  */
-/** @typedef {NonNullable<import('eslint').Rule.RuleContext['settings']> & { 'import/extensions'?: Extension[], 'import/parsers'?: { [k: string]: Extension[] }, 'import/cache'?: { lifetime: number | '∞' | 'Infinity' } }} ESLintSettings */
+/** @typedef {NonNullable<import('eslint').Rule.RuleContext['settings']> & { 'import-x/extensions'?: Extension[], 'import-x/parsers'?: { [k: string]: Extension[] }, 'import-x/cache'?: { lifetime: number | '∞' | 'Infinity' } }} ESLintSettings */
 
 const moduleRequire = require('./module-require').default;
 const extname = require('path').extname;
 const fs = require('fs');
 
-const log = require('debug')('eslint-plugin-import:parse');
+const log = require('debug')('eslint-plugin-import-x:parse');
 
 /** @type {(parserPath: NonNullable<import('eslint').Rule.RuleContext['parserPath']>) => unknown} */
 function getBabelEslintVisitorKeys(parserPath) {
@@ -157,7 +157,7 @@ function getParser(path, context) {
 
 /** @type {(path: string, context: import('eslint').Rule.RuleContext & { settings?: ESLintSettings }) => import('eslint').Rule.RuleContext['parserPath']} */
 function getParserPath(path, context) {
-  const parsers = context.settings['import/parsers'];
+  const parsers = context.settings['import-x/parsers'];
   if (parsers != null) {
     // eslint-disable-next-line no-extra-parens
     const extension = /** @type {Extension} */ (extname(path));

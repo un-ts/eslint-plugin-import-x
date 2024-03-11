@@ -25,12 +25,12 @@ function validExtensions(context) {
 function makeValidExtensionSet(settings) {
   // start with explicit JS-parsed extensions
   /** @type {Set<import('./types').Extension>} */
-  const exts = new Set(settings['import/extensions'] || ['.js']);
+  const exts = new Set(settings['import-x/extensions'] || ['.js']);
 
   // all alternate parser extensions are also valid
-  if ('import/parsers' in settings) {
-    for (const parser in settings['import/parsers']) {
-      const parserSettings = settings['import/parsers'][parser];
+  if ('import-x/parsers' in settings) {
+    for (const parser in settings['import-x/parsers']) {
+      const parserSettings = settings['import-x/parsers'][parser];
       if (!Array.isArray(parserSettings)) {
         throw new TypeError('"settings" for ' + parser + ' must be an array');
       }
@@ -47,8 +47,8 @@ exports.default = function ignore(path, context) {
   // check extension whitelist first (cheap)
   if (!hasValidExtension(path, context)) { return true; }
 
-  if (!('import/ignore' in context.settings)) { return false; }
-  const ignoreStrings = context.settings['import/ignore'];
+  if (!('import-x/ignore' in context.settings)) { return false; }
+  const ignoreStrings = context.settings['import-x/ignore'];
 
   for (let i = 0; i < ignoreStrings.length; i++) {
     const regex = new RegExp(ignoreStrings[i]);

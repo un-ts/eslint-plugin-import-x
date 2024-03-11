@@ -14,7 +14,7 @@ function baseModule(name) {
 }
 
 function isInternalRegexMatch(name, settings) {
-  const internalScope = settings && settings['import/internal-regex'];
+  const internalScope = settings && settings['import-x/internal-regex'];
   return internalScope && new RegExp(internalScope).test(name);
 }
 
@@ -26,7 +26,7 @@ export function isAbsolute(name) {
 export function isBuiltIn(name, settings, path) {
   if (path || !name) { return false; }
   const base = baseModule(name);
-  const extras = settings && settings['import/core-modules'] || [];
+  const extras = settings && settings['import-x/core-modules'] || [];
   return isCoreModule(base) || extras.indexOf(base) > -1;
 }
 
@@ -89,7 +89,7 @@ function isExternalPath(path, context) {
     return true;
   }
 
-  const folders = settings && settings['import/external-module-folders'] || ['node_modules'];
+  const folders = settings && settings['import-x/external-module-folders'] || ['node_modules'];
   return folders.some((folder) => {
     const folderPath = nodeResolve(packagePath, folder);
     const relativePath = relative(folderPath, path);

@@ -18,8 +18,8 @@ describe('ignore', function () {
       expect(isIgnored('../files/ignore.invalid.extension', testContext)).to.equal(true);
     });
 
-    it('ignores paths with invalid extensions when configured with import/extensions', function () {
-      const testContext = utils.testContext({ 'import/extensions': ['.js', '.jsx', '.ts'] });
+    it('ignores paths with invalid extensions when configured with import-x/extensions', function () {
+      const testContext = utils.testContext({ 'import-x/extensions': ['.js', '.jsx', '.ts'] });
 
       expect(isIgnored('../files/foo.js', testContext)).to.equal(false);
 
@@ -44,8 +44,8 @@ describe('ignore', function () {
       expect(hasValidExtension('../files/foo.invalid.extension', testContext)).to.equal(false);
     });
 
-    it('can be configured with import/extensions', function () {
-      const testContext = utils.testContext({ 'import/extensions': ['.foo', '.bar'] });
+    it('can be configured with import-x/extensions', function () {
+      const testContext = utils.testContext({ 'import-x/extensions': ['.foo', '.bar'] });
 
       expect(hasValidExtension('../files/foo.foo', testContext)).to.equal(true);
 
@@ -56,15 +56,15 @@ describe('ignore', function () {
   });
 
   describe('getFileExtensions', function () {
-    it('returns a set with the file extension ".js" if "import/extensions" is not configured', function () {
+    it('returns a set with the file extension ".js" if "import-x/extensions" is not configured', function () {
       const fileExtensions = getFileExtensions({});
 
       expect(fileExtensions).to.include('.js');
     });
 
-    it('returns a set with the file extensions configured in "import/extension"', function () {
+    it('returns a set with the file extensions configured in "import-x/extension"', function () {
       const settings = {
-        'import/extensions': ['.js', '.jsx'],
+        'import-x/extensions': ['.js', '.jsx'],
       };
 
       const fileExtensions = getFileExtensions(settings);
@@ -73,16 +73,16 @@ describe('ignore', function () {
       expect(fileExtensions).to.include('.jsx');
     });
 
-    it('returns a set with the file extensions configured in "import/extension" and "import/parsers"', function () {
+    it('returns a set with the file extensions configured in "import-x/extension" and "import-x/parsers"', function () {
       const settings = {
-        'import/parsers': {
+        'import-x/parsers': {
           'typescript-eslint-parser': ['.ts', '.tsx'],
         },
       };
 
       const fileExtensions = getFileExtensions(settings);
 
-      expect(fileExtensions).to.include('.js'); // If "import/extensions" is not configured, this is the default
+      expect(fileExtensions).to.include('.js'); // If "import-x/extensions" is not configured, this is the default
       expect(fileExtensions).to.include('.ts');
       expect(fileExtensions).to.include('.tsx');
     });

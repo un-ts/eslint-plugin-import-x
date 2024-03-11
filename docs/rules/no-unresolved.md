@@ -1,5 +1,7 @@
 # import-x/no-unresolved
 
+💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
+
 <!-- end auto-generated rule header -->
 
 Ensures an imported module can be resolved to a module on the local filesystem,

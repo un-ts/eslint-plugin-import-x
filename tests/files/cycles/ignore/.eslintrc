@@ -1,5 +1,5 @@
 {
   "rules": {
-    "import/no-cycle": 0
+    "import-x/no-cycle": 0
   }
 }

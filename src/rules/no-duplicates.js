@@ -6,7 +6,7 @@ import docsUrl from '../docsUrl';
 
 let typescriptPkg;
 try {
-  typescriptPkg = require('typescript/package.json'); // eslint-disable-line import/no-extraneous-dependencies
+  typescriptPkg = require('typescript/package.json'); // eslint-disable-line import-x/no-extraneous-dependencies
 } catch (e) { /**/ }
 
 function checkImports(imported, context) {

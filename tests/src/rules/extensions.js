@@ -31,7 +31,7 @@ ruleTester.run('extensions', rule, {
         'import data from "./bar.json"',
       ].join('\n'),
       options: ['never'],
-      settings: { 'import/resolve': { extensions: ['.js', '.jsx', '.json'] } },
+      settings: { 'import-x/resolve': { extensions: ['.js', '.jsx', '.json'] } },
     }),
 
     test({
@@ -41,7 +41,7 @@ ruleTester.run('extensions', rule, {
         'import barhbs from "./bar.hbs"',
       ].join('\n'),
       options: ['always', { js: 'never', jsx: 'never' }],
-      settings: { 'import/resolve': { extensions: ['.js', '.jsx', '.json', '.hbs'] } },
+      settings: { 'import-x/resolve': { extensions: ['.js', '.jsx', '.json', '.hbs'] } },
     }),
 
     test({
@@ -50,7 +50,7 @@ ruleTester.run('extensions', rule, {
         'import pack from "./package"',
       ].join('\n'),
       options: ['never', { js: 'always', json: 'never' }],
-      settings: { 'import/resolve': { extensions: ['.js', '.json'] } },
+      settings: { 'import-x/resolve': { extensions: ['.js', '.json'] } },
     }),
 
     // unresolved (#271/#295)
@@ -95,7 +95,7 @@ ruleTester.run('extensions', rule, {
       options: ['always', { js: 'never', jsx: 'never' }],
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       settings: {
-        'import/resolver': {
+        'import-x/resolver': {
           node: { extensions: ['.js', '.jsx', '.json'] },
           webpack: { config: 'webpack.empty.config.js' },
         },
@@ -174,7 +174,7 @@ ruleTester.run('extensions', rule, {
         'import packageConfig from "./package"',
       ].join('\n'),
       options: [{ json: 'always', js: 'never' }],
-      settings: { 'import/resolve': { extensions: ['.js', '.json'] } },
+      settings: { 'import-x/resolve': { extensions: ['.js', '.json'] } },
       errors: [
         {
           message: 'Unexpected use of file extension "js" for "a/index.js"',
@@ -195,7 +195,7 @@ ruleTester.run('extensions', rule, {
         'import data from "./bar.json"',
       ].join('\n'),
       options: ['never'],
-      settings: { 'import/resolve': { extensions: ['.js', '.jsx', '.json'] } },
+      settings: { 'import-x/resolve': { extensions: ['.js', '.jsx', '.json'] } },
       errors: [
         {
           message: 'Unexpected use of file extension "js" for "./bar.js"',
@@ -211,7 +211,7 @@ ruleTester.run('extensions', rule, {
         'import data from "./bar.json"',
       ].join('\n'),
       options: [{ json: 'always', js: 'never', jsx: 'never' }],
-      settings: { 'import/resolve': { extensions: ['.js', '.jsx', '.json'] } },
+      settings: { 'import-x/resolve': { extensions: ['.js', '.jsx', '.json'] } },
       errors: [
         {
           message: 'Unexpected use of file extension "js" for "./bar.js"',
@@ -227,7 +227,7 @@ ruleTester.run('extensions', rule, {
         'import data from "./bar.json"',
       ].join('\n'),
       options: [{ json: 'always', js: 'never', jsx: 'never' }],
-      settings: { 'import/resolve': { extensions: ['.jsx', '.json', '.js'] } },
+      settings: { 'import-x/resolve': { extensions: ['.jsx', '.json', '.js'] } },
       errors: [
         {
           message: 'Unexpected use of file extension "jsx" for "./bar.jsx"',
@@ -246,7 +246,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
       options: ['never', { js: 'always', jsx: 'always' }],
-      settings: { 'import/resolve': { extensions: ['.coffee', '.js'] } },
+      settings: { 'import-x/resolve': { extensions: ['.coffee', '.js'] } },
     }),
 
     test({
@@ -256,7 +256,7 @@ ruleTester.run('extensions', rule, {
         'import barnone from "./bar"',
       ].join('\n'),
       options: ['always', { json: 'always', js: 'never', jsx: 'never' }],
-      settings: { 'import/resolve': { extensions: ['.js', '.jsx', '.json'] } },
+      settings: { 'import-x/resolve': { extensions: ['.js', '.jsx', '.json'] } },
       errors: [
         {
           message: 'Unexpected use of file extension "js" for "./bar.js"',
@@ -293,7 +293,7 @@ ruleTester.run('extensions', rule, {
         'import barnone from "./bar"',
       ].join('\n'),
       options: ['never', { json: 'always', js: 'never', jsx: 'never' }],
-      settings: { 'import/resolve': { extensions: ['.js', '.jsx', '.json'] } },
+      settings: { 'import-x/resolve': { extensions: ['.js', '.jsx', '.json'] } },
       errors: [
         {
           message: 'Unexpected use of file extension "js" for "./bar.js"',
@@ -604,8 +604,8 @@ ruleTester.run('extensions', rule, {
       `,
       options: ['never'],
       settings: {
-        'import/resolver': 'webpack',
-        'import/external-module-folders': ['node_modules', 'symlinked-module'],
+        'import-x/resolver': 'webpack',
+        'import-x/external-module-folders': ['node_modules', 'symlinked-module'],
       },
       errors: [
         {

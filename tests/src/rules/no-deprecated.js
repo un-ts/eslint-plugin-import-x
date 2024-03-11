@@ -15,16 +15,16 @@ ruleTester.run('no-deprecated', rule, {
 
     test({
       code: "import { fn } from './deprecated'",
-      settings: { 'import/docstyle': ['tomdoc'] },
+      settings: { 'import-x/docstyle': ['tomdoc'] },
     }),
 
     test({
       code: "import { fine } from './tomdoc-deprecated'",
-      settings: { 'import/docstyle': ['tomdoc'] },
+      settings: { 'import-x/docstyle': ['tomdoc'] },
     }),
     test({
       code: "import { _undocumented } from './tomdoc-deprecated'",
-      settings: { 'import/docstyle': ['tomdoc'] },
+      settings: { 'import-x/docstyle': ['tomdoc'] },
     }),
 
     // naked namespace is fine
@@ -62,25 +62,25 @@ ruleTester.run('no-deprecated', rule, {
 
     test({
       code: "import { fn } from './deprecated'",
-      settings: { 'import/docstyle': ['jsdoc', 'tomdoc'] },
+      settings: { 'import-x/docstyle': ['jsdoc', 'tomdoc'] },
       errors: ["Deprecated: please use 'x' instead."],
     }),
 
     test({
       code: "import { fn } from './tomdoc-deprecated'",
-      settings: { 'import/docstyle': ['tomdoc'] },
+      settings: { 'import-x/docstyle': ['tomdoc'] },
       errors: ['Deprecated: This function is terrible.'],
     }),
 
     test({
       code: "import TerribleClass from './tomdoc-deprecated'",
-      settings: { 'import/docstyle': ['tomdoc'] },
+      settings: { 'import-x/docstyle': ['tomdoc'] },
       errors: ['Deprecated: this is awful, use NotAsBadClass.'],
     }),
 
     test({
       code: "import { MY_TERRIBLE_ACTION } from './tomdoc-deprecated'",
-      settings: { 'import/docstyle': ['tomdoc'] },
+      settings: { 'import-x/docstyle': ['tomdoc'] },
       errors: ['Deprecated: Please stop sending/handling this action type.'],
     }),
 
@@ -202,8 +202,8 @@ describe('TypeScript', function () {
     const parserConfig = {
       parser,
       settings: {
-        'import/parsers': { [parser]: ['.ts'] },
-        'import/resolver': { 'eslint-import-resolver-typescript': true },
+        'import-x/parsers': { [parser]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
     };
 

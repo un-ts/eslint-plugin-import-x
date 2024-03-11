@@ -1,10 +1,10 @@
 {
   "root": true,
 
-  "plugins": ["import", "json"],
+  "plugins": ["import-x", "json"],
 
   "rules": {
-    "import/no-unused-modules": [
+    "import-x/no-unused-modules": [
       "error",
       {
         "missingExports": false,

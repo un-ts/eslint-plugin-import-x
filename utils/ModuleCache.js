@@ -37,7 +37,7 @@ class ModuleCache {
     /** @type {ReturnType<typeof ModuleCache.getSettings>} */
     const cacheSettings = Object.assign({
       lifetime: 30,  // seconds
-    }, settings['import/cache']);
+    }, settings['import-x/cache']);
 
     // parse infinity
     // @ts-expect-error the lack of type overlap is because we're abusing `cacheSettings` as a temporary object

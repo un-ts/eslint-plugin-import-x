@@ -41,16 +41,16 @@ ruleTester.run('no-cycle', rule, {
       code: 'import { foo } from "cycles/external/depth-one"',
       options: [{ ignoreExternal: true }],
       settings: {
-        'import/resolver': 'webpack',
-        'import/external-module-folders': ['cycles/external'],
+        'import-x/resolver': 'webpack',
+        'import-x/external-module-folders': ['cycles/external'],
       },
     }),
     test({
       code: 'import { foo } from "./external-depth-two"',
       options: [{ ignoreExternal: true }],
       settings: {
-        'import/resolver': 'webpack',
-        'import/external-module-folders': ['cycles/external'],
+        'import-x/resolver': 'webpack',
+        'import-x/external-module-folders': ['cycles/external'],
       },
     }),
 
@@ -127,16 +127,16 @@ ruleTester.run('no-cycle', rule, {
       code: 'import { foo } from "cycles/external/depth-one"',
       errors: [error(`Dependency cycle detected.`)],
       settings: {
-        'import/resolver': 'webpack',
-        'import/external-module-folders': ['cycles/external'],
+        'import-x/resolver': 'webpack',
+        'import-x/external-module-folders': ['cycles/external'],
       },
     }),
     test({
       code: 'import { foo } from "./external-depth-two"',
       errors: [error(`Dependency cycle via cycles/external/depth-one:1`)],
       settings: {
-        'import/resolver': 'webpack',
-        'import/external-module-folders': ['cycles/external'],
+        'import-x/resolver': 'webpack',
+        'import-x/external-module-folders': ['cycles/external'],
       },
     }),
 

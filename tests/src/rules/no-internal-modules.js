@@ -315,7 +315,7 @@ ruleTester.run('no-internal-modules', rule, {
         column: 8,
       }],
       settings: {
-        'import/resolver': {
+        'import-x/resolver': {
           webpack: {
             config: {
               resolve: {

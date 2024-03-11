@@ -1,15 +1,18 @@
-const eslintPkg = require('eslint/package.json');
-const semver = require('semver');
+const eslintPkg = require("eslint/package.json");
+const semver = require("semver");
 
-const supportsArbitraryModuleNamespaceIdentifierNames = semver.satisfies(eslintPkg.version, '>= 8.7');
+const supportsArbitraryModuleNamespaceIdentifierNames = semver.satisfies(
+  eslintPkg.version,
+  ">= 8.7"
+);
 
 const config = {
-  "parser": "babel-eslint",
-  "parserOptions": {
-    "sourceType": "module",
-    "ecmaVersion": 8
+  parser: "babel-eslint",
+  parserOptions: {
+    sourceType: "module",
+    ecmaVersion: 8,
   },
-  "rules": {
+  rules: {
     "accessor-pairs": 0,
     "array-bracket-newline": 0,
     "array-bracket-spacing": 0,
@@ -22,23 +25,23 @@ const config = {
     "block-spacing": 0,
     "brace-style": 0,
     "callback-return": 0,
-    "camelcase": 0,
+    camelcase: 0,
     "capitalized-comments": 0,
     "class-methods-use-this": 0,
     "comma-dangle": 0,
     "comma-spacing": 0,
     "comma-style": 0,
-    "complexity": 0,
+    complexity: 0,
     "computed-property-spacing": 0,
     "consistent-return": 0,
     "consistent-this": 0,
     "constructor-super": 0,
-    "curly": 0,
+    curly: 0,
     "default-case": 0,
     "dot-location": 0,
     "dot-notation": 0,
     "eol-last": 0,
-    "eqeqeq": 0,
+    eqeqeq: 0,
     "for-direction": 0,
     "func-call-spacing": 0,
     "func-name-matching": 0,
@@ -54,7 +57,7 @@ const config = {
     "id-length": 0,
     "id-match": 0,
     "implicit-arrow-linebreak": 0,
-    "indent": 0,
+    indent: 0,
     "indent-legacy": 0,
     "init-declarations": 0,
     "jsx-quotes": 0,
@@ -242,15 +245,15 @@ const config = {
     "prefer-spread": 0,
     "prefer-template": 0,
     "quote-props": 0,
-    "quotes": 0,
-    "radix": 0,
+    quotes: 0,
+    radix: 0,
     "require-atomic-updates": 0,
     "require-await": 0,
     "require-jsdoc": 0,
     "require-unicode-regexp": 0,
     "require-yield": 0,
     "rest-spread-spacing": 0,
-    "semi": 0,
+    semi: 0,
     "semi-spacing": 0,
     "semi-style": 0,
     "sort-imports": 0,
@@ -262,7 +265,7 @@ const config = {
     "space-infix-ops": 0,
     "space-unary-ops": 0,
     "spaced-comment": 0,
-    "strict": 0,
+    strict: 0,
     "switch-colon-spacing": 0,
     "symbol-description": 0,
     "template-curly-spacing": 0,
@@ -275,17 +278,17 @@ const config = {
     "wrap-iife": 0,
     "wrap-regex": 0,
     "yield-star-spacing": 0,
-    "yoda": 0,
-    "import/no-unresolved": 0,
-    "import/named": 0,
-    "import/namespace": 0,
-    "import/default": 0,
-    "import/export": 0,
-    "import/no-named-as-default": 0,
-    "import/no-named-as-default-member": 0,
-    "import/no-duplicates": 0,
-    "import/no-extraneous-dependencies": 0,
-    "import/unambiguous": 0
+    yoda: 0,
+    "import-x/no-unresolved": 0,
+    "import-x/named": 0,
+    "import-x/namespace": 0,
+    "import-x/default": 0,
+    "import-x/export": 0,
+    "import-x/no-named-as-default": 0,
+    "import-x/no-named-as-default-member": 0,
+    "import-x/no-duplicates": 0,
+    "import-x/no-extraneous-dependencies": 0,
+    "import-x/unambiguous": 0,
   },
   ignorePatterns: [
     "default-export-namespace-string.js",
@@ -293,28 +296,28 @@ const config = {
     "export-default-string-and-named.js",
     "no-unused-modules/arbitrary-module-namespace-identifier-name-a.js",
     "no-unused-modules/arbitrary-module-namespace-identifier-name-b.js",
-    "no-unused-modules/arbitrary-module-namespace-identifier-name-c.js"
+    "no-unused-modules/arbitrary-module-namespace-identifier-name-c.js",
   ],
-}
+};
 
 if (supportsArbitraryModuleNamespaceIdentifierNames) {
   config.ignorePatterns = [];
   config.overrides = [
     // For parsing arbitrary module namespace names
     {
-      "files": [
+      files: [
         "default-export-namespace-string.js",
         "default-export-string.js",
         "export-default-string-and-named.js",
         "no-unused-modules/arbitrary-module-namespace-identifier-name-a.js",
         "no-unused-modules/arbitrary-module-namespace-identifier-name-b.js",
-        "no-unused-modules/arbitrary-module-namespace-identifier-name-c.js"
+        "no-unused-modules/arbitrary-module-namespace-identifier-name-c.js",
       ],
-      "parser": "espree",
-      "parserOptions": {
-        "ecmaVersion": 2022
-      }
-    }
+      parser: "espree",
+      parserOptions: {
+        ecmaVersion: 2022,
+      },
+    },
   ];
 }
 

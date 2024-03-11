@@ -13,12 +13,12 @@ const allExtensions = [...typeScriptExtensions, '.js', '.jsx'];
 
 module.exports = {
   settings: {
-    'import/extensions': allExtensions,
-    'import/external-module-folders': ['node_modules', 'node_modules/@types'],
-    'import/parsers': {
+    'import-x/extensions': allExtensions,
+    'import-x/external-module-folders': ['node_modules', 'node_modules/@types'],
+    'import-x/parsers': {
       '@typescript-eslint/parser': typeScriptExtensions,
     },
-    'import/resolver': {
+    'import-x/resolver': {
       node: {
         extensions: allExtensions,
       },
@@ -29,6 +29,6 @@ module.exports = {
     // analysis/correctness
 
     // TypeScript compilation already ensures that named imports exist in the referenced module
-    'import/named': 'off',
+    'import-x/named': 'off',
   },
 };

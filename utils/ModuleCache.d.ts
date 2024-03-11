@@ -15,7 +15,7 @@ declare class ModuleCache {
 
     set<T>(cacheKey: CacheKey, result: T): T;
 
-    static getSettings(settings: ESLintSettings): { lifetime: number } & Omit<ESLintSettings['import/cache'], 'lifetime'>;
+    static getSettings(settings: ESLintSettings): { lifetime: number } & Omit<ESLintSettings['import-x/cache'], 'lifetime'>;
 }
 export default ModuleCache;
 

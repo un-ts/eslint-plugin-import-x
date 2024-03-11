@@ -1,5 +1,7 @@
 # import-x/default
 
+💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
+
 <!-- end auto-generated rule header -->
 
 If a default import is requested, this rule will report if there is no default

@@ -168,7 +168,7 @@ const COMMON_TESTS = {
         type: 'ImportSpecifier',
       }],
     },
-    // https://github.com/import-js/eslint-plugin-import/issues/2753
+    // https://github.com/import-js/eslint-plugin-import-x/issues/2753
     {
       code: `\
 import { Component, type ComponentProps } from "package-1";

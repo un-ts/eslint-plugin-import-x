@@ -356,7 +356,7 @@ ruleTester.run('order', rule, {
         ],
       }],
     }),
-    // Using pathGroups (a test case for https://github.com/import-js/eslint-plugin-import/pull/1724)
+    // Using pathGroups (a test case for https://github.com/import-js/eslint-plugin-import-x/pull/1724)
     test({
       code: `
         import fs from 'fs';
@@ -385,8 +385,8 @@ ruleTester.run('order', rule, {
         'newlines-between': 'always',
       }],
       settings: {
-        'import/resolver': 'webpack',
-        'import/external-module-folders': ['node_modules', 'symlinked-module'],
+        'import-x/resolver': 'webpack',
+        'import-x/external-module-folders': ['node_modules', 'symlinked-module'],
       },
     }),
     // Monorepo setup, using Node resolver (doesn't resolve symlinks)
@@ -401,8 +401,8 @@ ruleTester.run('order', rule, {
         'newlines-between': 'always',
       }],
       settings: {
-        'import/resolver': 'node',
-        'import/external-module-folders': ['node_modules', 'symlinked-module'],
+        'import-x/resolver': 'node',
+        'import-x/external-module-folders': ['node_modules', 'symlinked-module'],
       },
     }),
     // Option: newlines-between: 'always'
@@ -537,7 +537,7 @@ ruleTester.run('order', rule, {
     test({
       code: `
         import foo
-          from '../../../../this/will/be/very/long/path/and/therefore/this/import/has/to/be/in/two/lines';
+          from '../../../../this/will/be/very/long/path/and/therefore/this/import-x/has/to/be/in/two/lines';
 
         import bar
           from './sibling';
@@ -925,7 +925,7 @@ ruleTester.run('order', rule, {
         },
       ],
       settings: {
-        'import/resolver': {
+        'import-x/resolver': {
           webpack: {
             config: {
               resolve: {
@@ -2341,7 +2341,7 @@ ruleTester.run('order', rule, {
         },
       ],
       settings: {
-        'import/internal-regex': '^(a|b|c|d|e|f|g|h|i|j|k)(\\/|$)',
+        'import-x/internal-regex': '^(a|b|c|d|e|f|g|h|i|j|k)(\\/|$)',
       },
       errors: Array.from({ length: 11 }, () => 'There should be at least one empty line between import groups'),
     }),
@@ -2747,8 +2747,8 @@ context('TypeScript', function () {
       const parserConfig = {
         parser,
         settings: {
-          'import/parsers': { [parser]: ['.ts'] },
-          'import/resolver': { 'eslint-import-resolver-typescript': true },
+          'import-x/parsers': { [parser]: ['.ts'] },
+          'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
       };
 
