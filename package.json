@@ -1,6 +1,6 @@
 {
-  "name": "eslint-plugin-import",
-  "version": "2.29.1",
+  "name": "eslint-plugin-import-x",
+  "version": "0.0.0",
   "description": "Import with sanity.",
   "engines": {
     "node": ">=4"
@@ -35,10 +35,7 @@
     "preupdate:eslint-docs": "npm run build",
     "update:eslint-docs": "eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/import-js/eslint-plugin-import"
-  },
+  "repository": "git+https://github.com/un-es/eslint-plugin-i",
   "keywords": [
     "eslint",
     "eslintplugin",
@@ -49,12 +46,8 @@
     "import",
     "export"
   ],
-  "author": "Ben Mosher <me@benmosher.com>",
+  "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/import-js/eslint-plugin-import/issues"
-  },
-  "homepage": "https://github.com/import-js/eslint-plugin-import",
   "devDependencies": {
     "@angular-eslint/template-parser": "^13.5.0",
     "@eslint/import-test-order-redirect-scoped": "file:./tests/files/order-redirect-scoped",
