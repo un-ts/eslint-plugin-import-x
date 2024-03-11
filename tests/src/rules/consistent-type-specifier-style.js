@@ -411,7 +411,7 @@ context('Babel/Flow', () => {
   }
 
   const ruleTester = new RuleTester({
-    parser: parsers.BABEL_OLD,
+    parser: parsers.BABEL,
     parserOptions: {
       ecmaVersion: 6,
       sourceType: 'module',

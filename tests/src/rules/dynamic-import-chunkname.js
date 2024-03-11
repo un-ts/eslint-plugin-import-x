@@ -19,7 +19,7 @@ const allowEmptyOptions = [{
 const multipleImportFunctionOptions = [{
   importFunctions: ['dynamicImport', 'definitelyNotStaticImport'],
 }];
-const parser = parsers.BABEL_OLD;
+const parser = parsers.BABEL;
 
 const noLeadingCommentError = 'dynamic imports require a leading comment with the webpack chunkname';
 const nonBlockCommentError = 'dynamic imports require a /* foo */ style comment, not a // foo comment';
@@ -436,7 +436,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: nonBlockCommentError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -446,7 +446,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       output: 'import(\'test\')',
       errors: [{
         message: noLeadingCommentError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -462,7 +462,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: invalidSyntaxCommentError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -478,7 +478,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: invalidSyntaxCommentError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -494,7 +494,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: invalidSyntaxCommentError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -510,7 +510,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: invalidSyntaxCommentError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -526,7 +526,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -542,7 +542,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: chunkNameFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -558,7 +558,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: chunkNameFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -574,7 +574,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: chunkNameFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -590,7 +590,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: noPaddingCommentError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -606,7 +606,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -622,7 +622,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: invalidSyntaxCommentError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -638,7 +638,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: invalidSyntaxCommentError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -656,7 +656,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -672,7 +672,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -688,7 +688,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: pickyChunkNameFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -704,7 +704,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -720,7 +720,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -736,7 +736,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -752,7 +752,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -768,7 +768,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -784,7 +784,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -800,7 +800,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -816,7 +816,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -832,7 +832,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -848,7 +848,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {
@@ -864,7 +864,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [{
         message: commentFormatError,
-        type: 'CallExpression',
+        type: 'ImportExpression',
       }],
     },
     {

@@ -7,7 +7,7 @@ const supportsArbitraryModuleNamespaceIdentifierNames = semver.satisfies(
 );
 
 const config = {
-  parser: "babel-eslint",
+  parser: "@babel/eslint-parser",
   parserOptions: {
     sourceType: "module",
     ecmaVersion: 8,

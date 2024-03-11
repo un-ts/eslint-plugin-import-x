@@ -6,12 +6,13 @@ import semver from 'semver';
 import flatMap from 'array.prototype.flatmap';
 import { resolve } from 'path';
 import isCoreModule from 'is-core-module';
-import { default as babelPresetFlow } from 'babel-preset-flow';
+import babelPresetFlow from '@babel/preset-flow';
 
 const ruleTester = new RuleTester();
 const flowRuleTester = new RuleTester({
-  parser: resolve(__dirname, '../../../node_modules/babel-eslint'),
+  parser: resolve(__dirname, '../../../node_modules/@babel/eslint-parser'),
   parserOptions: {
+    requireConfigFile: false,
     babelOptions: {
       configFile: false,
       babelrc: false,

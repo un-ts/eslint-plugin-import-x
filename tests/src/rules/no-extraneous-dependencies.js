@@ -82,7 +82,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import type MyType from "myflowtyped";',
       options: [{ packageDir: packageDirWithFlowTyped }],
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     }),
     test({
       code: `
@@ -90,7 +90,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         import typeof TypeScriptModule from 'typescript';
       `,
       options: [{ packageDir: packageDirWithFlowTyped }],
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     }),
     test({
       code: 'import react from "react";',
@@ -467,22 +467,22 @@ typescriptRuleTester.run('no-extraneous-dependencies typescript type imports', r
     test({
       code: 'import type MyType from "not-a-dependency";',
       filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     }),
     test({
       code: 'import type { MyType } from "not-a-dependency";',
       filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     }),
     test({
       code: 'import { type MyType } from "not-a-dependency";',
       filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     }),
     test({
       code: 'import { type MyType, type OtherType } from "not-a-dependency";',
       filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     }),
   ],
   invalid: [
@@ -490,7 +490,7 @@ typescriptRuleTester.run('no-extraneous-dependencies typescript type imports', r
       code: 'import type { MyType } from "not-a-dependency";',
       options: [{ includeTypes: true }],
       filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
       errors: [{
         message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
       }],
@@ -499,7 +499,7 @@ typescriptRuleTester.run('no-extraneous-dependencies typescript type imports', r
       code: `import type { Foo } from 'not-a-dependency';`,
       options: [{ includeTypes: true }],
       filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
       errors: [{
         message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
       }],
@@ -507,7 +507,7 @@ typescriptRuleTester.run('no-extraneous-dependencies typescript type imports', r
     test({
       code: 'import Foo, { type MyType } from "not-a-dependency";',
       filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
       errors: [{
         message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
       }],
@@ -515,7 +515,7 @@ typescriptRuleTester.run('no-extraneous-dependencies typescript type imports', r
     test({
       code: 'import { type MyType, Foo } from "not-a-dependency";',
       filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
       errors: [{
         message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
       }],

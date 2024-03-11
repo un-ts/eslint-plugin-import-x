@@ -29,7 +29,7 @@ ruleTester.run('no-dynamic-require', rule, {
     test({ code: 'var foo = require("@scope/foo")' }),
 
     //dynamic import
-    ...flatMap([parsers.ESPREE, parsers.BABEL_OLD], (parser) => {
+    ...flatMap([parsers.ESPREE, parsers.BABEL], (parser) => {
       const _test = parser === parsers.ESPREE
         ? (testObj) => testVersion('>= 6.2.0', () => testObj)
         : (testObj) => test(testObj);
@@ -141,7 +141,7 @@ ruleTester.run('no-dynamic-require', rule, {
     }),
 
     // dynamic import
-    ...flatMap([parsers.ESPREE, parsers.BABEL_OLD], (parser) => {
+    ...flatMap([parsers.ESPREE, parsers.BABEL], (parser) => {
       const _test = parser === parsers.ESPREE
         ? (testObj) => testVersion('>= 6.2.0', () => testObj)
         : (testObj) => test(testObj);

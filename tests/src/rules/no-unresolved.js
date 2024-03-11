@@ -33,7 +33,7 @@ function runResolverTests(resolver) {
       rest({ code: "import fs from 'fs';" }),
       rest({
         code: "import('fs');",
-        parser: parsers.BABEL_OLD,
+        parser: parsers.BABEL,
       }),
 
       // check with eslint parser
@@ -51,11 +51,11 @@ function runResolverTests(resolver) {
       // stage 1 proposal for export symmetry,
       rest({
         code: 'export * as bar from "./bar"',
-        parser: parsers.BABEL_OLD,
+        parser: parsers.BABEL,
       }),
       rest({
         code: 'export bar from "./bar"',
-        parser: parsers.BABEL_OLD,
+        parser: parsers.BABEL,
       }),
       rest({ code: 'import foo from "./jsx/MyUnCoolComponent.jsx"' }),
 
@@ -182,7 +182,7 @@ function runResolverTests(resolver) {
             type: 'Literal',
           },
         ],
-        parser: parsers.BABEL_OLD,
+        parser: parsers.BABEL,
       }),
 
       rest({
@@ -209,12 +209,12 @@ function runResolverTests(resolver) {
       // export symmetry proposal
       rest({
         code: 'export * as bar from "./does-not-exist"',
-        parser: parsers.BABEL_OLD,
+        parser: parsers.BABEL,
         errors: ["Unable to resolve path to module './does-not-exist'."],
       }),
       rest({
         code: 'export bar from "./does-not-exist"',
-        parser: parsers.BABEL_OLD,
+        parser: parsers.BABEL,
         errors: ["Unable to resolve path to module './does-not-exist'."],
       }),
 

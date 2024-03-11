@@ -4,13 +4,13 @@ import semver from 'semver';
 import typescriptPkg from 'typescript/package.json';
 
 // warms up the module cache. this import takes a while (>500ms)
-import 'babel-eslint';
+import '@babel/eslint-parser';
 
 export const parsers = {
   ESPREE: require.resolve('espree'),
   TS_OLD: semver.satisfies(eslintPkg.version, '>=4.0.0 <6.0.0') && semver.satisfies(typescriptPkg.version, '<4') && require.resolve('typescript-eslint-parser'),
   TS_NEW: semver.satisfies(eslintPkg.version, '> 5') && require.resolve('@typescript-eslint/parser'),
-  BABEL_OLD: require.resolve('babel-eslint'),
+  BABEL: require.resolve('@babel/eslint-parser'),
 };
 
 export function tsVersionSatisfies(specifier) {
@@ -33,7 +33,7 @@ export function getTSParsers() {
 }
 
 export function getNonDefaultParsers() {
-  return getTSParsers().concat(parsers.BABEL_OLD).filter(Boolean);
+  return getTSParsers().concat(parsers.BABEL).filter(Boolean);
 }
 
 export const FILENAME = testFilePath('foo.js');
@@ -81,7 +81,7 @@ export const SYNTAX_CASES = [
   test({ code: 'for (let [ foo, bar ] of baz) {}' }),
 
   test({ code: 'const { x, y } = bar' }),
-  test({ code: 'const { x, y, ...z } = bar', parser: parsers.BABEL_OLD }),
+  test({ code: 'const { x, y, ...z } = bar', parser: parsers.BABEL }),
 
   // all the exports
   test({ code: 'let x; export { x }' }),
@@ -89,7 +89,7 @@ export const SYNTAX_CASES = [
 
   // not sure about these since they reference a file
   // test({ code: 'export { x } from "./y.js"'}),
-  // test({ code: 'export * as y from "./y.js"', parser: parsers.BABEL_OLD}),
+  // test({ code: 'export * as y from "./y.js"', parser: parsers.BABEL}),
 
   test({ code: 'export const x = null' }),
   test({ code: 'export var x = null' }),

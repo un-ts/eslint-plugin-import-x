@@ -2,7 +2,7 @@ import { test } from '../utils';
 import { RuleTester } from 'eslint';
 import rule from 'rules/group-exports';
 import { resolve } from 'path';
-import { default as babelPresetFlow } from 'babel-preset-flow';
+import babelPresetFlow from '@babel/preset-flow';
 
 /* eslint-disable max-len */
 const errors = {
@@ -11,8 +11,9 @@ const errors = {
 };
 /* eslint-enable max-len */
 const ruleTester = new RuleTester({
-  parser: resolve(__dirname, '../../../node_modules/babel-eslint'),
+  parser: resolve(__dirname, '../../../node_modules/@babel/eslint-parser'),
   parserOptions: {
+    requireConfigFile: false,
     babelOptions: {
       configFile: false,
       babelrc: false,

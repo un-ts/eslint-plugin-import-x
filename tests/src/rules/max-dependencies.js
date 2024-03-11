@@ -66,7 +66,7 @@ ruleTester.run('max-dependencies', rule, {
 
     test({
       code: 'import type { x } from \'./foo\'; import type { y } from \'./bar\'',
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
       options: [{
         max: 1,
       }],
@@ -77,7 +77,7 @@ ruleTester.run('max-dependencies', rule, {
 
     test({
       code: 'import type { x } from \'./foo\'; import type { y } from \'./bar\'; import type { z } from \'./baz\'',
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
       options: [{
         max: 2,
         ignoreTypeImports: false,

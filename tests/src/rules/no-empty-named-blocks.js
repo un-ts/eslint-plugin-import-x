@@ -41,9 +41,9 @@ ruleTester.run('no-empty-named-blocks', rule, {
     ] : [],
 
     // Flow
-    test({ code: `import typeof Default from 'mod'; // babel old`, parser: parsers.BABEL_OLD }),
-    test({ code: `import typeof { Named } from 'mod'; // babel old`, parser: parsers.BABEL_OLD }),
-    test({ code: `import typeof Default, { Named } from 'mod'; // babel old`, parser: parsers.BABEL_OLD }),
+    test({ code: `import typeof Default from 'mod'; // babel old`, parser: parsers.BABEL }),
+    test({ code: `import typeof { Named } from 'mod'; // babel old`, parser: parsers.BABEL }),
+    test({ code: `import typeof Default, { Named } from 'mod'; // babel old`, parser: parsers.BABEL }),
     test({
       code: `
         module.exports = {
@@ -103,12 +103,12 @@ ruleTester.run('no-empty-named-blocks', rule, {
         `import typeof {} from'mod';`,
         `import typeof{}from'mod';`,
       ],
-      parsers.BABEL_OLD,
+      parsers.BABEL,
     ),
     test({
       code: `import typeof Default, {} from 'mod';`,
       output: `import typeof Default from 'mod';`,
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
       errors: ['Unexpected empty named import block'],
     }),
   ),

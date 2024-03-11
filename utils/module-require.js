@@ -5,7 +5,7 @@ exports.__esModule = true;
 const Module = require('module');
 const path = require('path');
 
-// borrowed from babel-eslint
+// borrowed from @babel/eslint-parser
 /** @type {(filename: string) => Module} */
 function createModule(filename) {
   const mod = new Module(filename);

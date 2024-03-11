@@ -257,22 +257,22 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         class App {}
       `,
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     },
     {
       code: `var foo = require('foo');\n\n@SomeDecorator(foo)\nclass Foo {}`,
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     },
     {
       code: `// issue 1004\nimport foo from 'foo';\n\n@SomeDecorator(foo)\nexport default class Test {}`,
       parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     },
     {
       code: `// issue 1004\nconst foo = require('foo');\n\n@SomeDecorator(foo)\nexport default class Test {}`,
       parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     },
     flatMap(getTSParsers(), (parser) => [].concat(
       {
@@ -626,7 +626,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         message: IMPORT_ERROR_MESSAGE,
       }],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     },
     {
       code: `var foo = require('foo');\n@SomeDecorator(foo)\nclass Foo {}`,
@@ -637,7 +637,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         message: REQUIRE_ERROR_MESSAGE,
       }],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     },
     {
       code: `// issue 10042\nimport foo from 'foo';\n@SomeDecorator(foo)\nexport default class Test {}`,
@@ -648,7 +648,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         message: IMPORT_ERROR_MESSAGE,
       }],
       parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     },
     {
       code: `// issue 1004\nconst foo = require('foo');\n@SomeDecorator(foo)\nexport default class Test {}`,
@@ -659,7 +659,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         message: REQUIRE_ERROR_MESSAGE,
       }],
       parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     },
     testVersion('>= 6', () => ({
       code: `
@@ -683,7 +683,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         },
       ],
       parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL_OLD,
+      parser: parsers.BABEL,
     })) || [],
     {
       code: `import foo from 'foo';\n\nexport default function() {};`,

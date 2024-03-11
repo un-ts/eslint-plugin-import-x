@@ -623,7 +623,7 @@ ExportMap.parse = function (path, content, context) {
         switch (n.declaration.type) {
           case 'FunctionDeclaration':
           case 'ClassDeclaration':
-          case 'TypeAlias': // flowtype with babel-eslint parser
+          case 'TypeAlias': // flowtype with @babel/eslint-parser
           case 'InterfaceDeclaration':
           case 'DeclareFunction':
           case 'TSDeclareFunction':

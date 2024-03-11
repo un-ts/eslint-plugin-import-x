@@ -32,7 +32,7 @@ function keysFromParser(parserPath, parserInstance, parsedResult) {
   if (typeof parserPath === 'string' && (/.*espree.*/).test(parserPath)) {
     return parserInstance.VisitorKeys;
   }
-  if (typeof parserPath === 'string' && (/.*babel-eslint.*/).test(parserPath)) {
+  if (typeof parserPath === 'string' && (/.*@babel\/eslint-parser.*/).test(parserPath)) {
     return getBabelEslintVisitorKeys(parserPath);
   }
   return null;
