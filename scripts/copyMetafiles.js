@@ -1,17 +1,9 @@
-import path from 'path';
-import copyFileSync from 'fs-copy-file-sync';
-import resolverDirectories from './resolverDirectories';
+import path from "path";
+import copyFileSync from "fs-copy-file-sync";
 
-const files = [
-  'LICENSE',
-  '.npmrc',
-];
+const files = ["LICENSE", ".npmrc"];
 
-const directories = [].concat(
-  'memo-parser',
-  resolverDirectories,
-  'utils',
-);
+const directories = [].concat("memo-parser", "utils");
 
 for (const directory of directories) {
   for (const file of files) {

@@ -31,7 +31,6 @@
     "test": "yarn build && yarn test-compiled",
     "tests-only": "yarn mocha --compilers js:@babel/register tests/src",
     "test-compiled": "yarn build && BABEL_ENV=testCompiled yarn mocha --compilers js:@babel/register tests/src",
-    "test-all": "node --require @babel/register ./scripts/testAll",
     "prepublishOnly": "yarn build",
     "update:eslint-docs": "yarn build && eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️"
   },
@@ -69,7 +68,7 @@
     "eslint": "^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8",
     "eslint-doc-generator": "^1.6.1",
     "eslint-import-resolver-typescript": "^1.0.2 || ^1.1.1",
-    "eslint-import-resolver-webpack": "link:./resolvers/webpack",
+    "eslint-import-resolver-webpack": "^0.13.8",
     "eslint-import-test-order-redirect": "link:./tests/files/order-redirect",
     "eslint-plugin-eslint-plugin": "^2.3.0",
     "eslint-plugin-import-x": "link:.",
@@ -109,7 +108,6 @@
     "tsconfig-paths": "^3.15.0"
   },
   "resolutions": {
-    "eslint-import-resolver-node": "link:./resolvers/node",
     "eslint-module-utils": "link:./utils"
   }
 }
