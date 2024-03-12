@@ -3,7 +3,7 @@
     {
       "files": "**.ts",
       "parser": "@typescript-eslint/parser",
-      "extends": "../../../config/typescript",
+      "extends": "../../../lib/config/typescript",
       "rules": {
         "import-x/export": "error"
       }

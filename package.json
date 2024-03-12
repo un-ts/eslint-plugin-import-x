@@ -12,13 +12,12 @@
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
-    "./config/*": "./config/*",
     "./package.json": "./package.json",
     "./*": "./lib/*"
   },
   "files": [
-    "config",
-    "lib"
+    "lib",
+    "!lib/*.tsbuildinfo"
   ],
   "keywords": [
     "eslint",
@@ -31,12 +30,12 @@
     "export"
   ],
   "scripts": {
-    "build": "babel --quiet --out-dir lib src",
+    "build": "rimraf lib && tsc -p src",
     "lint": "yarn lint:es && yarn update:eslint-docs --check",
     "lint:es": "eslint . --cache",
-    "prebuild": "rimraf lib",
     "release": "changeset publish",
     "test": "jest",
+    "test-compiled": "yarn build && cross-env TEST_COMPILED=1 jest",
     "update:eslint-docs": "yarn build && eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️",
     "watch": "yarn test --watch"
   },
@@ -54,8 +53,8 @@
   },
   "devDependencies": {
     "@1stg/prettier-config": "^4.0.1",
+    "@1stg/tsconfig": "^2.3.3",
     "@angular-eslint/template-parser": "^17.2.1",
-    "@babel/cli": "^7.23.9",
     "@babel/core": "^7.24.0",
     "@babel/eslint-parser": "^7.23.10",
     "@babel/plugin-proposal-decorators": "^7.24.0",
@@ -71,6 +70,7 @@
     "@types/jest": "^29.5.12",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^5.62.0",
+    "cross-env": "^7.0.3",
     "escope": "^4.0.0",
     "eslint": "^7.2.0 || ^8",
     "eslint-config-prettier": "^9.1.0",

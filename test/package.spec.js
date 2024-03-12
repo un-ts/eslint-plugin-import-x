@@ -6,7 +6,8 @@ function isJSFile(f) {
 }
 
 describe('package', () => {
-  const pkg = path.join(process.cwd(), 'src')
+  const pkg = path.resolve('src')
+
   let module
 
   beforeAll(() => {
@@ -30,7 +31,7 @@ describe('package', () => {
   })
 
   it('exports all configs', done => {
-    fs.readdir(path.join(process.cwd(), 'config'), function (err, files) {
+    fs.readdir(path.resolve('src', 'config'), function (err, files) {
       if (err) {
         done(err)
         return
