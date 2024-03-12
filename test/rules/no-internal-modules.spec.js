@@ -83,15 +83,6 @@ ruleTester.run('no-internal-modules', rule, {
       ],
     }),
     test({
-      code: 'import b from "app/a"',
-      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['app/**/**'],
-        },
-      ],
-    }),
-    test({
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -169,15 +160,6 @@ ruleTester.run('no-internal-modules', rule, {
       ],
     }),
     test({
-      code: 'export * from "app/a"',
-      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['app/**/**'],
-        },
-      ],
-    }),
-    test({
       code: 'export { b } from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -212,6 +194,22 @@ ruleTester.run('no-internal-modules', rule, {
           message: 'Reaching to "./plugin2/app/index" is not allowed.',
           line: 2,
           column: 8,
+        },
+      ],
+    }),
+    test({
+      code: 'import b from "app/a"',
+      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
+      options: [
+        {
+          forbid: ['app/**/**'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "app/a" is not allowed.',
+          line: 1,
+          column: 15,
         },
       ],
     }),
@@ -265,11 +263,11 @@ ruleTester.run('no-internal-modules', rule, {
       ],
     }),
     test({
-      code: 'import get from "debug/node"',
+      code: 'import get from "debug/src/node"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       errors: [
         {
-          message: 'Reaching to "debug/node" is not allowed.',
+          message: 'Reaching to "debug/src/node" is not allowed.',
           line: 1,
           column: 17,
         },
@@ -280,7 +278,7 @@ ruleTester.run('no-internal-modules', rule, {
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
         {
-          forbid: ['*/app/*'],
+          forbid: ['**/app/*'],
         },
       ],
       errors: [
@@ -406,6 +404,22 @@ ruleTester.run('no-internal-modules', rule, {
       ],
     }),
     test({
+      code: 'export * from "app/a"',
+      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
+      options: [
+        {
+          forbid: ['app/**/**'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "app/a" is not allowed.',
+          line: 1,
+          column: 15,
+        },
+      ],
+    }),
+    test({
       code: 'export * from "./app/index.js"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       errors: [
@@ -455,11 +469,11 @@ ruleTester.run('no-internal-modules', rule, {
       ],
     }),
     test({
-      code: 'export {get} from "debug/node"',
+      code: 'export {get} from "debug/src/node"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       errors: [
         {
-          message: 'Reaching to "debug/node" is not allowed.',
+          message: 'Reaching to "debug/src/node" is not allowed.',
           line: 1,
           column: 19,
         },

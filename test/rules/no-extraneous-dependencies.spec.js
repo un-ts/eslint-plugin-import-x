@@ -91,17 +91,17 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       },
     }),
     test({
-      code: 'import chai from "chai"',
+      code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.spec.js'] }],
       filename: 'foo.spec.js',
     }),
     test({
-      code: 'import chai from "chai"',
+      code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.spec.js'] }],
       filename: path.join(process.cwd(), 'foo.spec.js'),
     }),
     test({
-      code: 'import chai from "chai"',
+      code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
       filename: path.join(process.cwd(), 'foo.spec.js'),
     }),
@@ -321,46 +321,46 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       ],
     }),
     test({
-      code: 'import chai from "chai"',
+      code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js'] }],
       filename: 'foo.tes.js',
       errors: [
         {
           message:
-            "'chai' should be listed in the project's dependencies, not devDependencies.",
+            "'jest' should be listed in the project's dependencies, not devDependencies.",
         },
       ],
     }),
     test({
-      code: 'import chai from "chai"',
+      code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js'] }],
       filename: path.join(process.cwd(), 'foo.tes.js'),
       errors: [
         {
           message:
-            "'chai' should be listed in the project's dependencies, not devDependencies.",
+            "'jest' should be listed in the project's dependencies, not devDependencies.",
         },
       ],
     }),
     test({
-      code: 'import chai from "chai"',
+      code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
       filename: 'foo.tes.js',
       errors: [
         {
           message:
-            "'chai' should be listed in the project's dependencies, not devDependencies.",
+            "'jest' should be listed in the project's dependencies, not devDependencies.",
         },
       ],
     }),
     test({
-      code: 'import chai from "chai"',
+      code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
       filename: path.join(process.cwd(), 'foo.tes.js'),
       errors: [
         {
           message:
-            "'chai' should be listed in the project's dependencies, not devDependencies.",
+            "'jest' should be listed in the project's dependencies, not devDependencies.",
         },
       ],
     }),
@@ -484,13 +484,13 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       ],
     }),
     test({
-      code: 'import chai from "alias/chai";',
+      code: 'import jest from "alias/jest";',
       settings: { 'import-x/resolver': 'webpack' },
       errors: [
         {
-          // missing dependency is chai not alias
+          // missing dependency is jest not alias
           message:
-            "'chai' should be listed in the project's dependencies. Run 'npm i -S chai' to add it",
+            "'jest' should be listed in the project's dependencies. Run 'npm i -S jest' to add it",
         },
       ],
     }),

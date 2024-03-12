@@ -1,4 +1,4 @@
-import minimatch from 'minimatch'
+import { makeRe } from 'minimatch'
 
 import resolve from '../utils/resolve'
 import importType from '../core/importType'
@@ -48,8 +48,8 @@ module.exports = {
 
   create: function noReachingInside(context) {
     const options = context.options[0] || {}
-    const allowRegexps = (options.allow || []).map(p => minimatch.makeRe(p))
-    const forbidRegexps = (options.forbid || []).map(p => minimatch.makeRe(p))
+    const allowRegexps = (options.allow || []).map(p => makeRe(p))
+    const forbidRegexps = (options.forbid || []).map(p => makeRe(p))
 
     // minimatch patterns are expected to use / path separators, like import
     // statements, so normalize paths to use the same
