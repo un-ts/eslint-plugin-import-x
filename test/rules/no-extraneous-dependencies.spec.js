@@ -292,12 +292,12 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       ],
     }),
     test({
-      code: 'import "lodash.isarray"',
+      code: 'import "lodash"',
       options: [{ optionalDependencies: false }],
       errors: [
         {
           message:
-            "'lodash.isarray' should be listed in the project's dependencies, not optionalDependencies.",
+            "'lodash' should be listed in the project's dependencies, not optionalDependencies.",
         },
       ],
     }),
@@ -365,12 +365,12 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       ],
     }),
     test({
-      code: 'var eslint = require("lodash.isarray")',
+      code: 'var eslint = require("lodash")',
       options: [{ optionalDependencies: false }],
       errors: [
         {
           message:
-            "'lodash.isarray' should be listed in the project's dependencies, not optionalDependencies.",
+            "'lodash' should be listed in the project's dependencies, not optionalDependencies.",
         },
       ],
     }),

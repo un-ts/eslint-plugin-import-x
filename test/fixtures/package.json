@@ -14,7 +14,7 @@
     "rxjs": "^1.0.0"
   },
   "optionalDependencies": {
-    "lodash.isarray": "^4.0.0"
+    "lodash": "^4.0.0"
   },
   "devDependencies": {
     "eslint": "2.x",
