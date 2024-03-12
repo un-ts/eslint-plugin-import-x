@@ -186,7 +186,7 @@ describe('importType(name)', () => {
     const foldersContext = testContext({
       'import-x/external-module-folders': [],
     })
-    expect(importType('chai', foldersContext)).toBe('internal')
+    expect(importType('jest', foldersContext)).toBe('internal')
   })
 
   it("should return 'internal' for module from 'node_modules' if its name matched 'internal-regex'", () => {

@@ -3,7 +3,7 @@
  * @author Radek Benkel
  */
 
-import minimatch from 'minimatch'
+import { minimatch } from 'minimatch'
 import docsUrl from '../docsUrl'
 
 //------------------------------------------------------------------------------

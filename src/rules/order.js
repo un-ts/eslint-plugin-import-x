@@ -1,6 +1,6 @@
 'use strict'
 
-import minimatch from 'minimatch'
+import { minimatch } from 'minimatch'
 
 import importType from '../core/importType'
 import isStaticRequire from '../core/staticRequire'
