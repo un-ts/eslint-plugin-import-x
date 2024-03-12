@@ -38,7 +38,7 @@
     "lint": "yarn lint:es && yarn update:eslint-docs --check",
     "lint:es": "eslint . --cache",
     "prebuild": "rimraf lib",
-    "prepublishOnly": "yarn build",
+    "release": "changeset publish",
     "test": "jest",
     "update:eslint-docs": "yarn build && eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️",
     "watch": "yarn test --watch"
