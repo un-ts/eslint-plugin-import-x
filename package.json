@@ -7,9 +7,6 @@
   },
   "packageManager": "yarn@1.22.19",
   "main": "lib/index.js",
-  "directories": {
-    "test": "tests"
-  },
   "files": [
     "*.md",
     "LICENSE",
@@ -20,14 +17,14 @@
   "scripts": {
     "prebuild": "rimraf lib",
     "build": "babel --quiet --out-dir lib src",
-    "watch": "yarn tests-only --watch",
+    "watch": "yarn test-only --watch",
     "lint": "yarn lint:es && yarn update:eslint-docs --check && yarn lint:md",
     "lint:es": "eslint . --cache",
     "lint:md": "markdownlint \"**/*.md\"",
     "mocha": "cross-env BABEL_ENV=test mocha",
-    "test": "yarn build && yarn test-compiled",
-    "tests-only": "yarn mocha --compilers js:@babel/register 'tests/**/*.spec.js'",
-    "test-compiled": "yarn build && BABEL_ENV=testCompiled yarn mocha --compilers js:@babel/register 'tests/**/*.spec.js'",
+    "test": "yarn test-only",
+    "test-only": "yarn mocha --compilers js:@babel/register 'test/**/*.spec.js'",
+    "test-compiled": "yarn build && BABEL_ENV=testCompiled yarn mocha --compilers js:@babel/register 'test/**/*.spec.js'",
     "prepublishOnly": "yarn build",
     "update:eslint-docs": "yarn build && eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️"
   },
@@ -55,8 +52,8 @@
     "@babel/preset-flow": "^7.24.0",
     "@babel/preset-react": "^7.23.3",
     "@babel/register": "^7.23.7",
-    "@eslint/import-test-order-redirect-scoped": "link:./tests/fixtures/order-redirect-scoped",
-    "@test-scope/some-module": "link:./tests/fixtures/symlinked-module",
+    "@eslint/import-test-order-redirect-scoped": "link:./test/fixtures/order-redirect-scoped",
+    "@test-scope/some-module": "link:./test/fixtures/symlinked-module",
     "@typescript-eslint/parser": "^2.23.0 || ^3.3.0 || ^4.29.3 || ^5.10.0",
     "babel-plugin-module-resolver": "^5.0.0",
     "chai": "^4.3.10",
@@ -66,7 +63,7 @@
     "eslint-doc-generator": "^1.6.1",
     "eslint-import-resolver-typescript": "^1.0.2 || ^1.1.1",
     "eslint-import-resolver-webpack": "^0.13.8",
-    "eslint-import-test-order-redirect": "link:./tests/fixtures/order-redirect",
+    "eslint-import-test-order-redirect": "link:./test/fixtures/order-redirect",
     "eslint-plugin-eslint-plugin": "^2.3.0",
     "eslint-plugin-import-x": "link:.",
     "eslint-plugin-json": "^2.1.2",

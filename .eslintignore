@@ -1,10 +1,10 @@
 lib
 coverage
 node_modules
-tests/fixtures/malformed.js
-tests/fixtures/with-syntax-error
-tests/fixtures/just-json-files/invalid.json
-tests/fixtures/typescript-d-ts/
-# we want to ignore "tests/fixtures" here, but unfortunately doing so would
+test/fixtures/malformed.js
+test/fixtures/with-syntax-error
+test/fixtures/just-json-files/invalid.json
+test/fixtures/typescript-d-ts/
+# we want to ignore "test/fixtures" here, but unfortunately doing so would
 # interfere with unit test and fail it for some reason.
-# tests/fixtures
+# test/fixtures

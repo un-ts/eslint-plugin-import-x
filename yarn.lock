@@ -1141,7 +1141,7 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
-"@eslint/import-test-order-redirect-scoped@link:./tests/fixtures/order-redirect-scoped":
+"@eslint/import-test-order-redirect-scoped@link:./test/fixtures/order-redirect-scoped":
   version "0.0.0"
   uid ""
 
@@ -1263,7 +1263,7 @@
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.27.8.tgz#6667fac16c436b5434a387a34dedb013198f6e6e"
   integrity sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==
 
-"@test-scope/some-module@link:./tests/fixtures/symlinked-module":
+"@test-scope/some-module@link:./test/fixtures/symlinked-module":
   version "0.0.0"
   uid ""
 
@@ -2188,7 +2188,7 @@ eslint-import-resolver-webpack@^0.13.8:
     resolve "^2.0.0-next.5"
     semver "^5.7.2"
 
-"eslint-import-test-order-redirect@link:./tests/fixtures/order-redirect":
+"eslint-import-test-order-redirect@link:./test/fixtures/order-redirect":
   version "0.0.0"
   uid ""
 

@@ -193,7 +193,7 @@
     "import-x/no-extraneous-dependencies": [
       "error",
       {
-        "devDependencies": ["tests/**", "resolvers/*/test/**", "scripts/**"],
+        "devDependencies": ["test/**"],
         "optionalDependencies": false,
         "peerDependencies": true,
         "bundledDependencies": false
@@ -212,7 +212,7 @@
 
   "overrides": [
     {
-      "files": "tests/**",
+      "files": "test/**",
       "env": {
         "mocha": true
       },
