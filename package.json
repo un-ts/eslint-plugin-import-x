@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-import-x",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Import with sanity.",
   "repository": "git+https://github.com/un-es/eslint-plugin-i",
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
