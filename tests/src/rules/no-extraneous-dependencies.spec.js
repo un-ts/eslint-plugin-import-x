@@ -12,7 +12,7 @@ const rule = require('rules/no-extraneous-dependencies');
 
 const packageDirWithSyntaxError = path.join(
   __dirname,
-  '../../files/with-syntax-error',
+  '../../fixtures/with-syntax-error',
 );
 const packageFileWithSyntaxErrorMessage = (() => {
   try {
@@ -25,35 +25,35 @@ const packageFileWithSyntaxErrorMessage = (() => {
 })();
 const packageDirWithFlowTyped = path.join(
   __dirname,
-  '../../files/with-flow-typed',
+  '../../fixtures/with-flow-typed',
 );
 const packageDirWithTypescriptDevDependencies = path.join(
   __dirname,
-  '../../files/with-typescript-dev-dependencies',
+  '../../fixtures/with-typescript-dev-dependencies',
 );
-const packageDirMonoRepoRoot = path.join(__dirname, '../../files/monorepo');
+const packageDirMonoRepoRoot = path.join(__dirname, '../../fixtures/monorepo');
 const packageDirMonoRepoWithNested = path.join(
   __dirname,
-  '../../files/monorepo/packages/nested-package',
+  '../../fixtures/monorepo/packages/nested-package',
 );
-const packageDirWithEmpty = path.join(__dirname, '../../files/empty');
+const packageDirWithEmpty = path.join(__dirname, '../../fixtures/empty');
 const packageDirBundleDeps = path.join(
   __dirname,
-  '../../files/bundled-dependencies/as-array-bundle-deps',
+  '../../fixtures/bundled-dependencies/as-array-bundle-deps',
 );
 const packageDirBundledDepsAsObject = path.join(
   __dirname,
-  '../../files/bundled-dependencies/as-object',
+  '../../fixtures/bundled-dependencies/as-object',
 );
 const packageDirBundledDepsRaceCondition = path.join(
   __dirname,
-  '../../files/bundled-dependencies/race-condition',
+  '../../fixtures/bundled-dependencies/race-condition',
 );
 
 const {
   dependencies: deps,
   devDependencies: devDeps,
-} = require('../../files/package.json');
+} = require('../../fixtures/package.json');
 
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
@@ -85,7 +85,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       code: 'import "importType"',
       settings: {
         'import-x/resolver': {
-          node: { paths: [path.join(__dirname, '../../files')] },
+          node: { paths: [path.join(__dirname, '../../fixtures')] },
         },
       },
     }),
@@ -518,7 +518,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       code: 'import "not-a-dependency"',
       settings: {
         'import-x/resolver': {
-          node: { paths: [path.join(__dirname, '../../files')] },
+          node: { paths: [path.join(__dirname, '../../fixtures')] },
         },
         'import-x/internal-regex': '^not-a-dependency.*',
       },

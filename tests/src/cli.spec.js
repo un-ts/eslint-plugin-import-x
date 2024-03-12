@@ -17,7 +17,7 @@ describe('CLI regression tests', function () {
       if (ESLint) {
         eslint = new ESLint({
           useEslintrc: false,
-          overrideConfigFile: './tests/files/issue210.config.js',
+          overrideConfigFile: './tests/fixtures/issue210.config.js',
           rulePaths: ['./src/rules'],
           overrideConfig: {
             rules: {
@@ -29,7 +29,7 @@ describe('CLI regression tests', function () {
       } else {
         cli = new CLIEngine({
           useEslintrc: false,
-          configFile: './tests/files/issue210.config.js',
+          configFile: './tests/fixtures/issue210.config.js',
           rulePaths: ['./src/rules'],
           rules: {
             named: 2,
@@ -40,10 +40,10 @@ describe('CLI regression tests', function () {
     });
     it("doesn't throw an error on gratuitous, erroneous self-reference", function () {
       if (eslint) {
-        return eslint.lintFiles(['./tests/files/issue210.js'])
+        return eslint.lintFiles(['./tests/fixtures/issue210.js'])
           .catch(() => expect.fail());
       } else {
-        expect(() => cli.executeOnFiles(['./tests/files/issue210.js'])).not.to.throw();
+        expect(() => cli.executeOnFiles(['./tests/fixtures/issue210.js'])).not.to.throw();
       }
     });
   });
@@ -58,7 +58,7 @@ describe('CLI regression tests', function () {
         if (ESLint) {
           eslint = new ESLint({
             useEslintrc: false,
-            overrideConfigFile: './tests/files/just-json-files/.eslintrc.json',
+            overrideConfigFile: './tests/fixtures/just-json-files/.eslintrc.json',
             rulePaths: ['./src/rules'],
             ignore: false,
             plugins: { 'eslint-plugin-import': importPlugin },
@@ -66,7 +66,7 @@ describe('CLI regression tests', function () {
         } else {
           cli = new CLIEngine({
             useEslintrc: false,
-            configFile: './tests/files/just-json-files/.eslintrc.json',
+            configFile: './tests/fixtures/just-json-files/.eslintrc.json',
             rulePaths: ['./src/rules'],
             ignore: false,
           });
@@ -76,7 +76,7 @@ describe('CLI regression tests', function () {
     });
 
     it('throws an error on invalid JSON', () => {
-      const invalidJSON = './tests/files/just-json-files/invalid.json';
+      const invalidJSON = './tests/fixtures/just-json-files/invalid.json';
       if (eslint) {
         return eslint.lintFiles([invalidJSON]).then((results) => {
           expect(results).to.eql(

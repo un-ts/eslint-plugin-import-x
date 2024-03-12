@@ -309,7 +309,7 @@ function runResolverTests(resolver) {
   });
 
   if (!CASE_SENSITIVE_FS) {
-    const relativePath = './tests/files/jsx/MyUnCoolComponent.jsx';
+    const relativePath = './tests/fixtures/jsx/MyUnCoolComponent.jsx';
     const cwd = process.cwd();
     const mismatchedPath = path
       .join(cwd.toUpperCase(), relativePath)
@@ -383,7 +383,7 @@ ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
       code: "import { DEEP } from 'in-alternate-root';",
       settings: {
         'import-x/resolve': {
-          paths: [path.join(process.cwd(), 'tests', 'files', 'alternate-root')],
+          paths: [path.join(process.cwd(), 'tests', 'fixtures', 'alternate-root')],
         },
       },
     }),
@@ -393,8 +393,8 @@ ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
       settings: {
         'import-x/resolve': {
           paths: [
-            path.join('tests', 'files', 'src-root'),
-            path.join('tests', 'files', 'alternate-root'),
+            path.join('tests', 'fixtures', 'src-root'),
+            path.join('tests', 'fixtures', 'alternate-root'),
           ],
         },
       },
@@ -417,7 +417,7 @@ ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
 ruleTester.run('no-unresolved (webpack-specific)', rule, {
   valid: [
     test({
-      // default webpack config in files/webpack.config.js knows about jsx
+      // default webpack config in fixtures/webpack.config.js knows about jsx
       code: 'import * as foo from "jsx-module/foo"',
       settings: { 'import-x/resolver': 'webpack' },
     }),
@@ -429,7 +429,7 @@ ruleTester.run('no-unresolved (webpack-specific)', rule, {
   ],
   invalid: [
     test({
-      // default webpack config in files/webpack.config.js knows about jsx
+      // default webpack config in fixtures/webpack.config.js knows about jsx
       code: 'import * as foo from "jsx-module/foo"',
       settings: {
         'import-x/resolver': { webpack: { config: 'webpack.empty.config.js' } },

@@ -14,8 +14,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server',
-              from: './tests/files/restricted-paths/other',
+              target: './tests/fixtures/restricted-paths/server',
+              from: './tests/fixtures/restricted-paths/other',
             },
           ],
         },
@@ -29,7 +29,7 @@ ruleTester.run('no-restricted-paths', rule, {
           zones: [
             {
               target: '**/*',
-              from: './tests/files/restricted-paths/other',
+              from: './tests/fixtures/restricted-paths/other',
             },
           ],
         },
@@ -42,8 +42,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/!(client)/**/*',
-              from: './tests/files/restricted-paths/client/**/*',
+              target: './tests/fixtures/restricted-paths/!(client)/**/*',
+              from: './tests/fixtures/restricted-paths/client/**/*',
             },
           ],
         },
@@ -56,8 +56,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server',
-              from: './tests/files/restricted-paths/other',
+              target: './tests/fixtures/restricted-paths/server',
+              from: './tests/fixtures/restricted-paths/other',
             },
           ],
         },
@@ -70,8 +70,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client',
-              from: './tests/files/restricted-paths/other',
+              target: './tests/fixtures/restricted-paths/client',
+              from: './tests/fixtures/restricted-paths/other',
             },
           ],
         },
@@ -84,8 +84,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server/one',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/server/one',
+              from: './tests/fixtures/restricted-paths/server',
               except: ['./one'],
             },
           ],
@@ -99,8 +99,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server/one',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/server/one',
+              from: './tests/fixtures/restricted-paths/server',
               except: ['./two'],
             },
           ],
@@ -114,8 +114,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server/two',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/server/two',
+              from: './tests/fixtures/restricted-paths/server',
               except: [],
             },
           ],
@@ -130,7 +130,7 @@ ruleTester.run('no-restricted-paths', rule, {
           zones: [
             {
               target: '**/*',
-              from: './tests/files/restricted-paths/server/**/*',
+              from: './tests/fixtures/restricted-paths/server/**/*',
               except: ['**/a.js'],
             },
           ],
@@ -147,8 +147,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: ['./tests/files/restricted-paths/server'],
-              from: './tests/files/restricted-paths/other',
+              target: ['./tests/fixtures/restricted-paths/server'],
+              from: './tests/fixtures/restricted-paths/other',
             },
           ],
         },
@@ -161,8 +161,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server',
-              from: ['./tests/files/restricted-paths/other'],
+              target: './tests/fixtures/restricted-paths/server',
+              from: ['./tests/fixtures/restricted-paths/other'],
             },
           ],
         },
@@ -177,10 +177,10 @@ ruleTester.run('no-restricted-paths', rule, {
           zones: [
             {
               target: [
-                './tests/files/restricted-paths/server/two',
-                './tests/files/restricted-paths/server/three',
+                './tests/fixtures/restricted-paths/server/two',
+                './tests/fixtures/restricted-paths/server/three',
               ],
-              from: './tests/files/restricted-paths/server',
+              from: './tests/fixtures/restricted-paths/server',
             },
           ],
         },
@@ -193,10 +193,10 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/server',
               from: [
-                './tests/files/restricted-paths/server/two',
-                './tests/files/restricted-paths/server/three',
+                './tests/fixtures/restricted-paths/server/two',
+                './tests/fixtures/restricted-paths/server/three',
               ],
               except: [],
             },
@@ -212,10 +212,10 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/!(client)/**/*',
+              target: './tests/fixtures/restricted-paths/!(client)/**/*',
               from: [
-                './tests/files/restricted-paths/client/*',
-                './tests/files/restricted-paths/client/one/*',
+                './tests/fixtures/restricted-paths/client/*',
+                './tests/fixtures/restricted-paths/client/one/*',
               ],
             },
           ],
@@ -231,10 +231,10 @@ ruleTester.run('no-restricted-paths', rule, {
           zones: [
             {
               target: [
-                './tests/files/restricted-paths/!(client)/**/*',
-                './tests/files/restricted-paths/client/a/',
+                './tests/fixtures/restricted-paths/!(client)/**/*',
+                './tests/fixtures/restricted-paths/client/a/',
               ],
-              from: './tests/files/restricted-paths/client/**/*',
+              from: './tests/fixtures/restricted-paths/client/**/*',
             },
           ],
         },
@@ -250,8 +250,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/client',
+              from: './tests/fixtures/restricted-paths/server',
             },
           ],
         },
@@ -274,8 +274,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/client',
+              from: './tests/fixtures/restricted-paths/server',
             },
           ],
         },
@@ -296,8 +296,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client/**/*',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/client/**/*',
+              from: './tests/fixtures/restricted-paths/server',
             },
           ],
         },
@@ -321,8 +321,8 @@ ruleTester.run('no-restricted-paths', rule, {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/client/*.js',
-                from: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/client/*.js',
+                from: './tests/fixtures/restricted-paths/server',
               },
             ],
           },
@@ -343,8 +343,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client/**',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/client/**',
+              from: './tests/fixtures/restricted-paths/server',
             },
           ],
         },
@@ -365,12 +365,12 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server',
-              from: './tests/files/restricted-paths/client',
+              target: './tests/fixtures/restricted-paths/server',
+              from: './tests/fixtures/restricted-paths/client',
             },
             {
-              target: './tests/files/restricted-paths/server',
-              from: './tests/files/restricted-paths/server/c.js',
+              target: './tests/fixtures/restricted-paths/server',
+              from: './tests/fixtures/restricted-paths/server/c.js',
             },
           ],
         },
@@ -418,8 +418,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/client',
+              from: './tests/fixtures/restricted-paths/server',
             },
           ],
         },
@@ -440,8 +440,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server/one',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/server/one',
+              from: './tests/fixtures/restricted-paths/server',
               except: ['./one'],
             },
           ],
@@ -462,8 +462,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server/one',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/server/one',
+              from: './tests/fixtures/restricted-paths/server',
               except: ['./one'],
               message: 'Custom message',
             },
@@ -486,8 +486,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/server/one',
-              from: './tests/files/restricted-paths/server',
+              target: './tests/fixtures/restricted-paths/server/one',
+              from: './tests/fixtures/restricted-paths/server',
               except: ['../client/a'],
             },
           ],
@@ -510,7 +510,7 @@ ruleTester.run('no-restricted-paths', rule, {
           zones: [
             {
               target: '**/*',
-              from: './tests/files/restricted-paths/server/**/*',
+              from: './tests/fixtures/restricted-paths/server/**/*',
             },
           ],
         },
@@ -531,7 +531,7 @@ ruleTester.run('no-restricted-paths', rule, {
           zones: [
             {
               target: '**/*',
-              from: './tests/files/restricted-paths/server/**/*',
+              from: './tests/fixtures/restricted-paths/server/**/*',
               except: ['a.js'],
             },
           ],
@@ -556,8 +556,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: ['./tests/files/restricted-paths/client'],
-              from: './tests/files/restricted-paths/server',
+              target: ['./tests/fixtures/restricted-paths/client'],
+              from: './tests/fixtures/restricted-paths/server',
             },
           ],
         },
@@ -578,8 +578,8 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client',
-              from: ['./tests/files/restricted-paths/server'],
+              target: './tests/fixtures/restricted-paths/client',
+              from: ['./tests/fixtures/restricted-paths/server'],
             },
           ],
         },
@@ -602,10 +602,10 @@ ruleTester.run('no-restricted-paths', rule, {
           zones: [
             {
               target: [
-                './tests/files/restricted-paths/client/one',
-                './tests/files/restricted-paths/client',
+                './tests/fixtures/restricted-paths/client/one',
+                './tests/fixtures/restricted-paths/client',
               ],
-              from: './tests/files/restricted-paths/server',
+              from: './tests/fixtures/restricted-paths/server',
             },
           ],
         },
@@ -626,10 +626,10 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client',
+              target: './tests/fixtures/restricted-paths/client',
               from: [
-                './tests/files/restricted-paths/server/one',
-                './tests/files/restricted-paths/server/two',
+                './tests/fixtures/restricted-paths/server/one',
+                './tests/fixtures/restricted-paths/server/two',
               ],
             },
           ],
@@ -658,10 +658,10 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client',
+              target: './tests/fixtures/restricted-paths/client',
               from: [
-                './tests/files/restricted-paths/server/one/*',
-                './tests/files/restricted-paths/server/two/*',
+                './tests/fixtures/restricted-paths/server/one/*',
+                './tests/fixtures/restricted-paths/server/two/*',
               ],
             },
           ],
@@ -691,10 +691,10 @@ ruleTester.run('no-restricted-paths', rule, {
           zones: [
             {
               target: [
-                './tests/files/restricted-paths/client/one',
-                './tests/files/restricted-paths/client/**/*',
+                './tests/fixtures/restricted-paths/client/one',
+                './tests/fixtures/restricted-paths/client/**/*',
               ],
-              from: './tests/files/restricted-paths/server',
+              from: './tests/fixtures/restricted-paths/server',
             },
           ],
         },
@@ -717,7 +717,7 @@ ruleTester.run('no-restricted-paths', rule, {
           zones: [
             {
               target: '**/*',
-              from: ['./tests/files/restricted-paths/server/**/*'],
+              from: ['./tests/fixtures/restricted-paths/server/**/*'],
               except: ['a.js'],
             },
           ],
@@ -739,10 +739,10 @@ ruleTester.run('no-restricted-paths', rule, {
         {
           zones: [
             {
-              target: './tests/files/restricted-paths/client',
+              target: './tests/fixtures/restricted-paths/client',
               from: [
-                './tests/files/restricted-paths/server/one',
-                './tests/files/restricted-paths/server/two/*',
+                './tests/fixtures/restricted-paths/server/one',
+                './tests/fixtures/restricted-paths/server/two/*',
               ],
             },
           ],
@@ -776,8 +776,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/server',
-                from: './tests/files/restricted-paths/other',
+                target: './tests/fixtures/restricted-paths/server',
+                from: './tests/fixtures/restricted-paths/other',
               },
             ],
           },
@@ -791,7 +791,7 @@ context('Typescript', function () {
         options: [
           {
             zones: [
-              { target: '**/*', from: './tests/files/restricted-paths/other' },
+              { target: '**/*', from: './tests/fixtures/restricted-paths/other' },
             ],
           },
         ],
@@ -805,8 +805,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/!(client)/**/*',
-                from: './tests/files/restricted-paths/client/**/*',
+                target: './tests/fixtures/restricted-paths/!(client)/**/*',
+                from: './tests/fixtures/restricted-paths/client/**/*',
               },
             ],
           },
@@ -821,8 +821,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/client',
-                from: './tests/files/restricted-paths/other',
+                target: './tests/fixtures/restricted-paths/client',
+                from: './tests/fixtures/restricted-paths/other',
               },
             ],
           },
@@ -837,8 +837,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/server/one',
-                from: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/server/one',
+                from: './tests/fixtures/restricted-paths/server',
                 except: ['./one'],
               },
             ],
@@ -854,8 +854,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/server/one',
-                from: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/server/one',
+                from: './tests/fixtures/restricted-paths/server',
                 except: ['./two'],
               },
             ],
@@ -871,8 +871,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/server/two',
-                from: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/server/two',
+                from: './tests/fixtures/restricted-paths/server',
                 except: [],
               },
             ],
@@ -889,7 +889,7 @@ context('Typescript', function () {
             zones: [
               {
                 target: '**/*',
-                from: './tests/files/restricted-paths/server/**/*',
+                from: './tests/fixtures/restricted-paths/server/**/*',
                 except: ['**/a.js'],
               },
             ],
@@ -914,8 +914,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/client',
-                from: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/client',
+                from: './tests/fixtures/restricted-paths/server',
               },
             ],
           },
@@ -938,8 +938,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/client/**/*',
-                from: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/client/**/*',
+                from: './tests/fixtures/restricted-paths/server',
               },
             ],
           },
@@ -962,10 +962,10 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/server',
                 from: [
-                  './tests/files/restricted-paths/client',
-                  './tests/files/restricted-paths/server/c.ts',
+                  './tests/fixtures/restricted-paths/client',
+                  './tests/fixtures/restricted-paths/server/c.ts',
                 ],
               },
             ],
@@ -1014,8 +1014,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/server/one',
-                from: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/server/one',
+                from: './tests/fixtures/restricted-paths/server',
                 except: ['./one'],
               },
             ],
@@ -1038,8 +1038,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/server/one',
-                from: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/server/one',
+                from: './tests/fixtures/restricted-paths/server',
                 except: ['./one'],
                 message: 'Custom message',
               },
@@ -1064,8 +1064,8 @@ context('Typescript', function () {
           {
             zones: [
               {
-                target: './tests/files/restricted-paths/server/one',
-                from: './tests/files/restricted-paths/server',
+                target: './tests/fixtures/restricted-paths/server/one',
+                from: './tests/fixtures/restricted-paths/server',
                 except: ['../client/a'],
               },
             ],
@@ -1090,7 +1090,7 @@ context('Typescript', function () {
             zones: [
               {
                 target: '**/*',
-                from: './tests/files/restricted-paths/server/**/*',
+                from: './tests/fixtures/restricted-paths/server/**/*',
               },
             ],
           },
@@ -1113,7 +1113,7 @@ context('Typescript', function () {
             zones: [
               {
                 target: '**/*',
-                from: './tests/files/restricted-paths/server/**/*',
+                from: './tests/fixtures/restricted-paths/server/**/*',
                 except: ['a.ts'],
               },
             ],

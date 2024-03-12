@@ -436,7 +436,7 @@ context('TypeScript', function () {
       parserOptions: {
         tsconfigRootDir: path.resolve(
           __dirname,
-          '../../files/typescript-export-assign-object/',
+          '../../fixtures/typescript-export-assign-object/',
         ),
       },
       settings,
@@ -459,7 +459,7 @@ context('TypeScript', function () {
       parserOptions: {
         tsconfigRootDir: path.resolve(
           __dirname,
-          '../../files/typescript-export-assign-object/',
+          '../../fixtures/typescript-export-assign-object/',
         ),
       },
       settings,
@@ -477,7 +477,7 @@ context('TypeScript', function () {
       parserOptions: {
         tsconfigRootDir: path.resolve(
           __dirname,
-          '../../files/typescript-export-assign-object/',
+          '../../fixtures/typescript-export-assign-object/',
         ),
       },
       settings,

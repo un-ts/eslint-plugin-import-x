@@ -8,7 +8,7 @@ function runResolverTests(resolver) {
   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
     valid: [
       // CommonJS modules with default options
-      test({ code: 'require("./../files/malformed.js")' }),
+      test({ code: 'require("./../fixtures/malformed.js")' }),
 
       // ES modules with default options
       test({ code: 'import "./malformed.js"' }),
@@ -39,28 +39,28 @@ function runResolverTests(resolver) {
     invalid: [
       // CommonJS modules
       test({
-        code: 'require("./../files/malformed.js")',
-        output: 'require("../files/malformed.js")',
+        code: 'require("./../fixtures/malformed.js")',
+        output: 'require("../fixtures/malformed.js")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "./../files/malformed.js", should be "../files/malformed.js"'],
+        errors: ['Useless path segments for "./../fixtures/malformed.js", should be "../fixtures/malformed.js"'],
       }),
       test({
-        code: 'require("./../files/malformed")',
-        output: 'require("../files/malformed")',
+        code: 'require("./../fixtures/malformed")',
+        output: 'require("../fixtures/malformed")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "./../files/malformed", should be "../files/malformed"'],
+        errors: ['Useless path segments for "./../fixtures/malformed", should be "../fixtures/malformed"'],
       }),
       test({
-        code: 'require("../files/malformed.js")',
+        code: 'require("../fixtures/malformed.js")',
         output: 'require("./malformed.js")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "../files/malformed.js", should be "./malformed.js"'],
+        errors: ['Useless path segments for "../fixtures/malformed.js", should be "./malformed.js"'],
       }),
       test({
-        code: 'require("../files/malformed")',
+        code: 'require("../fixtures/malformed")',
         output: 'require("./malformed")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "../files/malformed", should be "./malformed"'],
+        errors: ['Useless path segments for "../fixtures/malformed", should be "./malformed"'],
       }),
       test({
         code: 'require("./test-module/")',
@@ -139,24 +139,24 @@ function runResolverTests(resolver) {
 
       // ES modules
       test({
-        code: 'import "./../files/malformed.js"',
-        output: 'import "../files/malformed.js"',
-        errors: ['Useless path segments for "./../files/malformed.js", should be "../files/malformed.js"'],
+        code: 'import "./../fixtures/malformed.js"',
+        output: 'import "../fixtures/malformed.js"',
+        errors: ['Useless path segments for "./../fixtures/malformed.js", should be "../fixtures/malformed.js"'],
       }),
       test({
-        code: 'import "./../files/malformed"',
-        output: 'import "../files/malformed"',
-        errors: ['Useless path segments for "./../files/malformed", should be "../files/malformed"'],
+        code: 'import "./../fixtures/malformed"',
+        output: 'import "../fixtures/malformed"',
+        errors: ['Useless path segments for "./../fixtures/malformed", should be "../fixtures/malformed"'],
       }),
       test({
-        code: 'import "../files/malformed.js"',
+        code: 'import "../fixtures/malformed.js"',
         output: 'import "./malformed.js"',
-        errors: ['Useless path segments for "../files/malformed.js", should be "./malformed.js"'],
+        errors: ['Useless path segments for "../fixtures/malformed.js", should be "./malformed.js"'],
       }),
       test({
-        code: 'import "../files/malformed"',
+        code: 'import "../fixtures/malformed"',
         output: 'import "./malformed"',
-        errors: ['Useless path segments for "../files/malformed", should be "./malformed"'],
+        errors: ['Useless path segments for "../fixtures/malformed", should be "./malformed"'],
       }),
       test({
         code: 'import "./test-module/"',

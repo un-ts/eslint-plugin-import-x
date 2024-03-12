@@ -27,7 +27,7 @@ export function typescriptEslintParserSatisfies(specifier) {
 }
 
 export function testFilePath(relativePath) {
-  return path.join(process.cwd(), './tests/files', relativePath);
+  return path.join(process.cwd(), './tests/fixtures', relativePath);
 }
 
 export function getNonDefaultParsers() {
@@ -69,7 +69,7 @@ export function testContext(settings) {
 }
 
 export function getFilename(file) {
-  return path.join(__dirname, '..', 'files', file || 'foo.js');
+  return path.join(__dirname, '..', 'fixtures', file || 'foo.js');
 }
 
 /**

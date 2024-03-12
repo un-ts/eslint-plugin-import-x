@@ -231,7 +231,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../files/typescript-export-assign-default-namespace/',
+            '../../fixtures/typescript-export-assign-default-namespace/',
           ),
         },
       }),
@@ -245,7 +245,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../files/typescript-export-as-default-namespace/',
+            '../../fixtures/typescript-export-as-default-namespace/',
           ),
         },
       }),
@@ -259,7 +259,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../files/typescript-export-react-test-renderer/',
+            '../../fixtures/typescript-export-react-test-renderer/',
           ),
         },
       }),
@@ -273,7 +273,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../files/typescript-extended-config/',
+            '../../fixtures/typescript-extended-config/',
           ),
         },
       }),
@@ -329,7 +329,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../files/typescript-no-compiler-options/',
+            '../../fixtures/typescript-no-compiler-options/',
           ),
         },
         errors: [

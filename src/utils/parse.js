@@ -72,8 +72,8 @@ exports.default = function parse(path, content, context) {
   if (!parserOrPath) { throw new Error('parserPath or languageOptions.parser is required!'); }
 
   // hack: espree blows up with frozen options
-  parserOptions = Object.assign({}, parserOptions);
-  parserOptions.ecmaFeatures = Object.assign({}, parserOptions.ecmaFeatures);
+  parserOptions = { ...parserOptions };
+  parserOptions.ecmaFeatures = { ...parserOptions.ecmaFeatures };
 
   // always include comments and tokens (for doc parsing)
   parserOptions.comment = true;
@@ -112,14 +112,14 @@ exports.default = function parse(path, content, context) {
       return makeParseReturn(ast, keysFromParser(parserOrPath, parser, parserRaw));
     } catch (e) {
       console.warn();
-      console.warn('Error while parsing ' + parserOptions.filePath);
+      console.warn(`Error while parsing ${parserOptions.filePath}`);
       // @ts-expect-error e is almost certainly an Error here
-      console.warn('Line ' + e.lineNumber + ', column ' + e.column + ': ' + e.message);
+      console.warn(`Line ${e.lineNumber}, column ${e.column}: ${e.message}`);
     }
     if (!ast || typeof ast !== 'object') {
       console.warn(
         // Can only be invalid for custom parser per imports/parser
-        '`parseForESLint` from parser `' + (typeof parserOrPath === 'string' ? parserOrPath : '`context.languageOptions.parser`') + '` is invalid and will just be ignored'
+        `\`parseForESLint\` from parser \`${typeof parserOrPath === 'string' ? parserOrPath : '`context.languageOptions.parser`'}\` is invalid and will just be ignored`,
       );
     } else {
       // @ts-expect-error TODO: FIXME

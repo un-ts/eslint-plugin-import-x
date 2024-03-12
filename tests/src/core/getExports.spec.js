@@ -458,7 +458,7 @@ describe('ExportMap', function () {
 
     for (const [testFile, expectedRegexResult] of testFiles) {
       it(`works for ${testFile} (${expectedRegexResult})`, function () {
-        const content = fs.readFileSync(`./tests/files/${testFile}`, 'utf8');
+        const content = fs.readFileSync(`./tests/fixtures/${testFile}`, 'utf8');
         expect(testUnambiguous(content)).to.equal(expectedRegexResult);
       });
     }

@@ -8,7 +8,7 @@ import { testContext, testFilePath } from '../utils';
 
 describe('importType(name)', function () {
   const context = testContext();
-  const pathToTestFiles = path.join(__dirname, '..', '..', 'files');
+  const pathToTestFixtures = path.join(__dirname, '..', '..', 'fixtures');
 
   it("should return 'absolute' for paths starting with a /", function () {
     expect(importType('/', context)).to.equal('absolute');
@@ -49,23 +49,23 @@ describe('importType(name)', function () {
   });
 
   it("should return 'internal' for non-builtins resolved outside of node_modules", function () {
-    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFiles] } } });
+    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFixtures] } } });
     expect(importType('importType', pathContext)).to.equal('internal');
   });
 
   it("should return 'internal' for scoped packages resolved outside of node_modules", function () {
-    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFiles] } } });
+    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFixtures] } } });
     expect(importType('@importType/index', pathContext)).to.equal('internal');
   });
 
   it("should return 'internal' for internal modules that are referenced by aliases", function () {
-    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFiles] } } });
+    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFixtures] } } });
     expect(importType('@my-alias/fn', pathContext)).to.equal('internal');
     expect(importType('@importType', pathContext)).to.equal('internal');
   });
 
   it("should return 'internal' for aliased internal modules that look like core modules (node resolver)", function () {
-    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFiles] } } });
+    const pathContext = testContext({ 'import-x/resolver': { node: { paths: [pathToTestFixtures] } } });
     expect(importType('constants/index', pathContext)).to.equal('internal');
     expect(importType('constants/', pathContext)).to.equal('internal');
     // resolves exact core modules over internal modules
@@ -73,7 +73,7 @@ describe('importType(name)', function () {
   });
 
   it("should return 'internal' for aliased internal modules that look like core modules (webpack resolver)", function () {
-    const webpackConfig = { resolve: { modules: [pathToTestFiles, 'node_modules'] } };
+    const webpackConfig = { resolve: { modules: [pathToTestFixtures, 'node_modules'] } };
     const pathContext = testContext({ 'import-x/resolver': { webpack: { config: webpackConfig } } });
     expect(importType('constants/index', pathContext)).to.equal('internal');
     expect(importType('constants/', pathContext)).to.equal('internal');
@@ -84,7 +84,7 @@ describe('importType(name)', function () {
     // `@` for internal modules is a common alias and is different from scoped names.
     // Scoped names are prepended with `@` (e.g. `@scoped/some-file.js`) whereas `@`
     // as an alias by itelf is the full root name (e.g. `@/some-file.js`).
-    const alias = { '@': path.join(pathToTestFiles, 'internal-modules') };
+    const alias = { '@': path.join(pathToTestFixtures, 'internal-modules') };
     const webpackConfig = { resolve: { alias } };
     const pathContext = testContext({ 'import-x/resolver': { webpack: { config: webpackConfig } } });
     expect(importType('@/api/service', pathContext)).to.equal('internal');
@@ -173,7 +173,7 @@ describe('importType(name)', function () {
 
   // We're using Webpack resolver here since it resolves all symlinks, which means that
   // directory path will not contain node_modules/<package-name> but will point to the
-  // actual directory inside 'files' instead
+  // actual directory inside 'fixtures' instead
   it('returns "external" for a scoped module from a symlinked directory which name is contained in "external-module-folders" (webpack resolver)', function () {
     const foldersContext = testContext({
       'import-x/resolver': 'webpack',
@@ -213,7 +213,7 @@ describe('importType(name)', function () {
   it('returns "internal" for a scoped module from a symlinked directory which partial path w/ incomplete segment is contained in "external-module-folders" (webpack resolver)', function () {
     const foldersContext_1 = testContext({
       'import-x/resolver': 'webpack',
-      'import-x/external-module-folders': ['files/symlinked-mod'],
+      'import-x/external-module-folders': ['fixtures/symlinked-mod'],
     });
     expect(importType('@test-scope/some-module', foldersContext_1)).to.equal('internal');
 

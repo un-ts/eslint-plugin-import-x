@@ -17,7 +17,7 @@ exports.default = function visitModules(visitor, options) {
   const amd = !!(options && options.amd);
   const commonjs = !!(options && options.commonjs);
   // if esmodule is not explicitly disabled, it is assumed to be enabled
-  const esmodule = !!Object.assign({ esmodule: true }, options).esmodule;
+  const esmodule = !!{ esmodule: true, ...options }.esmodule;
 
   const ignoreRegExps = ignore == null ? [] : ignore.map((p) => new RegExp(p));
 

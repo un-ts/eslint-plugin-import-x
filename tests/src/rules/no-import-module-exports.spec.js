@@ -51,15 +51,15 @@ ruleTester.run('no-import-module-exports', rule, {
         module.exports = foo;
       `,
       // When the file matches the entry point defined in package.json
-      // See tests/files/package.json
-      filename: path.join(process.cwd(), 'tests/files/index.js'),
+      // See tests/fixtures/package.json
+      filename: path.join(process.cwd(), 'tests/fixtures/index.js'),
     }),
     test({
       code: `
         import foo from 'path';
         module.exports = foo;
       `,
-      filename: path.join(process.cwd(), 'tests/files/some/other/entry-point.js'),
+      filename: path.join(process.cwd(), 'tests/fixtures/some/other/entry-point.js'),
       options: [{ exceptions: ['**/*/other/entry-point.js'] }],
     }),
     test({
@@ -67,20 +67,20 @@ ruleTester.run('no-import-module-exports', rule, {
         import * as process from 'process';
         console.log(process.env);
       `,
-      filename: path.join(process.cwd(), 'tests/files/missing-entrypoint/cli.js'),
+      filename: path.join(process.cwd(), 'tests/fixtures/missing-entrypoint/cli.js'),
     }),
     testVersion('>= 6', () => ({
       code: `
         import fs from 'fs/promises';
 
         const subscriptions = new Map();
-        
+
         export default async (client) => {
             /**
              * loads all modules and their subscriptions
              */
             const modules = await fs.readdir('./src/modules');
-        
+
             await Promise.all(
                 modules.map(async (moduleName) => {
                     // Loads the module
@@ -97,7 +97,7 @@ ruleTester.run('no-import-module-exports', rule, {
                     }
                 })
             );
-        
+
             /**
              * Setting up all events.
              * binds all events inside the subscriptions map to call all functions provided
@@ -155,7 +155,7 @@ ruleTester.run('no-import-module-exports', rule, {
         import foo from 'path';
         module.exports = foo;
       `,
-      filename: path.join(process.cwd(), 'tests/files/some/other/entry-point.js'),
+      filename: path.join(process.cwd(), 'tests/fixtures/some/other/entry-point.js'),
       options: [{ exceptions: ['**/*/other/file.js'] }],
       errors: [error],
     }),

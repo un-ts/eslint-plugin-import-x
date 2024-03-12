@@ -212,52 +212,6 @@
 
   "overrides": [
     {
-      "files": "scripts/**",
-      "rules": {
-        "no-console": "off"
-      }
-    },
-    {
-      "files": ["resolvers/**", "utils/**"],
-      "env": {
-        "es6": false
-      },
-      "parserOptions": {
-        "sourceType": "module",
-        "ecmaVersion": 2016
-      },
-      "rules": {
-        "comma-dangle": [
-          "error",
-          {
-            "arrays": "always-multiline",
-            "objects": "always-multiline",
-            "imports": "always-multiline",
-            "exports": "always-multiline",
-            "functions": "never"
-          }
-        ],
-        "prefer-destructuring": "off",
-        "prefer-object-spread": "off",
-        "prefer-rest-params": "off",
-        "prefer-spread": "off",
-        "prefer-template": "off"
-      }
-    },
-    {
-      "files": ["resolvers/webpack/**", "utils/**"],
-      "rules": {
-        "no-console": 1
-      }
-    },
-    {
-      "files": ["resolvers/*/test/**/*"],
-      "env": {
-        "mocha": true,
-        "es6": false
-      }
-    },
-    {
       "files": "tests/**",
       "env": {
         "mocha": true

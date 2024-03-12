@@ -82,7 +82,7 @@ ruleTester.run('no-duplicates', rule, {
       output: "import { x , y } from './bar'; ",
       settings: {
         'import-x/resolve': {
-          paths: [path.join(process.cwd(), 'tests', 'files')],
+          paths: [path.join(process.cwd(), 'tests', 'fixtures')],
         },
       },
       errors: 2, // path ends up hardcoded

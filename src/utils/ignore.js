@@ -32,7 +32,7 @@ function makeValidExtensionSet(settings) {
     for (const parser in settings['import-x/parsers']) {
       const parserSettings = settings['import-x/parsers'][parser];
       if (!Array.isArray(parserSettings)) {
-        throw new TypeError('"settings" for ' + parser + ' must be an array');
+        throw new TypeError(`"settings" for ${parser} must be an array`);
       }
       parserSettings.forEach((ext) => exts.add(ext));
     }
