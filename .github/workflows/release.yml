@@ -43,10 +43,9 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          commit: 'chore: release package(s)'
-          title: 'chore: release package(s)'
-          version: yarn run version
-          publish: yarn release:only
+          commit: 'chore: release eslint-plugin-import-x'
+          title: 'chore: release eslint-plugin-import-x'
+          publish: yarn release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
