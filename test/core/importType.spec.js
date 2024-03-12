@@ -1,5 +1,4 @@
 import * as path from 'path'
-import isCoreModule from 'is-core-module'
 
 import importType, {
   isExternalModule,
@@ -7,6 +6,7 @@ import importType, {
   isAbsolute,
 } from 'core/importType'
 
+import { isCoreModule } from '../../src/utils/is-core-module'
 import { testContext, testFilePath } from '../utils'
 
 describe('importType(name)', () => {

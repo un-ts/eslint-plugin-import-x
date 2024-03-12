@@ -1,7 +1,5 @@
 import ExportMap, { recursivePatternCapture } from '../ExportMap'
 import docsUrl from '../docsUrl'
-import includes from 'array-includes'
-import flatMap from 'array.prototype.flatmap'
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:
@@ -38,7 +36,7 @@ const tsTypePrefix = 'type:'
 function isTypescriptFunctionOverloads(nodes) {
   const nodesArr = Array.from(nodes)
 
-  const idents = flatMap(nodesArr, node =>
+  const idents = nodesArr.flatMap(node =>
     node.declaration &&
     (node.declaration.type === 'TSDeclareFunction' || // eslint 6+
       node.declaration.type === 'TSEmptyBodyFunctionDeclaration') // eslint 4-5
@@ -183,8 +181,7 @@ module.exports = {
 
         if (node.declaration.id != null) {
           if (
-            includes(
-              ['TSTypeAliasDeclaration', 'TSInterfaceDeclaration'],
+            ['TSTypeAliasDeclaration', 'TSInterfaceDeclaration'].includes(
               node.declaration.type,
             )
           ) {

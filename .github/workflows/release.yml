@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+          fetch-depth: 0
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: yarn
+        env:
+          # https://github.com/actions/setup-node/issues/531#issuecomment-1819151412
+          SKIP_YARN_COREPACK_CHECK: 1
+
+      - name: Install Dependencies
+        run: yarn --immutable
+        env:
+          SKIP_YARN_COREPACK_CHECK: 1
+
+      # required for linting before commit
+      - name: Build
+        run: yarn build
+        env:
+          SKIP_YARN_COREPACK_CHECK: 1
+
+      - name: Create Release Pull Request or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          commit: 'chore: release package(s)'
+          title: 'chore: release package(s)'
+          version: yarn run version
+          publish: yarn release:only
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          SKIP_YARN_COREPACK_CHECK: 1

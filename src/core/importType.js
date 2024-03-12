@@ -3,8 +3,8 @@ import {
   relative,
   resolve as nodeResolve,
 } from 'path'
-import isCoreModule from 'is-core-module'
 
+import { isCoreModule } from '../utils/is-core-module'
 import resolve from '../utils/resolve'
 import { getContextPackagePath } from './packagePath'
 

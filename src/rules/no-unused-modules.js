@@ -9,9 +9,6 @@ import resolve from '../utils/resolve'
 import visit from '../utils/visit'
 import { dirname, join } from 'path'
 import readPkgUp from '../utils/readPkgUp'
-import values from 'object.values'
-import includes from 'array-includes'
-import flatMap from 'array.prototype.flatmap'
 
 import Exports, { recursivePatternCapture } from '../ExportMap'
 import docsUrl from '../docsUrl'
@@ -47,7 +44,7 @@ try {
 
       listFilesToProcess = function (src, extensions) {
         const patterns = src.concat(
-          flatMap(src, pattern =>
+          src.flatMap(pattern =>
             extensions.map(extension =>
               /\*\*|\*\./.test(pattern)
                 ? pattern
@@ -194,7 +191,7 @@ const resolveFiles = (src, ignoreExports, context) => {
   // prepare list of source files, don't consider files from node_modules
 
   return new Set(
-    flatMap(srcFileList, ({ filename }) =>
+    srcFileList.flatMap(({ filename }) =>
       isNodeModule(filename) ? [] : filename,
     ),
   )
@@ -380,11 +377,11 @@ const fileIsInPkg = file => {
   }
 
   const checkPkgFieldObject = pkgField => {
-    const pkgFieldFiles = flatMap(values(pkgField), value =>
+    const pkgFieldFiles = Object.values(pkgField).flatMap(value =>
       typeof value === 'boolean' ? [] : join(basePath, value),
     )
 
-    if (includes(pkgFieldFiles, file)) {
+    if (pkgFieldFiles.includes(file)) {
       return true
     }
   }

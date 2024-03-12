@@ -17,8 +17,6 @@ import * as unambiguous from './utils/unambiguous'
 
 import { tsConfigLoader } from 'tsconfig-paths/lib/tsconfig-loader'
 
-import includes from 'array-includes'
-
 let ts
 
 const log = debug('eslint-plugin-import-x:ExportMap')
@@ -776,7 +774,7 @@ ExportMap.parse = function (path, content, context) {
     }
 
     // This doesn't declare anything, but changes what's being exported.
-    if (includes(exports, n.type)) {
+    if (exports.includes(n.type)) {
       const exportedName =
         n.type === 'TSNamespaceExportDeclaration'
           ? (n.id || n.name).name
@@ -795,7 +793,7 @@ ExportMap.parse = function (path, content, context) {
       ]
       const exportedDecls = ast.body.filter(
         ({ type, id, declarations }) =>
-          includes(declTypes, type) &&
+          declTypes.includes(type) &&
           ((id && id.name === exportedName) ||
             (declarations &&
               declarations.find(d => d.id.name === exportedName))),
