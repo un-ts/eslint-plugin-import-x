@@ -47,10 +47,10 @@
     "debug": "^3.2.7",
     "doctrine": "^2.1.0",
     "eslint-import-resolver-node": "^0.3.9",
+    "get-tsconfig": "^4.7.3",
     "is-glob": "^4.0.3",
     "minimatch": "^3.1.2",
-    "semver": "^6.3.1",
-    "tsconfig-paths": "^3.15.0"
+    "semver": "^6.3.1"
   },
   "devDependencies": {
     "@1stg/prettier-config": "^4.0.1",
