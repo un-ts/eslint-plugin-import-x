@@ -1,7 +1,8 @@
 import semver from 'semver'
 import eslintPkg from 'eslint/package.json'
 import typescriptPkg from 'typescript/package.json'
-import * as tsConfigLoader from 'tsconfig-paths/lib/tsconfig-loader'
+import getTsconfig from 'get-tsconfig'
+
 import ExportMap from '../../src/ExportMap'
 
 import * as fs from 'fs'
@@ -426,11 +427,11 @@ describe('ExportMap', () => {
         let imports
         beforeAll(() => {
           jest.setTimeout(20e3) // takes a long time :shrug:
-          jest.spyOn(tsConfigLoader, 'tsConfigLoader').mockClear()
+          jest.spyOn(getTsconfig, 'getTsconfig').mockClear()
           imports = ExportMap.get('./typescript.ts', context)
         })
         afterAll(() => {
-          tsConfigLoader.tsConfigLoader.mockRestore()
+          getTsconfig.getTsconfig.mockRestore()
         })
 
         it('returns something for a TypeScript file', () => {
@@ -468,11 +469,11 @@ describe('ExportMap', () => {
               tsconfigRootDir: null,
             },
           }
-          expect(tsConfigLoader.tsConfigLoader).toHaveBeenCalledTimes(0)
+          expect(getTsconfig.getTsconfig).toHaveBeenCalledTimes(0)
           ExportMap.parse('./baz.ts', 'export const baz = 5', customContext)
-          expect(tsConfigLoader.tsConfigLoader).toHaveBeenCalledTimes(1)
+          expect(getTsconfig.getTsconfig).toHaveBeenCalledTimes(1)
           ExportMap.parse('./baz.ts', 'export const baz = 5', customContext)
-          expect(tsConfigLoader.tsConfigLoader).toHaveBeenCalledTimes(1)
+          expect(getTsconfig.getTsconfig).toHaveBeenCalledTimes(1)
 
           const differentContext = {
             ...context,
@@ -482,7 +483,7 @@ describe('ExportMap', () => {
           }
 
           ExportMap.parse('./baz.ts', 'export const baz = 5', differentContext)
-          expect(tsConfigLoader.tsConfigLoader).toHaveBeenCalledTimes(2)
+          expect(getTsconfig.getTsconfig).toHaveBeenCalledTimes(2)
         })
 
         it('should cache after parsing for an ambiguous module', () => {
