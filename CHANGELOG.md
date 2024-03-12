@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 0.1.1
+
+### Patch Changes
+
+- [#34](https://github.com/un-es/eslint-plugin-import-x/pull/34) [`a615826`](https://github.com/un-es/eslint-plugin-import-x/commit/a6158264ce3cba829fe2de51c42a5d5ea042440d) Thanks [@JounQin](https://github.com/JounQin)! - chore: cleanup npm package content
+
 ## 0.1.0
 
 ### Minor Changes
