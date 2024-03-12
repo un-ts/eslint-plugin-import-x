@@ -21,7 +21,7 @@ import includes from 'array-includes';
 
 let ts;
 
-const log = debug('eslint-plugin-import:ExportMap');
+const log = debug('eslint-plugin-import-x:ExportMap');
 
 const exportCache = new Map();
 const tsconfigCache = new Map();

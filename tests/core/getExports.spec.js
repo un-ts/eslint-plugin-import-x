@@ -4,12 +4,12 @@ import sinon from 'sinon';
 import eslintPkg from 'eslint/package.json';
 import typescriptPkg from 'typescript/package.json';
 import * as tsConfigLoader from 'tsconfig-paths/lib/tsconfig-loader';
-import ExportMap from '../../../src/ExportMap';
+import ExportMap from '../../src/ExportMap';
 
 import * as fs from 'fs';
 
 import { getFilename } from '../utils';
-import { test as testUnambiguous } from '../../../src/utils/unambiguous';
+import { test as testUnambiguous } from '../../src/utils/unambiguous';
 
 describe('ExportMap', function () {
   const fakeContext = Object.assign(

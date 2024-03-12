@@ -69,7 +69,7 @@ export function testContext(settings) {
 }
 
 export function getFilename(file) {
-  return path.join(__dirname, '..', 'fixtures', file || 'foo.js');
+  return path.join(__dirname, 'fixtures', file || 'foo.js');
 }
 
 /**

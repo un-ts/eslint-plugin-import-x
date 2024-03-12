@@ -7,7 +7,7 @@ import {
   parsers,
 } from '../utils';
 
-import { CASE_SENSITIVE_FS } from '../../../src/utils/resolve';
+import { CASE_SENSITIVE_FS } from '../../src/utils/resolve';
 
 import { RuleTester } from 'eslint';
 

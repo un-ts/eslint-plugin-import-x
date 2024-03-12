@@ -4,7 +4,7 @@ exports.__esModule = true;
 
 const extname = require('path').extname;
 
-const log = require('debug')('eslint-plugin-import:utils:ignore');
+const log = require('debug')('eslint-plugin-import-x:utils:ignore');
 
 // one-shot memoized
 /** @type {Set<import('./types').Extension>} */ let cachedSet;

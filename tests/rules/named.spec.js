@@ -8,7 +8,7 @@ import {
 import { RuleTester } from 'eslint';
 import path from 'path';
 
-import { CASE_SENSITIVE_FS } from '../../../src/utils/resolve';
+import { CASE_SENSITIVE_FS } from '../../src/utils/resolve';
 
 const ruleTester = new RuleTester();
 const rule = require('rules/named');
@@ -436,7 +436,7 @@ context('TypeScript', function () {
       parserOptions: {
         tsconfigRootDir: path.resolve(
           __dirname,
-          '../../fixtures/typescript-export-assign-object/',
+          '../fixtures/typescript-export-assign-object/',
         ),
       },
       settings,
@@ -459,7 +459,7 @@ context('TypeScript', function () {
       parserOptions: {
         tsconfigRootDir: path.resolve(
           __dirname,
-          '../../fixtures/typescript-export-assign-object/',
+          '../fixtures/typescript-export-assign-object/',
         ),
       },
       settings,
@@ -477,7 +477,7 @@ context('TypeScript', function () {
       parserOptions: {
         tsconfigRootDir: path.resolve(
           __dirname,
-          '../../fixtures/typescript-export-assign-object/',
+          '../fixtures/typescript-export-assign-object/',
         ),
       },
       settings,

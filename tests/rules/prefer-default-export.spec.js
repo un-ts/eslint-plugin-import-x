@@ -3,7 +3,7 @@ import { test, testVersion, getNonDefaultParsers, parsers } from '../utils';
 import { RuleTester } from 'eslint';
 
 const ruleTester = new RuleTester();
-const rule = require('../../../src/rules/prefer-default-export');
+const rule = require('../../src/rules/prefer-default-export');
 
 const SINGLE_EXPORT_ERROR_MESSAGE = 'Prefer default export on a file with single export.';
 const ANY_EXPORT_ERROR_MESSAGE = 'Prefer default export to be present on every file that has export.';

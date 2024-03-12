@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { CLIEngine, ESLint } from 'eslint';
 import eslintPkg from 'eslint/package.json';
 import semver from 'semver';
-import * as importPlugin from '../../src/index';
+import * as importPlugin from '../src/index';
 
 describe('CLI regression tests', function () {
   describe('issue #210', function () {

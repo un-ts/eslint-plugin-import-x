@@ -26,7 +26,7 @@ ruleTester.run('first', rule, {
     testVersion('>= 7', () => ({
       // issue #2210
       code: String(
-        fs.readFileSync(path.join(__dirname, '../../fixtures/component.html')),
+        fs.readFileSync(path.join(__dirname, '../fixtures/component.html')),
       ),
       parser: require.resolve('@angular-eslint/template-parser'),
     })),

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
-import pkg from '../../../package.json';
-import docsUrl from '../../../src/docsUrl';
+import pkg from '../../package.json';
+import docsUrl from '../../src/docsUrl';
 
 describe('docsUrl', function () {
   it('returns the rule documentation URL when given a rule name', function () {

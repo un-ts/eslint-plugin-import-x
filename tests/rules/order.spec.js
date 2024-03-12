@@ -9,7 +9,7 @@ import babelPresetFlow from '@babel/preset-flow';
 
 const ruleTester = new RuleTester();
 const flowRuleTester = new RuleTester({
-  parser: resolve(__dirname, '../../../node_modules/@babel/eslint-parser'),
+  parser: resolve(__dirname, '../../node_modules/@babel/eslint-parser'),
   parserOptions: {
     requireConfigFile: false,
     babelOptions: {

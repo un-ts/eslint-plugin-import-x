@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import eslintPkg from 'eslint/package.json';
 import semver from 'semver';
 
-import resolve, { CASE_SENSITIVE_FS, fileExistsWithCaseSync } from '../../../src/utils/resolve';
+import resolve, { CASE_SENSITIVE_FS, fileExistsWithCaseSync } from '../../src/utils/resolve';
 
 import * as path from 'path';
 import * as fs from 'fs';

@@ -26,8 +26,8 @@
     "lint:md": "markdownlint \"**/*.md\"",
     "mocha": "cross-env BABEL_ENV=test mocha",
     "test": "yarn build && yarn test-compiled",
-    "tests-only": "yarn mocha --compilers js:@babel/register tests/src",
-    "test-compiled": "yarn build && BABEL_ENV=testCompiled yarn mocha --compilers js:@babel/register tests/src",
+    "tests-only": "yarn mocha --compilers js:@babel/register 'tests/**/*.spec.js'",
+    "test-compiled": "yarn build && BABEL_ENV=testCompiled yarn mocha --compilers js:@babel/register 'tests/**/*.spec.js'",
     "prepublishOnly": "yarn build",
     "update:eslint-docs": "yarn build && eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️"
   },

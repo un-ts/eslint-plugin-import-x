@@ -5,7 +5,7 @@ import {
   tsVersionSatisfies,
   typescriptEslintParserSatisfies,
 } from '../utils';
-import jsxConfig from '../../../config/react';
+import jsxConfig from '../../config/react';
 
 import { RuleTester } from 'eslint';
 import eslintPkg from 'eslint/package.json';

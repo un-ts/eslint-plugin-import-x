@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import isIgnored, { getFileExtensions, hasValidExtension } from '../../../src/utils/ignore';
+import isIgnored, { getFileExtensions, hasValidExtension } from '../../src/utils/ignore';
 
 import * as utils from '../utils';
 

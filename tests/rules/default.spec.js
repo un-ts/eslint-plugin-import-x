@@ -2,7 +2,7 @@ import path from 'path';
 import { test, testVersion, SYNTAX_CASES, parsers } from '../utils';
 import { RuleTester } from 'eslint';
 
-import { CASE_SENSITIVE_FS } from '../../../src/utils/resolve';
+import { CASE_SENSITIVE_FS } from '../../src/utils/resolve';
 
 const ruleTester = new RuleTester();
 const rule = require('rules/default');
@@ -231,7 +231,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../fixtures/typescript-export-assign-default-namespace/',
+            '../fixtures/typescript-export-assign-default-namespace/',
           ),
         },
       }),
@@ -245,7 +245,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../fixtures/typescript-export-as-default-namespace/',
+            '../fixtures/typescript-export-as-default-namespace/',
           ),
         },
       }),
@@ -259,7 +259,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../fixtures/typescript-export-react-test-renderer/',
+            '../fixtures/typescript-export-react-test-renderer/',
           ),
         },
       }),
@@ -273,7 +273,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../fixtures/typescript-extended-config/',
+            '../fixtures/typescript-extended-config/',
           ),
         },
       }),
@@ -329,7 +329,7 @@ context('TypeScript', function () {
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
-            '../../fixtures/typescript-no-compiler-options/',
+            '../fixtures/typescript-no-compiler-options/',
           ),
         },
         errors: [

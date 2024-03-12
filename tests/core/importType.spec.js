@@ -8,7 +8,7 @@ import { testContext, testFilePath } from '../utils';
 
 describe('importType(name)', function () {
   const context = testContext();
-  const pathToTestFixtures = path.join(__dirname, '..', '..', 'fixtures');
+  const pathToTestFixtures = path.join(__dirname, '..', 'fixtures');
 
   it("should return 'absolute' for paths starting with a /", function () {
     expect(importType('/', context)).to.equal('absolute');
