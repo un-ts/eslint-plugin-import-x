@@ -1,22 +1,24 @@
-import type { ESLintSettings } from "./types";
+import type { ESLintSettings } from './types'
 
-export type CacheKey = unknown;
+export type CacheKey = unknown
 export type CacheObject = {
-    result: unknown;
-    lastSeen: ReturnType<typeof process.hrtime>;
-};
+  result: unknown
+  lastSeen: ReturnType<typeof process.hrtime>
+}
 
 declare class ModuleCache {
-    map: Map<CacheKey, CacheObject>;
+  map: Map<CacheKey, CacheObject>
 
-    constructor(map?: Map<CacheKey, CacheObject>);
+  constructor(map?: Map<CacheKey, CacheObject>)
 
-    get<T>(cacheKey: CacheKey, settings: ESLintSettings): T | undefined;
+  get<T>(cacheKey: CacheKey, settings: ESLintSettings): T | undefined
 
-    set<T>(cacheKey: CacheKey, result: T): T;
+  set<T>(cacheKey: CacheKey, result: T): T
 
-    static getSettings(settings: ESLintSettings): { lifetime: number } & Omit<ESLintSettings['import-x/cache'], 'lifetime'>;
+  static getSettings(
+    settings: ESLintSettings,
+  ): { lifetime: number } & Omit<ESLintSettings['import-x/cache'], 'lifetime'>
 }
-export default ModuleCache;
+export default ModuleCache
 
 export type { ModuleCache }

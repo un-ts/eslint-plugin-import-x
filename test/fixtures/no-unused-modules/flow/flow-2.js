@@ -1,3 +1,3 @@
 // @flow strict
-export type FooType = string;
-export interface FooInterface {};
+export type FooType = string
+export interface FooInterface {}

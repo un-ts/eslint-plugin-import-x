@@ -1,3 +1,3 @@
-export = foobar;
+export = foobar
 
-declare const foobar: number;
+declare const foobar: number

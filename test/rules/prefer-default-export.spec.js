@@ -1,12 +1,14 @@
-import { test, testVersion, getNonDefaultParsers, parsers } from '../utils';
+import { test, testVersion, getNonDefaultParsers, parsers } from '../utils'
 
-import { RuleTester } from 'eslint';
+import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester();
-const rule = require('../../src/rules/prefer-default-export');
+const ruleTester = new RuleTester()
+const rule = require('../../src/rules/prefer-default-export')
 
-const SINGLE_EXPORT_ERROR_MESSAGE = 'Prefer default export on a file with single export.';
-const ANY_EXPORT_ERROR_MESSAGE = 'Prefer default export to be present on every file that has export.';
+const SINGLE_EXPORT_ERROR_MESSAGE =
+  'Prefer default export on a file with single export.'
+const ANY_EXPORT_ERROR_MESSAGE =
+  'Prefer default export to be present on every file that has export.'
 
 // test cases for default option { target: 'single' }
 ruleTester.run('prefer-default-export', rule, {
@@ -108,54 +110,66 @@ ruleTester.run('prefer-default-export', rule, {
     test({
       code: `
         export function bar() {};`,
-      errors: [{
-        type: 'ExportNamedDeclaration',
-        message: SINGLE_EXPORT_ERROR_MESSAGE,
-      }],
+      errors: [
+        {
+          type: 'ExportNamedDeclaration',
+          message: SINGLE_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         export const foo = 'foo';`,
-      errors: [{
-        type: 'ExportNamedDeclaration',
-        message: SINGLE_EXPORT_ERROR_MESSAGE,
-      }],
+      errors: [
+        {
+          type: 'ExportNamedDeclaration',
+          message: SINGLE_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         const foo = 'foo';
         export { foo };`,
-      errors: [{
-        type: 'ExportSpecifier',
-        message: SINGLE_EXPORT_ERROR_MESSAGE,
-      }],
+      errors: [
+        {
+          type: 'ExportSpecifier',
+          message: SINGLE_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         export const { foo } = { foo: "bar" };`,
-      errors: [{
-        type: 'ExportNamedDeclaration',
-        message: SINGLE_EXPORT_ERROR_MESSAGE,
-      }],
+      errors: [
+        {
+          type: 'ExportNamedDeclaration',
+          message: SINGLE_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         export const { foo: { bar } } = { foo: { bar: "baz" } };`,
-      errors: [{
-        type: 'ExportNamedDeclaration',
-        message: SINGLE_EXPORT_ERROR_MESSAGE,
-      }],
+      errors: [
+        {
+          type: 'ExportNamedDeclaration',
+          message: SINGLE_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         export const [a] = ["foo"]`,
-      errors: [{
-        type: 'ExportNamedDeclaration',
-        message: SINGLE_EXPORT_ERROR_MESSAGE,
-      }],
+      errors: [
+        {
+          type: 'ExportNamedDeclaration',
+          message: SINGLE_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
   ],
-});
+})
 
 // test cases for { target: 'any' }
 ruleTester.run('prefer-default-export', rule, {
@@ -164,33 +178,41 @@ ruleTester.run('prefer-default-export', rule, {
     test({
       code: `
           export default function bar() {};`,
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
     }),
     test({
       code: `
               export const foo = 'foo';
               export const bar = 'bar';
               export default 42;`,
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
     }),
     test({
       code: `
             export default a = 2;`,
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
     }),
     test({
       code: `
             export const a = 2;
             export default function foo() {};`,
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
     }),
     test({
       code: `
@@ -198,44 +220,56 @@ ruleTester.run('prefer-default-export', rule, {
           export function bar(){};
           let foo;
           export { foo as default }`,
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
     }),
     test({
       code: `
           export * from './foo';`,
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
     }),
     test({
       code: `export Memory, { MemoryValue } from './Memory'`,
       parser: parsers.BABEL,
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
     }),
     // no exports at all
     test({
       code: `
             import * as foo from './foo';`,
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
     }),
     test({
       code: `const a = 5;`,
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
     }),
     // es2022: Arbitrary module namespae identifier names
     testVersion('>= 8.7', () => ({
       code: 'export const a = 4; let foo; export { foo as "default" };',
-      options: [{
-        target: 'any',
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
       parserOptions: { ecmaVersion: 2022 },
     })),
   ),
@@ -245,100 +279,132 @@ ruleTester.run('prefer-default-export', rule, {
       code: `
         export const foo = 'foo';
         export const bar = 'bar';`,
-      options: [{
-        target: 'any',
-      }],
-      errors: [{
-        message: ANY_EXPORT_ERROR_MESSAGE,
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
+      errors: [
+        {
+          message: ANY_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         export const foo = 'foo';
         export function bar() {};`,
-      options: [{
-        target: 'any',
-      }],
-      errors: [{
-        message: ANY_EXPORT_ERROR_MESSAGE,
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
+      errors: [
+        {
+          message: ANY_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         let foo, bar;
         export { foo, bar }`,
-      options: [{
-        target: 'any',
-      }],
-      errors: [{
-        message: ANY_EXPORT_ERROR_MESSAGE,
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
+      errors: [
+        {
+          message: ANY_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         let item;
         export const foo = item;
         export { item };`,
-      options: [{
-        target: 'any',
-      }],
-      errors: [{
-        message: ANY_EXPORT_ERROR_MESSAGE,
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
+      errors: [
+        {
+          message: ANY_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: 'export { a, b } from "foo.js"',
       parser: parsers.BABEL,
-      options: [{
-        target: 'any',
-      }],
-      errors: [{
-        message: ANY_EXPORT_ERROR_MESSAGE,
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
+      errors: [
+        {
+          message: ANY_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         const foo = 'foo';
         export { foo };`,
-      options: [{
-        target: 'any',
-      }],
-      errors: [{
-        message: ANY_EXPORT_ERROR_MESSAGE,
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
+      errors: [
+        {
+          message: ANY_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         export const { foo } = { foo: "bar" };`,
-      options: [{
-        target: 'any',
-      }],
-      errors: [{
-        message: ANY_EXPORT_ERROR_MESSAGE,
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
+      errors: [
+        {
+          message: ANY_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
     test({
       code: `
         export const { foo: { bar } } = { foo: { bar: "baz" } };`,
-      options: [{
-        target: 'any',
-      }],
-      errors: [{
-        message: ANY_EXPORT_ERROR_MESSAGE,
-      }],
+      options: [
+        {
+          target: 'any',
+        },
+      ],
+      errors: [
+        {
+          message: ANY_EXPORT_ERROR_MESSAGE,
+        },
+      ],
     }),
   ),
-});
+})
 
-context('TypeScript', function () {
-  getNonDefaultParsers().forEach((parser) => {
+describe('TypeScript', () => {
+  getNonDefaultParsers().forEach(parser => {
     const parserConfig = {
       parser,
       settings: {
         'import-x/parsers': { [parser]: ['.ts'] },
         'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
-    };
+    }
 
     ruleTester.run('prefer-default-export', rule, {
       valid: [].concat(
@@ -373,6 +439,6 @@ context('TypeScript', function () {
         }),
       ),
       invalid: [],
-    });
-  });
-});
+    })
+  })
+})

@@ -1,1 +1,1 @@
-import { destructured } from './file-destructured-1';
+import { destructured } from './file-destructured-1'

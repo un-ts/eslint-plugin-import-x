@@ -1,11 +1,13 @@
-import findLastIndex from 'array.prototype.findlastindex';
+import findLastIndex from 'array.prototype.findlastindex'
 
-import docsUrl from '../docsUrl';
+import docsUrl from '../docsUrl'
 
 function isNonExportStatement({ type }) {
-  return type !== 'ExportDefaultDeclaration'
-    && type !== 'ExportNamedDeclaration'
-    && type !== 'ExportAllDeclaration';
+  return (
+    type !== 'ExportDefaultDeclaration' &&
+    type !== 'ExportNamedDeclaration' &&
+    type !== 'ExportAllDeclaration'
+  )
 }
 
 module.exports = {
@@ -22,19 +24,23 @@ module.exports = {
   create(context) {
     return {
       Program({ body }) {
-        const lastNonExportStatementIndex = findLastIndex(body, isNonExportStatement);
+        const lastNonExportStatementIndex = findLastIndex(
+          body,
+          isNonExportStatement,
+        )
 
         if (lastNonExportStatementIndex !== -1) {
-          body.slice(0, lastNonExportStatementIndex).forEach((node) => {
+          body.slice(0, lastNonExportStatementIndex).forEach(node => {
             if (!isNonExportStatement(node)) {
               context.report({
                 node,
-                message: 'Export statements should appear at the end of the file',
-              });
+                message:
+                  'Export statements should appear at the end of the file',
+              })
             }
-          });
+          })
         }
       },
-    };
+    }
   },
-};
+}

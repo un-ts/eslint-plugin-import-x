@@ -4,17 +4,17 @@ import {
   testFilePath,
   testVersion,
   parsers,
-} from '../utils';
-import { RuleTester } from 'eslint';
-import path from 'path';
+} from '../utils'
+import { RuleTester } from 'eslint'
+import path from 'path'
 
-import { CASE_SENSITIVE_FS } from '../../src/utils/resolve';
+import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/named');
+const ruleTester = new RuleTester()
+const rule = require('rules/named')
 
 function error(name, module, type = 'Identifier') {
-  return { message: `${name} not found in '${module}'`, type };
+  return { message: `${name} not found in '${module}'`, type }
 }
 
 ruleTester.run('named', rule, {
@@ -387,7 +387,7 @@ ruleTester.run('named', rule, {
       parserOptions: { ecmaVersion: 2022 },
     })),
   ),
-});
+})
 
 // #311: import of mismatched case
 if (!CASE_SENSITIVE_FS) {
@@ -403,7 +403,7 @@ if (!CASE_SENSITIVE_FS) {
         errors: [`foo not found in './Named-Exports'`],
       }),
     ],
-  });
+  })
 }
 
 // export-all
@@ -419,15 +419,15 @@ ruleTester.run('named (export *)', rule, {
       errors: [`bar not found in './export-all'`],
     }),
   ],
-});
+})
 
-context('TypeScript', function () {
-  const parser = parsers.TS;
+describe('TypeScript', () => {
+  const parser = parsers.TS
 
   const settings = {
     'import-x/parsers': { [parser]: ['.ts'] },
     'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-  };
+  }
 
   let valid = [
     test({
@@ -441,7 +441,7 @@ context('TypeScript', function () {
       },
       settings,
     }),
-  ];
+  ]
   const invalid = [
     // TODO: uncomment this test
     // test({
@@ -488,14 +488,14 @@ context('TypeScript', function () {
         },
       ],
     }),
-  ];
+  ]
 
-  [
+  ;[
     'typescript',
     'typescript-declare',
     'typescript-export-assign-namespace',
     'typescript-export-assign-namespace-merged',
-  ].forEach((source) => {
+  ].forEach(source => {
     valid = valid.concat(
       test({
         code: `import { MyType } from "./${source}"`,
@@ -514,15 +514,15 @@ context('TypeScript', function () {
       }),
       source === 'typescript-declare'
         ? testVersion('> 5', () => ({
-          code: `import { getFoo } from "./${source}"`,
-          parser,
-          settings,
-        }))
+            code: `import { getFoo } from "./${source}"`,
+            parser,
+            settings,
+          }))
         : test({
-          code: `import { getFoo } from "./${source}"`,
-          parser,
-          settings,
-        }),
+            code: `import { getFoo } from "./${source}"`,
+            parser,
+            settings,
+          }),
       test({
         code: `import { MyEnum } from "./${source}"`,
         parser,
@@ -544,7 +544,7 @@ context('TypeScript', function () {
         parser,
         settings,
       }),
-    );
+    )
 
     invalid.push(
       test({
@@ -569,11 +569,11 @@ context('TypeScript', function () {
           },
         ],
       }),
-    );
-  });
+    )
+  })
 
   ruleTester.run(`named [TypeScript]`, rule, {
     valid,
     invalid,
-  });
-});
+  })
+})

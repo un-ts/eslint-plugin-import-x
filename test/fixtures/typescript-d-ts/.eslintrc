@@ -5,8 +5,8 @@
       "parser": "@typescript-eslint/parser",
       "extends": "../../../config/typescript",
       "rules": {
-        "import-x/export": "error",
-      },
-    },
-  ],
+        "import-x/export": "error"
+      }
+    }
+  ]
 }

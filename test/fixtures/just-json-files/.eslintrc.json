@@ -1,8 +1,9 @@
 {
   "root": true,
-
-  "plugins": ["import-x", "json"],
-
+  "plugins": [
+    "import-x",
+    "json"
+  ],
   "rules": {
     "import-x/no-unused-modules": [
       "error",
@@ -12,7 +13,6 @@
       }
     ]
   },
-
   "overrides": [
     {
       "files": "*.json",

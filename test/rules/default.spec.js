@@ -1,11 +1,11 @@
-import path from 'path';
-import { test, testVersion, SYNTAX_CASES, parsers } from '../utils';
-import { RuleTester } from 'eslint';
+import path from 'path'
+import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
+import { RuleTester } from 'eslint'
 
-import { CASE_SENSITIVE_FS } from '../../src/utils/resolve';
+import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/default');
+const ruleTester = new RuleTester()
+const rule = require('rules/default')
 
 ruleTester.run('default', rule, {
   valid: [].concat(
@@ -110,7 +110,7 @@ ruleTester.run('default', rule, {
     test({
       code: "import Foo from './jsx/FooES7.js';",
       errors: [
-        "Parse errors in imported module './jsx/FooES7.js': Unexpected token = (6:16)",
+        "Parse errors in imported module './jsx/FooES7.js': Unexpected token = (6:14)",
       ],
     }),
 
@@ -156,7 +156,7 @@ ruleTester.run('default', rule, {
       errors: ['No default export found in imported module "./re-export".'],
     }),
   ],
-});
+})
 
 // #311: import of mismatched case
 if (!CASE_SENSITIVE_FS) {
@@ -174,11 +174,11 @@ if (!CASE_SENSITIVE_FS) {
         ],
       }),
     ],
-  });
+  })
 }
 
-context('TypeScript', function () {
-  const parser = parsers.TS;
+describe('TypeScript', () => {
+  const parser = parsers.TS
   ruleTester.run(`default`, rule, {
     valid: [].concat(
       test({
@@ -344,5 +344,5 @@ context('TypeScript', function () {
         ],
       }),
     ],
-  });
-});
+  })
+})

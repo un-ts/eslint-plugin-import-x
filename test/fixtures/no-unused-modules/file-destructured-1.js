@@ -1,2 +1,2 @@
-export const { destructured } = {};
-export const { destructured2 } = {};
+export const { destructured } = {}
+export const { destructured2 } = {}

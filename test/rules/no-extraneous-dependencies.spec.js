@@ -1,63 +1,63 @@
-import { parsers, test, testFilePath } from '../utils';
-import typescriptConfig from '../../config/typescript';
-import path from 'path';
-import fs from 'fs';
+import { parsers, test, testFilePath } from '../utils'
+import typescriptConfig from '../../config/typescript'
+import path from 'path'
+import fs from 'fs'
 
-import { RuleTester } from 'eslint';
-import flatMap from 'array.prototype.flatmap';
+import { RuleTester } from 'eslint'
+import flatMap from 'array.prototype.flatmap'
 
-const ruleTester = new RuleTester();
-const typescriptRuleTester = new RuleTester(typescriptConfig);
-const rule = require('rules/no-extraneous-dependencies');
+const ruleTester = new RuleTester()
+const typescriptRuleTester = new RuleTester(typescriptConfig)
+const rule = require('rules/no-extraneous-dependencies')
 
 const packageDirWithSyntaxError = path.join(
   __dirname,
   '../fixtures/with-syntax-error',
-);
+)
 const packageFileWithSyntaxErrorMessage = (() => {
   try {
     JSON.parse(
       fs.readFileSync(path.join(packageDirWithSyntaxError, 'package.json')),
-    );
+    )
   } catch (error) {
-    return error.message;
+    return error.message
   }
-})();
+})()
 const packageDirWithFlowTyped = path.join(
   __dirname,
   '../fixtures/with-flow-typed',
-);
+)
 const packageDirWithTypescriptDevDependencies = path.join(
   __dirname,
   '../fixtures/with-typescript-dev-dependencies',
-);
-const packageDirMonoRepoRoot = path.join(__dirname, '../fixtures/monorepo');
+)
+const packageDirMonoRepoRoot = path.join(__dirname, '../fixtures/monorepo')
 const packageDirMonoRepoWithNested = path.join(
   __dirname,
   '../fixtures/monorepo/packages/nested-package',
-);
-const packageDirWithEmpty = path.join(__dirname, '../fixtures/empty');
+)
+const packageDirWithEmpty = path.join(__dirname, '../fixtures/empty')
 const packageDirBundleDeps = path.join(
   __dirname,
   '../fixtures/bundled-dependencies/as-array-bundle-deps',
-);
+)
 const packageDirBundledDepsAsObject = path.join(
   __dirname,
   '../fixtures/bundled-dependencies/as-object',
-);
+)
 const packageDirBundledDepsRaceCondition = path.join(
   __dirname,
   '../fixtures/bundled-dependencies/race-condition',
-);
+)
 
 const {
   dependencies: deps,
   devDependencies: devDeps,
-} = require('../fixtures/package.json');
+} = require('../fixtures/package.json')
 
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
-    ...flatMap(Object.keys(deps).concat(Object.keys(devDeps)), (pkg) => [
+    ...flatMap(Object.keys(deps).concat(Object.keys(devDeps)), pkg => [
       test({ code: `import "${pkg}"` }),
       test({ code: `import foo, { bar } from "${pkg}"` }),
       test({ code: `require("${pkg}")` }),
@@ -531,10 +531,10 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       ],
     }),
   ],
-});
+})
 
 describe('TypeScript', () => {
-  const parser = parsers.TS;
+  const parser = parsers.TS
 
   const parserConfig = {
     parser,
@@ -542,7 +542,7 @@ describe('TypeScript', () => {
       'import-x/parsers': { [parser]: ['.ts'] },
       'import-x/resolver': ['node', 'typescript'],
     },
-  };
+  }
 
   ruleTester.run('no-extraneous-dependencies', rule, {
     valid: [
@@ -615,8 +615,8 @@ describe('TypeScript', () => {
         ...parserConfig,
       }),
     ],
-  });
-});
+  })
+})
 
 typescriptRuleTester.run(
   'no-extraneous-dependencies typescript type imports',
@@ -689,4 +689,4 @@ typescriptRuleTester.run(
       }),
     ],
   },
-);
+)

@@ -1,4 +1,4 @@
 {
-  "main": "./index.js",
-  "private": true
+  "private": true,
+  "main": "./index.js"
 }

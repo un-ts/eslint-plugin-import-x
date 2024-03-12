@@ -8,7 +8,7 @@ exports.resolve = function (modulePath, sourceFile, config) {
   if (sourceFileName === 'exception.js') {
     throw new Error('foo-bar-resolver-v2 resolve test exception')
   }
-  return { found: false };
-};
+  return { found: false }
+}
 
-exports.interfaceVersion = 2;
+exports.interfaceVersion = 2

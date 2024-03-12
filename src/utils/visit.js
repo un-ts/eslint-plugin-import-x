@@ -1,30 +1,30 @@
-'use strict';
+'use strict'
 
-exports.__esModule = true;
+exports.__esModule = true
 
 /** @type {import('./visit').default} */
 exports.default = function visit(node, keys, visitorSpec) {
   if (!node || !keys) {
-    return;
+    return
   }
-  const type = node.type;
-  const visitor = visitorSpec[type];
+  const type = node.type
+  const visitor = visitorSpec[type]
   if (typeof visitor === 'function') {
-    visitor(node);
+    visitor(node)
   }
-  const childFields = keys[type];
+  const childFields = keys[type]
   if (!childFields) {
-    return;
+    return
   }
-  childFields.forEach((fieldName) => {
+  childFields.forEach(fieldName => {
     // @ts-expect-error TS sucks with concat
-    [].concat(node[fieldName]).forEach((item) => {
-      visit(item, keys, visitorSpec);
-    });
-  });
+    ;[].concat(node[fieldName]).forEach(item => {
+      visit(item, keys, visitorSpec)
+    })
+  })
 
-  const exit = visitorSpec[`${type}:Exit`];
+  const exit = visitorSpec[`${type}:Exit`]
   if (typeof exit === 'function') {
-    exit(node);
+    exit(node)
   }
-};
+}

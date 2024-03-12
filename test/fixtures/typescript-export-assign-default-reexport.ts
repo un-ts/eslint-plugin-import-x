@@ -1,2 +1,2 @@
-import { getFoo } from './typescript';
-export = getFoo;
+import { getFoo } from './typescript'
+export = getFoo

@@ -1,8 +1,8 @@
-import { RuleTester } from 'eslint';
-import rule from 'rules/extensions';
-import { test, testFilePath, parsers } from '../utils';
+import { RuleTester } from 'eslint'
+import rule from 'rules/extensions'
+import { test, testFilePath, parsers } from '../utils'
 
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester()
 
 ruleTester.run('extensions', rule, {
   valid: [
@@ -655,10 +655,10 @@ ruleTester.run('extensions', rule, {
       ],
     }),
   ],
-});
+})
 
 describe('TypeScript', () => {
-  const parser = parsers.TS;
+  const parser = parsers.TS
 
   ruleTester.run(`${parser}: extensions ignore type-only`, rule, {
     valid: [
@@ -699,5 +699,5 @@ describe('TypeScript', () => {
         parser,
       }),
     ],
-  });
-});
+  })
+})

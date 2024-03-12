@@ -1,12 +1,15 @@
-import { RuleTester } from 'eslint';
+import { RuleTester } from 'eslint'
 
-import { parsers, testVersion } from '../utils';
+import { parsers, testVersion } from '../utils'
 
-const IMPORT_ERROR_MESSAGE =  'Expected 1 empty line after import statement not followed by another import.';
-const IMPORT_ERROR_MESSAGE_MULTIPLE = (count) => `Expected ${count} empty lines after import statement not followed by another import.`;
-const REQUIRE_ERROR_MESSAGE =  'Expected 1 empty line after require statement not followed by another require.';
+const IMPORT_ERROR_MESSAGE =
+  'Expected 1 empty line after import statement not followed by another import.'
+const IMPORT_ERROR_MESSAGE_MULTIPLE = count =>
+  `Expected ${count} empty lines after import statement not followed by another import.`
+const REQUIRE_ERROR_MESSAGE =
+  'Expected 1 empty line after require statement not followed by another require.'
 
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester()
 
 ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
   valid: [].concat(
@@ -930,4 +933,4 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
       parserOptions: { ecmaVersion: 2015 },
     },
   ),
-});
+})

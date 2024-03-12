@@ -1,9 +1,5 @@
-
 export function Baz1() {
-  return (
-    <div>
-    </div>
-  );
+  return <div></div>
 }
 
 // Fragment Syntax
@@ -12,5 +8,5 @@ export function Baz2() {
     <div>
       <span>Baz2</span>
     </div>
-  );
+  )
 }

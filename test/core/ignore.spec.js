@@ -1,90 +1,101 @@
-import { expect } from 'chai';
+import isIgnored, {
+  getFileExtensions,
+  hasValidExtension,
+} from '../../src/utils/ignore'
 
-import isIgnored, { getFileExtensions, hasValidExtension } from '../../src/utils/ignore';
+import * as utils from '../utils'
 
-import * as utils from '../utils';
+describe('ignore', () => {
+  describe('isIgnored', () => {
+    it('ignores paths with extensions other than .js', () => {
+      const testContext = utils.testContext({})
 
-describe('ignore', function () {
-  describe('isIgnored', function () {
-    it('ignores paths with extensions other than .js', function () {
-      const testContext = utils.testContext({});
+      expect(isIgnored('../fixtures/foo.js', testContext)).toBe(false)
 
-      expect(isIgnored('../fixtures/foo.js', testContext)).to.equal(false);
+      expect(isIgnored('../fixtures/bar.jsx', testContext)).toBe(true)
 
-      expect(isIgnored('../fixtures/bar.jsx', testContext)).to.equal(true);
+      expect(isIgnored('../fixtures/typescript.ts', testContext)).toBe(true)
 
-      expect(isIgnored('../fixtures/typescript.ts', testContext)).to.equal(true);
+      expect(
+        isIgnored('../fixtures/ignore.invalid.extension', testContext),
+      ).toBe(true)
+    })
 
-      expect(isIgnored('../fixtures/ignore.invalid.extension', testContext)).to.equal(true);
-    });
+    it('ignores paths with invalid extensions when configured with import-x/extensions', () => {
+      const testContext = utils.testContext({
+        'import-x/extensions': ['.js', '.jsx', '.ts'],
+      })
 
-    it('ignores paths with invalid extensions when configured with import-x/extensions', function () {
-      const testContext = utils.testContext({ 'import-x/extensions': ['.js', '.jsx', '.ts'] });
+      expect(isIgnored('../fixtures/foo.js', testContext)).toBe(false)
 
-      expect(isIgnored('../fixtures/foo.js', testContext)).to.equal(false);
+      expect(isIgnored('../fixtures/bar.jsx', testContext)).toBe(false)
 
-      expect(isIgnored('../fixtures/bar.jsx', testContext)).to.equal(false);
+      expect(isIgnored('../fixtures/typescript.ts', testContext)).toBe(false)
 
-      expect(isIgnored('../fixtures/typescript.ts', testContext)).to.equal(false);
+      expect(
+        isIgnored('../fixtures/ignore.invalid.extension', testContext),
+      ).toBe(true)
+    })
+  })
 
-      expect(isIgnored('../fixtures/ignore.invalid.extension', testContext)).to.equal(true);
-    });
-  });
+  describe('hasValidExtension', () => {
+    it('assumes only .js as valid by default', () => {
+      const testContext = utils.testContext({})
 
-  describe('hasValidExtension', function () {
-    it('assumes only .js as valid by default', function () {
-      const testContext = utils.testContext({});
+      expect(hasValidExtension('../fixtures/foo.js', testContext)).toBe(true)
 
-      expect(hasValidExtension('../fixtures/foo.js', testContext)).to.equal(true);
+      expect(hasValidExtension('../fixtures/foo.jsx', testContext)).toBe(false)
 
-      expect(hasValidExtension('../fixtures/foo.jsx', testContext)).to.equal(false);
+      expect(hasValidExtension('../fixtures/foo.css', testContext)).toBe(false)
 
-      expect(hasValidExtension('../fixtures/foo.css', testContext)).to.equal(false);
+      expect(
+        hasValidExtension('../fixtures/foo.invalid.extension', testContext),
+      ).toBe(false)
+    })
 
-      expect(hasValidExtension('../fixtures/foo.invalid.extension', testContext)).to.equal(false);
-    });
+    it('can be configured with import-x/extensions', () => {
+      const testContext = utils.testContext({
+        'import-x/extensions': ['.foo', '.bar'],
+      })
 
-    it('can be configured with import-x/extensions', function () {
-      const testContext = utils.testContext({ 'import-x/extensions': ['.foo', '.bar'] });
+      expect(hasValidExtension('../fixtures/foo.foo', testContext)).toBe(true)
 
-      expect(hasValidExtension('../fixtures/foo.foo', testContext)).to.equal(true);
+      expect(hasValidExtension('../fixtures/foo.bar', testContext)).toBe(true)
 
-      expect(hasValidExtension('../fixtures/foo.bar', testContext)).to.equal(true);
+      expect(hasValidExtension('../fixtures/foo.js', testContext)).toBe(false)
+    })
+  })
 
-      expect(hasValidExtension('../fixtures/foo.js', testContext)).to.equal(false);
-    });
-  });
+  describe('getFileExtensions', () => {
+    it('returns a set with the file extension ".js" if "import-x/extensions" is not configured', () => {
+      const fileExtensions = getFileExtensions({})
 
-  describe('getFileExtensions', function () {
-    it('returns a set with the file extension ".js" if "import-x/extensions" is not configured', function () {
-      const fileExtensions = getFileExtensions({});
+      expect(fileExtensions).toContain('.js')
+    })
 
-      expect(fileExtensions).to.include('.js');
-    });
-
-    it('returns a set with the file extensions configured in "import-x/extension"', function () {
+    it('returns a set with the file extensions configured in "import-x/extension"', () => {
       const settings = {
         'import-x/extensions': ['.js', '.jsx'],
-      };
+      }
 
-      const fileExtensions = getFileExtensions(settings);
+      const fileExtensions = getFileExtensions(settings)
 
-      expect(fileExtensions).to.include('.js');
-      expect(fileExtensions).to.include('.jsx');
-    });
+      expect(fileExtensions).toContain('.js')
+      expect(fileExtensions).toContain('.jsx')
+    })
 
-    it('returns a set with the file extensions configured in "import-x/extension" and "import-x/parsers"', function () {
+    it('returns a set with the file extensions configured in "import-x/extension" and "import-x/parsers"', () => {
       const settings = {
         'import-x/parsers': {
           '@typescript-eslint/parser': ['.ts', '.tsx'],
         },
-      };
+      }
 
-      const fileExtensions = getFileExtensions(settings);
+      const fileExtensions = getFileExtensions(settings)
 
-      expect(fileExtensions).to.include('.js'); // If "import-x/extensions" is not configured, this is the default
-      expect(fileExtensions).to.include('.ts');
-      expect(fileExtensions).to.include('.tsx');
-    });
-  });
-});
+      expect(fileExtensions).toContain('.js') // If "import-x/extensions" is not configured, this is the default
+      expect(fileExtensions).toContain('.ts')
+      expect(fileExtensions).toContain('.tsx')
+    })
+  })
+})

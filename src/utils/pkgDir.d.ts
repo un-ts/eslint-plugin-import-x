@@ -1,3 +1,3 @@
-declare function pkgDir(cwd: string): string | null;
+declare function pkgDir(cwd: string): string | null
 
-export default pkgDir;
+export default pkgDir

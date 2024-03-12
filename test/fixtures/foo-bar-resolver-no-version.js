@@ -8,5 +8,5 @@ exports.resolveImport = function (modulePath, sourceFile, config) {
   if (sourceFileName === 'exception.js') {
     throw new Error('foo-bar-resolver-v1 resolveImport test exception')
   }
-  return undefined;
+  return undefined
 }

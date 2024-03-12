@@ -1,5 +1,9 @@
 {
-  "dummy": true,
-  "bundledDependencies": {"@generated/bar": "latest"},
-  "bundleDependencies": ["@generated/foo"]
+  "bundledDependencies": {
+    "@generated/bar": "latest"
+  },
+  "bundleDependencies": [
+    "@generated/foo"
+  ],
+  "dummy": true
 }

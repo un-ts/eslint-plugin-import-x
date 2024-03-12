@@ -1,3 +1,3 @@
-declare function moduleRequire<T>(p: string): T;
+declare function moduleRequire<T>(p: string): T
 
-export default moduleRequire;
+export default moduleRequire

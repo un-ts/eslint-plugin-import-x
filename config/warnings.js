@@ -9,4 +9,4 @@ module.exports = {
     'import-x/no-named-as-default-member': 1,
     'import-x/no-duplicates': 1,
   },
-};
+}

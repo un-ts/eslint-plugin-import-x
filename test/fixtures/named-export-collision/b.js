@@ -1,1 +1,1 @@
-export const FOO = 'b-foobar';
+export const FOO = 'b-foobar'

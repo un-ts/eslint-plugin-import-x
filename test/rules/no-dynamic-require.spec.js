@@ -1,18 +1,18 @@
-import { parsers, test, testVersion } from '../utils';
+import { parsers, test, testVersion } from '../utils'
 
-import { RuleTester } from 'eslint';
-import flatMap from 'array.prototype.flatmap';
+import { RuleTester } from 'eslint'
+import flatMap from 'array.prototype.flatmap'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/no-dynamic-require');
+const ruleTester = new RuleTester()
+const rule = require('rules/no-dynamic-require')
 
 const error = {
   message: 'Calls to require() should use string literals',
-};
+}
 
 const dynamicImportError = {
   message: 'Calls to import() should use string literals',
-};
+}
 
 ruleTester.run('no-dynamic-require', rule, {
   valid: [
@@ -29,10 +29,11 @@ ruleTester.run('no-dynamic-require', rule, {
     test({ code: 'var foo = require("@scope/foo")' }),
 
     //dynamic import
-    ...flatMap([parsers.ESPREE, parsers.BABEL], (parser) => {
-      const _test = parser === parsers.ESPREE
-        ? (testObj) => testVersion('>= 6.2.0', () => testObj)
-        : (testObj) => test(testObj);
+    ...flatMap([parsers.ESPREE, parsers.BABEL], parser => {
+      const _test =
+        parser === parsers.ESPREE
+          ? testObj => testVersion('>= 6.2.0', () => testObj)
+          : testObj => test(testObj)
       return [].concat(
         _test({
           code: 'import("foo")',
@@ -114,7 +115,7 @@ ruleTester.run('no-dynamic-require', rule, {
             ecmaVersion: 2020,
           },
         }),
-      );
+      )
     }),
   ],
   invalid: [
@@ -141,10 +142,11 @@ ruleTester.run('no-dynamic-require', rule, {
     }),
 
     // dynamic import
-    ...flatMap([parsers.ESPREE, parsers.BABEL], (parser) => {
-      const _test = parser === parsers.ESPREE
-        ? (testObj) => testVersion('>= 6.2.0', () => testObj)
-        : (testObj) => test(testObj);
+    ...flatMap([parsers.ESPREE, parsers.BABEL], parser => {
+      const _test =
+        parser === parsers.ESPREE
+          ? testObj => testVersion('>= 6.2.0', () => testObj)
+          : testObj => test(testObj)
       return [].concat(
         _test({
           code: 'import("../" + name)',
@@ -182,7 +184,7 @@ ruleTester.run('no-dynamic-require', rule, {
             ecmaVersion: 2020,
           },
         }),
-      );
+      )
     }),
     test({
       code: 'require(`foo${x}`)',
@@ -193,4 +195,4 @@ ruleTester.run('no-dynamic-require', rule, {
       errors: [error],
     }),
   ],
-});
+})

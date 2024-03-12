@@ -1,10 +1,10 @@
 declare interface foo {
-  a: string;
+  a: string
 }
 
 declare namespace SomeNamespace {
   type foobar = foo & {
-    b: string;
+    b: string
   }
 }
 

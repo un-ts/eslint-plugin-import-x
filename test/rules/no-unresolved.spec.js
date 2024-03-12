@@ -1,18 +1,13 @@
-import path from 'path';
+import path from 'path'
 
-import {
-  test,
-  SYNTAX_CASES,
-  testVersion,
-  parsers,
-} from '../utils';
+import { test, SYNTAX_CASES, testVersion, parsers } from '../utils'
 
-import { CASE_SENSITIVE_FS } from '../../src/utils/resolve';
+import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
 
-import { RuleTester } from 'eslint';
+import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/no-unresolved');
+const ruleTester = new RuleTester()
+const rule = require('rules/no-unresolved')
 
 function runResolverTests(resolver) {
   // redefine 'test' to set a resolver
@@ -25,7 +20,7 @@ function runResolverTests(resolver) {
         'import-x/resolver': resolver,
         'import-x/cache': { lifetime: 0 },
       },
-    });
+    })
   }
 
   ruleTester.run(`no-unresolved (${resolver})`, rule, {
@@ -42,10 +37,11 @@ function runResolverTests(resolver) {
       }),
 
       // check with eslint parser
-      testVersion('>= 7', () => rest({
-        code: "import('fs');",
-        parserOptions: { ecmaVersion: 2021 },
-      }),
+      testVersion('>= 7', () =>
+        rest({
+          code: "import('fs');",
+          parserOptions: { ecmaVersion: 2021 },
+        }),
       ) || [],
 
       rest({ code: 'import * as foo from "a"' }),
@@ -203,16 +199,17 @@ function runResolverTests(resolver) {
       }),
 
       // check with eslint parser
-      testVersion('>= 7', () => rest({
-        code: "import('in-alternate-root').then(function({DEEP}) {});",
-        errors: [
-          {
-            message: "Unable to resolve path to module 'in-alternate-root'.",
-            type: 'Literal',
-          },
-        ],
-        parserOptions: { ecmaVersion: 2021 },
-      }),
+      testVersion('>= 7', () =>
+        rest({
+          code: "import('in-alternate-root').then(function({DEEP}) {});",
+          errors: [
+            {
+              message: "Unable to resolve path to module 'in-alternate-root'.",
+              type: 'Literal',
+            },
+          ],
+          parserOptions: { ecmaVersion: 2021 },
+        }),
       ) || [],
 
       // export symmetry proposal
@@ -285,7 +282,7 @@ function runResolverTests(resolver) {
         ],
       }),
     ),
-  });
+  })
 
   ruleTester.run(`issue #333 (${resolver})`, rule, {
     valid: [
@@ -306,14 +303,14 @@ function runResolverTests(resolver) {
         errors: ["Unable to resolve path to module './foo.json'."],
       }),
     ],
-  });
+  })
 
   if (!CASE_SENSITIVE_FS) {
-    const relativePath = './test/fixtures/jsx/MyUnCoolComponent.jsx';
-    const cwd = process.cwd();
+    const relativePath = './test/fixtures/jsx/MyUnCoolComponent.jsx'
+    const cwd = process.cwd()
     const mismatchedPath = path
       .join(cwd.toUpperCase(), relativePath)
-      .replace(/\\/g, '/');
+      .replace(/\\/g, '/')
 
     ruleTester.run('case sensitivity', rule, {
       valid: [
@@ -341,7 +338,7 @@ function runResolverTests(resolver) {
           ],
         }),
       ],
-    });
+    })
 
     ruleTester.run('case sensitivity strict', rule, {
       valid: [
@@ -371,11 +368,11 @@ function runResolverTests(resolver) {
           ],
         }),
       ],
-    });
+    })
   }
 }
 
-['node', 'webpack'].forEach(runResolverTests);
+;['node', 'webpack'].forEach(runResolverTests)
 
 ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
   valid: [
@@ -383,7 +380,9 @@ ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
       code: "import { DEEP } from 'in-alternate-root';",
       settings: {
         'import-x/resolve': {
-          paths: [path.join(process.cwd(), 'test', 'fixtures', 'alternate-root')],
+          paths: [
+            path.join(process.cwd(), 'test', 'fixtures', 'alternate-root'),
+          ],
         },
       },
     }),
@@ -412,7 +411,7 @@ ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
       errors: ["Unable to resolve path to module 'jsx-module/foo'."],
     }),
   ],
-});
+})
 
 ruleTester.run('no-unresolved (webpack-specific)', rule, {
   valid: [
@@ -437,7 +436,7 @@ ruleTester.run('no-unresolved (webpack-specific)', rule, {
       errors: ["Unable to resolve path to module 'jsx-module/foo'."],
     }),
   ],
-});
+})
 
 ruleTester.run('no-unresolved ignore list', rule, {
   valid: [
@@ -474,7 +473,7 @@ ruleTester.run('no-unresolved ignore list', rule, {
       errors: ["Unable to resolve path to module './test.png'."],
     }),
   ],
-});
+})
 
 ruleTester.run('no-unresolved unknown resolver', rule, {
   valid: [],
@@ -501,7 +500,7 @@ ruleTester.run('no-unresolved unknown resolver', rule, {
       ],
     }),
   ],
-});
+})
 
 ruleTester.run('no-unresolved electron', rule, {
   valid: [
@@ -516,12 +515,12 @@ ruleTester.run('no-unresolved electron', rule, {
       errors: [`Unable to resolve path to module 'electron'.`],
     }),
   ],
-});
+})
 
 ruleTester.run('no-unresolved syntax verification', rule, {
   valid: SYNTAX_CASES,
   invalid: [],
-});
+})
 
 // https://github.com/import-js/eslint-plugin-import-x/issues/2024
 ruleTester.run('import() with built-in parser', rule, {
@@ -540,11 +539,11 @@ ruleTester.run('import() with built-in parser', rule, {
       ],
     })) || [],
   ),
-});
+})
 
-context('TypeScript', () => {
+describe('TypeScript', () => {
   // Type-only imports were added in TypeScript ESTree 2.23.0
-  const parser = parsers.TS;
+  const parser = parsers.TS
   ruleTester.run(`${parser}: no-unresolved ignore type-only`, rule, {
     valid: [
       test({
@@ -568,5 +567,5 @@ context('TypeScript', () => {
         parser,
       }),
     ],
-  });
-});
+  })
+})

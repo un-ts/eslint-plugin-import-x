@@ -1,1 +1,1 @@
-export * as b from './c';
+export * as b from './c'

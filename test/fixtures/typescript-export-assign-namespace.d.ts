@@ -1,11 +1,11 @@
-export = AssignedNamespace;
+export = AssignedNamespace
 
 declare namespace AssignedNamespace {
   type MyType = string
   enum MyEnum {
     Foo,
     Bar,
-    Baz
+    Baz,
   }
 
   interface Foo {
@@ -17,20 +17,20 @@ declare namespace AssignedNamespace {
   abstract class Bar {
     abstract foo(): Foo
 
-    method();
+    method()
   }
 
-  export function getFoo() : MyType;
+  export function getFoo(): MyType
 
   export module MyModule {
-    export function ModuleFunction();
+    export function ModuleFunction()
   }
 
   export namespace MyNamespace {
-    export function NamespaceFunction();
+    export function NamespaceFunction()
 
     export module NSModule {
-      export function NSModuleFunction();
+      export function NSModuleFunction()
     }
   }
 

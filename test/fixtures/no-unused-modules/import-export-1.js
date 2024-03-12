@@ -1,2 +1,2 @@
-export const a = 5;
-export const b = 'b';
+export const a = 5
+export const b = 'b'

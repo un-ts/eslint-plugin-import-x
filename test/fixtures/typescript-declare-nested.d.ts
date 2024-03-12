@@ -1,15 +1,15 @@
 declare namespace foo {
   interface SomeInterface {
-    a: string;
+    a: string
   }
 }
 
 declare namespace foo.bar {
   interface SomeOtherInterface {
-    b: string;
+    b: string
   }
 
-  function MyFunction();
+  function MyFunction()
 }
 
-export = foo;
+export = foo

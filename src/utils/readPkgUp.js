@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-exports.__esModule = true;
+exports.__esModule = true
 
-const fs = require('fs');
-const pkgUp = require('./pkgUp').default;
+const fs = require('fs')
+const pkgUp = require('./pkgUp').default
 
 /** @type {(str: string) => string} */
 function stripBOM(str) {
-  return str.replace(/^\uFEFF/, '');
+  return str.replace(/^\uFEFF/, '')
 }
 
 /**
@@ -38,18 +38,18 @@ function stripBOM(str) {
  */
 /** @type {import('./readPkgUp').default} */
 exports.default = function readPkgUp(opts) {
-  const fp = pkgUp(opts);
+  const fp = pkgUp(opts)
 
   if (!fp) {
-    return {};
+    return {}
   }
 
   try {
     return {
       pkg: JSON.parse(stripBOM(fs.readFileSync(fp, { encoding: 'utf-8' }))),
       path: fp,
-    };
+    }
   } catch (e) {
-    return {};
+    return {}
   }
-};
+}

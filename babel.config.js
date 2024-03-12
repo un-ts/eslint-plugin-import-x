@@ -4,7 +4,7 @@ module.exports = {
       '@babel/env',
       {
         targets: {
-          node: 'current',
+          node: 4,
         },
       },
     ],
@@ -22,12 +22,4 @@ module.exports = {
   ],
   sourceMaps: 'inline',
   retainLines: true,
-  env: {
-    test: {
-      plugins: [['module-resolver', { root: ['./src/'] }]],
-    },
-    testCompiled: {
-      plugins: [['module-resolver', { root: ['./lib/'] }]],
-    },
-  },
-};
+}

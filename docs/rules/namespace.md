@@ -40,7 +40,7 @@ export { b }
 const c = 3
 export { c as d }
 
-export class ExportedClass { }
+export class ExportedClass {}
 
 // ES7
 export * as deep from './deep'
@@ -50,7 +50,7 @@ and:
 
 ```js
 // @module ./deep
-export const e = "MC2"
+export const e = 'MC2'
 ```
 
 See what is valid and reported:
@@ -60,7 +60,7 @@ See what is valid and reported:
 import * as names from './named-exports'
 
 function great() {
-  return names.a + names.b  // so great https://youtu.be/ei7mb8UxEl8
+  return names.a + names.b // so great https://youtu.be/ei7mb8UxEl8
 }
 
 function notGreat() {
@@ -74,7 +74,6 @@ function deepTrouble() {
   doSomethingWith(names.deep.e) // fine
   doSomethingWith(names.deep.f) // Reported: 'f' not found in deeply imported namespace 'names.deep'.
 }
-
 ```
 
 ### Options
@@ -84,7 +83,7 @@ function deepTrouble() {
 Defaults to `false`. When false, will report the following:
 
 ```js
-/*eslint import/namespace: [2, { allowComputed: false }]*/
+/*eslint import-x/namespace: [2, { allowComputed: false }]*/
 import * as a from './a'
 
 function f(x) {
@@ -97,10 +96,10 @@ still can't be statically analyzed any further.
 
 ## Further Reading
 
- - Lee Byron's [ES7] export proposal
- - [`import/ignore`] setting
- - [`jsnext:main`](Rollup)
+- Lee Byron's [ES7] export proposal
+- [`import-x/ignore`] setting
+- [`jsnext:main`](Rollup)
 
 [ES7]: https://github.com/leebyron/ecmascript-more-export-from
-[`import/ignore`]: ../../README.md#importignore
+[`import-x/ignore`]: ../../README.md#importignore
 [`jsnext:main`]: https://github.com/rollup/rollup/wiki/jsnext:main

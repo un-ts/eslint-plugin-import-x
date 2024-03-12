@@ -1,8 +1,8 @@
-import { test, testVersion, SYNTAX_CASES, parsers } from '../utils';
-import { RuleTester } from 'eslint';
+import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
+import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/no-named-default');
+const ruleTester = new RuleTester()
+const rule = require('rules/no-named-default')
 
 ruleTester.run('no-named-default', rule, {
   valid: [
@@ -33,29 +33,35 @@ ruleTester.run('no-named-default', rule, {
     }),*/
     test({
       code: 'import { default as bar } from "./bar";',
-      errors: [{
-        message: 'Use default import syntax to import \'bar\'.',
-        type: 'Identifier',
-      }],
+      errors: [
+        {
+          message: "Use default import syntax to import 'bar'.",
+          type: 'Identifier',
+        },
+      ],
     }),
     test({
       code: 'import { foo, default as bar } from "./bar";',
-      errors: [{
-        message: 'Use default import syntax to import \'bar\'.',
-        type: 'Identifier',
-      }],
+      errors: [
+        {
+          message: "Use default import syntax to import 'bar'.",
+          type: 'Identifier',
+        },
+      ],
     }),
 
     // es2022: Arbitrary module namespae identifier names
     testVersion('>= 8.7', () => ({
       code: 'import { "default" as bar } from "./bar";',
-      errors: [{
-        message: 'Use default import syntax to import \'bar\'.',
-        type: 'Identifier',
-      }],
+      errors: [
+        {
+          message: "Use default import syntax to import 'bar'.",
+          type: 'Identifier',
+        },
+      ],
       parserOptions: {
         ecmaVersion: 2022,
       },
     })) || [],
   ),
-});
+})

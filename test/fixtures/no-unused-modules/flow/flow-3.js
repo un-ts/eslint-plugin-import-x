@@ -1,1 +1,1 @@
-import type { FooType, FooInterface } from './flow-4';
+import type { FooType, FooInterface } from './flow-4'

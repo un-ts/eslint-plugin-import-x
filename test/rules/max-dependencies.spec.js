@@ -1,9 +1,9 @@
-import { test, parsers } from '../utils';
+import { test, parsers } from '../utils'
 
-import { RuleTester } from 'eslint';
+import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/max-dependencies');
+const ruleTester = new RuleTester()
+const rule = require('rules/max-dependencies')
 
 ruleTester.run('max-dependencies', rule, {
   valid: [
@@ -61,7 +61,7 @@ ruleTester.run('max-dependencies', rule, {
     }),
 
     test({
-      code: "import { x } from './foo'; import { z } from './foo'; require(\"./bar\"); const path = require(\"path\");",
+      code: 'import { x } from \'./foo\'; import { z } from \'./foo\'; require("./bar"); const path = require("path");',
       options: [
         {
           max: 2,
@@ -93,10 +93,10 @@ ruleTester.run('max-dependencies', rule, {
       errors: ['Maximum number of dependencies (2) exceeded.'],
     }),
   ],
-});
+})
 
 describe('TypeScript', () => {
-  const parser = parsers.TS;
+  const parser = parsers.TS
 
   ruleTester.run(
     `max-dependencies (${parser.replace(process.cwd(), '.')})`,
@@ -139,5 +139,5 @@ describe('TypeScript', () => {
         }),
       ],
     },
-  );
-});
+  )
+})

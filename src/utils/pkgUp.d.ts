@@ -1,3 +1,3 @@
-declare function pkgUp(opts?: { cwd?: string }): string | null;
+declare function pkgUp(opts?: { cwd?: string }): string | null
 
-export default pkgUp;
+export default pkgUp

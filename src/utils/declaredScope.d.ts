@@ -1,8 +1,8 @@
-import { Rule, Scope } from 'eslint';
+import { Rule, Scope } from 'eslint'
 
 declare function declaredScope(
-    context: Rule.RuleContext,
-    name: string
-): Scope.Scope['type'] | undefined;
+  context: Rule.RuleContext,
+  name: string,
+): Scope.Scope['type'] | undefined
 
-export default declaredScope;
+export default declaredScope

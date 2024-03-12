@@ -1,8 +1,8 @@
-import { parsers, test, testVersion } from '../utils';
-import { RuleTester } from 'eslint';
-import rule from 'rules/no-mutable-exports';
+import { parsers, test, testVersion } from '../utils'
+import { RuleTester } from 'eslint'
+import rule from 'rules/no-mutable-exports'
 
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester()
 
 ruleTester.run('no-mutable-exports', rule, {
   valid: [].concat(
@@ -34,46 +34,47 @@ ruleTester.run('no-mutable-exports', rule, {
     }),
     // es2022: Arbitrary module namespace identifier names
     testVersion('>= 8.7', () => ({
-      code: 'const count = 1\nexport { count as "counter" }', parserOptions: { ecmaVersion: 2022 },
+      code: 'const count = 1\nexport { count as "counter" }',
+      parserOptions: { ecmaVersion: 2022 },
     })),
   ),
   invalid: [].concat(
     test({
       code: 'export let count = 1',
-      errors: ['Exporting mutable \'let\' binding, use \'const\' instead.'],
+      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
     }),
     test({
       code: 'export var count = 1',
-      errors: ['Exporting mutable \'var\' binding, use \'const\' instead.'],
+      errors: ["Exporting mutable 'var' binding, use 'const' instead."],
     }),
     test({
       code: 'let count = 1\nexport { count }',
-      errors: ['Exporting mutable \'let\' binding, use \'const\' instead.'],
+      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
     }),
     test({
       code: 'var count = 1\nexport { count }',
-      errors: ['Exporting mutable \'var\' binding, use \'const\' instead.'],
+      errors: ["Exporting mutable 'var' binding, use 'const' instead."],
     }),
     test({
       code: 'let count = 1\nexport { count as counter }',
-      errors: ['Exporting mutable \'let\' binding, use \'const\' instead.'],
+      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
     }),
     test({
       code: 'var count = 1\nexport { count as counter }',
-      errors: ['Exporting mutable \'var\' binding, use \'const\' instead.'],
+      errors: ["Exporting mutable 'var' binding, use 'const' instead."],
     }),
     test({
       code: 'let count = 1\nexport default count',
-      errors: ['Exporting mutable \'let\' binding, use \'const\' instead.'],
+      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
     }),
     test({
       code: 'var count = 1\nexport default count',
-      errors: ['Exporting mutable \'var\' binding, use \'const\' instead.'],
+      errors: ["Exporting mutable 'var' binding, use 'const' instead."],
     }),
     // es2022: Arbitrary module namespace identifier names
     testVersion('>= 8.7', () => ({
       code: 'let count = 1\nexport { count as "counter" }',
-      errors: ['Exporting mutable \'let\' binding, use \'const\' instead.'],
+      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
       parserOptions: { ecmaVersion: 2022 },
     })),
 
@@ -87,4 +88,4 @@ ruleTester.run('no-mutable-exports', rule, {
     //   errors: ['Exporting mutable global binding, use \'const\' instead.'],
     // }),
   ),
-});
+})

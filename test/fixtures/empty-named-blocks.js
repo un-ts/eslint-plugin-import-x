@@ -1,1 +1,1 @@
-import {} from './bar.js';
+import {} from './bar.js'

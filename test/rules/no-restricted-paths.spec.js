@@ -1,9 +1,9 @@
-import { RuleTester } from 'eslint';
-import rule from 'rules/no-restricted-paths';
+import { RuleTester } from 'eslint'
+import rule from 'rules/no-restricted-paths'
 
-import { parsers, test, testFilePath } from '../utils';
+import { parsers, test, testFilePath } from '../utils'
 
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester()
 
 ruleTester.run('no-restricted-paths', rule, {
   valid: [].concat(
@@ -315,27 +315,27 @@ ruleTester.run('no-restricted-paths', rule, {
     process.platform === 'win32'
       ? []
       : test({
-        code: 'import b from "../server/b.js";',
-        filename: testFilePath('./restricted-paths/client/a.js'),
-        options: [
-          {
-            zones: [
-              {
-                target: './test/fixtures/restricted-paths/client/*.js',
-                from: './test/fixtures/restricted-paths/server',
-              },
-            ],
-          },
-        ],
-        errors: [
-          {
-            message:
+          code: 'import b from "../server/b.js";',
+          filename: testFilePath('./restricted-paths/client/a.js'),
+          options: [
+            {
+              zones: [
+                {
+                  target: './test/fixtures/restricted-paths/client/*.js',
+                  from: './test/fixtures/restricted-paths/server',
+                },
+              ],
+            },
+          ],
+          errors: [
+            {
+              message:
                 'Unexpected path "../server/b.js" imported in restricted zone.',
-            line: 1,
-            column: 15,
-          },
-        ],
-      }),
+              line: 1,
+              column: 15,
+            },
+          ],
+        }),
     test({
       code: 'import b from "../server/b.js"; // 2 ter',
       filename: testFilePath('./restricted-paths/client/a.js'),
@@ -758,15 +758,15 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
     }),
   ),
-});
+})
 
-context('Typescript', function () {
-  const parser = parsers.TS;
+describe('Typescript', () => {
+  const parser = parsers.TS
 
   const settings = {
     'import-x/parsers': { [parser]: ['.ts'] },
     'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-  };
+  }
   ruleTester.run('no-restricted-paths', rule, {
     valid: [
       test({
@@ -791,7 +791,10 @@ context('Typescript', function () {
         options: [
           {
             zones: [
-              { target: '**/*', from: './test/fixtures/restricted-paths/other' },
+              {
+                target: '**/*',
+                from: './test/fixtures/restricted-paths/other',
+              },
             ],
           },
         ],
@@ -1131,5 +1134,5 @@ context('Typescript', function () {
         settings,
       }),
     ],
-  });
-});
+  })
+})

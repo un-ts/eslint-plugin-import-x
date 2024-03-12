@@ -4,12 +4,11 @@
 export type MyType = {
   id: number,
   firstName: string,
-  lastName: string
-};
+  lastName: string,
+}
 
 export interface MyInterface {}
 
 export class MyClass {}
 
-export opaque type MyOpaqueType: string = string;
-
+export opaque type MyOpaqueType: string = string

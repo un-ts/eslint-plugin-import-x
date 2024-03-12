@@ -1,57 +1,58 @@
-const expect = require('chai').expect;
-
-const path = require('path');
-const fs = require('fs');
+const path = require('path')
+const fs = require('fs')
 
 function isJSFile(f) {
-  return path.extname(f) === '.js';
+  return path.extname(f) === '.js'
 }
 
-describe('package', function () {
-  const pkg = path.join(process.cwd(), 'src');
-  let module;
+describe('package', () => {
+  const pkg = path.join(process.cwd(), 'src')
+  let module
 
-  before('is importable', function () {
-    module = require(pkg);
-  });
+  beforeAll(() => {
+    module = require(pkg)
+  })
 
-  it('exists', function () {
-    expect(module).to.exist;
-  });
+  it('exists', () => {
+    expect(module).toBeDefined()
+  })
 
-  it('has every rule', function (done) {
+  it('has every rule', done => {
+    fs.readdir(path.join(pkg, 'rules'), function (err, files) {
+      expect(err).toBeFalsy()
 
-    fs.readdir(
-      path.join(pkg, 'rules')
-      , function (err, files) {
-        expect(err).not.to.exist;
+      files.filter(isJSFile).forEach(function (f) {
+        expect(module.rules).toHaveProperty(path.basename(f, '.js'))
+      })
 
-        files.filter(isJSFile).forEach(function (f) {
-          expect(module.rules).to.have.property(path.basename(f, '.js'));
-        });
+      done()
+    })
+  })
 
-        done();
-      });
-  });
-
-  it('exports all configs', function (done) {
+  it('exports all configs', done => {
     fs.readdir(path.join(process.cwd(), 'config'), function (err, files) {
-      if (err) { done(err); return; }
-      files.filter(isJSFile).forEach((file) => {
-        if (file[0] === '.') { return; }
-        expect(module.configs).to.have.property(path.basename(file, '.js'));
-      });
-      done();
-    });
-  });
+      if (err) {
+        done(err)
+        return
+      }
+      files.filter(isJSFile).forEach(file => {
+        if (file[0] === '.') {
+          return
+        }
+        expect(module.configs).toHaveProperty(path.basename(file, '.js'))
+      })
+      done()
+    })
+  })
 
-  it('has configs only for rules that exist', function () {
+  it('has configs only for rules that exist', () => {
     for (const configFile in module.configs) {
-      const preamble = 'import-x/';
+      const preamble = 'import-x/'
 
       for (const rule in module.configs[configFile].rules) {
-        expect(() => require(getRulePath(rule.slice(preamble.length))))
-          .not.to.throw(Error);
+        expect(() =>
+          require(getRulePath(rule.slice(preamble.length))),
+        ).not.toThrow(Error)
       }
     }
 
@@ -59,13 +60,16 @@ describe('package', function () {
       // 'require' does not work with dynamic paths because of the compilation step by babel
       // (which resolves paths according to the root folder configuration)
       // the usage of require.resolve on a static path gets around this
-      return path.resolve(require.resolve('rules/no-unresolved'), '..', ruleName);
+      return path.resolve(
+        require.resolve('rules/no-unresolved'),
+        '..',
+        ruleName,
+      )
     }
-  });
+  })
 
-  it('marks deprecated rules in their metadata', function () {
-    expect(module.rules['imports-first'].meta.deprecated).to.be.true;
-    expect(module.rules.first.meta.deprecated).not.to.be.true;
-  });
-
-});
+  it('marks deprecated rules in their metadata', () => {
+    expect(module.rules['imports-first'].meta.deprecated).toBe(true)
+    expect(module.rules.first.meta.deprecated).not.toBe(true)
+  })
+})

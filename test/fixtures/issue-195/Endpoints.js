@@ -1,2 +1,2 @@
-export Bookings from './Bookings';
-export Users from './Users';
+export Bookings from './Bookings'
+export Users from './Users'

@@ -1,1 +1,1 @@
-export type d = {};
+export type d = {}

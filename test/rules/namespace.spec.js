@@ -4,16 +4,16 @@ import {
   testVersion,
   testFilePath,
   parsers,
-} from '../utils';
-import { RuleTester } from 'eslint';
+} from '../utils'
+import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester({ env: { es6: true } });
-const rule = require('rules/namespace');
+const ruleTester = new RuleTester({ env: { es6: true } })
+const rule = require('rules/namespace')
 
 function error(name, namespace) {
   return {
     message: `'${name}' not found in imported namespace '${namespace}'.`,
-  };
+  }
 }
 
 const valid = [
@@ -262,7 +262,7 @@ const valid = [
       parserOptions: { ecmaVersion: 2022 },
     })),
   ),
-];
+]
 
 const invalid = [].concat(
   test({
@@ -393,12 +393,12 @@ const invalid = [].concat(
     errors: ["'e' not found in deeply imported namespace 'b.c'."],
     parserOptions: { ecmaVersion: 2022 },
   })),
-);
+)
 
 ///////////////////////
 // deep dereferences //
 //////////////////////
-[
+;[
   ['deep', require.resolve('espree')],
   // FIXME: check and enable
   // ['deep-es7', parsers.BABEL]
@@ -425,45 +425,45 @@ const invalid = [].concat(
       parser,
       code: `import { b } from "./${folder}/a"; var {c:{d:{e}}} = b`,
     }),
-  );
+  )
 
   // deep namespaces should include explicitly exported defaults
   test({
     parser,
     code: `import * as a from "./${folder}/a"; console.log(a.b.default)`,
   }),
-  invalid.push(
-    test({
-      parser,
-      code: `import * as a from "./${folder}/a"; console.log(a.b.e)`,
-      errors: ["'e' not found in deeply imported namespace 'a.b'."],
-    }),
-    test({
-      parser,
-      code: `import { b } from "./${folder}/a"; console.log(b.e)`,
-      errors: ["'e' not found in imported namespace 'b'."],
-    }),
-    test({
-      parser,
-      code: `import * as a from "./${folder}/a"; console.log(a.b.c.e)`,
-      errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
-    }),
-    test({
-      parser,
-      code: `import { b } from "./${folder}/a"; console.log(b.c.e)`,
-      errors: ["'e' not found in deeply imported namespace 'b.c'."],
-    }),
-    test({
-      parser,
-      code: `import * as a from "./${folder}/a"; var {b:{ e }} = a`,
-      errors: ["'e' not found in deeply imported namespace 'a.b'."],
-    }),
-    test({
-      parser,
-      code: `import * as a from "./${folder}/a"; var {b:{c:{ e }}} = a`,
-      errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
-    }),
-  );
-});
+    invalid.push(
+      test({
+        parser,
+        code: `import * as a from "./${folder}/a"; console.log(a.b.e)`,
+        errors: ["'e' not found in deeply imported namespace 'a.b'."],
+      }),
+      test({
+        parser,
+        code: `import { b } from "./${folder}/a"; console.log(b.e)`,
+        errors: ["'e' not found in imported namespace 'b'."],
+      }),
+      test({
+        parser,
+        code: `import * as a from "./${folder}/a"; console.log(a.b.c.e)`,
+        errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
+      }),
+      test({
+        parser,
+        code: `import { b } from "./${folder}/a"; console.log(b.c.e)`,
+        errors: ["'e' not found in deeply imported namespace 'b.c'."],
+      }),
+      test({
+        parser,
+        code: `import * as a from "./${folder}/a"; var {b:{ e }} = a`,
+        errors: ["'e' not found in deeply imported namespace 'a.b'."],
+      }),
+      test({
+        parser,
+        code: `import * as a from "./${folder}/a"; var {b:{c:{ e }}} = a`,
+        errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
+      }),
+    )
+})
 
-ruleTester.run('namespace', rule, { valid, invalid });
+ruleTester.run('namespace', rule, { valid, invalid })

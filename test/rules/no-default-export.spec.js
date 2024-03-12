@@ -1,9 +1,9 @@
-import { parsers, test, testVersion } from '../utils';
+import { parsers, test, testVersion } from '../utils'
 
-import { RuleTester } from 'eslint';
+import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/no-default-export');
+const ruleTester = new RuleTester()
+const rule = require('rules/no-default-export')
 
 ruleTester.run('no-default-export', rule, {
   valid: [
@@ -148,7 +148,8 @@ ruleTester.run('no-default-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Do not alias `foo` as `default`. Just export `foo` itself instead.',
+          message:
+            'Do not alias `foo` as `default`. Just export `foo` itself instead.',
         },
       ],
     }),
@@ -168,10 +169,11 @@ ruleTester.run('no-default-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Do not alias `foo` as `default`. Just export `foo` itself instead.',
+          message:
+            'Do not alias `foo` as `default`. Just export `foo` itself instead.',
         },
       ],
       parserOptions: { ecmaVersion: 2022 },
     })),
   ),
-});
+})

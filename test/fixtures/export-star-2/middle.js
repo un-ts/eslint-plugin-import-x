@@ -1,1 +1,1 @@
-export * as myName from './upstream';
+export * as myName from './upstream'

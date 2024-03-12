@@ -1,4 +1,6 @@
 {
-  "dummy": true,
-  "bundleDependencies": ["@generated/foo"]
+  "bundleDependencies": [
+    "@generated/foo"
+  ],
+  "dummy": true
 }

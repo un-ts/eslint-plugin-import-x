@@ -1,17 +1,17 @@
-import path from 'path';
-import { RuleTester } from 'eslint';
+import path from 'path'
+import { RuleTester } from 'eslint'
 
-import { eslintVersionSatisfies, test, testVersion } from '../utils';
+import { eslintVersionSatisfies, test, testVersion } from '../utils'
 
 const ruleTester = new RuleTester({
   parserOptions: { ecmaVersion: 6, sourceType: 'module' },
-});
-const rule = require('rules/no-import-module-exports');
+})
+const rule = require('rules/no-import-module-exports')
 
 const error = {
   message: `Cannot use import declarations in modules that export using CommonJS (module.exports = 'foo' or exports.bar = 'hi')`,
   type: 'ImportDeclaration',
-};
+}
 
 ruleTester.run('no-import-module-exports', rule, {
   valid: [].concat(
@@ -39,12 +39,14 @@ ruleTester.run('no-import-module-exports', rule, {
         exports.foo = bar
       `,
     }),
-    eslintVersionSatisfies('>= 4') ? test({
-      code: `
+    eslintVersionSatisfies('>= 4')
+      ? test({
+          code: `
         import { module } from 'qunit'
         module.skip('A test', function () {})
       `,
-    }) : [],
+        })
+      : [],
     test({
       code: `
         import foo from 'path';
@@ -59,7 +61,10 @@ ruleTester.run('no-import-module-exports', rule, {
         import foo from 'path';
         module.exports = foo;
       `,
-      filename: path.join(process.cwd(), 'test/fixtures/some/other/entry-point.js'),
+      filename: path.join(
+        process.cwd(),
+        'test/fixtures/some/other/entry-point.js',
+      ),
       options: [{ exceptions: ['**/*/other/entry-point.js'] }],
     }),
     test({
@@ -67,7 +72,10 @@ ruleTester.run('no-import-module-exports', rule, {
         import * as process from 'process';
         console.log(process.env);
       `,
-      filename: path.join(process.cwd(), 'test/fixtures/missing-entrypoint/cli.js'),
+      filename: path.join(
+        process.cwd(),
+        'test/fixtures/missing-entrypoint/cli.js',
+      ),
     }),
     testVersion('>= 6', () => ({
       code: `
@@ -155,9 +163,12 @@ ruleTester.run('no-import-module-exports', rule, {
         import foo from 'path';
         module.exports = foo;
       `,
-      filename: path.join(process.cwd(), 'test/fixtures/some/other/entry-point.js'),
+      filename: path.join(
+        process.cwd(),
+        'test/fixtures/some/other/entry-point.js',
+      ),
       options: [{ exceptions: ['**/*/other/file.js'] }],
       errors: [error],
     }),
   ],
-});
+})

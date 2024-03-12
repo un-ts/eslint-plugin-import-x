@@ -3,62 +3,67 @@
  * basically iteratively updates hash with a JSON-like format
  */
 
-'use strict';
+'use strict'
 
-exports.__esModule = true;
+exports.__esModule = true
 
-const createHash = require('crypto').createHash;
+const createHash = require('crypto').createHash
 
-const stringify = JSON.stringify;
+const stringify = JSON.stringify
 
 /** @type {import('./hash').default} */
 function hashify(value, hash) {
-  if (!hash) { hash = createHash('sha256'); }
-
-  if (Array.isArray(value)) {
-    hashArray(value, hash);
-  } else if (value instanceof Object) {
-    hashObject(value, hash);
-  } else {
-    hash.update(stringify(value) || 'undefined');
+  if (!hash) {
+    hash = createHash('sha256')
   }
 
-  return hash;
+  if (Array.isArray(value)) {
+    hashArray(value, hash)
+  } else if (value instanceof Object) {
+    hashObject(value, hash)
+  } else {
+    hash.update(stringify(value) || 'undefined')
+  }
+
+  return hash
 }
-exports.default = hashify;
+exports.default = hashify
 
 /** @type {import('./hash').hashArray} */
 function hashArray(array, hash) {
-  if (!hash) { hash = createHash('sha256'); }
-
-  hash.update('[');
-  for (let i = 0; i < array.length; i++) {
-    hashify(array[i], hash);
-    hash.update(',');
+  if (!hash) {
+    hash = createHash('sha256')
   }
-  hash.update(']');
 
-  return hash;
+  hash.update('[')
+  for (let i = 0; i < array.length; i++) {
+    hashify(array[i], hash)
+    hash.update(',')
+  }
+  hash.update(']')
+
+  return hash
 }
-hashify.array = hashArray;
-exports.hashArray = hashArray;
+hashify.array = hashArray
+exports.hashArray = hashArray
 
 /** @type {import('./hash').hashObject} */
 function hashObject(object, optionalHash) {
-  const hash = optionalHash || createHash('sha256');
+  const hash = optionalHash || createHash('sha256')
 
-  hash.update('{');
-  Object.keys(object).sort().forEach((key) => {
-    hash.update(stringify(key));
-    hash.update(':');
-    // @ts-expect-error the key is guaranteed to exist on the object here
-    hashify(object[key], hash);
-    hash.update(',');
-  });
-  hash.update('}');
+  hash.update('{')
+  Object.keys(object)
+    .sort()
+    .forEach(key => {
+      hash.update(stringify(key))
+      hash.update(':')
+      // @ts-expect-error the key is guaranteed to exist on the object here
+      hashify(object[key], hash)
+      hash.update(',')
+    })
+  hash.update('}')
 
-  return hash;
+  return hash
 }
-hashify.object = hashObject;
-exports.hashObject = hashObject;
-
+hashify.object = hashObject
+exports.hashObject = hashObject

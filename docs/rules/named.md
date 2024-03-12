@@ -37,7 +37,7 @@ import { foo } from './foo'
 export { foo as bar } from './foo'
 
 // node_modules without jsnext:main are not analyzed by default
-// (import/ignore setting)
+// (import-x/ignore setting)
 import { SomeNonsenseThatDoesntExist } from 'react'
 ```
 
@@ -56,7 +56,7 @@ import { dontCreateStore } from 'redux'
 
 ### Settings
 
-[`import/ignore`] can be provided as a setting to ignore certain modules (node_modules,
+[`import-x/ignore`] can be provided as a setting to ignore certain modules (node_modules,
 CoffeeScript, CSS if using Webpack, etc.).
 
 Given:
@@ -65,7 +65,7 @@ Given:
 # .eslintrc (YAML)
 ---
 settings:
-  import/ignore:
+  import-x/ignore:
     - node_modules  # included by default, but replaced if explicitly configured
     - *.coffee$     # can't parse CoffeeScript (unless a custom polyglot parser was configured)
 ```
@@ -93,10 +93,10 @@ runtime, you will likely see false positives with this rule.
 
 ## Further Reading
 
- - [`import/ignore`] setting
- - [`jsnext:main`] deprecation
- - [`pkg.module`] (Rollup)
+- [`import-x/ignore`] setting
+- [`jsnext:main`] deprecation
+- [`pkg.module`] (Rollup)
 
 [`jsnext:main`]: https://github.com/jsforum/jsforum/issues/5
 [`pkg.module`]: https://github.com/rollup/rollup/wiki/pkg.module
-[`import/ignore`]: ../../README.md#importignore
+[`import-x/ignore`]: ../../README.md#importignore

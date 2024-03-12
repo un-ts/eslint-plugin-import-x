@@ -2,7 +2,7 @@ export declare type MyType = string
 export declare enum MyEnum {
   Foo,
   Bar,
-  Baz
+  Baz,
 }
 export declare interface Foo {
   native: string | number
@@ -13,20 +13,20 @@ export declare interface Foo {
 export declare abstract class Bar {
   abstract foo(): Foo
 
-  method();
+  method()
 }
 
-export declare function getFoo() : MyType;
+export declare function getFoo(): MyType
 
 export declare module MyModule {
-  export function ModuleFunction();
+  export function ModuleFunction()
 }
 
 export declare namespace MyNamespace {
-  export function NamespaceFunction();
+  export function NamespaceFunction()
 
   export module NSModule {
-    export function NSModuleFunction();
+    export function NSModuleFunction()
   }
 }
 

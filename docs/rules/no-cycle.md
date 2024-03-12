@@ -11,7 +11,9 @@ This includes cycles of depth 1 (imported module imports me) to `"∞"` (or `Inf
 // dep-b.js
 import './dep-a.js'
 
-export function b() { /* ... */ }
+export function b() {
+  /* ... */
+}
 ```
 
 ```js
@@ -29,7 +31,7 @@ This rule ignores type-only imports in Flow and TypeScript syntax (`import type`
 ### Options
 
 By default, this rule only detects cycles for ES6 imports, but see the [`no-unresolved` options](./no-unresolved.md#options) as this rule also supports the same `commonjs` and `amd` flags. However, these flags only impact which import types are _linted_; the
-import/export infrastructure only registers `import` statements in dependencies, so
+import-x/export infrastructure only registers `import` statements in dependencies, so
 cycles created by `require` within imported modules may not be detected.
 
 #### `maxDepth`
@@ -37,7 +39,7 @@ cycles created by `require` within imported modules may not be detected.
 There is a `maxDepth` option available to prevent full expansion of very deep dependency trees:
 
 ```js
-/*eslint import/no-cycle: [2, { maxDepth: 1 }]*/
+/*eslint import-x/no-cycle: [2, { maxDepth: 1 }]*/
 
 // dep-c.js
 import './dep-a.js'
@@ -47,7 +49,9 @@ import './dep-a.js'
 // dep-b.js
 import './dep-c.js'
 
-export function b() { /* ... */ }
+export function b() {
+  /* ... */
+}
 ```
 
 ```js
@@ -63,12 +67,14 @@ for reducing total project lint time, if needed.
 An `ignoreExternal` option is available to prevent the cycle detection to expand to external modules:
 
 ```js
-/*eslint import/no-cycle: [2, { ignoreExternal: true }]*/
+/*eslint import-x/no-cycle: [2, { ignoreExternal: true }]*/
 
 // dep-a.js
 import 'module-b/dep-b.js'
 
-export function a() { /* ... */ }
+export function a() {
+  /* ... */
+}
 ```
 
 ```js
@@ -84,12 +90,14 @@ This option disable reporting of errors if a cycle is detected with at least one
 
 ```js
 // bar.js
-import { foo } from './foo';
-export const bar = foo;
+import { foo } from './foo'
+export const bar = foo
 
 // foo.js
-export const foo = 'Foo';
-export function getBar() { return import('./bar'); }
+export const foo = 'Foo'
+export function getBar() {
+  return import('./bar')
+}
 ```
 
 > Cyclic dependency are **always** a dangerous anti-pattern as discussed extensively in [#2265](https://github.com/import-js/eslint-plugin-import/issues/2265). Please be extra careful about using this option.
@@ -102,10 +110,9 @@ this rule enabled.
 
 ## Further Reading
 
- - [Original inspiring issue](https://github.com/import-js/eslint-plugin-import/issues/941)
- - Rule to detect that module imports itself: [`no-self-import`]
- - [`import/external-module-folders`] setting
+- [Original inspiring issue](https://github.com/import-js/eslint-plugin-import/issues/941)
+- Rule to detect that module imports itself: [`no-self-import`]
+- [`import-x/external-module-folders`] setting
 
 [`no-self-import`]: ./no-self-import.md
-
-[`import/external-module-folders`]: ../../README.md#importexternal-module-folders
+[`import-x/external-module-folders`]: ../../README.md#importexternal-module-folders

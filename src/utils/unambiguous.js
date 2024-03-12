@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-exports.__esModule = true;
+exports.__esModule = true
 
-const pattern = /(^|;)\s*(export|import)((\s+\w)|(\s*[{*=]))|import\(/m;
+const pattern = /(^|;)\s*(export|import)((\s+\w)|(\s*[{*=]))|import\(/m
 /**
  * detect possible imports/exports without a full parse.
  *
@@ -14,16 +14,17 @@ const pattern = /(^|;)\s*(export|import)((\s+\w)|(\s*[{*=]))|import\(/m;
  * @type {import('./unambiguous').test}
  */
 exports.test = function isMaybeUnambiguousModule(content) {
-  return pattern.test(content);
-};
+  return pattern.test(content)
+}
 
 // future-/Babel-proof at the expense of being a little loose
-const unambiguousNodeType = /^(?:(?:Exp|Imp)ort.*Declaration|TSExportAssignment)$/;
+const unambiguousNodeType =
+  /^(?:(?:Exp|Imp)ort.*Declaration|TSExportAssignment)$/
 
 /**
  * Given an AST, return true if the AST unambiguously represents a module.
  * @type {import('./unambiguous').isModule}
  */
 exports.isModule = function isUnambiguousModule(ast) {
-  return ast.body && ast.body.some((node) => unambiguousNodeType.test(node.type));
-};
+  return ast.body && ast.body.some(node => unambiguousNodeType.test(node.type))
+}

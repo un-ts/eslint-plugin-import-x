@@ -1,1 +1,1 @@
-export default NaN;
+export default NaN

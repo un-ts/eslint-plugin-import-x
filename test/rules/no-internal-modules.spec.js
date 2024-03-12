@@ -1,9 +1,9 @@
-import { RuleTester } from 'eslint';
-import rule from 'rules/no-internal-modules';
+import { RuleTester } from 'eslint'
+import rule from 'rules/no-internal-modules'
 
-import { test, testFilePath, parsers } from '../utils';
+import { test, testFilePath, parsers } from '../utils'
 
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester()
 
 ruleTester.run('no-internal-modules', rule, {
   valid: [
@@ -40,51 +40,65 @@ ruleTester.run('no-internal-modules', rule, {
     test({
       code: 'import b from "../../api/service"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        allow: ['**/api/*'],
-      }],
+      options: [
+        {
+          allow: ['**/api/*'],
+        },
+      ],
     }),
     test({
       code: 'import "jquery/dist/jquery"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        allow: ['jquery/dist/*'],
-      }],
+      options: [
+        {
+          allow: ['jquery/dist/*'],
+        },
+      ],
     }),
     test({
       code: 'import "./app/index.js";\nimport "./app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        allow: ['**/index{.js,}'],
-      }],
+      options: [
+        {
+          allow: ['**/index{.js,}'],
+        },
+      ],
     }),
     test({
       code: 'import a from "./plugin2/thing"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [{
-        forbid: ['**/api/*'],
-      }],
+      options: [
+        {
+          forbid: ['**/api/*'],
+        },
+      ],
     }),
     test({
       code: 'const a = require("./plugin2/thing")',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [{
-        forbid: ['**/api/*'],
-      }],
+      options: [
+        {
+          forbid: ['**/api/*'],
+        },
+      ],
     }),
     test({
       code: 'import b from "app/a"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['app/**/**'],
-      }],
+      options: [
+        {
+          forbid: ['app/**/**'],
+        },
+      ],
     }),
     test({
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['@org/package/*'],
-      }],
+      options: [
+        {
+          forbid: ['@org/package/*'],
+        },
+      ],
     }),
     // exports
     test({
@@ -102,23 +116,29 @@ ruleTester.run('no-internal-modules', rule, {
     test({
       code: 'export {b} from "../../api/service"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        allow: ['**/api/*'],
-      }],
+      options: [
+        {
+          allow: ['**/api/*'],
+        },
+      ],
     }),
     test({
       code: 'export * from "jquery/dist/jquery"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        allow: ['jquery/dist/*'],
-      }],
+      options: [
+        {
+          allow: ['jquery/dist/*'],
+        },
+      ],
     }),
     test({
       code: 'export * from "./app/index.js";\nexport * from "./app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        allow: ['**/index{.js,}'],
-      }],
+      options: [
+        {
+          allow: ['**/index{.js,}'],
+        },
+      ],
     }),
     test({
       code: `
@@ -142,30 +162,38 @@ ruleTester.run('no-internal-modules', rule, {
     test({
       code: 'export * from "./plugin2/thing"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [{
-        forbid: ['**/api/*'],
-      }],
+      options: [
+        {
+          forbid: ['**/api/*'],
+        },
+      ],
     }),
     test({
       code: 'export * from "app/a"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['app/**/**'],
-      }],
+      options: [
+        {
+          forbid: ['app/**/**'],
+        },
+      ],
     }),
     test({
       code: 'export { b } from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['@org/package/*'],
-      }],
+      options: [
+        {
+          forbid: ['@org/package/*'],
+        },
+      ],
     }),
     test({
       code: 'export * from "./app/index.js";\nexport * from "./app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['**/index.ts'],
-      }],
+      options: [
+        {
+          forbid: ['**/index.ts'],
+        },
+      ],
     }),
   ],
 
@@ -174,39 +202,49 @@ ruleTester.run('no-internal-modules', rule, {
     test({
       code: 'import "./plugin2/index.js";\nimport "./plugin2/app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [{
-        allow: ['*/index.js'],
-      }],
-      errors: [{
-        message: 'Reaching to "./plugin2/app/index" is not allowed.',
-        line: 2,
-        column: 8,
-      }],
+      options: [
+        {
+          allow: ['*/index.js'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "./plugin2/app/index" is not allowed.',
+          line: 2,
+          column: 8,
+        },
+      ],
     }),
     test({
       code: 'import "./app/index.js"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      errors: [{
-        message: 'Reaching to "./app/index.js" is not allowed.',
-        line: 1,
-        column: 8,
-      }],
+      errors: [
+        {
+          message: 'Reaching to "./app/index.js" is not allowed.',
+          line: 1,
+          column: 8,
+        },
+      ],
     }),
     test({
       code: 'import b from "./plugin2/internal"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      errors: [{
-        message: 'Reaching to "./plugin2/internal" is not allowed.',
-        line: 1,
-        column: 15,
-      }],
+      errors: [
+        {
+          message: 'Reaching to "./plugin2/internal" is not allowed.',
+          line: 1,
+          column: 15,
+        },
+      ],
     }),
     test({
       code: 'import a from "../api/service/index"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [{
-        allow: ['**/internal-modules/*'],
-      }],
+      options: [
+        {
+          allow: ['**/internal-modules/*'],
+        },
+      ],
       errors: [
         {
           message: 'Reaching to "../api/service/index" is not allowed.',
@@ -240,77 +278,102 @@ ruleTester.run('no-internal-modules', rule, {
     test({
       code: 'import "./app/index.js"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['*/app/*'],
-      }],
-      errors: [{
-        message: 'Reaching to "./app/index.js" is not allowed.',
-        line: 1,
-        column: 8,
-      }],
+      options: [
+        {
+          forbid: ['*/app/*'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "./app/index.js" is not allowed.',
+          line: 1,
+          column: 8,
+        },
+      ],
     }),
     test({
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['@org/**'],
-      }],
-      errors: [{
-        message: 'Reaching to "@org/package" is not allowed.',
-        line: 1,
-        column: 15,
-      }],
+      options: [
+        {
+          forbid: ['@org/**'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "@org/package" is not allowed.',
+          line: 1,
+          column: 15,
+        },
+      ],
     }),
     test({
       code: 'import b from "app/a/b"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['app/**/**'],
-      }],
-      errors: [{
-        message: 'Reaching to "app/a/b" is not allowed.',
-        line: 1,
-        column: 15,
-      }],
+      options: [
+        {
+          forbid: ['app/**/**'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "app/a/b" is not allowed.',
+          line: 1,
+          column: 15,
+        },
+      ],
     }),
     test({
       code: 'import get from "lodash.get"',
       filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
-      options: [{
-        forbid: ['lodash.*'],
-      }],
-      errors: [{
-        message: 'Reaching to "lodash.get" is not allowed.',
-        line: 1,
-        column: 17,
-      }],
+      options: [
+        {
+          forbid: ['lodash.*'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "lodash.get" is not allowed.',
+          line: 1,
+          column: 17,
+        },
+      ],
     }),
     test({
       code: 'import "./app/index.js";\nimport "./app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['**/index{.js,}'],
-      }],
-      errors: [{
-        message: 'Reaching to "./app/index.js" is not allowed.',
-        line: 1,
-        column: 8,
-      }, {
-        message: 'Reaching to "./app/index" is not allowed.',
-        line: 2,
-        column: 8,
-      }],
+      options: [
+        {
+          forbid: ['**/index{.js,}'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "./app/index.js" is not allowed.',
+          line: 1,
+          column: 8,
+        },
+        {
+          message: 'Reaching to "./app/index" is not allowed.',
+          line: 2,
+          column: 8,
+        },
+      ],
     }),
     test({
       code: 'import "@/api/service";',
-      options: [{
-        forbid: ['**/api/*'],
-      }],
-      errors: [{
-        message: 'Reaching to "@/api/service" is not allowed.',
-        line: 1,
-        column: 8,
-      }],
+      options: [
+        {
+          forbid: ['**/api/*'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "@/api/service" is not allowed.',
+          line: 1,
+          column: 8,
+        },
+      ],
       settings: {
         'import-x/resolver': {
           webpack: {
@@ -329,39 +392,49 @@ ruleTester.run('no-internal-modules', rule, {
     test({
       code: 'export * from "./plugin2/index.js";\nexport * from "./plugin2/app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [{
-        allow: ['*/index.js'],
-      }],
-      errors: [{
-        message: 'Reaching to "./plugin2/app/index" is not allowed.',
-        line: 2,
-        column: 15,
-      }],
+      options: [
+        {
+          allow: ['*/index.js'],
+        },
+      ],
+      errors: [
+        {
+          message: 'Reaching to "./plugin2/app/index" is not allowed.',
+          line: 2,
+          column: 15,
+        },
+      ],
     }),
     test({
       code: 'export * from "./app/index.js"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      errors: [{
-        message: 'Reaching to "./app/index.js" is not allowed.',
-        line: 1,
-        column: 15,
-      }],
+      errors: [
+        {
+          message: 'Reaching to "./app/index.js" is not allowed.',
+          line: 1,
+          column: 15,
+        },
+      ],
     }),
     test({
       code: 'export {b} from "./plugin2/internal"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      errors: [{
-        message: 'Reaching to "./plugin2/internal" is not allowed.',
-        line: 1,
-        column: 17,
-      }],
+      errors: [
+        {
+          message: 'Reaching to "./plugin2/internal" is not allowed.',
+          line: 1,
+          column: 17,
+        },
+      ],
     }),
     test({
       code: 'export {a} from "../api/service/index"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [{
-        allow: ['**/internal-modules/*'],
-      }],
+      options: [
+        {
+          allow: ['**/internal-modules/*'],
+        },
+      ],
       errors: [
         {
           message: 'Reaching to "../api/service/index" is not allowed.',
@@ -395,9 +468,11 @@ ruleTester.run('no-internal-modules', rule, {
     test({
       code: 'export * from "./plugin2/thing"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [{
-        forbid: ['**/plugin2/*'],
-      }],
+      options: [
+        {
+          forbid: ['**/plugin2/*'],
+        },
+      ],
       errors: [
         {
           message: 'Reaching to "./plugin2/thing" is not allowed.',
@@ -409,9 +484,11 @@ ruleTester.run('no-internal-modules', rule, {
     test({
       code: 'export * from "app/a"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [{
-        forbid: ['**'],
-      }],
+      options: [
+        {
+          forbid: ['**'],
+        },
+      ],
       errors: [
         {
           message: 'Reaching to "app/a" is not allowed.',
@@ -421,4 +498,4 @@ ruleTester.run('no-internal-modules', rule, {
       ],
     }),
   ],
-});
+})

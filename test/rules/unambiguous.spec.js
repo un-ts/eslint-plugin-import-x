@@ -1,8 +1,8 @@
-import { RuleTester } from 'eslint';
-import { parsers } from '../utils';
+import { RuleTester } from 'eslint'
+import { parsers } from '../utils'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/unambiguous');
+const ruleTester = new RuleTester()
+const rule = require('rules/unambiguous')
 
 ruleTester.run('unambiguous', rule, {
   valid: [
@@ -55,4 +55,4 @@ ruleTester.run('unambiguous', rule, {
       errors: ['This module could be parsed as a valid script.'],
     },
   ],
-});
+})

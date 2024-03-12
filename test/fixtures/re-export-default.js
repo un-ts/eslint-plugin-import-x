@@ -1,4 +1,4 @@
-export const baz = "baz? really?"
+export const baz = 'baz? really?'
 
 export { default as bar } from './default-export'
 export { default as foo } from './named-default-export'

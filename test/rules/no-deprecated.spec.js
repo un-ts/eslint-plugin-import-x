@@ -1,9 +1,9 @@
-import { test, SYNTAX_CASES, parsers } from '../utils';
+import { test, SYNTAX_CASES, parsers } from '../utils'
 
-import { RuleTester } from 'eslint';
+import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/no-deprecated');
+const ruleTester = new RuleTester()
+const rule = require('rules/no-deprecated')
 
 ruleTester.run('no-deprecated', rule, {
   valid: [
@@ -215,7 +215,7 @@ ruleTester.run('no-deprecated', rule, {
       ],
     }),
   ],
-});
+})
 
 ruleTester.run('no-deprecated: hoisting', rule, {
   valid: [
@@ -239,10 +239,10 @@ ruleTester.run('no-deprecated: hoisting', rule, {
       ],
     }),
   ],
-});
+})
 
-describe('TypeScript', function () {
-  const parser = parsers.TS;
+describe('TypeScript', () => {
+  const parser = parsers.TS
 
   const parserConfig = {
     parser,
@@ -250,7 +250,7 @@ describe('TypeScript', function () {
       'import-x/parsers': { [parser]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     },
-  };
+  }
 
   ruleTester.run(parser, rule, {
     valid: [
@@ -269,5 +269,5 @@ describe('TypeScript', function () {
         ...parserConfig,
       }),
     ],
-  });
-});
+  })
+})

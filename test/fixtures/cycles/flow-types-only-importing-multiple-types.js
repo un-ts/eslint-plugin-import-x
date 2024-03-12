@@ -1,3 +1,3 @@
 // @flow
 
-import { type FooType, type BarType } from './depth-zero';
+import { type FooType, type BarType } from './depth-zero'

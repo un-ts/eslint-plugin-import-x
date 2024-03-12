@@ -1,13 +1,13 @@
-import { test } from '../utils';
+import { test } from '../utils'
 
-import { RuleTester } from 'eslint';
+import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/no-absolute-path');
+const ruleTester = new RuleTester()
+const rule = require('rules/no-absolute-path')
 
 const error = {
   message: 'Do not import modules using an absolute path',
-};
+}
 
 ruleTester.run('no-absolute-path', rule, {
   valid: [
@@ -123,4 +123,4 @@ ruleTester.run('no-absolute-path', rule, {
       output: 'define(["../../some/path"], function (f) { /* ... */ })',
     }),
   ],
-});
+})

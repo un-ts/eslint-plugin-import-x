@@ -1,11 +1,11 @@
-import { test, parsers, testVersion } from '../utils';
-import fs from 'fs';
-import path from 'path';
+import { test, parsers, testVersion } from '../utils'
+import fs from 'fs'
+import path from 'path'
 
-import { RuleTester } from 'eslint';
+import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester();
-const rule = require('rules/first');
+const ruleTester = new RuleTester()
+const rule = require('rules/first')
 
 ruleTester.run('first', rule, {
   valid: [].concat(
@@ -89,10 +89,10 @@ ruleTester.run('first', rule, {
       output: "import a from 'b'\nif (true) { console.log(1) }",
     }),
   ],
-});
+})
 
-context('TypeScript', function () {
-  const parser = parsers.TS;
+describe('TypeScript', () => {
+  const parser = parsers.TS
 
   const parserConfig = {
     parser,
@@ -100,7 +100,7 @@ context('TypeScript', function () {
       'import-x/parsers': { [parser]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     },
-  };
+  }
 
   ruleTester.run('order', rule, {
     valid: [
@@ -128,5 +128,5 @@ context('TypeScript', function () {
         ],
       }),
     ],
-  });
-});
+  })
+})

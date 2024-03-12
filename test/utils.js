@@ -1,52 +1,52 @@
-import path from 'path';
-import eslintPkg from 'eslint/package.json';
-import semver from 'semver';
-import typescriptPkg from 'typescript/package.json';
+import path from 'path'
+import eslintPkg from 'eslint/package.json'
+import semver from 'semver'
+import typescriptPkg from 'typescript/package.json'
 
 // warms up the module cache. this import takes a while (>500ms)
-import '@babel/eslint-parser';
+import '@babel/eslint-parser'
 
 export const parsers = {
   ESPREE: require.resolve('espree'),
   TS: require.resolve('@typescript-eslint/parser'),
   BABEL: require.resolve('@babel/eslint-parser'),
-};
+}
 
 export function tsVersionSatisfies(specifier) {
-  return semver.satisfies(typescriptPkg.version, specifier);
+  return semver.satisfies(typescriptPkg.version, specifier)
 }
 
 export function typescriptEslintParserSatisfies(specifier) {
   return (
-    parsers.TS
-    && semver.satisfies(
+    parsers.TS &&
+    semver.satisfies(
       require('@typescript-eslint/parser/package.json').version,
       specifier,
     )
-  );
+  )
 }
 
 export function testFilePath(relativePath) {
-  return path.join(process.cwd(), './test/fixtures', relativePath);
+  return path.join(process.cwd(), './test/fixtures', relativePath)
 }
 
 export function getNonDefaultParsers() {
-  return [parsers.TS, parsers.BABEL].filter(Boolean);
+  return [parsers.TS, parsers.BABEL].filter(Boolean)
 }
 
-export const FILENAME = testFilePath('foo.js');
+export const FILENAME = testFilePath('foo.js')
 
 export function eslintVersionSatisfies(specifier) {
-  return semver.satisfies(eslintPkg.version, specifier);
+  return semver.satisfies(eslintPkg.version, specifier)
 }
 
 export function testVersion(specifier, t) {
-  return eslintVersionSatisfies(specifier) ? test(t()) : [];
+  return eslintVersionSatisfies(specifier) ? test(t()) : []
 }
 
 export function test(t) {
   if (arguments.length !== 1) {
-    throw new SyntaxError('`test` requires exactly one object argument');
+    throw new SyntaxError('`test` requires exactly one object argument')
   }
   return {
     filename: FILENAME,
@@ -56,20 +56,20 @@ export function test(t) {
       ecmaVersion: 9,
       ...t.parserOptions,
     },
-  };
+  }
 }
 
 export function testContext(settings) {
   return {
     getFilename() {
-      return FILENAME;
+      return FILENAME
     },
     settings: settings || {},
-  };
+  }
 }
 
 export function getFilename(file) {
-  return path.join(__dirname, 'fixtures', file || 'foo.js');
+  return path.join(__dirname, 'fixtures', file || 'foo.js')
 }
 
 /**
@@ -135,4 +135,4 @@ export const SYNTAX_CASES = [
   test({
     code: 'import { foo } from "./ignore.invalid.extension"',
   }),
-];
+]
