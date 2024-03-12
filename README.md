@@ -1,11 +1,15 @@
 # eslint-plugin-import-x
 
-[![github actions][actions-image]][actions-url]
-[![travis-ci](https://travis-ci.org/import-js/eslint-plugin-import.svg?branch=main)](https://travis-ci.org/import-js/eslint-plugin-import)
-[![coverage][codecov-image]][codecov-url]
-[![win32 build status](https://ci.appveyor.com/api/projects/status/3mw2fifalmjlqf56/branch/main?svg=true)](https://ci.appveyor.com/project/import-js/eslint-plugin-import/branch/main)
-[![npm](https://img.shields.io/npm/v/eslint-plugin-import.svg)](https://www.npmjs.com/package/eslint-plugin-import)
-[![npm downloads](https://img.shields.io/npm/dt/eslint-plugin-import.svg?maxAge=2592000)](https://www.npmtrends.com/eslint-plugin-import)
+[![GitHub Actions](https://github.com/un-es/eslint-plugin-import-x/workflows/CI/badge.svg)](https://github.com/un-es/eslint-plugin-import-x/actions/workflows/ci.yml)
+[![Codecov](https://img.shields.io/codecov/c/github/un-es/eslint-plugin-import-x.svg)](https://codecov.io/gh/un-es/eslint-plugin-import-x)
+[![type-coverage](https://img.shields.io/badge/dynamic/json.svg?label=type-coverage&prefix=%E2%89%A5&suffix=%&query=$.typeCoverage.atLeast&uri=https%3A%2F%2Fraw.githubusercontent.com%2Fun-ts%2Fsynckit%2Fmain%2Fpackage.json)](https://github.com/plantain-00/type-coverage)
+[![npm](https://img.shields.io/npm/v/eslint-plugin-import-x.svg)](https://www.npmjs.com/package/eslint-plugin-import-x)
+[![GitHub Release](https://img.shields.io/github/release/un-es/eslint-plugin-import-x)](https://github.com/un-es/eslint-plugin-import-x/releases)
+
+[![Conventional Commits](https://img.shields.io/badge/conventional%20commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+[![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![Code Style: Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
 This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, and prevent issues with misspelling of file paths and import names. All the goodness that the ES2015+ static module syntax intends to provide, marked up in your editor.
 
@@ -488,8 +492,3 @@ In Package Settings / SublimeLinter / User Settings:
 
 I believe this defaults to `3`, so you may not need to alter it depending on your
 project folder max depth.
-
-[codecov-image]: https://codecov.io/gh/import-js/eslint-plugin-import/branch/main/graphs/badge.svg
-[codecov-url]: https://app.codecov.io/gh/import-js/eslint-plugin-import/
-[actions-image]: https://img.shields.io/endpoint?url=https://github-actions-badge-u3jn4tfpocch.runkit.sh/import-js/eslint-plugin-import
-[actions-url]: https://github.com/import-js/eslint-plugin-import
