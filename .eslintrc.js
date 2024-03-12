@@ -56,6 +56,14 @@ module.exports = {
 
   overrides: [
     {
+      files: ['src/**/*.ts'],
+      settings: {
+        'import-x/resolver': {
+          typescript: true,
+        },
+      },
+    },
+    {
       files: 'test/**',
       env: {
         jest: true,

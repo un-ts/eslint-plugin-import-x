@@ -1,8 +1,10 @@
+import type { PluginConfig } from '../types'
+
 /**
  * Default settings for Electron applications.
  */
-module.exports = {
+export = {
   settings: {
     'import-x/core-modules': ['electron'],
   },
-}
+} satisfies PluginConfig

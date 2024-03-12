@@ -136,3 +136,7 @@ export const SYNTAX_CASES = [
     code: 'import { foo } from "./ignore.invalid.extension"',
   }),
 ]
+
+export const testCompiled = process.env.TEST_COMPILED === '1'
+
+export const srcDir = testCompiled ? 'lib' : 'src'

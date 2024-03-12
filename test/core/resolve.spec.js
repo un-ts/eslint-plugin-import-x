@@ -12,7 +12,7 @@ import * as utils from '../utils'
 
 describe('resolve', () => {
   it('throws on bad parameters', () => {
-    expect(resolve.bind(null, null, null)).toThrow(Error)
+    expect(resolve.bind(null, null, null)).toThrow()
   })
 
   it('resolves via a custom resolver with interface version 1', () => {

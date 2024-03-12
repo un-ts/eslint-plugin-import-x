@@ -1,12 +1,19 @@
 const path = require('path')
 const fs = require('fs')
 
-function isJSFile(f) {
-  return path.extname(f) === '.js'
+import { srcDir } from './utils'
+
+/**
+ * @param {string} f
+ * @returns {boolean}
+ */
+function isSourceFile(f) {
+  const ext = path.extname(f)
+  return ext === '.js' || (ext === '.ts' && !f.endsWith('.d.ts'))
 }
 
 describe('package', () => {
-  const pkg = path.resolve('src')
+  const pkg = path.resolve(srcDir)
 
   let module
 
@@ -22,7 +29,7 @@ describe('package', () => {
     fs.readdir(path.join(pkg, 'rules'), function (err, files) {
       expect(err).toBeFalsy()
 
-      files.filter(isJSFile).forEach(function (f) {
+      files.filter(isSourceFile).forEach(function (f) {
         expect(module.rules).toHaveProperty(path.basename(f, '.js'))
       })
 
@@ -31,16 +38,15 @@ describe('package', () => {
   })
 
   it('exports all configs', done => {
-    fs.readdir(path.resolve('src', 'config'), function (err, files) {
+    fs.readdir(path.resolve(srcDir, 'config'), function (err, files) {
       if (err) {
         done(err)
         return
       }
-      files.filter(isJSFile).forEach(file => {
-        if (file[0] === '.') {
-          return
-        }
-        expect(module.configs).toHaveProperty(path.basename(file, '.js'))
+      files.filter(isSourceFile).forEach(file => {
+        expect(module.configs).toHaveProperty(
+          path.basename(file, path.extname(file)),
+        )
       })
       done()
     })
@@ -53,7 +59,7 @@ describe('package', () => {
       for (const rule in module.configs[configFile].rules) {
         expect(() =>
           require(getRulePath(rule.slice(preamble.length))),
-        ).not.toThrow(Error)
+        ).not.toThrow()
       }
     }
 
