@@ -1,7 +1,7 @@
-import moduleVisitor, { makeOptionsSchema } from 'eslint-module-utils/moduleVisitor';
+import moduleVisitor, { makeOptionsSchema } from '../utils/moduleVisitor';
 import docsUrl from '../docsUrl';
 import { basename, dirname, relative } from 'path';
-import resolve from 'eslint-module-utils/resolve';
+import resolve from '../utils/resolve';
 
 import importType from '../core/importType';
 

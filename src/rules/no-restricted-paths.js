@@ -1,7 +1,7 @@
 import path from 'path';
 
-import resolve from 'eslint-module-utils/resolve';
-import moduleVisitor from 'eslint-module-utils/moduleVisitor';
+import resolve from '../utils/resolve';
+import moduleVisitor from '../utils/moduleVisitor';
 import isGlob from 'is-glob';
 import { Minimatch } from 'minimatch';
 import docsUrl from '../docsUrl';

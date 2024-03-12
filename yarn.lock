@@ -2192,14 +2192,6 @@ eslint-import-resolver-webpack@^0.13.8:
   version "0.0.0"
   uid ""
 
-eslint-module-utils@^2.8.0:
-  version "0.0.0"
-  uid ""
-
-"eslint-module-utils@link:./utils":
-  version "0.0.0"
-  uid ""
-
 eslint-plugin-eslint-plugin@^2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/eslint-plugin-eslint-plugin/-/eslint-plugin-eslint-plugin-2.3.0.tgz#1b6ffd13b74da5656e27106b79567b162984fc41"
@@ -2469,11 +2461,6 @@ formatio@1.2.0:
   integrity sha512-YAF05v8+XCxAyHOdiiAmHdgCVPrWO8X744fYIPtBciIorh5LndWfi1gjeJ16sTbJhzek9kd+j3YByhohtz5Wmg==
   dependencies:
     samsam "1.x"
-
-fs-copy-file-sync@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/fs-copy-file-sync/-/fs-copy-file-sync-1.1.1.tgz#11bf32c096c10d126e5f6b36d06eece776062918"
-  integrity sha512-2QY5eeqVv4m2PfyMiEuy9adxNP+ajf+8AR05cEi+OAzPcOj90hvFImeZhTmKLBgSd9EvG33jsD7ZRxsx9dThkQ==
 
 fs-readdir-recursive@^1.1.0:
   version "1.1.0"

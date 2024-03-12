@@ -1,4 +1,4 @@
-import resolve from 'eslint-module-utils/resolve';
+import resolve from '../utils/resolve';
 import semver from 'semver';
 import flatMap from 'array.prototype.flatmap';
 

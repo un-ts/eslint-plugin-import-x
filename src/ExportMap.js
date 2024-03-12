@@ -7,13 +7,13 @@ import debug from 'debug';
 
 import { SourceCode } from 'eslint';
 
-import parse from 'eslint-module-utils/parse';
-import visit from 'eslint-module-utils/visit';
-import resolve from 'eslint-module-utils/resolve';
-import isIgnored, { hasValidExtension } from 'eslint-module-utils/ignore';
+import parse from './utils/parse';
+import visit from './utils/visit';
+import resolve from './utils/resolve';
+import isIgnored, { hasValidExtension } from './utils/ignore';
 
-import { hashObject } from 'eslint-module-utils/hash';
-import * as unambiguous from 'eslint-module-utils/unambiguous';
+import { hashObject } from './utils/hash';
+import * as unambiguous from './utils/unambiguous';
 
 import { tsConfigLoader } from 'tsconfig-paths/lib/tsconfig-loader';
 

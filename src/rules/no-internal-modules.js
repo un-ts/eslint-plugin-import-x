@@ -1,8 +1,8 @@
 import minimatch from 'minimatch';
 
-import resolve from 'eslint-module-utils/resolve';
+import resolve from '../utils/resolve';
 import importType from '../core/importType';
-import moduleVisitor from 'eslint-module-utils/moduleVisitor';
+import moduleVisitor from '../utils/moduleVisitor';
 import docsUrl from '../docsUrl';
 
 module.exports = {

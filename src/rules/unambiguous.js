@@ -3,7 +3,7 @@
  * @author Ben Mosher
  */
 
-import { isModule } from 'eslint-module-utils/unambiguous';
+import { isModule } from '../utils/unambiguous';
 import docsUrl from '../docsUrl';
 
 module.exports = {

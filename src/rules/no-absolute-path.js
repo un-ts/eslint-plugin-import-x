@@ -1,5 +1,5 @@
 import path from 'path';
-import moduleVisitor, { makeOptionsSchema } from 'eslint-module-utils/moduleVisitor';
+import moduleVisitor, { makeOptionsSchema } from '../utils/moduleVisitor';
 import { isAbsolute } from '../core/importType';
 import docsUrl from '../docsUrl';
 

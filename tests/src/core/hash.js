@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import hashify, { hashArray, hashObject } from 'eslint-module-utils/hash';
+import hashify, { hashArray, hashObject } from '../../../src/utils/hash';
 
 const createHash = require('crypto').createHash;
 

@@ -9,7 +9,7 @@ import ExportMap from '../../../src/ExportMap';
 import * as fs from 'fs';
 
 import { getFilename } from '../utils';
-import { test as testUnambiguous } from 'eslint-module-utils/unambiguous';
+import { test as testUnambiguous } from '../../../src/utils/unambiguous';
 
 describe('ExportMap', function () {
   const fakeContext = Object.assign(

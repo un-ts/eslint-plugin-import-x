@@ -1,7 +1,7 @@
 import { isAbsolute as nodeIsAbsolute, relative, resolve as nodeResolve } from 'path';
 import isCoreModule from 'is-core-module';
 
-import resolve from 'eslint-module-utils/resolve';
+import resolve from '../utils/resolve';
 import { getContextPackagePath } from './packagePath';
 
 function baseModule(name) {

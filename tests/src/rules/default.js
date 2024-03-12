@@ -2,7 +2,7 @@ import path from 'path';
 import { test, testVersion, SYNTAX_CASES, parsers } from '../utils';
 import { RuleTester } from 'eslint';
 
-import { CASE_SENSITIVE_FS } from 'eslint-module-utils/resolve';
+import { CASE_SENSITIVE_FS } from '../../../src/utils/resolve';
 
 const ruleTester = new RuleTester();
 const rule = require('rules/default');

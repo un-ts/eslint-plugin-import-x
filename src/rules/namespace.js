@@ -1,4 +1,4 @@
-import declaredScope from 'eslint-module-utils/declaredScope';
+import declaredScope from '../utils/declaredScope';
 import Exports from '../ExportMap';
 import importDeclaration from '../importDeclaration';
 import docsUrl from '../docsUrl';

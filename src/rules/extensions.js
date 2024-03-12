@@ -1,8 +1,8 @@
 import path from 'path';
 
-import resolve from 'eslint-module-utils/resolve';
+import resolve from '../utils/resolve';
 import { isBuiltIn, isExternalModule, isScoped } from '../core/importType';
-import moduleVisitor from 'eslint-module-utils/moduleVisitor';
+import moduleVisitor from '../utils/moduleVisitor';
 import docsUrl from '../docsUrl';
 
 const enumValues = { enum: ['always', 'ignorePackages', 'never'] };

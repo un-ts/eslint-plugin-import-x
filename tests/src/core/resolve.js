@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import eslintPkg from 'eslint/package.json';
 import semver from 'semver';
 
-import resolve, { CASE_SENSITIVE_FS, fileExistsWithCaseSync } from 'eslint-module-utils/resolve';
+import resolve, { CASE_SENSITIVE_FS, fileExistsWithCaseSync } from '../../../src/utils/resolve';
 
 import * as path from 'path';
 import * as fs from 'fs';
@@ -112,7 +112,7 @@ describe('resolve', function () {
     )).to.equal(utils.testFilePath('./bar.jsx'));
   });
 
-  it('finds resolvers from the source files rather than eslint-module-utils', function () {
+  it('finds resolvers from the source files rather than ../../../src/utils', function () {
     const testContext = utils.testContext({ 'import-x/resolver': { foo: {} } });
 
     expect(resolve(
@@ -280,7 +280,7 @@ describe('resolve', function () {
       )).to.equal(utils.testFilePath('./bar.jsx'));
     });
 
-    it('finds resolvers from the source files rather than eslint-module-utils', function () {
+    it('finds resolvers from the source files rather than ../../../src/utils', function () {
       const testContext = utils.testContext({ 'import-x/resolver': { foo: {} } });
 
       expect(resolve(

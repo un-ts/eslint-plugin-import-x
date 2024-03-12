@@ -3,10 +3,10 @@
  * @author Ben Mosher
  */
 
-import resolve from 'eslint-module-utils/resolve';
+import resolve from '../utils/resolve';
 import Exports from '../ExportMap';
 import { isExternalModule } from '../core/importType';
-import moduleVisitor, { makeOptionsSchema } from 'eslint-module-utils/moduleVisitor';
+import moduleVisitor, { makeOptionsSchema } from '../utils/moduleVisitor';
 import docsUrl from '../docsUrl';
 
 const traversed = new Set();

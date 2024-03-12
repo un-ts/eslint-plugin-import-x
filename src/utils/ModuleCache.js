@@ -2,7 +2,7 @@
 
 exports.__esModule = true;
 
-const log = require('debug')('eslint-module-utils:ModuleCache');
+const log = require('debug')('eslint-plugin-import-x:utils:ModuleCache');
 
 /** @type {import('./ModuleCache').ModuleCache} */
 class ModuleCache {

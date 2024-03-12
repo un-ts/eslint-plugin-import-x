@@ -3,9 +3,9 @@
  * @author Thomas Grainger
  */
 
-import { getFileExtensions } from 'eslint-module-utils/ignore';
-import moduleVisitor from 'eslint-module-utils/moduleVisitor';
-import resolve from 'eslint-module-utils/resolve';
+import { getFileExtensions } from '../utils/ignore';
+import moduleVisitor from '../utils/moduleVisitor';
+import resolve from '../utils/resolve';
 import path from 'path';
 import docsUrl from '../docsUrl';
 

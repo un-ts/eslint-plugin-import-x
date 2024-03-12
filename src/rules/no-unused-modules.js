@@ -4,11 +4,11 @@
  * @author René Fermann
  */
 
-import { getFileExtensions } from 'eslint-module-utils/ignore';
-import resolve from 'eslint-module-utils/resolve';
-import visit from 'eslint-module-utils/visit';
+import { getFileExtensions } from '../utils/ignore';
+import resolve from '../utils/resolve';
+import visit from '../utils/visit';
 import { dirname, join } from 'path';
-import readPkgUp from 'eslint-module-utils/readPkgUp';
+import readPkgUp from '../utils/readPkgUp';
 import values from 'object.values';
 import includes from 'array-includes';
 import flatMap from 'array.prototype.flatmap';

@@ -3,8 +3,8 @@
  * @author Gio d'Amelio
  */
 
-import resolve from 'eslint-module-utils/resolve';
-import moduleVisitor from 'eslint-module-utils/moduleVisitor';
+import resolve from '../utils/resolve';
+import moduleVisitor from '../utils/moduleVisitor';
 import docsUrl from '../docsUrl';
 
 function isImportingSelf(context, node, requireName) {
