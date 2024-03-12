@@ -6,7 +6,6 @@ import {
 } from '../utils'
 
 import { RuleTester } from 'eslint'
-import flatMap from 'array.prototype.flatmap'
 
 const ruleTester = new RuleTester()
 const rule = require('rules/no-cycle')
@@ -65,7 +64,7 @@ ruleTester.run('no-cycle', rule, {
       },
     }),
 
-    flatMap(testDialects, testDialect =>
+    testDialects.flatMap(testDialect =>
       [
         test({
           code: `import { foo } from "./${testDialect}/depth-two"`,
@@ -158,85 +157,94 @@ ruleTester.run('no-cycle', rule, {
     }),
 
     // Ensure behavior does not change for those tests, with or without `
-    flatMap(testDialects, testDialect =>
-      flatMap([{}, { allowUnsafeDynamicCyclicDependency: true }], opts => [
-        test({
-          code: `import { foo } from "./${testDialect}/depth-one"`,
-          options: [{ ...opts }],
-          errors: [error(`Dependency cycle detected.`)],
-        }),
-        test({
-          code: `import { foo } from "./${testDialect}/depth-one"`,
-          options: [{ ...opts, maxDepth: 1 }],
-          errors: [error(`Dependency cycle detected.`)],
-        }),
-        test({
-          code: `const { foo } = require("./${testDialect}/depth-one")`,
-          errors: [error(`Dependency cycle detected.`)],
-          options: [{ ...opts, commonjs: true }],
-        }),
-        test({
-          code: `require(["./${testDialect}/depth-one"], d1 => {})`,
-          errors: [error(`Dependency cycle detected.`)],
-          options: [{ ...opts, amd: true }],
-        }),
-        test({
-          code: `define(["./${testDialect}/depth-one"], d1 => {})`,
-          errors: [error(`Dependency cycle detected.`)],
-          options: [{ ...opts, amd: true }],
-        }),
-        test({
-          code: `import { foo } from "./${testDialect}/depth-one-reexport"`,
-          options: [{ ...opts }],
-          errors: [error(`Dependency cycle detected.`)],
-        }),
-        test({
-          code: `import { foo } from "./${testDialect}/depth-two"`,
-          options: [{ ...opts }],
-          errors: [error(`Dependency cycle via ./depth-one:1`)],
-        }),
-        test({
-          code: `import { foo } from "./${testDialect}/depth-two"`,
-          options: [{ ...opts, maxDepth: 2 }],
-          errors: [error(`Dependency cycle via ./depth-one:1`)],
-        }),
-        test({
-          code: `const { foo } = require("./${testDialect}/depth-two")`,
-          errors: [error(`Dependency cycle via ./depth-one:1`)],
-          options: [{ ...opts, commonjs: true }],
-        }),
-        test({
-          code: `import { two } from "./${testDialect}/depth-three-star"`,
-          options: [{ ...opts }],
-          errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
-        }),
-        test({
-          code: `import one, { two, three } from "./${testDialect}/depth-three-star"`,
-          options: [{ ...opts }],
-          errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
-        }),
-        test({
-          code: `import { bar } from "./${testDialect}/depth-three-indirect"`,
-          options: [{ ...opts }],
-          errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
-        }),
-        test({
-          code: `import { bar } from "./${testDialect}/depth-three-indirect"`,
-          options: [{ ...opts }],
-          errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
-          parser: parsers.BABEL,
-        }),
-        test({
-          code: `import { foo } from "./${testDialect}/depth-two"`,
-          options: [{ ...opts, maxDepth: Infinity }],
-          errors: [error(`Dependency cycle via ./depth-one:1`)],
-        }),
-        test({
-          code: `import { foo } from "./${testDialect}/depth-two"`,
-          options: [{ ...opts, maxDepth: '∞' }],
-          errors: [error(`Dependency cycle via ./depth-one:1`)],
-        }),
-      ])
+    testDialects.flatMap(testDialect =>
+      [{}, { allowUnsafeDynamicCyclicDependency: true }]
+        .flatMap(opts => [
+          test({
+            code: `import { foo } from "./${testDialect}/depth-one"`,
+            options: [{ ...opts }],
+            errors: [error(`Dependency cycle detected.`)],
+          }),
+          test({
+            code: `import { foo } from "./${testDialect}/depth-one"`,
+            options: [{ ...opts, maxDepth: 1 }],
+            errors: [error(`Dependency cycle detected.`)],
+          }),
+          test({
+            code: `const { foo } = require("./${testDialect}/depth-one")`,
+            errors: [error(`Dependency cycle detected.`)],
+            options: [{ ...opts, commonjs: true }],
+          }),
+          test({
+            code: `require(["./${testDialect}/depth-one"], d1 => {})`,
+            errors: [error(`Dependency cycle detected.`)],
+            options: [{ ...opts, amd: true }],
+          }),
+          test({
+            code: `define(["./${testDialect}/depth-one"], d1 => {})`,
+            errors: [error(`Dependency cycle detected.`)],
+            options: [{ ...opts, amd: true }],
+          }),
+          test({
+            code: `import { foo } from "./${testDialect}/depth-one-reexport"`,
+            options: [{ ...opts }],
+            errors: [error(`Dependency cycle detected.`)],
+          }),
+          test({
+            code: `import { foo } from "./${testDialect}/depth-two"`,
+            options: [{ ...opts }],
+            errors: [error(`Dependency cycle via ./depth-one:1`)],
+          }),
+          test({
+            code: `import { foo } from "./${testDialect}/depth-two"`,
+            options: [{ ...opts, maxDepth: 2 }],
+            errors: [error(`Dependency cycle via ./depth-one:1`)],
+          }),
+          test({
+            code: `const { foo } = require("./${testDialect}/depth-two")`,
+            errors: [error(`Dependency cycle via ./depth-one:1`)],
+            options: [{ ...opts, commonjs: true }],
+          }),
+          test({
+            code: `import { two } from "./${testDialect}/depth-three-star"`,
+            options: [{ ...opts }],
+            errors: [
+              error(`Dependency cycle via ./depth-two:1=>./depth-one:1`),
+            ],
+          }),
+          test({
+            code: `import one, { two, three } from "./${testDialect}/depth-three-star"`,
+            options: [{ ...opts }],
+            errors: [
+              error(`Dependency cycle via ./depth-two:1=>./depth-one:1`),
+            ],
+          }),
+          test({
+            code: `import { bar } from "./${testDialect}/depth-three-indirect"`,
+            options: [{ ...opts }],
+            errors: [
+              error(`Dependency cycle via ./depth-two:1=>./depth-one:1`),
+            ],
+          }),
+          test({
+            code: `import { bar } from "./${testDialect}/depth-three-indirect"`,
+            options: [{ ...opts }],
+            errors: [
+              error(`Dependency cycle via ./depth-two:1=>./depth-one:1`),
+            ],
+            parser: parsers.BABEL,
+          }),
+          test({
+            code: `import { foo } from "./${testDialect}/depth-two"`,
+            options: [{ ...opts, maxDepth: Infinity }],
+            errors: [error(`Dependency cycle via ./depth-one:1`)],
+          }),
+          test({
+            code: `import { foo } from "./${testDialect}/depth-two"`,
+            options: [{ ...opts, maxDepth: '∞' }],
+            errors: [error(`Dependency cycle via ./depth-one:1`)],
+          }),
+        ])
         .concat([
           test({
             code: `import("./${testDialect}/depth-three-star")`,

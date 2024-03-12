@@ -1,6 +1,5 @@
 import resolve from '../utils/resolve'
 import semver from 'semver'
-import flatMap from 'array.prototype.flatmap'
 
 import docsUrl from '../docsUrl'
 
@@ -55,7 +54,7 @@ function getFix(first, rest, sourceCode, context) {
   }
 
   const defaultImportNames = new Set(
-    flatMap([].concat(first, rest || []), x => getDefaultImportName(x) || []),
+    [].concat(first, rest || []).flatMap(x => getDefaultImportName(x) || []),
   )
 
   // Bail if there are multiple different default import names – it's up to the

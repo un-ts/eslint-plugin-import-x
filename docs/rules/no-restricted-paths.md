@@ -55,8 +55,6 @@ The following patterns are not considered problems when configuration set to `{ 
 import baz from '../client/baz'
 ```
 
----
-
 Given the following folder structure:
 
 ```pt
@@ -99,8 +97,6 @@ The following pattern is not considered a problem:
 import b from './b'
 ```
 
----
-
 Given the following folder structure:
 
 ```pt
@@ -137,8 +133,6 @@ The following import is not considered a problem in `my-project/client/sub-modul
 ```js
 import b from './baz'
 ```
-
----
 
 Given the following folder structure:
 

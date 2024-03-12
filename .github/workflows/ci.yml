@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  ci:
+    name: Lint and Test with Node.js ${{ matrix.node }} on ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+        node:
+          - 18
+          - 20
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: yarn
+        env:
+          # https://github.com/actions/setup-node/issues/531#issuecomment-1819151412
+          SKIP_YARN_COREPACK_CHECK: 1
+
+      - name: Install Dependencies
+        run: yarn --immutable
+        env:
+          SKIP_YARN_COREPACK_CHECK: 1
+
+      - name: Build, Lint and Test
+        run: |
+          yarn build
+          yarn lint
+          yarn test
+        env:
+          EFF_NO_LINK_RULES: true
+          PARSER_NO_WATCH: true
+          SKIP_YARN_COREPACK_CHECK: 1
+
+      - name: Codecov
+        uses: codecov/codecov-action@v3

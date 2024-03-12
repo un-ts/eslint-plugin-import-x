@@ -4,7 +4,6 @@ import path from 'path'
 import fs from 'fs'
 
 import { RuleTester } from 'eslint'
-import flatMap from 'array.prototype.flatmap'
 
 const ruleTester = new RuleTester()
 const typescriptRuleTester = new RuleTester(typescriptConfig)
@@ -57,14 +56,16 @@ const {
 
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
-    ...flatMap(Object.keys(deps).concat(Object.keys(devDeps)), pkg => [
-      test({ code: `import "${pkg}"` }),
-      test({ code: `import foo, { bar } from "${pkg}"` }),
-      test({ code: `require("${pkg}")` }),
-      test({ code: `var foo = require("${pkg}")` }),
-      test({ code: `export { foo } from "${pkg}"` }),
-      test({ code: `export * from "${pkg}"` }),
-    ]),
+    ...Object.keys(deps)
+      .concat(Object.keys(devDeps))
+      .flatMap(pkg => [
+        test({ code: `import "${pkg}"` }),
+        test({ code: `import foo, { bar } from "${pkg}"` }),
+        test({ code: `require("${pkg}")` }),
+        test({ code: `var foo = require("${pkg}")` }),
+        test({ code: `export { foo } from "${pkg}"` }),
+        test({ code: `export * from "${pkg}"` }),
+      ]),
     test({ code: 'import "eslint"' }),
     test({ code: 'import "eslint/lib/api"' }),
     test({ code: 'import "fs"' }),

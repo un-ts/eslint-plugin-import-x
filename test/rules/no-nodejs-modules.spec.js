@@ -1,9 +1,8 @@
 import { test } from '../utils'
-
 import { RuleTester } from 'eslint'
-const isCore = require('is-core-module')
 
 const ruleTester = new RuleTester()
+
 const rule = require('rules/no-nodejs-modules')
 
 const error = message => ({
@@ -66,56 +65,46 @@ ruleTester.run('no-nodejs-modules', rule, {
         },
       ],
     }),
-    isCore('node:events')
-      ? [
-          test({
-            code: 'import events from "node:events"',
-            options: [
-              {
-                allow: ['node:events'],
-              },
-            ],
-          }),
-          test({
-            code: 'var events = require("node:events")',
-            options: [
-              {
-                allow: ['node:events'],
-              },
-            ],
-          }),
-        ]
-      : [],
-    isCore('node:path')
-      ? [
-          test({
-            code: 'import path from "node:path"',
-            options: [
-              {
-                allow: ['node:path'],
-              },
-            ],
-          }),
-          test({
-            code: 'var path = require("node:path")',
-            options: [
-              {
-                allow: ['node:path'],
-              },
-            ],
-          }),
-        ]
-      : [],
-    isCore('node:path') && isCore('node:events')
-      ? test({
-          code: 'import path from "node:path";import events from "node:events"',
-          options: [
-            {
-              allow: ['node:path', 'node:events'],
-            },
-          ],
-        })
-      : [],
+    test({
+      code: 'import events from "node:events"',
+      options: [
+        {
+          allow: ['node:events'],
+        },
+      ],
+    }),
+    test({
+      code: 'var events = require("node:events")',
+      options: [
+        {
+          allow: ['node:events'],
+        },
+      ],
+    }),
+    test({
+      code: 'import path from "node:path"',
+      options: [
+        {
+          allow: ['node:path'],
+        },
+      ],
+    }),
+    test({
+      code: 'var path = require("node:path")',
+      options: [
+        {
+          allow: ['node:path'],
+        },
+      ],
+    }),
+    test({
+      code: 'import path from "node:path";import events from "node:events"',
+      options: [
+        {
+          allow: ['node:path', 'node:events'],
+        },
+      ],
+    }),
   ),
   invalid: [].concat(
     test({
@@ -143,38 +132,30 @@ ruleTester.run('no-nodejs-modules', rule, {
       ],
       errors: [error('Do not import Node.js builtin module "fs"')],
     }),
-    isCore('node:path')
-      ? [
-          test({
-            code: 'import path from "node:path"',
-            errors: [error('Do not import Node.js builtin module "node:path"')],
-          }),
-          test({
-            code: 'var path = require("node:path")',
-            errors: [error('Do not import Node.js builtin module "node:path"')],
-          }),
-        ]
-      : [],
-    isCore('node:fs')
-      ? [
-          test({
-            code: 'import fs from "node:fs"',
-            errors: [error('Do not import Node.js builtin module "node:fs"')],
-          }),
-          test({
-            code: 'var fs = require("node:fs")',
-            errors: [error('Do not import Node.js builtin module "node:fs"')],
-          }),
-          test({
-            code: 'import fs from "node:fs"',
-            options: [
-              {
-                allow: ['node:path'],
-              },
-            ],
-            errors: [error('Do not import Node.js builtin module "node:fs"')],
-          }),
-        ]
-      : [],
+    test({
+      code: 'import path from "node:path"',
+      errors: [error('Do not import Node.js builtin module "node:path"')],
+    }),
+    test({
+      code: 'var path = require("node:path")',
+      errors: [error('Do not import Node.js builtin module "node:path"')],
+    }),
+    test({
+      code: 'import fs from "node:fs"',
+      errors: [error('Do not import Node.js builtin module "node:fs"')],
+    }),
+    test({
+      code: 'var fs = require("node:fs")',
+      errors: [error('Do not import Node.js builtin module "node:fs"')],
+    }),
+    test({
+      code: 'import fs from "node:fs"',
+      options: [
+        {
+          allow: ['node:path'],
+        },
+      ],
+      errors: [error('Do not import Node.js builtin module "node:fs"')],
+    }),
   ),
 })

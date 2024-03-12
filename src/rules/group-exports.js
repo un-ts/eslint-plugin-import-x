@@ -1,6 +1,4 @@
 import docsUrl from '../docsUrl'
-import values from 'object.values'
-import flat from 'array.prototype.flat'
 
 const meta = {
   type: 'suggestion',
@@ -114,17 +112,18 @@ function create(context) {
       }
 
       // Report multiple `aggregated exports` from the same module (ES2015 modules)
-      flat(
-        values(nodes.modules.sources).filter(
+      Object.values(nodes.modules.sources)
+        .filter(
           nodesWithSource =>
             Array.isArray(nodesWithSource) && nodesWithSource.length > 1,
-        ),
-      ).forEach(node => {
-        context.report({
-          node,
-          message: errors[node.type],
+        )
+        .flat()
+        .forEach(node => {
+          context.report({
+            node,
+            message: errors[node.type],
+          })
         })
-      })
 
       // Report multiple `export type` declarations (FLOW ES2015 modules)
       if (nodes.types.set.size > 1) {
@@ -137,17 +136,18 @@ function create(context) {
       }
 
       // Report multiple `aggregated type exports` from the same module (FLOW ES2015 modules)
-      flat(
-        values(nodes.types.sources).filter(
+      Object.values(nodes.types.sources)
+        .filter(
           nodesWithSource =>
             Array.isArray(nodesWithSource) && nodesWithSource.length > 1,
-        ),
-      ).forEach(node => {
-        context.report({
-          node,
-          message: errors[node.type],
+        )
+        .flat()
+        .forEach(node => {
+          context.report({
+            node,
+            message: errors[node.type],
+          })
         })
-      })
 
       // Report multiple `module.exports` assignments (CommonJS)
       if (nodes.commonjs.set.size > 1) {
