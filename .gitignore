@@ -19,16 +19,6 @@ coverage
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
-# Copied from ./LICENSE for the npm module releases
-memo-parser/LICENSE
-resolvers/node/LICENSE
-resolvers/webpack/LICENSE
-utils/LICENSE
-memo-parser/.npmrc
-resolvers/node/.npmrc
-resolvers/webpack/.npmrc
-utils/.npmrc
-
 # Dependency directory
 # Commenting this out is preferred by some people, see
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git-
@@ -44,11 +34,6 @@ node_modules
 # generated output
 lib/
 **/.nyc_output/
-
-# Only apps should have lockfiles
-yarn.lock
-package-lock.json
-npm-shrinkwrap.json
 
 # macOS
 .DS_Store

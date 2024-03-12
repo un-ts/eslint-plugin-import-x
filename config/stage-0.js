@@ -5,8 +5,8 @@
  * @type {Object}
  */
 module.exports = {
-  plugins: ['import'],
+  plugins: ['import-x'],
   rules: {
-    'import/no-deprecated': 1,
+    'import-x/no-deprecated': 1,
   },
-};
+}

@@ -1,0 +1,5 @@
+{
+  "rules": {
+    "import-x/no-cycle": 0
+  }
+}

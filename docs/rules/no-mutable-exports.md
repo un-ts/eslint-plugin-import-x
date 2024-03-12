@@ -1,4 +1,4 @@
-# import/no-mutable-exports
+# import-x/no-mutable-exports
 
 <!-- end auto-generated rule header -->
 
@@ -43,8 +43,8 @@ export function getCount() {} // reported here: exported function is reassigned 
 To prevent general reassignment of these identifiers, exported or not, you may
 want to enable the following core ESLint rules:
 
- - [no-func-assign]
- - [no-class-assign]
+- [no-func-assign]
+- [no-class-assign]
 
 [no-func-assign]: https://eslint.org/docs/rules/no-func-assign
 [no-class-assign]: https://eslint.org/docs/rules/no-class-assign

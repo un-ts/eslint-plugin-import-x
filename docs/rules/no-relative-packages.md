@@ -1,4 +1,4 @@
-# import/no-relative-packages
+# import-x/no-relative-packages
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -31,7 +31,7 @@ And the .eslintrc file:
 {
   ...
   "rules": {
-    "import/no-relative-packages": "error"
+    "import-x/no-relative-packages": "error"
   }
 }
 ```
@@ -43,14 +43,14 @@ The following patterns are considered problems:
  *  in my-project/packages/foo.js
  */
 
-import bar from '../bar'; // Import sibling package using relative path
-import entry from '../../entry.js'; // Import from parent package using relative path
+import bar from '../bar' // Import sibling package using relative path
+import entry from '../../entry.js' // Import from parent package using relative path
 
 /**
  *  in my-project/entry.js
  */
 
-import bar from './packages/bar'; // Import child package using relative path
+import bar from './packages/bar' // Import child package using relative path
 ```
 
 The following patterns are NOT considered problems:
@@ -60,11 +60,11 @@ The following patterns are NOT considered problems:
  *  in my-project/packages/foo.js
  */
 
-import bar from 'bar'; // Import sibling package using package name
+import bar from 'bar' // Import sibling package using package name
 
 /**
  *  in my-project/entry.js
  */
 
-import bar from 'bar'; // Import sibling package using package name
+import bar from 'bar' // Import sibling package using package name
 ```

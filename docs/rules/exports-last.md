@@ -1,4 +1,4 @@
-# import/exports-last
+# import-x/exports-last
 
 <!-- end auto-generated rule header -->
 

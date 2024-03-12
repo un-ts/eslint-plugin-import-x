@@ -1,4 +1,4 @@
-# import/no-deprecated
+# import-x/no-deprecated
 
 <!-- end auto-generated rule header -->
 
@@ -43,20 +43,20 @@ export function multiply(six, nine) {
 ```
 
 Only JSDoc is enabled by default. Other documentation styles can be enabled with
-the `import/docstyle` setting.
+the `import-x/docstyle` setting.
 
 ```yaml
 # .eslintrc.yml
 settings:
-  import/docstyle: ['jsdoc', 'tomdoc']
+  import-x/docstyle: ['jsdoc', 'tomdoc']
 ```
 
 ## Worklist
 
- - [x] report explicit imports on the import node
- - [x] support namespaces
-   - [x] should bubble up through deep namespaces (#157)
- - [x] report explicit imports at reference time (at the identifier) similar to namespace
- - [x] mark module deprecated if file JSDoc has a @deprecated tag?
- - [ ] don't flag redeclaration of imported, deprecated names
- - [ ] flag destructuring
+- [x] report explicit imports on the import node
+- [x] support namespaces
+  - [x] should bubble up through deep namespaces (#157)
+- [x] report explicit imports at reference time (at the identifier) similar to namespace
+- [x] mark module deprecated if file JSDoc has a @deprecated tag?
+- [ ] don't flag redeclaration of imported, deprecated names
+- [ ] flag destructuring
