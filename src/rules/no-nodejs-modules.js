@@ -1,6 +1,6 @@
 import importType from '../core/importType'
-import moduleVisitor from '../utils/moduleVisitor'
-import docsUrl from '../docsUrl'
+import { moduleVisitor } from '../utils/moduleVisitor'
+import { docsUrl } from '../docs-url'
 
 function reportIfMissing(context, node, allowed, name) {
   if (allowed.indexOf(name) === -1 && importType(name, context) === 'builtin') {

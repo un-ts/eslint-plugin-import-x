@@ -64,7 +64,9 @@ describe('CLI regression tests', () => {
               './test/fixtures/just-json-files/.eslintrc.json',
             rulePaths: ['./src/rules'],
             ignore: false,
-            plugins: { 'eslint-plugin-import': importPlugin },
+            plugins: {
+              'eslint-plugin-import-x': importPlugin,
+            },
           })
         } else {
           cli = new CLIEngine({
@@ -73,7 +75,7 @@ describe('CLI regression tests', () => {
             rulePaths: ['./src/rules'],
             ignore: false,
           })
-          cli.addPlugin('eslint-plugin-import', importPlugin)
+          cli.addPlugin('eslint-plugin-import-x', importPlugin)
         }
       }
     })

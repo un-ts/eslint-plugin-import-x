@@ -1,10 +1,10 @@
 import path from 'path'
-import readPkgUp from '../utils/readPkgUp'
+import { readPkgUp } from '../utils/readPkgUp'
 
-import resolve from '../utils/resolve'
-import moduleVisitor, { makeOptionsSchema } from '../utils/moduleVisitor'
+import { resolve } from '../utils/resolve'
+import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
 import importType from '../core/importType'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 /** @param {string} filePath */
 function toPosixPath(filePath) {

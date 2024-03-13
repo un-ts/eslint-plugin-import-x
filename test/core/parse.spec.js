@@ -210,7 +210,13 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
       parse.bind(null, path, content, {
         settings: { 'import-x/parsers': { [parseStubParserPath]: ['.js'] } },
         parserPath: null,
-        languageOptions: { parser: { parse() {} } },
+        languageOptions: {
+          parser: {
+            parse() {
+              //
+            },
+          },
+        },
       }),
     ).not.toThrow()
     // custom parser to be called once

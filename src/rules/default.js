@@ -1,5 +1,5 @@
 import Exports from '../ExportMap'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 module.exports = {
   meta: {

@@ -9,9 +9,9 @@ import type { PluginConfig } from '../types'
 // Omit `.d.ts` because 1) TypeScript compilation already confirms that
 // types are resolved, and 2) it would mask an unresolved
 // `.ts`/`.tsx`/`.js`/`.jsx` implementation.
-const typeScriptExtensions = ['.ts', '.tsx']
+const typeScriptExtensions = ['.ts', '.tsx'] as const
 
-const allExtensions = [...typeScriptExtensions, '.js', '.jsx']
+const allExtensions = [...typeScriptExtensions, '.js', '.jsx'] as const
 
 export = {
   settings: {

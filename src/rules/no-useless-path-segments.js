@@ -4,10 +4,10 @@
  */
 
 import { getFileExtensions } from '../utils/ignore'
-import moduleVisitor from '../utils/moduleVisitor'
-import resolve from '../utils/resolve'
+import { moduleVisitor } from '../utils/moduleVisitor'
+import { resolve } from '../utils/resolve'
 import path from 'path'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 /**
  * convert a potentially relative path from node utils into a true

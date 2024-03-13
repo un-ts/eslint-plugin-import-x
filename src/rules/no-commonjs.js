@@ -3,7 +3,7 @@
  * @author Jamund Ferguson
  */
 
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 const EXPORT_MESSAGE = 'Expected "export" or "export default"'
 const IMPORT_MESSAGE = 'Expected "import" instead of "require()"'

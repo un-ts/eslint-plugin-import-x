@@ -1,9 +1,9 @@
 import path from 'path'
 
-import resolve from '../utils/resolve'
+import { resolve } from '../utils/resolve'
 import { isBuiltIn, isExternalModule, isScoped } from '../core/importType'
-import moduleVisitor from '../utils/moduleVisitor'
-import docsUrl from '../docsUrl'
+import { moduleVisitor } from '../utils/moduleVisitor'
+import { docsUrl } from '../docs-url'
 
 const enumValues = { enum: ['always', 'ignorePackages', 'never'] }
 const patternProperties = {

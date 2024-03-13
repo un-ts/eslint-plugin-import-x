@@ -1,12 +1,12 @@
-import type { Linter } from 'eslint'
 import type { TsResolverOptions } from 'eslint-import-resolver-typescript'
 import type { KebabCase, LiteralUnion } from 'type-fest'
 import type { ResolveOptions } from 'enhanced-resolve'
 
 import type { PluginName } from './utils'
+import { TSESLint } from '@typescript-eslint/utils'
 
 export interface NodeResolverOptions {
-  extensions?: string[]
+  extensions?: readonly string[]
   moduleDirectory?: string[]
   paths?: string[]
 }
@@ -19,10 +19,14 @@ export interface WebpackResolverOptions {
 }
 
 export interface ImportSettings {
+  cache?: {
+    lifetime: number | '∞' | 'Infinity'
+  }
   coreModules?: string[]
-  extensions?: string[]
+  extensions?: ReadonlyArray<`.${string}`>
   externalModuleFolders?: string[]
-  parsers?: Record<string, string[]>
+  parsers?: boolean | Record<string, string[]>
+  resolve?: NodeResolverOptions
   resolver?:
     | LiteralUnion<'node' | 'typescript' | 'webpack', string>
     | {
@@ -32,14 +36,16 @@ export interface ImportSettings {
       }
 }
 
-export type WithPluginName<T extends object> = {
-  [K in keyof T as `${PluginName}/${KebabCase<K & string>}`]: T[K]
-}
+export type WithPluginName<T extends string | object> = T extends string
+  ? `${PluginName}/${KebabCase<T>}`
+  : {
+      [K in keyof T as WithPluginName<`${KebabCase<K & string>}`>]: T[K]
+    }
 
 export type PluginSettings = WithPluginName<ImportSettings>
 
-export interface PluginConfig extends Linter.Config {
+export interface PluginConfig extends TSESLint.Linter.Config {
   plugins?: [PluginName]
   settings?: PluginSettings
-  rules?: Record<`${PluginName}/${string}`, Linter.RuleEntry>
+  rules?: Record<`${PluginName}/${string}`, TSESLint.Linter.RuleEntry>
 }

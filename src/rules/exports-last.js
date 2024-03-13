@@ -1,4 +1,4 @@
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 function isNonExportStatement({ type }) {
   return (

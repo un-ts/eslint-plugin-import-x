@@ -1,5 +1,10 @@
+import type { PluginConfig } from './types'
+
+import noUnresolved from './rules/no-unresolved'
+import { TSESLint } from '@typescript-eslint/utils'
+
 export const rules = {
-  'no-unresolved': require('./rules/no-unresolved'),
+  'no-unresolved': noUnresolved,
   named: require('./rules/named'),
   default: require('./rules/default'),
   namespace: require('./rules/namespace'),
@@ -52,7 +57,7 @@ export const rules = {
 
   // deprecated aliases to rules
   'imports-first': require('./rules/imports-first'),
-}
+} satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
 export const configs = {
   recommended: require('./config/recommended'),
@@ -68,4 +73,4 @@ export const configs = {
   'react-native': require('./config/react-native'),
   electron: require('./config/electron'),
   typescript: require('./config/typescript'),
-}
+} satisfies Record<string, PluginConfig>

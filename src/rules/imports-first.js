@@ -1,4 +1,4 @@
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 const first = require('./first')
 

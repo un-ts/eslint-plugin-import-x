@@ -1,5 +1,6 @@
 import pkg from '../../package.json'
-import docsUrl from '../../src/docsUrl'
+
+import { docsUrl } from '../../src/docs-url'
 
 describe('docsUrl', () => {
   it('returns the rule documentation URL when given a rule name', () => {

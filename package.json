@@ -33,6 +33,7 @@
     "build": "rimraf lib && tsc -p src",
     "lint": "yarn lint:es && yarn update:eslint-docs --check",
     "lint:es": "eslint . --cache",
+    "prepare": "patch-package",
     "release": "changeset publish",
     "test": "jest",
     "test-compiled": "yarn build && cross-env TEST_COMPILED=1 jest",
@@ -43,6 +44,7 @@
     "eslint": "^7.2.0 || ^8"
   },
   "dependencies": {
+    "@typescript-eslint/utils": "^5.62.0",
     "debug": "^4.3.4",
     "doctrine": "^3.0.0",
     "eslint-import-resolver-node": "^0.3.9",
@@ -70,8 +72,11 @@
     "@test-scope/some-module": "link:./test/fixtures/symlinked-module",
     "@types/eslint": "^8.56.5",
     "@types/jest": "^29.5.12",
-    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@types/json-schema": "^7.0.15",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
+    "@typescript-eslint/typescript-estree": "^5.62.0",
+    "@unts/patch-package": "^8.0.0",
     "cross-env": "^7.0.3",
     "enhanced-resolve": "^5.16.0",
     "escope": "^4.0.0",
@@ -92,6 +97,6 @@
     "rimraf": "^5.0.5",
     "svelte": "^4.2.12",
     "type-fest": "^4.12.0",
-    "typescript": "^5.4.2"
+    "typescript": "~5.1.0"
   }
 }

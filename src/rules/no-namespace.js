@@ -4,7 +4,7 @@
  */
 
 import { minimatch } from 'minimatch'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 //------------------------------------------------------------------------------
 // Rule Definition

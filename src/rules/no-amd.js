@@ -3,7 +3,7 @@
  * @author Jamund Ferguson
  */
 
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 //------------------------------------------------------------------------------
 // Rule Definition

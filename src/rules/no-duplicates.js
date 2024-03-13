@@ -1,7 +1,7 @@
-import resolve from '../utils/resolve'
+import { resolve } from '../utils/resolve'
 import semver from 'semver'
 
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 let typescriptPkg
 try {

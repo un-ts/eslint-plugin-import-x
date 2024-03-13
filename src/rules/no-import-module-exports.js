@@ -1,6 +1,6 @@
 import { minimatch } from 'minimatch'
 import path from 'path'
-import pkgUp from '../utils/pkgUp'
+import { pkgUp } from '../utils/pkgUp'
 
 function getEntryPoint(context) {
   const pkgPath = pkgUp({

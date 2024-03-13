@@ -3,7 +3,7 @@
  * @author Duncan Beevers
  */
 
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 const hasOwn = Function.bind.bind(Function.prototype.call)(
   Object.prototype.hasOwnProperty,

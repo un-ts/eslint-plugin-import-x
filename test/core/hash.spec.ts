@@ -1,8 +1,8 @@
-import hashify, { hashArray, hashObject } from '../../src/utils/hash'
+import { type Hash, createHash } from 'crypto'
 
-const createHash = require('crypto').createHash
+import { hashify, hashArray, hashObject } from '../../src/utils/hash'
 
-function expectHash(actualHash, expectedString) {
+function expectHash(actualHash: Hash, expectedString: string) {
   const expectedHash = createHash('sha256')
   expectedHash.update(expectedString)
   // to be a hex digest of sha256 hash of string <${expectedString}>

@@ -1,3 +1,6 @@
+/**
+ * @type {import('eslint').Linter.Config}
+ */
 module.exports = {
   root: true,
   plugins: ['eslint-plugin', 'import-x'],
@@ -18,6 +21,7 @@ module.exports = {
     ecmaVersion: 2020,
   },
   rules: {
+    '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-var-requires': 'off',
 
     'eslint-plugin/consistent-output': ['error', 'always'],
@@ -56,7 +60,8 @@ module.exports = {
 
   overrides: [
     {
-      files: ['src/**/*.ts'],
+      files: ['*.js', '*.ts'],
+      excludedFiles: ['test/fixtures'],
       settings: {
         'import-x/resolver': {
           typescript: true,

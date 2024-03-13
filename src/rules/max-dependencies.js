@@ -1,5 +1,5 @@
-import moduleVisitor from '../utils/moduleVisitor'
-import docsUrl from '../docsUrl'
+import { moduleVisitor } from '../utils/moduleVisitor'
+import { docsUrl } from '../docs-url'
 
 const DEFAULT_MAX = 10
 const DEFAULT_IGNORE_TYPE_IMPORTS = false

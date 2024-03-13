@@ -30,7 +30,7 @@ describe('package', () => {
       expect(err).toBeFalsy()
 
       files.filter(isSourceFile).forEach(function (f) {
-        expect(module.rules).toHaveProperty(path.basename(f, '.js'))
+        expect(module.rules).toHaveProperty(path.basename(f, path.extname(f)))
       })
 
       done()

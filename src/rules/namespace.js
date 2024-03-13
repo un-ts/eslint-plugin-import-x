@@ -1,7 +1,7 @@
 import declaredScope from '../utils/declaredScope'
 import Exports from '../ExportMap'
-import importDeclaration from '../importDeclaration'
-import docsUrl from '../docsUrl'
+import { importDeclaration } from '../import-declaration'
+import { docsUrl } from '../docs-url'
 
 function processBodyStatement(context, namespaces, declaration) {
   if (declaration.type !== 'ImportDeclaration') {

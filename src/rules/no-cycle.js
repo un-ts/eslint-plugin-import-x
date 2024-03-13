@@ -3,11 +3,11 @@
  * @author Ben Mosher
  */
 
-import resolve from '../utils/resolve'
+import { resolve } from '../utils/resolve'
 import Exports from '../ExportMap'
 import { isExternalModule } from '../core/importType'
-import moduleVisitor, { makeOptionsSchema } from '../utils/moduleVisitor'
-import docsUrl from '../docsUrl'
+import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
+import { docsUrl } from '../docs-url'
 
 const traversed = new Set()
 

@@ -5,7 +5,7 @@ import {
 } from 'path'
 
 import { isCoreModule } from '../utils/is-core-module'
-import resolve from '../utils/resolve'
+import { resolve } from '../utils/resolve'
 import { getContextPackagePath } from './packagePath'
 
 function baseModule(name) {

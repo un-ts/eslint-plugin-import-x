@@ -1,32 +1,62 @@
 'use strict'
 
-exports.__esModule = true
+import fs from 'fs'
+import module from 'module'
+import path from 'path'
 
-const fs = require('fs')
-const { createRequire } = require('module')
-const path = require('path')
+import type { TSESLint } from '@typescript-eslint/utils'
 
-const hashObject = require('./hash').hashObject
-const ModuleCache = require('./ModuleCache').default
-const pkgDir = require('./pkgDir').default
+import { ImportSettings, PluginSettings } from '../types'
 
-const CASE_SENSITIVE_FS = !fs.existsSync(
+import { hashObject } from './hash'
+import { ModuleCache } from './ModuleCache'
+
+import { pkgDir } from './pkgDir'
+
+export type ResultNotFound = { found: false; path?: undefined }
+
+export type ResultFound = { found: true; path: string | null }
+
+export type ResolvedResult = ResultNotFound | ResultFound
+
+export type ResolverResolve = (
+  modulePath: string,
+  sourceFile: string,
+  config: unknown,
+) => ResolvedResult
+
+export type ResolverResolveImport = (
+  modulePath: string,
+  sourceFile: string,
+  config: unknown,
+) => string | undefined
+
+export type Resolver = {
+  interfaceVersion?: 1 | 2
+  resolve: ResolverResolve
+  resolveImport: ResolverResolveImport
+}
+
+export const CASE_SENSITIVE_FS = !fs.existsSync(
   path.join(__dirname.toUpperCase(), 'reSOLVE.js'),
 )
-exports.CASE_SENSITIVE_FS = CASE_SENSITIVE_FS
 
 const ERROR_NAME = 'EslintPluginImportResolveError'
 
 const fileExistsCache = new ModuleCache()
 
-/** @type {<T extends string>(target: T, sourceFile?: string | null | undefined) => undefined | ReturnType<typeof require>} */
-function tryRequire(target, sourceFile) {
+function tryRequire<T>(
+  target: string,
+  sourceFile?: string | null,
+): undefined | T {
   let resolved
   try {
     // Check if the target exists
     if (sourceFile != null) {
       try {
-        resolved = createRequire(path.resolve(sourceFile)).resolve(target)
+        resolved = module
+          .createRequire(path.resolve(sourceFile))
+          .resolve(target)
       } catch (e) {
         resolved = require.resolve(target)
       }
@@ -43,12 +73,11 @@ function tryRequire(target, sourceFile) {
 }
 
 // https://stackoverflow.com/a/27382838
-/** @type {import('./resolve').fileExistsWithCaseSync} */
-exports.fileExistsWithCaseSync = function fileExistsWithCaseSync(
-  filepath,
-  cacheSettings,
-  strict,
-) {
+export function fileExistsWithCaseSync(
+  filepath: string | null,
+  cacheSettings: ImportSettings['cache'],
+  strict?: boolean,
+): boolean {
   // don't care if the FS is case-sensitive
   if (CASE_SENSITIVE_FS) {
     return true
@@ -64,7 +93,7 @@ exports.fileExistsWithCaseSync = function fileExistsWithCaseSync(
   const parsedPath = path.parse(filepath)
   const dir = parsedPath.dir
 
-  let result = fileExistsCache.get(filepath, cacheSettings)
+  let result = fileExistsCache.get<boolean>(filepath, cacheSettings)
   if (result != null) {
     return result
   }
@@ -84,11 +113,14 @@ exports.fileExistsWithCaseSync = function fileExistsWithCaseSync(
   return result
 }
 
-/** @type {import('./types').ESLintSettings | null} */
-let prevSettings = null
+let prevSettings: PluginSettings | null = null
 let memoizedHash = ''
-/** @type {(modulePath: string, sourceFile: string, settings: import('./types').ESLintSettings) => import('./resolve').ResolvedResult} */
-function fullResolve(modulePath, sourceFile, settings) {
+
+function fullResolve(
+  modulePath: string,
+  sourceFile: string,
+  settings: PluginSettings,
+) {
   // check if this is a bonus core module
   const coreSet = new Set(settings['import-x/core-modules'])
   if (coreSet.has(modulePath)) {
@@ -106,18 +138,16 @@ function fullResolve(modulePath, sourceFile, settings) {
 
   const cacheSettings = ModuleCache.getSettings(settings)
 
-  const cachedPath = fileExistsCache.get(cacheKey, cacheSettings)
+  const cachedPath = fileExistsCache.get<string | null>(cacheKey, cacheSettings)
   if (cachedPath !== undefined) {
     return { found: true, path: cachedPath }
   }
 
-  /** @type {(resolvedPath: string | null) => void} */
-  function cache(resolvedPath) {
+  function cache(resolvedPath: string | null) {
     fileExistsCache.set(cacheKey, resolvedPath)
   }
 
-  /** @type {(resolver: import('./resolve').Resolver, config: unknown) => import('./resolve').ResolvedResult} */
-  function withResolver(resolver, config) {
+  function withResolver(resolver: Resolver, config: unknown) {
     if (resolver.interfaceVersion === 2) {
       return resolver.resolve(modulePath, sourceFile, config)
     }
@@ -150,7 +180,7 @@ function fullResolve(modulePath, sourceFile, settings) {
     }
 
     // else, counts
-    cache(resolved.path)
+    cache(resolved.path as string | null)
     return resolved
   }
 
@@ -160,13 +190,18 @@ function fullResolve(modulePath, sourceFile, settings) {
 }
 
 /** @type {import('./resolve').relative} */
-function relative(modulePath, sourceFile, settings) {
+export function relative(
+  modulePath: string,
+  sourceFile: string,
+  settings: PluginSettings,
+) {
   return fullResolve(modulePath, sourceFile, settings).path
 }
-exports.relative = relative
 
-/** @type {<T extends Map<string, unknown>>(resolvers: string[] | string | { [k: string]: string }, map: T) => T} */
-function resolverReducer(resolvers, map) {
+function resolverReducer(
+  resolvers: string[] | string | Record<string, unknown>,
+  map: Map<string, unknown>,
+) {
   if (Array.isArray(resolvers)) {
     resolvers.forEach(r => resolverReducer(r, map))
     return map
@@ -189,13 +224,11 @@ function resolverReducer(resolvers, map) {
   throw err
 }
 
-/** @type {(sourceFile: string) => string} */
-function getBaseDir(sourceFile) {
+function getBaseDir(sourceFile: string): string {
   return pkgDir(sourceFile) || process.cwd()
 }
 
-/** @type {(name: string, sourceFile: string) => import('./resolve').Resolver} */
-function requireResolver(name, sourceFile) {
+function requireResolver(name: string, sourceFile: string) {
   // Try to resolve package with conventional name
   const resolver =
     tryRequire(`eslint-import-resolver-${name}`, sourceFile) ||
@@ -216,8 +249,7 @@ function requireResolver(name, sourceFile) {
   return resolver
 }
 
-/** @type {(resolver: object) => resolver is import('./resolve').Resolver} */
-function isResolverValid(resolver) {
+function isResolverValid(resolver: object): resolver is Resolver {
   if ('interfaceVersion' in resolver && resolver.interfaceVersion === 2) {
     return (
       'resolve' in resolver &&
@@ -232,17 +264,20 @@ function isResolverValid(resolver) {
   )
 }
 
-/** @type {Set<import('eslint').Rule.RuleContext>} */
-const erroredContexts = new Set()
+const erroredContexts = new Set<
+  TSESLint.RuleContext<string, readonly unknown[]>
+>()
 
 /**
  * Given
  * @param p - module path
  * @param context - ESLint context
  * @return - the full module filesystem path; null if package is core; undefined if not found
- * @type {import('./resolve').default}
  */
-function resolve(p, context) {
+export function resolve(
+  p: string,
+  context: TSESLint.RuleContext<string, readonly unknown[]>,
+) {
   try {
     return relative(
       p,
@@ -252,17 +287,16 @@ function resolve(p, context) {
       context.settings,
     )
   } catch (err) {
+    const error = err as Error
     if (!erroredContexts.has(context)) {
       // The `err.stack` string starts with `err.name` followed by colon and `err.message`.
       // We're filtering out the default `err.name` because it adds little value to the message.
-      // @ts-expect-error this might be an Error
-      let errMessage = err.message
-      // @ts-expect-error this might be an Error
-      if (err.name !== ERROR_NAME && err.stack) {
-        // @ts-expect-error this might be an Error
-        errMessage = err.stack.replace(/^Error: /, '')
+      let errMessage = error.message
+      if (error.name !== ERROR_NAME && error.stack) {
+        errMessage = error.stack.replace(/^Error: /, '')
       }
       context.report({
+        // @ts-expect-error - report without messageId
         message: `Resolve error: ${errMessage}`,
         loc: { line: 1, column: 0 },
       })
@@ -270,5 +304,3 @@ function resolve(p, context) {
     }
   }
 }
-resolve.relative = relative
-exports.default = resolve
