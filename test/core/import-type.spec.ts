@@ -6,7 +6,6 @@ import {
   isScoped,
   isAbsolute,
 } from '../../src/core/importType'
-
 import { isCoreModule } from '../../src/utils/is-core-module'
 import { testContext, testFilePath } from '../utils'
 
@@ -331,9 +330,7 @@ describe('importType(name)', () => {
         'foo',
         'E:\\path\\to\\node_modules\\foo',
         testContext({
-          settings: {
-            'import-x/external-module-folders': ['E:\\path\\to\\node_modules'],
-          },
+          'import-x/external-module-folders': ['E:\\path\\to\\node_modules'],
         }),
       ),
     ).toBe(true)
@@ -352,9 +349,7 @@ describe('importType(name)', () => {
         'foo',
         '/path/to/node_modules/foo',
         testContext({
-          settings: {
-            'import-x/external-module-folders': ['/path/to/node_modules'],
-          },
+          'import-x/external-module-folders': ['/path/to/node_modules'],
         }),
       ),
     ).toBe(true)

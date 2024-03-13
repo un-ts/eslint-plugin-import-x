@@ -23,7 +23,7 @@ function isInternalRegexMatch(name: string, settings: PluginSettings) {
   return internalScope && new RegExp(internalScope).test(name)
 }
 
-export function isAbsolute(name: string) {
+export function isAbsolute(name?: string | boolean | number | null) {
   return typeof name === 'string' && nodeIsAbsolute(name)
 }
 

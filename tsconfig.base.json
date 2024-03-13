@@ -1,9 +1,7 @@
 {
   "extends": "@1stg/tsconfig/node",
   "compilerOptions": {
-    "allowJs": true,
-    "paths": {
-      "eslint-plugin-import-x": ["./src"]
-    }
-  }
+    "allowJs": true
+  },
+  "exclude": ["test/fixtures"]
 }

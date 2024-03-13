@@ -3,7 +3,7 @@
  * @author Radek Benkel
  */
 
-import {isStaticRequire} from '../core/staticRequire'
+import { isStaticRequire } from '../core/staticRequire'
 import { docsUrl } from '../docs-url'
 
 import debug from 'debug'

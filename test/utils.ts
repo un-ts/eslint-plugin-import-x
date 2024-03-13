@@ -1,9 +1,14 @@
 import path from 'path'
+
+// warms up the module cache. this import takes a while (>500ms)
+
+import { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
-// warms up the module cache. this import takes a while (>500ms)
+import type { PluginSettings, RuleContext } from '../src/types'
+
 import '@babel/eslint-parser'
 
 export const parsers = {
@@ -12,11 +17,11 @@ export const parsers = {
   BABEL: require.resolve('@babel/eslint-parser'),
 }
 
-export function tsVersionSatisfies(specifier) {
+export function tsVersionSatisfies(specifier: string) {
   return semver.satisfies(typescriptPkg.version, specifier)
 }
 
-export function typescriptEslintParserSatisfies(specifier) {
+export function typescriptEslintParserSatisfies(specifier: string) {
   return (
     parsers.TS &&
     semver.satisfies(
@@ -26,25 +31,27 @@ export function typescriptEslintParserSatisfies(specifier) {
   )
 }
 
-export function testFilePath(relativePath) {
-  return path.join(process.cwd(), './test/fixtures', relativePath)
+export function testFilePath(relativePath = 'foo.js') {
+  return path.resolve('test/fixtures', relativePath)
 }
 
 export function getNonDefaultParsers() {
-  return [parsers.TS, parsers.BABEL].filter(Boolean)
+  return [parsers.TS, parsers.BABEL]
 }
 
-export const FILENAME = testFilePath('foo.js')
+const FILENAME = testFilePath()
 
-export function eslintVersionSatisfies(specifier) {
+export function eslintVersionSatisfies(specifier: string) {
   return semver.satisfies(eslintPkg.version, specifier)
 }
 
-export function testVersion(specifier, t) {
+type ValidTestCase = TSESLint.ValidTestCase<readonly unknown[]>
+
+export function testVersion(specifier: string, t: () => ValidTestCase) {
   return eslintVersionSatisfies(specifier) ? test(t()) : []
 }
 
-export function test(t) {
+export function test(t: ValidTestCase): ValidTestCase {
   if (arguments.length !== 1) {
     throw new SyntaxError('`test` requires exactly one object argument')
   }
@@ -59,23 +66,21 @@ export function test(t) {
   }
 }
 
-export function testContext(settings) {
+export function testContext(settings?: PluginSettings) {
   return {
     getFilename() {
       return FILENAME
     },
     settings: settings || {},
-  }
+  } as RuleContext
 }
 
-export function getFilename(file) {
-  return path.join(__dirname, 'fixtures', file || 'foo.js')
-}
+// TODO: remove this alias
+export const getFilename = testFilePath
 
 /**
  * to be added as valid cases just to ensure no nullable fields are going
  * to crash at runtime
- * @type {Array}
  */
 export const SYNTAX_CASES = [
   test({ code: 'for (let { foo, bar } of baz) {}' }),

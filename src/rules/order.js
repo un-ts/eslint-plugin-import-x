@@ -2,8 +2,8 @@
 
 import { minimatch } from 'minimatch'
 
-import {importType} from '../core/importType'
-import {isStaticRequire} from '../core/staticRequire'
+import { importType } from '../core/importType'
+import { isStaticRequire } from '../core/staticRequire'
 import { docsUrl } from '../docs-url'
 
 // This is a **non-spec compliant** but works in practice replacement of `object.groupby` package.

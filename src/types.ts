@@ -12,7 +12,7 @@ export interface NodeResolverOptions {
 }
 
 export interface WebpackResolverOptions {
-  config?: string | ResolveOptions
+  config?: string | { resolve: Omit<ResolveOptions, 'fileSystem'> }
   'config-index'?: number
   env?: Record<string, unknown>
   argv?: Record<string, unknown>
@@ -22,9 +22,11 @@ export type FileExtension = `.${string}`
 
 export type DocStyle = 'jsdoc' | 'tomdoc'
 
+export type Arrayable<T> = T | readonly T[]
+
 export interface ImportSettings {
   cache?: {
-    lifetime: number | '∞' | 'Infinity'
+    lifetime?: number | '∞' | 'Infinity'
   }
   coreModules?: string[]
   docstyle?: DocStyle[]
@@ -32,15 +34,17 @@ export interface ImportSettings {
   externalModuleFolders?: string[]
   ignore?: string[]
   internalRegex?: string
-  parsers?: Record<string, FileExtension[]>
+  parsers?: Record<string, readonly FileExtension[]>
   resolve?: NodeResolverOptions
-  resolver?:
+  resolver?: Arrayable<
     | LiteralUnion<'node' | 'typescript' | 'webpack', string>
     | {
         node?: boolean | NodeResolverOptions
         typescript?: boolean | TsResolverOptions
         webpack?: WebpackResolverOptions
+        [resolve: string]: unknown
       }
+  >
 }
 
 export type WithPluginName<T extends string | object> = T extends string
@@ -62,8 +66,8 @@ export interface RuleContext<
   TOptions extends readonly unknown[] = readonly unknown[],
 > extends Omit<TSESLint.RuleContext<TMessageIds, TOptions>, 'settings'> {
   languageOptions?: {
-    parser: TSESLint.Linter.ParserModule
-    parserOptions: TSESLint.ParserOptions
+    parser?: TSESLint.Linter.ParserModule
+    parserOptions?: TSESLint.ParserOptions
   }
   settings: PluginSettings
 }
@@ -71,10 +75,10 @@ export interface RuleContext<
 export interface ChildContext {
   cacheKey: string
   settings: PluginSettings
-  parserPath: string
-  parserOptions: TSESLint.ParserOptions
+  parserPath?: string | null
+  parserOptions?: TSESLint.ParserOptions
   path: string
-  filename: string
+  filename?: string
 }
 
 export interface ParseError extends Error {

@@ -1,4 +1,4 @@
-import {importType} from '../core/importType'
+import { importType } from '../core/importType'
 import { moduleVisitor } from '../utils/moduleVisitor'
 import { docsUrl } from '../docs-url'
 

@@ -5,7 +5,7 @@ import { moduleVisitor } from '../utils/moduleVisitor'
 import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
 import { docsUrl } from '../docs-url'
-import {importType} from '../core/importType'
+import { importType } from '../core/importType'
 
 const containsPath = (filepath, target) => {
   const relative = path.relative(target, filepath)
