@@ -1,4 +1,4 @@
-import ExportMap, { recursivePatternCapture } from '../ExportMap'
+import { ExportMap, recursivePatternCapture } from '../ExportMap'
 import { docsUrl } from '../docs-url'
 
 /*

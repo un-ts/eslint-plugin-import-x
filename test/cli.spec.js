@@ -6,7 +6,7 @@ import path from 'path'
 import { CLIEngine, ESLint } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
-import * as importPlugin from '../src/index'
+import importPlugin from '../src/index'
 
 describe('CLI regression tests', () => {
   describe('issue #210', () => {
@@ -23,7 +23,7 @@ describe('CLI regression tests', () => {
               named: 2,
             },
           },
-          plugins: { 'eslint-plugin-import': importPlugin },
+          plugins: { 'eslint-plugin-import-x': importPlugin },
         })
       } else {
         cli = new CLIEngine({
@@ -34,9 +34,10 @@ describe('CLI regression tests', () => {
             named: 2,
           },
         })
-        cli.addPlugin('eslint-plugin-import', importPlugin)
+        cli.addPlugin('eslint-plugin-import-x', importPlugin)
       }
     })
+
     it("doesn't throw an error on gratuitous, erroneous self-reference", () => {
       if (eslint) {
         return eslint

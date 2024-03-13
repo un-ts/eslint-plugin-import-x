@@ -1,10 +1,7 @@
 /**
- * @fileoverview Rule to warn about potentially confused use of name exports
- * @author Desmond Brand
- * @copyright 2016 Desmond Brand. All rights reserved.
- * See LICENSE in root directory for full license.
+ * Rule to warn about potentially confused use of name exports
  */
-import Exports from '../ExportMap'
+import { ExportMap } from '../ExportMap'
 import { importDeclaration } from '../import-declaration'
 import { docsUrl } from '../docs-url'
 
@@ -36,7 +33,7 @@ module.exports = {
     return {
       ImportDefaultSpecifier(node) {
         const declaration = importDeclaration(context)
-        const exportMap = Exports.get(declaration.source.value, context)
+        const exportMap = ExportMap.get(declaration.source.value, context)
         if (exportMap == null) {
           return
         }

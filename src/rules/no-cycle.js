@@ -1,10 +1,9 @@
 /**
- * @fileOverview Ensures that no imported module imports the linted module.
- * @author Ben Mosher
+ * Ensures that no imported module imports the linted module.
  */
 
 import { resolve } from '../utils/resolve'
-import Exports from '../ExportMap'
+import { ExportMap } from '../ExportMap'
 import { isExternalModule } from '../core/importType'
 import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
 import { docsUrl } from '../docs-url'
@@ -90,7 +89,7 @@ module.exports = {
         return // ignore type imports
       }
 
-      const imported = Exports.get(sourceNode.value, context)
+      const imported = ExportMap.get(sourceNode.value, context)
 
       if (imported == null) {
         return // no-unresolved territory

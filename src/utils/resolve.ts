@@ -1,21 +1,25 @@
 'use strict'
 
 import fs from 'fs'
-import module from 'module'
+import Module from 'module'
 import path from 'path'
 
-import type { TSESLint } from '@typescript-eslint/utils'
-
-import { ImportSettings, PluginSettings } from '../types'
+import { ImportSettings, PluginSettings, RuleContext } from '../types'
 
 import { hashObject } from './hash'
 import { ModuleCache } from './ModuleCache'
 
 import { pkgDir } from './pkgDir'
 
-export type ResultNotFound = { found: false; path?: undefined }
+export interface ResultNotFound {
+  found: false
+  path?: undefined
+}
 
-export type ResultFound = { found: true; path: string | null }
+export interface ResultFound {
+  found: true
+  path: string | null
+}
 
 export type ResolvedResult = ResultNotFound | ResultFound
 
@@ -54,9 +58,9 @@ function tryRequire<T>(
     // Check if the target exists
     if (sourceFile != null) {
       try {
-        resolved = module
-          .createRequire(path.resolve(sourceFile))
-          .resolve(target)
+        resolved = Module.createRequire(path.resolve(sourceFile)).resolve(
+          target,
+        )
       } catch (e) {
         resolved = require.resolve(target)
       }
@@ -114,7 +118,7 @@ export function fileExistsWithCaseSync(
 }
 
 let prevSettings: PluginSettings | null = null
-let memoizedHash = ''
+let memoizedHash: string
 
 function fullResolve(
   modulePath: string,
@@ -124,7 +128,10 @@ function fullResolve(
   // check if this is a bonus core module
   const coreSet = new Set(settings['import-x/core-modules'])
   if (coreSet.has(modulePath)) {
-    return { found: true, path: null }
+    return {
+      found: true,
+      path: null,
+    }
   }
 
   const sourceDir = path.dirname(sourceFile)
@@ -155,11 +162,18 @@ function fullResolve(
     try {
       const resolved = resolver.resolveImport(modulePath, sourceFile, config)
       if (resolved === undefined) {
-        return { found: false }
+        return {
+          found: false,
+        }
       }
-      return { found: true, path: resolved }
-    } catch (err) {
-      return { found: false }
+      return {
+        found: true,
+        path: resolved,
+      }
+    } catch {
+      return {
+        found: false,
+      }
     }
   }
 
@@ -189,7 +203,6 @@ function fullResolve(
   return { found: false }
 }
 
-/** @type {import('./resolve').relative} */
 export function relative(
   modulePath: string,
   sourceFile: string,
@@ -264,9 +277,7 @@ function isResolverValid(resolver: object): resolver is Resolver {
   )
 }
 
-const erroredContexts = new Set<
-  TSESLint.RuleContext<string, readonly unknown[]>
->()
+const erroredContexts = new Set<RuleContext>()
 
 /**
  * Given
@@ -274,10 +285,7 @@ const erroredContexts = new Set<
  * @param context - ESLint context
  * @return - the full module filesystem path; null if package is core; undefined if not found
  */
-export function resolve(
-  p: string,
-  context: TSESLint.RuleContext<string, readonly unknown[]>,
-) {
+export function resolve(p: string, context: RuleContext) {
   try {
     return relative(
       p,
@@ -298,7 +306,10 @@ export function resolve(
       context.report({
         // @ts-expect-error - report without messageId
         message: `Resolve error: ${errMessage}`,
-        loc: { line: 1, column: 0 },
+        loc: {
+          line: 1,
+          column: 0,
+        },
       })
       erroredContexts.add(context)
     }

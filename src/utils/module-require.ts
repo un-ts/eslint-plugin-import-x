@@ -1,13 +1,8 @@
-'use strict'
-
-exports.__esModule = true
-
-const Module = require('module')
-const path = require('path')
+import Module from 'module'
+import path from 'path'
 
 // borrowed from @babel/eslint-parser
-/** @type {(filename: string) => Module} */
-function createModule(filename) {
+function createModule(filename: string) {
   const mod = new Module(filename)
   mod.filename = filename
   // @ts-expect-error _nodeModulesPaths are undocumented
@@ -15,8 +10,7 @@ function createModule(filename) {
   return mod
 }
 
-/** @type {import('./module-require').default} */
-exports.default = function moduleRequire(p) {
+export function moduleRequire<T>(p: string): T {
   try {
     // attempt to get espree relative to eslint
     const eslintPath = require.resolve('eslint')
@@ -24,15 +18,14 @@ exports.default = function moduleRequire(p) {
     // @ts-expect-error _resolveFilename is undocumented
     return require(Module._resolveFilename(p, eslintModule))
   } catch (err) {
-    /* ignore */
+    //
   }
 
   try {
     // try relative to entry point
-    // @ts-expect-error TODO: figure out what this is
-    return require.main.require(p)
+    return require.main!.require(p)
   } catch (err) {
-    /* ignore */
+    //
   }
 
   // finally, try from here

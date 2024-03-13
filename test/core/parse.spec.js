@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import parse from '../../src/utils/parse'
+import { parse } from '../../src/utils/parse'
 
 import { getFilename } from '../utils'
 

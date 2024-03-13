@@ -1,5 +1,5 @@
 import declaredScope from '../utils/declaredScope'
-import Exports from '../ExportMap'
+import { ExportMap } from '../ExportMap'
 import { docsUrl } from '../docs-url'
 
 function message(deprecation) {
@@ -38,7 +38,7 @@ module.exports = {
         return
       } // local export, ignore
 
-      const imports = Exports.get(node.source.value, context)
+      const imports = ExportMap.get(node.source.value, context)
       if (imports == null) {
         return
       }
@@ -148,7 +148,7 @@ module.exports = {
         const namepath = [dereference.object.name]
         // while property is namespace and parent is member expression, keep validating
         while (
-          namespace instanceof Exports &&
+          namespace instanceof ExportMap &&
           dereference.type === 'MemberExpression'
         ) {
           // ignore computed parts for now

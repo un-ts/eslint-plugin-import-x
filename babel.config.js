@@ -28,7 +28,14 @@ module.exports = {
   overrides: [
     {
       include: '**/*.ts',
-      presets: ['@babel/typescript'],
+      presets: [
+        [
+          '@babel/typescript',
+          {
+            allowDeclareFields: true,
+          },
+        ],
+      ],
     },
   ],
 }

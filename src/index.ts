@@ -1,11 +1,13 @@
+import type { TSESLint } from '@typescript-eslint/utils'
+
 import type { PluginConfig } from './types'
 
 import noUnresolved from './rules/no-unresolved'
-import { TSESLint } from '@typescript-eslint/utils'
+import named from './rules/named'
 
 export const rules = {
   'no-unresolved': noUnresolved,
-  named: require('./rules/named'),
+  named,
   default: require('./rules/default'),
   namespace: require('./rules/namespace'),
   'no-namespace': require('./rules/no-namespace'),

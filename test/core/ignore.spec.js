@@ -1,68 +1,69 @@
-import isIgnored, {
+import {
+  ignore as isIgnored,
   getFileExtensions,
   hasValidExtension,
 } from '../../src/utils/ignore'
 
-import * as utils from '../utils'
+import { testContext } from '../utils'
 
 describe('ignore', () => {
   describe('isIgnored', () => {
     it('ignores paths with extensions other than .js', () => {
-      const testContext = utils.testContext({})
+      const context = testContext({})
 
-      expect(isIgnored('../fixtures/foo.js', testContext)).toBe(false)
+      expect(isIgnored('../fixtures/foo.js', context)).toBe(false)
 
-      expect(isIgnored('../fixtures/bar.jsx', testContext)).toBe(true)
+      expect(isIgnored('../fixtures/bar.jsx', context)).toBe(true)
 
-      expect(isIgnored('../fixtures/typescript.ts', testContext)).toBe(true)
+      expect(isIgnored('../fixtures/typescript.ts', context)).toBe(true)
 
-      expect(
-        isIgnored('../fixtures/ignore.invalid.extension', testContext),
-      ).toBe(true)
+      expect(isIgnored('../fixtures/ignore.invalid.extension', context)).toBe(
+        true,
+      )
     })
 
     it('ignores paths with invalid extensions when configured with import-x/extensions', () => {
-      const testContext = utils.testContext({
+      const context = testContext({
         'import-x/extensions': ['.js', '.jsx', '.ts'],
       })
 
-      expect(isIgnored('../fixtures/foo.js', testContext)).toBe(false)
+      expect(isIgnored('../fixtures/foo.js', context)).toBe(false)
 
-      expect(isIgnored('../fixtures/bar.jsx', testContext)).toBe(false)
+      expect(isIgnored('../fixtures/bar.jsx', context)).toBe(false)
 
-      expect(isIgnored('../fixtures/typescript.ts', testContext)).toBe(false)
+      expect(isIgnored('../fixtures/typescript.ts', context)).toBe(false)
 
-      expect(
-        isIgnored('../fixtures/ignore.invalid.extension', testContext),
-      ).toBe(true)
+      expect(isIgnored('../fixtures/ignore.invalid.extension', context)).toBe(
+        true,
+      )
     })
   })
 
   describe('hasValidExtension', () => {
     it('assumes only .js as valid by default', () => {
-      const testContext = utils.testContext({})
+      const context = testContext({})
 
-      expect(hasValidExtension('../fixtures/foo.js', testContext)).toBe(true)
+      expect(hasValidExtension('../fixtures/foo.js', context)).toBe(true)
 
-      expect(hasValidExtension('../fixtures/foo.jsx', testContext)).toBe(false)
+      expect(hasValidExtension('../fixtures/foo.jsx', context)).toBe(false)
 
-      expect(hasValidExtension('../fixtures/foo.css', testContext)).toBe(false)
+      expect(hasValidExtension('../fixtures/foo.css', context)).toBe(false)
 
       expect(
-        hasValidExtension('../fixtures/foo.invalid.extension', testContext),
+        hasValidExtension('../fixtures/foo.invalid.extension', context),
       ).toBe(false)
     })
 
     it('can be configured with import-x/extensions', () => {
-      const testContext = utils.testContext({
+      const context = testContext({
         'import-x/extensions': ['.foo', '.bar'],
       })
 
-      expect(hasValidExtension('../fixtures/foo.foo', testContext)).toBe(true)
+      expect(hasValidExtension('../fixtures/foo.foo', context)).toBe(true)
 
-      expect(hasValidExtension('../fixtures/foo.bar', testContext)).toBe(true)
+      expect(hasValidExtension('../fixtures/foo.bar', context)).toBe(true)
 
-      expect(hasValidExtension('../fixtures/foo.js', testContext)).toBe(false)
+      expect(hasValidExtension('../fixtures/foo.js', context)).toBe(false)
     })
   })
 

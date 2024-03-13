@@ -1,16 +1,15 @@
 /**
- * @fileOverview Ensures that modules contain exports and/or all
+ * Ensures that modules contain exports and/or all
  * modules are consumed within other modules.
- * @author René Fermann
  */
 
 import { getFileExtensions } from '../utils/ignore'
 import { resolve } from '../utils/resolve'
-import visit from '../utils/visit'
+import { visit } from '../utils/visit'
 import { dirname, join } from 'path'
 import { readPkgUp } from '../utils/readPkgUp'
 
-import Exports, { recursivePatternCapture } from '../ExportMap'
+import { ExportMap, recursivePatternCapture } from '../ExportMap'
 import { docsUrl } from '../docs-url'
 
 let FileEnumerator
@@ -205,7 +204,7 @@ const prepareImportsAndExports = (srcFiles, context) => {
   srcFiles.forEach(file => {
     const exports = new Map()
     const imports = new Map()
-    const currentExports = Exports.get(file, context)
+    const currentExports = ExportMap.get(file, context)
     if (currentExports) {
       const {
         dependencies,

@@ -22,7 +22,7 @@ type Options = [
   },
 ]
 
-type MessageId = 'unresolved' | 'casing-mismatch'
+type MessageId = 'unresolved' | 'casingMismatch'
 
 export = createRule<Options, MessageId>({
   name: 'no-unresolved',
@@ -36,7 +36,7 @@ export = createRule<Options, MessageId>({
     },
     messages: {
       unresolved: "Unable to resolve path to module '{{module}}'.",
-      'casing-mismatch':
+      casingMismatch:
         "Casing of '{{module}}' does not match the underlying filesystem.",
     },
     schema: [
@@ -51,7 +51,6 @@ export = createRule<Options, MessageId>({
       caseSensitive: true,
     },
   ],
-
   create(context) {
     const options = context.options[0] || {}
 
@@ -90,7 +89,7 @@ export = createRule<Options, MessageId>({
         ) {
           context.report({
             node: source,
-            messageId: 'casing-mismatch',
+            messageId: 'casingMismatch',
             data: {
               module: source.value,
             },
