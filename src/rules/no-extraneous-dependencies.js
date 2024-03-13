@@ -4,7 +4,7 @@ import { pkgUp } from '../utils/pkgUp'
 import { minimatch } from 'minimatch'
 import { resolve } from '../utils/resolve'
 import { moduleVisitor } from '../utils/moduleVisitor'
-import importType from '../core/importType'
+import {importType} from '../core/importType'
 import { getFilePackageName } from '../core/packagePath'
 import { docsUrl } from '../docs-url'
 

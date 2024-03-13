@@ -3,7 +3,7 @@ import { readPkgUp } from '../utils/readPkgUp'
 
 import { resolve } from '../utils/resolve'
 import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
-import importType from '../core/importType'
+import {importType} from '../core/importType'
 import { docsUrl } from '../docs-url'
 
 /** @param {string} filePath */

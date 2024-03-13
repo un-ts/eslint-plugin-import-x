@@ -31,6 +31,7 @@ export interface ImportSettings {
   extensions?: readonly FileExtension[]
   externalModuleFolders?: string[]
   ignore?: string[]
+  internalRegex?: string
   parsers?: Record<string, FileExtension[]>
   resolve?: NodeResolverOptions
   resolver?:

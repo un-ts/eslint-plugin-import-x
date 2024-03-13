@@ -3,7 +3,7 @@ import { docsUrl } from '../docs-url'
 import { basename, dirname, relative } from 'path'
 import { resolve } from '../utils/resolve'
 
-import importType from '../core/importType'
+import {importType} from '../core/importType'
 
 module.exports = {
   meta: {

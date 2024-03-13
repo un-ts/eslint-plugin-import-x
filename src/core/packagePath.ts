@@ -1,8 +1,10 @@
 import { dirname } from 'path'
+
 import { pkgUp } from '../utils/pkgUp'
 import { readPkgUp } from '../utils/readPkgUp'
+import { RuleContext } from '../types'
 
-export function getContextPackagePath(context) {
+export function getContextPackagePath(context: RuleContext) {
   return getFilePackagePath(
     context.getPhysicalFilename
       ? context.getPhysicalFilename()
@@ -10,13 +12,13 @@ export function getContextPackagePath(context) {
   )
 }
 
-export function getFilePackagePath(filePath) {
-  const fp = pkgUp({ cwd: filePath })
+export function getFilePackagePath(filePath: string) {
+  const fp = pkgUp({ cwd: filePath })!
   return dirname(fp)
 }
 
-export function getFilePackageName(filePath) {
-  const { pkg, path } = readPkgUp({ cwd: filePath, normalize: false })
+export function getFilePackageName(filePath: string): string | null {
+  const { pkg, path } = readPkgUp({ cwd: filePath })
   if (pkg) {
     // recursion in case of intermediate esm package.json without name found
     return pkg.name || getFilePackageName(dirname(dirname(path)))

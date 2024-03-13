@@ -1,10 +1,11 @@
-import * as path from 'path'
+import path from 'path'
 
-import importType, {
+import {
+  importType,
   isExternalModule,
   isScoped,
   isAbsolute,
-} from 'core/importType'
+} from '../../src/core/importType'
 
 import { isCoreModule } from '../../src/utils/is-core-module'
 import { testContext, testFilePath } from '../utils'
