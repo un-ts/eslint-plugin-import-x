@@ -1,5 +1,5 @@
-import declaredScope from '../utils/declaredScope'
-import { ExportMap } from '../ExportMap'
+import { declaredScope } from '../utils/declared-scope'
+import { ExportMap } from '../export-map'
 import { importDeclaration } from '../import-declaration'
 import { docsUrl } from '../docs-url'
 

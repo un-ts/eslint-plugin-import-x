@@ -3,7 +3,7 @@
  */
 
 import { resolve } from '../utils/resolve'
-import { ExportMap } from '../ExportMap'
+import { ExportMap } from '../export-map'
 import { isExternalModule } from '../core/importType'
 import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
 import { docsUrl } from '../docs-url'

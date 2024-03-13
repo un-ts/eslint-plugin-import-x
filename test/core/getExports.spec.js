@@ -2,7 +2,7 @@ import semver from 'semver'
 import eslintPkg from 'eslint/package.json'
 import getTsconfig from 'get-tsconfig'
 
-import { ExportMap } from '../../src/ExportMap'
+import { ExportMap } from '../../src/export-map'
 
 import fs from 'fs'
 

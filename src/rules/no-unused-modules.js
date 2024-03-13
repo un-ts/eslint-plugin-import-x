@@ -9,7 +9,7 @@ import { visit } from '../utils/visit'
 import { dirname, join } from 'path'
 import { readPkgUp } from '../utils/readPkgUp'
 
-import { ExportMap, recursivePatternCapture } from '../ExportMap'
+import { ExportMap, recursivePatternCapture } from '../export-map'
 import { docsUrl } from '../docs-url'
 
 let FileEnumerator
