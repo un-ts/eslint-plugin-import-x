@@ -1,5 +1,17 @@
 # eslint-plugin-import-x
 
+## 0.3.0
+
+### Minor Changes
+
+- [#42](https://github.com/un-es/eslint-plugin-import-x/pull/42) [`6ee88e8`](https://github.com/un-es/eslint-plugin-import-x/commit/6ee88e8b648e6d5b434a5d56d8c04ad41aa3d491) Thanks [@JounQin](https://github.com/JounQin)! - feat!: start TypeScript migration
+
+### Patch Changes
+
+- [#44](https://github.com/un-es/eslint-plugin-import-x/pull/44) [`bbf46c3`](https://github.com/un-es/eslint-plugin-import-x/commit/bbf46c302f4f2632e1d4b76c52101c8ed8c469c2) Thanks [@JounQin](https://github.com/JounQin)! - feat: migrate named rule and related usage
+
+- [#45](https://github.com/un-es/eslint-plugin-import-x/pull/45) [`dc3d48b`](https://github.com/un-es/eslint-plugin-import-x/commit/dc3d48bb1893d5094c68ed4189029fabe8fe8ef3) Thanks [@JounQin](https://github.com/JounQin)! - refactor: migrate core utils
+
 ## 0.2.0
 
 ### Minor Changes
