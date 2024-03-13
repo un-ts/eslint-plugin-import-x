@@ -1,4 +1,4 @@
-import { ExportMap } from '../ExportMap'
+import { ExportMap } from '../export-map'
 import { importDeclaration } from '../import-declaration'
 import { docsUrl } from '../docs-url'
 

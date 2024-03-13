@@ -1,11 +1,11 @@
 import path from 'path'
 import fs from 'fs'
-import { pkgUp } from '../utils/pkgUp'
+import { pkgUp } from '../utils/pkg-up'
 import { minimatch } from 'minimatch'
 import { resolve } from '../utils/resolve'
-import { moduleVisitor } from '../utils/moduleVisitor'
-import importType from '../core/importType'
-import { getFilePackageName } from '../core/packagePath'
+import { moduleVisitor } from '../utils/module-visitor'
+import { importType } from '../core/import-type'
+import { getFilePackageName } from '../core/package-path'
 import { docsUrl } from '../docs-url'
 
 const depFieldCache = new Map()

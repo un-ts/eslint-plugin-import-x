@@ -1,7 +1,7 @@
 /**
  * Rule to warn about potentially confused use of name exports
  */
-import { ExportMap } from '../ExportMap'
+import { ExportMap } from '../export-map'
 import { importDeclaration } from '../import-declaration'
 import { docsUrl } from '../docs-url'
 

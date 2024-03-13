@@ -1,11 +1,11 @@
 import path from 'path'
 
 import { resolve } from '../utils/resolve'
-import { moduleVisitor } from '../utils/moduleVisitor'
+import { moduleVisitor } from '../utils/module-visitor'
 import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
 import { docsUrl } from '../docs-url'
-import importType from '../core/importType'
+import { importType } from '../core/import-type'
 
 const containsPath = (filepath, target) => {
   const relative = path.relative(target, filepath)

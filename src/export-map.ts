@@ -660,7 +660,7 @@ export class ExportMap {
 
   private declare mtime: Date
 
-  private declare doc: Annotation
+  declare doc: Annotation
 
   constructor(public path: string) {}
 
@@ -812,8 +812,6 @@ export class ExportMap {
         }
       }
     }
-
-    return undefined
   }
 
   forEach(
@@ -1072,7 +1070,7 @@ function childContext(
           : 'getFilename' in context &&
               typeof context.getFilename === 'function'
             ? context.getFilename()
-            : (('filename' in context && context.filename) as string),
+            : ('filename' in context && context.filename) || undefined,
   }
 }
 

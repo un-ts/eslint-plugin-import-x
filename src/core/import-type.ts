@@ -6,9 +6,10 @@ import {
 
 import { isCoreModule } from '../utils/is-core-module'
 import { resolve } from '../utils/resolve'
-import { getContextPackagePath } from './packagePath'
+import { getContextPackagePath } from './package-path'
+import { PluginSettings, RuleContext } from '../types'
 
-function baseModule(name) {
+function baseModule(name: string) {
   if (isScoped(name)) {
     const [scope, pkg] = name.split('/')
     return `${scope}/${pkg}`
@@ -17,17 +18,21 @@ function baseModule(name) {
   return pkg
 }
 
-function isInternalRegexMatch(name, settings) {
-  const internalScope = settings && settings['import-x/internal-regex']
+function isInternalRegexMatch(name: string, settings: PluginSettings) {
+  const internalScope = settings?.['import-x/internal-regex']
   return internalScope && new RegExp(internalScope).test(name)
 }
 
-export function isAbsolute(name) {
+export function isAbsolute(name?: string | boolean | number | null) {
   return typeof name === 'string' && nodeIsAbsolute(name)
 }
 
 // path is defined only when a resolver resolves to a non-standard path
-export function isBuiltIn(name, settings, path) {
+export function isBuiltIn(
+  name: string,
+  settings: PluginSettings,
+  path?: string | null,
+) {
   if (path || !name) {
     return false
   }
@@ -36,7 +41,11 @@ export function isBuiltIn(name, settings, path) {
   return isCoreModule(base) || extras.indexOf(base) > -1
 }
 
-export function isExternalModule(name, path, context) {
+export function isExternalModule(
+  name: string,
+  path: string,
+  context: RuleContext,
+) {
   if (arguments.length < 3) {
     throw new TypeError(
       'isExternalModule: name, path, and context are all required',
@@ -48,7 +57,11 @@ export function isExternalModule(name, path, context) {
   )
 }
 
-export function isExternalModuleMain(name, path, context) {
+export function isExternalModuleMain(
+  name: string,
+  path: string,
+  context: RuleContext,
+) {
   if (arguments.length < 3) {
     throw new TypeError(
       'isExternalModule: name, path, and context are all required',
@@ -58,39 +71,44 @@ export function isExternalModuleMain(name, path, context) {
 }
 
 const moduleRegExp = /^\w/
-function isModule(name) {
+
+function isModule(name: string) {
   return name && moduleRegExp.test(name)
 }
 
 const moduleMainRegExp = /^[\w]((?!\/).)*$/
-function isModuleMain(name) {
+
+function isModuleMain(name: string) {
   return name && moduleMainRegExp.test(name)
 }
 
 const scopedRegExp = /^@[^/]+\/?[^/]+/
-export function isScoped(name) {
+
+export function isScoped(name: string) {
   return name && scopedRegExp.test(name)
 }
 
 const scopedMainRegExp = /^@[^/]+\/?[^/]+$/
-export function isScopedMain(name) {
+
+export function isScopedMain(name: string) {
   return name && scopedMainRegExp.test(name)
 }
 
-function isRelativeToParent(name) {
+function isRelativeToParent(name: string) {
   return /^\.\.$|^\.\.[\\/]/.test(name)
 }
 
 const indexFiles = ['.', './', './index', './index.js']
-function isIndex(name) {
-  return indexFiles.indexOf(name) !== -1
+
+function isIndex(name: string) {
+  return indexFiles.includes(name)
 }
 
-function isRelativeToSibling(name) {
+function isRelativeToSibling(name: string) {
   return /^\.[\\/]/.test(name)
 }
 
-function isExternalPath(path, context) {
+function isExternalPath(path: string | null | undefined, context: RuleContext) {
   if (!path) {
     return false
   }
@@ -102,8 +120,9 @@ function isExternalPath(path, context) {
     return true
   }
 
-  const folders = (settings &&
-    settings['import-x/external-module-folders']) || ['node_modules']
+  const folders = settings?.['import-x/external-module-folders'] || [
+    'node_modules',
+  ]
   return folders.some(folder => {
     const folderPath = nodeResolve(packagePath, folder)
     const relativePath = relative(folderPath, path)
@@ -111,7 +130,7 @@ function isExternalPath(path, context) {
   })
 }
 
-function isInternalPath(path, context) {
+function isInternalPath(path: string | null | undefined, context: RuleContext) {
   if (!path) {
     return false
   }
@@ -119,28 +138,28 @@ function isInternalPath(path, context) {
   return !relative(packagePath, path).startsWith('../')
 }
 
-function isExternalLookingName(name) {
+function isExternalLookingName(name: string) {
   return isModule(name) || isScoped(name)
 }
 
-function typeTest(name, context, path) {
+function typeTest(name: string, context: RuleContext, path?: string | null) {
   const { settings } = context
   if (isInternalRegexMatch(name, settings)) {
     return 'internal'
   }
-  if (isAbsolute(name, settings, path)) {
+  if (isAbsolute(name)) {
     return 'absolute'
   }
   if (isBuiltIn(name, settings, path)) {
     return 'builtin'
   }
-  if (isRelativeToParent(name, settings, path)) {
+  if (isRelativeToParent(name)) {
     return 'parent'
   }
-  if (isIndex(name, settings, path)) {
+  if (isIndex(name)) {
     return 'index'
   }
-  if (isRelativeToSibling(name, settings, path)) {
+  if (isRelativeToSibling(name)) {
     return 'sibling'
   }
   if (isExternalPath(path, context)) {
@@ -155,6 +174,6 @@ function typeTest(name, context, path) {
   return 'unknown'
 }
 
-export default function resolveImportType(name, context) {
+export function importType(name: string, context: RuleContext) {
   return typeTest(name, context, resolve(name, context))
 }

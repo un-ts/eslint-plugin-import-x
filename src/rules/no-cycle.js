@@ -3,9 +3,9 @@
  */
 
 import { resolve } from '../utils/resolve'
-import { ExportMap } from '../ExportMap'
-import { isExternalModule } from '../core/importType'
-import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
+import { ExportMap } from '../export-map'
+import { isExternalModule } from '../core/import-type'
+import { moduleVisitor, makeOptionsSchema } from '../utils/module-visitor'
 import { docsUrl } from '../docs-url'
 
 const traversed = new Set()

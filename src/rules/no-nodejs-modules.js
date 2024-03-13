@@ -1,5 +1,5 @@
-import importType from '../core/importType'
-import { moduleVisitor } from '../utils/moduleVisitor'
+import { importType } from '../core/import-type'
+import { moduleVisitor } from '../utils/module-visitor'
 import { docsUrl } from '../docs-url'
 
 function reportIfMissing(context, node, allowed, name) {

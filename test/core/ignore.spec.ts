@@ -1,3 +1,4 @@
+import { PluginSettings } from '../../src/types'
 import {
   ignore as isIgnored,
   getFileExtensions,
@@ -75,7 +76,7 @@ describe('ignore', () => {
     })
 
     it('returns a set with the file extensions configured in "import-x/extension"', () => {
-      const settings = {
+      const settings: PluginSettings = {
         'import-x/extensions': ['.js', '.jsx'],
       }
 
@@ -86,7 +87,7 @@ describe('ignore', () => {
     })
 
     it('returns a set with the file extensions configured in "import-x/extension" and "import-x/parsers"', () => {
-      const settings = {
+      const settings: PluginSettings = {
         'import-x/parsers': {
           '@typescript-eslint/parser': ['.ts', '.tsx'],
         },

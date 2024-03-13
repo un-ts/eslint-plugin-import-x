@@ -7,9 +7,9 @@ import { getFileExtensions } from '../utils/ignore'
 import { resolve } from '../utils/resolve'
 import { visit } from '../utils/visit'
 import { dirname, join } from 'path'
-import { readPkgUp } from '../utils/readPkgUp'
+import { readPkgUp } from '../utils/read-pkg-ip'
 
-import { ExportMap, recursivePatternCapture } from '../ExportMap'
+import { ExportMap, recursivePatternCapture } from '../export-map'
 import { docsUrl } from '../docs-url'
 
 let FileEnumerator

@@ -1,6 +1,6 @@
 import path from 'path'
-import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
-import { isAbsolute } from '../core/importType'
+import { moduleVisitor, makeOptionsSchema } from '../utils/module-visitor'
+import { isAbsolute } from '../core/import-type'
 import { docsUrl } from '../docs-url'
 
 module.exports = {

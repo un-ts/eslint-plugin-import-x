@@ -1,5 +1,7 @@
+import type { TSESTree } from '@typescript-eslint/utils'
+
 // todo: merge with module visitor
-export default function isStaticRequire(node) {
+export function isStaticRequire(node: TSESTree.CallExpression) {
   return (
     node &&
     node.callee &&

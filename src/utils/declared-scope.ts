@@ -1,9 +1,6 @@
-'use strict'
+import type { RuleContext } from '../types'
 
-exports.__esModule = true
-
-/** @type {import('./declaredScope').default} */
-exports.default = function declaredScope(context, name) {
+export function declaredScope(context: RuleContext, name: string) {
   const references = context.getScope().references
   const reference = references.find(x => x.identifier.name === name)
   if (!reference || !reference.resolved) {

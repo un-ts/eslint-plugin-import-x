@@ -1,4 +1,4 @@
-import { ExportMap } from '../ExportMap'
+import { ExportMap } from '../export-map'
 import { docsUrl } from '../docs-url'
 
 module.exports = {

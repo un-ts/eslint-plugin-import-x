@@ -1,8 +1,8 @@
 import path from 'path'
 
 import { resolve } from '../utils/resolve'
-import { isBuiltIn, isExternalModule, isScoped } from '../core/importType'
-import { moduleVisitor } from '../utils/moduleVisitor'
+import { isBuiltIn, isExternalModule, isScoped } from '../core/import-type'
+import { moduleVisitor } from '../utils/module-visitor'
 import { docsUrl } from '../docs-url'
 
 const enumValues = { enum: ['always', 'ignorePackages', 'never'] }

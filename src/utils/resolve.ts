@@ -4,12 +4,17 @@ import fs from 'fs'
 import Module from 'module'
 import path from 'path'
 
-import { ImportSettings, PluginSettings, RuleContext } from '../types'
+import type {
+  Arrayable,
+  ImportSettings,
+  PluginSettings,
+  RuleContext,
+} from '../types'
 
 import { hashObject } from './hash'
-import { ModuleCache } from './ModuleCache'
+import { ModuleCache } from './module-cache'
 
-import { pkgDir } from './pkgDir'
+import { pkgDir } from './pkg-dir'
 
 export interface ResultNotFound {
   found: false
@@ -79,7 +84,7 @@ function tryRequire<T>(
 // https://stackoverflow.com/a/27382838
 export function fileExistsWithCaseSync(
   filepath: string | null,
-  cacheSettings: ImportSettings['cache'],
+  cacheSettings?: ImportSettings['cache'],
   strict?: boolean,
 ): boolean {
   // don't care if the FS is case-sensitive
@@ -212,7 +217,7 @@ export function relative(
 }
 
 function resolverReducer(
-  resolvers: string[] | string | Record<string, unknown>,
+  resolvers: Arrayable<string | Record<string, unknown>>,
   map: Map<string, unknown>,
 ) {
   if (Array.isArray(resolvers)) {
@@ -226,8 +231,8 @@ function resolverReducer(
   }
 
   if (typeof resolvers === 'object') {
-    for (const key in resolvers) {
-      map.set(key, resolvers[key])
+    for (const [key, value] of Object.entries(resolvers)) {
+      map.set(key, value)
     }
     return map
   }

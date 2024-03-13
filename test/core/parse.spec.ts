@@ -1,34 +1,30 @@
-import * as fs from 'fs'
+import fs from 'fs'
 import { parse } from '../../src/utils/parse'
 
-import { getFilename } from '../utils'
+import { testFilePath } from '../utils'
+import { ChildContext, PluginSettings, RuleContext } from '../../src/types'
+
+import eslintParser from './eslint-parser'
+import parseStubParser from './parse-stub-parser'
 
 describe('parse(content, { settings, ecmaFeatures })', () => {
-  const path = getFilename('jsx.js')
-  const parseStubParser = require('./parseStubParser')
-  const parseStubParserPath = require.resolve('./parseStubParser')
-  const eslintParser = require('./eslintParser')
-  const eslintParserPath = require.resolve('./eslintParser')
-  let content
+  const filepath = testFilePath('jsx.js')
 
-  beforeAll(done => {
-    fs.readFile(path, { encoding: 'utf8' }, (err, f) => {
-      if (err) {
-        done(err)
-      } else {
-        content = f
-        done()
-      }
-    })
-  })
+  const parseStubParserPath = require.resolve('./parse-stub-parser')
+
+  const eslintParserPath = require.resolve('./eslint-parser')
+
+  const content = fs.readFileSync(filepath, 'utf8')
 
   it("doesn't support JSX by default", () => {
-    expect(() => parse(path, content, { parserPath: 'espree' })).toThrow()
+    expect(() =>
+      parse(filepath, content, { parserPath: 'espree' } as ChildContext),
+    ).toThrow()
   })
 
   it('infers jsx from ecmaFeatures when using stock parser', () => {
     expect(() =>
-      parse(path, content, {
+      parse(filepath, content, {
         settings: {},
         parserPath: 'espree',
         parserOptions: {
@@ -36,7 +32,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
           sourceType: 'module',
           ecmaFeatures: { jsx: true },
         },
-      }),
+      } as ChildContext),
     ).not.toThrow()
   })
 
@@ -44,11 +40,11 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     const parseSpy = jest.fn()
     const parserOptions = { ecmaFeatures: { jsx: true } }
     parseStubParser.parse = parseSpy
-    parse(path, content, {
+    parse(filepath, content, {
       settings: {},
       parserPath: parseStubParserPath,
       parserOptions,
-    })
+    } as ChildContext)
     // custom parser to be called once
     expect(parseSpy).toHaveBeenCalledTimes(1)
     // custom parser to get content as its first argument
@@ -68,7 +64,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     // custom parser to get parserOptions.range equal to true
     expect(parseSpy.mock.calls[0][1]).toHaveProperty('range', true)
     // custom parser to get parserOptions.filePath equal to the full path of the source file
-    expect(parseSpy.mock.calls[0][1]).toHaveProperty('filePath', path)
+    expect(parseSpy.mock.calls[0][1]).toHaveProperty('filePath', filepath)
   })
 
   it('passes with custom `parseForESLint` parser', () => {
@@ -76,8 +72,11 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
       .spyOn(eslintParser, 'parseForESLint')
       .mockClear()
     const parseSpy = jest.fn()
-    eslintParser.parse = parseSpy
-    parse(path, content, { settings: {}, parserPath: eslintParserPath })
+    Object.assign(eslintParser, { parse: parseSpy })
+    parse(filepath, content, {
+      settings: {},
+      parserPath: eslintParserPath,
+    } as ChildContext)
     // custom `parseForESLint` parser to be called once
     expect(parseForESLintSpy).toHaveBeenCalledTimes(1)
     // `parseForESLint` takes higher priority than `parse`
@@ -85,35 +84,57 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('throws on context == null', () => {
-    expect(parse.bind(null, path, content, null)).toThrow()
+    expect(
+      parse.bind(
+        null,
+        filepath,
+        content,
+        // @ts-expect-error - testing
+        null,
+      ),
+    ).toThrow()
   })
 
   it('throws on unable to resolve parserPath', () => {
     expect(
-      parse.bind(null, path, content, { settings: {}, parserPath: null }),
+      parse.bind(
+        null,
+        filepath,
+        content,
+        // @ts-expect-error - testing
+        {
+          settings: {},
+          parserPath: null,
+        },
+      ),
     ).toThrow()
   })
 
   it('takes the alternate parser specified in settings', () => {
-    const parseSpy = jest.fn()
+    jest.spyOn(parseStubParser, 'parse').mockClear()
     const parserOptions = { ecmaFeatures: { jsx: true } }
-    parseStubParser.parse = parseSpy
     expect(
-      parse.bind(null, path, content, {
-        settings: { 'import-x/parsers': { [parseStubParserPath]: ['.js'] } },
+      parse.bind(null, filepath, content, {
+        settings: {
+          'import-x/parsers': {
+            [parseStubParserPath]: ['.js'] as const,
+          },
+          // FIXME: it seems a bug in TypeScript
+        } as PluginSettings,
         parserPath: null,
         parserOptions,
-      }),
+      } as ChildContext),
     ).not.toThrow()
     // custom parser to be called once
-    expect(parseSpy).toHaveBeenCalledTimes(1)
+    expect(parseStubParser.parse).toHaveBeenCalledTimes(1)
   })
 
   it('throws on invalid languageOptions', () => {
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
         parserPath: null,
+        // @ts-expect-error - testing
         languageOptions: null,
       }),
     ).toThrow()
@@ -121,60 +142,86 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
 
   it('throws on non-object languageOptions.parser', () => {
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
         parserPath: null,
-        languageOptions: { parser: 'espree' },
+        languageOptions: {
+          // @ts-expect-error - testing
+          parser: 'espree',
+        },
       }),
     ).toThrow()
   })
 
   it('throws on null languageOptions.parser', () => {
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
         parserPath: null,
-        languageOptions: { parser: null },
+        languageOptions: {
+          // @ts-expect-error - testing
+          parser: null,
+        },
       }),
     ).toThrow()
   })
 
   it('throws on empty languageOptions.parser', () => {
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
         parserPath: null,
-        languageOptions: { parser: {} },
+        languageOptions: {
+          // @ts-expect-error - testing
+          parser: {},
+        },
       }),
     ).toThrow()
   })
 
   it('throws on non-function languageOptions.parser.parse', () => {
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
         parserPath: null,
-        languageOptions: { parser: { parse: 'espree' } },
+        languageOptions: {
+          parser: {
+            // @ts-expect-error - testing
+            parse: 'espree',
+          },
+        },
       }),
     ).toThrow()
   })
 
   it('throws on non-function languageOptions.parser.parse', () => {
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
         parserPath: null,
-        languageOptions: { parser: { parseForESLint: 'espree' } },
+        languageOptions: {
+          parser: {
+            // @ts-expect-error - testing
+            parseForESLint: 'espree',
+          },
+        },
       }),
     ).toThrow()
   })
 
   it('requires only one of the parse methods', () => {
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
         parserPath: null,
-        languageOptions: { parser: { parseForESLint: () => ({ ast: {} }) } },
+        languageOptions: {
+          parser: {
+            parseForESLint: () => ({
+              // @ts-expect-error - testing
+              ast: {},
+            }),
+          },
+        },
       }),
     ).not.toThrow()
   })
@@ -182,10 +229,20 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   it('uses parse from languageOptions.parser', () => {
     const parseSpy = jest.fn()
     expect(
-      parse.bind(null, path, content, {
-        settings: {},
-        languageOptions: { parser: { parse: parseSpy } },
-      }),
+      parse.bind(
+        null,
+        filepath,
+        content,
+        // @ts-expect-error - testing
+        {
+          settings: {},
+          languageOptions: {
+            parser: {
+              parse: parseSpy,
+            },
+          },
+        },
+      ),
     ).not.toThrow()
     // passed parser to be called once
     expect(parseSpy).toHaveBeenCalledTimes(1)
@@ -194,9 +251,14 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   it('uses parseForESLint from languageOptions.parser', () => {
     const parseSpy = jest.fn(() => ({ ast: {} }))
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
-        languageOptions: { parser: { parseForESLint: parseSpy } },
+        languageOptions: {
+          parser: {
+            // @ts-expect-error - testing
+            parseForESLint: parseSpy,
+          },
+        },
       }),
     ).not.toThrow()
     // passed parser to be called once
@@ -207,11 +269,12 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     const parseSpy = jest.fn()
     parseStubParser.parse = parseSpy
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: { 'import-x/parsers': { [parseStubParserPath]: ['.js'] } },
         parserPath: null,
         languageOptions: {
           parser: {
+            // @ts-expect-error - testing
             parse() {
               //
             },
@@ -227,10 +290,13 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     const parseSpy = jest.fn()
     parseStubParser.parse = parseSpy
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
         parserPath: 'espree',
-        languageOptions: { parserOptions: null },
+        languageOptions: {
+          // @ts-expect-error - testing
+          parserOptions: null,
+        },
         parserOptions: {
           sourceType: 'module',
           ecmaVersion: 2015,
@@ -244,7 +310,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     const parseSpy = jest.fn()
     parseStubParser.parse = parseSpy
     expect(
-      parse.bind(null, path, content, {
+      parse.bind(null, filepath, content, {
         settings: {},
         parserPath: 'espree',
         languageOptions: {
@@ -254,8 +320,10 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
             ecmaFeatures: { jsx: true },
           },
         },
-        parserOptions: { sourceType: 'script' },
-      }),
+        parserOptions: {
+          sourceType: 'script',
+        },
+      } as RuleContext),
     ).not.toThrow()
   })
 })

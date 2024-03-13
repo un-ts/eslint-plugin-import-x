@@ -2,7 +2,12 @@ import { extname } from 'path'
 
 import debug from 'debug'
 
-import type { ChildContext, FileExtension, PluginSettings } from '../types'
+import type {
+  ChildContext,
+  FileExtension,
+  PluginSettings,
+  RuleContext,
+} from '../types'
 
 const log = debug('eslint-plugin-import-x:utils:ignore')
 
@@ -10,7 +15,7 @@ const log = debug('eslint-plugin-import-x:utils:ignore')
 let cachedSet: Set<FileExtension>
 let lastSettings: PluginSettings
 
-function validExtensions(context: ChildContext) {
+function validExtensions(context: ChildContext | RuleContext) {
   if (cachedSet && context.settings === lastSettings) {
     return cachedSet
   }
@@ -40,7 +45,7 @@ export function getFileExtensions(settings: PluginSettings) {
   return exts
 }
 
-export function ignore(path: string, context: ChildContext) {
+export function ignore(path: string, context: ChildContext | RuleContext) {
   // check extension whitelist first (cheap)
   if (!hasValidExtension(path, context)) {
     return true
@@ -65,7 +70,7 @@ export function ignore(path: string, context: ChildContext) {
 
 export function hasValidExtension(
   path: string,
-  context: ChildContext,
+  context: ChildContext | RuleContext,
 ): path is `${string}${FileExtension}` {
   return validExtensions(context).has(extname(path) as FileExtension)
 }
