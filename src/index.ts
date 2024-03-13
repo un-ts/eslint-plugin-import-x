@@ -4,11 +4,12 @@ import type { PluginConfig } from './types'
 
 import noUnresolved from './rules/no-unresolved'
 import named from './rules/named'
+import default_ from './rules/default'
 
 export const rules = {
   'no-unresolved': noUnresolved,
   named,
-  default: require('./rules/default'),
+  default: default_,
   namespace: require('./rules/namespace'),
   'no-namespace': require('./rules/no-namespace'),
   export: require('./rules/export'),

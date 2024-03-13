@@ -847,8 +847,11 @@ export class ExportMap {
 
   reportErrors(
     context: RuleContext,
-    declaration: { source: TSESTree.Literal },
+    declaration: { source: TSESTree.Literal | null },
   ) {
+    if (!declaration.source) {
+      throw new Error('declaration.source is null')
+    }
     const msg = this.errors
       .map(err => `${err.message} (${err.lineNumber}:${err.column})`)
       .join(', ')

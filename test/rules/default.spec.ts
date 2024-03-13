@@ -1,14 +1,15 @@
 import path from 'path'
-import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
-import { RuleTester } from 'eslint'
+
+import { TSESLint } from '@typescript-eslint/utils'
 
 import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
+import rule from '../../src/rules/default'
+import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/default')
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('default', rule, {
-  valid: [].concat(
+  valid: [
     test({ code: 'import "./malformed.js"' }),
 
     test({ code: 'import foo from "./empty-folder";' }),
@@ -96,7 +97,7 @@ ruleTester.run('default', rule, {
     }),
 
     // es2022: Arbitrary module namespace identifier names
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'export { "default" as bar } from "./bar"',
       parserOptions: {
         ecmaVersion: 2022,
@@ -104,7 +105,7 @@ ruleTester.run('default', rule, {
     })),
 
     ...SYNTAX_CASES,
-  ),
+  ],
 
   invalid: [
     test({
@@ -180,7 +181,7 @@ if (!CASE_SENSITIVE_FS) {
 describe('TypeScript', () => {
   const parser = parsers.TS
   ruleTester.run(`default`, rule, {
-    valid: [].concat(
+    valid: [
       test({
         code: `import foobar from "./typescript-default"`,
         parser,
@@ -285,7 +286,7 @@ describe('TypeScript', () => {
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
       }),
-    ),
+    ],
 
     invalid: [
       test({

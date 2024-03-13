@@ -1,3 +1,9 @@
+import path from 'path'
+
+import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+
+import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
+
 import {
   test,
   SYNTAX_CASES,
@@ -5,15 +11,16 @@ import {
   testVersion,
   parsers,
 } from '../utils'
-import { RuleTester } from 'eslint'
-import path from 'path'
 
-import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
+import rule from '../../src/rules/named'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/named')
+const ruleTester = new TSESLint.RuleTester()
 
-function error(name, module, type = 'Identifier') {
+function error(
+  name: string,
+  module: string,
+  type: `${TSESTree.AST_NODE_TYPES}` = 'Identifier',
+) {
   return { message: `${name} not found in '${module}'`, type }
 }
 
@@ -195,40 +202,39 @@ ruleTester.run('named', rule, {
 
     ...SYNTAX_CASES,
 
-    ...[].concat(
-      testVersion('>= 6', () => ({
-        code: `import { ExtfieldModel, Extfield2Model } from './models';`,
-        filename: testFilePath('./export-star/downstream.js'),
-        parserOptions: {
-          sourceType: 'module',
-          ecmaVersion: 2020,
-        },
-      })),
+    ...testVersion('>= 6', () => ({
+      code: `import { ExtfieldModel, Extfield2Model } from './models';`,
+      filename: testFilePath('./export-star/downstream.js'),
+      parserOptions: {
+        sourceType: 'module',
+        ecmaVersion: 2020,
+      },
+    })),
 
-      testVersion('>=7.8.0', () => ({
-        code: 'const { something } = require("./dynamic-import-in-commonjs")',
-        parserOptions: { ecmaVersion: 2021 },
-        options: [{ commonjs: true }],
-      })),
+    ...testVersion('>=7.8.0', () => ({
+      code: 'const { something } = require("./dynamic-import-in-commonjs")',
+      parserOptions: { ecmaVersion: 2021 },
+      options: [{ commonjs: true }],
+    })),
 
-      testVersion('>=7.8.0', () => ({
-        code: 'import { something } from "./dynamic-import-in-commonjs"',
-        parserOptions: { ecmaVersion: 2021 },
-      })),
+    ...testVersion('>=7.8.0', () => ({
+      code: 'import { something } from "./dynamic-import-in-commonjs"',
+      parserOptions: { ecmaVersion: 2021 },
+    })),
 
-      // es2022: Arbitrary module namespace identifier names
-      testVersion('>= 8.7', () => ({
-        code: 'import { "foo" as foo } from "./bar"',
-        parserOptions: { ecmaVersion: 2022 },
-      })),
-      testVersion('>= 8.7', () => ({
-        code: 'import { "foo" as foo } from "./empty-module"',
-        parserOptions: { ecmaVersion: 2022 },
-      })),
-    ),
+    // es2022: Arbitrary module namespace identifier names
+    ...testVersion('>= 8.7', () => ({
+      code: 'import { "foo" as foo } from "./bar"',
+      parserOptions: { ecmaVersion: 2022 },
+    })),
+
+    ...testVersion('>= 8.7', () => ({
+      code: 'import { "foo" as foo } from "./empty-module"',
+      parserOptions: { ecmaVersion: 2022 },
+    })),
   ],
 
-  invalid: [].concat(
+  invalid: [
     test({
       code: 'import { somethingElse } from "./test-module"',
       errors: [error('somethingElse', './test-module')],
@@ -368,12 +374,12 @@ ruleTester.run('named', rule, {
     }),
 
     // es2022: Arbitrary module namespace identifier names
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'import { "somethingElse" as somethingElse } from "./test-module"',
       errors: [error('somethingElse', './test-module', 'Literal')],
       parserOptions: { ecmaVersion: 2022 },
     })),
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'import { "baz" as baz, "bop" as bop } from "./bar"',
       errors: [
         error('baz', './bar', 'Literal'),
@@ -381,12 +387,12 @@ ruleTester.run('named', rule, {
       ],
       parserOptions: { ecmaVersion: 2022 },
     })),
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'import { "default" as barDefault } from "./re-export"',
       errors: [`default not found in './re-export'`],
       parserOptions: { ecmaVersion: 2022 },
     })),
-  ),
+  ],
 })
 
 // #311: import of mismatched case
