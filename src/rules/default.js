@@ -1,4 +1,4 @@
-import Exports from '../ExportMap'
+import { ExportMap } from '../ExportMap'
 import { docsUrl } from '../docs-url'
 
 module.exports = {
@@ -22,7 +22,7 @@ module.exports = {
       if (!defaultSpecifier) {
         return
       }
-      const imports = Exports.get(node.source.value, context)
+      const imports = ExportMap.get(node.source.value, context)
       if (imports == null) {
         return
       }

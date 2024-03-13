@@ -1,6 +1,4 @@
-'use strict'
-
-exports.__esModule = true
+import type { TSESTree } from '@typescript-eslint/utils'
 
 const pattern = /(^|;)\s*(export|import)((\s+\w)|(\s*[{*=]))|import\(/m
 /**
@@ -11,9 +9,8 @@ const pattern = /(^|;)\s*(export|import)((\s+\w)|(\s*[{*=]))|import\(/m
  *
  * Not perfect, just a fast way to disqualify large non-ES6 modules and
  * avoid a parse.
- * @type {import('./unambiguous').test}
  */
-exports.test = function isMaybeUnambiguousModule(content) {
+export function isMaybeUnambiguousModule(content: string) {
   return pattern.test(content)
 }
 
@@ -23,8 +20,7 @@ const unambiguousNodeType =
 
 /**
  * Given an AST, return true if the AST unambiguously represents a module.
- * @type {import('./unambiguous').isModule}
  */
-exports.isModule = function isUnambiguousModule(ast) {
+export function isUnambiguousModule(ast: TSESTree.Program) {
   return ast.body && ast.body.some(node => unambiguousNodeType.test(node.type))
 }

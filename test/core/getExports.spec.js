@@ -1,14 +1,13 @@
 import semver from 'semver'
 import eslintPkg from 'eslint/package.json'
-import typescriptPkg from 'typescript/package.json'
 import getTsconfig from 'get-tsconfig'
 
-import ExportMap from '../../src/ExportMap'
+import { ExportMap } from '../../src/ExportMap'
 
-import * as fs from 'fs'
+import fs from 'fs'
 
 import { getFilename } from '../utils'
-import { test as testUnambiguous } from '../../src/utils/unambiguous'
+import { isMaybeUnambiguousModule } from '../../src/utils/unambiguous'
 
 describe('ExportMap', () => {
   const fakeContext = Object.assign(
@@ -404,16 +403,6 @@ describe('ExportMap', () => {
       ])
     }
 
-    if (
-      semver.satisfies(eslintPkg.version, '<6') &&
-      semver.satisfies(typescriptPkg.version, '<4')
-    ) {
-      configs.push([
-        'array form',
-        { 'typescript-eslint-parser': ['.ts', '.tsx'] },
-      ])
-    }
-
     configs.forEach(([description, parserConfig]) => {
       describe(description, () => {
         const context = {
@@ -514,7 +503,7 @@ describe('ExportMap', () => {
     for (const [testFile, expectedRegexResult] of testFiles) {
       it(`works for ${testFile} (${expectedRegexResult})`, () => {
         const content = fs.readFileSync(`./test/fixtures/${testFile}`, 'utf8')
-        expect(testUnambiguous(content)).toBe(expectedRegexResult)
+        expect(isMaybeUnambiguousModule(content)).toBe(expectedRegexResult)
       })
     }
   })

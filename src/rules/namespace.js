@@ -1,5 +1,5 @@
 import declaredScope from '../utils/declaredScope'
-import Exports from '../ExportMap'
+import { ExportMap } from '../ExportMap'
 import { importDeclaration } from '../import-declaration'
 import { docsUrl } from '../docs-url'
 
@@ -12,7 +12,7 @@ function processBodyStatement(context, namespaces, declaration) {
     return
   }
 
-  const imports = Exports.get(declaration.source.value, context)
+  const imports = ExportMap.get(declaration.source.value, context)
   if (imports == null) {
     return null
   }
@@ -100,7 +100,7 @@ module.exports = {
       ExportNamespaceSpecifier(namespace) {
         const declaration = importDeclaration(context)
 
-        const imports = Exports.get(declaration.source.value, context)
+        const imports = ExportMap.get(declaration.source.value, context)
         if (imports == null) {
           return null
         }
@@ -146,7 +146,7 @@ module.exports = {
         const namepath = [dereference.object.name]
         // while property is namespace and parent is member expression, keep validating
         while (
-          namespace instanceof Exports &&
+          namespace instanceof ExportMap &&
           dereference.type === 'MemberExpression'
         ) {
           if (dereference.computed) {
@@ -197,7 +197,7 @@ module.exports = {
 
         // DFS traverse child namespaces
         function testKey(pattern, namespace, path = [init.name]) {
-          if (!(namespace instanceof Exports)) {
+          if (!(namespace instanceof ExportMap)) {
             return
           }
 

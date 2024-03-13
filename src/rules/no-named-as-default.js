@@ -1,4 +1,4 @@
-import Exports from '../ExportMap'
+import { ExportMap } from '../ExportMap'
 import { importDeclaration } from '../import-declaration'
 import { docsUrl } from '../docs-url'
 
@@ -23,7 +23,7 @@ module.exports = {
 
       const declaration = importDeclaration(context)
 
-      const imports = Exports.get(declaration.source.value, context)
+      const imports = ExportMap.get(declaration.source.value, context)
       if (imports == null) {
         return
       }

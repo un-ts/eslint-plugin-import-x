@@ -3,7 +3,7 @@
  * @author Ben Mosher
  */
 
-import { isModule } from '../utils/unambiguous'
+import { isUnambiguousModule } from '../utils/unambiguous'
 import { docsUrl } from '../docs-url'
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
 
     return {
       Program(ast) {
-        if (!isModule(ast)) {
+        if (!isUnambiguousModule(ast)) {
           context.report({
             node: ast,
             message: 'This module could be parsed as a valid script.',
