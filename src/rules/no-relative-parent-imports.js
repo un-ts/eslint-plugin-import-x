@@ -1,9 +1,9 @@
-import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
+import { moduleVisitor, makeOptionsSchema } from '../utils/module-visitor'
 import { docsUrl } from '../docs-url'
 import { basename, dirname, relative } from 'path'
 import { resolve } from '../utils/resolve'
 
-import { importType } from '../core/importType'
+import { importType } from '../core/import-type'
 
 module.exports = {
   meta: {

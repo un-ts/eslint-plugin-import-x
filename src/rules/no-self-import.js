@@ -4,7 +4,7 @@
  */
 
 import { resolve } from '../utils/resolve'
-import { moduleVisitor } from '../utils/moduleVisitor'
+import { moduleVisitor } from '../utils/module-visitor'
 import { docsUrl } from '../docs-url'
 
 function isImportingSelf(context, node, requireName) {

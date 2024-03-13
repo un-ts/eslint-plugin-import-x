@@ -6,7 +6,7 @@ import {
 
 import { isCoreModule } from '../utils/is-core-module'
 import { resolve } from '../utils/resolve'
-import { getContextPackagePath } from './packagePath'
+import { getContextPackagePath } from './package-path'
 import { PluginSettings, RuleContext } from '../types'
 
 function baseModule(name: string) {

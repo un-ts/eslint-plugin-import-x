@@ -1,7 +1,7 @@
 import { dirname } from 'path'
 
-import { pkgUp } from '../utils/pkgUp'
-import { readPkgUp } from '../utils/readPkgUp'
+import { pkgUp } from '../utils/pkg-up'
+import { readPkgUp } from '../utils/read-pkg-ip'
 import { RuleContext } from '../types'
 
 export function getContextPackagePath(context: RuleContext) {

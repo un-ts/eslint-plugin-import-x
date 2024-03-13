@@ -1,4 +1,4 @@
-import { moduleVisitor } from '../utils/moduleVisitor'
+import { moduleVisitor } from '../utils/module-visitor'
 import { docsUrl } from '../docs-url'
 
 const DEFAULT_MAX = 10

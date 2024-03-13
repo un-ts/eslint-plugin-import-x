@@ -1,9 +1,9 @@
 import path from 'path'
-import { readPkgUp } from '../utils/readPkgUp'
+import { readPkgUp } from '../utils/read-pkg-ip'
 
 import { resolve } from '../utils/resolve'
-import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
-import { importType } from '../core/importType'
+import { moduleVisitor, makeOptionsSchema } from '../utils/module-visitor'
+import { importType } from '../core/import-type'
 import { docsUrl } from '../docs-url'
 
 /** @param {string} filePath */

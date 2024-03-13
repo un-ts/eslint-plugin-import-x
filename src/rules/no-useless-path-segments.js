@@ -4,7 +4,7 @@
  */
 
 import { getFileExtensions } from '../utils/ignore'
-import { moduleVisitor } from '../utils/moduleVisitor'
+import { moduleVisitor } from '../utils/module-visitor'
 import { resolve } from '../utils/resolve'
 import path from 'path'
 import { docsUrl } from '../docs-url'

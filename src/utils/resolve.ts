@@ -12,9 +12,9 @@ import type {
 } from '../types'
 
 import { hashObject } from './hash'
-import { ModuleCache } from './ModuleCache'
+import { ModuleCache } from './module-cache'
 
-import { pkgDir } from './pkgDir'
+import { pkgDir } from './pkg-dir'
 
 export interface ResultNotFound {
   found: false

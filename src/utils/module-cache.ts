@@ -1,6 +1,8 @@
-import { ImportSettings, PluginSettings } from '../types'
+import debug from 'debug'
 
-const log = require('debug')('eslint-plugin-import-x:utils:ModuleCache')
+import type { ImportSettings, PluginSettings } from '../types'
+
+const log = debug('eslint-plugin-import-x:utils:ModuleCache')
 
 export type CacheKey = unknown
 

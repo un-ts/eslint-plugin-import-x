@@ -7,12 +7,12 @@ import {
   fileExistsWithCaseSync,
   resolve,
 } from '../utils/resolve'
-import { ModuleCache } from '../utils/ModuleCache'
+import { ModuleCache } from '../utils/module-cache'
 import {
   ModuleOptions,
   makeOptionsSchema,
   moduleVisitor,
-} from '../utils/moduleVisitor'
+} from '../utils/module-visitor'
 import { createRule } from '../utils'
 
 type Options = [

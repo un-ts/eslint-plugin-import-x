@@ -5,7 +5,7 @@ import {
   isExternalModule,
   isScoped,
   isAbsolute,
-} from '../../src/core/importType'
+} from '../../src/core/import-type'
 import { isCoreModule } from '../../src/utils/is-core-module'
 import { testContext, testFilePath } from '../utils'
 
