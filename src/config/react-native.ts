@@ -1,7 +1,9 @@
+import type { PluginConfig } from '../types'
+
 /**
- * - adds platform extensions to Node resolver
+ * adds platform extensions to Node resolver
  */
-module.exports = {
+export = {
   settings: {
     'import-x/resolver': {
       node: {
@@ -10,4 +12,4 @@ module.exports = {
       },
     },
   },
-}
+} satisfies PluginConfig

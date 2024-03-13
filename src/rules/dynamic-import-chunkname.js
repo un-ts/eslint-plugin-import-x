@@ -1,5 +1,5 @@
 import vm from 'vm'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 module.exports = {
   meta: {

@@ -1,8 +1,9 @@
+import type { PluginConfig } from '../types'
+
 /**
  * The basics.
- * @type {Object}
  */
-module.exports = {
+export = {
   plugins: ['import-x'],
 
   rules: {
@@ -25,4 +26,4 @@ module.exports = {
     sourceType: 'module',
     ecmaVersion: 2018,
   },
-}
+} satisfies PluginConfig

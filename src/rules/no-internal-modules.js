@@ -1,9 +1,9 @@
 import { makeRe } from 'minimatch'
 
-import resolve from '../utils/resolve'
+import { resolve } from '../utils/resolve'
 import importType from '../core/importType'
-import moduleVisitor from '../utils/moduleVisitor'
-import docsUrl from '../docsUrl'
+import { moduleVisitor } from '../utils/moduleVisitor'
+import { docsUrl } from '../docs-url'
 
 module.exports = {
   meta: {

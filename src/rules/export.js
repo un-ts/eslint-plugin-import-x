@@ -1,5 +1,5 @@
 import ExportMap, { recursivePatternCapture } from '../ExportMap'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:

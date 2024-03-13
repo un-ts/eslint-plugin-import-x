@@ -1,10 +1,10 @@
 import path from 'path'
 
-import resolve from '../utils/resolve'
-import moduleVisitor from '../utils/moduleVisitor'
+import { resolve } from '../utils/resolve'
+import { moduleVisitor } from '../utils/moduleVisitor'
 import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 import importType from '../core/importType'
 
 const containsPath = (filepath, target) => {

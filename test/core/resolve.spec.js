@@ -1,18 +1,19 @@
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 
-import resolve, {
+import {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
+  resolve,
 } from '../../src/utils/resolve'
 
-import * as path from 'path'
-import * as fs from 'fs'
+import path from 'path'
+import fs from 'fs'
 import * as utils from '../utils'
 
 describe('resolve', () => {
   it('throws on bad parameters', () => {
-    expect(resolve.bind(null, null, null)).toThrow(Error)
+    expect(resolve.bind(null, null, null)).toThrow()
   })
 
   it('resolves via a custom resolver with interface version 1', () => {

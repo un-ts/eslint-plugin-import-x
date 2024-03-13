@@ -23,7 +23,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it("doesn't support JSX by default", () => {
-    expect(() => parse(path, content, { parserPath: 'espree' })).toThrow(Error)
+    expect(() => parse(path, content, { parserPath: 'espree' })).toThrow()
   })
 
   it('infers jsx from ecmaFeatures when using stock parser', () => {
@@ -37,7 +37,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
           ecmaFeatures: { jsx: true },
         },
       }),
-    ).not.toThrow(Error)
+    ).not.toThrow()
   })
 
   it('passes expected parserOptions to custom parser', () => {
@@ -85,13 +85,13 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('throws on context == null', () => {
-    expect(parse.bind(null, path, content, null)).toThrow(Error)
+    expect(parse.bind(null, path, content, null)).toThrow()
   })
 
   it('throws on unable to resolve parserPath', () => {
     expect(
       parse.bind(null, path, content, { settings: {}, parserPath: null }),
-    ).toThrow(Error)
+    ).toThrow()
   })
 
   it('takes the alternate parser specified in settings', () => {
@@ -104,7 +104,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         parserPath: null,
         parserOptions,
       }),
-    ).not.toThrow(Error)
+    ).not.toThrow()
     // custom parser to be called once
     expect(parseSpy).toHaveBeenCalledTimes(1)
   })
@@ -116,7 +116,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         parserPath: null,
         languageOptions: null,
       }),
-    ).toThrow(Error)
+    ).toThrow()
   })
 
   it('throws on non-object languageOptions.parser', () => {
@@ -126,7 +126,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         parserPath: null,
         languageOptions: { parser: 'espree' },
       }),
-    ).toThrow(Error)
+    ).toThrow()
   })
 
   it('throws on null languageOptions.parser', () => {
@@ -136,7 +136,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         parserPath: null,
         languageOptions: { parser: null },
       }),
-    ).toThrow(Error)
+    ).toThrow()
   })
 
   it('throws on empty languageOptions.parser', () => {
@@ -146,7 +146,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         parserPath: null,
         languageOptions: { parser: {} },
       }),
-    ).toThrow(Error)
+    ).toThrow()
   })
 
   it('throws on non-function languageOptions.parser.parse', () => {
@@ -156,7 +156,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         parserPath: null,
         languageOptions: { parser: { parse: 'espree' } },
       }),
-    ).toThrow(Error)
+    ).toThrow()
   })
 
   it('throws on non-function languageOptions.parser.parse', () => {
@@ -166,7 +166,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         parserPath: null,
         languageOptions: { parser: { parseForESLint: 'espree' } },
       }),
-    ).toThrow(Error)
+    ).toThrow()
   })
 
   it('requires only one of the parse methods', () => {
@@ -176,7 +176,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         parserPath: null,
         languageOptions: { parser: { parseForESLint: () => ({ ast: {} }) } },
       }),
-    ).not.toThrow(Error)
+    ).not.toThrow()
   })
 
   it('uses parse from languageOptions.parser', () => {
@@ -186,7 +186,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         settings: {},
         languageOptions: { parser: { parse: parseSpy } },
       }),
-    ).not.toThrow(Error)
+    ).not.toThrow()
     // passed parser to be called once
     expect(parseSpy).toHaveBeenCalledTimes(1)
   })
@@ -198,7 +198,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         settings: {},
         languageOptions: { parser: { parseForESLint: parseSpy } },
       }),
-    ).not.toThrow(Error)
+    ).not.toThrow()
     // passed parser to be called once
     expect(parseSpy).toHaveBeenCalledTimes(1)
   })
@@ -210,9 +210,15 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
       parse.bind(null, path, content, {
         settings: { 'import-x/parsers': { [parseStubParserPath]: ['.js'] } },
         parserPath: null,
-        languageOptions: { parser: { parse() {} } },
+        languageOptions: {
+          parser: {
+            parse() {
+              //
+            },
+          },
+        },
       }),
-    ).not.toThrow(Error)
+    ).not.toThrow()
     // custom parser to be called once
     expect(parseSpy).toHaveBeenCalledTimes(1)
   })
@@ -231,7 +237,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
           ecmaFeatures: { jsx: true },
         },
       }),
-    ).not.toThrow(Error)
+    ).not.toThrow()
   })
 
   it('prefers languageOptions.parserOptions over parserOptions', () => {
@@ -250,6 +256,6 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         },
         parserOptions: { sourceType: 'script' },
       }),
-    ).not.toThrow(Error)
+    ).not.toThrow()
   })
 })

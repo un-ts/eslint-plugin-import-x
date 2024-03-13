@@ -34,7 +34,7 @@ describe('ExportMap', () => {
     let imports
     expect(function () {
       imports = ExportMap.get('./export-all', fakeContext)
-    }).not.toThrow(Error)
+    }).not.toThrow()
 
     expect(imports).toBeDefined()
     expect(imports.has('foo')).toBe(true)
@@ -77,7 +77,7 @@ describe('ExportMap', () => {
     let imports
     expect(function () {
       imports = ExportMap.get('./does-not-exist', fakeContext)
-    }).not.toThrow(Error)
+    }).not.toThrow()
 
     expect(imports).toBeFalsy()
   })
@@ -86,7 +86,7 @@ describe('ExportMap', () => {
     let imports
     expect(function () {
       imports = ExportMap.get('./exports-missing', fakeContext)
-    }).not.toThrow(Error)
+    }).not.toThrow()
 
     expect(imports).toBeDefined()
     expect(imports.has('bar')).toBe(true)

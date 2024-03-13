@@ -4,7 +4,7 @@
  */
 
 import { isModule } from '../utils/unambiguous'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 module.exports = {
   meta: {

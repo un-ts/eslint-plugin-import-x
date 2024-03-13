@@ -1,6 +1,6 @@
 import declaredScope from '../utils/declaredScope'
 import Exports from '../ExportMap'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 function message(deprecation) {
   return `Deprecated${deprecation.description ? `: ${deprecation.description}` : '.'}`

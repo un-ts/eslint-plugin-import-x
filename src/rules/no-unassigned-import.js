@@ -2,7 +2,7 @@ import path from 'path'
 import { minimatch } from 'minimatch'
 
 import isStaticRequire from '../core/staticRequire'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 function report(context, node) {
   context.report({

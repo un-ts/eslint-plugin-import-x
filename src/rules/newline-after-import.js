@@ -4,7 +4,7 @@
  */
 
 import isStaticRequire from '../core/staticRequire'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 import debug from 'debug'
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')

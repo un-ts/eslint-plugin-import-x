@@ -1,6 +1,6 @@
 'use strict'
 
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 const SINGLE_EXPORT_ERROR_MESSAGE =
   'Prefer default export on a file with single export.'

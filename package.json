@@ -12,13 +12,12 @@
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
-    "./config/*": "./config/*",
     "./package.json": "./package.json",
     "./*": "./lib/*"
   },
   "files": [
-    "config",
-    "lib"
+    "lib",
+    "!lib/*.tsbuildinfo"
   ],
   "keywords": [
     "eslint",
@@ -31,12 +30,13 @@
     "export"
   ],
   "scripts": {
-    "build": "babel --quiet --out-dir lib src",
+    "build": "rimraf lib && tsc -p src",
     "lint": "yarn lint:es && yarn update:eslint-docs --check",
     "lint:es": "eslint . --cache",
-    "prebuild": "rimraf lib",
+    "prepare": "patch-package",
     "release": "changeset publish",
     "test": "jest",
+    "test-compiled": "yarn build && cross-env TEST_COMPILED=1 jest",
     "update:eslint-docs": "yarn build && eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️",
     "watch": "yarn test --watch"
   },
@@ -44,6 +44,7 @@
     "eslint": "^7.2.0 || ^8"
   },
   "dependencies": {
+    "@typescript-eslint/utils": "^5.62.0",
     "debug": "^4.3.4",
     "doctrine": "^3.0.0",
     "eslint-import-resolver-node": "^0.3.9",
@@ -54,8 +55,8 @@
   },
   "devDependencies": {
     "@1stg/prettier-config": "^4.0.1",
+    "@1stg/tsconfig": "^2.3.3",
     "@angular-eslint/template-parser": "^17.2.1",
-    "@babel/cli": "^7.23.9",
     "@babel/core": "^7.24.0",
     "@babel/eslint-parser": "^7.23.10",
     "@babel/plugin-proposal-decorators": "^7.24.0",
@@ -63,14 +64,21 @@
     "@babel/preset-env": "^7.24.0",
     "@babel/preset-flow": "^7.24.0",
     "@babel/preset-react": "^7.23.3",
+    "@babel/preset-typescript": "^7.23.3",
     "@babel/register": "^7.23.7",
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.1",
     "@eslint/import-test-order-redirect-scoped": "link:./test/fixtures/order-redirect-scoped",
     "@test-scope/some-module": "link:./test/fixtures/symlinked-module",
+    "@types/eslint": "^8.56.5",
     "@types/jest": "^29.5.12",
-    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@types/json-schema": "^7.0.15",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
+    "@typescript-eslint/typescript-estree": "^5.62.0",
+    "@unts/patch-package": "^8.0.0",
+    "cross-env": "^7.0.3",
+    "enhanced-resolve": "^5.16.0",
     "escope": "^4.0.0",
     "eslint": "^7.2.0 || ^8",
     "eslint-config-prettier": "^9.1.0",
@@ -88,6 +96,7 @@
     "redux": "^5.0.1",
     "rimraf": "^5.0.5",
     "svelte": "^4.2.12",
-    "typescript": "^5.4.2"
+    "type-fest": "^4.12.0",
+    "typescript": "~5.1.0"
   }
 }

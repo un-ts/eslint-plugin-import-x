@@ -1,5 +1,5 @@
-import moduleVisitor from '../utils/moduleVisitor'
-import docsUrl from '../docsUrl'
+import { moduleVisitor } from '../utils/moduleVisitor'
+import { docsUrl } from '../docs-url'
 
 function reportIfNonStandard(context, node, name) {
   if (name && name.indexOf('!') !== -1) {

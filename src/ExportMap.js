@@ -9,7 +9,7 @@ import { SourceCode } from 'eslint'
 
 import parse from './utils/parse'
 import visit from './utils/visit'
-import resolve from './utils/resolve'
+import { relative, resolve } from './utils/resolve'
 import isIgnored, { hasValidExtension } from './utils/ignore'
 
 import { hashObject } from './utils/hash'
@@ -506,7 +506,7 @@ ExportMap.parse = function (path, content, context) {
   const namespaces = new Map()
 
   function remotePath(value) {
-    return resolve.relative(value, path, context.settings)
+    return relative(value, path, context.settings)
   }
 
   function resolveImport(value) {

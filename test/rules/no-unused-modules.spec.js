@@ -1,6 +1,6 @@
 import { test, testVersion, testFilePath, parsers } from '../utils'
-import jsxConfig from '../../config/react'
-import typescriptConfig from '../../config/typescript'
+import jsxConfig from '../../src/config/react'
+import typescriptConfig from '../../src/config/typescript'
 
 import { RuleTester } from 'eslint'
 import fs from 'fs'

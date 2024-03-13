@@ -1,5 +1,5 @@
 import { parsers, test, testFilePath } from '../utils'
-import typescriptConfig from '../../config/typescript'
+import typescriptConfig from '../../src/config/typescript'
 import path from 'path'
 import fs from 'fs'
 

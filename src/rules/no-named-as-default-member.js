@@ -5,8 +5,8 @@
  * See LICENSE in root directory for full license.
  */
 import Exports from '../ExportMap'
-import importDeclaration from '../importDeclaration'
-import docsUrl from '../docsUrl'
+import { importDeclaration } from '../import-declaration'
+import { docsUrl } from '../docs-url'
 
 //------------------------------------------------------------------------------
 // Rule Definition

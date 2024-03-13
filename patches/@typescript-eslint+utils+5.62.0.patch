@@ -1,0 +1,15 @@
+diff --git a/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts b/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts
+index 9a3a1fd..46b3961 100644
+--- a/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts
++++ b/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts
+@@ -6,6 +6,10 @@ import type { Scope } from './Scope';
+ import type { SourceCode } from './SourceCode';
+ export type RuleRecommendation = 'error' | 'strict' | 'warn' | false;
+ interface RuleMetaDataDocs {
++    /**
++     * The category the rule falls under
++     */
++    category?: string;
+     /**
+      * Concise description of the rule
+      */

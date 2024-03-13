@@ -3,9 +3,9 @@
  * @author Gio d'Amelio
  */
 
-import resolve from '../utils/resolve'
-import moduleVisitor from '../utils/moduleVisitor'
-import docsUrl from '../docsUrl'
+import { resolve } from '../utils/resolve'
+import { moduleVisitor } from '../utils/moduleVisitor'
+import { docsUrl } from '../docs-url'
 
 function isImportingSelf(context, node, requireName) {
   const filePath = context.getPhysicalFilename

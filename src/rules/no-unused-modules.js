@@ -5,13 +5,13 @@
  */
 
 import { getFileExtensions } from '../utils/ignore'
-import resolve from '../utils/resolve'
+import { resolve } from '../utils/resolve'
 import visit from '../utils/visit'
 import { dirname, join } from 'path'
-import readPkgUp from '../utils/readPkgUp'
+import { readPkgUp } from '../utils/readPkgUp'
 
 import Exports, { recursivePatternCapture } from '../ExportMap'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 let FileEnumerator
 let listFilesToProcess

@@ -4,7 +4,7 @@ import { minimatch } from 'minimatch'
 
 import importType from '../core/importType'
 import isStaticRequire from '../core/staticRequire'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 // This is a **non-spec compliant** but works in practice replacement of `object.groupby` package.
 const groupBy = (array, grouper) =>

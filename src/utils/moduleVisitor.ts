@@ -1,18 +1,30 @@
-'use strict'
+import type { TSESTree } from '@typescript-eslint/typescript-estree'
+import type { TSESLint } from '@typescript-eslint/utils'
+import type { JSONSchema4 } from 'json-schema'
 
-exports.__esModule = true
+type Visitor = (
+  source: TSESTree.StringLiteral,
+  importer:
+    | TSESTree.ImportDeclaration
+    | TSESTree.ExportNamedDeclaration
+    | TSESTree.ExportAllDeclaration
+    | TSESTree.CallExpression
+    | TSESTree.ImportExpression
+    | TSESTree.StringLiteral,
+) => void
 
-/** @typedef {import('estree').Node} Node */
-/** @typedef {{ arguments: import('estree').CallExpression['arguments'], callee: Node }} Call */
-/** @typedef {import('estree').ImportDeclaration | import('estree').ExportNamedDeclaration | import('estree').ExportAllDeclaration} Declaration */
+export interface ModuleOptions {
+  amd?: boolean
+  commonjs?: boolean
+  esmodule?: boolean
+  ignore?: string[]
+}
 
 /**
  * Returns an object of node visitors that will call
  * 'visitor' with every discovered module path.
- *
- * @type {(import('./moduleVisitor').default)}
  */
-exports.default = function visitModules(visitor, options) {
+export function moduleVisitor(visitor: Visitor, options: ModuleOptions) {
   const ignore = options && options.ignore
   const amd = !!(options && options.amd)
   const commonjs = !!(options && options.commonjs)
@@ -21,8 +33,16 @@ exports.default = function visitModules(visitor, options) {
 
   const ignoreRegExps = ignore == null ? [] : ignore.map(p => new RegExp(p))
 
-  /** @type {(source: undefined | null | import('estree').Literal, importer: Parameters<typeof visitor>[1]) => void} */
-  function checkSourceValue(source, importer) {
+  function checkSourceValue(
+    source: TSESTree.StringLiteral | null | undefined,
+    importer:
+      | TSESTree.ImportDeclaration
+      | TSESTree.ExportNamedDeclaration
+      | TSESTree.ExportAllDeclaration
+      | TSESTree.CallExpression
+      | TSESTree.ImportExpression
+      | TSESTree.StringLiteral,
+  ) {
     if (source == null) {
       return
     } //?
@@ -37,15 +57,17 @@ exports.default = function visitModules(visitor, options) {
   }
 
   // for import-y declarations
-  /** @type {(node: Declaration) => void} */
-  function checkSource(node) {
+  function checkSource(
+    node:
+      | TSESTree.ImportDeclaration
+      | TSESTree.ExportNamedDeclaration
+      | TSESTree.ExportAllDeclaration,
+  ) {
     checkSourceValue(node.source, node)
   }
 
   // for esmodule dynamic `import()` calls
-  /** @type {(node: import('estree').ImportExpression | import('estree').CallExpression) => void} */
-  function checkImportCall(node) {
-    /** @type {import('estree').Expression | import('estree').Literal | import('estree').CallExpression['arguments'][0]} */
+  function checkImportCall(node: TSESTree.Node) {
     let modulePath
     // refs https://github.com/estree/estree/blob/HEAD/es2020.md#importexpression
     if (node.type === 'ImportExpression') {
@@ -67,6 +89,7 @@ exports.default = function visitModules(visitor, options) {
     if (modulePath.type !== 'Literal') {
       return
     }
+
     if (typeof modulePath.value !== 'string') {
       return
     }
@@ -76,8 +99,7 @@ exports.default = function visitModules(visitor, options) {
 
   // for CommonJS `require` calls
   // adapted from @mctep: https://git.io/v4rAu
-  /** @type {(call: Call) => void} */
-  function checkCommon(call) {
+  function checkCommon(call: TSESTree.CallExpression) {
     if (call.callee.type !== 'Identifier') {
       return
     }
@@ -89,6 +111,7 @@ exports.default = function visitModules(visitor, options) {
     }
 
     const modulePath = call.arguments[0]
+
     if (modulePath.type !== 'Literal') {
       return
     }
@@ -99,8 +122,7 @@ exports.default = function visitModules(visitor, options) {
     checkSourceValue(modulePath, call)
   }
 
-  /** @type {(call: Call) => void} */
-  function checkAMD(call) {
+  function checkAMD(call: TSESTree.CallExpression) {
     if (call.callee.type !== 'Identifier') {
       return
     }
@@ -120,9 +142,11 @@ exports.default = function visitModules(visitor, options) {
       if (!element) {
         continue
       }
+
       if (element.type !== 'Literal') {
         continue
       }
+
       if (typeof element.value !== 'string') {
         continue
       }
@@ -135,7 +159,8 @@ exports.default = function visitModules(visitor, options) {
     }
   }
 
-  const visitors = {}
+  const visitors = {} as TSESLint.RuleListener
+
   if (esmodule) {
     Object.assign(visitors, {
       ImportDeclaration: checkSource,
@@ -148,9 +173,7 @@ exports.default = function visitModules(visitor, options) {
 
   if (commonjs || amd) {
     const currentCallExpression = visitors.CallExpression
-    visitors.CallExpression = /** @type {(call: Call) => void} */ function (
-      call,
-    ) {
+    visitors.CallExpression = function (call) {
       if (currentCallExpression) {
         currentCallExpression(call)
       }
@@ -168,11 +191,9 @@ exports.default = function visitModules(visitor, options) {
 
 /**
  * make an options schema for the module visitor, optionally adding extra fields.
- * @type {import('./moduleVisitor').makeOptionsSchema}
  */
-function makeOptionsSchema(additionalProperties) {
-  /** @type {import('./moduleVisitor').Schema} */
-  const base = {
+export function makeOptionsSchema(additionalProperties?: JSONSchema4) {
+  const base: JSONSchema4 = {
     type: 'object',
     properties: {
       commonjs: { type: 'boolean' },
@@ -190,16 +211,14 @@ function makeOptionsSchema(additionalProperties) {
 
   if (additionalProperties) {
     for (const key in additionalProperties) {
-      // @ts-expect-error TS always has trouble with arbitrary object assignment/mutation
-      base.properties[key] = additionalProperties[key]
+      base.properties![key] = additionalProperties[key]
     }
   }
 
   return base
 }
-exports.makeOptionsSchema = makeOptionsSchema
 
 /**
  * json schema object for options parameter. can be used to build rule options schema object.
  */
-exports.optionsSchema = makeOptionsSchema()
+export const optionsSchema = makeOptionsSchema()

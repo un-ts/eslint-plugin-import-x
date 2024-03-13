@@ -1,3 +1,5 @@
+import type { PluginConfig } from '../types'
+
 /**
  * Adds `.jsx` as an extension, and enables JSX parsing.
  *
@@ -5,12 +7,13 @@
  * define jsnext:main and have JSX internally, you may run into problems
  * if you don't enable these settings at the top level.
  */
-module.exports = {
+export = {
   settings: {
     'import-x/extensions': ['.js', '.jsx'],
   },
-
   parserOptions: {
-    ecmaFeatures: { jsx: true },
+    ecmaFeatures: {
+      jsx: true,
+    },
   },
-}
+} satisfies PluginConfig

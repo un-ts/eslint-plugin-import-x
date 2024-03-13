@@ -1,5 +1,10 @@
+import type { PluginConfig } from './types'
+
+import noUnresolved from './rules/no-unresolved'
+import { TSESLint } from '@typescript-eslint/utils'
+
 export const rules = {
-  'no-unresolved': require('./rules/no-unresolved'),
+  'no-unresolved': noUnresolved,
   named: require('./rules/named'),
   default: require('./rules/default'),
   namespace: require('./rules/namespace'),
@@ -52,20 +57,20 @@ export const rules = {
 
   // deprecated aliases to rules
   'imports-first': require('./rules/imports-first'),
-}
+} satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
 export const configs = {
-  recommended: require('../config/recommended'),
+  recommended: require('./config/recommended'),
 
-  errors: require('../config/errors'),
-  warnings: require('../config/warnings'),
+  errors: require('./config/errors'),
+  warnings: require('./config/warnings'),
 
   // shhhh... work in progress "secret" rules
-  'stage-0': require('../config/stage-0'),
+  'stage-0': require('./config/stage-0'),
 
   // useful stuff for folks using various environments
-  react: require('../config/react'),
-  'react-native': require('../config/react-native'),
-  electron: require('../config/electron'),
-  typescript: require('../config/typescript'),
-}
+  react: require('./config/react'),
+  'react-native': require('./config/react-native'),
+  electron: require('./config/electron'),
+  typescript: require('./config/typescript'),
+} satisfies Record<string, PluginConfig>

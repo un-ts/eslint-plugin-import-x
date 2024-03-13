@@ -1,7 +1,7 @@
-import moduleVisitor, { makeOptionsSchema } from '../utils/moduleVisitor'
-import docsUrl from '../docsUrl'
+import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
+import { docsUrl } from '../docs-url'
 import { basename, dirname, relative } from 'path'
-import resolve from '../utils/resolve'
+import { resolve } from '../utils/resolve'
 
 import importType from '../core/importType'
 

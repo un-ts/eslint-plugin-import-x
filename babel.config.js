@@ -1,3 +1,6 @@
+/**
+ * @type {import('@babel/core').TransformOptions}
+ */
 module.exports = {
   presets: [
     [
@@ -22,4 +25,10 @@ module.exports = {
   ],
   sourceMaps: 'inline',
   retainLines: true,
+  overrides: [
+    {
+      include: '**/*.ts',
+      presets: ['@babel/typescript'],
+    },
+  ],
 }

@@ -1,6 +1,6 @@
 import { dirname } from 'path'
-import pkgUp from '../utils/pkgUp'
-import readPkgUp from '../utils/readPkgUp'
+import { pkgUp } from '../utils/pkgUp'
+import { readPkgUp } from '../utils/readPkgUp'
 
 export function getContextPackagePath(context) {
   return getFilePackagePath(

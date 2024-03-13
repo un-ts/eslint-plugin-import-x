@@ -1,7 +1,7 @@
 import path from 'path'
-import moduleVisitor, { makeOptionsSchema } from '../utils/moduleVisitor'
+import { moduleVisitor, makeOptionsSchema } from '../utils/moduleVisitor'
 import { isAbsolute } from '../core/importType'
-import docsUrl from '../docsUrl'
+import { docsUrl } from '../docs-url'
 
 module.exports = {
   meta: {
