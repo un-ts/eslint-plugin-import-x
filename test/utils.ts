@@ -1,6 +1,6 @@
 import path from 'path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
@@ -41,16 +41,49 @@ export function eslintVersionSatisfies(specifier: string) {
   return semver.satisfies(eslintPkg.version, specifier)
 }
 
-type ValidTestCase = TSESLint.ValidTestCase<readonly unknown[]>
-
-export function testVersion(specifier: string, t: () => ValidTestCase) {
-  return eslintVersionSatisfies(specifier) ? test(t()) : []
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
+export type ValidTestCase = TSESLint.ValidTestCase<any> & {
+  errors?: readonly InvalidTestCaseError[]
 }
 
-export function test(t: ValidTestCase): ValidTestCase {
+export type InvalidTestCase = // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
+  TSESLint.InvalidTestCase<any, readonly any[]>
+
+export function testVersion<T extends ValidTestCase>(
+  specifier: string,
+  t: () => T,
+): T extends { errors: readonly InvalidTestCaseError[] }
+  ? InvalidTestCase[]
+  : ValidTestCase[] {
+  // @ts-expect-error -- simplify testing
+  return eslintVersionSatisfies(specifier) ? [test(t())] : []
+}
+
+export type InvalidTestCaseError =
+  | string
+  | InvalidTestCase['errors'][number]
+  | {
+      type?: `${TSESTree.AST_NODE_TYPES}`
+      message: string
+      line?: number
+      column?: number
+      endLine?: number
+      endColumn?: number
+    }
+
+export function test<
+  T extends ValidTestCase & {
+    errors?: InvalidTestCaseError[]
+  },
+>(
+  t: T,
+): T extends { errors?: InvalidTestCaseError[] }
+  ? InvalidTestCase
+  : ValidTestCase {
   if (arguments.length !== 1) {
     throw new SyntaxError('`test` requires exactly one object argument')
   }
+  // @ts-expect-error -- simplify testing
   return {
     filename: FILENAME,
     ...t,

@@ -1,18 +1,31 @@
 import path from 'path'
 
-import { test, SYNTAX_CASES, testVersion, parsers } from '../utils'
+import { TSESLint } from '@typescript-eslint/utils'
 
 import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
+import rule from '../../src/rules/no-unresolved'
 
-import { RuleTester } from 'eslint'
+import {
+  test,
+  SYNTAX_CASES,
+  testVersion,
+  parsers,
+  ValidTestCase,
+  InvalidTestCaseError,
+  InvalidTestCase,
+} from '../utils'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/no-unresolved')
+const ruleTester = new TSESLint.RuleTester()
 
-function runResolverTests(resolver) {
+function runResolverTests(resolver: 'node' | 'webpack') {
   // redefine 'test' to set a resolver
   // thus 'rest'. needed something 4-chars-long for formatting simplicity
-  function rest(specs) {
+  function rest<T extends ValidTestCase>(
+    specs: T,
+  ): T extends { errors: InvalidTestCaseError[] }
+    ? InvalidTestCase
+    : ValidTestCase {
+    // @ts-expect-error -- simplify testing
     return test({
       ...specs,
       settings: {
@@ -24,7 +37,7 @@ function runResolverTests(resolver) {
   }
 
   ruleTester.run(`no-unresolved (${resolver})`, rule, {
-    valid: [].concat(
+    valid: [
       test({ code: 'import "./malformed.js"' }),
 
       rest({ code: 'import foo from "./bar";' }),
@@ -37,12 +50,12 @@ function runResolverTests(resolver) {
       }),
 
       // check with eslint parser
-      testVersion('>= 7', () =>
+      ...testVersion('>= 7', () =>
         rest({
           code: "import('fs');",
           parserOptions: { ecmaVersion: 2021 },
         }),
-      ) || [],
+      ),
 
       rest({ code: 'import * as foo from "a"' }),
 
@@ -127,9 +140,9 @@ function runResolverTests(resolver) {
         code: 'require(foo)',
         options: [{ commonjs: true }],
       }),
-    ),
+    ],
 
-    invalid: [].concat(
+    invalid: [
       rest({
         code: 'import reallyfake from "./reallyfake/module"',
         settings: { 'import-x/ignore': ['^\\./fake/'] },
@@ -199,7 +212,7 @@ function runResolverTests(resolver) {
       }),
 
       // check with eslint parser
-      testVersion('>= 7', () =>
+      ...testVersion('>= 7', () =>
         rest({
           code: "import('in-alternate-root').then(function({DEEP}) {});",
           errors: [
@@ -210,7 +223,7 @@ function runResolverTests(resolver) {
           ],
           parserOptions: { ecmaVersion: 2021 },
         }),
-      ) || [],
+      ),
 
       // export symmetry proposal
       rest({
@@ -281,7 +294,7 @@ function runResolverTests(resolver) {
           },
         ],
       }),
-    ),
+    ],
   })
 
   ruleTester.run(`issue #333 (${resolver})`, rule, {
@@ -372,7 +385,7 @@ function runResolverTests(resolver) {
   }
 }
 
-;['node', 'webpack'].forEach(runResolverTests)
+;(['node', 'webpack'] as const).forEach(runResolverTests)
 
 ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
   valid: [
@@ -524,21 +537,17 @@ ruleTester.run('no-unresolved syntax verification', rule, {
 
 // https://github.com/import-js/eslint-plugin-import-x/issues/2024
 ruleTester.run('import() with built-in parser', rule, {
-  valid: [].concat(
-    testVersion('>=7', () => ({
-      code: "import('fs');",
-      parserOptions: { ecmaVersion: 2021 },
-    })) || [],
-  ),
-  invalid: [].concat(
-    testVersion('>=7', () => ({
-      code: 'import("./does-not-exist-l0w9ssmcqy9").then(() => {})',
-      parserOptions: { ecmaVersion: 2021 },
-      errors: [
-        "Unable to resolve path to module './does-not-exist-l0w9ssmcqy9'.",
-      ],
-    })) || [],
-  ),
+  valid: testVersion('>=7', () => ({
+    code: "import('fs');",
+    parserOptions: { ecmaVersion: 2021 },
+  })),
+  invalid: testVersion('>=7', () => ({
+    code: 'import("./does-not-exist-l0w9ssmcqy9").then(() => {})',
+    parserOptions: { ecmaVersion: 2021 },
+    errors: [
+      "Unable to resolve path to module './does-not-exist-l0w9ssmcqy9'.",
+    ],
+  })),
 })
 
 describe('TypeScript', () => {
