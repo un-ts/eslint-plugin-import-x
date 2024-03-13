@@ -97,7 +97,7 @@ This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, a
 
 <!-- end auto-generated rules list -->
 
-## `eslint-plugin-import` for enterprise
+## `eslint-plugin-import-x` for enterprise
 
 Available as part of the Tidelift Subscription.
 
@@ -107,7 +107,7 @@ The maintainers of `eslint-plugin-import` and thousands of other packages are wo
 
 ```sh
 # inside your project's working tree
-npm install eslint-plugin-import --save-dev
+npm install eslint-plugin-import-x --save-dev
 ```
 
 All rules are off by default. However, you may configure them manually
