@@ -1,7 +1,5 @@
 import path from 'path'
 
-// warms up the module cache. this import takes a while (>500ms)
-
 import { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
@@ -9,6 +7,7 @@ import typescriptPkg from 'typescript/package.json'
 
 import type { PluginSettings, RuleContext } from '../src/types'
 
+// warms up the module cache. this import takes a while (>500ms)
 import '@babel/eslint-parser'
 
 export const parsers = {
@@ -22,12 +21,9 @@ export function tsVersionSatisfies(specifier: string) {
 }
 
 export function typescriptEslintParserSatisfies(specifier: string) {
-  return (
-    parsers.TS &&
-    semver.satisfies(
-      require('@typescript-eslint/parser/package.json').version,
-      specifier,
-    )
+  return semver.satisfies(
+    require('@typescript-eslint/parser/package.json').version,
+    specifier,
   )
 }
 
