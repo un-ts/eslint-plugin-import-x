@@ -10,6 +10,7 @@ import noNamespace from './rules/no-namespace'
 import export_ from './rules/export'
 import noMutableExports from './rules/no-mutable-exports'
 import extensions from './rules/extensions'
+import noRestrictedPaths from './rules/no-restricted-paths'
 
 export const rules = {
   'no-unresolved': noUnresolved,
@@ -20,7 +21,7 @@ export const rules = {
   export: export_,
   'no-mutable-exports': noMutableExports,
   extensions,
-  'no-restricted-paths': require('./rules/no-restricted-paths'),
+  'no-restricted-paths': noRestrictedPaths,
   'no-internal-modules': require('./rules/no-internal-modules'),
   'group-exports': require('./rules/group-exports'),
   'no-relative-packages': require('./rules/no-relative-packages'),
