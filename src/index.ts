@@ -18,6 +18,7 @@ import noRelativePackages from './rules/no-relative-packages'
 import noRelativeParentImports from './rules/no-relative-parent-imports'
 import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
 import noSelfImport from './rules/no-self-import'
+import noCycle from './rules/no-cycle'
 
 // configs
 import recommended from './config/recommended'
@@ -46,7 +47,7 @@ export const rules = {
   'consistent-type-specifier-style': consistentTypeSpecifierStyle,
 
   'no-self-import': noSelfImport,
-  'no-cycle': require('./rules/no-cycle'),
+  'no-cycle': noCycle,
   'no-named-default': require('./rules/no-named-default'),
   'no-named-as-default': require('./rules/no-named-as-default'),
   'no-named-as-default-member': require('./rules/no-named-as-default-member'),
