@@ -3,17 +3,49 @@ import { makeRe } from 'minimatch'
 import { resolve } from '../utils/resolve'
 import { importType } from '../core/import-type'
 import { moduleVisitor } from '../utils/module-visitor'
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
 
-module.exports = {
+// minimatch patterns are expected to use / path separators, like import
+// statements, so normalize paths to use the same
+function normalizeSep(somePath: string) {
+  return somePath.split('\\').join('/')
+}
+
+function toSteps(somePath: string) {
+  return normalizeSep(somePath)
+    .split('/')
+    .filter(step => step && step !== '.')
+    .reduce<string[]>((acc, step) => {
+      if (step === '..') {
+        return acc.slice(0, -1)
+      }
+      return acc.concat(step)
+    }, [])
+}
+
+const potentialViolationTypes = [
+  'parent',
+  'index',
+  'sibling',
+  'external',
+  'internal',
+]
+
+type Options = {
+  allow?: string[]
+  forbid?: string[]
+}
+
+type MessageId = 'noAllowed'
+
+export = createRule<[Options?], MessageId>({
+  name: 'no-internal-modules',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Static analysis',
       description: 'Forbid importing the submodules of other modules.',
-      url: docsUrl('no-internal-modules'),
     },
-
     schema: [
       {
         anyOf: [
@@ -44,42 +76,31 @@ module.exports = {
         ],
       },
     ],
+    messages: {
+      noAllowed: `Reaching to "{{importPath}}" is not allowed.`,
+    },
   },
-
-  create: function noReachingInside(context) {
+  defaultOptions: [],
+  create(context) {
     const options = context.options[0] || {}
-    const allowRegexps = (options.allow || []).map(p => makeRe(p))
-    const forbidRegexps = (options.forbid || []).map(p => makeRe(p))
-
-    // minimatch patterns are expected to use / path separators, like import
-    // statements, so normalize paths to use the same
-    function normalizeSep(somePath) {
-      return somePath.split('\\').join('/')
-    }
-
-    function toSteps(somePath) {
-      return normalizeSep(somePath)
-        .split('/')
-        .filter(step => step && step !== '.')
-        .reduce((acc, step) => {
-          if (step === '..') {
-            return acc.slice(0, -1)
-          }
-          return acc.concat(step)
-        }, [])
-    }
+    const allowRegexps = (options.allow || [])
+      .map(p => makeRe(p))
+      .filter(Boolean) as RegExp[]
+    const forbidRegexps = (options.forbid || [])
+      .map(p => makeRe(p))
+      .filter(Boolean) as RegExp[]
 
     // test if reaching to this destination is allowed
-    function reachingAllowed(importPath) {
+    function reachingAllowed(importPath: string) {
       return allowRegexps.some(re => re.test(importPath))
     }
 
     // test if reaching to this destination is forbidden
-    function reachingForbidden(importPath) {
+    function reachingForbidden(importPath: string) {
       return forbidRegexps.some(re => re.test(importPath))
     }
 
-    function isAllowViolation(importPath) {
+    function isAllowViolation(importPath: string) {
       const steps = toSteps(importPath)
 
       const nonScopeSteps = steps.filter(step => step.indexOf('@') !== 0)
@@ -106,7 +127,7 @@ module.exports = {
       return true
     }
 
-    function isForbidViolation(importPath) {
+    function isForbidViolation(importPath: string) {
       const steps = toSteps(importPath)
 
       // before trying to resolve, see if the raw import (with relative
@@ -133,31 +154,23 @@ module.exports = {
       ? isForbidViolation
       : isAllowViolation
 
-    function checkImportForReaching(importPath, node) {
-      const potentialViolationTypes = [
-        'parent',
-        'index',
-        'sibling',
-        'external',
-        'internal',
-      ]
-      if (
-        potentialViolationTypes.indexOf(importType(importPath, context)) !==
-          -1 &&
-        isReachViolation(importPath)
-      ) {
-        context.report({
-          node,
-          message: `Reaching to "${importPath}" is not allowed.`,
-        })
-      }
-    }
-
     return moduleVisitor(
       source => {
-        checkImportForReaching(source.value, source)
+        const importPath = source.value
+        if (
+          potentialViolationTypes.includes(importType(importPath, context)) &&
+          isReachViolation(importPath)
+        ) {
+          context.report({
+            node: source,
+            messageId: 'noAllowed',
+            data: {
+              importPath,
+            },
+          })
+        }
       },
       { commonjs: true },
     )
   },
-}
+})
