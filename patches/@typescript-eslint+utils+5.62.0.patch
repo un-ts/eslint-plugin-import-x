@@ -1,15 +1,24 @@
 diff --git a/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts b/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts
-index 9a3a1fd..46b3961 100644
+index 9a3a1fd..6a2e2dd 100644
 --- a/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts
 +++ b/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts
-@@ -6,6 +6,10 @@ import type { Scope } from './Scope';
- import type { SourceCode } from './SourceCode';
+@@ -7,15 +7,13 @@ import type { SourceCode } from './SourceCode';
  export type RuleRecommendation = 'error' | 'strict' | 'warn' | false;
  interface RuleMetaDataDocs {
-+    /**
+     /**
+-     * Concise description of the rule
 +     * The category the rule falls under
-+     */
+      */
+-    description: string;
 +    category?: string;
      /**
-      * Concise description of the rule
+-     * The recommendation level for the rule.
+-     * Used by the build tools to generate the recommended and strict configs.
+-     * Set to false to not include it as a recommendation
++     * Concise description of the rule
+      */
+-    recommended: 'error' | 'strict' | 'warn' | false;
++    description: string;
+     /**
+      * The URL of the rule's docs
       */

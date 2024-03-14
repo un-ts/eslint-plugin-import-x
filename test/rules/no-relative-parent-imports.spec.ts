@@ -1,16 +1,17 @@
-import { RuleTester } from 'eslint'
-import rule from 'rules/no-relative-parent-imports'
-import { parsers, test as _test, testFilePath } from '../utils'
+import { TSESLint } from '@typescript-eslint/utils'
 
-const test = def =>
-  _test(
-    Object.assign(def, {
-      filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
-      parser: parsers.BABEL,
-    }),
-  )
+import rule from '../../src/rules/no-relative-parent-imports'
 
-const ruleTester = new RuleTester()
+import { parsers, test as _test, testFilePath, ValidTestCase } from '../utils'
+
+const test = <T extends ValidTestCase>(def: T) =>
+  _test({
+    ...def,
+    filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
+    parser: parsers.BABEL,
+  })
+
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-relative-parent-imports', rule, {
   valid: [

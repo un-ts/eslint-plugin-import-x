@@ -1,6 +1,7 @@
 import path from 'path'
 
 import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { RuleTester } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
@@ -62,18 +63,13 @@ export function testVersion<T extends ValidTestCase>(
 export type InvalidTestCaseError =
   | string
   | InvalidTestCase['errors'][number]
-  | {
+  | (RuleTester.TestCaseError & {
       type?: `${TSESTree.AST_NODE_TYPES}`
-      message: string
-      line?: number
-      column?: number
-      endLine?: number
-      endColumn?: number
-    }
+    })
 
 export function test<
   T extends ValidTestCase & {
-    errors?: InvalidTestCaseError[]
+    errors?: readonly InvalidTestCaseError[]
   },
 >(
   t: T,

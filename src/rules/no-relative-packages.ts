@@ -1,17 +1,23 @@
 import path from 'path'
+
+import { TSESTree } from '@typescript-eslint/utils'
+
 import { readPkgUp } from '../utils/read-pkg-ip'
-
 import { resolve } from '../utils/resolve'
-import { moduleVisitor, makeOptionsSchema } from '../utils/module-visitor'
+import {
+  moduleVisitor,
+  makeOptionsSchema,
+  ModuleOptions,
+} from '../utils/module-visitor'
 import { importType } from '../core/import-type'
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
+import { RuleContext } from '../types'
 
-/** @param {string} filePath */
-function toPosixPath(filePath) {
+function toPosixPath(filePath: string) {
   return filePath.replace(/\\/g, '/')
 }
 
-function findNamedPackage(filePath) {
+function findNamedPackage(filePath: string) {
   const found = readPkgUp({ cwd: filePath })
   if (found.pkg && !found.pkg.name) {
     return findNamedPackage(path.join(found.path, '../..'))
@@ -19,8 +25,15 @@ function findNamedPackage(filePath) {
   return found
 }
 
-function checkImportForRelativePackage(context, importPath, node) {
-  const potentialViolationTypes = ['parent', 'index', 'sibling']
+type MessageId = 'noAllowed'
+
+const potentialViolationTypes = ['parent', 'index', 'sibling']
+
+function checkImportForRelativePackage(
+  context: RuleContext<MessageId>,
+  importPath: string,
+  node: TSESTree.StringLiteral,
+) {
   if (potentialViolationTypes.indexOf(importType(importPath, context)) === -1) {
     return
   }
@@ -52,29 +65,37 @@ function checkImportForRelativePackage(context, importPath, node) {
     )
     context.report({
       node,
-      message: `Relative import from another package is not allowed. Use \`${properImport}\` instead of \`${importPath}\``,
+      messageId: 'noAllowed',
+      data: {
+        properImport,
+        importPath,
+      },
       fix: fixer =>
         fixer.replaceText(node, JSON.stringify(toPosixPath(properImport))),
     })
   }
 }
 
-module.exports = {
+export = createRule<[ModuleOptions?], MessageId>({
+  name: 'no-relative-packages',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Static analysis',
       description: 'Forbid importing packages through relative paths.',
-      url: docsUrl('no-relative-packages'),
     },
     fixable: 'code',
     schema: [makeOptionsSchema()],
+    messages: {
+      noAllowed:
+        'Relative import from another package is not allowed. Use `{{properImport}}` instead of `{{importPath}}`',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     return moduleVisitor(
       source => checkImportForRelativePackage(context, source.value, source),
       context.options[0],
     )
   },
-}
+})

@@ -1,26 +1,47 @@
 import path from 'path'
 
-import { resolve } from '../utils/resolve'
-import { moduleVisitor } from '../utils/module-visitor'
 import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
-import { docsUrl } from '../docs-url'
-import { importType } from '../core/import-type'
 
-const containsPath = (filepath, target) => {
+import { resolve } from '../utils/resolve'
+import { moduleVisitor } from '../utils/module-visitor'
+import { importType } from '../core/import-type'
+import { createRule } from '../utils'
+import { Arrayable } from '../types'
+import { TSESTree } from '@typescript-eslint/utils'
+
+const containsPath = (filepath: string, target: string) => {
   const relative = path.relative(target, filepath)
   return relative === '' || !relative.startsWith('..')
 }
 
-module.exports = {
+type Options = {
+  basePath?: string
+  zones?: Array<{
+    from: Arrayable<string>
+    target: Arrayable<string>
+    message?: string
+    except?: string[]
+  }>
+}
+
+type MessageId = 'path' | 'mixedGlob' | 'glob' | 'zone'
+
+type Validator = {
+  isPathRestricted: (absoluteImportPath: string) => boolean
+  hasValidExceptions: boolean
+  isPathException?: (absoluteImportPath: string) => boolean
+  reportInvalidException: (node: TSESTree.Node) => void
+}
+
+export = createRule<[Options?], MessageId>({
+  name: 'no-restricted-paths',
   meta: {
     type: 'problem',
     docs: {
       category: 'Static analysis',
       description: 'Enforce which files can be imported in a given folder.',
-      url: docsUrl('no-restricted-paths'),
     },
-
     schema: [
       {
         type: 'object',
@@ -70,8 +91,15 @@ module.exports = {
         additionalProperties: false,
       },
     ],
+    messages: {
+      path: 'Restricted path exceptions must be descendants of the configured `from` path for that zone.',
+      mixedGlob:
+        'Restricted path `from` must contain either only glob patterns or none',
+      glob: 'Restricted path exceptions must be glob patterns when `from` contains glob patterns',
+      zone: 'Unexpected path "{{importPath}}" imported in restricted zone.{{extra}}',
+    },
   },
-
+  defaultOptions: [],
   create: function noRestrictedPaths(context) {
     const options = context.options[0] || {}
     const restrictedPaths = options.zones || []
@@ -80,13 +108,13 @@ module.exports = {
       ? context.getPhysicalFilename()
       : context.getFilename()
     const matchingZones = restrictedPaths.filter(zone =>
-      []
-        .concat(zone.target)
+      [zone.target]
+        .flat()
         .map(target => path.resolve(basePath, target))
         .some(targetPath => isMatchingTargetPath(currentFilename, targetPath)),
     )
 
-    function isMatchingTargetPath(filename, targetPath) {
+    function isMatchingTargetPath(filename: string, targetPath: string) {
       if (isGlob(targetPath)) {
         const mm = new Minimatch(targetPath)
         return mm.match(filename)
@@ -95,7 +123,10 @@ module.exports = {
       return containsPath(filename, targetPath)
     }
 
-    function isValidExceptionPath(absoluteFromPath, absoluteExceptionPath) {
+    function isValidExceptionPath(
+      absoluteFromPath: string,
+      absoluteExceptionPath: string,
+    ) {
       const relativeExceptionPath = path.relative(
         absoluteFromPath,
         absoluteExceptionPath,
@@ -104,34 +135,31 @@ module.exports = {
       return importType(relativeExceptionPath, context) !== 'parent'
     }
 
-    function areBothGlobPatternAndAbsolutePath(areGlobPatterns) {
+    function areBothGlobPatternAndAbsolutePath(areGlobPatterns: boolean[]) {
       return (
         areGlobPatterns.some(isGlob => isGlob) &&
         areGlobPatterns.some(isGlob => !isGlob)
       )
     }
 
-    function reportInvalidExceptionPath(node) {
+    function reportInvalidExceptionPath(node: TSESTree.Node) {
       context.report({
         node,
-        message:
-          'Restricted path exceptions must be descendants of the configured `from` path for that zone.',
+        messageId: 'path',
       })
     }
 
-    function reportInvalidExceptionMixedGlobAndNonGlob(node) {
+    function reportInvalidExceptionMixedGlobAndNonGlob(node: TSESTree.Node) {
       context.report({
         node,
-        message:
-          'Restricted path `from` must contain either only glob patterns or none',
+        messageId: 'mixedGlob',
       })
     }
 
-    function reportInvalidExceptionGlob(node) {
+    function reportInvalidExceptionGlob(node: TSESTree.Node) {
       context.report({
         node,
-        message:
-          'Restricted path exceptions must be glob patterns when `from` contains glob patterns',
+        messageId: 'glob',
       })
     }
 
@@ -143,17 +171,20 @@ module.exports = {
       }
     }
 
-    function computeGlobPatternPathValidator(absoluteFrom, zoneExcept) {
-      let isPathException
+    function computeGlobPatternPathValidator(
+      absoluteFrom: string,
+      zoneExcept: string[],
+    ) {
+      let isPathException: ((absoluteImportPath: string) => boolean) | undefined
 
       const mm = new Minimatch(absoluteFrom)
-      const isPathRestricted = absoluteImportPath =>
+      const isPathRestricted = (absoluteImportPath: string) =>
         mm.match(absoluteImportPath)
-      const hasValidExceptions = zoneExcept.every(isGlob)
+      const hasValidExceptions = zoneExcept.every(it => isGlob(it))
 
       if (hasValidExceptions) {
         const exceptionsMm = zoneExcept.map(except => new Minimatch(except))
-        isPathException = absoluteImportPath =>
+        isPathException = (absoluteImportPath: string) =>
           exceptionsMm.some(mm => mm.match(absoluteImportPath))
       }
 
@@ -167,10 +198,13 @@ module.exports = {
       }
     }
 
-    function computeAbsolutePathValidator(absoluteFrom, zoneExcept) {
-      let isPathException
+    function computeAbsolutePathValidator(
+      absoluteFrom: string,
+      zoneExcept: string[],
+    ) {
+      let isPathException: ((absoluteImportPath: string) => boolean) | undefined
 
-      const isPathRestricted = absoluteImportPath =>
+      const isPathRestricted = (absoluteImportPath: string) =>
         containsPath(absoluteImportPath, absoluteFrom)
 
       const absoluteExceptionPaths = zoneExcept.map(exceptionPath =>
@@ -198,28 +232,37 @@ module.exports = {
       }
     }
 
-    function reportInvalidExceptions(validators, node) {
+    function reportInvalidExceptions(
+      validators: Validator[],
+      node: TSESTree.Node,
+    ) {
       validators.forEach(validator => validator.reportInvalidException(node))
     }
 
     function reportImportsInRestrictedZone(
-      validators,
-      node,
-      importPath,
-      customMessage,
+      validators: Validator[],
+      node: TSESTree.Node,
+      importPath: string,
+      customMessage?: string,
     ) {
       validators.forEach(() => {
         context.report({
           node,
-          message: `Unexpected path "{{importPath}}" imported in restricted zone.${customMessage ? ` ${customMessage}` : ''}`,
-          data: { importPath },
+          messageId: 'zone',
+          data: {
+            importPath,
+            extra: customMessage ? ` ${customMessage}` : '',
+          },
         })
       })
     }
 
-    const makePathValidators = (zoneFrom, zoneExcept = []) => {
-      const allZoneFrom = [].concat(zoneFrom)
-      const areGlobPatterns = allZoneFrom.map(isGlob)
+    const makePathValidators = (
+      zoneFrom: Arrayable<string>,
+      zoneExcept: string[] = [],
+    ) => {
+      const allZoneFrom = [zoneFrom].flat()
+      const areGlobPatterns = allZoneFrom.map(it => isGlob(it))
 
       if (areBothGlobPatternAndAbsolutePath(areGlobPatterns)) {
         return [computeMixedGlobAndAbsolutePathValidator()]
@@ -237,50 +280,49 @@ module.exports = {
       })
     }
 
-    const validators = []
-
-    function checkForRestrictedImportPath(importPath, node) {
-      const absoluteImportPath = resolve(importPath, context)
-
-      if (!absoluteImportPath) {
-        return
-      }
-
-      matchingZones.forEach((zone, index) => {
-        if (!validators[index]) {
-          validators[index] = makePathValidators(zone.from, zone.except)
-        }
-
-        const applicableValidatorsForImportPath = validators[index].filter(
-          validator => validator.isPathRestricted(absoluteImportPath),
-        )
-
-        const validatorsWithInvalidExceptions =
-          applicableValidatorsForImportPath.filter(
-            validator => !validator.hasValidExceptions,
-          )
-        reportInvalidExceptions(validatorsWithInvalidExceptions, node)
-
-        const applicableValidatorsForImportPathExcludingExceptions =
-          applicableValidatorsForImportPath.filter(
-            validator =>
-              validator.hasValidExceptions &&
-              !validator.isPathException(absoluteImportPath),
-          )
-        reportImportsInRestrictedZone(
-          applicableValidatorsForImportPathExcludingExceptions,
-          node,
-          importPath,
-          zone.message,
-        )
-      })
-    }
+    const validators: Validator[][] = []
 
     return moduleVisitor(
       source => {
-        checkForRestrictedImportPath(source.value, source)
+        const importPath = source.value
+
+        const absoluteImportPath = resolve(importPath, context)
+
+        if (!absoluteImportPath) {
+          return
+        }
+
+        matchingZones.forEach((zone, index) => {
+          if (!validators[index]) {
+            validators[index] = makePathValidators(zone.from, zone.except)
+          }
+
+          const applicableValidatorsForImportPath = validators[index].filter(
+            validator => validator.isPathRestricted(absoluteImportPath),
+          )
+
+          const validatorsWithInvalidExceptions =
+            applicableValidatorsForImportPath.filter(
+              validator => !validator.hasValidExceptions,
+            )
+
+          reportInvalidExceptions(validatorsWithInvalidExceptions, source)
+
+          const applicableValidatorsForImportPathExcludingExceptions =
+            applicableValidatorsForImportPath.filter(
+              validator =>
+                validator.hasValidExceptions &&
+                !validator.isPathException!(absoluteImportPath),
+            )
+          reportImportsInRestrictedZone(
+            applicableValidatorsForImportPathExcludingExceptions,
+            source,
+            importPath,
+            zone.message,
+          )
+        })
       },
       { commonjs: true },
     )
   },
-}
+})

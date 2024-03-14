@@ -12,7 +12,6 @@ export = createRule<[], MessageId>({
       category: 'Static analysis',
       description:
         'Ensure a default export is present, given a default import.',
-      recommended: 'warn',
     },
     schema: [],
     messages: {

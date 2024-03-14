@@ -1,0 +1,67 @@
+import { basename, dirname, relative } from 'path'
+
+import {
+  moduleVisitor,
+  makeOptionsSchema,
+  ModuleOptions,
+} from '../utils/module-visitor'
+import { resolve } from '../utils/resolve'
+import { importType } from '../core/import-type'
+import { createRule } from '../utils'
+
+type MessageId = 'noAllowed'
+
+export = createRule<[ModuleOptions?], MessageId>({
+  name: 'no-relative-parent-imports',
+  meta: {
+    type: 'suggestion',
+    docs: {
+      category: 'Static analysis',
+      description: 'Forbid importing modules from parent directories.',
+    },
+    schema: [makeOptionsSchema()],
+    messages: {
+      noAllowed:
+        "Relative imports from parent directories are not allowed. Please either pass what you're importing through at runtime (dependency injection), move `{{filename}}` to same directory as `{{depPath}}` or consider making `{{depPath}}` a package.",
+    },
+  },
+  defaultOptions: [],
+  create(context) {
+    const filename = context.getPhysicalFilename
+      ? context.getPhysicalFilename()
+      : context.getFilename()
+
+    if (filename === '<text>') {
+      return {}
+    } // can't check a non-file
+
+    return moduleVisitor(sourceNode => {
+      const depPath = sourceNode.value
+
+      if (importType(depPath, context) === 'external') {
+        // ignore packages
+        return
+      }
+
+      const absDepPath = resolve(depPath, context)
+
+      if (!absDepPath) {
+        // unable to resolve path
+        return
+      }
+
+      const relDepPath = relative(dirname(filename), absDepPath)
+
+      if (importType(relDepPath, context) === 'parent') {
+        context.report({
+          node: sourceNode,
+          messageId: 'noAllowed',
+          data: {
+            filename: basename(filename),
+            depPath,
+          },
+        })
+      }
+    }, context.options[0])
+  },
+})

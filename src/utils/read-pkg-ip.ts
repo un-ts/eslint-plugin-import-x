@@ -19,7 +19,9 @@ export function readPkgUp(opts?: { cwd?: string }) {
     return {
       pkg: JSON.parse(
         stripBOM(fs.readFileSync(fp, { encoding: 'utf-8' })),
-      ) as PackageJson,
+      ) as PackageJson & {
+        name: string
+      },
       path: fp,
     }
   } catch (e) {

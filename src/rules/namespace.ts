@@ -1,9 +1,26 @@
 import { declaredScope } from '../utils/declared-scope'
 import { ExportMap } from '../export-map'
 import { importDeclaration } from '../import-declaration'
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
+import { RuleContext } from '../types'
+import { TSESTree } from '@typescript-eslint/utils'
 
-function processBodyStatement(context, namespaces, declaration) {
+type MessageId =
+  | 'noNamesFound'
+  | 'computedReference'
+  | 'namespaceMember'
+  | 'topLevelNames'
+  | 'notFoundInNamespace'
+
+type Options = {
+  allowComputed?: boolean
+}
+
+function processBodyStatement(
+  context: RuleContext<MessageId>,
+  namespaces: Map<string, ExportMap>,
+  declaration: TSESTree.ProgramStatement,
+) {
   if (declaration.type !== 'ImportDeclaration') {
     return
   }
@@ -13,8 +30,9 @@ function processBodyStatement(context, namespaces, declaration) {
   }
 
   const imports = ExportMap.get(declaration.source.value, context)
+
   if (imports == null) {
-    return null
+    return
   }
 
   if (imports.errors.length > 0) {
@@ -26,20 +44,25 @@ function processBodyStatement(context, namespaces, declaration) {
     switch (specifier.type) {
       case 'ImportNamespaceSpecifier':
         if (!imports.size) {
-          context.report(
-            specifier,
-            `No exported names found in module '${declaration.source.value}'.`,
-          )
+          context.report({
+            node: specifier,
+            messageId: 'noNamesFound',
+            data: {
+              module: declaration.source.value,
+            },
+          })
         }
         namespaces.set(specifier.local.name, imports)
         break
       case 'ImportDefaultSpecifier':
       case 'ImportSpecifier': {
-        const meta = imports.get(
-          // default to 'default' for default https://i.imgur.com/nj6qAWy.jpg
-          specifier.imported
-            ? specifier.imported.name || specifier.imported.value
-            : 'default',
+        const meta = imports.get<{ namespace?: ExportMap }>(
+          'imported' in specifier && specifier.imported
+            ? specifier.imported.name ||
+                // @ts-expect-error - legacy parser node
+                specifier.imported.value
+            : // default to 'default' for default
+              'default',
         )
         if (!meta || !meta.namespace) {
           break
@@ -52,16 +75,34 @@ function processBodyStatement(context, namespaces, declaration) {
   })
 }
 
-module.exports = {
+function makeMessage(
+  last:
+    | TSESTree.Identifier
+    | TSESTree.PrivateIdentifier
+    | TSESTree.JSXIdentifier,
+  namepath: string[],
+  node: TSESTree.Node = last,
+) {
+  return {
+    node,
+    messageId: 'notFoundInNamespace' as const,
+    data: {
+      name: last.name,
+      depth: namepath.length > 1 ? 'deeply ' : '',
+      namepath: namepath.join('.'),
+    },
+  }
+}
+
+export = createRule<[Options], MessageId>({
+  name: 'namespace',
   meta: {
     type: 'problem',
     docs: {
       category: 'Static analysis',
       description:
         'Ensure imported namespaces contain dereferenced properties as they are dereferenced.',
-      url: docsUrl('namespace'),
     },
-
     schema: [
       {
         type: 'object',
@@ -76,17 +117,26 @@ module.exports = {
         additionalProperties: false,
       },
     ],
+    messages: {
+      noNamesFound: "No exported names found in module '{{module}}'.",
+      computedReference:
+        "Unable to validate computed reference to imported namespace '{{namespace}}'.",
+      namespaceMember: "Assignment to member of namespace '{{namespace}}'.",
+      topLevelNames: 'Only destructure top-level names.',
+      notFoundInNamespace:
+        "'{{name}}' not found in {{depth}}imported namespace '{{namepath}}'.",
+    },
   },
-
+  defaultOptions: [
+    {
+      allowComputed: false,
+    },
+  ],
   create: function namespaceRule(context) {
     // read options
-    const { allowComputed = false } = context.options[0] || {}
+    const { allowComputed } = context.options[0] || {}
 
-    const namespaces = new Map()
-
-    function makeMessage(last, namepath) {
-      return `'${last.name}' not found in ${namepath.length > 1 ? 'deeply ' : ''}imported namespace '${namepath.join('.')}'.`
-    }
+    const namespaces = new Map<string, ExportMap>()
 
     return {
       // pick up all imports at body entry time, to properly respect hoisting
@@ -111,10 +161,13 @@ module.exports = {
         }
 
         if (!imports.size) {
-          context.report(
-            namespace,
-            `No exported names found in module '${declaration.source.value}'.`,
-          )
+          context.report({
+            node: namespace,
+            messageId: 'noNamesFound',
+            data: {
+              module: declaration.source.value,
+            },
+          })
         }
       },
 
@@ -124,58 +177,73 @@ module.exports = {
         if (dereference.object.type !== 'Identifier') {
           return
         }
+
         if (!namespaces.has(dereference.object.name)) {
           return
         }
+
         if (declaredScope(context, dereference.object.name) !== 'module') {
           return
         }
 
+        const parent = dereference!.parent
+
         if (
-          dereference.parent.type === 'AssignmentExpression' &&
-          dereference.parent.left === dereference
+          parent?.type === 'AssignmentExpression' &&
+          parent.left === dereference
         ) {
-          context.report(
-            dereference.parent,
-            `Assignment to member of namespace '${dereference.object.name}'.`,
-          )
+          context.report({
+            node: parent,
+            messageId: 'namespaceMember',
+            data: {
+              namespace: dereference.object.name,
+            },
+          })
         }
 
         // go deep
         let namespace = namespaces.get(dereference.object.name)
+
         const namepath = [dereference.object.name]
+
+        let deref: TSESTree.Node | undefined = dereference
+
         // while property is namespace and parent is member expression, keep validating
         while (
           namespace instanceof ExportMap &&
-          dereference.type === 'MemberExpression'
+          deref?.type === 'MemberExpression'
         ) {
-          if (dereference.computed) {
+          if (deref.computed) {
             if (!allowComputed) {
-              context.report(
-                dereference.property,
-                `Unable to validate computed reference to imported namespace '${dereference.object.name}'.`,
-              )
+              context.report({
+                node: deref.property,
+                messageId: 'computedReference',
+                data: {
+                  namespace: 'name' in deref.object && deref.object.name,
+                },
+              })
             }
             return
           }
 
-          if (!namespace.has(dereference.property.name)) {
-            context.report(
-              dereference.property,
-              makeMessage(dereference.property, namepath),
-            )
+          if (!namespace.has(deref.property.name)) {
+            context.report(makeMessage(deref.property, namepath))
             break
           }
 
-          const exported = namespace.get(dereference.property.name)
+          const exported = namespace.get<{ namespace: ExportMap }>(
+            deref.property.name,
+          )
+
           if (exported == null) {
             return
           }
 
           // stash and pop
-          namepath.push(dereference.property.name)
+          namepath.push(deref.property.name)
           namespace = exported.namespace
-          dereference = dereference.parent
+
+          deref = deref.parent
         }
       },
 
@@ -195,8 +263,14 @@ module.exports = {
           return
         }
 
+        const initName = init.name
+
         // DFS traverse child namespaces
-        function testKey(pattern, namespace, path = [init.name]) {
+        function testKey(
+          pattern: TSESTree.Node,
+          namespace?: ExportMap,
+          path: string[] = [initName],
+        ) {
           if (!(namespace instanceof ExportMap)) {
             return
           }
@@ -207,6 +281,7 @@ module.exports = {
 
           for (const property of pattern.properties) {
             if (
+              // @ts-expect-error - experimental type
               property.type === 'ExperimentalRestProperty' ||
               property.type === 'RestElement' ||
               !property.key
@@ -217,25 +292,27 @@ module.exports = {
             if (property.key.type !== 'Identifier') {
               context.report({
                 node: property,
-                message: 'Only destructure top-level names.',
+                messageId: 'topLevelNames',
               })
               continue
             }
 
             if (!namespace.has(property.key.name)) {
-              context.report({
-                node: property,
-                message: makeMessage(property.key, path),
-              })
+              context.report(makeMessage(property.key, path, property))
               continue
             }
 
             path.push(property.key.name)
-            const dependencyExportMap = namespace.get(property.key.name)
+
+            const dependencyExportMap = namespace.get<{ namespace: ExportMap }>(
+              property.key.name,
+            )
+
             // could be null when ignored or ambiguous
-            if (dependencyExportMap !== null) {
+            if (dependencyExportMap != null) {
               testKey(property.value, dependencyExportMap.namespace, path)
             }
+
             path.pop()
           }
         }
@@ -244,17 +321,20 @@ module.exports = {
       },
 
       JSXMemberExpression({ object, property }) {
-        if (!namespaces.has(object.name)) {
+        if (
+          !('name' in object) ||
+          typeof object.name !== 'string' ||
+          !namespaces.has(object.name)
+        ) {
           return
         }
-        const namespace = namespaces.get(object.name)
+
+        const namespace = namespaces.get(object.name)!
+
         if (!namespace.has(property.name)) {
-          context.report({
-            node: property,
-            message: makeMessage(property, [object.name]),
-          })
+          context.report(makeMessage(property, [object.name]))
         }
       },
     }
   },
-}
+})

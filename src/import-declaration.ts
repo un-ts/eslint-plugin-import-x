@@ -1,6 +1,8 @@
-import type { Rule } from 'eslint'
+import { TSESTree } from '@typescript-eslint/utils'
 
-export const importDeclaration = (context: Rule.RuleContext) => {
+import { RuleContext } from './types'
+
+export const importDeclaration = (context: RuleContext) => {
   const ancestors = context.getAncestors()
-  return ancestors[ancestors.length - 1]
+  return ancestors[ancestors.length - 1] as TSESTree.ImportDeclaration
 }

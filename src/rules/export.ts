@@ -1,5 +1,6 @@
+import { TSESTree } from '@typescript-eslint/utils'
 import { ExportMap, recursivePatternCapture } from '../export-map'
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:
@@ -30,24 +31,21 @@ const tsTypePrefix = 'type:'
  * export function foo(a: string);
  * export function foo(a: number|string) { return a; }
  * ```
- * @param {Set<Object>} nodes
- * @returns {boolean}
  */
-function isTypescriptFunctionOverloads(nodes) {
+function isTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
   const nodesArr = Array.from(nodes)
 
   const idents = nodesArr.flatMap(node =>
-    node.declaration &&
-    (node.declaration.type === 'TSDeclareFunction' || // eslint 6+
-      node.declaration.type === 'TSEmptyBodyFunctionDeclaration') // eslint 4-5
-      ? node.declaration.id.name
+    'declaration' in node && node.declaration?.type === 'TSDeclareFunction'
+      ? node.declaration.id!.name
       : [],
   )
+
   if (new Set(idents).size !== idents.length) {
     return true
   }
 
-  const types = new Set(nodesArr.map(node => node.parent.type))
+  const types = new Set(nodesArr.map(node => `${node.parent!.type}` as const))
   if (!types.has('TSDeclareFunction')) {
     return false
   }
@@ -66,13 +64,13 @@ function isTypescriptFunctionOverloads(nodes) {
  * export class Foo { }
  * export namespace Foo { }
  * ```
- * @param {Set<Object>} nodes
- * @returns {boolean}
  */
-function isTypescriptNamespaceMerging(nodes) {
-  const types = new Set(Array.from(nodes, node => node.parent.type))
+function isTypescriptNamespaceMerging(nodes: Set<TSESTree.Node>) {
+  const types = new Set(
+    Array.from(nodes, node => `${node.parent!.type}` as const),
+  )
   const noNamespaceNodes = Array.from(nodes).filter(
-    node => node.parent.type !== 'TSModuleDeclaration',
+    node => node.parent!.type !== 'TSModuleDeclaration',
   )
 
   return (
@@ -98,16 +96,18 @@ function isTypescriptNamespaceMerging(nodes) {
  * export function Foo();
  * export namespace Foo { }
  * ```
- * @param {Object} node
- * @param {Set<Object>} nodes
- * @returns {boolean}
  */
-function shouldSkipTypescriptNamespace(node, nodes) {
-  const types = new Set(Array.from(nodes, node => node.parent.type))
+function shouldSkipTypescriptNamespace(
+  node: TSESTree.Node,
+  nodes: Set<TSESTree.Node>,
+) {
+  const types = new Set(
+    Array.from(nodes, node => `${node.parent!.type}` as const),
+  )
 
   return (
     !isTypescriptNamespaceMerging(nodes) &&
-    node.parent.type === 'TSModuleDeclaration' &&
+    node.parent!.type === 'TSModuleDeclaration' &&
     (types.has('TSEnumDeclaration') ||
       types.has('ClassDeclaration') ||
       types.has('FunctionDeclaration') ||
@@ -115,28 +115,45 @@ function shouldSkipTypescriptNamespace(node, nodes) {
   )
 }
 
-module.exports = {
+type MessageId = 'noNamed' | 'multiDefault' | 'multiNamed'
+
+export = createRule<[], MessageId>({
+  name: 'export',
   meta: {
     type: 'problem',
     docs: {
       category: 'Helpful warnings',
       description:
         'Forbid any invalid exports, i.e. re-export of the same name.',
-      url: docsUrl('export'),
     },
     schema: [],
+    messages: {
+      noNamed: "No named exports found in module '{{module}}'.",
+      multiDefault: 'Multiple default exports.',
+      multiNamed: "Multiple exports of name '{{name}}'.",
+    },
   },
-
+  defaultOptions: [],
   create(context) {
-    const namespace = new Map([[rootProgram, new Map()]])
+    const namespace = new Map<
+      'root' | TSESTree.TSModuleDeclaration,
+      Map<string, Set<TSESTree.Node>>
+    >([[rootProgram, new Map()]])
 
-    function addNamed(name, node, parent, isType) {
+    function addNamed(
+      name: string,
+      node: TSESTree.Node,
+      parent: TSESTree.TSModuleDeclaration | 'root',
+      isType?: boolean,
+    ) {
       if (!namespace.has(parent)) {
         namespace.set(parent, new Map())
       }
-      const named = namespace.get(parent)
+
+      const named = namespace.get(parent)!
 
       const key = isType ? `${tsTypePrefix}${name}` : name
+
       let nodes = named.get(key)
 
       if (nodes == null) {
@@ -147,9 +164,9 @@ module.exports = {
       nodes.add(node)
     }
 
-    function getParent(node) {
-      if (node.parent && node.parent.type === 'TSModuleBlock') {
-        return node.parent.parent
+    function getParent(node: TSESTree.Node) {
+      if (node.parent?.type === 'TSModuleBlock') {
+        return node.parent.parent as TSESTree.TSModuleDeclaration
       }
 
       // just in case somehow a non-ts namespace export declaration isn't directly
@@ -164,9 +181,11 @@ module.exports = {
 
       ExportSpecifier(node) {
         addNamed(
-          node.exported.name || node.exported.value,
+          node.exported.name ||
+            // @ts-expect-error - legacy parser type
+            node.exported.value,
           node.exported,
-          getParent(node.parent),
+          getParent(node.parent!),
         )
       },
 
@@ -176,35 +195,36 @@ module.exports = {
         }
 
         const parent = getParent(node)
-        // support for old TypeScript versions
-        const isTypeVariableDecl = node.declaration.kind === 'type'
 
-        if (node.declaration.id != null) {
-          if (
+        const isTypeVariableDecl =
+          'kind' in node.declaration &&
+          // @ts-expect-error - support for old TypeScript versions
+          node.declaration.kind === 'type'
+
+        if ('id' in node.declaration && node.declaration.id != null) {
+          const id = node.declaration.id as TSESTree.Identifier
+          addNamed(
+            id.name,
+            id,
+            parent,
             ['TSTypeAliasDeclaration', 'TSInterfaceDeclaration'].includes(
               node.declaration.type,
-            )
-          ) {
-            addNamed(
-              node.declaration.id.name,
-              node.declaration.id,
-              parent,
-              true,
-            )
-          } else {
-            addNamed(
-              node.declaration.id.name,
-              node.declaration.id,
-              parent,
-              isTypeVariableDecl,
-            )
-          }
+            ) || isTypeVariableDecl,
+          )
         }
 
-        if (node.declaration.declarations != null) {
+        if (
+          'declarations' in node.declaration &&
+          node.declaration.declarations != null
+        ) {
           for (const declaration of node.declaration.declarations) {
             recursivePatternCapture(declaration.id, v => {
-              addNamed(v.name, v, parent, isTypeVariableDecl)
+              addNamed(
+                (v as TSESTree.Identifier).name,
+                v,
+                parent,
+                isTypeVariableDecl,
+              )
             })
           }
         }
@@ -233,7 +253,8 @@ module.exports = {
         const parent = getParent(node)
 
         let any = false
-        remoteExports.forEach((v, name) => {
+
+        remoteExports.forEach((_, name) => {
           if (name !== 'default') {
             any = true // poor man's filter
             addNamed(name, node, parent)
@@ -241,10 +262,11 @@ module.exports = {
         })
 
         if (!any) {
-          context.report(
-            node.source,
-            `No named exports found in module '${node.source.value}'.`,
-          )
+          context.report({
+            node: node.source,
+            messageId: 'noNamed',
+            data: { module: node.source.value },
+          })
         }
       },
 
@@ -268,12 +290,18 @@ module.exports = {
               }
 
               if (name === 'default') {
-                context.report(node, 'Multiple default exports.')
-              } else {
-                context.report(
+                context.report({
                   node,
-                  `Multiple exports of name '${name.replace(tsTypePrefix, '')}'.`,
-                )
+                  messageId: 'multiDefault',
+                })
+              } else {
+                context.report({
+                  node,
+                  messageId: 'multiNamed',
+                  data: {
+                    name: name.replace(tsTypePrefix, ''),
+                  },
+                })
               }
             }
           }
@@ -281,4 +309,4 @@ module.exports = {
       },
     }
   },
-}
+})

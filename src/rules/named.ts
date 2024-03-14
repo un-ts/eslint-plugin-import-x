@@ -8,7 +8,7 @@ import { ModuleOptions } from '../utils/module-visitor'
 
 type MessageId = 'notFound' | 'notFoundDeep'
 
-export = createRule<[ModuleOptions], MessageId>({
+export = createRule<[ModuleOptions?], MessageId>({
   name: 'named',
   meta: {
     type: 'problem',
@@ -16,7 +16,6 @@ export = createRule<[ModuleOptions], MessageId>({
       category: 'Static analysis',
       description:
         'Ensure named imports correspond to a named export in the remote file.',
-      recommended: 'error',
     },
     messages: {
       notFound: "{{name}} not found in '{{path}}'",
@@ -34,7 +33,7 @@ export = createRule<[ModuleOptions], MessageId>({
       },
     ],
   },
-  defaultOptions: [{}],
+  defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
 

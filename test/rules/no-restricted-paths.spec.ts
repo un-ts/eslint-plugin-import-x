@@ -1,12 +1,13 @@
-import { RuleTester } from 'eslint'
-import rule from 'rules/no-restricted-paths'
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-restricted-paths'
 
 import { parsers, test, testFilePath } from '../utils'
 
-const ruleTester = new RuleTester()
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-restricted-paths', rule, {
-  valid: [].concat(
+  valid: [
     test({
       code: 'import a from "../client/a.js"',
       filename: testFilePath('./restricted-paths/server/b.js'),
@@ -264,9 +265,9 @@ ruleTester.run('no-restricted-paths', rule, {
 
     // builtin (ignore)
     test({ code: 'require("os")' }),
-  ),
+  ],
 
-  invalid: [].concat(
+  invalid: [
     test({
       code: 'import b from "../server/b.js"; // 1',
       filename: testFilePath('./restricted-paths/client/a.js'),
@@ -312,30 +313,32 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
     }),
     // TODO: fix test on windows
-    process.platform === 'win32'
+    ...(process.platform === 'win32'
       ? []
-      : test({
-          code: 'import b from "../server/b.js";',
-          filename: testFilePath('./restricted-paths/client/a.js'),
-          options: [
-            {
-              zones: [
-                {
-                  target: './test/fixtures/restricted-paths/client/*.js',
-                  from: './test/fixtures/restricted-paths/server',
-                },
-              ],
-            },
-          ],
-          errors: [
-            {
-              message:
-                'Unexpected path "../server/b.js" imported in restricted zone.',
-              line: 1,
-              column: 15,
-            },
-          ],
-        }),
+      : [
+          test({
+            code: 'import b from "../server/b.js";',
+            filename: testFilePath('./restricted-paths/client/a.js'),
+            options: [
+              {
+                zones: [
+                  {
+                    target: './test/fixtures/restricted-paths/client/*.js',
+                    from: './test/fixtures/restricted-paths/server',
+                  },
+                ],
+              },
+            ],
+            errors: [
+              {
+                message:
+                  'Unexpected path "../server/b.js" imported in restricted zone.',
+                line: 1,
+                column: 15,
+              },
+            ],
+          }),
+        ]),
     test({
       code: 'import b from "../server/b.js"; // 2 ter',
       filename: testFilePath('./restricted-paths/client/a.js'),
@@ -757,7 +760,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-  ),
+  ],
 })
 
 describe('Typescript', () => {

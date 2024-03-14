@@ -2,25 +2,47 @@ import type { TSESLint } from '@typescript-eslint/utils'
 
 import type { PluginConfig } from './types'
 
+// rules
 import noUnresolved from './rules/no-unresolved'
 import named from './rules/named'
 import default_ from './rules/default'
+import namespace from './rules/namespace'
+import noNamespace from './rules/no-namespace'
+import export_ from './rules/export'
+import noMutableExports from './rules/no-mutable-exports'
+import extensions from './rules/extensions'
+import noRestrictedPaths from './rules/no-restricted-paths'
+import noInternalModules from './rules/no-internal-modules'
+import groupExports from './rules/group-exports'
+import noRelativePackages from './rules/no-relative-packages'
+import noRelativeParentImports from './rules/no-relative-parent-imports'
+import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
+
+// configs
+import recommended from './config/recommended'
+import errors from './config/errors'
+import warnings from './config/warnings'
+import stage0 from './config/stage-0'
+import react from './config/react'
+import reactNative from './config/react-native'
+import electron from './config/electron'
+import typescript from './config/typescript'
 
 export const rules = {
   'no-unresolved': noUnresolved,
   named,
   default: default_,
-  namespace: require('./rules/namespace'),
-  'no-namespace': require('./rules/no-namespace'),
-  export: require('./rules/export'),
-  'no-mutable-exports': require('./rules/no-mutable-exports'),
-  extensions: require('./rules/extensions'),
-  'no-restricted-paths': require('./rules/no-restricted-paths'),
-  'no-internal-modules': require('./rules/no-internal-modules'),
-  'group-exports': require('./rules/group-exports'),
-  'no-relative-packages': require('./rules/no-relative-packages'),
-  'no-relative-parent-imports': require('./rules/no-relative-parent-imports'),
-  'consistent-type-specifier-style': require('./rules/consistent-type-specifier-style'),
+  namespace,
+  'no-namespace': noNamespace,
+  export: export_,
+  'no-mutable-exports': noMutableExports,
+  extensions,
+  'no-restricted-paths': noRestrictedPaths,
+  'no-internal-modules': noInternalModules,
+  'group-exports': groupExports,
+  'no-relative-packages': noRelativePackages,
+  'no-relative-parent-imports': noRelativeParentImports,
+  'consistent-type-specifier-style': consistentTypeSpecifierStyle,
 
   'no-self-import': require('./rules/no-self-import'),
   'no-cycle': require('./rules/no-cycle'),
@@ -63,17 +85,17 @@ export const rules = {
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
 export const configs = {
-  recommended: require('./config/recommended'),
+  recommended,
 
-  errors: require('./config/errors'),
-  warnings: require('./config/warnings'),
+  errors,
+  warnings,
 
   // shhhh... work in progress "secret" rules
-  'stage-0': require('./config/stage-0'),
+  'stage-0': stage0,
 
   // useful stuff for folks using various environments
-  react: require('./config/react'),
-  'react-native': require('./config/react-native'),
-  electron: require('./config/electron'),
-  typescript: require('./config/typescript'),
+  react,
+  'react-native': reactNative,
+  electron,
+  typescript,
 } satisfies Record<string, PluginConfig>

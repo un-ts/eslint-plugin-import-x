@@ -1,25 +1,24 @@
-import { test } from '../utils'
-import { RuleTester } from 'eslint'
-import rule from 'rules/group-exports'
-import { resolve } from 'path'
-import babelPresetFlow from '@babel/preset-flow'
+import { TSESLint } from '@typescript-eslint/utils'
 
-/* eslint-disable max-len */
+import rule from '../../src/rules/group-exports'
+
+import { parsers, test } from '../utils'
+
 const errors = {
   named:
     'Multiple named export declarations; consolidate all named exports into a single export declaration',
   commonjs:
     'Multiple CommonJS exports; consolidate all exports into a single assignment to `module.exports`',
 }
-/* eslint-enable max-len */
-const ruleTester = new RuleTester({
-  parser: resolve(__dirname, '../../node_modules/@babel/eslint-parser'),
+
+const ruleTester = new TSESLint.RuleTester({
+  parser: parsers.BABEL,
   parserOptions: {
     requireConfigFile: false,
     babelOptions: {
       configFile: false,
       babelrc: false,
-      presets: [babelPresetFlow],
+      presets: ['@babel/preset-flow'],
     },
   },
 })

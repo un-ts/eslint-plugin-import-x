@@ -24,10 +24,10 @@ export interface ModuleOptions {
  * Returns an object of node visitors that will call
  * 'visitor' with every discovered module path.
  */
-export function moduleVisitor(visitor: Visitor, options: ModuleOptions) {
-  const ignore = options && options.ignore
-  const amd = !!(options && options.amd)
-  const commonjs = !!(options && options.commonjs)
+export function moduleVisitor(visitor: Visitor, options?: ModuleOptions) {
+  const ignore = options?.ignore
+  const amd = !!options?.amd
+  const commonjs = !!options?.commonjs
   // if esmodule is not explicitly disabled, it is assumed to be enabled
   const esmodule = !!{ esmodule: true, ...options }.esmodule
 
@@ -45,7 +45,7 @@ export function moduleVisitor(visitor: Visitor, options: ModuleOptions) {
   ) {
     if (source == null) {
       return
-    } //?
+    }
 
     // handle ignore
     if (ignoreRegExps.some(re => re.test(String(source.value)))) {

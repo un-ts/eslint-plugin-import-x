@@ -814,8 +814,12 @@ export class ExportMap {
     }
   }
 
-  forEach(
-    callback: (value: unknown, name: string, map: ExportMap) => void,
+  forEach<T>(
+    callback: (
+      value: T | null | undefined,
+      name: string,
+      map: ExportMap,
+    ) => void,
     thisArg?: unknown,
   ) {
     this.namespace.forEach((v, n) => {
@@ -835,7 +839,7 @@ export class ExportMap {
         return
       }
 
-      d.forEach((v, n) => {
+      d.forEach<T>((v, n) => {
         if (n !== 'default') {
           callback.call(thisArg, v, n, this)
         }
