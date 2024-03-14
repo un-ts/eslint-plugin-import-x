@@ -16,7 +16,6 @@ export = createRule<[ModuleOptions], MessageId>({
       category: 'Static analysis',
       description:
         'Ensure named imports correspond to a named export in the remote file.',
-      recommended: 'error',
     },
     messages: {
       notFound: "{{name}} not found in '{{path}}'",

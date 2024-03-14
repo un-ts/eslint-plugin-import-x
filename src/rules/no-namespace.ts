@@ -20,7 +20,6 @@ export = createRule<[Options], MessageId>({
     docs: {
       category: 'Style guide',
       description: 'Forbid namespace (a.k.a. "wildcard" `*`) imports.',
-      recommended: 'warn',
     },
     fixable: 'code',
     schema: [

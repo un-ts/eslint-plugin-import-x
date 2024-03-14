@@ -7,6 +7,7 @@ import named from './rules/named'
 import default_ from './rules/default'
 import namespace from './rules/namespace'
 import noNamespace from './rules/no-namespace'
+import export_ from './rules/export'
 
 export const rules = {
   'no-unresolved': noUnresolved,
@@ -14,7 +15,7 @@ export const rules = {
   default: default_,
   namespace,
   'no-namespace': noNamespace,
-  export: require('./rules/export'),
+  export: export_,
   'no-mutable-exports': require('./rules/no-mutable-exports'),
   extensions: require('./rules/extensions'),
   'no-restricted-paths': require('./rules/no-restricted-paths'),

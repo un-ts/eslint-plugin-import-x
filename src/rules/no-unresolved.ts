@@ -32,7 +32,6 @@ export = createRule<Options, MessageId>({
       category: 'Static analysis',
       description:
         'Ensure imports point to a file/module that can be resolved.',
-      recommended: 'error',
     },
     messages: {
       unresolved: "Unable to resolve path to module '{{module}}'.",

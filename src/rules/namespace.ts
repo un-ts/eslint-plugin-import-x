@@ -102,7 +102,6 @@ export = createRule<[Options], MessageId>({
       category: 'Static analysis',
       description:
         'Ensure imported namespaces contain dereferenced properties as they are dereferenced.',
-      recommended: 'warn',
     },
     schema: [
       {
