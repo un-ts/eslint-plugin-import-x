@@ -1,13 +1,8 @@
-import { RuleTester } from 'eslint'
-import {
-  test,
-  parsers,
-  tsVersionSatisfies,
-  eslintVersionSatisfies,
-  typescriptEslintParserSatisfies,
-} from '../utils'
+import { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-const rule = require('rules/consistent-type-specifier-style')
+import rule from '../../src/rules/consistent-type-specifier-style'
+
+import { test, parsers } from '../utils'
 
 const COMMON_TESTS = {
   valid: [
@@ -117,9 +112,11 @@ const COMMON_TESTS = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type-only import instead of inline type specifiers.',
-          type: 'ImportDeclaration',
+          messageId: 'topLevel',
+          data: {
+            kind: 'type',
+          },
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -129,9 +126,8 @@ const COMMON_TESTS = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type-only import instead of inline type specifiers.',
-          type: 'ImportDeclaration',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -141,9 +137,8 @@ const COMMON_TESTS = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type-only import instead of inline type specifiers.',
-          type: 'ImportDeclaration',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -153,9 +148,8 @@ const COMMON_TESTS = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type-only import instead of inline type specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -165,9 +159,8 @@ const COMMON_TESTS = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type-only import instead of inline type specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -177,9 +170,8 @@ const COMMON_TESTS = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type-only import instead of inline type specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -189,9 +181,8 @@ const COMMON_TESTS = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type-only import instead of inline type specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -219,9 +210,8 @@ import {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type-only import instead of inline type specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -235,9 +225,11 @@ import {
       options: ['prefer-inline'],
       errors: [
         {
-          message:
-            'Prefer using inline type specifiers instead of a top-level type-only import.',
-          type: 'ImportDeclaration',
+          messageId: 'inline',
+          data: {
+            kind: 'type',
+          },
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -247,14 +239,13 @@ import {
       options: ['prefer-inline'],
       errors: [
         {
-          message:
-            'Prefer using inline type specifiers instead of a top-level type-only import.',
-          type: 'ImportDeclaration',
+          messageId: 'inline',
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
   ],
-}
+} as const
 
 const TS_ONLY = {
   valid: [
@@ -310,9 +301,11 @@ const FLOW_ONLY = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level typeof-only import instead of inline typeof specifiers.',
-          type: 'ImportDeclaration',
+          messageId: 'topLevel',
+          data: {
+            kind: 'typeof',
+          },
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -322,9 +315,8 @@ const FLOW_ONLY = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level typeof-only import instead of inline typeof specifiers.',
-          type: 'ImportDeclaration',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -334,9 +326,11 @@ const FLOW_ONLY = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type/typeof-only import instead of inline type/typeof specifiers.',
-          type: 'ImportDeclaration',
+          messageId: 'topLevel',
+          data: {
+            kind: 'type/typeof',
+          },
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -346,9 +340,8 @@ const FLOW_ONLY = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level typeof-only import instead of inline typeof specifiers.',
-          type: 'ImportDeclaration',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -358,9 +351,8 @@ const FLOW_ONLY = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level typeof-only import instead of inline typeof specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -370,9 +362,8 @@ const FLOW_ONLY = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level typeof-only import instead of inline typeof specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -383,14 +374,18 @@ const FLOW_ONLY = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level type-only import instead of inline type specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          data: {
+            kind: 'type',
+          },
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
         {
-          message:
-            'Prefer using a top-level typeof-only import instead of inline typeof specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          data: {
+            kind: 'typeof',
+          },
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -400,9 +395,8 @@ const FLOW_ONLY = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level typeof-only import instead of inline typeof specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -413,9 +407,8 @@ const FLOW_ONLY = {
       options: ['prefer-top-level'],
       errors: [
         {
-          message:
-            'Prefer using a top-level typeof-only import instead of inline typeof specifiers.',
-          type: 'ImportSpecifier',
+          messageId: 'topLevel',
+          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -429,9 +422,11 @@ const FLOW_ONLY = {
       options: ['prefer-inline'],
       errors: [
         {
-          message:
-            'Prefer using inline typeof specifiers instead of a top-level typeof-only import.',
-          type: 'ImportDeclaration',
+          messageId: 'inline',
+          data: {
+            kind: 'typeof',
+          },
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -441,26 +436,16 @@ const FLOW_ONLY = {
       options: ['prefer-inline'],
       errors: [
         {
-          message:
-            'Prefer using inline typeof specifiers instead of a top-level typeof-only import.',
-          type: 'ImportDeclaration',
+          messageId: 'inline',
+          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
   ],
-}
+} as const
 
 describe('TypeScript', () => {
-  // inline type specifiers weren't supported prior to TS v4.5
-  if (
-    !parsers.TS ||
-    !tsVersionSatisfies('>= 4.5') ||
-    !typescriptEslintParserSatisfies('>= 5.7.0')
-  ) {
-    return
-  }
-
-  const ruleTester = new RuleTester({
+  const ruleTester = new TSESLint.RuleTester({
     parser: parsers.TS,
     parserOptions: {
       ecmaVersion: 6,
@@ -468,17 +453,13 @@ describe('TypeScript', () => {
     },
   })
   ruleTester.run('consistent-type-specifier-style', rule, {
-    valid: [].concat(COMMON_TESTS.valid, TS_ONLY.valid),
-    invalid: [].concat(COMMON_TESTS.invalid, TS_ONLY.invalid),
+    valid: [...COMMON_TESTS.valid, ...TS_ONLY.valid],
+    invalid: [...COMMON_TESTS.invalid, ...TS_ONLY.invalid],
   })
 })
 
 describe('Babel/Flow', () => {
-  if (!eslintVersionSatisfies('> 3')) {
-    return
-  }
-
-  const ruleTester = new RuleTester({
+  const ruleTester = new TSESLint.RuleTester({
     parser: parsers.BABEL,
     parserOptions: {
       ecmaVersion: 6,
@@ -486,7 +467,7 @@ describe('Babel/Flow', () => {
     },
   })
   ruleTester.run('consistent-type-specifier-style', rule, {
-    valid: [].concat(COMMON_TESTS.valid, FLOW_ONLY.valid),
-    invalid: [].concat(COMMON_TESTS.invalid, FLOW_ONLY.invalid),
+    valid: [...COMMON_TESTS.valid, ...FLOW_ONLY.valid],
+    invalid: [...COMMON_TESTS.invalid, ...FLOW_ONLY.invalid],
   })
 })
