@@ -1,9 +1,10 @@
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-self-import'
+
 import { test, testFilePath } from '../utils'
 
-import { RuleTester } from 'eslint'
-
-const ruleTester = new RuleTester()
-const rule = require('rules/no-self-import')
+const ruleTester = new TSESLint.RuleTester()
 
 const error = {
   message: 'Module imports itself.',
