@@ -1,3 +1,7 @@
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/namespace'
+
 import {
   test,
   SYNTAX_CASES,
@@ -5,12 +9,13 @@ import {
   testFilePath,
   parsers,
 } from '../utils'
-import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester({ env: { es6: true } })
-const rule = require('rules/namespace')
+const ruleTester = new TSESLint.RuleTester({
+  parser: require.resolve('espree'),
+  parserOptions: { env: { es6: true } },
+})
 
-function error(name, namespace) {
+function error(name: string, namespace: string) {
   return {
     message: `'${name}' not found in imported namespace '${namespace}'.`,
   }
@@ -224,47 +229,45 @@ const valid = [
     `,
   }),
 
-  ...[].concat(
-    testVersion('>= 6', () => ({
-      code: `
-      import * as middle from './middle';
+  ...testVersion('>= 6', () => ({
+    code: `
+    import * as middle from './middle';
 
-      console.log(middle.myName);
-    `,
-      filename: testFilePath('export-star-2/downstream.js'),
-      parserOptions: {
-        ecmaVersion: 2020,
-      },
-    })),
-    // es2022: Arbitrary module namespace identifier names
-    testVersion('>= 8.7', () => ({
-      code: "import * as names from './default-export-string';",
-      parserOptions: { ecmaVersion: 2022 },
-    })),
-    testVersion('>= 8.7', () => ({
-      code: "import * as names from './default-export-string'; console.log(names.default)",
-      parserOptions: { ecmaVersion: 2022 },
-    })),
-    testVersion('>= 8.7', () => ({
-      code: "import * as names from './default-export-namespace-string';",
-      parserOptions: { ecmaVersion: 2022 },
-    })),
-    testVersion('>= 8.7', () => ({
-      code: "import * as names from './default-export-namespace-string'; console.log(names.default)",
-      parserOptions: { ecmaVersion: 2022 },
-    })),
-    testVersion('>= 8.7', () => ({
-      code: `import { "b" as b } from "./deep/a"; console.log(b.c.d.e)`,
-      parserOptions: { ecmaVersion: 2022 },
-    })),
-    testVersion('>= 8.7', () => ({
-      code: `import { "b" as b } from "./deep/a"; var {c:{d:{e}}} = b`,
-      parserOptions: { ecmaVersion: 2022 },
-    })),
-  ),
+    console.log(middle.myName);
+  `,
+    filename: testFilePath('export-star-2/downstream.js'),
+    parserOptions: {
+      ecmaVersion: 2020,
+    },
+  })),
+  // es2022: Arbitrary module namespace identifier names
+  ...testVersion('>= 8.7', () => ({
+    code: "import * as names from './default-export-string';",
+    parserOptions: { ecmaVersion: 2022 },
+  })),
+  ...testVersion('>= 8.7', () => ({
+    code: "import * as names from './default-export-string'; console.log(names.default)",
+    parserOptions: { ecmaVersion: 2022 },
+  })),
+  ...testVersion('>= 8.7', () => ({
+    code: "import * as names from './default-export-namespace-string';",
+    parserOptions: { ecmaVersion: 2022 },
+  })),
+  ...testVersion('>= 8.7', () => ({
+    code: "import * as names from './default-export-namespace-string'; console.log(names.default)",
+    parserOptions: { ecmaVersion: 2022 },
+  })),
+  ...testVersion('>= 8.7', () => ({
+    code: `import { "b" as b } from "./deep/a"; console.log(b.c.d.e)`,
+    parserOptions: { ecmaVersion: 2022 },
+  })),
+  ...testVersion('>= 8.7', () => ({
+    code: `import { "b" as b } from "./deep/a"; var {c:{d:{e}}} = b`,
+    parserOptions: { ecmaVersion: 2022 },
+  })),
 ]
 
-const invalid = [].concat(
+const invalid = [
   test({
     code: "import * as names from './named-exports'; console.log(names.c)",
     errors: [error('c', 'names')],
@@ -383,25 +386,25 @@ const invalid = [].concat(
   }),
 
   // es2022: Arbitrary module namespace identifier names
-  testVersion('>= 8.7', () => ({
+  ...testVersion('>= 8.7', () => ({
     code: `import { "b" as b } from "./deep/a"; console.log(b.e)`,
     errors: ["'e' not found in imported namespace 'b'."],
     parserOptions: { ecmaVersion: 2022 },
   })),
-  testVersion('>= 8.7', () => ({
+  ...testVersion('>= 8.7', () => ({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.e)`,
     errors: ["'e' not found in deeply imported namespace 'b.c'."],
     parserOptions: { ecmaVersion: 2022 },
   })),
-)
+]
 
 ///////////////////////
 // deep dereferences //
 //////////////////////
 ;[
-  ['deep', require.resolve('espree')],
+  ['deep'],
   // FIXME: check and enable
-  // ['deep-es7', parsers.BABEL]
+  // ['deep-es7', parsers.BABEL],
 ].forEach(function ([folder, parser]) {
   // close over params
   valid.push(
