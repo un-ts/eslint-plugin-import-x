@@ -13,6 +13,7 @@ import extensions from './rules/extensions'
 import noRestrictedPaths from './rules/no-restricted-paths'
 import noInternalModules from './rules/no-internal-modules'
 import groupExports from './rules/group-exports'
+import noRelativePackages from './rules/no-relative-packages'
 
 export const rules = {
   'no-unresolved': noUnresolved,
@@ -26,7 +27,7 @@ export const rules = {
   'no-restricted-paths': noRestrictedPaths,
   'no-internal-modules': noInternalModules,
   'group-exports': groupExports,
-  'no-relative-packages': require('./rules/no-relative-packages'),
+  'no-relative-packages': noRelativePackages,
   'no-relative-parent-imports': require('./rules/no-relative-parent-imports'),
   'consistent-type-specifier-style': require('./rules/consistent-type-specifier-style'),
 

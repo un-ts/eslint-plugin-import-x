@@ -1,10 +1,12 @@
-import { RuleTester } from 'eslint'
-import rule from 'rules/no-relative-packages'
 import { normalize } from 'path'
+
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-relative-packages'
 
 import { test, testFilePath } from '../utils'
 
-const ruleTester = new RuleTester()
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-relative-packages', rule, {
   valid: [
