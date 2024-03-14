@@ -13,7 +13,7 @@ type Options = {
   ignore?: string[]
 }
 
-export = createRule<[Options], MessageId>({
+export = createRule<[Options?], MessageId>({
   name: 'no-namespace',
   meta: {
     type: 'suggestion',
@@ -40,7 +40,7 @@ export = createRule<[Options], MessageId>({
       noNamespace: 'Unexpected namespace import.',
     },
   },
-  defaultOptions: [{}],
+  defaultOptions: [],
   create(context) {
     const firstOption = context.options[0] || {}
     const ignoreGlobs = firstOption.ignore

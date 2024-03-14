@@ -45,7 +45,7 @@ export function moduleVisitor(visitor: Visitor, options: ModuleOptions) {
   ) {
     if (source == null) {
       return
-    } //?
+    }
 
     // handle ignore
     if (ignoreRegExps.some(re => re.test(String(source.value)))) {

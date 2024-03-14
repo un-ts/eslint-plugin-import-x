@@ -15,16 +15,14 @@ import {
 } from '../utils/module-visitor'
 import { createRule } from '../utils'
 
-type Options = [
-  ModuleOptions & {
-    caseSensitive?: boolean
-    caseSensitiveStrict?: boolean
-  },
-]
+type Options = ModuleOptions & {
+  caseSensitive?: boolean
+  caseSensitiveStrict?: boolean
+}
 
 type MessageId = 'unresolved' | 'casingMismatch'
 
-export = createRule<Options, MessageId>({
+export = createRule<[Options?], MessageId>({
   name: 'no-unresolved',
   meta: {
     type: 'problem',
@@ -45,11 +43,7 @@ export = createRule<Options, MessageId>({
       }),
     ],
   },
-  defaultOptions: [
-    {
-      caseSensitive: true,
-    },
-  ],
+  defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
 

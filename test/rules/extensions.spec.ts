@@ -1,8 +1,10 @@
-import { RuleTester } from 'eslint'
-import rule from 'rules/extensions'
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/extensions'
+
 import { test, testFilePath, parsers } from '../utils'
 
-const ruleTester = new RuleTester()
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('extensions', rule, {
   valid: [
