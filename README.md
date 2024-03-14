@@ -97,12 +97,6 @@ This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, a
 
 <!-- end auto-generated rules list -->
 
-## `eslint-plugin-import-x` for enterprise
-
-Available as part of the Tidelift Subscription.
-
-The maintainers of `eslint-plugin-import` and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-eslint-plugin-import?utm_source=npm-eslint-plugin-import&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
-
 ## Installation
 
 ```sh
