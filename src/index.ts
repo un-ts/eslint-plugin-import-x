@@ -2,6 +2,7 @@ import type { TSESLint } from '@typescript-eslint/utils'
 
 import type { PluginConfig } from './types'
 
+// rules
 import noUnresolved from './rules/no-unresolved'
 import named from './rules/named'
 import default_ from './rules/default'
@@ -14,6 +15,17 @@ import noRestrictedPaths from './rules/no-restricted-paths'
 import noInternalModules from './rules/no-internal-modules'
 import groupExports from './rules/group-exports'
 import noRelativePackages from './rules/no-relative-packages'
+import noRelativeParentImports from './rules/no-relative-parent-imports'
+
+// configs
+import recommended from './config/recommended'
+import errors from './config/errors'
+import warnings from './config/warnings'
+import stage0 from './config/stage-0'
+import react from './config/react'
+import reactNative from './config/react-native'
+import electron from './config/electron'
+import typescript from './config/typescript'
 
 export const rules = {
   'no-unresolved': noUnresolved,
@@ -28,7 +40,7 @@ export const rules = {
   'no-internal-modules': noInternalModules,
   'group-exports': groupExports,
   'no-relative-packages': noRelativePackages,
-  'no-relative-parent-imports': require('./rules/no-relative-parent-imports'),
+  'no-relative-parent-imports': noRelativeParentImports,
   'consistent-type-specifier-style': require('./rules/consistent-type-specifier-style'),
 
   'no-self-import': require('./rules/no-self-import'),
@@ -72,17 +84,17 @@ export const rules = {
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
 export const configs = {
-  recommended: require('./config/recommended'),
+  recommended,
 
-  errors: require('./config/errors'),
-  warnings: require('./config/warnings'),
+  errors,
+  warnings,
 
   // shhhh... work in progress "secret" rules
-  'stage-0': require('./config/stage-0'),
+  'stage-0': stage0,
 
   // useful stuff for folks using various environments
-  react: require('./config/react'),
-  'react-native': require('./config/react-native'),
-  electron: require('./config/electron'),
-  typescript: require('./config/typescript'),
+  react,
+  'react-native': reactNative,
+  electron,
+  typescript,
 } satisfies Record<string, PluginConfig>

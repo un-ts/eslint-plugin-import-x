@@ -69,7 +69,7 @@ export type InvalidTestCaseError =
 
 export function test<
   T extends ValidTestCase & {
-    errors?: InvalidTestCaseError[]
+    errors?: readonly InvalidTestCaseError[]
   },
 >(
   t: T,
