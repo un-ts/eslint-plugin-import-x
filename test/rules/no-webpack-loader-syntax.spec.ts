@@ -1,10 +1,10 @@
-import { test, parsers } from '../utils'
+import { TSESLint } from '@typescript-eslint/utils'
 
-import { RuleTester } from 'eslint'
-import semver from 'semver'
+import rule from '../../src/rules/no-webpack-loader-syntax'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/no-webpack-loader-syntax')
+import { test } from '../utils'
+
+const ruleTester = new TSESLint.RuleTester()
 
 const message = 'Do not use import syntax to configure webpack loaders.'
 
@@ -76,35 +76,4 @@ ruleTester.run('no-webpack-loader-syntax', rule, {
       ],
     }),
   ],
-})
-
-describe('TypeScript', () => {
-  const parser = parsers.TS
-
-  const parserConfig = {
-    parser,
-    settings: {
-      'import-x/parsers': { [parser]: ['.ts'] },
-      'import-x/resolver': { 'eslint-import-resolver-typescript': true },
-    },
-  }
-  // @typescript-eslint/parser@5+ throw error for invalid module specifiers at parsing time.
-  // https://github.com/typescript-eslint/typescript-eslint/releases/tag/v5.0.0
-  if (
-    !(
-      parser === parsers.TS &&
-      semver.satisfies(
-        require('@typescript-eslint/parser/package.json').version,
-        '>= 5',
-      )
-    )
-  ) {
-    ruleTester.run('no-webpack-loader-syntax', rule, {
-      valid: [
-        test({ code: 'import { foo } from\nalert()', ...parserConfig }),
-        test({ code: 'import foo from\nalert()', ...parserConfig }),
-      ],
-      invalid: [],
-    })
-  }
 })
