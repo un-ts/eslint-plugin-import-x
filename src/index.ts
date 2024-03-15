@@ -31,6 +31,7 @@ import first from './rules/first'
 import maxDependencies from './rules/max-dependencies'
 import noExtraneousDependencies from './rules/no-extraneous-dependencies'
 import noAbsolutePath from './rules/no-absolute-path'
+import noNodejsModules from './rules/no-nodejs-modules'
 
 // configs
 import recommended from './config/recommended'
@@ -73,7 +74,7 @@ export const rules = {
   'max-dependencies': maxDependencies,
   'no-extraneous-dependencies': noExtraneousDependencies,
   'no-absolute-path': noAbsolutePath,
-  'no-nodejs-modules': require('./rules/no-nodejs-modules'),
+  'no-nodejs-modules': noNodejsModules,
   'no-webpack-loader-syntax': require('./rules/no-webpack-loader-syntax'),
   order: require('./rules/order'),
   'newline-after-import': require('./rules/newline-after-import'),

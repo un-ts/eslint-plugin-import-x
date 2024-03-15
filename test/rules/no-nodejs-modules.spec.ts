@@ -1,16 +1,17 @@
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-nodejs-modules'
+
 import { test } from '../utils'
-import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester()
+const ruleTester = new TSESLint.RuleTester()
 
-const rule = require('rules/no-nodejs-modules')
-
-const error = message => ({
+const error = (message: string) => ({
   message,
 })
 
 ruleTester.run('no-nodejs-modules', rule, {
-  valid: [].concat(
+  valid: [
     test({ code: 'import _ from "lodash"' }),
     test({ code: 'import find from "lodash.find"' }),
     test({ code: 'import foo from "./foo"' }),
@@ -105,8 +106,8 @@ ruleTester.run('no-nodejs-modules', rule, {
         },
       ],
     }),
-  ),
-  invalid: [].concat(
+  ],
+  invalid: [
     test({
       code: 'import path from "path"',
       errors: [error('Do not import Node.js builtin module "path"')],
@@ -157,5 +158,5 @@ ruleTester.run('no-nodejs-modules', rule, {
       ],
       errors: [error('Do not import Node.js builtin module "node:fs"')],
     }),
-  ),
+  ],
 })
