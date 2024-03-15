@@ -1,9 +1,10 @@
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/max-dependencies'
+
 import { test, parsers } from '../utils'
 
-import { RuleTester } from 'eslint'
-
-const ruleTester = new RuleTester()
-const rule = require('rules/max-dependencies')
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('max-dependencies', rule, {
   valid: [
@@ -98,46 +99,42 @@ ruleTester.run('max-dependencies', rule, {
 describe('TypeScript', () => {
   const parser = parsers.TS
 
-  ruleTester.run(
-    `max-dependencies (${parser.replace(process.cwd(), '.')})`,
-    rule,
-    {
-      valid: [
-        test({
-          code: "import type { x } from './foo'; import { y } from './bar';",
-          parser,
-          options: [
-            {
-              max: 1,
-              ignoreTypeImports: true,
-            },
-          ],
-        }),
-      ],
-      invalid: [
-        test({
-          code: "import type { x } from './foo'; import type { y } from './bar'",
-          parser,
-          options: [
-            {
-              max: 1,
-            },
-          ],
-          errors: ['Maximum number of dependencies (1) exceeded.'],
-        }),
+  ruleTester.run('max-dependencies', rule, {
+    valid: [
+      test({
+        code: "import type { x } from './foo'; import { y } from './bar';",
+        parser,
+        options: [
+          {
+            max: 1,
+            ignoreTypeImports: true,
+          },
+        ],
+      }),
+    ],
+    invalid: [
+      test({
+        code: "import type { x } from './foo'; import type { y } from './bar'",
+        parser,
+        options: [
+          {
+            max: 1,
+          },
+        ],
+        errors: ['Maximum number of dependencies (1) exceeded.'],
+      }),
 
-        test({
-          code: "import type { x } from './foo'; import type { y } from './bar'; import type { z } from './baz'",
-          parser,
-          options: [
-            {
-              max: 2,
-              ignoreTypeImports: false,
-            },
-          ],
-          errors: ['Maximum number of dependencies (2) exceeded.'],
-        }),
-      ],
-    },
-  )
+      test({
+        code: "import type { x } from './foo'; import type { y } from './bar'; import type { z } from './baz'",
+        parser,
+        options: [
+          {
+            max: 2,
+            ignoreTypeImports: false,
+          },
+        ],
+        errors: ['Maximum number of dependencies (2) exceeded.'],
+      }),
+    ],
+  })
 })
