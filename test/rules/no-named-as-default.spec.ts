@@ -1,11 +1,13 @@
-import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
-import { RuleTester } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/no-named-as-default')
+import rule from '../../src/rules/no-named-as-default'
+
+import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
+
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-named-as-default', rule, {
-  valid: [].concat(
+  valid: [
     test({ code: 'import "./malformed.js"' }),
 
     test({ code: 'import bar, { foo } from "./bar";' }),
@@ -18,16 +20,16 @@ ruleTester.run('no-named-as-default', rule, {
     // #566: don't false-positive on `default` itself
     test({ code: 'export default from "./bar";', parser: parsers.BABEL }),
 
-    // es2022: Arbitrary module namespae identifier names
-    testVersion('>= 8.7', () => ({
+    // es2022: Arbitrary module namespace identifier names
+    ...testVersion('>= 8.7', () => ({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
       parserOptions: { ecmaVersion: 2022 },
     })),
 
     ...SYNTAX_CASES,
-  ),
+  ],
 
-  invalid: [].concat(
+  invalid: [
     test({
       code: 'import foo from "./bar";',
       errors: [
@@ -57,7 +59,8 @@ ruleTester.run('no-named-as-default', rule, {
         {
           message:
             "Using exported name 'foo' as identifier for default export.",
-          type: 'ExportDefaultSpecifier',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- ExportDefaultSpecifier is unavailable yet
+          type: 'ExportDefaultSpecifier' as any,
         },
       ],
     }),
@@ -68,7 +71,8 @@ ruleTester.run('no-named-as-default', rule, {
         {
           message:
             "Using exported name 'foo' as identifier for default export.",
-          type: 'ExportDefaultSpecifier',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- ExportDefaultSpecifier is unavailable yet
+          type: 'ExportDefaultSpecifier' as any,
         },
       ],
     }),
@@ -85,7 +89,7 @@ ruleTester.run('no-named-as-default', rule, {
     }),
 
     // es2022: Arbitrary module namespae identifier names
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'import foo from "./export-default-string-and-named"',
       errors: [
         {
@@ -96,7 +100,7 @@ ruleTester.run('no-named-as-default', rule, {
       ],
       parserOptions: { ecmaVersion: 2022 },
     })),
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'import foo, { foo as bar } from "./export-default-string-and-named"',
       errors: [
         {
@@ -107,5 +111,5 @@ ruleTester.run('no-named-as-default', rule, {
       ],
       parserOptions: { ecmaVersion: 2022 },
     })),
-  ),
+  ],
 })
