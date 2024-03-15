@@ -1,23 +1,20 @@
-import { test, testVersion, testFilePath, parsers } from '../utils'
+import fs from 'fs'
+
+import { TSESLint } from '@typescript-eslint/utils'
+// @ts-expect-error - no types yet
+import { FlatRuleTester } from 'eslint/use-at-your-own-risk'
+
 import jsxConfig from '../../src/config/react'
 import typescriptConfig from '../../src/config/typescript'
+import rule from '../../src/rules/no-unused-modules'
 
-import { RuleTester } from 'eslint'
-import fs from 'fs'
-import eslintPkg from 'eslint/package.json'
-import semver from 'semver'
+import { test, testVersion, testFilePath, parsers } from '../utils'
 
-const { FlatRuleTester } = require('eslint/use-at-your-own-risk')
+const ruleTester = new TSESLint.RuleTester()
+const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
+const jsxRuleTester = new TSESLint.RuleTester(jsxConfig)
 
-// TODO: figure out why these tests fail in eslint 4 and 5
-const isESLint4TODO = semver.satisfies(eslintPkg.version, '^4 || ^5')
-
-const ruleTester = new RuleTester()
-const typescriptRuleTester = new RuleTester(typescriptConfig)
-const jsxRuleTester = new RuleTester(jsxConfig)
-const rule = require('rules/no-unused-modules')
-
-const error = message => ({ message })
+const error = (message: string) => ({ message })
 
 const missingExportsOptions = [
   {
@@ -281,13 +278,6 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 describe('dynamic imports', () => {
-  if (semver.satisfies(eslintPkg.version, '< 6')) {
-    beforeEach(() => {
-      this.skip()
-    })
-    return
-  }
-
   jest.setTimeout(10e3)
 
   // test for unused exports with `import()`
@@ -1173,7 +1163,7 @@ describe('TypeScript', () => {
   const parser = parsers.TS
 
   typescriptRuleTester.run('no-unused-modules', rule, {
-    valid: [].concat(
+    valid: [
       test({
         options: unusedExportsTypescriptOptions,
         code: `
@@ -1264,32 +1254,26 @@ describe('TypeScript', () => {
         ),
       }),
       // Should also be valid when the exporting files are linted before the importing ones
-      isESLint4TODO
-        ? []
-        : test({
-            options: unusedExportsTypescriptOptions,
-            code: `export interface g {}`,
-            parser,
-            filename: testFilePath(
-              './no-unused-modules/typescript/file-ts-g.ts',
-            ),
-          }),
+      test({
+        options: unusedExportsTypescriptOptions,
+        code: `export interface g {}`,
+        parser,
+        filename: testFilePath('./no-unused-modules/typescript/file-ts-g.ts'),
+      }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `import {g} from './file-ts-g';`,
         parser,
         filename: testFilePath('./no-unused-modules/typescript/file-ts-f.ts'),
       }),
-      isESLint4TODO
-        ? []
-        : test({
-            options: unusedExportsTypescriptOptions,
-            code: `export interface g {}; /* used-as-type */`,
-            parser,
-            filename: testFilePath(
-              './no-unused-modules/typescript/file-ts-g-used-as-type.ts',
-            ),
-          }),
+      test({
+        options: unusedExportsTypescriptOptions,
+        code: `export interface g {}; /* used-as-type */`,
+        parser,
+        filename: testFilePath(
+          './no-unused-modules/typescript/file-ts-g-used-as-type.ts',
+        ),
+      }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `import type {g} from './file-ts-g';`,
@@ -1298,8 +1282,8 @@ describe('TypeScript', () => {
           './no-unused-modules/typescript/file-ts-f-import-type.ts',
         ),
       }),
-    ),
-    invalid: [].concat(
+    ],
+    invalid: [
       test({
         options: unusedExportsTypescriptOptions,
         code: `export const b = 2;`,
@@ -1344,7 +1328,7 @@ describe('TypeScript', () => {
           error(`exported declaration 'e' not used within other modules`),
         ],
       }),
-    ),
+    ],
   })
 })
 
@@ -1441,8 +1425,8 @@ describe('support (nested) destructuring assignment', () => {
 
 describe('support ES2022 Arbitrary module namespace identifier names', () => {
   ruleTester.run('no-unused-module', rule, {
-    valid: [].concat(
-      testVersion('>= 8.7', () => ({
+    valid: [
+      ...testVersion('>= 8.7', () => ({
         options: unusedExportsOptions,
         code: `import { "foo" as foo } from "./arbitrary-module-namespace-identifier-name-a"`,
         parserOptions: { ecmaVersion: 2022 },
@@ -1450,7 +1434,7 @@ describe('support ES2022 Arbitrary module namespace identifier names', () => {
           './no-unused-modules/arbitrary-module-namespace-identifier-name-b.js',
         ),
       })),
-      testVersion('>= 8.7', () => ({
+      ...testVersion('>= 8.7', () => ({
         options: unusedExportsOptions,
         code: 'const foo = 333;\nexport { foo as "foo" }',
         parserOptions: { ecmaVersion: 2022 },
@@ -1458,20 +1442,18 @@ describe('support ES2022 Arbitrary module namespace identifier names', () => {
           './no-unused-modules/arbitrary-module-namespace-identifier-name-a.js',
         ),
       })),
-    ),
-    invalid: [].concat(
-      testVersion('>= 8.7', () => ({
-        options: unusedExportsOptions,
-        code: 'const foo = 333\nexport { foo as "foo" }',
-        parserOptions: { ecmaVersion: 2022 },
-        filename: testFilePath(
-          './no-unused-modules/arbitrary-module-namespace-identifier-name-c.js',
-        ),
-        errors: [
-          error(`exported declaration 'foo' not used within other modules`),
-        ],
-      })),
-    ),
+    ],
+    invalid: testVersion('>= 8.7', () => ({
+      options: unusedExportsOptions,
+      code: 'const foo = 333\nexport { foo as "foo" }',
+      parserOptions: { ecmaVersion: 2022 },
+      filename: testFilePath(
+        './no-unused-modules/arbitrary-module-namespace-identifier-name-c.js',
+      ),
+      errors: [
+        error(`exported declaration 'foo' not used within other modules`),
+      ],
+    })),
   })
 })
 
@@ -1544,7 +1526,7 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
   })
 })
 describe('supports flat eslint', () => {
-  const flatRuleTester = new FlatRuleTester()
+  const flatRuleTester = new FlatRuleTester() as TSESLint.RuleTester
   flatRuleTester.run('no-unused-modules', rule, {
     valid: [
       {
@@ -1559,7 +1541,12 @@ describe('supports flat eslint', () => {
         code: 'export default () => 13',
         filename: testFilePath('./no-unused-modules/file-f.js'),
         errors: [
-          error(`exported declaration 'default' not used within other modules`),
+          {
+            messageId: 'unused',
+            data: {
+              value: 'default',
+            },
+          },
         ],
       },
     ],

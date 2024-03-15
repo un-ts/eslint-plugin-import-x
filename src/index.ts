@@ -23,6 +23,7 @@ import noNamedDefault from './rules/no-named-default'
 import noNamedAsDefault from './rules/no-named-as-default'
 import noNamedAsDefaultMember from './rules/no-named-as-default-member'
 import noAnonymousDefaultExport from './rules/no-anonymous-default-export'
+import noUnusedModules from './rules/no-unused-modules'
 
 // configs
 import recommended from './config/recommended'
@@ -56,7 +57,7 @@ export const rules = {
   'no-named-as-default': noNamedAsDefault,
   'no-named-as-default-member': noNamedAsDefaultMember,
   'no-anonymous-default-export': noAnonymousDefaultExport,
-  'no-unused-modules': require('./rules/no-unused-modules'),
+  'no-unused-modules': noUnusedModules,
 
   'no-commonjs': require('./rules/no-commonjs'),
   'no-amd': require('./rules/no-amd'),

@@ -49,6 +49,11 @@ export interface ModuleNamespace {
   namespace?: ExportMap | null
 }
 
+export interface ModuleImport {
+  getter: () => ExportMap | null
+  declarations: Set<DeclarationMetadata>
+}
+
 export class ExportMap {
   static for(context: ChildContext) {
     const { path } = context
@@ -652,19 +657,13 @@ export class ExportMap {
   /**
    * dependencies of this module that are not explicitly re-exported
    */
-  imports = new Map<
-    string,
-    {
-      getter: () => ExportMap | null
-      declarations: Set<DeclarationMetadata>
-    }
-  >()
+  imports = new Map<string, ModuleImport>()
 
   errors: ParseError[] = []
 
   parseGoal: 'ambiguous' | 'Module' | 'Script' = 'ambiguous'
 
-  private declare visitorKeys: TSESLint.SourceCode.VisitorKeys | null
+  declare visitorKeys: TSESLint.SourceCode.VisitorKeys | null
 
   private declare mtime: Date
 

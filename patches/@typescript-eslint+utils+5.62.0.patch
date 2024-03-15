@@ -22,3 +22,16 @@ index 9a3a1fd..c6ed412 100644
      /**
       * The URL of the rule's docs
       */
+diff --git a/node_modules/@typescript-eslint/utils/dist/ts-eslint/RuleTester.d.ts b/node_modules/@typescript-eslint/utils/dist/ts-eslint/RuleTester.d.ts
+index c8afefe..d629d04 100644
+--- a/node_modules/@typescript-eslint/utils/dist/ts-eslint/RuleTester.d.ts
++++ b/node_modules/@typescript-eslint/utils/dist/ts-eslint/RuleTester.d.ts
+@@ -115,7 +115,7 @@ interface RunTests<TMessageIds extends string, TOptions extends Readonly<unknown
+     readonly invalid: readonly InvalidTestCase<TMessageIds, TOptions>[];
+ }
+ interface RuleTesterConfig extends Linter.Config {
+-    readonly parser: string;
++    readonly parser?: string;
+     readonly parserOptions?: Readonly<ParserOptions>;
+ }
+ declare class RuleTesterBase {
