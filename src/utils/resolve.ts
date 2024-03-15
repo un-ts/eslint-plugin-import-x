@@ -6,6 +6,7 @@ import path from 'path'
 
 import type {
   Arrayable,
+  ImportResolver,
   ImportSettings,
   PluginSettings,
   RuleContext,
@@ -188,9 +189,7 @@ function fullResolve(
 
   const resolvers = resolverReducer(configResolvers, new Map())
 
-  for (const pair of resolvers) {
-    const name = pair[0]
-    const config = pair[1]
+  for (const [name, config] of resolvers) {
     const resolver = requireResolver(name, sourceFile)
     const resolved = withResolver(resolver, config)
 
@@ -217,11 +216,11 @@ export function relative(
 }
 
 function resolverReducer(
-  resolvers: Arrayable<string | Record<string, unknown>>,
+  resolvers: Arrayable<ImportResolver>,
   map: Map<string, unknown>,
 ) {
   if (Array.isArray(resolvers)) {
-    resolvers.forEach(r => resolverReducer(r, map))
+    ;(resolvers as ImportResolver[]).forEach(r => resolverReducer(r, map))
     return map
   }
 

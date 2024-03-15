@@ -85,10 +85,10 @@ export = createRule<[Options?], MessageId>({
     const options = context.options[0] || {}
     const allowRegexps = (options.allow || [])
       .map(p => makeRe(p))
-      .filter(Boolean) as RegExp[]
+      .filter(Boolean)
     const forbidRegexps = (options.forbid || [])
       .map(p => makeRe(p))
-      .filter(Boolean) as RegExp[]
+      .filter(Boolean)
 
     // test if reaching to this destination is allowed
     function reachingAllowed(importPath: string) {

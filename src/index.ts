@@ -26,6 +26,7 @@ import noAnonymousDefaultExport from './rules/no-anonymous-default-export'
 import noUnusedModules from './rules/no-unused-modules'
 import noCommonjs from './rules/no-commonjs'
 import noAmd from './rules/no-amd'
+import noDuplicates from './rules/no-duplicates'
 
 // configs
 import recommended from './config/recommended'
@@ -63,7 +64,7 @@ export const rules = {
 
   'no-commonjs': noCommonjs,
   'no-amd': noAmd,
-  'no-duplicates': require('./rules/no-duplicates'),
+  'no-duplicates': noDuplicates,
   first: require('./rules/first'),
   'max-dependencies': require('./rules/max-dependencies'),
   'no-extraneous-dependencies': require('./rules/no-extraneous-dependencies'),

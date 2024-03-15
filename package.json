@@ -73,6 +73,7 @@
     "@changesets/cli": "^2.27.1",
     "@eslint/import-test-order-redirect-scoped": "link:./test/fixtures/order-redirect-scoped",
     "@test-scope/some-module": "link:./test/fixtures/symlinked-module",
+    "@total-typescript/ts-reset": "^0.5.1",
     "@types/debug": "^4.1.12",
     "@types/doctrine": "^0.0.9",
     "@types/eslint": "^8.56.5",

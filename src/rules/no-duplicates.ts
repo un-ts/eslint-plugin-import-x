@@ -1,40 +1,65 @@
-import { resolve } from '../utils/resolve'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import semver from 'semver'
+import type { PackageJson } from 'type-fest'
 
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
+import { resolve } from '../utils/resolve'
+import type { RuleContext } from '../types'
 
-let typescriptPkg
+let typescriptPkg: PackageJson | undefined
+
 try {
-  typescriptPkg = require('typescript/package.json') // eslint-disable-line import-x/no-extraneous-dependencies
-} catch (e) {
-  /**/
+  // eslint-disable-next-line import-x/no-extraneous-dependencies
+  typescriptPkg = require('typescript/package.json') as PackageJson
+} catch {
+  //
 }
 
-function checkImports(imported, context) {
+type Options = {
+  considerQueryString?: boolean
+  'prefer-inline'?: boolean
+}
+
+type MessageId = 'duplicate'
+
+function checkImports(
+  imported: Map<string, TSESTree.ImportDeclaration[]>,
+  context: RuleContext<MessageId, [Options?]>,
+) {
   for (const [module, nodes] of imported.entries()) {
     if (nodes.length > 1) {
-      const message = `'${module}' imported multiple times.`
       const [first, ...rest] = nodes
       const sourceCode = context.getSourceCode()
       const fix = getFix(first, rest, sourceCode, context)
 
       context.report({
         node: first.source,
-        message,
+        messageId: 'duplicate',
+        data: {
+          module,
+        },
         fix, // Attach the autofix (if any) to the first import.
       })
 
       for (const node of rest) {
         context.report({
           node: node.source,
-          message,
+          messageId: 'duplicate',
+          data: {
+            module,
+          },
         })
       }
     }
   }
 }
 
-function getFix(first, rest, sourceCode, context) {
+function getFix(
+  first: TSESTree.ImportDeclaration,
+  rest: TSESTree.ImportDeclaration[],
+  sourceCode: TSESLint.SourceCode,
+  context: RuleContext<MessageId, [Options?]>,
+) {
   // Sorry ESLint <= 3 users, no autofix for you. Autofixing duplicate imports
   // requires multiple `fixer.whatever()` calls in the `fix`: We both need to
   // update the first one, and remove the rest. Support for multiple
@@ -54,7 +79,7 @@ function getFix(first, rest, sourceCode, context) {
   }
 
   const defaultImportNames = new Set(
-    [].concat(first, rest || []).flatMap(x => getDefaultImportName(x) || []),
+    [first, ...rest].flatMap(x => getDefaultImportName(x) || []),
   )
 
   // Bail if there are multiple different default import names – it's up to the
@@ -93,7 +118,9 @@ function getFix(first, rest, sourceCode, context) {
     node =>
       !hasSpecifiers(node) &&
       !hasNamespace(node) &&
-      !specifiers.some(specifier => specifier.importNode === node),
+      !specifiers.some(
+        specifier => 'importNode' in specifier && specifier.importNode === node,
+      ),
   )
 
   const shouldAddDefault =
@@ -105,16 +132,16 @@ function getFix(first, rest, sourceCode, context) {
     return undefined
   }
 
-  return fixer => {
+  return (fixer: TSESLint.RuleFixer) => {
     const tokens = sourceCode.getTokens(first)
-    const openBrace = tokens.find(token => isPunctuator(token, '{'))
-    const closeBrace = tokens.find(token => isPunctuator(token, '}'))
-    const firstToken = sourceCode.getFirstToken(first)
+    const openBrace = tokens.find(token => isPunctuator(token, '{'))!
+    const closeBrace = tokens.find(token => isPunctuator(token, '}'))!
+    const firstToken = sourceCode.getFirstToken(first)!
     const [defaultImportName] = defaultImportNames
 
     const firstHasTrailingComma =
       closeBrace != null &&
-      isPunctuator(sourceCode.getTokenBefore(closeBrace), ',')
+      isPunctuator(sourceCode.getTokenBefore(closeBrace)!, ',')
     const firstIsEmpty = !hasSpecifiers(first)
     const firstExistingIdentifiers = firstIsEmpty
       ? new Set()
@@ -127,14 +154,17 @@ function getFix(first, rest, sourceCode, context) {
 
     const [specifiersText] = specifiers.reduce(
       ([result, needsComma, existingIdentifiers], specifier) => {
-        const isTypeSpecifier = specifier.importNode.importKind === 'type'
+        const isTypeSpecifier =
+          'importNode' in specifier &&
+          specifier.importNode.importKind === 'type'
 
         const preferInline =
           context.options[0] && context.options[0]['prefer-inline']
         // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
         if (
           preferInline &&
-          (!typescriptPkg || !semver.satisfies(typescriptPkg.version, '>= 4.5'))
+          (!typescriptPkg ||
+            !semver.satisfies(typescriptPkg.version!, '>= 4.5'))
         ) {
           throw new Error(
             'Your version of TypeScript does not support inline type imports.',
@@ -219,7 +249,7 @@ function getFix(first, rest, sourceCode, context) {
       const charAfterImportRange = [
         importNode.range[1],
         importNode.range[1] + 1,
-      ]
+      ] as const
       const charAfterImport = sourceCode.text.substring(
         charAfterImportRange[0],
         charAfterImportRange[1],
@@ -235,7 +265,7 @@ function getFix(first, rest, sourceCode, context) {
     for (const node of unnecessaryImports) {
       fixes.push(fixer.remove(node))
 
-      const charAfterImportRange = [node.range[1], node.range[1] + 1]
+      const charAfterImportRange = [node.range[1], node.range[1] + 1] as const
       const charAfterImport = sourceCode.text.substring(
         charAfterImportRange[0],
         charAfterImportRange[1],
@@ -249,12 +279,12 @@ function getFix(first, rest, sourceCode, context) {
   }
 }
 
-function isPunctuator(node, value) {
+function isPunctuator(node: TSESTree.Token, value: '{' | '}' | ',') {
   return node.type === 'Punctuator' && node.value === value
 }
 
 // Get the name of the default import of `node`, if any.
-function getDefaultImportName(node) {
+function getDefaultImportName(node: TSESTree.ImportDeclaration) {
   const defaultSpecifier = node.specifiers.find(
     specifier => specifier.type === 'ImportDefaultSpecifier',
   )
@@ -262,7 +292,7 @@ function getDefaultImportName(node) {
 }
 
 // Checks whether `node` has a namespace import.
-function hasNamespace(node) {
+function hasNamespace(node: TSESTree.ImportDeclaration) {
   const specifiers = node.specifiers.filter(
     specifier => specifier.type === 'ImportNamespaceSpecifier',
   )
@@ -270,7 +300,7 @@ function hasNamespace(node) {
 }
 
 // Checks whether `node` has any non-default specifiers.
-function hasSpecifiers(node) {
+function hasSpecifiers(node: TSESTree.ImportDeclaration) {
   const specifiers = node.specifiers.filter(
     specifier => specifier.type === 'ImportSpecifier',
   )
@@ -279,7 +309,10 @@ function hasSpecifiers(node) {
 
 // It's not obvious what the user wants to do with comments associated with
 // duplicate imports, so skip imports with comments when autofixing.
-function hasProblematicComments(node, sourceCode) {
+function hasProblematicComments(
+  node: TSESTree.ImportDeclaration,
+  sourceCode: TSESLint.SourceCode,
+) {
   return (
     hasCommentBefore(node, sourceCode) ||
     hasCommentAfter(node, sourceCode) ||
@@ -289,7 +322,10 @@ function hasProblematicComments(node, sourceCode) {
 
 // Checks whether `node` has a comment (that ends) on the previous line or on
 // the same line as `node` (starts).
-function hasCommentBefore(node, sourceCode) {
+function hasCommentBefore(
+  node: TSESTree.ImportDeclaration,
+  sourceCode: TSESLint.SourceCode,
+) {
   return sourceCode
     .getCommentsBefore(node)
     .some(comment => comment.loc.end.line >= node.loc.start.line - 1)
@@ -297,7 +333,10 @@ function hasCommentBefore(node, sourceCode) {
 
 // Checks whether `node` has a comment (that starts) on the same line as `node`
 // (ends).
-function hasCommentAfter(node, sourceCode) {
+function hasCommentAfter(
+  node: TSESTree.ImportDeclaration,
+  sourceCode: TSESLint.SourceCode,
+) {
   return sourceCode
     .getCommentsAfter(node)
     .some(comment => comment.loc.start.line === node.loc.end.line)
@@ -305,7 +344,10 @@ function hasCommentAfter(node, sourceCode) {
 
 // Checks whether `node` has any comments _inside,_ except inside the `{...}`
 // part (if any).
-function hasCommentInsideNonSpecifiers(node, sourceCode) {
+function hasCommentInsideNonSpecifiers(
+  node: TSESTree.ImportDeclaration,
+  sourceCode: TSESLint.SourceCode,
+) {
   const tokens = sourceCode.getTokens(node)
   const openBraceIndex = tokens.findIndex(token => isPunctuator(token, '{'))
   const closeBraceIndex = tokens.findIndex(token => isPunctuator(token, '}'))
@@ -323,14 +365,14 @@ function hasCommentInsideNonSpecifiers(node, sourceCode) {
   )
 }
 
-module.exports = {
+export = createRule<[Options?], MessageId>({
+  name: 'no-duplicates',
   meta: {
     type: 'problem',
     docs: {
       category: 'Style guide',
       description:
         'Forbid repeated import of the same module in multiple places.',
-      url: docsUrl('no-duplicates'),
     },
     fixable: 'code',
     schema: [
@@ -347,16 +389,18 @@ module.exports = {
         additionalProperties: false,
       },
     ],
+    messages: {
+      duplicate: "'{{module}}' imported multiple times.",
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     // Prepare the resolver from options.
-    const considerQueryStringOption =
-      context.options[0] && context.options[0].considerQueryString
-    const defaultResolver = sourcePath =>
+    const considerQueryStringOption = context.options[0]?.considerQueryString
+    const defaultResolver = (sourcePath: string) =>
       resolve(sourcePath, context) || sourcePath
     const resolver = considerQueryStringOption
-      ? sourcePath => {
+      ? (sourcePath: string) => {
           const parts = sourcePath.match(/^([^?]*)\?(.*)$/)
           if (!parts) {
             return defaultResolver(sourcePath)
@@ -365,20 +409,28 @@ module.exports = {
         }
       : defaultResolver
 
-    const moduleMaps = new Map()
+    const moduleMaps = new Map<
+      TSESTree.Node,
+      {
+        imported: Map<string, TSESTree.ImportDeclaration[]>
+        nsImported: Map<string, TSESTree.ImportDeclaration[]>
+        defaultTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+        namedTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+      }
+    >()
 
-    function getImportMap(n) {
-      if (!moduleMaps.has(n.parent)) {
-        moduleMaps.set(n.parent, {
+    function getImportMap(n: TSESTree.ImportDeclaration) {
+      const parent = n.parent!
+      if (!moduleMaps.has(parent)) {
+        moduleMaps.set(parent, {
           imported: new Map(),
           nsImported: new Map(),
           defaultTypesImported: new Map(),
           namedTypesImported: new Map(),
         })
       }
-      const map = moduleMaps.get(n.parent)
-      const preferInline =
-        context.options[0] && context.options[0]['prefer-inline']
+      const map = moduleMaps.get(parent)!
+      const preferInline = context.options[0]?.['prefer-inline']
       if (!preferInline && n.importKind === 'type') {
         return n.specifiers.length > 0 &&
           n.specifiers[0].type === 'ImportDefaultSpecifier'
@@ -387,7 +439,9 @@ module.exports = {
       }
       if (
         !preferInline &&
-        n.specifiers.some(spec => spec.importKind === 'type')
+        n.specifiers.some(
+          spec => 'importKind' in spec && spec.importKind === 'type',
+        )
       ) {
         return map.namedTypesImported
       }
@@ -402,7 +456,7 @@ module.exports = {
         const importMap = getImportMap(n)
 
         if (importMap.has(resolvedPath)) {
-          importMap.get(resolvedPath).push(n)
+          importMap.get(resolvedPath)!.push(n)
         } else {
           importMap.set(resolvedPath, [n])
         }
@@ -418,4 +472,4 @@ module.exports = {
       },
     }
   },
-}
+})
