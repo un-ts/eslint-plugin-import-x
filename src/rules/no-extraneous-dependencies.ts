@@ -1,28 +1,35 @@
 import path from 'path'
 import fs from 'fs'
+
+import type { TSESTree } from '@typescript-eslint/utils'
+import type { PackageJson } from 'type-fest'
+
 import { pkgUp } from '../utils/pkg-up'
 import { minimatch } from 'minimatch'
 import { resolve } from '../utils/resolve'
 import { moduleVisitor } from '../utils/module-visitor'
 import { importType } from '../core/import-type'
 import { getFilePackageName } from '../core/package-path'
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
+import type { RuleContext } from '../types'
 
-const depFieldCache = new Map()
+type PackageDeps = ReturnType<typeof extractDepFields>
 
-function hasKeys(obj = {}) {
+const depFieldCache = new Map<string, PackageDeps>()
+
+function hasKeys(obj: object = {}) {
   return Object.keys(obj).length > 0
 }
 
-function arrayOrKeys(arrayOrObject) {
+function arrayOrKeys(arrayOrObject: object | string[]) {
   return Array.isArray(arrayOrObject)
-    ? arrayOrObject
+    ? (arrayOrObject as string[])
     : Object.keys(arrayOrObject)
 }
 
-function readJSON(jsonPath, throwException) {
+function readJSON<T>(jsonPath: string, throwException: boolean) {
   try {
-    return JSON.parse(fs.readFileSync(jsonPath, 'utf8'))
+    return JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as T
   } catch (err) {
     if (throwException) {
       throw err
@@ -30,7 +37,7 @@ function readJSON(jsonPath, throwException) {
   }
 }
 
-function extractDepFields(pkg) {
+function extractDepFields(pkg: PackageJson) {
   return {
     dependencies: pkg.dependencies || {},
     devDependencies: pkg.devDependencies || {},
@@ -44,19 +51,19 @@ function extractDepFields(pkg) {
   }
 }
 
-function getPackageDepFields(packageJsonPath, throwAtRead) {
+function getPackageDepFields(packageJsonPath: string, throwAtRead: boolean) {
   if (!depFieldCache.has(packageJsonPath)) {
-    const depFields = extractDepFields(readJSON(packageJsonPath, throwAtRead))
+    const depFields = extractDepFields(readJSON(packageJsonPath, throwAtRead)!)
     depFieldCache.set(packageJsonPath, depFields)
   }
-
   return depFieldCache.get(packageJsonPath)
 }
 
-function getDependencies(context, packageDir) {
-  let paths = []
+function getDependencies(context: RuleContext, packageDir?: string | string[]) {
+  let paths: string[] = []
+
   try {
-    const packageContent = {
+    let packageContent: PackageDeps = {
       dependencies: {},
       devDependencies: {},
       optionalDependencies: {},
@@ -65,10 +72,10 @@ function getDependencies(context, packageDir) {
     }
 
     if (packageDir && packageDir.length > 0) {
-      if (!Array.isArray(packageDir)) {
-        paths = [path.resolve(packageDir)]
-      } else {
+      if (Array.isArray(packageDir)) {
         paths = packageDir.map(dir => path.resolve(dir))
+      } else {
+        paths = [path.resolve(packageDir)]
       }
     }
 
@@ -76,21 +83,25 @@ function getDependencies(context, packageDir) {
       // use rule config to find package.json
       paths.forEach(dir => {
         const packageJsonPath = path.join(dir, 'package.json')
-        const _packageContent = getPackageDepFields(packageJsonPath, true)
+        const packageContent_ = getPackageDepFields(packageJsonPath, true)!
         Object.keys(packageContent).forEach(depsKey => {
-          Object.assign(packageContent[depsKey], _packageContent[depsKey])
+          const key = depsKey as keyof PackageDeps
+          Object.assign(packageContent[key], packageContent_[key])
         })
       })
     } else {
+      // use closest package.json
       const packageJsonPath = pkgUp({
         cwd: context.getPhysicalFilename
           ? context.getPhysicalFilename()
           : context.getFilename(),
-        normalize: false,
-      })
+      })!
 
-      // use closest package.json
-      Object.assign(packageContent, getPackageDepFields(packageJsonPath, false))
+      const packageContent_ = getPackageDepFields(packageJsonPath, false)
+
+      if (packageContent_) {
+        packageContent = packageContent_
+      }
     }
 
     if (
@@ -102,50 +113,47 @@ function getDependencies(context, packageDir) {
         packageContent.bundledDependencies,
       ].some(hasKeys)
     ) {
-      return null
+      return
     }
 
     return packageContent
-  } catch (e) {
-    if (paths.length > 0 && e.code === 'ENOENT') {
-      context.report({
-        message: 'The package.json file could not be found.',
-        loc: { line: 0, column: 0 },
-      })
-    }
-    if (e.name === 'JSONError' || e instanceof SyntaxError) {
-      context.report({
-        message: `The package.json file could not be parsed: ${e.message}`,
-        loc: { line: 0, column: 0 },
-      })
-    }
+  } catch (err) {
+    const error = err as Error & { code: string }
 
-    return null
+    if (paths.length > 0 && error.code === 'ENOENT') {
+      context.report({
+        messageId: 'pkgNotFound',
+        loc: { line: 0, column: 0 },
+      })
+    }
+    if (error.name === 'JSONError' || error instanceof SyntaxError) {
+      context.report({
+        messageId: 'pkgUnparsable',
+        data: { error: error.message },
+        loc: { line: 0, column: 0 },
+      })
+    }
   }
 }
 
-function missingErrorMessage(packageName) {
-  return `'${packageName}' should be listed in the project's dependencies. Run 'npm i -S ${packageName}' to add it`
-}
-
-function devDepErrorMessage(packageName) {
-  return `'${packageName}' should be listed in the project's dependencies, not devDependencies.`
-}
-
-function optDepErrorMessage(packageName) {
-  return `'${packageName}' should be listed in the project's dependencies, not optionalDependencies.`
-}
-
-function getModuleOriginalName(name) {
+function getModuleOriginalName(name: string) {
   const [first, second] = name.split('/')
   return first.startsWith('@') ? `${first}/${second}` : first
 }
 
-function getModuleRealName(resolved) {
-  return getFilePackageName(resolved)
+type DepDeclaration = {
+  isInDeps: boolean
+  isInDevDeps: boolean
+  isInOptDeps: boolean
+  isInPeerDeps: boolean
+  isInBundledDeps: boolean
 }
 
-function checkDependencyDeclaration(deps, packageName, declarationStatus) {
+function checkDependencyDeclaration(
+  deps: PackageDeps,
+  packageName: string,
+  declarationStatus?: DepDeclaration,
+) {
   const newDeclarationStatus = declarationStatus || {
     isInDeps: false,
     isInDevDeps: false,
@@ -156,8 +164,9 @@ function checkDependencyDeclaration(deps, packageName, declarationStatus) {
 
   // in case of sub package.json inside a module
   // check the dependencies on all hierarchy
-  const packageHierarchy = []
+  const packageHierarchy: string[] = []
   const packageNameParts = packageName ? packageName.split('/') : []
+
   packageNameParts.forEach((namePart, index) => {
     if (!namePart.startsWith('@')) {
       const ancestor = packageNameParts.slice(0, index + 1).join('/')
@@ -185,19 +194,43 @@ function checkDependencyDeclaration(deps, packageName, declarationStatus) {
   )
 }
 
-function reportIfMissing(context, deps, depsOptions, node, name) {
+type DepsOptions = {
+  allowDevDeps: boolean
+  allowOptDeps: boolean
+  allowPeerDeps: boolean
+  allowBundledDeps: boolean
+  verifyInternalDeps: boolean
+  verifyTypeImports: boolean
+}
+
+function reportIfMissing(
+  context: RuleContext<MessageId>,
+  deps: PackageDeps,
+  depsOptions: DepsOptions,
+  node: TSESTree.Node,
+  name: string,
+) {
   // Do not report when importing types unless option is enabled
   if (
     !depsOptions.verifyTypeImports &&
-    (node.importKind === 'type' ||
-      node.importKind === 'typeof' ||
-      node.exportKind === 'type' ||
-      (Array.isArray(node.specifiers) &&
-        node.specifiers.length &&
-        node.specifiers.every(
+    (('importKind' in node &&
+      (node.importKind === 'type' ||
+        // @ts-expect-error - flow type
+        node.importKind === 'typeof')) ||
+      ('exportKind' in node && node.exportKind === 'type') ||
+      ('specifiers' in node &&
+        Array.isArray(node.specifiers) &&
+        !!node.specifiers.length &&
+        (
+          node.specifiers as Array<
+            TSESTree.ExportSpecifier | TSESTree.ImportClause
+          >
+        ).every(
           specifier =>
-            specifier.importKind === 'type' ||
-            specifier.importKind === 'typeof',
+            'importKind' in specifier &&
+            (specifier.importKind === 'type' ||
+              // @ts-expect-error - flow type
+              specifier.importKind === 'typeof'),
         )))
   ) {
     return
@@ -232,7 +265,7 @@ function reportIfMissing(context, deps, depsOptions, node, name) {
 
   // test the real name from the resolved package.json
   // if not aliased imports (alias/react for example), importPackageName can be misinterpreted
-  const realPackageName = getModuleRealName(resolved)
+  const realPackageName = getFilePackageName(resolved)
   if (realPackageName && realPackageName !== importPackageName) {
     declarationStatus = checkDependencyDeclaration(
       deps,
@@ -251,50 +284,75 @@ function reportIfMissing(context, deps, depsOptions, node, name) {
     }
   }
 
+  const packageName = realPackageName || importPackageName
+
   if (declarationStatus.isInDevDeps && !depsOptions.allowDevDeps) {
-    context.report(
+    context.report({
       node,
-      devDepErrorMessage(realPackageName || importPackageName),
-    )
+      messageId: 'devDep',
+      data: {
+        packageName,
+      },
+    })
     return
   }
 
   if (declarationStatus.isInOptDeps && !depsOptions.allowOptDeps) {
-    context.report(
+    context.report({
       node,
-      optDepErrorMessage(realPackageName || importPackageName),
-    )
+      messageId: 'optDep',
+      data: {
+        packageName,
+      },
+    })
     return
   }
 
-  context.report(
+  context.report({
     node,
-    missingErrorMessage(realPackageName || importPackageName),
-  )
+    messageId: 'missing',
+    data: {
+      packageName,
+    },
+  })
 }
 
-function testConfig(config, filename) {
+function testConfig(config: string[] | boolean | undefined, filename: string) {
   // Simplest configuration first, either a boolean or nothing.
   if (typeof config === 'boolean' || typeof config === 'undefined') {
     return config
   }
   // Array of globs.
   return config.some(
-    c =>
-      minimatch(filename, c) ||
-      minimatch(filename, path.join(process.cwd(), c)),
+    c => minimatch(filename, c) || minimatch(filename, path.resolve(c)),
   )
 }
 
-module.exports = {
+type Options = {
+  packageDir?: string | string[]
+  devDependencies?: boolean
+  optionalDependencies?: boolean
+  peerDependencies?: boolean
+  bundledDependencies?: boolean
+  includeInternal?: boolean
+  includeTypes?: boolean
+}
+
+type MessageId =
+  | 'pkgNotFound'
+  | 'pkgUnparsable'
+  | 'devDep'
+  | 'optDep'
+  | 'missing'
+
+export = createRule<[Options?], MessageId>({
+  name: 'no-extraneous-dependencies',
   meta: {
     type: 'problem',
     docs: {
       category: 'Helpful warnings',
       description: 'Forbid the use of extraneous packages.',
-      url: docsUrl('no-extraneous-dependencies'),
     },
-
     schema: [
       {
         type: 'object',
@@ -310,13 +368,25 @@ module.exports = {
         additionalProperties: false,
       },
     ],
+    messages: {
+      pkgNotFound: 'The package.json file could not be found.',
+      pkgUnparsable: 'The package.json file could not be parsed: {{error}}',
+      devDep:
+        "'{{packageName}}' should be listed in the project's dependencies, not devDependencies.",
+      optDep:
+        "'{{packageName}}' should be listed in the project's dependencies, not optionalDependencies.",
+      missing:
+        "'{{packageName}}' should be listed in the project's dependencies. Run 'npm i -S {{packageName}}' to add it",
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
+
     const filename = context.getPhysicalFilename
       ? context.getPhysicalFilename()
       : context.getFilename()
+
     const deps =
       getDependencies(context, options.packageDir) || extractDepFields({})
 
@@ -331,15 +401,16 @@ module.exports = {
       verifyTypeImports: !!options.includeTypes,
     }
 
-    return moduleVisitor(
-      (source, node) => {
-        reportIfMissing(context, deps, depsOptions, node, source.value)
+    return {
+      ...moduleVisitor(
+        (source, node) => {
+          reportIfMissing(context, deps, depsOptions, node, source.value)
+        },
+        { commonjs: true },
+      ),
+      'Program:exit'() {
+        depFieldCache.clear()
       },
-      { commonjs: true },
-    )
+    }
   },
-
-  'Program:exit'() {
-    depFieldCache.clear()
-  },
-}
+})

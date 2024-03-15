@@ -1,58 +1,54 @@
-import { parsers, test, testFilePath } from '../utils'
-import typescriptConfig from '../../src/config/typescript'
 import path from 'path'
 import fs from 'fs'
 
-import { RuleTester } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
 
-const ruleTester = new RuleTester()
-const typescriptRuleTester = new RuleTester(typescriptConfig)
-const rule = require('rules/no-extraneous-dependencies')
+import rule from '../../src/rules/no-extraneous-dependencies'
+import typescriptConfig from '../../src/config/typescript'
 
-const packageDirWithSyntaxError = path.join(
-  __dirname,
-  '../fixtures/with-syntax-error',
-)
+import {
+  dependencies as deps,
+  devDependencies as devDeps,
+} from '../fixtures/package.json'
+
+import { parsers, test, testFilePath } from '../utils'
+
+const ruleTester = new TSESLint.RuleTester()
+const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
+
+const packageDirWithSyntaxError = testFilePath('with-syntax-error')
+
 const packageFileWithSyntaxErrorMessage = (() => {
   try {
     JSON.parse(
-      fs.readFileSync(path.join(packageDirWithSyntaxError, 'package.json')),
+      fs.readFileSync(
+        path.join(packageDirWithSyntaxError, 'package.json'),
+        'utf8',
+      ),
     )
   } catch (error) {
-    return error.message
+    return (error as Error).message
   }
 })()
-const packageDirWithFlowTyped = path.join(
-  __dirname,
-  '../fixtures/with-flow-typed',
-)
-const packageDirWithTypescriptDevDependencies = path.join(
-  __dirname,
-  '../fixtures/with-typescript-dev-dependencies',
-)
-const packageDirMonoRepoRoot = path.join(__dirname, '../fixtures/monorepo')
-const packageDirMonoRepoWithNested = path.join(
-  __dirname,
-  '../fixtures/monorepo/packages/nested-package',
-)
-const packageDirWithEmpty = path.join(__dirname, '../fixtures/empty')
-const packageDirBundleDeps = path.join(
-  __dirname,
-  '../fixtures/bundled-dependencies/as-array-bundle-deps',
-)
-const packageDirBundledDepsAsObject = path.join(
-  __dirname,
-  '../fixtures/bundled-dependencies/as-object',
-)
-const packageDirBundledDepsRaceCondition = path.join(
-  __dirname,
-  '../fixtures/bundled-dependencies/race-condition',
-)
 
-const {
-  dependencies: deps,
-  devDependencies: devDeps,
-} = require('../fixtures/package.json')
+const packageDirWithFlowTyped = testFilePath('with-flow-typed')
+const packageDirWithTypescriptDevDependencies = testFilePath(
+  'with-typescript-dev-dependencies',
+)
+const packageDirMonoRepoRoot = testFilePath('monorepo')
+const packageDirMonoRepoWithNested = testFilePath(
+  'monorepo/packages/nested-package',
+)
+const packageDirWithEmpty = testFilePath('empty')
+const packageDirBundleDeps = testFilePath(
+  'bundled-dependencies/as-array-bundle-deps',
+)
+const packageDirBundledDepsAsObject = testFilePath(
+  'bundled-dependencies/as-object',
+)
+const packageDirBundledDepsRaceCondition = testFilePath(
+  'bundled-dependencies/race-condition',
+)
 
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [

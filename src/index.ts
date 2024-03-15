@@ -29,6 +29,7 @@ import noAmd from './rules/no-amd'
 import noDuplicates from './rules/no-duplicates'
 import first from './rules/first'
 import maxDependencies from './rules/max-dependencies'
+import noExtraneousDependencies from './rules/no-extraneous-dependencies'
 
 // configs
 import recommended from './config/recommended'
@@ -69,7 +70,7 @@ export const rules = {
   'no-duplicates': noDuplicates,
   first,
   'max-dependencies': maxDependencies,
-  'no-extraneous-dependencies': require('./rules/no-extraneous-dependencies'),
+  'no-extraneous-dependencies': noExtraneousDependencies,
   'no-absolute-path': require('./rules/no-absolute-path'),
   'no-nodejs-modules': require('./rules/no-nodejs-modules'),
   'no-webpack-loader-syntax': require('./rules/no-webpack-loader-syntax'),
