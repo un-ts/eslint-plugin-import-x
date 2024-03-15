@@ -2,42 +2,45 @@
  * Rule to prefer ES6 to CJS
  */
 
-import { docsUrl } from '../docs-url'
+import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { createRule } from '../utils'
 
-const EXPORT_MESSAGE = 'Expected "export" or "export default"'
-const IMPORT_MESSAGE = 'Expected "import" instead of "require()"'
-
-function normalizeLegacyOptions(options) {
-  if (options.indexOf('allow-primitive-modules') >= 0) {
-    return { allowPrimitiveModules: true }
-  }
-  return options[0] || {}
+type NormalizedOptions = {
+  allowPrimitiveModules?: boolean
+  allowRequire?: boolean
+  allowConditionalRequire?: boolean
 }
 
-function allowPrimitive(node, options) {
+type Options = 'allow-primitive-modules' | NormalizedOptions
+
+type MessageId = 'export' | 'import'
+
+function normalizeLegacyOptions(options: [Options?]): NormalizedOptions {
+  if (options.includes('allow-primitive-modules')) {
+    return { allowPrimitiveModules: true }
+  }
+  return (options[0] as NormalizedOptions) || {}
+}
+
+function allowPrimitive(
+  node: TSESTree.MemberExpression,
+  options: NormalizedOptions,
+) {
   if (!options.allowPrimitiveModules) {
     return false
   }
-  if (node.parent.type !== 'AssignmentExpression') {
+  if (node.parent!.type !== 'AssignmentExpression') {
     return false
   }
-  return node.parent.right.type !== 'ObjectExpression'
+  return node.parent!.right.type !== 'ObjectExpression'
 }
 
-function allowRequire(node, options) {
-  return options.allowRequire
-}
-
-function allowConditionalRequire(node, options) {
-  return options.allowConditionalRequire !== false
-}
-
-function validateScope(scope) {
+function validateScope(scope: TSESLint.Scope.Scope) {
   return scope.variableScope.type === 'module'
 }
 
 // https://github.com/estree/estree/blob/HEAD/es5.md
-function isConditional(node) {
+function isConditional(node: TSESTree.Node) {
   if (
     node.type === 'IfStatement' ||
     node.type === 'TryStatement' ||
@@ -52,70 +55,77 @@ function isConditional(node) {
   return false
 }
 
-function isLiteralString(node) {
+function isLiteralString(node: TSESTree.CallExpressionArgument) {
   return (
     (node.type === 'Literal' && typeof node.value === 'string') ||
     (node.type === 'TemplateLiteral' && node.expressions.length === 0)
   )
 }
 
-const schemaString = { enum: ['allow-primitive-modules'] }
-const schemaObject = {
-  type: 'object',
-  properties: {
-    allowPrimitiveModules: { type: 'boolean' },
-    allowRequire: { type: 'boolean' },
-    allowConditionalRequire: { type: 'boolean' },
-  },
-  additionalProperties: false,
-}
-
-module.exports = {
+export = createRule<[Options?], MessageId>({
+  name: 'no-commonjs',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Module systems',
       description:
         'Forbid CommonJS `require` calls and `module.exports` or `exports.*`.',
-      url: docsUrl('no-commonjs'),
     },
-
     schema: {
       anyOf: [
         {
           type: 'array',
-          items: [schemaString],
+          items: [{ enum: ['allow-primitive-modules'] }],
           additionalItems: false,
         },
         {
           type: 'array',
-          items: [schemaObject],
+          items: [
+            {
+              type: 'object',
+              properties: {
+                allowPrimitiveModules: { type: 'boolean' },
+                allowRequire: { type: 'boolean' },
+                allowConditionalRequire: { type: 'boolean' },
+              },
+              additionalProperties: false,
+            },
+          ],
           additionalItems: false,
         },
       ],
     },
+    messages: {
+      export: 'Expected "export" or "export default"',
+      import: 'Expected "import" instead of "require()"',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     const options = normalizeLegacyOptions(context.options)
 
     return {
       MemberExpression(node) {
         // module.exports
-        if (node.object.name === 'module' && node.property.name === 'exports') {
+        if (
+          'name' in node.object &&
+          node.object.name === 'module' &&
+          'name' in node.property &&
+          node.property.name === 'exports'
+        ) {
           if (allowPrimitive(node, options)) {
             return
           }
-          context.report({ node, message: EXPORT_MESSAGE })
+          context.report({ node, messageId: 'export' })
         }
 
         // exports.
-        if (node.object.name === 'exports') {
+        if ('name' in node.object && node.object.name === 'exports') {
           const isInScope = context
             .getScope()
             .variables.some(variable => variable.name === 'exports')
           if (!isInScope) {
-            context.report({ node, message: EXPORT_MESSAGE })
+            context.report({ node, messageId: 'export' })
           }
         }
       },
@@ -138,13 +148,13 @@ module.exports = {
           return
         }
 
-        if (allowRequire(call, options)) {
+        if (options.allowRequire) {
           return
         }
 
         if (
-          allowConditionalRequire(call, options) &&
-          isConditional(call.parent)
+          options.allowConditionalRequire !== false &&
+          isConditional(call.parent!)
         ) {
           return
         }
@@ -152,9 +162,9 @@ module.exports = {
         // keeping it simple: all 1-string-arg `require` calls are reported
         context.report({
           node: call.callee,
-          message: IMPORT_MESSAGE,
+          messageId: 'import',
         })
       },
     }
   },
-}
+})
