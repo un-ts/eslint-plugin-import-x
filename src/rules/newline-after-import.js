@@ -1,6 +1,5 @@
 /**
- * @fileoverview Rule to enforce new line after import not followed by another import.
- * @author Radek Benkel
+ * Rule to enforce new line after import not followed by another import.
  */
 
 import { isStaticRequire } from '../core/static-require'
@@ -8,10 +7,6 @@ import { docsUrl } from '../docs-url'
 
 import debug from 'debug'
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')
-
-//------------------------------------------------------------------------------
-// Rule Definition
-//------------------------------------------------------------------------------
 
 function containsNodeOrEqual(outerNode, innerNode) {
   return (

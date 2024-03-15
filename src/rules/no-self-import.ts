@@ -1,13 +1,20 @@
 /**
- * @fileOverview Forbids a module from importing itself
- * @author Gio d'Amelio
+ * Forbids a module from importing itself
  */
 
 import { resolve } from '../utils/resolve'
 import { moduleVisitor } from '../utils/module-visitor'
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
+import { RuleContext } from '../types'
+import { TSESTree } from '@typescript-eslint/utils'
 
-function isImportingSelf(context, node, requireName) {
+type MessageId = 'self'
+
+function isImportingSelf(
+  context: RuleContext<MessageId>,
+  node: TSESTree.Node,
+  requireName: string,
+) {
   const filePath = context.getPhysicalFilename
     ? context.getPhysicalFilename()
     : context.getFilename()
@@ -16,23 +23,26 @@ function isImportingSelf(context, node, requireName) {
   if (filePath !== '<text>' && filePath === resolve(requireName, context)) {
     context.report({
       node,
-      message: 'Module imports itself.',
+      messageId: 'self',
     })
   }
 }
 
-module.exports = {
+export = createRule<[], MessageId>({
+  name: 'no-self-import',
   meta: {
     type: 'problem',
     docs: {
       category: 'Static analysis',
       description: 'Forbid a module from importing itself.',
       recommended: true,
-      url: docsUrl('no-self-import'),
     },
-
     schema: [],
+    messages: {
+      self: 'Module imports itself.',
+    },
   },
+  defaultOptions: [],
   create(context) {
     return moduleVisitor(
       (source, node) => {
@@ -41,4 +51,4 @@ module.exports = {
       { commonjs: true },
     )
   },
-}
+})

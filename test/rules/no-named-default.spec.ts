@@ -1,8 +1,10 @@
-import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
-import { RuleTester } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/no-named-default')
+import rule from '../../src/rules/no-named-default'
+
+import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
+
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-named-default', rule, {
   valid: [
@@ -22,7 +24,7 @@ ruleTester.run('no-named-default', rule, {
     ...SYNTAX_CASES,
   ],
 
-  invalid: [].concat(
+  invalid: [
     /*test({
       code: 'import { default } from "./bar";',
       errors: [{
@@ -50,8 +52,8 @@ ruleTester.run('no-named-default', rule, {
       ],
     }),
 
-    // es2022: Arbitrary module namespae identifier names
-    testVersion('>= 8.7', () => ({
+    // es2022: Arbitrary module namespace identifier names
+    ...testVersion('>= 8.7', () => ({
       code: 'import { "default" as bar } from "./bar";',
       errors: [
         {
@@ -62,6 +64,6 @@ ruleTester.run('no-named-default', rule, {
       parserOptions: {
         ecmaVersion: 2022,
       },
-    })) || [],
-  ),
+    })),
+  ],
 })

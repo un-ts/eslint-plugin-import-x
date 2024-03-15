@@ -2,6 +2,8 @@
  * Ensures that modules contain exports and/or all
  * modules are consumed within other modules.
  */
+import { TSESTree } from '@typescript-eslint/utils'
+import { FileEnumerator } from 'eslint/use-at-your-own-risk'
 
 import { getFileExtensions } from '../utils/ignore'
 import { resolve } from '../utils/resolve'
@@ -10,105 +12,51 @@ import { dirname, join } from 'path'
 import { readPkgUp } from '../utils/read-pkg-ip'
 
 import { ExportMap, recursivePatternCapture } from '../export-map'
-import { docsUrl } from '../docs-url'
+import type { FileExtension, RuleContext } from '../types'
 
-let FileEnumerator
-let listFilesToProcess
+import { createRule } from '../utils'
 
-try {
-  ;({ FileEnumerator } = require('eslint/use-at-your-own-risk'))
-} catch (e) {
-  try {
-    // has been moved to eslint/lib/cli-engine/file-enumerator in version 6
-    ;({ FileEnumerator } = require('eslint/lib/cli-engine/file-enumerator'))
-  } catch (e) {
-    try {
-      // eslint/lib/util/glob-util has been moved to eslint/lib/util/glob-utils with version 5.3
-      const {
-        listFilesToProcess: originalListFilesToProcess,
-      } = require('eslint/lib/util/glob-utils')
+function listFilesToProcess(src: string[], extensions: FileExtension[]) {
+  const e = new FileEnumerator({
+    extensions,
+  })
 
-      // Prevent passing invalid options (extensions array) to old versions of the function.
-      // https://github.com/eslint/eslint/blob/v5.16.0/lib/util/glob-utils.js#L178-L280
-      // https://github.com/eslint/eslint/blob/v5.2.0/lib/util/glob-util.js#L174-L269
-      listFilesToProcess = function (src, extensions) {
-        return originalListFilesToProcess(src, {
-          extensions,
-        })
-      }
-    } catch (e) {
-      const {
-        listFilesToProcess: originalListFilesToProcess,
-      } = require('eslint/lib/util/glob-util')
-
-      listFilesToProcess = function (src, extensions) {
-        const patterns = src.concat(
-          src.flatMap(pattern =>
-            extensions.map(extension =>
-              /\*\*|\*\./.test(pattern)
-                ? pattern
-                : `${pattern}/**/*${extension}`,
-            ),
-          ),
-        )
-
-        return originalListFilesToProcess(patterns)
-      }
-    }
-  }
+  return Array.from(e.iterateFiles(src), ({ filePath, ignored }) => ({
+    ignored,
+    filename: filePath,
+  }))
 }
 
-if (FileEnumerator) {
-  listFilesToProcess = function (src, extensions) {
-    const e = new FileEnumerator({
-      extensions,
-    })
-
-    return Array.from(e.iterateFiles(src), ({ filePath, ignored }) => ({
-      ignored,
-      filename: filePath,
-    }))
-  }
-}
-
-const EXPORT_DEFAULT_DECLARATION = 'ExportDefaultDeclaration'
-const EXPORT_NAMED_DECLARATION = 'ExportNamedDeclaration'
-const EXPORT_ALL_DECLARATION = 'ExportAllDeclaration'
-const IMPORT_DECLARATION = 'ImportDeclaration'
-const IMPORT_NAMESPACE_SPECIFIER = 'ImportNamespaceSpecifier'
-const IMPORT_DEFAULT_SPECIFIER = 'ImportDefaultSpecifier'
-const VARIABLE_DECLARATION = 'VariableDeclaration'
-const FUNCTION_DECLARATION = 'FunctionDeclaration'
-const CLASS_DECLARATION = 'ClassDeclaration'
-const IDENTIFIER = 'Identifier'
-const OBJECT_PATTERN = 'ObjectPattern'
-const ARRAY_PATTERN = 'ArrayPattern'
-const TS_INTERFACE_DECLARATION = 'TSInterfaceDeclaration'
-const TS_TYPE_ALIAS_DECLARATION = 'TSTypeAliasDeclaration'
-const TS_ENUM_DECLARATION = 'TSEnumDeclaration'
 const DEFAULT = 'default'
 
-function forEachDeclarationIdentifier(declaration, cb) {
+const { AST_NODE_TYPES } = TSESTree
+
+function forEachDeclarationIdentifier(
+  declaration: TSESTree.Node | null,
+  cb: (name: string) => void,
+) {
   if (declaration) {
     if (
-      declaration.type === FUNCTION_DECLARATION ||
-      declaration.type === CLASS_DECLARATION ||
-      declaration.type === TS_INTERFACE_DECLARATION ||
-      declaration.type === TS_TYPE_ALIAS_DECLARATION ||
-      declaration.type === TS_ENUM_DECLARATION
+      declaration.type === AST_NODE_TYPES.FunctionDeclaration ||
+      declaration.type === AST_NODE_TYPES.ClassDeclaration ||
+      declaration.type === AST_NODE_TYPES.TSInterfaceDeclaration ||
+      declaration.type === AST_NODE_TYPES.TSTypeAliasDeclaration ||
+      declaration.type === AST_NODE_TYPES.TSEnumDeclaration
     ) {
-      cb(declaration.id.name)
-    } else if (declaration.type === VARIABLE_DECLARATION) {
+      cb(declaration.id!.name)
+    } else if (declaration.type === AST_NODE_TYPES.VariableDeclaration) {
       declaration.declarations.forEach(({ id }) => {
-        if (id.type === OBJECT_PATTERN) {
+        if (id.type === AST_NODE_TYPES.ObjectPattern) {
           recursivePatternCapture(id, pattern => {
-            if (pattern.type === IDENTIFIER) {
+            if (pattern.type === AST_NODE_TYPES.Identifier) {
               cb(pattern.name)
             }
           })
-        } else if (id.type === ARRAY_PATTERN) {
-          id.elements.forEach(({ name }) => {
-            cb(name)
+        } else if (id.type === AST_NODE_TYPES.ArrayPattern) {
+          id.elements.forEach(el => {
+            if (el?.type === AST_NODE_TYPES.Identifier) {
+              cb(el.name)
+            }
           })
         } else {
           cb(id.name)
@@ -135,9 +83,8 @@ function forEachDeclarationIdentifier(declaration, cb) {
  *
  *   Map { 'foo.js' => Map { 'bar.js' => Set { 'o2' } } }
  *
- * @type {Map<string, Map<string, Set<string>>>}
  */
-const importList = new Map()
+const importList = new Map<string, Map<string, Set<string>>>()
 
 /**
  * List of exports per file.
@@ -161,24 +108,26 @@ const importList = new Map()
  * Then we will have a structure that looks like:
  *
  *   Map { 'bar.js' => Map { 'o2' => { whereUsed: Set { 'foo.js' } } } }
- *
- * @type {Map<string, Map<string, object>>}
  */
-const exportList = new Map()
+const exportList = new Map<string, Map<string, { whereUsed: Set<string> }>>()
 
 const visitorKeyMap = new Map()
 
 const ignoredFiles = new Set()
 const filesOutsideSrc = new Set()
 
-const isNodeModule = path => /\/(node_modules)\//.test(path)
+const isNodeModule = (path: string) => /([/\\])(node_modules)\1/.test(path)
 
 /**
  * read all files matching the patterns in src and ignoreExports
  *
  * return all files matching src pattern, which are not matching the ignoreExports pattern
  */
-const resolveFiles = (src, ignoreExports, context) => {
+const resolveFiles = (
+  src: string[],
+  ignoreExports: string[],
+  context: RuleContext,
+) => {
   const extensions = Array.from(getFileExtensions(context.settings))
 
   const srcFileList = listFilesToProcess(src, extensions)
@@ -199,11 +148,14 @@ const resolveFiles = (src, ignoreExports, context) => {
 /**
  * parse all source files and build up 2 maps containing the existing imports and exports
  */
-const prepareImportsAndExports = (srcFiles, context) => {
-  const exportAll = new Map()
+const prepareImportsAndExports = (
+  srcFiles: Set<string>,
+  context: RuleContext,
+) => {
+  const exportAll = new Map<string, Set<string>>()
   srcFiles.forEach(file => {
-    const exports = new Map()
-    const imports = new Map()
+    const exports = new Map<string, { whereUsed: Set<string> }>()
+    const imports = new Map<string, Set<string>>()
     const currentExports = ExportMap.get(file, context)
     if (currentExports) {
       const {
@@ -216,7 +168,7 @@ const prepareImportsAndExports = (srcFiles, context) => {
 
       visitorKeyMap.set(file, visitorKeys)
       // dependencies === export * from
-      const currentExportAll = new Set()
+      const currentExportAll = new Set<string>()
       dependencies.forEach(getDependency => {
         const dependency = getDependency()
         if (dependency === null) {
@@ -229,7 +181,9 @@ const prepareImportsAndExports = (srcFiles, context) => {
 
       reexports.forEach((value, key) => {
         if (key === DEFAULT) {
-          exports.set(IMPORT_DEFAULT_SPECIFIER, { whereUsed: new Set() })
+          exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
+            whereUsed: new Set(),
+          })
         } else {
           exports.set(key, { whereUsed: new Set() })
         }
@@ -240,7 +194,7 @@ const prepareImportsAndExports = (srcFiles, context) => {
         let localImport = imports.get(reexport.path)
         let currentValue
         if (value.local === DEFAULT) {
-          currentValue = IMPORT_DEFAULT_SPECIFIER
+          currentValue = AST_NODE_TYPES.ImportDefaultSpecifier
         } else {
           currentValue = value.local
         }
@@ -258,7 +212,7 @@ const prepareImportsAndExports = (srcFiles, context) => {
         }
         const localImport = imports.get(key) || new Set()
         value.declarations.forEach(({ importedSpecifiers }) => {
-          importedSpecifiers.forEach(specifier => {
+          importedSpecifiers!.forEach(specifier => {
             localImport.add(specifier)
           })
         })
@@ -270,24 +224,32 @@ const prepareImportsAndExports = (srcFiles, context) => {
       if (ignoredFiles.has(file)) {
         return
       }
-      namespace.forEach((value, key) => {
+      namespace.forEach((_value, key) => {
         if (key === DEFAULT) {
-          exports.set(IMPORT_DEFAULT_SPECIFIER, { whereUsed: new Set() })
+          exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
+            whereUsed: new Set(),
+          })
         } else {
           exports.set(key, { whereUsed: new Set() })
         }
       })
     }
-    exports.set(EXPORT_ALL_DECLARATION, { whereUsed: new Set() })
-    exports.set(IMPORT_NAMESPACE_SPECIFIER, { whereUsed: new Set() })
+    exports.set(AST_NODE_TYPES.ExportAllDeclaration, {
+      whereUsed: new Set(),
+    })
+    exports.set(AST_NODE_TYPES.ImportNamespaceSpecifier, {
+      whereUsed: new Set(),
+    })
     exportList.set(file, exports)
   })
   exportAll.forEach((value, key) => {
     value.forEach(val => {
       const currentExports = exportList.get(val)
       if (currentExports) {
-        const currentExport = currentExports.get(EXPORT_ALL_DECLARATION)
-        currentExport.whereUsed.add(key)
+        const currentExport = currentExports.get(
+          AST_NODE_TYPES.ExportAllDeclaration,
+        )
+        currentExport!.whereUsed.add(key)
       }
     })
   })
@@ -303,11 +265,11 @@ const determineUsage = () => {
       const exports = exportList.get(key)
       if (typeof exports !== 'undefined') {
         value.forEach(currentImport => {
-          let specifier
-          if (currentImport === IMPORT_NAMESPACE_SPECIFIER) {
-            specifier = IMPORT_NAMESPACE_SPECIFIER
-          } else if (currentImport === IMPORT_DEFAULT_SPECIFIER) {
-            specifier = IMPORT_DEFAULT_SPECIFIER
+          let specifier: string
+          if (currentImport === AST_NODE_TYPES.ImportNamespaceSpecifier) {
+            specifier = AST_NODE_TYPES.ImportNamespaceSpecifier
+          } else if (currentImport === AST_NODE_TYPES.ImportDefaultSpecifier) {
+            specifier = AST_NODE_TYPES.ImportDefaultSpecifier
           } else {
             specifier = currentImport
           }
@@ -325,7 +287,7 @@ const determineUsage = () => {
   })
 }
 
-const getSrc = src => {
+const getSrc = (src?: string[]) => {
   if (src) {
     return src
   }
@@ -336,11 +298,16 @@ const getSrc = src => {
  * prepare the lists of existing imports and exports - should only be executed once at
  * the start of a new eslint run
  */
-let srcFiles
-let lastPrepareKey
-const doPreparation = (src, ignoreExports, context) => {
+let srcFiles: Set<string>
+let lastPrepareKey: string
+
+const doPreparation = (
+  src: string[] = [],
+  ignoreExports: string[],
+  context: RuleContext,
+) => {
   const prepareKey = JSON.stringify({
-    src: (src || []).sort(),
+    src: src.sort(),
     ignoreExports: (ignoreExports || []).sort(),
     extensions: Array.from(getFileExtensions(context.settings)).sort(),
   })
@@ -359,25 +326,29 @@ const doPreparation = (src, ignoreExports, context) => {
   lastPrepareKey = prepareKey
 }
 
-const newNamespaceImportExists = specifiers =>
-  specifiers.some(({ type }) => type === IMPORT_NAMESPACE_SPECIFIER)
+const newNamespaceImportExists = (specifiers: TSESTree.Node[]) =>
+  specifiers.some(
+    ({ type }) => type === AST_NODE_TYPES.ImportNamespaceSpecifier,
+  )
 
-const newDefaultImportExists = specifiers =>
-  specifiers.some(({ type }) => type === IMPORT_DEFAULT_SPECIFIER)
+const newDefaultImportExists = (specifiers: TSESTree.Node[]) =>
+  specifiers.some(({ type }) => type === AST_NODE_TYPES.ImportDefaultSpecifier)
 
-const fileIsInPkg = file => {
+const fileIsInPkg = (file: string) => {
   const { path, pkg } = readPkgUp({ cwd: file })
-  const basePath = dirname(path)
+  const basePath = dirname(path!)
 
-  const checkPkgFieldString = pkgField => {
+  const checkPkgFieldString = (pkgField: string) => {
     if (join(basePath, pkgField) === file) {
       return true
     }
   }
 
-  const checkPkgFieldObject = pkgField => {
+  const checkPkgFieldObject = (
+    pkgField: string | Partial<Record<string, string | false>>,
+  ) => {
     const pkgFieldFiles = Object.values(pkgField).flatMap(value =>
-      typeof value === 'boolean' ? [] : join(basePath, value),
+      typeof value === 'boolean' ? [] : join(basePath, value!),
     )
 
     if (pkgFieldFiles.includes(file)) {
@@ -385,7 +356,9 @@ const fileIsInPkg = file => {
     }
   }
 
-  const checkPkgField = pkgField => {
+  const checkPkgField = (
+    pkgField: string | Partial<Record<string, string | false>>,
+  ) => {
     if (typeof pkgField === 'string') {
       return checkPkgFieldString(pkgField)
     }
@@ -393,6 +366,10 @@ const fileIsInPkg = file => {
     if (typeof pkgField === 'object') {
       return checkPkgFieldObject(pkgField)
     }
+  }
+
+  if (!pkg) {
+    return false
   }
 
   if (pkg.private === true) {
@@ -420,14 +397,23 @@ const fileIsInPkg = file => {
   return false
 }
 
-module.exports = {
+type Options = {
+  src?: string[]
+  ignoreExports?: string[]
+  missingExports?: string[]
+  unusedExports?: boolean
+}
+
+type MessageId = 'notFound' | 'unused'
+
+export = createRule<Options[], MessageId>({
+  name: 'no-unused-modules',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Helpful warnings',
       description:
         'Forbid modules without exports, or exports without matching import in another module.',
-      url: docsUrl('no-unused-modules'),
     },
     schema: [
       {
@@ -479,8 +465,12 @@ module.exports = {
         ],
       },
     ],
+    messages: {
+      notFound: 'No exports found',
+      unused: "exported declaration '{{value}}' not used within other modules",
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     const {
       src,
@@ -497,7 +487,7 @@ module.exports = {
       ? context.getPhysicalFilename()
       : context.getFilename()
 
-    const checkExportPresence = node => {
+    const checkExportPresence = (node: TSESTree.Program) => {
       if (!missingExports) {
         return
       }
@@ -506,22 +496,27 @@ module.exports = {
         return
       }
 
-      const exportCount = exportList.get(file)
-      const exportAll = exportCount.get(EXPORT_ALL_DECLARATION)
-      const namespaceImports = exportCount.get(IMPORT_NAMESPACE_SPECIFIER)
+      const exportCount = exportList.get(file)!
+      const exportAll = exportCount.get(AST_NODE_TYPES.ExportAllDeclaration)!
+      const namespaceImports = exportCount.get(
+        AST_NODE_TYPES.ImportNamespaceSpecifier,
+      )!
 
-      exportCount.delete(EXPORT_ALL_DECLARATION)
-      exportCount.delete(IMPORT_NAMESPACE_SPECIFIER)
+      exportCount.delete(AST_NODE_TYPES.ExportAllDeclaration)
+      exportCount.delete(AST_NODE_TYPES.ImportNamespaceSpecifier)
       if (exportCount.size < 1) {
         // node.body[0] === 'undefined' only happens, if everything is commented out in the file
         // being linted
-        context.report(node.body[0] ? node.body[0] : node, 'No exports found')
+        context.report({
+          node: node.body[0] ? node.body[0] : node,
+          messageId: 'notFound',
+        })
       }
-      exportCount.set(EXPORT_ALL_DECLARATION, exportAll)
-      exportCount.set(IMPORT_NAMESPACE_SPECIFIER, namespaceImports)
+      exportCount.set(AST_NODE_TYPES.ExportAllDeclaration, exportAll)
+      exportCount.set(AST_NODE_TYPES.ImportNamespaceSpecifier, namespaceImports)
     }
 
-    const checkUsage = (node, exportedValue) => {
+    const checkUsage = (node: TSESTree.Node, exportedValue: string) => {
       if (!unusedExports) {
         return
       }
@@ -547,19 +542,20 @@ module.exports = {
         }
       }
 
-      exports = exportList.get(file)
+      const exports = exportList.get(file)
 
       if (!exports) {
         console.error(
           `file \`${file}\` has no exports. Please update to the latest, and if it still happens, report this on https://github.com/import-js/eslint-plugin-import/issues/2866!`,
         )
+        return
       }
 
       // special case: export * from
-      const exportAll = exports.get(EXPORT_ALL_DECLARATION)
+      const exportAll = exports.get(AST_NODE_TYPES.ExportAllDeclaration)
       if (
         typeof exportAll !== 'undefined' &&
-        exportedValue !== IMPORT_DEFAULT_SPECIFIER
+        exportedValue !== AST_NODE_TYPES.ImportDefaultSpecifier
       ) {
         if (exportAll.whereUsed.size > 0) {
           return
@@ -567,7 +563,9 @@ module.exports = {
       }
 
       // special case: namespace import
-      const namespaceImports = exports.get(IMPORT_NAMESPACE_SPECIFIER)
+      const namespaceImports = exports.get(
+        AST_NODE_TYPES.ImportNamespaceSpecifier,
+      )
       if (typeof namespaceImports !== 'undefined') {
         if (namespaceImports.whereUsed.size > 0) {
           return
@@ -576,25 +574,35 @@ module.exports = {
 
       // exportsList will always map any imported value of 'default' to 'ImportDefaultSpecifier'
       const exportsKey =
-        exportedValue === DEFAULT ? IMPORT_DEFAULT_SPECIFIER : exportedValue
+        exportedValue === DEFAULT
+          ? AST_NODE_TYPES.ImportDefaultSpecifier
+          : exportedValue
 
       const exportStatement = exports.get(exportsKey)
 
       const value =
-        exportsKey === IMPORT_DEFAULT_SPECIFIER ? DEFAULT : exportsKey
+        exportsKey === AST_NODE_TYPES.ImportDefaultSpecifier
+          ? DEFAULT
+          : exportsKey
 
       if (typeof exportStatement !== 'undefined') {
         if (exportStatement.whereUsed.size < 1) {
-          context.report(
+          context.report({
             node,
-            `exported declaration '${value}' not used within other modules`,
-          )
+            messageId: 'unused',
+            data: {
+              value,
+            },
+          })
         }
       } else {
-        context.report(
+        context.report({
           node,
-          `exported declaration '${value}' not used within other modules`,
-        )
+          messageId: 'unused',
+          data: {
+            value,
+          },
+        })
       }
     }
 
@@ -603,37 +611,36 @@ module.exports = {
      *
      * update lists of existing exports during runtime
      */
-    const updateExportUsage = node => {
+    const updateExportUsage = (node: TSESTree.Program) => {
       if (ignoredFiles.has(file)) {
         return
       }
 
-      let exports = exportList.get(file)
-
       // new module has been created during runtime
       // include it in further processing
-      if (typeof exports === 'undefined') {
-        exports = new Map()
-      }
+      const exports =
+        exportList.get(file) ?? new Map<string, { whereUsed: Set<string> }>()
 
-      const newExports = new Map()
-      const newExportIdentifiers = new Set()
+      const newExports = new Map<string, { whereUsed: Set<string> }>()
+      const newExportIdentifiers = new Set<string>()
 
-      node.body.forEach(({ type, declaration, specifiers }) => {
-        if (type === EXPORT_DEFAULT_DECLARATION) {
-          newExportIdentifiers.add(IMPORT_DEFAULT_SPECIFIER)
+      node.body.forEach(s => {
+        if (s.type === AST_NODE_TYPES.ExportDefaultDeclaration) {
+          newExportIdentifiers.add(AST_NODE_TYPES.ImportDefaultSpecifier)
         }
-        if (type === EXPORT_NAMED_DECLARATION) {
-          if (specifiers.length > 0) {
-            specifiers.forEach(specifier => {
+        if (s.type === AST_NODE_TYPES.ExportNamedDeclaration) {
+          if (s.specifiers.length > 0) {
+            s.specifiers.forEach(specifier => {
               if (specifier.exported) {
                 newExportIdentifiers.add(
-                  specifier.exported.name || specifier.exported.value,
+                  specifier.exported.name ||
+                    // @ts-expect-error - legacy parser type
+                    specifier.exported.value,
                 )
               }
             })
           }
-          forEachDeclarationIdentifier(declaration, name => {
+          forEachDeclarationIdentifier(s.declaration!, name => {
             newExportIdentifiers.add(name)
           })
         }
@@ -654,15 +661,13 @@ module.exports = {
       })
 
       // preserve information about namespace imports
-      const exportAll = exports.get(EXPORT_ALL_DECLARATION)
-      let namespaceImports = exports.get(IMPORT_NAMESPACE_SPECIFIER)
+      const exportAll = exports.get(AST_NODE_TYPES.ExportAllDeclaration)!
+      const namespaceImports = exports.get(
+        AST_NODE_TYPES.ImportNamespaceSpecifier,
+      ) ?? { whereUsed: new Set() }
 
-      if (typeof namespaceImports === 'undefined') {
-        namespaceImports = { whereUsed: new Set() }
-      }
-
-      newExports.set(EXPORT_ALL_DECLARATION, exportAll)
-      newExports.set(IMPORT_NAMESPACE_SPECIFIER, namespaceImports)
+      newExports.set(AST_NODE_TYPES.ExportAllDeclaration, exportAll)
+      newExports.set(AST_NODE_TYPES.ImportNamespaceSpecifier, namespaceImports)
       exportList.set(file, newExports)
     }
 
@@ -671,49 +676,47 @@ module.exports = {
      *
      * update lists of existing imports during runtime
      */
-    const updateImportUsage = node => {
+    const updateImportUsage = (node: TSESTree.Program) => {
       if (!unusedExports) {
         return
       }
 
-      let oldImportPaths = importList.get(file)
-      if (typeof oldImportPaths === 'undefined') {
-        oldImportPaths = new Map()
-      }
+      const oldImportPaths =
+        importList.get(file) ?? new Map<string, Set<string>>()
 
-      const oldNamespaceImports = new Set()
-      const newNamespaceImports = new Set()
+      const oldNamespaceImports = new Set<string>()
+      const newNamespaceImports = new Set<string>()
 
-      const oldExportAll = new Set()
-      const newExportAll = new Set()
+      const oldExportAll = new Set<string>()
+      const newExportAll = new Set<string>()
 
-      const oldDefaultImports = new Set()
-      const newDefaultImports = new Set()
+      const oldDefaultImports = new Set<string>()
+      const newDefaultImports = new Set<string>()
 
       const oldImports = new Map()
       const newImports = new Map()
       oldImportPaths.forEach((value, key) => {
-        if (value.has(EXPORT_ALL_DECLARATION)) {
+        if (value.has(AST_NODE_TYPES.ExportAllDeclaration)) {
           oldExportAll.add(key)
         }
-        if (value.has(IMPORT_NAMESPACE_SPECIFIER)) {
+        if (value.has(AST_NODE_TYPES.ImportNamespaceSpecifier)) {
           oldNamespaceImports.add(key)
         }
-        if (value.has(IMPORT_DEFAULT_SPECIFIER)) {
+        if (value.has(AST_NODE_TYPES.ImportDefaultSpecifier)) {
           oldDefaultImports.add(key)
         }
         value.forEach(val => {
           if (
-            val !== IMPORT_NAMESPACE_SPECIFIER &&
-            val !== IMPORT_DEFAULT_SPECIFIER
+            val !== AST_NODE_TYPES.ImportNamespaceSpecifier &&
+            val !== AST_NODE_TYPES.ImportDefaultSpecifier
           ) {
             oldImports.set(val, key)
           }
         })
       })
 
-      function processDynamicImport(source) {
-        if (source.type !== 'Literal') {
+      function processDynamicImport(source: TSESTree.Node) {
+        if (source.type !== 'Literal' || typeof source.value !== 'string') {
           return null
         }
         const p = resolve(source.value, context)
@@ -725,9 +728,11 @@ module.exports = {
 
       visit(node, visitorKeyMap.get(file), {
         ImportExpression(child) {
-          processDynamicImport(child.source)
+          processDynamicImport((child as TSESTree.ImportExpression).source)
         },
-        CallExpression(child) {
+        CallExpression(child_) {
+          const child = child_ as TSESTree.CallExpression
+          // @ts-expect-error - legacy parser type
           if (child.callee.type === 'Import') {
             processDynamicImport(child.arguments[0])
           }
@@ -735,19 +740,22 @@ module.exports = {
       })
 
       node.body.forEach(astNode => {
-        let resolvedPath
+        let resolvedPath: string | null | undefined
 
         // support for export { value } from 'module'
-        if (astNode.type === EXPORT_NAMED_DECLARATION) {
+        if (astNode.type === AST_NODE_TYPES.ExportNamedDeclaration) {
           if (astNode.source) {
             resolvedPath = resolve(
               astNode.source.raw.replace(/('|")/g, ''),
               context,
             )
             astNode.specifiers.forEach(specifier => {
-              const name = specifier.local.name || specifier.local.value
+              const name =
+                specifier.local.name ||
+                // @ts-expect-error - legacy parser type
+                specifier.local.value
               if (name === DEFAULT) {
-                newDefaultImports.add(resolvedPath)
+                newDefaultImports.add(resolvedPath!)
               } else {
                 newImports.set(name, resolvedPath)
               }
@@ -755,15 +763,15 @@ module.exports = {
           }
         }
 
-        if (astNode.type === EXPORT_ALL_DECLARATION) {
+        if (astNode.type === AST_NODE_TYPES.ExportAllDeclaration) {
           resolvedPath = resolve(
             astNode.source.raw.replace(/('|")/g, ''),
             context,
           )
-          newExportAll.add(resolvedPath)
+          newExportAll.add(resolvedPath!)
         }
 
-        if (astNode.type === IMPORT_DECLARATION) {
+        if (astNode.type === AST_NODE_TYPES.ImportDeclaration) {
           resolvedPath = resolve(
             astNode.source.raw.replace(/('|")/g, ''),
             context,
@@ -787,31 +795,32 @@ module.exports = {
           astNode.specifiers
             .filter(
               specifier =>
-                specifier.type !== IMPORT_DEFAULT_SPECIFIER &&
-                specifier.type !== IMPORT_NAMESPACE_SPECIFIER,
+                specifier.type !== AST_NODE_TYPES.ImportDefaultSpecifier &&
+                specifier.type !== AST_NODE_TYPES.ImportNamespaceSpecifier,
             )
             .forEach(specifier => {
-              newImports.set(
-                specifier.imported.name || specifier.imported.value,
-                resolvedPath,
-              )
+              if ('imported' in specifier) {
+                newImports.set(
+                  specifier.imported.name ||
+                    // @ts-expect-error - legacy parser type
+                    specifier.imported.value,
+                  resolvedPath,
+                )
+              }
             })
         }
       })
 
       newExportAll.forEach(value => {
         if (!oldExportAll.has(value)) {
-          let imports = oldImportPaths.get(value)
-          if (typeof imports === 'undefined') {
-            imports = new Set()
-          }
-          imports.add(EXPORT_ALL_DECLARATION)
+          const imports = oldImportPaths.get(value) ?? new Set()
+          imports.add(AST_NODE_TYPES.ExportAllDeclaration)
           oldImportPaths.set(value, imports)
 
           let exports = exportList.get(value)
-          let currentExport
+          let currentExport: { whereUsed: Set<string> } | undefined
           if (typeof exports !== 'undefined') {
-            currentExport = exports.get(EXPORT_ALL_DECLARATION)
+            currentExport = exports.get(AST_NODE_TYPES.ExportAllDeclaration)
           } else {
             exports = new Map()
             exportList.set(value, exports)
@@ -820,21 +829,25 @@ module.exports = {
           if (typeof currentExport !== 'undefined') {
             currentExport.whereUsed.add(file)
           } else {
-            const whereUsed = new Set()
+            const whereUsed = new Set<string>()
             whereUsed.add(file)
-            exports.set(EXPORT_ALL_DECLARATION, { whereUsed })
+            exports.set(AST_NODE_TYPES.ExportAllDeclaration, {
+              whereUsed,
+            })
           }
         }
       })
 
       oldExportAll.forEach(value => {
         if (!newExportAll.has(value)) {
-          const imports = oldImportPaths.get(value)
-          imports.delete(EXPORT_ALL_DECLARATION)
+          const imports = oldImportPaths.get(value)!
+          imports.delete(AST_NODE_TYPES.ExportAllDeclaration)
 
           const exports = exportList.get(value)
           if (typeof exports !== 'undefined') {
-            const currentExport = exports.get(EXPORT_ALL_DECLARATION)
+            const currentExport = exports.get(
+              AST_NODE_TYPES.ExportAllDeclaration,
+            )
             if (typeof currentExport !== 'undefined') {
               currentExport.whereUsed.delete(file)
             }
@@ -848,13 +861,13 @@ module.exports = {
           if (typeof imports === 'undefined') {
             imports = new Set()
           }
-          imports.add(IMPORT_DEFAULT_SPECIFIER)
+          imports.add(AST_NODE_TYPES.ImportDefaultSpecifier)
           oldImportPaths.set(value, imports)
 
           let exports = exportList.get(value)
           let currentExport
           if (typeof exports !== 'undefined') {
-            currentExport = exports.get(IMPORT_DEFAULT_SPECIFIER)
+            currentExport = exports.get(AST_NODE_TYPES.ImportDefaultSpecifier)
           } else {
             exports = new Map()
             exportList.set(value, exports)
@@ -863,21 +876,25 @@ module.exports = {
           if (typeof currentExport !== 'undefined') {
             currentExport.whereUsed.add(file)
           } else {
-            const whereUsed = new Set()
+            const whereUsed = new Set<string>()
             whereUsed.add(file)
-            exports.set(IMPORT_DEFAULT_SPECIFIER, { whereUsed })
+            exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
+              whereUsed,
+            })
           }
         }
       })
 
       oldDefaultImports.forEach(value => {
         if (!newDefaultImports.has(value)) {
-          const imports = oldImportPaths.get(value)
-          imports.delete(IMPORT_DEFAULT_SPECIFIER)
+          const imports = oldImportPaths.get(value)!
+          imports.delete(AST_NODE_TYPES.ImportDefaultSpecifier)
 
           const exports = exportList.get(value)
           if (typeof exports !== 'undefined') {
-            const currentExport = exports.get(IMPORT_DEFAULT_SPECIFIER)
+            const currentExport = exports.get(
+              AST_NODE_TYPES.ImportDefaultSpecifier,
+            )
             if (typeof currentExport !== 'undefined') {
               currentExport.whereUsed.delete(file)
             }
@@ -891,13 +908,13 @@ module.exports = {
           if (typeof imports === 'undefined') {
             imports = new Set()
           }
-          imports.add(IMPORT_NAMESPACE_SPECIFIER)
+          imports.add(AST_NODE_TYPES.ImportNamespaceSpecifier)
           oldImportPaths.set(value, imports)
 
           let exports = exportList.get(value)
           let currentExport
           if (typeof exports !== 'undefined') {
-            currentExport = exports.get(IMPORT_NAMESPACE_SPECIFIER)
+            currentExport = exports.get(AST_NODE_TYPES.ImportNamespaceSpecifier)
           } else {
             exports = new Map()
             exportList.set(value, exports)
@@ -906,21 +923,25 @@ module.exports = {
           if (typeof currentExport !== 'undefined') {
             currentExport.whereUsed.add(file)
           } else {
-            const whereUsed = new Set()
+            const whereUsed = new Set<string>()
             whereUsed.add(file)
-            exports.set(IMPORT_NAMESPACE_SPECIFIER, { whereUsed })
+            exports.set(AST_NODE_TYPES.ImportNamespaceSpecifier, {
+              whereUsed,
+            })
           }
         }
       })
 
       oldNamespaceImports.forEach(value => {
         if (!newNamespaceImports.has(value)) {
-          const imports = oldImportPaths.get(value)
-          imports.delete(IMPORT_NAMESPACE_SPECIFIER)
+          const imports = oldImportPaths.get(value)!
+          imports.delete(AST_NODE_TYPES.ImportNamespaceSpecifier)
 
           const exports = exportList.get(value)
           if (typeof exports !== 'undefined') {
-            const currentExport = exports.get(IMPORT_NAMESPACE_SPECIFIER)
+            const currentExport = exports.get(
+              AST_NODE_TYPES.ImportNamespaceSpecifier,
+            )
             if (typeof currentExport !== 'undefined') {
               currentExport.whereUsed.delete(file)
             }
@@ -949,7 +970,7 @@ module.exports = {
           if (typeof currentExport !== 'undefined') {
             currentExport.whereUsed.add(file)
           } else {
-            const whereUsed = new Set()
+            const whereUsed = new Set<string>()
             whereUsed.add(file)
             exports.set(key, { whereUsed })
           }
@@ -958,7 +979,7 @@ module.exports = {
 
       oldImports.forEach((value, key) => {
         if (!newImports.has(key)) {
-          const imports = oldImportPaths.get(value)
+          const imports = oldImportPaths.get(value)!
           imports.delete(key)
 
           const exports = exportList.get(value)
@@ -973,19 +994,21 @@ module.exports = {
     }
 
     return {
-      'Program:exit'(node) {
+      'Program:exit'(node: TSESTree.Program) {
         updateExportUsage(node)
         updateImportUsage(node)
         checkExportPresence(node)
       },
       ExportDefaultDeclaration(node) {
-        checkUsage(node, IMPORT_DEFAULT_SPECIFIER)
+        checkUsage(node, AST_NODE_TYPES.ImportDefaultSpecifier)
       },
       ExportNamedDeclaration(node) {
         node.specifiers.forEach(specifier => {
           checkUsage(
             specifier,
-            specifier.exported.name || specifier.exported.value,
+            specifier.exported.name ||
+              // @ts-expect-error - legacy parser type
+              specifier.exported.value,
           )
         })
         forEachDeclarationIdentifier(node.declaration, name => {
@@ -994,4 +1017,4 @@ module.exports = {
       },
     }
   },
-}
+})

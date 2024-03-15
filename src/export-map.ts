@@ -44,6 +44,16 @@ export interface DeclarationMetadata {
   isOnlyImportingTypes?: boolean
 }
 
+export interface ModuleNamespace {
+  doc?: Annotation
+  namespace?: ExportMap | null
+}
+
+export interface ModuleImport {
+  getter: () => ExportMap | null
+  declarations: Set<DeclarationMetadata>
+}
+
 export class ExportMap {
   static for(context: ChildContext) {
     const { path } = context
@@ -216,18 +226,25 @@ export class ExportMap {
       return ExportMap.for(childContext(rp, context))
     }
 
-    function getNamespace(identifier: TSESTree.Identifier) {
-      if (!namespaces.has(identifier.name)) {
+    function getNamespace(identifier: TSESTree.Identifier | string) {
+      const namespace =
+        typeof identifier === 'string' ? identifier : identifier.name
+      if (!namespaces.has(namespace)) {
         return
       }
 
       return function () {
-        return resolveImport(namespaces.get(identifier.name))
+        return resolveImport(namespaces.get(namespace))
       }
     }
 
-    function addNamespace(object: object, identifier: TSESTree.Identifier) {
-      const nsfn = getNamespace(identifier)
+    function addNamespace(
+      object: object,
+      identifier: TSESTree.Identifier | string,
+    ) {
+      const namespace =
+        typeof identifier === 'string' ? identifier : identifier.name
+      const nsfn = getNamespace(namespace)
       if (nsfn) {
         Object.defineProperty(object, 'namespace', { get: nsfn })
       }
@@ -247,7 +264,7 @@ export class ExportMap {
         n.source &&
         (n.source as TSESTree.StringLiteral).value) as string
 
-      const exportMeta = {}
+      const exportMeta: ModuleNamespace = {}
 
       let local: string
 
@@ -273,11 +290,7 @@ export class ExportMap {
             s.exported!.name ||
               // @ts-expect-error - legacy parser type
               s.exported!.value,
-            addNamespace(
-              exportMeta,
-              // @ts-expect-error -- FIXME: no idea yet
-              s.source.value,
-            ),
+            addNamespace(exportMeta, s.source.value),
           )
           return
         case 'ExportSpecifier':
@@ -625,7 +638,7 @@ export class ExportMap {
     return m
   }
 
-  namespace = new Map()
+  namespace = new Map<string, ModuleNamespace>()
 
   // todo: restructure to key on path, value is resolver + map of names
   reexports = new Map<
@@ -644,19 +657,13 @@ export class ExportMap {
   /**
    * dependencies of this module that are not explicitly re-exported
    */
-  imports = new Map<
-    string,
-    {
-      getter: () => ExportMap | null
-      declarations: Set<DeclarationMetadata>
-    }
-  >()
+  imports = new Map<string, ModuleImport>()
 
   errors: ParseError[] = []
 
   parseGoal: 'ambiguous' | 'Module' | 'Script' = 'ambiguous'
 
-  private declare visitorKeys: TSESLint.SourceCode.VisitorKeys | null
+  declare visitorKeys: TSESLint.SourceCode.VisitorKeys | null
 
   private declare mtime: Date
 
@@ -770,7 +777,7 @@ export class ExportMap {
     return { found: false, path: [this] }
   }
 
-  get<T = unknown>(name: string): T | null | undefined {
+  get(name: string): ModuleNamespace | null | undefined {
     if (this.namespace.has(name)) {
       return this.namespace.get(name)
     }
@@ -808,15 +815,15 @@ export class ExportMap {
 
         const innerValue = innerMap.get(name)
         if (innerValue !== undefined) {
-          return innerValue as T
+          return innerValue
         }
       }
     }
   }
 
-  forEach<T>(
+  forEach(
     callback: (
-      value: T | null | undefined,
+      value: ModuleNamespace | null | undefined,
       name: string,
       map: ExportMap,
     ) => void,
@@ -839,7 +846,7 @@ export class ExportMap {
         return
       }
 
-      d.forEach<T>((v, n) => {
+      d.forEach((v, n) => {
         if (n !== 'default') {
           callback.call(thisArg, v, n, this)
         }

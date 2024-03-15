@@ -17,6 +17,13 @@ import groupExports from './rules/group-exports'
 import noRelativePackages from './rules/no-relative-packages'
 import noRelativeParentImports from './rules/no-relative-parent-imports'
 import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
+import noSelfImport from './rules/no-self-import'
+import noCycle from './rules/no-cycle'
+import noNamedDefault from './rules/no-named-default'
+import noNamedAsDefault from './rules/no-named-as-default'
+import noNamedAsDefaultMember from './rules/no-named-as-default-member'
+import noAnonymousDefaultExport from './rules/no-anonymous-default-export'
+import noUnusedModules from './rules/no-unused-modules'
 
 // configs
 import recommended from './config/recommended'
@@ -44,13 +51,13 @@ export const rules = {
   'no-relative-parent-imports': noRelativeParentImports,
   'consistent-type-specifier-style': consistentTypeSpecifierStyle,
 
-  'no-self-import': require('./rules/no-self-import'),
-  'no-cycle': require('./rules/no-cycle'),
-  'no-named-default': require('./rules/no-named-default'),
-  'no-named-as-default': require('./rules/no-named-as-default'),
-  'no-named-as-default-member': require('./rules/no-named-as-default-member'),
-  'no-anonymous-default-export': require('./rules/no-anonymous-default-export'),
-  'no-unused-modules': require('./rules/no-unused-modules'),
+  'no-self-import': noSelfImport,
+  'no-cycle': noCycle,
+  'no-named-default': noNamedDefault,
+  'no-named-as-default': noNamedAsDefault,
+  'no-named-as-default-member': noNamedAsDefaultMember,
+  'no-anonymous-default-export': noAnonymousDefaultExport,
+  'no-unused-modules': noUnusedModules,
 
   'no-commonjs': require('./rules/no-commonjs'),
   'no-amd': require('./rules/no-amd'),

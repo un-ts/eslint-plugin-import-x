@@ -1,30 +1,43 @@
 /**
  * Rule to warn about potentially confused use of name exports
  */
+import { TSESTree } from '@typescript-eslint/utils'
 import { ExportMap } from '../export-map'
 import { importDeclaration } from '../import-declaration'
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
 
-//------------------------------------------------------------------------------
-// Rule Definition
-//------------------------------------------------------------------------------
+type MessageId = 'member'
 
-module.exports = {
+export = createRule<[], MessageId>({
+  name: 'no-named-as-default-member',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Helpful warnings',
       description: 'Forbid use of exported name as property of default export.',
-      url: docsUrl('no-named-as-default-member'),
     },
     schema: [],
+    messages: {
+      member:
+        "Caution: `{{objectName}}` also has a named export `{{propName}}`. Check if you meant to write `import {{{propName}}} from '{{sourcePath}}'` instead.",
+    },
   },
-
+  defaultOptions: [],
   create(context) {
-    const fileImports = new Map()
-    const allPropertyLookups = new Map()
+    const fileImports = new Map<
+      string,
+      { exportMap: ExportMap; sourcePath: string }
+    >()
+    const allPropertyLookups = new Map<
+      string,
+      Array<{ node: TSESTree.Node; propName: string }>
+    >()
 
-    function storePropertyLookup(objectName, propName, node) {
+    function storePropertyLookup(
+      objectName: string,
+      propName: string,
+      node: TSESTree.Node,
+    ) {
       const lookups = allPropertyLookups.get(objectName) || []
       lookups.push({ node, propName })
       allPropertyLookups.set(objectName, lookups)
@@ -50,26 +63,31 @@ module.exports = {
       },
 
       MemberExpression(node) {
-        const objectName = node.object.name
-        const propName = node.property.name
-        storePropertyLookup(objectName, propName, node)
+        if ('name' in node.object && 'name' in node.property) {
+          storePropertyLookup(node.object.name, node.property.name, node)
+        }
       },
 
       VariableDeclarator(node) {
         const isDestructure =
-          node.id.type === 'ObjectPattern' &&
-          node.init != null &&
-          node.init.type === 'Identifier'
-        if (!isDestructure) {
+          node.id.type === 'ObjectPattern' && node.init?.type === 'Identifier'
+
+        if (
+          !isDestructure ||
+          !node.init ||
+          !('name' in node.init) ||
+          !('properties' in node.id)
+        ) {
           return
         }
 
         const objectName = node.init.name
-        for (const { key } of node.id.properties) {
-          if (key == null) {
+
+        for (const prop of node.id.properties) {
+          if (!('key' in prop) || !('name' in prop.key)) {
             continue
           } // true for rest properties
-          storePropertyLookup(objectName, key.name, key)
+          storePropertyLookup(objectName, prop.key.name, prop.key)
         }
       },
 
@@ -91,11 +109,16 @@ module.exports = {
 
             context.report({
               node,
-              message: `Caution: \`${objectName}\` also has a named export \`${propName}\`. Check if you meant to write \`import {${propName}} from '${fileImport.sourcePath}'\` instead.`,
+              messageId: 'member',
+              data: {
+                objectName,
+                propName,
+                sourcePath: fileImport.sourcePath,
+              },
             })
           }
         })
       },
     }
   },
-}
+})

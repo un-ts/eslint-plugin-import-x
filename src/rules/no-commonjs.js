@@ -1,6 +1,5 @@
 /**
- * @fileoverview Rule to prefer ES6 to CJS
- * @author Jamund Ferguson
+ * Rule to prefer ES6 to CJS
  */
 
 import { docsUrl } from '../docs-url'
@@ -59,10 +58,6 @@ function isLiteralString(node) {
     (node.type === 'TemplateLiteral' && node.expressions.length === 0)
   )
 }
-
-//------------------------------------------------------------------------------
-// Rule Definition
-//------------------------------------------------------------------------------
 
 const schemaString = { enum: ['allow-primitive-modules'] }
 const schemaObject = {

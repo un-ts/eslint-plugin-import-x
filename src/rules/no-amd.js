@@ -1,13 +1,8 @@
 /**
- * @fileoverview Rule to prefer imports to AMD
- * @author Jamund Ferguson
+ * Rule to prefer imports to AMD
  */
 
 import { docsUrl } from '../docs-url'
-
-//------------------------------------------------------------------------------
-// Rule Definition
-//------------------------------------------------------------------------------
 
 module.exports = {
   meta: {

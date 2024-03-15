@@ -18,7 +18,7 @@ type Options = {
 
 function processBodyStatement(
   context: RuleContext<MessageId>,
-  namespaces: Map<string, ExportMap>,
+  namespaces: Map<string, ExportMap | null>,
   declaration: TSESTree.ProgramStatement,
 ) {
   if (declaration.type !== 'ImportDeclaration') {
@@ -56,7 +56,7 @@ function processBodyStatement(
         break
       case 'ImportDefaultSpecifier':
       case 'ImportSpecifier': {
-        const meta = imports.get<{ namespace?: ExportMap }>(
+        const meta = imports.get(
           'imported' in specifier && specifier.imported
             ? specifier.imported.name ||
                 // @ts-expect-error - legacy parser node
@@ -136,7 +136,7 @@ export = createRule<[Options], MessageId>({
     // read options
     const { allowComputed } = context.options[0] || {}
 
-    const namespaces = new Map<string, ExportMap>()
+    const namespaces = new Map<string, ExportMap | null>()
 
     return {
       // pick up all imports at body entry time, to properly respect hoisting
@@ -231,9 +231,7 @@ export = createRule<[Options], MessageId>({
             break
           }
 
-          const exported = namespace.get<{ namespace: ExportMap }>(
-            deref.property.name,
-          )
+          const exported = namespace.get(deref.property.name)
 
           if (exported == null) {
             return
@@ -268,7 +266,7 @@ export = createRule<[Options], MessageId>({
         // DFS traverse child namespaces
         function testKey(
           pattern: TSESTree.Node,
-          namespace?: ExportMap,
+          namespace?: ExportMap | null,
           path: string[] = [initName],
         ) {
           if (!(namespace instanceof ExportMap)) {
@@ -304,9 +302,7 @@ export = createRule<[Options], MessageId>({
 
             path.push(property.key.name)
 
-            const dependencyExportMap = namespace.get<{ namespace: ExportMap }>(
-              property.key.name,
-            )
+            const dependencyExportMap = namespace.get(property.key.name)
 
             // could be null when ignored or ambiguous
             if (dependencyExportMap != null) {
