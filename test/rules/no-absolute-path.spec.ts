@@ -1,12 +1,13 @@
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-absolute-path'
+
 import { test } from '../utils'
 
-import { RuleTester } from 'eslint'
-
-const ruleTester = new RuleTester()
-const rule = require('rules/no-absolute-path')
+const ruleTester = new TSESLint.RuleTester()
 
 const error = {
-  message: 'Do not import modules using an absolute path',
+  messageId: 'absolute',
 }
 
 ruleTester.run('no-absolute-path', rule, {
