@@ -1,11 +1,13 @@
-import { test, testVersion, SYNTAX_CASES } from '../utils'
-import { RuleTester } from 'eslint'
-import rule from 'rules/no-named-as-default-member'
+import { TSESLint } from '@typescript-eslint/utils'
 
-const ruleTester = new RuleTester()
+import rule from '../../src/rules/no-named-as-default-member'
+
+import { test, testVersion, SYNTAX_CASES } from '../utils'
+
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-named-as-default-member', rule, {
-  valid: [].concat(
+  valid: [
     test({ code: 'import bar, {foo} from "./bar";' }),
     test({ code: 'import bar from "./bar"; const baz = bar.baz' }),
     test({ code: 'import {foo} from "./bar"; const baz = foo.baz;' }),
@@ -17,15 +19,15 @@ ruleTester.run('no-named-as-default-member', rule, {
     }),
 
     // es2022: Arbitrary module namespace identifier names
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
       parserOptions: { ecmaVersion: 2022 },
     })),
 
     ...SYNTAX_CASES,
-  ),
+  ],
 
-  invalid: [].concat(
+  invalid: [
     test({
       code: 'import bar from "./bar"; const foo = bar.foo;',
       errors: [
@@ -67,7 +69,7 @@ ruleTester.run('no-named-as-default-member', rule, {
       ],
     }),
     // es2022: Arbitrary module namespace identifier names
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'import bar from "./export-default-string-and-named"; const foo = bar.foo;',
       errors: [
         {
@@ -78,5 +80,5 @@ ruleTester.run('no-named-as-default-member', rule, {
       ],
       parserOptions: { ecmaVersion: 2022 },
     })),
-  ),
+  ],
 })

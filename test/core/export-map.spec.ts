@@ -265,10 +265,8 @@ describe('ExportMap', () => {
       const contents = fs.readFileSync(path, { encoding: 'utf8' })
       const a = ExportMap.parse(path, contents, espreeContext)!
       expect(a.errors).toHaveLength(0)
-      expect(a.get<{ namespace: ExportMap }>('b')!.namespace).toBeDefined()
-      expect(a.get<{ namespace: ExportMap }>('b')!.namespace.has('c')).toBe(
-        true,
-      )
+      expect(a.get('b')!.namespace).toBeDefined()
+      expect(a.get('b')!.namespace!.has('c')).toBe(true)
     })
 
     it('captures namespace exported as default', () => {
@@ -276,12 +274,8 @@ describe('ExportMap', () => {
       const contents = fs.readFileSync(path, { encoding: 'utf8' })
       const def = ExportMap.parse(path, contents, espreeContext)!
       expect(def.errors).toHaveLength(0)
-      expect(
-        def.get<{ namespace: ExportMap }>('default')!.namespace,
-      ).toBeDefined()
-      expect(
-        def.get<{ namespace: ExportMap }>('default')!.namespace.has('c'),
-      ).toBe(true)
+      expect(def.get('default')!.namespace).toBeDefined()
+      expect(def.get('default')!.namespace!.has('c')).toBe(true)
     })
 
     // FIXME: check and enable
@@ -290,10 +284,8 @@ describe('ExportMap', () => {
       const contents = fs.readFileSync(path, { encoding: 'utf8' })
       const a = ExportMap.parse(path, contents, babelContext)!
       expect(a.errors).toHaveLength(0)
-      expect(a.get<{ namespace: ExportMap }>('b')!.namespace).toBeDefined()
-      expect(a.get<{ namespace: ExportMap }>('b')!.namespace.has('c')).toBe(
-        true,
-      )
+      expect(a.get('b')!.namespace).toBeDefined()
+      expect(a.get('b')!.namespace!.has('c')).toBe(true)
     })
   })
 
@@ -319,10 +311,8 @@ describe('ExportMap', () => {
         a = ExportMap.parse(path, contents, espreeContext)!
         expect(a.errors).toHaveLength(0)
 
-        expect(a.get<{ namespace: ExportMap }>('b')!.namespace).toBeDefined()
-        expect(a.get<{ namespace: ExportMap }>('b')!.namespace.has('c')).toBe(
-          true,
-        )
+        expect(a.get('b')!.namespace).toBeDefined()
+        expect(a.get('b')!.namespace!.has('c')).toBe(true)
 
         // wait ~1s, cache check is 1s resolution
         await setTimeout(1100)
@@ -337,9 +327,7 @@ describe('ExportMap', () => {
     })
 
     it('works', () => {
-      expect(a!.get<{ namespace: ExportMap }>('b')!.namespace.has('c')).toBe(
-        false,
-      )
+      expect(a!.get('b')!.namespace!.has('c')).toBe(false)
     })
 
     afterAll(done => fs.unlink(testFilePath('deep/cache-2.js'), done))

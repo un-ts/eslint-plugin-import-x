@@ -21,6 +21,7 @@ import noSelfImport from './rules/no-self-import'
 import noCycle from './rules/no-cycle'
 import noNamedDefault from './rules/no-named-default'
 import noNamedAsDefault from './rules/no-named-as-default'
+import noNamedAsDefaultMember from './rules/no-named-as-default-member'
 
 // configs
 import recommended from './config/recommended'
@@ -52,7 +53,7 @@ export const rules = {
   'no-cycle': noCycle,
   'no-named-default': noNamedDefault,
   'no-named-as-default': noNamedAsDefault,
-  'no-named-as-default-member': require('./rules/no-named-as-default-member'),
+  'no-named-as-default-member': noNamedAsDefaultMember,
   'no-anonymous-default-export': require('./rules/no-anonymous-default-export'),
   'no-unused-modules': require('./rules/no-unused-modules'),
 
