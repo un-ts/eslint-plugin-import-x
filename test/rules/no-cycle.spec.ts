@@ -2,13 +2,7 @@ import { TSESLint } from '@typescript-eslint/utils'
 
 import rule from '../../src/rules/no-cycle'
 
-import {
-  parsers,
-  test as _test,
-  testFilePath,
-  testVersion as _testVersion,
-  ValidTestCase,
-} from '../utils'
+import { parsers, test as _test, testFilePath, ValidTestCase } from '../utils'
 
 const ruleTester = new TSESLint.RuleTester()
 
