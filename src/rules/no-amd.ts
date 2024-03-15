@@ -2,19 +2,24 @@
  * Rule to prefer imports to AMD
  */
 
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
 
-module.exports = {
+type MessageId = 'amd'
+
+export = createRule<[], MessageId>({
+  name: 'no-amd',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Module systems',
       description: 'Forbid AMD `require` and `define` calls.',
-      url: docsUrl('no-amd'),
     },
     schema: [],
+    messages: {
+      amd: 'Expected imports instead of AMD {{type}}().',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     return {
       CallExpression(node) {
@@ -25,6 +30,7 @@ module.exports = {
         if (node.callee.type !== 'Identifier') {
           return
         }
+
         if (node.callee.name !== 'require' && node.callee.name !== 'define') {
           return
         }
@@ -35,17 +41,21 @@ module.exports = {
         }
 
         const modules = node.arguments[0]
+
         if (modules.type !== 'ArrayExpression') {
           return
         }
 
         // todo: check second arg type? (identifier or callback)
 
-        context.report(
+        context.report({
           node,
-          `Expected imports instead of AMD ${node.callee.name}().`,
-        )
+          messageId: 'amd',
+          data: {
+            type: node.callee.name,
+          },
+        })
       },
     }
   },
-}
+})
