@@ -1,14 +1,29 @@
 import vm from 'vm'
-import { docsUrl } from '../docs-url'
 
-module.exports = {
+import { createRule } from '../utils'
+import { TSESTree } from '@typescript-eslint/utils'
+
+type Options = {
+  allowEmpty?: boolean
+  importFunctions?: readonly string[]
+  webpackChunknameFormat?: string
+}
+
+type MessageId =
+  | 'leadingComment'
+  | 'blockComment'
+  | 'paddedSpaces'
+  | 'webpackComment'
+  | 'chunknameFormat'
+
+export = createRule<[Options?], MessageId>({
+  name: 'dynamic-import-chunkname',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Style guide',
       description:
         'Enforce a leading comment with the webpackChunkName for dynamic imports.',
-      url: docsUrl('dynamic-import-chunkname'),
     },
     schema: [
       {
@@ -30,14 +45,26 @@ module.exports = {
         },
       },
     ],
+    messages: {
+      leadingComment:
+        'dynamic imports require a leading comment with the webpack chunkname',
+      blockComment:
+        'dynamic imports require a /* foo */ style comment, not a // foo comment',
+      paddedSpaces:
+        'dynamic imports require a block comment padded with spaces - /* foo */',
+      webpackComment:
+        'dynamic imports require a "webpack" comment with valid syntax',
+      chunknameFormat:
+        'dynamic imports require a leading comment in the form /*{{format}}*/',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
-    const config = context.options[0]
-    const { importFunctions = [], allowEmpty = false } = config || {}
     const {
+      importFunctions = [],
+      allowEmpty = false,
       webpackChunknameFormat = '([0-9a-zA-Z-_/.]|\\[(request|index)\\])+',
-    } = config || {}
+    } = context.options[0] || {}
 
     const paddedCommentRegex = /^ (\S[\s\S]+\S) $/
     const commentStyleRegex =
@@ -45,17 +72,14 @@ module.exports = {
     const chunkSubstrFormat = ` webpackChunkName: ["']${webpackChunknameFormat}["'],? `
     const chunkSubstrRegex = new RegExp(chunkSubstrFormat)
 
-    function run(node, arg) {
+    function run(node: TSESTree.Node, arg: TSESTree.Node) {
       const sourceCode = context.getSourceCode()
-      const leadingComments = sourceCode.getCommentsBefore
-        ? sourceCode.getCommentsBefore(arg) // This method is available in ESLint >= 4.
-        : sourceCode.getComments(arg).leading // This method is deprecated in ESLint 7.
+      const leadingComments = sourceCode.getCommentsBefore(arg)
 
       if ((!leadingComments || leadingComments.length === 0) && !allowEmpty) {
         context.report({
           node,
-          message:
-            'dynamic imports require a leading comment with the webpack chunkname',
+          messageId: 'leadingComment',
         })
         return
       }
@@ -66,8 +90,7 @@ module.exports = {
         if (comment.type !== 'Block') {
           context.report({
             node,
-            message:
-              'dynamic imports require a /* foo */ style comment, not a // foo comment',
+            messageId: 'blockComment',
           })
           return
         }
@@ -75,7 +98,7 @@ module.exports = {
         if (!paddedCommentRegex.test(comment.value)) {
           context.report({
             node,
-            message: `dynamic imports require a block comment padded with spaces - /* foo */`,
+            messageId: 'paddedSpaces',
           })
           return
         }
@@ -86,7 +109,7 @@ module.exports = {
         } catch (error) {
           context.report({
             node,
-            message: `dynamic imports require a "webpack" comment with valid syntax`,
+            messageId: 'webpackComment',
           })
           return
         }
@@ -94,7 +117,7 @@ module.exports = {
         if (!commentStyleRegex.test(comment.value)) {
           context.report({
             node,
-            message: `dynamic imports require a "webpack" comment with valid syntax`,
+            messageId: 'webpackComment',
           })
           return
         }
@@ -107,7 +130,10 @@ module.exports = {
       if (!isChunknamePresent && !allowEmpty) {
         context.report({
           node,
-          message: `dynamic imports require a leading comment in the form /*${chunkSubstrFormat}*/`,
+          messageId: 'chunknameFormat',
+          data: {
+            format: chunkSubstrFormat,
+          },
         })
       }
     }
@@ -119,7 +145,9 @@ module.exports = {
 
       CallExpression(node) {
         if (
+          // @ts-expect-error - legacy parser type
           node.callee.type !== 'Import' &&
+          'name' in node.callee &&
           importFunctions.indexOf(node.callee.name) < 0
         ) {
           return
@@ -129,4 +157,4 @@ module.exports = {
       },
     }
   },
-}
+})

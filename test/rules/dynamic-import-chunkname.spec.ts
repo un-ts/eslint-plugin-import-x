@@ -1,42 +1,47 @@
+import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/dynamic-import-chunkname'
+
 import { SYNTAX_CASES, parsers } from '../utils'
-import { RuleTester } from 'eslint'
 
-const rule = require('rules/dynamic-import-chunkname')
-const ruleTester = new RuleTester()
+const ruleTester = new TSESLint.RuleTester()
 
-const commentFormat = '([0-9a-zA-Z-_/.]|\\[(request|index)\\])+'
 const pickyCommentFormat = '[a-zA-Z-_/.]+'
-const options = [{ importFunctions: ['dynamicImport'] }]
+
+const options = [
+  {
+    importFunctions: ['dynamicImport'],
+  },
+] as const
+
 const pickyCommentOptions = [
   {
     importFunctions: ['dynamicImport'],
     webpackChunknameFormat: pickyCommentFormat,
   },
-]
+] as const
+
 const allowEmptyOptions = [
   {
     importFunctions: ['dynamicImport'],
     allowEmpty: true,
   },
-]
+] as const
+
 const multipleImportFunctionOptions = [
   {
     importFunctions: ['dynamicImport', 'definitelyNotStaticImport'],
   },
-]
+] as const
+
 const parser = parsers.BABEL
 
-const noLeadingCommentError =
-  'dynamic imports require a leading comment with the webpack chunkname'
-const nonBlockCommentError =
-  'dynamic imports require a /* foo */ style comment, not a // foo comment'
-const noPaddingCommentError =
-  'dynamic imports require a block comment padded with spaces - /* foo */'
-const invalidSyntaxCommentError =
-  'dynamic imports require a "webpack" comment with valid syntax'
-const commentFormatError = `dynamic imports require a "webpack" comment with valid syntax`
-const chunkNameFormatError = `dynamic imports require a leading comment in the form /* webpackChunkName: ["']${commentFormat}["'],? */`
-const pickyChunkNameFormatError = `dynamic imports require a leading comment in the form /* webpackChunkName: ["']${pickyCommentFormat}["'],? */`
+const pickyChunkNameFormatError = {
+  messageId: 'chunknameFormat',
+  data: {
+    format: ` webpackChunkName: ["']${pickyCommentFormat}["'],? `,
+  },
+} as const
 
 ruleTester.run('dynamic-import-chunkname', rule, {
   valid: [
@@ -445,8 +450,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: nonBlockCommentError,
-          type: 'ImportExpression',
+          messageId: 'blockComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -457,8 +462,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       output: "import('test')",
       errors: [
         {
-          message: noLeadingCommentError,
-          type: 'ImportExpression',
+          messageId: 'leadingComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -475,8 +480,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -493,8 +498,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -511,8 +516,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -529,8 +534,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -547,8 +552,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -565,8 +570,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: chunkNameFormatError,
-          type: 'ImportExpression',
+          messageId: 'chunknameFormat',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -583,8 +588,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: chunkNameFormatError,
-          type: 'ImportExpression',
+          messageId: 'chunknameFormat',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -601,8 +606,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: chunkNameFormatError,
-          type: 'ImportExpression',
+          messageId: 'chunknameFormat',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -619,8 +624,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: noPaddingCommentError,
-          type: 'ImportExpression',
+          messageId: 'paddedSpaces',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -637,8 +642,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -655,8 +660,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -673,8 +678,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -693,8 +698,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -711,8 +716,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -729,8 +734,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: pickyChunkNameFormatError,
-          type: 'ImportExpression',
+          ...pickyChunkNameFormatError,
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -747,8 +752,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -765,8 +770,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -783,8 +788,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -801,8 +806,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -819,8 +824,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -837,8 +842,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -855,8 +860,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -873,8 +878,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -891,8 +896,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -909,8 +914,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -927,8 +932,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'ImportExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -944,8 +949,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'CallExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.CallExpression,
         },
       ],
     },
@@ -961,8 +966,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'CallExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.CallExpression,
         },
       ],
     },
@@ -978,8 +983,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: nonBlockCommentError,
-          type: 'CallExpression',
+          messageId: 'blockComment',
+          type: TSESTree.AST_NODE_TYPES.CallExpression,
         },
       ],
     },
@@ -989,8 +994,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       output: "dynamicImport('test')",
       errors: [
         {
-          message: noLeadingCommentError,
-          type: 'CallExpression',
+          messageId: 'leadingComment',
+          type: TSESTree.AST_NODE_TYPES.CallExpression,
         },
       ],
     },
@@ -1006,8 +1011,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'CallExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.CallExpression,
         },
       ],
     },
@@ -1023,8 +1028,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: invalidSyntaxCommentError,
-          type: 'CallExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.CallExpression,
         },
       ],
     },
@@ -1040,8 +1045,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: commentFormatError,
-          type: 'CallExpression',
+          messageId: 'webpackComment',
+          type: TSESTree.AST_NODE_TYPES.CallExpression,
         },
       ],
     },
@@ -1057,8 +1062,8 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       errors: [
         {
-          message: pickyChunkNameFormatError,
-          type: 'CallExpression',
+          ...pickyChunkNameFormatError,
+          type: TSESTree.AST_NODE_TYPES.CallExpression,
         },
       ],
     },
@@ -1067,7 +1072,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
 
 describe('TypeScript', () => {
   const typescriptParser = parsers.TS
-  const nodeType = 'ImportExpression'
+  const nodeType = TSESTree.AST_NODE_TYPES.ImportExpression
 
   ruleTester.run('dynamic-import-chunkname', rule, {
     valid: [
@@ -1400,7 +1405,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: nonBlockCommentError,
+            messageId: 'blockComment',
             type: nodeType,
           },
         ],
@@ -1412,7 +1417,7 @@ describe('TypeScript', () => {
         output: "import('test')",
         errors: [
           {
-            message: noLeadingCommentError,
+            messageId: 'leadingComment',
             type: nodeType,
           },
         ],
@@ -1430,7 +1435,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: invalidSyntaxCommentError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1448,7 +1453,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: invalidSyntaxCommentError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1466,7 +1471,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: invalidSyntaxCommentError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1484,7 +1489,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: invalidSyntaxCommentError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1502,7 +1507,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1520,7 +1525,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: noPaddingCommentError,
+            messageId: 'paddedSpaces',
             type: nodeType,
           },
         ],
@@ -1538,7 +1543,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1556,7 +1561,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: invalidSyntaxCommentError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1574,7 +1579,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: invalidSyntaxCommentError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1594,7 +1599,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1612,7 +1617,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1630,7 +1635,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: chunkNameFormatError,
+            messageId: 'chunknameFormat',
             type: nodeType,
           },
         ],
@@ -1648,7 +1653,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: chunkNameFormatError,
+            messageId: 'chunknameFormat',
             type: nodeType,
           },
         ],
@@ -1666,7 +1671,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: chunkNameFormatError,
+            messageId: 'chunknameFormat',
             type: nodeType,
           },
         ],
@@ -1684,7 +1689,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: pickyChunkNameFormatError,
+            ...pickyChunkNameFormatError,
             type: nodeType,
           },
         ],
@@ -1702,7 +1707,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1720,7 +1725,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1738,7 +1743,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1756,7 +1761,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1774,7 +1779,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1792,7 +1797,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1810,7 +1815,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1828,7 +1833,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1846,7 +1851,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1864,7 +1869,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
@@ -1882,7 +1887,7 @@ describe('TypeScript', () => {
           )`,
         errors: [
           {
-            message: commentFormatError,
+            messageId: 'webpackComment',
             type: nodeType,
           },
         ],
