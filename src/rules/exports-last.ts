@@ -31,14 +31,14 @@ export = createRule({
           body.findLastIndex(isNonExportStatement)
 
         if (lastNonExportStatementIndex !== -1) {
-          body.slice(0, lastNonExportStatementIndex).forEach(node => {
+          for (const node of body.slice(0, lastNonExportStatementIndex)) {
             if (!isNonExportStatement(node)) {
               context.report({
                 node,
                 messageId: 'end',
               })
             }
-          })
+          }
         }
       },
     }

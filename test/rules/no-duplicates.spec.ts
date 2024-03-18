@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
@@ -716,9 +716,8 @@ describe('TypeScript', () => {
       `,
       ...parserConfig,
     }),
-  ].concat(
-    !tsVersionSatisfies('>= 4.5') ||
-      !typescriptEslintParserSatisfies('>= 5.7.0')
+    ...(!tsVersionSatisfies('>= 4.5') ||
+    !typescriptEslintParserSatisfies('>= 5.7.0')
       ? []
       : [
           // #2470: ignore duplicate if is a typescript inline type import
@@ -734,8 +733,8 @@ describe('TypeScript', () => {
             code: "import { type x } from './foo'; import type y from 'foo'",
             ...parserConfig,
           }),
-        ],
-  )
+        ]),
+  ]
 
   const invalid = [
     test({
@@ -789,9 +788,8 @@ describe('TypeScript', () => {
         },
       ],
     }),
-  ].concat(
-    !tsVersionSatisfies('>= 4.5') ||
-      !typescriptEslintParserSatisfies('>= 5.7.0')
+    ...(!tsVersionSatisfies('>= 4.5') ||
+    !typescriptEslintParserSatisfies('>= 5.7.0')
       ? []
       : [
           test({
@@ -918,8 +916,8 @@ describe('TypeScript', () => {
               },
             ],
           }),
-        ],
-  )
+        ]),
+  ]
 
   ruleTester.run('no-duplicates', rule, {
     valid,

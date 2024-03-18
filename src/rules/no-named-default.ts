@@ -19,14 +19,14 @@ export = createRule<[], MessageId>({
   create(context) {
     return {
       ImportDeclaration(node) {
-        node.specifiers.forEach(function (im) {
+        for (const im of node.specifiers) {
           if (
             'importKind' in im &&
             (im.importKind === 'type' ||
               // @ts-expect-error - flow type
               im.importKind === 'typeof')
           ) {
-            return
+            continue
           }
 
           if (
@@ -43,7 +43,7 @@ export = createRule<[], MessageId>({
               },
             })
           }
-        })
+        }
       },
     }
   },

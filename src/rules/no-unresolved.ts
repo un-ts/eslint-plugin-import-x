@@ -29,17 +29,17 @@ export = createRule<[Options?], MessageId>({
       description:
         'Ensure imports point to a file/module that can be resolved.',
     },
-    messages: {
-      unresolved: "Unable to resolve path to module '{{module}}'.",
-      casingMismatch:
-        'Casing of {{module}} does not match the underlying filesystem.',
-    },
     schema: [
       makeOptionsSchema({
         caseSensitive: { type: 'boolean', default: true },
         caseSensitiveStrict: { type: 'boolean' },
       }),
     ],
+    messages: {
+      unresolved: "Unable to resolve path to module '{{module}}'.",
+      casingMismatch:
+        'Casing of {{module}} does not match the underlying filesystem.',
+    },
   },
   defaultOptions: [],
   create(context) {

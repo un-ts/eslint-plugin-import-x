@@ -1,15 +1,19 @@
-import fs from 'fs/promises'
-import path from 'path'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 
 import type { TSESLint } from '@typescript-eslint/utils'
 
-import { moduleRequire, pluginName } from '../src/utils'
-
 import { srcDir } from './utils'
+
+import { moduleRequire, pluginName } from 'eslint-plugin-import-x/utils'
 
 function isSourceFile(f: string) {
   const ext = path.extname(f)
   return ext === '.js' || (ext === '.ts' && !f.endsWith('.d.ts'))
+}
+
+function getRulePath(ruleName: string) {
+  return path.resolve(srcDir, 'rules', ruleName)
 }
 
 describe('package', () => {
@@ -27,18 +31,18 @@ describe('package', () => {
 
   it('has every rule', async () => {
     const files = await fs.readdir(path.resolve(pkg, 'rules'))
-    files.filter(isSourceFile).forEach(f => {
+    for (const f of files.filter(isSourceFile)) {
       expect(module.rules).toHaveProperty(path.basename(f, path.extname(f)))
-    })
+    }
   })
 
   it('exports all configs', async () => {
     const files = await fs.readdir(path.resolve(srcDir, 'config'))
-    files.filter(isSourceFile).forEach(file => {
+    for (const file of files.filter(isSourceFile)) {
       expect(module.configs).toHaveProperty(
         path.basename(file, path.extname(file)),
       )
-    })
+    }
   })
 
   it('has configs only for rules that exist', () => {
@@ -52,10 +56,6 @@ describe('package', () => {
           require(getRulePath(rule.slice(preamble.length))),
         ).not.toThrow()
       }
-    }
-
-    function getRulePath(ruleName: string) {
-      return path.resolve(srcDir, 'rules', ruleName)
     }
   })
 

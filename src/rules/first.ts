@@ -68,9 +68,9 @@ export = createRule<['absolute-first'?], MessageId>({
         let shouldSort = true
         let lastSortNodesIndex = 0
 
-        body.forEach(function (node, index) {
+        for (const [index, node] of body.entries()) {
           if (!anyExpressions && isPossibleDirective(node)) {
-            return
+            continue
           }
 
           anyExpressions = true
@@ -122,13 +122,13 @@ export = createRule<['absolute-first'?], MessageId>({
           } else {
             nonImportCount++
           }
-        })
+        }
 
-        if (!errorInfos.length) {
+        if (errorInfos.length === 0) {
           return
         }
 
-        errorInfos.forEach(({ node }, index) => {
+        for (const [index, { node }] of errorInfos.entries()) {
           let fix: TSESLint.ReportFixFunction | undefined
 
           if (index < lastSortNodesIndex) {
@@ -166,13 +166,13 @@ export = createRule<['absolute-first'?], MessageId>({
                 : fixer.insertTextBefore(body[0], insertSourceCode)
 
               const fixers = [insertFixer, ...removeFixers]
-              fixers.forEach((computedFixer, i) => {
+              for (const [i, computedFixer] of fixers.entries()) {
                 replaceSourceCode +=
                   originSourceCode.slice(
                     fixers[i - 1] ? fixers[i - 1].range[1] : 0,
                     computedFixer.range[0],
                   ) + computedFixer.text
-              })
+              }
 
               return fixer.replaceTextRange(range, replaceSourceCode)
             }
@@ -182,7 +182,7 @@ export = createRule<['absolute-first'?], MessageId>({
             messageId: 'order',
             fix,
           })
-        })
+        }
       },
     }
   },

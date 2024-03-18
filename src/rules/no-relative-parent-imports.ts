@@ -1,4 +1,4 @@
-import { basename, dirname, relative } from 'path'
+import path from 'node:path'
 
 import type { ModuleOptions } from '../utils'
 import {
@@ -50,14 +50,14 @@ export = createRule<[ModuleOptions?], MessageId>({
         return
       }
 
-      const relDepPath = relative(dirname(filename), absDepPath)
+      const relDepPath = path.relative(path.dirname(filename), absDepPath)
 
       if (importType(relDepPath, context) === 'parent') {
         context.report({
           node: sourceNode,
           messageId: 'noAllowed',
           data: {
-            filename: basename(filename),
+            filename: path.basename(filename),
             depPath,
           },
         })

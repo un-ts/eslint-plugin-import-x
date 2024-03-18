@@ -43,20 +43,20 @@ export = createRule({
     const namespaces = new Map()
 
     return {
-      Program: ({ body }) =>
-        body.forEach(node => {
+      Program({ body }) {
+        for (const node of body) {
           if (node.type !== 'ImportDeclaration') {
-            return
+            continue
           }
 
           if (node.source == null) {
-            return
+            continue
           } // local export, ignore
 
           const imports = ExportMap.get(node.source.value, context)
 
           if (imports == null) {
-            return
+            continue
           }
 
           const moduleDeprecation = imports.doc?.tags.find(
@@ -69,41 +69,44 @@ export = createRule({
             })
           }
 
-          if (imports.errors.length) {
+          if (imports.errors.length > 0) {
             imports.reportErrors(context, node)
-            return
+            continue
           }
 
-          node.specifiers.forEach(function (im) {
+          for (const im of node.specifiers) {
             let imported: string
             let local: string
             switch (im.type) {
               case 'ImportNamespaceSpecifier': {
-                if (!imports.size) {
-                  return
+                if (imports.size === 0) {
+                  continue
                 }
                 namespaces.set(im.local.name, imports)
-                return
+                continue
               }
 
-              case 'ImportDefaultSpecifier':
+              case 'ImportDefaultSpecifier': {
                 imported = 'default'
                 local = im.local.name
                 break
+              }
 
-              case 'ImportSpecifier':
+              case 'ImportSpecifier': {
                 imported = im.imported.name
                 local = im.local.name
                 break
+              }
 
-              default:
-                return // can't handle this one
+              default: {
+                continue
+              } // can't handle this one
             }
 
             // unknown thing can't be deprecated
             const exported = imports.get(imported)
             if (exported == null) {
-              return
+              continue
             }
 
             // capture import of deep namespace
@@ -114,7 +117,7 @@ export = createRule({
             const deprecation = getDeprecation(imports.get(imported))
 
             if (!deprecation) {
-              return
+              continue
             }
 
             context.report({
@@ -123,8 +126,9 @@ export = createRule({
             })
 
             deprecated.set(local, deprecation)
-          })
-        }),
+          }
+        }
+      },
 
       Identifier(node) {
         if (

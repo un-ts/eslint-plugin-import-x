@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
@@ -14,7 +14,7 @@ import {
 } from '../utils'
 
 function toPosixPath(filePath: string) {
-  return filePath.replace(/\\/g, '/')
+  return filePath.replaceAll('\\', '/')
 }
 
 function findNamedPackage(filePath: string) {
@@ -27,14 +27,14 @@ function findNamedPackage(filePath: string) {
 
 type MessageId = 'noAllowed'
 
-const potentialViolationTypes = ['parent', 'index', 'sibling']
+const potentialViolationTypes = new Set(['parent', 'index', 'sibling'])
 
 function checkImportForRelativePackage(
   context: RuleContext<MessageId>,
   importPath: string,
   node: TSESTree.StringLiteral,
 ) {
-  if (potentialViolationTypes.indexOf(importType(importPath, context)) === -1) {
+  if (!potentialViolationTypes.has(importType(importPath, context))) {
     return
   }
 

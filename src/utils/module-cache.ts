@@ -50,7 +50,7 @@ export class ModuleCache {
         cacheSettings.lifetime,
       )
     ) {
-      cacheSettings.lifetime = Infinity
+      cacheSettings.lifetime = Number.POSITIVE_INFINITY
     }
 
     return cacheSettings as ImportSettings['cache'] & {

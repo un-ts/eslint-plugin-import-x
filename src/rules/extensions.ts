@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import type { FileExtension, RuleContext } from '../types'
 import {
@@ -46,17 +46,17 @@ function buildProperties(context: RuleContext<MessageId, Options[]>) {
     ignorePackages: false,
   }
 
-  context.options.forEach(obj => {
+  for (const obj of context.options) {
     // If this is a string, set defaultConfig to its value
     if (typeof obj === 'string') {
       result.defaultConfig = obj
-      return
+      continue
     }
 
     // If this is not the new structure, transfer all props to result.pattern
     if (obj.pattern === undefined && obj.ignorePackages === undefined) {
       Object.assign(result.pattern, obj)
-      return
+      continue
     }
 
     // If pattern is provided, transfer all props
@@ -68,7 +68,7 @@ function buildProperties(context: RuleContext<MessageId, Options[]>) {
     if (obj.ignorePackages !== undefined) {
       result.ignorePackages = obj.ignorePackages
     }
-  })
+  }
 
   if (result.defaultConfig === 'ignorePackages') {
     result.defaultConfig = 'always'
@@ -76,6 +76,21 @@ function buildProperties(context: RuleContext<MessageId, Options[]>) {
   }
 
   return result
+}
+
+function isExternalRootModule(file: string) {
+  if (file === '.' || file === '..') {
+    return false
+  }
+  const slashCount = file.split('/').length - 1
+
+  if (slashCount === 0) {
+    return true
+  }
+  if (isScoped(file) && slashCount <= 1) {
+    return true
+  }
+  return false
 }
 
 export = createRule<Options[], MessageId>({
@@ -154,21 +169,6 @@ export = createRule<Options[], MessageId>({
       return resolvedFileWithoutExtension === resolve(file, context)
     }
 
-    function isExternalRootModule(file: string) {
-      if (file === '.' || file === '..') {
-        return false
-      }
-      const slashCount = file.split('/').length - 1
-
-      if (slashCount === 0) {
-        return true
-      }
-      if (isScoped(file) && slashCount <= 1) {
-        return true
-      }
-      return false
-    }
-
     return moduleVisitor(
       (source, node) => {
         // bail if the declaration doesn't have a source, e.g. "export { foo };", or if it's only partially typed like in an editor
@@ -197,7 +197,7 @@ export = createRule<Options[], MessageId>({
         // for unresolved, use source value.
         const extension = path
           .extname(resolvedPath || importPath)
-          .substring(1) as FileExtension
+          .slice(1) as FileExtension
 
         // determine if this is a module
         const isPackage =
@@ -230,20 +230,19 @@ export = createRule<Options[], MessageId>({
               },
             })
           }
-        } else if (extension) {
-          if (
-            isUseOfExtensionForbidden(extension) &&
-            isResolvableWithoutExtension(importPath)
-          ) {
-            context.report({
-              node: source,
-              messageId: 'unexpected',
-              data: {
-                extension,
-                importPath: importPathWithQueryString,
-              },
-            })
-          }
+        } else if (
+          extension &&
+          isUseOfExtensionForbidden(extension) &&
+          isResolvableWithoutExtension(importPath)
+        ) {
+          context.report({
+            node: source,
+            messageId: 'unexpected',
+            data: {
+              extension,
+              importPath: importPathWithQueryString,
+            },
+          })
         }
       },
       { commonjs: true },

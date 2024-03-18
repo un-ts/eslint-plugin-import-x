@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import { minimatch } from 'minimatch'
 
@@ -13,20 +13,15 @@ function testIsAllow(
     return false // default doesn't allow any patterns
   }
 
-  let filePath: string
-
-  if (source[0] !== '.' && source[0] !== '/') {
+  const filePath =
     // a node module
-    filePath = source
-  } else {
-    filePath = path.resolve(path.dirname(filename), source) // get source absolute path
-  }
+    source[0] !== '.' && source[0] !== '/'
+      ? source
+      : path.resolve(path.dirname(filename), source) // get source absolute path
 
-  return (
-    globs.find(
-      glob =>
-        minimatch(filePath, glob) || minimatch(filePath, path.resolve(glob)),
-    ) !== undefined
+  return globs.some(
+    glob =>
+      minimatch(filePath, glob) || minimatch(filePath, path.resolve(glob)),
   )
 }
 
@@ -42,7 +37,7 @@ export = createRule<[Options?], MessageId>({
     type: 'suggestion',
     docs: {
       category: 'Style guide',
-      description: 'Forbid unassigned imports',
+      description: 'Forbid unassigned imports.',
     },
     schema: [
       {

@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 import { TSESLint } from '@typescript-eslint/utils'
@@ -448,6 +448,7 @@ describe('TypeScript', () => {
       settings,
     }),
   ]
+
   const invalid = [
     // TODO: uncomment this test
     // test({
@@ -496,13 +497,14 @@ describe('TypeScript', () => {
     }),
   ]
 
-  ;[
+  for (const source of [
     'typescript',
     'typescript-declare',
     'typescript-export-assign-namespace',
     'typescript-export-assign-namespace-merged',
-  ].forEach(source => {
-    valid = valid.concat(
+  ]) {
+    valid = [
+      ...valid,
       test({
         code: `import { MyType } from "./${source}"`,
         parser,
@@ -518,17 +520,11 @@ describe('TypeScript', () => {
         parser,
         settings,
       }),
-      source === 'typescript-declare'
-        ? testVersion('> 5', () => ({
-            code: `import { getFoo } from "./${source}"`,
-            parser,
-            settings,
-          }))
-        : test({
-            code: `import { getFoo } from "./${source}"`,
-            parser,
-            settings,
-          }),
+      test({
+        code: `import { getFoo } from "./${source}"`,
+        parser,
+        settings,
+      }),
       test({
         code: `import { MyEnum } from "./${source}"`,
         parser,
@@ -550,7 +546,7 @@ describe('TypeScript', () => {
         parser,
         settings,
       }),
-    )
+    ]
 
     invalid.push(
       test({
@@ -576,7 +572,7 @@ describe('TypeScript', () => {
         ],
       }),
     )
-  })
+  }
 
   ruleTester.run(`named [TypeScript]`, rule, {
     valid,

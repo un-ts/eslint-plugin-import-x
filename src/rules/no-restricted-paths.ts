@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 import isGlob from 'is-glob'
@@ -10,6 +10,21 @@ import { importType, createRule, moduleVisitor, resolve } from '../utils'
 const containsPath = (filepath: string, target: string) => {
   const relative = path.relative(target, filepath)
   return relative === '' || !relative.startsWith('..')
+}
+
+function isMatchingTargetPath(filename: string, targetPath: string) {
+  if (isGlob(targetPath)) {
+    const mm = new Minimatch(targetPath)
+    return mm.match(filename)
+  }
+
+  return containsPath(filename, targetPath)
+}
+
+function areBothGlobPatternAndAbsolutePath(areGlobPatterns: boolean[]) {
+  return (
+    areGlobPatterns.some(Boolean) && areGlobPatterns.some(isGlob => !isGlob)
+  )
 }
 
 type Options = {
@@ -111,15 +126,6 @@ export = createRule<[Options?], MessageId>({
         .some(targetPath => isMatchingTargetPath(currentFilename, targetPath)),
     )
 
-    function isMatchingTargetPath(filename: string, targetPath: string) {
-      if (isGlob(targetPath)) {
-        const mm = new Minimatch(targetPath)
-        return mm.match(filename)
-      }
-
-      return containsPath(filename, targetPath)
-    }
-
     function isValidExceptionPath(
       absoluteFromPath: string,
       absoluteExceptionPath: string,
@@ -130,13 +136,6 @@ export = createRule<[Options?], MessageId>({
       )
 
       return importType(relativeExceptionPath, context) !== 'parent'
-    }
-
-    function areBothGlobPatternAndAbsolutePath(areGlobPatterns: boolean[]) {
-      return (
-        areGlobPatterns.some(isGlob => isGlob) &&
-        areGlobPatterns.some(isGlob => !isGlob)
-      )
     }
 
     function reportInvalidExceptionPath(node: TSESTree.Node) {
@@ -233,7 +232,7 @@ export = createRule<[Options?], MessageId>({
       validators: Validator[],
       node: TSESTree.Node,
     ) {
-      validators.forEach(validator => validator.reportInvalidException(node))
+      for (const validator of validators) validator.reportInvalidException(node)
     }
 
     function reportImportsInRestrictedZone(
@@ -242,7 +241,7 @@ export = createRule<[Options?], MessageId>({
       importPath: string,
       customMessage?: string,
     ) {
-      validators.forEach(() => {
+      for (const _ of validators) {
         context.report({
           node,
           messageId: 'zone',
@@ -251,7 +250,7 @@ export = createRule<[Options?], MessageId>({
             extra: customMessage ? ` ${customMessage}` : '',
           },
         })
-      })
+      }
     }
 
     const makePathValidators = (
@@ -265,7 +264,7 @@ export = createRule<[Options?], MessageId>({
         return [computeMixedGlobAndAbsolutePathValidator()]
       }
 
-      const isGlobPattern = areGlobPatterns.every(isGlob => isGlob)
+      const isGlobPattern = areGlobPatterns.every(Boolean)
 
       return allZoneFrom.map(singleZoneFrom => {
         const absoluteFrom = path.resolve(basePath, singleZoneFrom)
@@ -289,7 +288,7 @@ export = createRule<[Options?], MessageId>({
           return
         }
 
-        matchingZones.forEach((zone, index) => {
+        for (const [index, zone] of matchingZones.entries()) {
           if (!validators[index]) {
             validators[index] = makePathValidators(zone.from, zone.except)
           }
@@ -317,7 +316,7 @@ export = createRule<[Options?], MessageId>({
             importPath,
             zone.message,
           )
-        })
+        }
       },
       { commonjs: true },
     )

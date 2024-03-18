@@ -1,5 +1,5 @@
-import fs from 'fs'
-import { setTimeout } from 'timers/promises'
+import fs from 'node:fs'
+import { setTimeout } from 'node:timers/promises'
 
 import eslintPkg from 'eslint/package.json'
 import getTsconfig from 'get-tsconfig'
@@ -105,7 +105,7 @@ describe('ExportMap', () => {
         const path = testFilePath('deprecated.js')
         const contents = fs
           .readFileSync(path, { encoding: 'utf8' })
-          .replace(/\r?\n/g, lineEnding)
+          .replaceAll(/\r?\n/g, lineEnding)
 
         const imports = ExportMap.parse(path, contents, parseContext)!
 

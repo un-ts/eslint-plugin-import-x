@@ -42,7 +42,7 @@ export = createRule<[], 'ExportNamedDeclaration' | 'AssignmentExpression'>({
     docs: {
       category: 'Style guide',
       description:
-        'Prefer named exports to be grouped together in a single export declaration',
+        'Prefer named exports to be grouped together in a single export declaration.',
     },
     schema: {},
     messages: {
@@ -115,60 +115,58 @@ export = createRule<[], 'ExportNamedDeclaration' | 'AssignmentExpression'>({
       'Program:exit': function onExit() {
         // Report multiple `export` declarations (ES2015 modules)
         if (nodes.modules.set.size > 1) {
-          nodes.modules.set.forEach(node => {
+          for (const node of nodes.modules.set) {
             context.report({
               node,
               messageId: node.type,
             })
-          })
+          }
         }
 
         // Report multiple `aggregated exports` from the same module (ES2015 modules)
-        Object.values(nodes.modules.sources)
+        for (const node of Object.values(nodes.modules.sources)
           .filter(
             nodesWithSource =>
               Array.isArray(nodesWithSource) && nodesWithSource.length > 1,
           )
-          .flat()
-          .forEach(node => {
-            context.report({
-              node,
-              messageId: node.type,
-            })
-          })
-
-        // Report multiple `export type` declarations (FLOW ES2015 modules)
-        if (nodes.types.set.size > 1) {
-          nodes.types.set.forEach(node => {
-            context.report({
-              node,
-              messageId: node.type,
-            })
+          .flat()) {
+          context.report({
+            node,
+            messageId: node.type,
           })
         }
 
+        // Report multiple `export type` declarations (FLOW ES2015 modules)
+        if (nodes.types.set.size > 1) {
+          for (const node of nodes.types.set) {
+            context.report({
+              node,
+              messageId: node.type,
+            })
+          }
+        }
+
         // Report multiple `aggregated type exports` from the same module (FLOW ES2015 modules)
-        Object.values(nodes.types.sources)
+        for (const node of Object.values(nodes.types.sources)
           .filter(
             nodesWithSource =>
               Array.isArray(nodesWithSource) && nodesWithSource.length > 1,
           )
-          .flat()
-          .forEach(node => {
-            context.report({
-              node,
-              messageId: node.type,
-            })
+          .flat()) {
+          context.report({
+            node,
+            messageId: node.type,
           })
+        }
 
         // Report multiple `module.exports` assignments (CommonJS)
         if (nodes.commonjs.set.size > 1) {
-          nodes.commonjs.set.forEach(node => {
+          for (const node of nodes.commonjs.set) {
             context.report({
               node,
               messageId: node.type,
             })
-          })
+          }
         }
       },
     }

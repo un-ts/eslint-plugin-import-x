@@ -751,7 +751,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `import foo from 'foo';\n\n\n\nexport default function() {};`,
-      output: `import foo from 'foo';\n\n\n\nexport default function() {};`,
+      output: null,
       options: [{ count: 2, exactCount: true }],
       errors: [
         {
@@ -764,7 +764,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `import foo from 'foo';\n\n\n\n\nexport default function() {};`,
-      output: `import foo from 'foo';\n\n\n\n\nexport default function() {};`,
+      output: null,
       options: [{ count: 2, exactCount: true }],
       errors: [
         {
@@ -790,7 +790,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `import foo from 'foo';\n// some random comment\n\n\nexport default function() {};`,
-      output: `import foo from 'foo';\n// some random comment\n\n\nexport default function() {};`,
+      output: null,
       options: [{ count: 2, exactCount: true }],
       errors: [
         {
@@ -803,7 +803,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `import foo from 'foo';\n// some random comment\n\n\n\nexport default function() {};`,
-      output: `import foo from 'foo';\n// some random comment\n\n\n\nexport default function() {};`,
+      output: null,
       options: [{ count: 2, exactCount: true }],
       errors: [
         {
@@ -842,7 +842,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `import foo from 'foo';\n\n\n\n// some random comment\nexport default function() {};`,
-      output: `import foo from 'foo';\n\n\n\n// some random comment\nexport default function() {};`,
+      output: null,
       options: [{ count: 2, exactCount: true, considerComments: true }],
       errors: [
         {
@@ -861,13 +861,7 @@ ruleTester.run('newline-after-import', rule, {
         // Some random single line comment
         var bar = 42;
       `,
-      output: `
-        import foo from 'foo';
-
-
-        // Some random single line comment
-        var bar = 42;
-      `,
+      output: null,
       errors: [
         {
           line: 2,
@@ -893,7 +887,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `const foo = require('foo');\n\n\n\nconst bar = function() {};`,
-      output: `const foo = require('foo');\n\n\n\nconst bar = function() {};`,
+      output: null,
       options: [{ count: 2, exactCount: true }],
       errors: [
         {
@@ -906,7 +900,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `const foo = require('foo');\n\n\n\n// some random comment\nconst bar = function() {};`,
-      output: `const foo = require('foo');\n\n\n\n// some random comment\nconst bar = function() {};`,
+      output: null,
       options: [{ count: 2, exactCount: true }],
       errors: [
         {

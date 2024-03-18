@@ -2,7 +2,7 @@
  * Ensures that there are no useless path segments
  */
 
-import path from 'path'
+import path from 'node:path'
 
 import type { ModuleOptions } from '../utils'
 import { createRule, moduleVisitor, resolve, getFileExtensions } from '../utils'
@@ -21,7 +21,7 @@ import { createRule, moduleVisitor, resolve, getFileExtensions } from '../utils'
  * @returns relative posix path that always starts with a ./
  **/
 function toRelativePath(relativePath: string): string {
-  const stripped = relativePath.replace(/\/$/g, '') // Remove trailing /
+  const stripped = relativePath.replaceAll(/\/$/g, '') // Remove trailing /
 
   return /^((\.\.)|(\.))($|\/)/.test(stripped) ? stripped : `./${stripped}`
 }
@@ -108,7 +108,7 @@ export = createRule<[Options?], MessageId>({
 
       const fileExtensions = getFileExtensions(context.settings)
       const regexUnnecessaryIndex = new RegExp(
-        `.*\\/index(\\${Array.from(fileExtensions).join('|\\')})?$`,
+        `.*\\/index(\\${[...fileExtensions].join('|\\')})?$`,
       )
 
       // Check if path contains unnecessary index (including a configured extension)
@@ -153,12 +153,10 @@ export = createRule<[Options?], MessageId>({
       // Report and propose minimal number of required relative parents
       return reportWithProposedPath(
         toRelativePath(
-          importPathSplit
-            .slice(0, countExpectedRelativeParents)
-            .concat(
-              importPathSplit.slice(countImportPathRelativeParents + diff),
-            )
-            .join('/'),
+          [
+            ...importPathSplit.slice(0, countExpectedRelativeParents),
+            ...importPathSplit.slice(countImportPathRelativeParents + diff),
+          ].join('/'),
         ),
       )
     }, options)

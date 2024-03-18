@@ -1,5 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 function findUp(filename: string | string[], cwd?: string): string | null {
   let dir = path.resolve(cwd || '')

@@ -81,7 +81,9 @@ export = createRule<[Options?], MessageId>({
     const options = context.options[0] || {}
 
     const maxDepth =
-      typeof options.maxDepth === 'number' ? options.maxDepth : Infinity
+      typeof options.maxDepth === 'number'
+        ? options.maxDepth
+        : Number.POSITIVE_INFINITY
 
     const ignoreModule = (name: string) =>
       options.ignoreExternal &&
@@ -177,7 +179,7 @@ export = createRule<[Options?], MessageId>({
             }
             if (route.length + 1 < maxDepth) {
               for (const { source } of toTraverse) {
-                untraversed.push({ mget: getter, route: route.concat(source) })
+                untraversed.push({ mget: getter, route: [...route, source] })
               }
             }
           }

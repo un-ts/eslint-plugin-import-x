@@ -1,4 +1,4 @@
-import { normalize } from 'path'
+import path from 'node:path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
@@ -72,7 +72,7 @@ ruleTester.run('no-relative-packages', rule, {
       filename: testFilePath('./package/index.js'),
       errors: [
         {
-          message: `Relative import from another package is not allowed. Use \`${normalize('@scope/package-named')}\` instead of \`../package-scoped\``,
+          message: `Relative import from another package is not allowed. Use \`${path.normalize('@scope/package-named')}\` instead of \`../package-scoped\``,
           line: 1,
           column: 17,
         },
@@ -84,7 +84,7 @@ ruleTester.run('no-relative-packages', rule, {
       filename: testFilePath('./package-named/index.js'),
       errors: [
         {
-          message: `Relative import from another package is not allowed. Use \`${normalize('eslint-plugin-import-x/test/fixtures/bar')}\` instead of \`../bar\``,
+          message: `Relative import from another package is not allowed. Use \`${path.normalize('eslint-plugin-import-x/test/fixtures/bar')}\` instead of \`../bar\``,
           line: 1,
           column: 17,
         },

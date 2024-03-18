@@ -300,4 +300,6 @@ function runResolverTests(resolver: 'node' | 'webpack') {
   })
 }
 
-;(['node', 'webpack'] as const).forEach(runResolverTests)
+for (const resolver of ['node', 'webpack'] as const) {
+  runResolverTests(resolver)
+}

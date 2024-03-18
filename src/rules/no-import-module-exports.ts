@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
@@ -14,7 +14,7 @@ function getEntryPoint(context: RuleContext) {
   })!
   try {
     return require.resolve(path.dirname(pkgPath))
-  } catch (error) {
+  } catch {
     // Assume the package has no entrypoint (e.g. CLI packages)
     // in which case require.resolve would throw.
     return null
@@ -23,14 +23,17 @@ function getEntryPoint(context: RuleContext) {
 
 function findScope(context: RuleContext, identifier: string) {
   const { scopeManager } = context.getSourceCode()
-  return scopeManager?.scopes
-    .slice()
-    .reverse()
-    .find(scope =>
-      scope.variables.some(variable =>
-        variable.identifiers.some(node => node.name === identifier),
-      ),
-    )
+  return (
+    scopeManager?.scopes
+      // eslint-disable-next-line unicorn/prefer-spread
+      .slice()
+      .reverse()
+      .find(scope =>
+        scope.variables.some(variable =>
+          variable.identifiers.some(node => node.name === identifier),
+        ),
+      )
+  )
 }
 
 function findDefinition(objectScope: TSESLint.Scope.Scope, identifier: string) {
@@ -120,12 +123,12 @@ export = createRule<[Options?], MessageId>({
           !isException &&
           !isImportBinding
         ) {
-          importDeclarations.forEach(importDeclaration => {
+          for (const importDeclaration of importDeclarations) {
             context.report({
               node: importDeclaration,
               messageId: 'notAllowed',
             })
-          })
+          }
           alreadyReported = true
         }
       },

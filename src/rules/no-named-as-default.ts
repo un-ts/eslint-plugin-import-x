@@ -1,7 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { importDeclaration } from '../import-declaration'
-import { ExportMap, createRule } from '../utils'
+import { importDeclaration, ExportMap, createRule } from '../utils'
 
 type MessageId = 'default'
 
@@ -42,7 +41,7 @@ export = createRule<[], MessageId>({
         return
       }
 
-      if (imports.errors.length) {
+      if (imports.errors.length > 0) {
         imports.reportErrors(context, declaration)
         return
       }

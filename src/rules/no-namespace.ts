@@ -82,7 +82,7 @@ export = createRule<[Options?], MessageId>({
                 // Pass 1: Collect variable names that are already in scope for each reference we want
                 // to transform, so that we can be sure that we choose non-conflicting import names
                 const importNameConflicts: Record<string, Set<string>> = {}
-                namespaceIdentifiers.forEach(identifier => {
+                for (const identifier of namespaceIdentifiers) {
                   const parent = identifier.parent
                   if (parent && parent.type === 'MemberExpression') {
                     const importName = getMemberPropertyName(parent)
@@ -90,15 +90,14 @@ export = createRule<[Options?], MessageId>({
                       scopeManager,
                       parent,
                     )
-                    if (!importNameConflicts[importName]) {
-                      importNameConflicts[importName] = localConflicts
+                    if (importNameConflicts[importName]) {
+                      for (const c of localConflicts)
+                        importNameConflicts[importName].add(c)
                     } else {
-                      localConflicts.forEach(c =>
-                        importNameConflicts[importName].add(c),
-                      )
+                      importNameConflicts[importName] = localConflicts
                     }
                   }
-                })
+                }
 
                 // Choose new names for each import
                 const importNames = Object.keys(importNameConflicts)
@@ -122,7 +121,7 @@ export = createRule<[Options?], MessageId>({
                 )
 
                 // Pass 2: Replace references to the namespace with references to the named imports
-                namespaceIdentifiers.forEach(identifier => {
+                for (const identifier of namespaceIdentifiers) {
                   const parent = identifier.parent
                   if (parent && parent.type === 'MemberExpression') {
                     const importName = getMemberPropertyName(parent)
@@ -130,7 +129,7 @@ export = createRule<[Options?], MessageId>({
                       fixer.replaceText(parent, importLocalNames[importName]),
                     )
                   }
-                })
+                }
 
                 return fixes
               }
@@ -174,9 +173,9 @@ function getVariableNamesInScope(
     scope = scopeManager.acquire(currentNode, true)
   }
   return new Set(
-    scope.variables
-      .concat(scope.upper!.variables)
-      .map(variable => variable.name),
+    [...scope.variables, ...scope.upper!.variables].map(
+      variable => variable.name,
+    ),
   )
 }
 
@@ -186,21 +185,21 @@ function generateLocalNames(
   namespaceName: string,
 ) {
   const localNames: Record<string, string> = {}
-  names.forEach(name => {
+  for (const name of names) {
     let localName: string
     if (!nameConflicts[name].has(name)) {
       localName = name
-    } else if (!nameConflicts[name].has(`${namespaceName}_${name}`)) {
-      localName = `${namespaceName}_${name}`
-    } else {
-      for (let i = 1; i < Infinity; i++) {
+    } else if (nameConflicts[name].has(`${namespaceName}_${name}`)) {
+      for (let i = 1; i < Number.POSITIVE_INFINITY; i++) {
         if (!nameConflicts[name].has(`${namespaceName}_${name}_${i}`)) {
           localName = `${namespaceName}_${name}_${i}`
           break
         }
       }
+    } else {
+      localName = `${namespaceName}_${name}`
     }
     localNames[name] = localName!
-  })
+  }
   return localNames
 }

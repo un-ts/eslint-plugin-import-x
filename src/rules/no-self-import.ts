@@ -1,6 +1,7 @@
 /**
  * Forbids a module from importing itself
  */
+
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import type { RuleContext } from '../types'

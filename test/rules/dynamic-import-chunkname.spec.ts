@@ -444,10 +444,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        // webpackChunkName: "someModule"
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'blockComment',
@@ -459,7 +456,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       code: "import('test')",
       options,
       parser,
-      output: "import('test')",
+      output: null,
       errors: [
         {
           messageId: 'leadingComment',
@@ -474,10 +471,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName: someModule */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -492,10 +486,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName: "someModule' */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -510,10 +501,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName: 'someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -528,10 +516,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -546,10 +531,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName:"someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -564,10 +546,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName: true */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'chunknameFormat',
@@ -582,10 +561,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName: "my-module-[id]" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'chunknameFormat',
@@ -600,10 +576,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName: ["request"] */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'chunknameFormat',
@@ -618,10 +591,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /*webpackChunkName: "someModule"*/
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'paddedSpaces',
@@ -636,10 +606,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName  :  "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -654,10 +621,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackChunkName: "someModule" ; */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -672,10 +636,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* totally not webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -691,11 +652,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackPrefetch: true */
-        /* webpackChunk: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -710,10 +667,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackPrefetch: true, webpackChunk: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -728,10 +682,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options: pickyCommentOptions,
       parser,
-      output: `import(
-        /* webpackChunkName: "someModule123" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           ...pickyChunkNameFormatError,
@@ -746,10 +697,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackPrefetch: "module", webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -764,10 +712,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackPreload: "module", webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -782,10 +727,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackIgnore: "no", webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -800,10 +742,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackInclude: "someModule", webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -818,10 +757,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackInclude: true, webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -836,10 +772,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackExclude: "someModule", webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -854,10 +787,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackExclude: true, webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -872,10 +802,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackMode: "fast", webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -890,10 +817,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackMode: true, webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -908,10 +832,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackExports: true, webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -926,10 +847,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       )`,
       options,
       parser,
-      output: `import(
-        /* webpackExports: /default/, webpackChunkName: "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -943,10 +861,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options: multipleImportFunctionOptions,
-      output: `dynamicImport(
-        /* webpackChunkName "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -960,10 +875,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options: multipleImportFunctionOptions,
-      output: `definitelyNotStaticImport(
-        /* webpackChunkName "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -977,10 +889,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      output: `dynamicImport(
-        // webpackChunkName: "someModule"
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'blockComment',
@@ -991,7 +900,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
     {
       code: "dynamicImport('test')",
       options,
-      output: "dynamicImport('test')",
+      output: null,
       errors: [
         {
           messageId: 'leadingComment',
@@ -1005,10 +914,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      output: `dynamicImport(
-        /* webpackChunkName: someModule */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -1022,10 +928,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      output: `dynamicImport(
-        /* webpackChunkName "someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -1039,10 +942,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      output: `dynamicImport(
-        /* webpackChunkName:"someModule" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           messageId: 'webpackComment',
@@ -1056,10 +956,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options: pickyCommentOptions,
-      output: `dynamicImport(
-        /* webpackChunkName: "someModule123" */
-        'someModule'
-      )`,
+      output: null,
       errors: [
         {
           ...pickyChunkNameFormatError,
@@ -1399,10 +1296,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            // webpackChunkName: "someModule"
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'blockComment',
@@ -1414,7 +1308,7 @@ describe('TypeScript', () => {
         code: "import('test')",
         options,
         parser: typescriptParser,
-        output: "import('test')",
+        output: null,
         errors: [
           {
             messageId: 'leadingComment',
@@ -1429,10 +1323,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName: someModule */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1447,10 +1338,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName "someModule' */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1465,10 +1353,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName 'someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1483,10 +1368,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1501,10 +1383,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName:"someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1519,10 +1398,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /*webpackChunkName: "someModule"*/
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'paddedSpaces',
@@ -1537,10 +1413,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName  :  "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1555,10 +1428,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName: "someModule" ; */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1573,10 +1443,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* totally not webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1592,11 +1459,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackPrefetch: true */
-            /* webpackChunk: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1611,10 +1474,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackPrefetch: true, webpackChunk: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1629,10 +1489,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName: true */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'chunknameFormat',
@@ -1647,10 +1504,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName: "my-module-[id]" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'chunknameFormat',
@@ -1665,10 +1519,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName: ["request"] */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'chunknameFormat',
@@ -1683,10 +1534,7 @@ describe('TypeScript', () => {
           )`,
         options: pickyCommentOptions,
         parser: typescriptParser,
-        output: `import(
-            /* webpackChunkName: "someModule123" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             ...pickyChunkNameFormatError,
@@ -1701,10 +1549,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackPrefetch: "module", webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1719,10 +1564,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackPreload: "module", webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1737,10 +1579,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackIgnore: "no", webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1755,10 +1594,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackInclude: "someModule", webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1773,10 +1609,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackInclude: true, webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1791,10 +1624,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackExclude: "someModule", webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1809,10 +1639,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackExclude: true, webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1827,10 +1654,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackMode: "fast", webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1845,10 +1669,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackMode: true, webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1863,10 +1684,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackExports: true, webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',
@@ -1881,10 +1699,7 @@ describe('TypeScript', () => {
           )`,
         options,
         parser: typescriptParser,
-        output: `import(
-            /* webpackExports: /default/, webpackChunkName: "someModule" */
-            'someModule'
-          )`,
+        output: null,
         errors: [
           {
             messageId: 'webpackComment',

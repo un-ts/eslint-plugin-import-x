@@ -89,9 +89,9 @@ function takeTokensAfterWhile(
 ) {
   const tokens = getTokensOrCommentsAfter(sourceCode, node, 100)
   const result: Array<TSESTree.Node | TSESTree.Token> = []
-  for (let i = 0; i < tokens.length; i++) {
-    if (condition(tokens[i])) {
-      result.push(tokens[i])
+  for (const token of tokens) {
+    if (condition(token)) {
+      result.push(token)
     } else {
       break
     }
@@ -138,7 +138,7 @@ function findRootNode(node: TSESTree.Node) {
   ) {
     parent = parent.parent
   }
-  return parent
+  return parent as TSESTree.ProgramStatement
 }
 
 function findEndOfLineWithComments(
@@ -268,11 +268,14 @@ function canCrossNodeWhileReorder(node: TSESTree.Node) {
   )
 }
 
-function canReorderItems(firstNode: TSESTree.Node, secondNode: TSESTree.Node) {
+function canReorderItems(
+  firstNode: TSESTree.ProgramStatement,
+  secondNode: TSESTree.ProgramStatement,
+) {
   const parent = firstNode.parent as TSESTree.Program
   const [firstIndex, secondIndex] = [
-    parent.body.findIndex(it => it === firstNode),
-    parent.body.findIndex(it => it === secondNode),
+    parent.body.indexOf(firstNode),
+    parent.body.indexOf(secondNode),
   ].sort()
   const nodesBetween = parent.body.slice(firstIndex, secondIndex + 1)
   for (const nodeBetween of nodesBetween) {
@@ -313,7 +316,7 @@ function fixOutOfOrder(
   const secondRootEnd = findEndOfLineWithComments(sourceCode, secondRoot)
   const canFix = canReorderItems(firstRoot, secondRoot)
 
-  let newCode = sourceCode.text.substring(secondRootStart, secondRootEnd)
+  let newCode = sourceCode.text.slice(secondRootStart, secondRootEnd)
   if (newCode[newCode.length - 1] !== '\n') {
     newCode = `${newCode}\n`
   }
@@ -335,12 +338,11 @@ function fixOutOfOrder(
             ? fixer.replaceTextRange(
                 [firstRootStart, secondRootEnd],
                 newCode +
-                  sourceCode.text.substring(firstRootStart, secondRootStart),
+                  sourceCode.text.slice(firstRootStart, secondRootStart),
               )
             : fixer.replaceTextRange(
                 [secondRootStart, firstRootEnd],
-                sourceCode.text.substring(secondRootEnd, firstRootEnd) +
-                  newCode,
+                sourceCode.text.slice(secondRootEnd, firstRootEnd) + newCode,
               )
       : null,
   })
@@ -352,14 +354,14 @@ function reportOutOfOrder(
   outOfOrder: ImportEntryWithRank[],
   order: 'before' | 'after',
 ) {
-  outOfOrder.forEach(imp => {
+  for (const imp of outOfOrder) {
     fixOutOfOrder(
       context,
       imported.find(importedItem => importedItem.rank > imp.rank)!,
       imp,
       order,
     )
-  })
+  }
 }
 
 function makeOutOfOrderReport(
@@ -367,7 +369,7 @@ function makeOutOfOrderReport(
   imported: ImportEntryWithRank[],
 ) {
   const outOfOrder = findOutOfOrder(imported)
-  if (!outOfOrder.length) {
+  if (outOfOrder.length === 0) {
     return
   }
 
@@ -467,32 +469,32 @@ function mutateRanksToAlphabetize(
   const groupRanks = Object.keys(groupedByRanks).sort((a, b) => +a - +b)
 
   // sort imports locally within their group
-  groupRanks.forEach(groupRank => {
+  for (const groupRank of groupRanks) {
     groupedByRanks[groupRank].sort(sorterFn)
-  })
+  }
 
   // assign globally unique rank to each import
   let newRank = 0
   const alphabetizedRanks = groupRanks.reduce<Record<string, number>>(
     (acc, groupRank) => {
-      groupedByRanks[groupRank].forEach(importedItem => {
+      for (const importedItem of groupedByRanks[groupRank]) {
         acc[
           `${importedItem.value}|${'importKind' in importedItem.node ? importedItem.node.importKind : ''}`
-        ] = parseInt(groupRank, 10) + newRank
+        ] = Number.parseInt(groupRank, 10) + newRank
         newRank += 1
-      })
+      }
       return acc
     },
     {},
   )
 
   // mutate the original group-rank with alphabetized-rank
-  imported.forEach(importedItem => {
+  for (const importedItem of imported) {
     importedItem.rank =
       alphabetizedRanks[
         `${importedItem.value}|${'importKind' in importedItem.node ? importedItem.node.importKind : ''}`
       ]
-  })
+  }
 }
 
 type Ranks = {
@@ -557,7 +559,7 @@ function computeRank(
       ranks.maxPosition,
     )
   }
-  if (typeof rank === 'undefined') {
+  if (rank === undefined) {
     rank = ranks.groups[impType]
   }
   if (
@@ -621,7 +623,7 @@ const types = [
 function convertGroupsToRanks(groups: ReadonlyArray<Arrayable<ImportType>>) {
   const rankObject = groups.reduce(
     (res, group, index) => {
-      ;([group] as const).flat().forEach(groupItem => {
+      for (const groupItem of ([group] as const).flat()) {
         if (!types.includes(groupItem)) {
           throw new Error(
             `Incorrect configuration of the rule: Unknown type \`${JSON.stringify(groupItem)}\``,
@@ -633,14 +635,14 @@ function convertGroupsToRanks(groups: ReadonlyArray<Arrayable<ImportType>>) {
           )
         }
         res[groupItem] = index * 2
-      })
+      }
       return res
     },
     {} as Record<ImportType, number>,
   )
 
   const omittedTypes = types.filter(function (type) {
-    return typeof rankObject[type] === 'undefined'
+    return rankObject[type] === undefined
   })
 
   const ranks = omittedTypes.reduce(function (res, type) {
@@ -675,18 +677,18 @@ function convertPathGroupsForRanks(pathGroups: PathGroup[]) {
 
   let maxPosition = 1
 
-  Object.keys(before).forEach(group => {
+  for (const group of Object.keys(before)) {
     const groupLength = before[group].length
-    before[group].forEach((groupIndex, index) => {
+    for (const [index, groupIndex] of before[group].entries()) {
       transformed[groupIndex].position = -1 * (groupLength - index)
-    })
+    }
     maxPosition = Math.max(maxPosition, groupLength)
-  })
+  }
 
-  Object.keys(after).forEach(key => {
+  for (const key of Object.keys(after)) {
     const groupNextPosition = after[key]
     maxPosition = Math.max(maxPosition, groupNextPosition - 1)
-  })
+  }
 
   return {
     pathGroups: transformed,
@@ -726,9 +728,7 @@ function removeNewLineAfterImport(
     findEndOfLineWithComments(sourceCode, prevRoot),
     findStartOfLineWithComments(sourceCode, currRoot),
   ] as const
-  if (
-    /^\s*$/.test(sourceCode.text.substring(rangeToRemove[0], rangeToRemove[1]))
-  ) {
+  if (/^\s*$/.test(sourceCode.text.slice(rangeToRemove[0], rangeToRemove[1]))) {
     return (fixer: TSESLint.RuleFixer) => fixer.removeRange(rangeToRemove)
   }
 }
@@ -743,14 +743,13 @@ function makeNewlinesBetweenReport(
     currentImport: ImportEntryWithRank,
     previousImport: ImportEntryWithRank,
   ) => {
-    const linesBetweenImports = context
+    return context
       .getSourceCode()
       .lines.slice(
         previousImport.node.loc.end.line,
         currentImport.node.loc.start.line - 1,
       )
-
-    return linesBetweenImports.filter(line => !line.trim().length).length
+      .filter(line => line.trim().length === 0).length
   }
   const getIsStartOfDistinctGroup = (
     currentImport: ImportEntryWithRank,
@@ -758,7 +757,7 @@ function makeNewlinesBetweenReport(
   ) => currentImport.rank - 1 >= previousImport.rank
   let previousImport = imported[0]
 
-  imported.slice(1).forEach(currentImport => {
+  for (const currentImport of imported.slice(1)) {
     const emptyLinesBetween = getNumberOfEmptyLinesBetween(
       currentImport,
       previousImport,
@@ -785,22 +784,15 @@ function makeNewlinesBetweenReport(
         }
       } else if (
         emptyLinesBetween > 0 &&
-        newlinesBetweenImports !== 'always-and-inside-groups'
+        newlinesBetweenImports !== 'always-and-inside-groups' &&
+        ((distinctGroup && currentImport.rank === previousImport.rank) ||
+          (!distinctGroup && !isStartOfDistinctGroup))
       ) {
-        if (
-          (distinctGroup && currentImport.rank === previousImport.rank) ||
-          (!distinctGroup && !isStartOfDistinctGroup)
-        ) {
-          context.report({
-            node: previousImport.node,
-            messageId: 'noLineWithinGroup',
-            fix: removeNewLineAfterImport(
-              context,
-              currentImport,
-              previousImport,
-            ),
-          })
-        }
+        context.report({
+          node: previousImport.node,
+          messageId: 'noLineWithinGroup',
+          fix: removeNewLineAfterImport(context, currentImport, previousImport),
+        })
       }
     } else if (emptyLinesBetween > 0) {
       context.report({
@@ -811,7 +803,7 @@ function makeNewlinesBetweenReport(
     }
 
     previousImport = currentImport
-  })
+  }
 }
 
 function getAlphabetizeConfig(options: Options): AlphabetizeOptions {
@@ -991,7 +983,7 @@ export = createRule<[Options?], MessageId>({
     return {
       ImportDeclaration(node) {
         // Ignoring unassigned imports unless warnOnUnassignedImports is set
-        if (node.specifiers.length || options.warnOnUnassignedImports) {
+        if (node.specifiers.length > 0 || options.warnOnUnassignedImports) {
           const name = node.source.value
           registerNode(
             context,
@@ -1069,7 +1061,7 @@ export = createRule<[Options?], MessageId>({
         )
       },
       'Program:exit': function reportAndReset() {
-        importMap.forEach(imported => {
+        for (const imported of importMap.values()) {
           if (newlinesBetweenImports !== 'ignore') {
             makeNewlinesBetweenReport(
               context,
@@ -1084,7 +1076,7 @@ export = createRule<[Options?], MessageId>({
           }
 
           makeOutOfOrderReport(context, imported)
-        })
+        }
 
         importMap.clear()
       },

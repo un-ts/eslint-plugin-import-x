@@ -202,7 +202,7 @@ export = createRule<[Options?], MessageId>({
           })
         } else {
           // remove specific specifiers and insert new imports for them
-          for (const specifier of typeSpecifiers.concat(typeofSpecifiers)) {
+          for (const specifier of [...typeSpecifiers, ...typeofSpecifiers]) {
             context.report({
               node: specifier,
               messageId: 'topLevel',
@@ -256,10 +256,11 @@ export = createRule<[Options?], MessageId>({
                   )
                 }
 
-                return fixes.concat(
+                return [
+                  ...fixes,
                   // insert the new imports after the old declaration
                   fixer.insertTextAfter(node, `\n${newImports}`),
-                )
+                ]
               },
             })
           }

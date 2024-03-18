@@ -1,4 +1,4 @@
-import { extname } from 'path'
+import path from 'node:path'
 
 import debug from 'debug'
 
@@ -38,16 +38,16 @@ export function getFileExtensions(settings: PluginSettings) {
       if (!Array.isArray(parserSettings)) {
         throw new TypeError(`"settings" for ${parser} must be an array`)
       }
-      parserSettings.forEach(ext => exts.add(ext))
+      for (const ext of parserSettings) exts.add(ext)
     }
   }
 
   return exts
 }
 
-export function ignore(path: string, context: ChildContext | RuleContext) {
+export function ignore(filepath: string, context: ChildContext | RuleContext) {
   // check extension whitelist first (cheap)
-  if (!hasValidExtension(path, context)) {
+  if (!hasValidExtension(filepath, context)) {
     return true
   }
 
@@ -57,10 +57,10 @@ export function ignore(path: string, context: ChildContext | RuleContext) {
     return false
   }
 
-  for (let i = 0; i < ignoreStrings.length; i++) {
-    const regex = new RegExp(ignoreStrings[i])
-    if (regex.test(path)) {
-      log(`ignoring ${path}, matched pattern /${ignoreStrings[i]}/`)
+  for (const ignoreString of ignoreStrings) {
+    const regex = new RegExp(ignoreString)
+    if (regex.test(filepath)) {
+      log(`ignoring ${filepath}, matched pattern /${ignoreString}/`)
       return true
     }
   }
@@ -69,8 +69,8 @@ export function ignore(path: string, context: ChildContext | RuleContext) {
 }
 
 export function hasValidExtension(
-  path: string,
+  filepath: string,
   context: ChildContext | RuleContext,
-): path is `${string}${FileExtension}` {
-  return validExtensions(context).has(extname(path) as FileExtension)
+): filepath is `${string}${FileExtension}` {
+  return validExtensions(context).has(path.extname(filepath) as FileExtension)
 }

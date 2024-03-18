@@ -33,34 +33,31 @@ export = createRule({
       },
 
       ExportNamedDeclaration(node) {
-        node.specifiers
-          .filter(
-            specifier =>
-              (specifier.exported.name ||
-                ('value' in specifier.exported && specifier.exported.value)) ===
-              'default',
-          )
-          .forEach(specifier => {
-            const { loc } =
-              context.getSourceCode().getFirstTokens(node)[1] || {}
-            // @ts-expect-error - legacy parser type
-            if (specifier.type === 'ExportDefaultSpecifier') {
-              context.report({
-                node,
-                messageId: 'preferNamed',
-                loc,
-              })
-            } else if (specifier.type === 'ExportSpecifier') {
-              context.report({
-                node,
-                messageId: 'noAliasDefault',
-                data: {
-                  local: specifier.local.name,
-                },
-                loc,
-              })
-            }
-          })
+        for (const specifier of node.specifiers.filter(
+          specifier =>
+            (specifier.exported.name ||
+              ('value' in specifier.exported && specifier.exported.value)) ===
+            'default',
+        )) {
+          const { loc } = context.getSourceCode().getFirstTokens(node)[1] || {}
+          // @ts-expect-error - legacy parser type
+          if (specifier.type === 'ExportDefaultSpecifier') {
+            context.report({
+              node,
+              messageId: 'preferNamed',
+              loc,
+            })
+          } else if (specifier.type === 'ExportSpecifier') {
+            context.report({
+              node,
+              messageId: 'noAliasDefault',
+              data: {
+                local: specifier.local.name,
+              },
+              loc,
+            })
+          }
+        }
       },
     }
   },

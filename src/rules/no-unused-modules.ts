@@ -2,7 +2,8 @@
  * Ensures that modules contain exports and/or all
  * modules are consumed within other modules.
  */
-import { dirname, join } from 'path'
+
+import path from 'node:path'
 
 import { TSESTree } from '@typescript-eslint/utils'
 import { FileEnumerator } from 'eslint/use-at-your-own-risk'
@@ -47,7 +48,7 @@ function forEachDeclarationIdentifier(
     ) {
       cb(declaration.id!.name)
     } else if (declaration.type === AST_NODE_TYPES.VariableDeclaration) {
-      declaration.declarations.forEach(({ id }) => {
+      for (const { id } of declaration.declarations) {
         if (id.type === AST_NODE_TYPES.ObjectPattern) {
           recursivePatternCapture(id, pattern => {
             if (pattern.type === AST_NODE_TYPES.Identifier) {
@@ -55,15 +56,15 @@ function forEachDeclarationIdentifier(
             }
           })
         } else if (id.type === AST_NODE_TYPES.ArrayPattern) {
-          id.elements.forEach(el => {
+          for (const el of id.elements) {
             if (el?.type === AST_NODE_TYPES.Identifier) {
               cb(el.name)
             }
-          })
+          }
         } else {
           cb(id.name)
         }
-      })
+      }
     }
   }
 }
@@ -130,13 +131,13 @@ const resolveFiles = (
   ignoreExports: string[],
   context: RuleContext,
 ) => {
-  const extensions = Array.from(getFileExtensions(context.settings))
+  const extensions = [...getFileExtensions(context.settings)]
 
   const srcFileList = listFilesToProcess(src, extensions)
 
   // prepare list of ignored files
   const ignoredFilesList = listFilesToProcess(ignoreExports, extensions)
-  ignoredFilesList.forEach(({ filename }) => ignoredFiles.add(filename))
+  for (const { filename } of ignoredFilesList) ignoredFiles.add(filename)
 
   // prepare list of source files, don't consider files from node_modules
 
@@ -155,7 +156,7 @@ const prepareImportsAndExports = (
   context: RuleContext,
 ) => {
   const exportAll = new Map<string, Set<string>>()
-  srcFiles.forEach(file => {
+  for (const file of srcFiles) {
     const exports = new Map<string, { whereUsed: Set<string> }>()
     const imports = new Map<string, Set<string>>()
     const currentExports = ExportMap.get(file, context)
@@ -171,17 +172,17 @@ const prepareImportsAndExports = (
       visitorKeyMap.set(file, visitorKeys)
       // dependencies === export * from
       const currentExportAll = new Set<string>()
-      dependencies.forEach(getDependency => {
+      for (const getDependency of dependencies) {
         const dependency = getDependency()
         if (dependency === null) {
-          return
+          continue
         }
 
         currentExportAll.add(dependency.path)
-      })
+      }
       exportAll.set(file, currentExportAll)
 
-      reexports.forEach((value, key) => {
+      for (const [key, value] of reexports.entries()) {
         if (key === DEFAULT) {
           exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
             whereUsed: new Set(),
@@ -191,42 +192,39 @@ const prepareImportsAndExports = (
         }
         const reexport = value.getImport()
         if (!reexport) {
-          return
+          continue
         }
         let localImport = imports.get(reexport.path)
-        let currentValue
-        if (value.local === DEFAULT) {
-          currentValue = AST_NODE_TYPES.ImportDefaultSpecifier
-        } else {
-          currentValue = value.local
-        }
-        if (typeof localImport !== 'undefined') {
-          localImport = new Set([...localImport, currentValue])
-        } else {
-          localImport = new Set([currentValue])
-        }
+        const currentValue =
+          value.local === DEFAULT
+            ? AST_NODE_TYPES.ImportDefaultSpecifier
+            : value.local
+        localImport =
+          localImport === undefined
+            ? new Set([currentValue])
+            : new Set([...localImport, currentValue])
         imports.set(reexport.path, localImport)
-      })
+      }
 
-      localImportList.forEach((value, key) => {
+      for (const [key, value] of localImportList.entries()) {
         if (isNodeModule(key)) {
-          return
+          continue
         }
         const localImport = imports.get(key) || new Set()
-        value.declarations.forEach(({ importedSpecifiers }) => {
-          importedSpecifiers!.forEach(specifier => {
+        for (const { importedSpecifiers } of value.declarations) {
+          for (const specifier of importedSpecifiers!) {
             localImport.add(specifier)
-          })
-        })
+          }
+        }
         imports.set(key, localImport)
-      })
+      }
       importList.set(file, imports)
 
       // build up export list only, if file is not ignored
       if (ignoredFiles.has(file)) {
-        return
+        continue
       }
-      namespace.forEach((_value, key) => {
+      for (const [key, _value] of namespace.entries()) {
         if (key === DEFAULT) {
           exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
             whereUsed: new Set(),
@@ -234,7 +232,7 @@ const prepareImportsAndExports = (
         } else {
           exports.set(key, { whereUsed: new Set() })
         }
-      })
+      }
     }
     exports.set(AST_NODE_TYPES.ExportAllDeclaration, {
       whereUsed: new Set(),
@@ -243,9 +241,9 @@ const prepareImportsAndExports = (
       whereUsed: new Set(),
     })
     exportList.set(file, exports)
-  })
-  exportAll.forEach((value, key) => {
-    value.forEach(val => {
+  }
+  for (const [key, value] of exportAll.entries()) {
+    for (const val of value) {
       const currentExports = exportList.get(val)
       if (currentExports) {
         const currentExport = currentExports.get(
@@ -253,8 +251,8 @@ const prepareImportsAndExports = (
         )
         currentExport!.whereUsed.add(key)
       }
-    })
-  })
+    }
+  }
 }
 
 /**
@@ -262,11 +260,11 @@ const prepareImportsAndExports = (
  * of the corresponding export
  */
 const determineUsage = () => {
-  importList.forEach((listValue, listKey) => {
-    listValue.forEach((value, key) => {
+  for (const [listKey, listValue] of importList.entries()) {
+    for (const [key, value] of listValue.entries()) {
       const exports = exportList.get(key)
-      if (typeof exports !== 'undefined') {
-        value.forEach(currentImport => {
+      if (exports !== undefined) {
+        for (const currentImport of value) {
           let specifier: string
           if (currentImport === AST_NODE_TYPES.ImportNamespaceSpecifier) {
             specifier = AST_NODE_TYPES.ImportNamespaceSpecifier
@@ -275,18 +273,18 @@ const determineUsage = () => {
           } else {
             specifier = currentImport
           }
-          if (typeof specifier !== 'undefined') {
+          if (specifier !== undefined) {
             const exportStatement = exports.get(specifier)
-            if (typeof exportStatement !== 'undefined') {
+            if (exportStatement !== undefined) {
               const { whereUsed } = exportStatement
               whereUsed.add(listKey)
               exports.set(specifier, { whereUsed })
             }
           }
-        })
+        }
       }
-    })
-  })
+    }
+  }
 }
 
 const getSrc = (src?: string[]) => {
@@ -311,7 +309,7 @@ const doPreparation = (
   const prepareKey = JSON.stringify({
     src: src.sort(),
     ignoreExports: (ignoreExports || []).sort(),
-    extensions: Array.from(getFileExtensions(context.settings)).sort(),
+    extensions: [...getFileExtensions(context.settings)].sort(),
   })
   if (prepareKey === lastPrepareKey) {
     return
@@ -337,11 +335,11 @@ const newDefaultImportExists = (specifiers: TSESTree.Node[]) =>
   specifiers.some(({ type }) => type === AST_NODE_TYPES.ImportDefaultSpecifier)
 
 const fileIsInPkg = (file: string) => {
-  const { path, pkg } = readPkgUp({ cwd: file })
-  const basePath = dirname(path!)
+  const { pkg, path: pkgPath } = readPkgUp({ cwd: file })
+  const basePath = path.dirname(pkgPath!)
 
   const checkPkgFieldString = (pkgField: string) => {
-    if (join(basePath, pkgField) === file) {
+    if (path.join(basePath, pkgField) === file) {
       return true
     }
   }
@@ -350,7 +348,7 @@ const fileIsInPkg = (file: string) => {
     pkgField: string | Partial<Record<string, string | false>>,
   ) => {
     const pkgFieldFiles = Object.values(pkgField).flatMap(value =>
-      typeof value === 'boolean' ? [] : join(basePath, value!),
+      typeof value === 'boolean' ? [] : path.join(basePath, value!),
     )
 
     if (pkgFieldFiles.includes(file)) {
@@ -378,22 +376,16 @@ const fileIsInPkg = (file: string) => {
     return false
   }
 
-  if (pkg.bin) {
-    if (checkPkgField(pkg.bin)) {
-      return true
-    }
+  if (pkg.bin && checkPkgField(pkg.bin)) {
+    return true
   }
 
-  if (pkg.browser) {
-    if (checkPkgField(pkg.browser)) {
-      return true
-    }
+  if (pkg.browser && checkPkgField(pkg.browser)) {
+    return true
   }
 
-  if (pkg.main) {
-    if (checkPkgFieldString(pkg.main)) {
-      return true
-    }
+  if (pkg.main && checkPkgFieldString(pkg.main)) {
+    return true
   }
 
   return false
@@ -506,11 +498,11 @@ export = createRule<Options[], MessageId>({
 
       exportCount.delete(AST_NODE_TYPES.ExportAllDeclaration)
       exportCount.delete(AST_NODE_TYPES.ImportNamespaceSpecifier)
-      if (exportCount.size < 1) {
+      if (exportCount.size === 0) {
         // node.body[0] === 'undefined' only happens, if everything is commented out in the file
         // being linted
         context.report({
-          node: node.body[0] ? node.body[0] : node,
+          node: node.body[0] ?? node,
           messageId: 'notFound',
         })
       }
@@ -556,22 +548,22 @@ export = createRule<Options[], MessageId>({
       // special case: export * from
       const exportAll = exports.get(AST_NODE_TYPES.ExportAllDeclaration)
       if (
-        typeof exportAll !== 'undefined' &&
-        exportedValue !== AST_NODE_TYPES.ImportDefaultSpecifier
+        exportAll !== undefined &&
+        exportedValue !== AST_NODE_TYPES.ImportDefaultSpecifier &&
+        exportAll.whereUsed.size > 0
       ) {
-        if (exportAll.whereUsed.size > 0) {
-          return
-        }
+        return
       }
 
       // special case: namespace import
       const namespaceImports = exports.get(
         AST_NODE_TYPES.ImportNamespaceSpecifier,
       )
-      if (typeof namespaceImports !== 'undefined') {
-        if (namespaceImports.whereUsed.size > 0) {
-          return
-        }
+      if (
+        namespaceImports !== undefined &&
+        namespaceImports.whereUsed.size > 0
+      ) {
+        return
       }
 
       // exportsList will always map any imported value of 'default' to 'ImportDefaultSpecifier'
@@ -587,8 +579,16 @@ export = createRule<Options[], MessageId>({
           ? DEFAULT
           : exportsKey
 
-      if (typeof exportStatement !== 'undefined') {
-        if (exportStatement.whereUsed.size < 1) {
+      if (exportStatement === undefined) {
+        context.report({
+          node,
+          messageId: 'unused',
+          data: {
+            value,
+          },
+        })
+      } else {
+        if (exportStatement.whereUsed.size === 0) {
           context.report({
             node,
             messageId: 'unused',
@@ -597,14 +597,6 @@ export = createRule<Options[], MessageId>({
             },
           })
         }
-      } else {
-        context.report({
-          node,
-          messageId: 'unused',
-          data: {
-            value,
-          },
-        })
       }
     }
 
@@ -626,13 +618,13 @@ export = createRule<Options[], MessageId>({
       const newExports = new Map<string, { whereUsed: Set<string> }>()
       const newExportIdentifiers = new Set<string>()
 
-      node.body.forEach(s => {
+      for (const s of node.body) {
         if (s.type === AST_NODE_TYPES.ExportDefaultDeclaration) {
           newExportIdentifiers.add(AST_NODE_TYPES.ImportDefaultSpecifier)
         }
         if (s.type === AST_NODE_TYPES.ExportNamedDeclaration) {
           if (s.specifiers.length > 0) {
-            s.specifiers.forEach(specifier => {
+            for (const specifier of s.specifiers) {
               if (specifier.exported) {
                 newExportIdentifiers.add(
                   specifier.exported.name ||
@@ -640,27 +632,27 @@ export = createRule<Options[], MessageId>({
                     specifier.exported.value,
                 )
               }
-            })
+            }
           }
           forEachDeclarationIdentifier(s.declaration!, name => {
             newExportIdentifiers.add(name)
           })
         }
-      })
+      }
 
       // old exports exist within list of new exports identifiers: add to map of new exports
-      exports.forEach((value, key) => {
+      for (const [key, value] of exports.entries()) {
         if (newExportIdentifiers.has(key)) {
           newExports.set(key, value)
         }
-      })
+      }
 
       // new export identifiers added: add to map of new exports
-      newExportIdentifiers.forEach(key => {
+      for (const key of newExportIdentifiers) {
         if (!exports.has(key)) {
           newExports.set(key, { whereUsed: new Set() })
         }
-      })
+      }
 
       // preserve information about namespace imports
       const exportAll = exports.get(AST_NODE_TYPES.ExportAllDeclaration)!
@@ -697,7 +689,7 @@ export = createRule<Options[], MessageId>({
 
       const oldImports = new Map()
       const newImports = new Map()
-      oldImportPaths.forEach((value, key) => {
+      for (const [key, value] of oldImportPaths.entries()) {
         if (value.has(AST_NODE_TYPES.ExportAllDeclaration)) {
           oldExportAll.add(key)
         }
@@ -707,15 +699,15 @@ export = createRule<Options[], MessageId>({
         if (value.has(AST_NODE_TYPES.ImportDefaultSpecifier)) {
           oldDefaultImports.add(key)
         }
-        value.forEach(val => {
+        for (const val of value) {
           if (
             val !== AST_NODE_TYPES.ImportNamespaceSpecifier &&
             val !== AST_NODE_TYPES.ImportDefaultSpecifier
           ) {
             oldImports.set(val, key)
           }
-        })
-      })
+        }
+      }
 
       function processDynamicImport(source: TSESTree.Node) {
         if (source.type !== 'Literal' || typeof source.value !== 'string') {
@@ -741,33 +733,34 @@ export = createRule<Options[], MessageId>({
         },
       })
 
-      node.body.forEach(astNode => {
+      for (const astNode of node.body) {
         let resolvedPath: string | null | undefined
 
         // support for export { value } from 'module'
-        if (astNode.type === AST_NODE_TYPES.ExportNamedDeclaration) {
-          if (astNode.source) {
-            resolvedPath = resolve(
-              astNode.source.raw.replace(/('|")/g, ''),
-              context,
-            )
-            astNode.specifiers.forEach(specifier => {
-              const name =
-                specifier.local.name ||
-                // @ts-expect-error - legacy parser type
-                specifier.local.value
-              if (name === DEFAULT) {
-                newDefaultImports.add(resolvedPath!)
-              } else {
-                newImports.set(name, resolvedPath)
-              }
-            })
+        if (
+          astNode.type === AST_NODE_TYPES.ExportNamedDeclaration &&
+          astNode.source
+        ) {
+          resolvedPath = resolve(
+            astNode.source.raw.replaceAll(/('|")/g, ''),
+            context,
+          )
+          for (const specifier of astNode.specifiers) {
+            const name =
+              specifier.local.name ||
+              // @ts-expect-error - legacy parser type
+              specifier.local.value
+            if (name === DEFAULT) {
+              newDefaultImports.add(resolvedPath!)
+            } else {
+              newImports.set(name, resolvedPath)
+            }
           }
         }
 
         if (astNode.type === AST_NODE_TYPES.ExportAllDeclaration) {
           resolvedPath = resolve(
-            astNode.source.raw.replace(/('|")/g, ''),
+            astNode.source.raw.replaceAll(/('|")/g, ''),
             context,
           )
           newExportAll.add(resolvedPath!)
@@ -775,15 +768,15 @@ export = createRule<Options[], MessageId>({
 
         if (astNode.type === AST_NODE_TYPES.ImportDeclaration) {
           resolvedPath = resolve(
-            astNode.source.raw.replace(/('|")/g, ''),
+            astNode.source.raw.replaceAll(/('|")/g, ''),
             context,
           )
           if (!resolvedPath) {
-            return
+            continue
           }
 
           if (isNodeModule(resolvedPath)) {
-            return
+            continue
           }
 
           if (newNamespaceImportExists(astNode.specifiers)) {
@@ -794,26 +787,24 @@ export = createRule<Options[], MessageId>({
             newDefaultImports.add(resolvedPath)
           }
 
-          astNode.specifiers
-            .filter(
-              specifier =>
-                specifier.type !== AST_NODE_TYPES.ImportDefaultSpecifier &&
-                specifier.type !== AST_NODE_TYPES.ImportNamespaceSpecifier,
-            )
-            .forEach(specifier => {
-              if ('imported' in specifier) {
-                newImports.set(
-                  specifier.imported.name ||
-                    // @ts-expect-error - legacy parser type
-                    specifier.imported.value,
-                  resolvedPath,
-                )
-              }
-            })
+          for (const specifier of astNode.specifiers.filter(
+            specifier =>
+              specifier.type !== AST_NODE_TYPES.ImportDefaultSpecifier &&
+              specifier.type !== AST_NODE_TYPES.ImportNamespaceSpecifier,
+          )) {
+            if ('imported' in specifier) {
+              newImports.set(
+                specifier.imported.name ||
+                  // @ts-expect-error - legacy parser type
+                  specifier.imported.value,
+                resolvedPath,
+              )
+            }
+          }
         }
-      })
+      }
 
-      newExportAll.forEach(value => {
+      for (const value of newExportAll) {
         if (!oldExportAll.has(value)) {
           const imports = oldImportPaths.get(value) ?? new Set()
           imports.add(AST_NODE_TYPES.ExportAllDeclaration)
@@ -821,46 +812,46 @@ export = createRule<Options[], MessageId>({
 
           let exports = exportList.get(value)
           let currentExport: { whereUsed: Set<string> } | undefined
-          if (typeof exports !== 'undefined') {
-            currentExport = exports.get(AST_NODE_TYPES.ExportAllDeclaration)
-          } else {
+          if (exports === undefined) {
             exports = new Map()
             exportList.set(value, exports)
+          } else {
+            currentExport = exports.get(AST_NODE_TYPES.ExportAllDeclaration)
           }
 
-          if (typeof currentExport !== 'undefined') {
-            currentExport.whereUsed.add(file)
-          } else {
+          if (currentExport === undefined) {
             const whereUsed = new Set<string>()
             whereUsed.add(file)
             exports.set(AST_NODE_TYPES.ExportAllDeclaration, {
               whereUsed,
             })
+          } else {
+            currentExport.whereUsed.add(file)
           }
         }
-      })
+      }
 
-      oldExportAll.forEach(value => {
+      for (const value of oldExportAll) {
         if (!newExportAll.has(value)) {
           const imports = oldImportPaths.get(value)!
           imports.delete(AST_NODE_TYPES.ExportAllDeclaration)
 
           const exports = exportList.get(value)
-          if (typeof exports !== 'undefined') {
+          if (exports !== undefined) {
             const currentExport = exports.get(
               AST_NODE_TYPES.ExportAllDeclaration,
             )
-            if (typeof currentExport !== 'undefined') {
+            if (currentExport !== undefined) {
               currentExport.whereUsed.delete(file)
             }
           }
         }
-      })
+      }
 
-      newDefaultImports.forEach(value => {
+      for (const value of newDefaultImports) {
         if (!oldDefaultImports.has(value)) {
           let imports = oldImportPaths.get(value)
-          if (typeof imports === 'undefined') {
+          if (imports === undefined) {
             imports = new Set()
           }
           imports.add(AST_NODE_TYPES.ImportDefaultSpecifier)
@@ -868,46 +859,46 @@ export = createRule<Options[], MessageId>({
 
           let exports = exportList.get(value)
           let currentExport
-          if (typeof exports !== 'undefined') {
-            currentExport = exports.get(AST_NODE_TYPES.ImportDefaultSpecifier)
-          } else {
+          if (exports === undefined) {
             exports = new Map()
             exportList.set(value, exports)
+          } else {
+            currentExport = exports.get(AST_NODE_TYPES.ImportDefaultSpecifier)
           }
 
-          if (typeof currentExport !== 'undefined') {
-            currentExport.whereUsed.add(file)
-          } else {
+          if (currentExport === undefined) {
             const whereUsed = new Set<string>()
             whereUsed.add(file)
             exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
               whereUsed,
             })
+          } else {
+            currentExport.whereUsed.add(file)
           }
         }
-      })
+      }
 
-      oldDefaultImports.forEach(value => {
+      for (const value of oldDefaultImports) {
         if (!newDefaultImports.has(value)) {
           const imports = oldImportPaths.get(value)!
           imports.delete(AST_NODE_TYPES.ImportDefaultSpecifier)
 
           const exports = exportList.get(value)
-          if (typeof exports !== 'undefined') {
+          if (exports !== undefined) {
             const currentExport = exports.get(
               AST_NODE_TYPES.ImportDefaultSpecifier,
             )
-            if (typeof currentExport !== 'undefined') {
+            if (currentExport !== undefined) {
               currentExport.whereUsed.delete(file)
             }
           }
         }
-      })
+      }
 
-      newNamespaceImports.forEach(value => {
+      for (const value of newNamespaceImports) {
         if (!oldNamespaceImports.has(value)) {
           let imports = oldImportPaths.get(value)
-          if (typeof imports === 'undefined') {
+          if (imports === undefined) {
             imports = new Set()
           }
           imports.add(AST_NODE_TYPES.ImportNamespaceSpecifier)
@@ -915,46 +906,46 @@ export = createRule<Options[], MessageId>({
 
           let exports = exportList.get(value)
           let currentExport
-          if (typeof exports !== 'undefined') {
-            currentExport = exports.get(AST_NODE_TYPES.ImportNamespaceSpecifier)
-          } else {
+          if (exports === undefined) {
             exports = new Map()
             exportList.set(value, exports)
+          } else {
+            currentExport = exports.get(AST_NODE_TYPES.ImportNamespaceSpecifier)
           }
 
-          if (typeof currentExport !== 'undefined') {
-            currentExport.whereUsed.add(file)
-          } else {
+          if (currentExport === undefined) {
             const whereUsed = new Set<string>()
             whereUsed.add(file)
             exports.set(AST_NODE_TYPES.ImportNamespaceSpecifier, {
               whereUsed,
             })
+          } else {
+            currentExport.whereUsed.add(file)
           }
         }
-      })
+      }
 
-      oldNamespaceImports.forEach(value => {
+      for (const value of oldNamespaceImports) {
         if (!newNamespaceImports.has(value)) {
           const imports = oldImportPaths.get(value)!
           imports.delete(AST_NODE_TYPES.ImportNamespaceSpecifier)
 
           const exports = exportList.get(value)
-          if (typeof exports !== 'undefined') {
+          if (exports !== undefined) {
             const currentExport = exports.get(
               AST_NODE_TYPES.ImportNamespaceSpecifier,
             )
-            if (typeof currentExport !== 'undefined') {
+            if (currentExport !== undefined) {
               currentExport.whereUsed.delete(file)
             }
           }
         }
-      })
+      }
 
-      newImports.forEach((value, key) => {
+      for (const [key, value] of newImports.entries()) {
         if (!oldImports.has(key)) {
           let imports = oldImportPaths.get(value)
-          if (typeof imports === 'undefined') {
+          if (imports === undefined) {
             imports = new Set()
           }
           imports.add(key)
@@ -962,37 +953,37 @@ export = createRule<Options[], MessageId>({
 
           let exports = exportList.get(value)
           let currentExport
-          if (typeof exports !== 'undefined') {
-            currentExport = exports.get(key)
-          } else {
+          if (exports === undefined) {
             exports = new Map()
             exportList.set(value, exports)
+          } else {
+            currentExport = exports.get(key)
           }
 
-          if (typeof currentExport !== 'undefined') {
-            currentExport.whereUsed.add(file)
-          } else {
+          if (currentExport === undefined) {
             const whereUsed = new Set<string>()
             whereUsed.add(file)
             exports.set(key, { whereUsed })
+          } else {
+            currentExport.whereUsed.add(file)
           }
         }
-      })
+      }
 
-      oldImports.forEach((value, key) => {
+      for (const [key, value] of oldImports.entries()) {
         if (!newImports.has(key)) {
           const imports = oldImportPaths.get(value)!
           imports.delete(key)
 
           const exports = exportList.get(value)
-          if (typeof exports !== 'undefined') {
+          if (exports !== undefined) {
             const currentExport = exports.get(key)
-            if (typeof currentExport !== 'undefined') {
+            if (currentExport !== undefined) {
               currentExport.whereUsed.delete(file)
             }
           }
         }
-      })
+      }
     }
 
     return {
@@ -1005,14 +996,14 @@ export = createRule<Options[], MessageId>({
         checkUsage(node, AST_NODE_TYPES.ImportDefaultSpecifier)
       },
       ExportNamedDeclaration(node) {
-        node.specifiers.forEach(specifier => {
+        for (const specifier of node.specifiers) {
           checkUsage(
             specifier,
             specifier.exported.name ||
               // @ts-expect-error - legacy parser type
               specifier.exported.value,
           )
-        })
+        }
         forEachDeclarationIdentifier(node.declaration, name => {
           checkUsage(node, name)
         })

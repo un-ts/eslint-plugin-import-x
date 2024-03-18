@@ -1,9 +1,14 @@
-import { extname } from 'path'
+import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 
-import type { ChildContext, FileExtension, RuleContext } from '../types'
+import type {
+  ChildContext,
+  FileExtension,
+  ParseError,
+  RuleContext,
+} from '../types'
 
 import { moduleRequire } from './module-require'
 
@@ -36,7 +41,7 @@ function makeParseReturn(
 }
 
 function stripUnicodeBOM(text: string) {
-  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
+  return text.codePointAt(0) === 0xfe_ff ? text.slice(1) : text
 }
 
 function transformHashbang(text: string) {
@@ -110,11 +115,12 @@ export function parse(
         ast,
         keysFromParser(parserOrPath, parser, parserRaw),
       )
-    } catch (e) {
-      console.warn()
+    } catch (error_) {
+      const error = error_ as ParseError
       console.warn(`Error while parsing ${parserOptions.filePath}`)
-      // @ts-expect-error e is almost certainly an Error here
-      console.warn(`Line ${e.lineNumber}, column ${e.column}: ${e.message}`)
+      console.warn(
+        `Line ${error.lineNumber}, column ${error.column}: ${error.message}`,
+      )
     }
     if (!ast || typeof ast !== 'object') {
       console.warn(
@@ -128,7 +134,7 @@ export function parse(
 
   if ('parse' in parser) {
     const ast = parser.parse(content, parserOptions)
-    return makeParseReturn(ast, keysFromParser(parserOrPath, parser, undefined))
+    return makeParseReturn(ast, keysFromParser(parserOrPath, parser))
   }
 
   throw new Error('Parser must expose a `parse` or `parseForESLint` method')
@@ -156,10 +162,10 @@ function getParser(path: string, context: ChildContext | RuleContext) {
   return null
 }
 
-function getParserPath(path: string, context: ChildContext | RuleContext) {
+function getParserPath(filepath: string, context: ChildContext | RuleContext) {
   const parsers = context.settings['import-x/parsers']
   if (parsers != null) {
-    const extension = extname(path) as FileExtension
+    const extension = path.extname(filepath) as FileExtension
     for (const parserPath in parsers) {
       if (parsers[parserPath].includes(extension)) {
         // use this alternate parser

@@ -30,8 +30,8 @@ export = createRule({
       description: 'Forbid empty named import blocks.',
     },
     fixable: 'code',
-    schema: [],
     hasSuggestions: true,
+    schema: [],
     messages: {
       emptyNamed: 'Unexpected empty named import block',
       unused: 'Remove unused import',
@@ -62,8 +62,8 @@ export = createRule({
 
         const pTokens = program.tokens || []
 
-        importsTokens.forEach(([node, tokens]) => {
-          tokens.forEach(token => {
+        for (const [node, tokens] of importsTokens) {
+          for (const token of tokens) {
             const idx = pTokens.indexOf(token)
             const nextToken = pTokens[idx + 1]
 
@@ -78,7 +78,15 @@ export = createRule({
 
               // If it has no other identifiers it's the only thing in the import, so we can either remove the import
               // completely or transform it in a side-effects only import
-              if (!hasOtherIdentifiers) {
+              if (hasOtherIdentifiers) {
+                context.report({
+                  node,
+                  messageId: 'emptyNamed',
+                  fix(fixer) {
+                    return fixer.removeRange(getEmptyBlockRange(pTokens, idx))
+                  },
+                })
+              } else {
                 context.report({
                   node,
                   messageId: 'emptyNamed',
@@ -124,18 +132,10 @@ export = createRule({
                     },
                   ],
                 })
-              } else {
-                context.report({
-                  node,
-                  messageId: 'emptyNamed',
-                  fix(fixer) {
-                    return fixer.removeRange(getEmptyBlockRange(pTokens, idx))
-                  },
-                })
               }
             }
-          })
-        })
+          }
+        }
       },
     }
   },

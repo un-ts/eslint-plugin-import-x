@@ -1,4 +1,5 @@
 {
   "node": "18",
+  "installCommand": "codesandbox:install",
   "sandboxes": []
 }

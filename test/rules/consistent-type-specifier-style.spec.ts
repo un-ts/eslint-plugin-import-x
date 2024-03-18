@@ -1,6 +1,6 @@
 import { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import { test, parsers } from '../utils'
+import { parsers, test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/consistent-type-specifier-style'
 

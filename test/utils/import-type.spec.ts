@@ -1,3 +1,5 @@
+import { isBuiltin } from 'node:module'
+
 import { FIXTURES_PATH, testContext, testFilePath } from '../utils'
 
 import {
@@ -5,7 +7,6 @@ import {
   isExternalModule,
   isScoped,
   isAbsolute,
-  isCoreModule,
 } from 'eslint-plugin-import-x/utils'
 
 describe('importType(name)', () => {
@@ -18,14 +19,12 @@ describe('importType(name)', () => {
   })
 
   it("should return 'builtin' for node.js modules", () => {
-    ;['fs', 'fs/promises', 'path']
-      .filter(x => isCoreModule(x))
-      .forEach(x => {
-        expect(importType(x, context)).toBe('builtin')
-        if (isCoreModule(`node:${x}`)) {
-          expect(importType(`node:${x}`, context)).toBe('builtin')
-        }
-      })
+    for (const x of ['fs', 'fs/promises', 'path'].filter(x => isBuiltin(x))) {
+      expect(importType(x, context)).toBe('builtin')
+      if (isBuiltin(`node:${x}`)) {
+        expect(importType(`node:${x}`, context)).toBe('builtin')
+      }
+    }
   })
 
   it("should return 'external' for non-builtin modules without a relative path", () => {
@@ -368,6 +367,6 @@ describe('isAbsolute', () => {
     expect(() => isAbsolute(true)).not.toThrow()
     expect(() => isAbsolute(false)).not.toThrow()
     expect(() => isAbsolute(0)).not.toThrow()
-    expect(() => isAbsolute(NaN)).not.toThrow()
+    expect(() => isAbsolute(Number.NaN)).not.toThrow()
   })
 })

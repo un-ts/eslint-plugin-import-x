@@ -3,7 +3,7 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "un-es/eslint-plugin-import-x"
+      "repo": "un-ts/eslint-plugin-import-x"
     }
   ],
   "commit": false,

@@ -33,7 +33,7 @@ const tsTypePrefix = 'type:'
  * ```
  */
 function isTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
-  const nodesArr = Array.from(nodes)
+  const nodesArr = [...nodes]
 
   const idents = nodesArr.flatMap(node =>
     'declaration' in node && node.declaration?.type === 'TSDeclareFunction'
@@ -69,7 +69,7 @@ function isTypescriptNamespaceMerging(nodes: Set<TSESTree.Node>) {
   const types = new Set(
     Array.from(nodes, node => `${node.parent!.type}` as const),
   )
-  const noNamespaceNodes = Array.from(nodes).filter(
+  const noNamespaceNodes = [...nodes].filter(
     node => node.parent!.type !== 'TSModuleDeclaration',
   )
 
@@ -235,7 +235,7 @@ export = createRule<[], MessageId>({
           return
         } // not sure if this is ever true
 
-        // `export * as X from 'path'` does not conflict
+        // `export * as X from path` does not conflict
         if (node.exported && node.exported.name) {
           return
         }
@@ -245,7 +245,7 @@ export = createRule<[], MessageId>({
           return
         }
 
-        if (remoteExports.errors.length) {
+        if (remoteExports.errors.length > 0) {
           remoteExports.reportErrors(context, node)
           return
         }
@@ -254,6 +254,7 @@ export = createRule<[], MessageId>({
 
         let any = false
 
+        // eslint-disable-next-line unicorn/no-array-for-each
         remoteExports.forEach((_, name) => {
           if (name !== 'default') {
             any = true // poor man's filter
