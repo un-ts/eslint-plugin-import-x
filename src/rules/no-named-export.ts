@@ -1,42 +1,45 @@
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
 
-module.exports = {
+export = createRule({
+  name: 'no-named-export',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Style guide',
       description: 'Forbid named exports.',
-      url: docsUrl('no-named-export'),
     },
     schema: [],
+    messages: {
+      noAllowed: 'Named exports are not allowed.',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     // ignore non-modules
     if (context.parserOptions.sourceType !== 'module') {
       return {}
     }
 
-    const message = 'Named exports are not allowed.'
-
     return {
       ExportAllDeclaration(node) {
-        context.report({ node, message })
+        context.report({ node, messageId: 'noAllowed' })
       },
 
       ExportNamedDeclaration(node) {
         if (node.specifiers.length === 0) {
-          return context.report({ node, message })
+          return context.report({ node, messageId: 'noAllowed' })
         }
 
         const someNamed = node.specifiers.some(
           specifier =>
-            (specifier.exported.name || specifier.exported.value) !== 'default',
+            (specifier.exported.name ||
+              ('value' in specifier.exported && specifier.exported.value)) !==
+            'default',
         )
         if (someNamed) {
-          context.report({ node, message })
+          context.report({ node, messageId: 'noAllowed' })
         }
       },
     }
   },
-}
+})

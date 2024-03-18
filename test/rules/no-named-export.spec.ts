@@ -1,11 +1,13 @@
-import { RuleTester } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-named-export'
+
 import { parsers, test, testVersion } from '../utils'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/no-named-export')
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-named-export', rule, {
-  valid: [].concat(
+  valid: [
     test({
       code: 'export default function bar() {};',
     }),
@@ -29,11 +31,11 @@ ruleTester.run('no-named-export', rule, {
     }),
 
     // es2022: Arbitrary module namespae identifier names
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'let foo; export { foo as "default" }',
       parserOptions: { ecmaVersion: 2022 },
     })),
-  ),
+  ],
   invalid: [
     test({
       code: `
@@ -43,11 +45,11 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -58,7 +60,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -70,11 +72,11 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -83,7 +85,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -95,7 +97,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -104,7 +106,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -113,7 +115,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -122,7 +124,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -131,7 +133,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -144,11 +146,11 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -157,7 +159,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportAllDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -166,7 +168,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -175,7 +177,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -185,7 +187,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -195,7 +197,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -205,7 +207,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
@@ -215,7 +217,7 @@ ruleTester.run('no-named-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: 'Named exports are not allowed.',
+          messageId: 'noAllowed',
         },
       ],
     }),
