@@ -1,9 +1,10 @@
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-deprecated'
+
 import { test, SYNTAX_CASES, parsers } from '../utils'
 
-import { RuleTester } from 'eslint'
-
-const ruleTester = new RuleTester()
-const rule = require('rules/no-deprecated')
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-deprecated', rule, {
   valid: [

@@ -46,6 +46,7 @@ import dynamicImportChunkname from './rules/dynamic-import-chunkname'
 import noImportModuleExports from './rules/no-import-module-exports'
 import noEmptyNamedBlocks from './rules/no-empty-named-blocks'
 import exportsLast from './rules/exports-last'
+import noDeprecated from './rules/no-deprecated'
 
 // configs
 import recommended from './config/recommended'
@@ -107,7 +108,7 @@ export const rules = {
   'exports-last': exportsLast,
 
   // metadata-based
-  'no-deprecated': require('./rules/no-deprecated'),
+  'no-deprecated': noDeprecated,
 
   // deprecated aliases to rules
   'imports-first': require('./rules/imports-first'),
