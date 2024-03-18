@@ -1,23 +1,25 @@
 /**
- * @fileOverview Report modules that could parse incorrectly as scripts.
- * @author Ben Mosher
+ * Report modules that could parse incorrectly as scripts.
  */
 
 import { isUnambiguousModule } from '../utils/unambiguous'
-import { docsUrl } from '../docs-url'
+import { createRule } from '../utils'
 
-module.exports = {
+export = createRule({
+  name: 'unambiguous',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Module systems',
       description:
         'Forbid potentially ambiguous parse goal (`script` vs. `module`).',
-      url: docsUrl('unambiguous'),
     },
     schema: [],
+    messages: {
+      module: 'This module could be parsed as a valid script.',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     // ignore non-modules
     if (context.parserOptions.sourceType !== 'module') {
@@ -29,10 +31,10 @@ module.exports = {
         if (!isUnambiguousModule(ast)) {
           context.report({
             node: ast,
-            message: 'This module could be parsed as a valid script.',
+            messageId: 'module',
           })
         }
       },
     }
   },
-}
+})

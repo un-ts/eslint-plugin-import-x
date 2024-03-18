@@ -1,8 +1,10 @@
-import { RuleTester } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/unambiguous'
+
 import { parsers } from '../utils'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/unambiguous')
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('unambiguous', rule, {
   valid: [
@@ -52,7 +54,11 @@ ruleTester.run('unambiguous', rule, {
       code: 'function x() {}',
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       output: 'function x() {}',
-      errors: ['This module could be parsed as a valid script.'],
+      errors: [
+        {
+          messageId: 'module',
+        },
+      ],
     },
   ],
 })

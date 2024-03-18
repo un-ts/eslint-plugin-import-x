@@ -39,6 +39,7 @@ import preferDefaultExport from './rules/prefer-default-export'
 import noDefaultExport from './rules/no-default-export'
 import noNamedExport from './rules/no-named-export'
 import noDynamicRequire from './rules/no-dynamic-require'
+import unambiguous from './rules/unambiguous'
 
 // configs
 import recommended from './config/recommended'
@@ -89,7 +90,7 @@ export const rules = {
   'no-default-export': noDefaultExport,
   'no-named-export': noNamedExport,
   'no-dynamic-require': noDynamicRequire,
-  unambiguous: require('./rules/unambiguous'),
+  unambiguous,
   'no-unassigned-import': require('./rules/no-unassigned-import'),
   'no-useless-path-segments': require('./rules/no-useless-path-segments'),
   'dynamic-import-chunkname': require('./rules/dynamic-import-chunkname'),
