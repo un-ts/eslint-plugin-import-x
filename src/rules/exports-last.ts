@@ -1,6 +1,8 @@
-import { docsUrl } from '../docs-url'
+import type { TSESTree } from '@typescript-eslint/utils'
 
-function isNonExportStatement({ type }) {
+import { createRule } from '../utils'
+
+function isNonExportStatement({ type }: TSESTree.Node) {
   return (
     type !== 'ExportDefaultDeclaration' &&
     type !== 'ExportNamedDeclaration' &&
@@ -8,17 +10,20 @@ function isNonExportStatement({ type }) {
   )
 }
 
-module.exports = {
+export = createRule({
+  name: 'exports-last',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Style guide',
       description: 'Ensure all exports appear after other statements.',
-      url: docsUrl('exports-last'),
     },
     schema: [],
+    messages: {
+      end: 'Export statements should appear at the end of the file',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     return {
       Program({ body }) {
@@ -30,8 +35,7 @@ module.exports = {
             if (!isNonExportStatement(node)) {
               context.report({
                 node,
-                message:
-                  'Export statements should appear at the end of the file',
+                messageId: 'end',
               })
             }
           })
@@ -39,4 +43,4 @@ module.exports = {
       },
     }
   },
-}
+})

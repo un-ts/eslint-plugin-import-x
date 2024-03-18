@@ -1,14 +1,16 @@
+import { TSESTree, TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/exports-last'
+
 import { test } from '../utils'
 
-import { RuleTester } from 'eslint'
-import rule from 'rules/exports-last'
+const ruleTester = new TSESLint.RuleTester()
 
-const ruleTester = new RuleTester()
-
-const error = type => ({
-  message: 'Export statements should appear at the end of the file',
-  type,
-})
+const error = (type: `${TSESTree.AST_NODE_TYPES}`) =>
+  ({
+    messageId: 'end',
+    type,
+  }) as const
 
 ruleTester.run('exports-last', rule, {
   valid: [
