@@ -1,7 +1,9 @@
+const eslintPkg = require('eslint/package.json')
+const semver = require('semver')
+
 /**
  * @type {import('eslint').Linter.Config}
  */
-// eslint-disable-next-line unicorn/prefer-module
 module.exports = {
   root: true,
   extends: [
@@ -10,9 +12,11 @@ module.exports = {
     'plugin:eslint-plugin/recommended',
     'plugin:import-x/recommended',
     'plugin:n/recommended',
-    'plugin:unicorn/recommended',
+    semver.satisfies(eslintPkg.version, '>=8')
+      ? 'plugin:unicorn/recommended'
+      : undefined,
     'plugin:prettier/recommended',
-  ],
+  ].filter(Boolean),
   env: {
     node: true,
     es6: true,

@@ -1533,7 +1533,11 @@ try {
 }
 
 ;(FlatRuleTester ? describe : describe.skip)('supports flat eslint', () => {
-  const flatRuleTester = new FlatRuleTester!()
+  if (typeof FlatRuleTester !== 'function') {
+    return
+  }
+
+  const flatRuleTester = new FlatRuleTester()
   flatRuleTester.run('no-unused-modules', rule, {
     valid: [
       {
