@@ -33,7 +33,7 @@ export function testFilePath(relativePath = 'foo.js') {
 }
 
 export function getNonDefaultParsers() {
-  return [parsers.TS, parsers.BABEL]
+  return [parsers.TS, parsers.BABEL] as const
 }
 
 const FILENAME = testFilePath()

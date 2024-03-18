@@ -1,9 +1,13 @@
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { TsResolverOptions } from 'eslint-import-resolver-typescript'
-import type { KebabCase, LiteralUnion } from 'type-fest'
 import type { ResolveOptions } from 'enhanced-resolve'
+import type { MinimatchOptions } from 'minimatch'
+import type { KebabCase, LiteralUnion } from 'type-fest'
 
+import type { ImportType as ImportType_ } from './core/import-type'
 import type { PluginName } from './utils'
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+
+export type ImportType = ImportType_ | 'object' | 'type'
 
 export interface NodeResolverOptions {
   extensions?: readonly string[]
@@ -101,3 +105,16 @@ export type ExportNamespaceSpecifier = CustomESTreeNode<
   'ExportNamespaceSpecifier',
   { exported: TSESTree.Identifier }
 >
+
+export interface PathGroup {
+  pattern: string
+  group: ImportType
+  patternOptions?: MinimatchOptions
+  position?: 'before' | 'after'
+}
+
+export interface AlphabetizeOptions {
+  caseInsensitive: boolean
+  order: 'ignore' | 'asc' | 'desc'
+  orderImportKind: 'ignore' | 'asc' | 'desc'
+}

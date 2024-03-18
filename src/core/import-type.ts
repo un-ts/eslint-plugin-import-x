@@ -177,3 +177,5 @@ function typeTest(name: string, context: RuleContext, path?: string | null) {
 export function importType(name: string, context: RuleContext) {
   return typeTest(name, context, resolve(name, context))
 }
+
+export type ImportType = ReturnType<typeof importType>

@@ -1,26 +1,32 @@
-import { test, parsers, getNonDefaultParsers, testFilePath } from '../utils'
-
-import { RuleTester } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
-import { resolve } from 'path'
-import babelPresetFlow from '@babel/preset-flow'
 
-const ruleTester = new RuleTester()
-const flowRuleTester = new RuleTester({
-  parser: resolve(__dirname, '../../node_modules/@babel/eslint-parser'),
+import rule from '../../src/rules/order'
+
+import {
+  test,
+  parsers,
+  getNonDefaultParsers,
+  testFilePath,
+  ValidTestCase,
+} from '../utils'
+
+const ruleTester = new TSESLint.RuleTester()
+
+const flowRuleTester = new TSESLint.RuleTester({
+  parser: parsers.BABEL,
   parserOptions: {
     requireConfigFile: false,
     babelOptions: {
       configFile: false,
       babelrc: false,
-      presets: [babelPresetFlow],
+      presets: ['@babel/flow'],
     },
   },
 })
-const rule = require('rules/order')
 
-function withoutAutofixOutput(test) {
+function withoutAutofixOutput<T extends ValidTestCase>(test: T) {
   return { ...test, output: test.code }
 }
 
@@ -1431,32 +1437,26 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Multiple errors
-    ...(semver.satisfies(eslintPkg.version, '< 3.0.0')
-      ? []
-      : [
-          test({
-            code: `
-          var sibling = require('./sibling');
-          var async = require('async');
-          var fs = require('fs');
-        `,
-            output: `
-          var async = require('async');
-          var sibling = require('./sibling');
-          var fs = require('fs');
-        `,
-            errors: [
-              {
-                message:
-                  '`async` import should occur before import of `./sibling`',
-              },
-              {
-                message:
-                  '`fs` import should occur before import of `./sibling`',
-              },
-            ],
-          }),
-        ]),
+    test({
+      code: `
+    var sibling = require('./sibling');
+    var async = require('async');
+    var fs = require('fs');
+  `,
+      output: `
+    var async = require('async');
+    var sibling = require('./sibling');
+    var fs = require('fs');
+  `,
+      errors: [
+        {
+          message: '`async` import should occur before import of `./sibling`',
+        },
+        {
+          message: '`fs` import should occur before import of `./sibling`',
+        },
+      ],
+    }),
     // Uses 'after' wording if it creates less errors
     test({
       code: `
@@ -3010,35 +3010,29 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Alphabetize with require
-    ...(semver.satisfies(eslintPkg.version, '< 3.0.0')
-      ? []
-      : [
-          test({
-            code: `
+    test({
+      code: `
           const { cello } = require('./cello');
           import { int } from './int';
           const blah = require('./blah');
           import { hello } from './hello';
         `,
-            output: `
+      output: `
           import { int } from './int';
           const { cello } = require('./cello');
           const blah = require('./blah');
           import { hello } from './hello';
         `,
-            errors: [
-              {
-                message:
-                  '`./int` import should occur before import of `./cello`',
-              },
-              {
-                message:
-                  '`./hello` import should occur before import of `./cello`',
-              },
-            ],
-          }),
-        ]),
-  ].filter(Boolean),
+      errors: [
+        {
+          message: '`./int` import should occur before import of `./cello`',
+        },
+        {
+          message: '`./hello` import should occur before import of `./cello`',
+        },
+      ],
+    }),
+  ],
 })
 
 describe('TypeScript', () => {
@@ -3054,7 +3048,7 @@ describe('TypeScript', () => {
       }
 
       ruleTester.run('order', rule, {
-        valid: [].concat(
+        valid: [
           // #1667: typescript type import support
 
           // Option alphabetize: {order: 'asc'}
@@ -3296,8 +3290,8 @@ describe('TypeScript', () => {
               },
             ],
           }),
-        ),
-        invalid: [].concat(
+        ],
+        invalid: [
           // Option alphabetize: {order: 'asc'}
           test({
             code: `
@@ -3593,7 +3587,7 @@ describe('TypeScript', () => {
               // { message: '`node:fs/promises` import should occur before import of `express`' },
             ],
           }),
-        ),
+        ],
       })
     })
 })

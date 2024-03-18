@@ -33,6 +33,7 @@ import noExtraneousDependencies from './rules/no-extraneous-dependencies'
 import noAbsolutePath from './rules/no-absolute-path'
 import noNodejsModules from './rules/no-nodejs-modules'
 import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax'
+import order from './rules/order'
 
 // configs
 import recommended from './config/recommended'
@@ -77,7 +78,7 @@ export const rules = {
   'no-absolute-path': noAbsolutePath,
   'no-nodejs-modules': noNodejsModules,
   'no-webpack-loader-syntax': noWebpackLoaderSyntax,
-  order: require('./rules/order'),
+  order,
   'newline-after-import': require('./rules/newline-after-import'),
   'prefer-default-export': require('./rules/prefer-default-export'),
   'no-default-export': require('./rules/no-default-export'),
