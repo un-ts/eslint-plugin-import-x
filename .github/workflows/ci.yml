@@ -10,8 +10,11 @@ jobs:
     strategy:
       matrix:
         os:
+          - macos-latest
           - ubuntu-latest
+          - windows-latest
         node:
+          - 16
           - 18
           - 20
     runs-on: ${{ matrix.os }}
@@ -32,7 +35,7 @@ jobs:
           SKIP_YARN_COREPACK_CHECK: 1
 
       - name: Install Dependencies
-        run: yarn --immutable
+        run: yarn --ignore-engines
         env:
           SKIP_YARN_COREPACK_CHECK: 1
 
@@ -41,6 +44,7 @@ jobs:
           yarn build
           yarn lint
           yarn test
+          yarn test-compiled
         env:
           EFF_NO_LINK_RULES: true
           PARSER_NO_WATCH: true
