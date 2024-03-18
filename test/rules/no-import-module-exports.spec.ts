@@ -1,20 +1,22 @@
 import path from 'path'
-import { RuleTester } from 'eslint'
 
-import { eslintVersionSatisfies, test, testVersion } from '../utils'
+import { TSESLint } from '@typescript-eslint/utils'
 
-const ruleTester = new RuleTester({
+import rule from '../../src/rules/no-import-module-exports'
+
+import { test } from '../utils'
+
+const ruleTester = new TSESLint.RuleTester({
   parserOptions: { ecmaVersion: 6, sourceType: 'module' },
 })
-const rule = require('rules/no-import-module-exports')
 
 const error = {
-  message: `Cannot use import declarations in modules that export using CommonJS (module.exports = 'foo' or exports.bar = 'hi')`,
+  messageId: 'notAllowed',
   type: 'ImportDeclaration',
-}
+} as const
 
 ruleTester.run('no-import-module-exports', rule, {
-  valid: [].concat(
+  valid: [
     test({
       code: `
         const thing = require('thing')
@@ -39,14 +41,12 @@ ruleTester.run('no-import-module-exports', rule, {
         exports.foo = bar
       `,
     }),
-    eslintVersionSatisfies('>= 4')
-      ? test({
-          code: `
+    test({
+      code: `
         import { module } from 'qunit'
         module.skip('A test', function () {})
       `,
-        })
-      : [],
+    }),
     test({
       code: `
         import foo from 'path';
@@ -77,7 +77,7 @@ ruleTester.run('no-import-module-exports', rule, {
         'test/fixtures/missing-entrypoint/cli.js',
       ),
     }),
-    testVersion('>= 6', () => ({
+    test({
       code: `
         import fs from 'fs/promises';
 
@@ -126,8 +126,8 @@ ruleTester.run('no-import-module-exports', rule, {
       parserOptions: {
         ecmaVersion: 2020,
       },
-    })) || [],
-  ),
+    }),
+  ],
   invalid: [
     test({
       code: `
@@ -163,10 +163,7 @@ ruleTester.run('no-import-module-exports', rule, {
         import foo from 'path';
         module.exports = foo;
       `,
-      filename: path.join(
-        process.cwd(),
-        'test/fixtures/some/other/entry-point.js',
-      ),
+      filename: path.resolve('test/fixtures/some/other/entry-point.js'),
       options: [{ exceptions: ['**/*/other/file.js'] }],
       errors: [error],
     }),

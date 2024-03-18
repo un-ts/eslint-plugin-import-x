@@ -11,8 +11,6 @@ import {
   testVersion,
   parsers,
   ValidTestCase,
-  InvalidTestCaseError,
-  InvalidTestCase,
 } from '../utils'
 
 const ruleTester = new TSESLint.RuleTester()
@@ -20,12 +18,7 @@ const ruleTester = new TSESLint.RuleTester()
 function runResolverTests(resolver: 'node' | 'webpack') {
   // redefine 'test' to set a resolver
   // thus 'rest'. needed something 4-chars-long for formatting simplicity
-  function rest<T extends ValidTestCase>(
-    specs: T,
-  ): T extends { errors: InvalidTestCaseError[] }
-    ? InvalidTestCase
-    : ValidTestCase {
-    // @ts-expect-error -- simplify testing
+  function rest<T extends ValidTestCase>(specs: T) {
     return test({
       ...specs,
       settings: {

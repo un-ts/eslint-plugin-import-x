@@ -73,7 +73,7 @@ export function test<
   },
 >(
   t: T,
-): T extends { errors?: InvalidTestCaseError[] }
+): T extends { errors: InvalidTestCaseError[] }
   ? InvalidTestCase
   : ValidTestCase {
   if (arguments.length !== 1) {
