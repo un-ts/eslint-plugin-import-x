@@ -1,9 +1,10 @@
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-default-export'
+
 import { parsers, test, testVersion } from '../utils'
 
-import { RuleTester } from 'eslint'
-
-const ruleTester = new RuleTester()
-const rule = require('rules/no-default-export')
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-default-export', rule, {
   valid: [
@@ -85,8 +86,8 @@ ruleTester.run('no-default-export', rule, {
       parser: parsers.BABEL,
     }),
   ],
-  invalid: [].concat(
-    testVersion('> 2', () => ({
+  invalid: [
+    test({
       code: 'export default function bar() {};',
       errors: [
         {
@@ -96,8 +97,8 @@ ruleTester.run('no-default-export', rule, {
           column: 8,
         },
       ],
-    })),
-    testVersion('> 2', () => ({
+    }),
+    test({
       code: `
         export const foo = 'foo';
         export default bar;`,
@@ -109,8 +110,8 @@ ruleTester.run('no-default-export', rule, {
           column: 16,
         },
       ],
-    })),
-    testVersion('> 2', () => ({
+    }),
+    test({
       code: 'export default class Bar {};',
       errors: [
         {
@@ -120,8 +121,8 @@ ruleTester.run('no-default-export', rule, {
           column: 8,
         },
       ],
-    })),
-    testVersion('> 2', () => ({
+    }),
+    test({
       code: 'export default function() {};',
       errors: [
         {
@@ -131,8 +132,8 @@ ruleTester.run('no-default-export', rule, {
           column: 8,
         },
       ],
-    })),
-    testVersion('> 2', () => ({
+    }),
+    test({
       code: 'export default class {};',
       errors: [
         {
@@ -142,7 +143,7 @@ ruleTester.run('no-default-export', rule, {
           column: 8,
         },
       ],
-    })),
+    }),
     test({
       code: 'let foo; export { foo as default }',
       errors: [
@@ -164,7 +165,7 @@ ruleTester.run('no-default-export', rule, {
       ],
     }),
     // es2022: Arbitrary module namespae identifier names
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'let foo; export { foo as "default" }',
       errors: [
         {
@@ -175,5 +176,5 @@ ruleTester.run('no-default-export', rule, {
       ],
       parserOptions: { ecmaVersion: 2022 },
     })),
-  ),
+  ],
 })
