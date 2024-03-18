@@ -1,6 +1,7 @@
 {
   "extends": "@1stg/tsconfig/node",
   "compilerOptions": {
+    "lib": ["ES2022"],
     "paths": {
       "eslint-plugin-import-x": ["./src"],
       "eslint-plugin-import-x/package.json": ["./package.json"],

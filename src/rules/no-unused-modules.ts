@@ -6,7 +6,6 @@
 import path from 'node:path'
 
 import { TSESTree } from '@typescript-eslint/utils'
-import { FileEnumerator } from 'eslint/use-at-your-own-risk'
 
 import type { FileExtension, RuleContext } from '../types'
 import {
@@ -20,11 +19,20 @@ import {
 } from '../utils'
 
 function listFilesToProcess(src: string[], extensions: FileExtension[]) {
-  const e = new FileEnumerator({
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  let FileEnumerator: typeof import('eslint/use-at-your-own-risk').FileEnumerator
+
+  try {
+    ;({ FileEnumerator } = require('eslint/use-at-your-own-risk'))
+  } catch {
+    ;({ FileEnumerator } = require('eslint/lib/cli-engine/file-enumerator'))
+  }
+
+  const enumerator = new FileEnumerator({
     extensions,
   })
 
-  return Array.from(e.iterateFiles(src), ({ filePath, ignored }) => ({
+  return Array.from(enumerator.iterateFiles(src), ({ filePath, ignored }) => ({
     ignored,
     filename: filePath,
   }))
