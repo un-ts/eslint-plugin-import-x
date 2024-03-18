@@ -1,14 +1,16 @@
+import path from 'path'
+
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-unassigned-import'
+
 import { test } from '../utils'
-import * as path from 'path'
 
-import { RuleTester } from 'eslint'
-
-const ruleTester = new RuleTester()
-const rule = require('rules/no-unassigned-import')
+const ruleTester = new TSESLint.RuleTester()
 
 const error = {
-  message: 'Imported module should be assigned',
-}
+  messageId: 'unassigned',
+} as const
 
 ruleTester.run('no-unassigned-import', rule, {
   valid: [
@@ -101,7 +103,7 @@ ruleTester.run('no-unassigned-import', rule, {
     test({
       code: 'import "./styles/app.css"',
       options: [{ allow: ['styles/*.css'] }],
-      filename: path.join(process.cwd(), 'src/app.js'),
+      filename: path.resolve('src/app.js'),
       errors: [error],
     }),
   ],
