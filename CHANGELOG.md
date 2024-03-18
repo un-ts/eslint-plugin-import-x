@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 0.3.1
+
+### Patch Changes
+
+- [#51](https://github.com/un-es/eslint-plugin-import-x/pull/51) [`f4ca4b5`](https://github.com/un-es/eslint-plugin-import-x/commit/f4ca4b503389ef6aa35bee50452042eee13cf66f) Thanks [@JounQin](https://github.com/JounQin)! - refactor: migrate all remaining rules
+
+- [#48](https://github.com/un-es/eslint-plugin-import-x/pull/48) [`3d7a551`](https://github.com/un-es/eslint-plugin-import-x/commit/3d7a551de617188079bf99c9478158adace02fac) Thanks [@JounQin](https://github.com/JounQin)! - refactor: migrate more rules
+
+- [#50](https://github.com/un-es/eslint-plugin-import-x/pull/50) [`de896f4`](https://github.com/un-es/eslint-plugin-import-x/commit/de896f46b1e3d3bcc51015d2e0269e6ae80dc87d) Thanks [@JounQin](https://github.com/JounQin)! - refactor: migrate several rules
+
 ## 0.3.0
 
 ### Minor Changes
