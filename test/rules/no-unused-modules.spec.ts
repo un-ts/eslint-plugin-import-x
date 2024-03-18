@@ -1,8 +1,6 @@
 import fs from 'node:fs'
 
 import { TSESLint } from '@typescript-eslint/utils'
-// @ts-expect-error - no types yet
-import { FlatRuleTester } from 'eslint/use-at-your-own-risk'
 
 import { test, testVersion, testFilePath, parsers } from '../utils'
 
@@ -1525,8 +1523,17 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
     invalid: [],
   })
 })
-describe('supports flat eslint', () => {
-  const flatRuleTester = new FlatRuleTester() as TSESLint.RuleTester
+
+let FlatRuleTester: typeof TSESLint.RuleTester | undefined
+
+try {
+  ;({ FlatRuleTester } = require('eslint/use-at-your-own-risk'))
+} catch {
+  //
+}
+
+;(FlatRuleTester ? describe : describe.skip)('supports flat eslint', () => {
+  const flatRuleTester = new FlatRuleTester!()
   flatRuleTester.run('no-unused-modules', rule, {
     valid: [
       {
