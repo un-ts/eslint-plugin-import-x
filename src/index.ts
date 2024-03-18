@@ -47,6 +47,7 @@ import noImportModuleExports from './rules/no-import-module-exports'
 import noEmptyNamedBlocks from './rules/no-empty-named-blocks'
 import exportsLast from './rules/exports-last'
 import noDeprecated from './rules/no-deprecated'
+import importsFirst from './rules/imports-first'
 
 // configs
 import recommended from './config/recommended'
@@ -111,7 +112,7 @@ export const rules = {
   'no-deprecated': noDeprecated,
 
   // deprecated aliases to rules
-  'imports-first': require('./rules/imports-first'),
+  'imports-first': importsFirst,
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
 export const configs = {
