@@ -1,14 +1,15 @@
-import { test, parsers, testVersion } from '../utils'
 import fs from 'fs'
-import path from 'path'
 
-import { RuleTester } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/first')
+import rule from '../../src/rules/first'
+
+import { test, parsers, testFilePath } from '../utils'
+
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('first', rule, {
-  valid: [].concat(
+  valid: [
     test({
       code: "import { x } from './foo'; import { y } from './bar';\
             export { x, y }",
@@ -23,14 +24,12 @@ ruleTester.run('first', rule, {
       code: "'use directive';\
             import { x } from 'foo';",
     }),
-    testVersion('>= 7', () => ({
+    test({
       // issue #2210
-      code: String(
-        fs.readFileSync(path.join(__dirname, '../fixtures/component.html')),
-      ),
+      code: fs.readFileSync(testFilePath('component.html'), 'utf8'),
       parser: require.resolve('@angular-eslint/template-parser'),
-    })),
-  ),
+    }),
+  ],
   invalid: [
     test({
       code: "import { x } from './foo';\
