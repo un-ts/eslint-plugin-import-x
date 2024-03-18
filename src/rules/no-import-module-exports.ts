@@ -4,8 +4,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
 import type { RuleContext } from '../types'
-import { pkgUp } from '../utils/pkg-up'
-import { createRule } from '../utils'
+import { createRule, pkgUp } from '../utils'
 
 function getEntryPoint(context: RuleContext) {
   const pkgPath = pkgUp({

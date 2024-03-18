@@ -1,8 +1,8 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/max-dependencies'
-
 import { test, parsers } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/max-dependencies'
 
 const ruleTester = new TSESLint.RuleTester()
 

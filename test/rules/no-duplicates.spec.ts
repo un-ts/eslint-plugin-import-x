@@ -8,9 +8,9 @@ import {
   tsVersionSatisfies,
   typescriptEslintParserSatisfies,
 } from '../utils'
-import jsxConfig from '../../src/config/react'
 
-import rule from '../../src/rules/no-duplicates'
+import jsxConfig from 'eslint-plugin-import-x/config/react'
+import rule from 'eslint-plugin-import-x/rules/no-duplicates'
 
 const ruleTester = new TSESLint.RuleTester()
 
@@ -77,7 +77,7 @@ ruleTester.run('no-duplicates', rule, {
       output: "import { x , y } from './bar'; ",
       settings: {
         'import-x/resolve': {
-          paths: [path.join(process.cwd(), 'test', 'fixtures')],
+          paths: [path.resolve('test/fixtures')],
         },
       },
       errors: 2, // path ends up hardcoded

@@ -1,12 +1,10 @@
 /**
  * Forbids a module from importing itself
  */
+import type { TSESTree } from '@typescript-eslint/utils'
 
-import { resolve } from '../utils/resolve'
-import { moduleVisitor } from '../utils/module-visitor'
-import { createRule } from '../utils'
-import { RuleContext } from '../types'
-import { TSESTree } from '@typescript-eslint/utils'
+import type { RuleContext } from '../types'
+import { createRule, moduleVisitor, resolve } from '../utils'
 
 type MessageId = 'self'
 

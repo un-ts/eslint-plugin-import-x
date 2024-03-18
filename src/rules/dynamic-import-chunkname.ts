@@ -1,7 +1,8 @@
 import vm from 'vm'
 
+import type { TSESTree } from '@typescript-eslint/utils'
+
 import { createRule } from '../utils'
-import { TSESTree } from '@typescript-eslint/utils'
 
 type Options = {
   allowEmpty?: boolean

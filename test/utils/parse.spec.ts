@@ -1,11 +1,16 @@
 import fs from 'fs'
-import { parse } from '../../src/utils/parse'
 
 import { testFilePath } from '../utils'
-import { ChildContext, PluginSettings, RuleContext } from '../../src/types'
 
 import eslintParser from './eslint-parser'
 import parseStubParser from './parse-stub-parser'
+
+import type {
+  ChildContext,
+  PluginSettings,
+  RuleContext,
+} from 'eslint-plugin-import-x/types'
+import { parse } from 'eslint-plugin-import-x/utils'
 
 describe('parse(content, { settings, ecmaFeatures })', () => {
   const filepath = testFilePath('jsx.js')

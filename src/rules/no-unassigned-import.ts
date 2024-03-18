@@ -1,8 +1,8 @@
 import path from 'path'
+
 import { minimatch } from 'minimatch'
 
-import { isStaticRequire } from '../core/static-require'
-import { createRule } from '../utils'
+import { isStaticRequire, createRule } from '../utils'
 
 function testIsAllow(
   globs: string[] | undefined,
@@ -25,8 +25,7 @@ function testIsAllow(
   return (
     globs.find(
       glob =>
-        minimatch(filePath, glob) ||
-        minimatch(filePath, path.join(process.cwd(), glob)),
+        minimatch(filePath, glob) || minimatch(filePath, path.resolve(glob)),
     ) !== undefined
   )
 }

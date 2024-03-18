@@ -2,7 +2,8 @@
  * Rule to disallow anonymous default exports.
  */
 
-import { TSESTree } from '@typescript-eslint/utils'
+import type { TSESTree } from '@typescript-eslint/utils'
+
 import { createRule } from '../utils'
 
 const { hasOwnProperty } = Object.prototype

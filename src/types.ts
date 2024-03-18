@@ -1,21 +1,20 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import type { TsResolverOptions } from 'eslint-import-resolver-typescript'
 import type { ResolveOptions } from 'enhanced-resolve'
+import type { TsResolverOptions } from 'eslint-import-resolver-typescript'
 import type { MinimatchOptions } from 'minimatch'
 import type { KebabCase, LiteralUnion } from 'type-fest'
 
-import type { ImportType as ImportType_ } from './core/import-type'
-import type { PluginName } from './utils'
+import type { ImportType as ImportType_, PluginName } from './utils'
 
 export type ImportType = ImportType_ | 'object' | 'type'
 
-export interface NodeResolverOptions {
+export type NodeResolverOptions = {
   extensions?: readonly string[]
   moduleDirectory?: string[]
   paths?: string[]
 }
 
-export interface WebpackResolverOptions {
+export type WebpackResolverOptions = {
   config?: string | { resolve: Omit<ResolveOptions, 'fileSystem'> }
   'config-index'?: number
   env?: Record<string, unknown>
@@ -37,7 +36,7 @@ export type ImportResolver =
       [resolve: string]: unknown
     }
 
-export interface ImportSettings {
+export type ImportSettings = {
   cache?: {
     lifetime?: number | '∞' | 'Infinity'
   }
@@ -60,24 +59,24 @@ export type WithPluginName<T extends string | object> = T extends string
 
 export type PluginSettings = WithPluginName<ImportSettings>
 
-export interface PluginConfig extends TSESLint.Linter.Config {
+export type PluginConfig = {
   plugins?: [PluginName]
   settings?: PluginSettings
   rules?: Record<`${PluginName}/${string}`, TSESLint.Linter.RuleEntry>
-}
+} & TSESLint.Linter.Config
 
-export interface RuleContext<
+export type RuleContext<
   TMessageIds extends string = string,
   TOptions extends readonly unknown[] = readonly unknown[],
-> extends Omit<TSESLint.RuleContext<TMessageIds, TOptions>, 'settings'> {
+> = {
   languageOptions?: {
     parser?: TSESLint.Linter.ParserModule
     parserOptions?: TSESLint.ParserOptions
   }
   settings: PluginSettings
-}
+} & Omit<TSESLint.RuleContext<TMessageIds, TOptions>, 'settings'>
 
-export interface ChildContext {
+export type ChildContext = {
   cacheKey: string
   settings: PluginSettings
   parserPath?: string | null
@@ -86,10 +85,10 @@ export interface ChildContext {
   filename?: string
 }
 
-export interface ParseError extends Error {
+export type ParseError = {
   lineNumber: number
   column: number
-}
+} & Error
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type CustomESTreeNode<Type extends string, T extends object = {}> = Omit<
@@ -106,14 +105,14 @@ export type ExportNamespaceSpecifier = CustomESTreeNode<
   { exported: TSESTree.Identifier }
 >
 
-export interface PathGroup {
+export type PathGroup = {
   pattern: string
   group: ImportType
   patternOptions?: MinimatchOptions
   position?: 'before' | 'after'
 }
 
-export interface AlphabetizeOptions {
+export type AlphabetizeOptions = {
   caseInsensitive: boolean
   order: 'ignore' | 'asc' | 'desc'
   orderImportKind: 'ignore' | 'asc' | 'desc'

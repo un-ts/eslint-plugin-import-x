@@ -1,4 +1,4 @@
-import config from '../../src/config/typescript'
+import config from 'eslint-plugin-import-x/config/typescript'
 
 describe('config typescript', () => {
   // https://github.com/import-js/eslint-plugin-import/issues/1525

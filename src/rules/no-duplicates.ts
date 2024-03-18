@@ -2,9 +2,8 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import semver from 'semver'
 import type { PackageJson } from 'type-fest'
 
-import { createRule } from '../utils'
-import { resolve } from '../utils/resolve'
 import type { RuleContext } from '../types'
+import { createRule, resolve } from '../utils'
 
 let typescriptPkg: PackageJson | undefined
 

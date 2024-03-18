@@ -1,8 +1,9 @@
 import { dirname } from 'path'
 
-import { pkgUp } from '../utils/pkg-up'
-import { readPkgUp } from '../utils/read-pkg-ip'
-import { RuleContext } from '../types'
+import type { RuleContext } from '../types'
+
+import { pkgUp } from './pkg-up'
+import { readPkgUp } from './read-pkg-up'
 
 export function getContextPackagePath(context: RuleContext) {
   return getFilePackagePath(
@@ -13,8 +14,7 @@ export function getContextPackagePath(context: RuleContext) {
 }
 
 export function getFilePackagePath(filePath: string) {
-  const fp = pkgUp({ cwd: filePath })!
-  return dirname(fp)
+  return dirname(pkgUp({ cwd: filePath })!)
 }
 
 export function getFilePackageName(filePath: string): string | null {

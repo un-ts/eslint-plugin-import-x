@@ -1,7 +1,5 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/namespace'
-
 import {
   test,
   SYNTAX_CASES,
@@ -9,6 +7,8 @@ import {
   testFilePath,
   parsers,
 } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/namespace'
 
 const ruleTester = new TSESLint.RuleTester({
   parser: require.resolve('espree'),

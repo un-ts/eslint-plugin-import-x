@@ -1,8 +1,9 @@
-import { TSESTree, TSESLint } from '@typescript-eslint/utils'
-
-import rule from '../../src/rules/exports-last'
+import { TSESLint } from '@typescript-eslint/utils'
+import type { TSESTree } from '@typescript-eslint/utils'
 
 import { test } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/exports-last'
 
 const ruleTester = new TSESLint.RuleTester()
 

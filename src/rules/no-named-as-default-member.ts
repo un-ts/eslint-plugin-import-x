@@ -1,10 +1,10 @@
 /**
  * Rule to warn about potentially confused use of name exports
  */
-import { TSESTree } from '@typescript-eslint/utils'
-import { ExportMap } from '../export-map'
+import type { TSESTree } from '@typescript-eslint/utils'
+
 import { importDeclaration } from '../import-declaration'
-import { createRule } from '../utils'
+import { ExportMap, createRule } from '../utils'
 
 type MessageId = 'member'
 

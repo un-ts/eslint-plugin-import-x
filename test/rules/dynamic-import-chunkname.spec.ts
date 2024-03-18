@@ -1,8 +1,8 @@
 import { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/dynamic-import-chunkname'
-
 import { SYNTAX_CASES, parsers } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/dynamic-import-chunkname'
 
 const ruleTester = new TSESLint.RuleTester()
 

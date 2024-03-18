@@ -1,8 +1,8 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-named-default'
-
 import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-named-default'
 
 const ruleTester = new TSESLint.RuleTester()
 

@@ -2,9 +2,9 @@ import { normalize } from 'path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-relative-packages'
-
 import { test, testFilePath } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-relative-packages'
 
 const ruleTester = new TSESLint.RuleTester()
 

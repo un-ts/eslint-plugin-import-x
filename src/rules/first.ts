@@ -1,4 +1,5 @@
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+
 import { createRule } from '../utils'
 
 function getImportValue(node: TSESTree.ProgramStatement) {

@@ -12,7 +12,7 @@ function findUp(filename: string | string[], cwd?: string): string | null {
     const file = filenames.find(el => fs.existsSync(path.resolve(dir, el)))
 
     if (file) {
-      return path.join(dir, file)
+      return path.resolve(dir, file)
     }
     if (dir === root) {
       return null

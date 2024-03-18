@@ -1,6 +1,5 @@
-'use strict'
+import type { TSESTree } from '@typescript-eslint/utils'
 
-import { TSESTree } from '@typescript-eslint/utils'
 import { createRule } from '../utils'
 
 type Options = {

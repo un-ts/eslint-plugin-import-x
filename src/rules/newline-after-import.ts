@@ -1,12 +1,10 @@
 /**
  * Rule to enforce new line after import not followed by another import.
  */
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 
-import { isStaticRequire } from '../core/static-require'
-
-import { createRule } from '../utils'
+import { isStaticRequire, createRule } from '../utils'
 
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')
 

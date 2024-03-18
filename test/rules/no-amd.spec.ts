@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-amd'
+import rule from 'eslint-plugin-import-x/rules/no-amd'
 
 const ruleTester = new TSESLint.RuleTester({
   parserOptions: { ecmaVersion: 2015, sourceType: 'module' },

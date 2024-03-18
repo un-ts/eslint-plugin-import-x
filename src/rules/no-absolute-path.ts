@@ -1,12 +1,12 @@
 import path from 'path'
 
 import {
+  isAbsolute,
+  createRule,
   moduleVisitor,
   makeOptionsSchema,
-  type ModuleOptions,
-} from '../utils/module-visitor'
-import { isAbsolute } from '../core/import-type'
-import { createRule } from '../utils'
+} from '../utils'
+import type { ModuleOptions } from '../utils'
 
 type MessageId = 'absolute'
 

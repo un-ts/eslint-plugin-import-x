@@ -1,8 +1,8 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-empty-named-blocks'
-
 import { parsers, test } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-empty-named-blocks'
 
 const ruleTester = new TSESLint.RuleTester()
 

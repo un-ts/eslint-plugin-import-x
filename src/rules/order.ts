@@ -1,9 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { type MinimatchOptions, minimatch } from 'minimatch'
+import { minimatch } from 'minimatch'
+import type { MinimatchOptions } from 'minimatch'
 
-import { importType } from '../core/import-type'
-import { isStaticRequire } from '../core/static-require'
-import { createRule } from '../utils'
 import type {
   AlphabetizeOptions,
   Arrayable,
@@ -11,10 +9,11 @@ import type {
   PathGroup,
   RuleContext,
 } from '../types'
+import { importType, isStaticRequire, createRule } from '../utils'
 
-interface ImportEntryWithRank extends ImportEntry {
+type ImportEntryWithRank = {
   rank: number
-}
+} & ImportEntry
 
 // This is a **non-spec compliant** but works in practice replacement of `object.groupby` package.
 const groupBy = <T>(

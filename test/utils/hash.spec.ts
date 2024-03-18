@@ -1,6 +1,7 @@
-import { type Hash, createHash } from 'crypto'
+import type { Hash } from 'crypto'
+import { createHash } from 'crypto'
 
-import { hashify, hashArray, hashObject } from '../../src/utils/hash'
+import { hashify, hashArray, hashObject } from 'eslint-plugin-import-x/utils'
 
 function expectHash(actualHash: Hash, expectedString: string) {
   const expectedHash = createHash('sha256')

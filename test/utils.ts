@@ -1,7 +1,7 @@
 import path from 'path'
 
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { RuleTester } from 'eslint'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { RuleTester } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
@@ -28,15 +28,17 @@ export function typescriptEslintParserSatisfies(specifier: string) {
   )
 }
 
+export const FIXTURES_PATH = path.resolve('test/fixtures')
+
 export function testFilePath(relativePath = 'foo.js') {
-  return path.resolve('test/fixtures', relativePath)
+  return path.resolve(FIXTURES_PATH, relativePath)
 }
 
 export function getNonDefaultParsers() {
   return [parsers.TS, parsers.BABEL] as const
 }
 
-const FILENAME = testFilePath()
+const TEST_FILENAME = testFilePath()
 
 export function eslintVersionSatisfies(specifier: string) {
   return semver.satisfies(eslintPkg.version, specifier)
@@ -77,7 +79,7 @@ export function test<T extends ValidTestCase>(
   }
   // @ts-expect-error -- simplify testing
   return {
-    filename: FILENAME,
+    filename: TEST_FILENAME,
     ...t,
     parserOptions: {
       sourceType: 'module',
@@ -90,14 +92,11 @@ export function test<T extends ValidTestCase>(
 export function testContext(settings?: PluginSettings) {
   return {
     getFilename() {
-      return FILENAME
+      return TEST_FILENAME
     },
     settings: settings || {},
   } as RuleContext
 }
-
-// TODO: remove this alias
-export const getFilename = testFilePath
 
 /**
  * to be added as valid cases just to ensure no nullable fields are going

@@ -1,9 +1,8 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { Tag } from 'doctrine'
 
-import { declaredScope } from '../utils/declared-scope'
-import { ExportMap, type ModuleNamespace } from '../export-map'
-import { createRule } from '../utils'
+import type { ModuleNamespace } from '../utils'
+import { ExportMap, createRule, declaredScope } from '../utils'
 
 function message(deprecation: Tag) {
   return {

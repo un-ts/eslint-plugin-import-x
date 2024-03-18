@@ -1,17 +1,19 @@
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
+import { minimatch } from 'minimatch'
 import type { PackageJson } from 'type-fest'
 
-import { pkgUp } from '../utils/pkg-up'
-import { minimatch } from 'minimatch'
-import { resolve } from '../utils/resolve'
-import { moduleVisitor } from '../utils/module-visitor'
-import { importType } from '../core/import-type'
-import { getFilePackageName } from '../core/package-path'
-import { createRule } from '../utils'
 import type { RuleContext } from '../types'
+import {
+  createRule,
+  moduleVisitor,
+  resolve,
+  pkgUp,
+  importType,
+  getFilePackageName,
+} from '../utils'
 
 type PackageDeps = ReturnType<typeof extractDepFields>
 
@@ -82,7 +84,7 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
     if (paths.length > 0) {
       // use rule config to find package.json
       paths.forEach(dir => {
-        const packageJsonPath = path.join(dir, 'package.json')
+        const packageJsonPath = path.resolve(dir, 'package.json')
         const packageContent_ = getPackageDepFields(packageJsonPath, true)!
         Object.keys(packageContent).forEach(depsKey => {
           const key = depsKey as keyof PackageDeps

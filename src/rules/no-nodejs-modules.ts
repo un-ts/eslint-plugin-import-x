@@ -1,6 +1,4 @@
-import { importType } from '../core/import-type'
-import { moduleVisitor } from '../utils/module-visitor'
-import { createRule } from '../utils'
+import { importType, createRule, moduleVisitor } from '../utils'
 
 type Options = {
   allow?: string[]

@@ -1,11 +1,11 @@
-import { PluginSettings } from '../../src/types'
+import { testContext } from '../utils'
+
+import type { PluginSettings } from 'eslint-plugin-import-x/types'
 import {
   ignore as isIgnored,
   getFileExtensions,
   hasValidExtension,
-} from '../../src/utils/ignore'
-
-import { testContext } from '../utils'
+} from 'eslint-plugin-import-x/utils'
 
 describe('ignore', () => {
   describe('isIgnored', () => {

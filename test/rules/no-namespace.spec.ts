@@ -1,8 +1,8 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-namespace'
-
 import { test } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-namespace'
 
 const ERROR_MESSAGE = 'Unexpected namespace import.'
 

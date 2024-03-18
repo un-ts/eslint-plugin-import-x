@@ -1,17 +1,15 @@
-import path from 'path'
+import { FIXTURES_PATH, testContext, testFilePath } from '../utils'
 
 import {
   importType,
   isExternalModule,
   isScoped,
   isAbsolute,
-} from '../../src/core/import-type'
-import { isCoreModule } from '../../src/utils/is-core-module'
-import { testContext, testFilePath } from '../utils'
+  isCoreModule,
+} from 'eslint-plugin-import-x/utils'
 
 describe('importType(name)', () => {
   const context = testContext()
-  const pathToTestFixtures = path.join(__dirname, '..', 'fixtures')
 
   it("should return 'absolute' for paths starting with a /", () => {
     expect(importType('/', context)).toBe('absolute')
@@ -63,21 +61,21 @@ describe('importType(name)', () => {
 
   it("should return 'internal' for non-builtins resolved outside of node_modules", () => {
     const pathContext = testContext({
-      'import-x/resolver': { node: { paths: [pathToTestFixtures] } },
+      'import-x/resolver': { node: { paths: [FIXTURES_PATH] } },
     })
     expect(importType('importType', pathContext)).toBe('internal')
   })
 
   it("should return 'internal' for scoped packages resolved outside of node_modules", () => {
     const pathContext = testContext({
-      'import-x/resolver': { node: { paths: [pathToTestFixtures] } },
+      'import-x/resolver': { node: { paths: [FIXTURES_PATH] } },
     })
     expect(importType('@importType/index', pathContext)).toBe('internal')
   })
 
   it("should return 'internal' for internal modules that are referenced by aliases", () => {
     const pathContext = testContext({
-      'import-x/resolver': { node: { paths: [pathToTestFixtures] } },
+      'import-x/resolver': { node: { paths: [FIXTURES_PATH] } },
     })
     expect(importType('@my-alias/fn', pathContext)).toBe('internal')
     expect(importType('@importType', pathContext)).toBe('internal')
@@ -85,7 +83,7 @@ describe('importType(name)', () => {
 
   it("should return 'internal' for aliased internal modules that look like core modules (node resolver)", () => {
     const pathContext = testContext({
-      'import-x/resolver': { node: { paths: [pathToTestFixtures] } },
+      'import-x/resolver': { node: { paths: [FIXTURES_PATH] } },
     })
     expect(importType('constants/index', pathContext)).toBe('internal')
     expect(importType('constants/', pathContext)).toBe('internal')
@@ -95,7 +93,7 @@ describe('importType(name)', () => {
 
   it("should return 'internal' for aliased internal modules that look like core modules (webpack resolver)", () => {
     const webpackConfig = {
-      resolve: { modules: [pathToTestFixtures, 'node_modules'] },
+      resolve: { modules: [FIXTURES_PATH, 'node_modules'] },
     }
     const pathContext = testContext({
       'import-x/resolver': { webpack: { config: webpackConfig } },
@@ -109,7 +107,7 @@ describe('importType(name)', () => {
     // `@` for internal modules is a common alias and is different from scoped names.
     // Scoped names are prepended with `@` (e.g. `@scoped/some-file.js`) whereas `@`
     // as an alias by itelf is the full root name (e.g. `@/some-file.js`).
-    const alias = { '@': path.join(pathToTestFixtures, 'internal-modules') }
+    const alias = { '@': testFilePath('internal-modules') }
     const webpackConfig = { resolve: { alias } }
     const pathContext = testContext({
       'import-x/resolver': { webpack: { config: webpackConfig } },

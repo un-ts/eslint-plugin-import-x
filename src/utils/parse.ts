@@ -3,8 +3,9 @@ import { extname } from 'path'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 
+import type { ChildContext, FileExtension, RuleContext } from '../types'
+
 import { moduleRequire } from './module-require'
-import { ChildContext, FileExtension, RuleContext } from '../types'
 
 const log = debug('eslint-plugin-import-x:parse')
 

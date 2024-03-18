@@ -4,10 +4,11 @@ import {
   resolve as nodeResolve,
 } from 'path'
 
-import { isCoreModule } from '../utils/is-core-module'
-import { resolve } from '../utils/resolve'
+import type { PluginSettings, RuleContext } from '../types'
+
+import { isCoreModule } from './is-core-module'
 import { getContextPackagePath } from './package-path'
-import { PluginSettings, RuleContext } from '../types'
+import { resolve } from './resolve'
 
 function baseModule(name: string) {
   if (isScoped(name)) {

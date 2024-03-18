@@ -3,7 +3,6 @@
  * basically iteratively updates hash with a JSON-like format
  */
 import type { Hash } from 'crypto'
-
 import { createHash } from 'crypto'
 
 export function hashify(value: unknown, hash?: Hash) {

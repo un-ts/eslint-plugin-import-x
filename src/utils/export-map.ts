@@ -1,20 +1,14 @@
 import fs from 'fs'
 import { resolve as pathResolve } from 'path'
 
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
-import doctrine, { Annotation } from 'doctrine'
-import { AST, SourceCode } from 'eslint'
-import { TsConfigJsonResolved, getTsconfig } from 'get-tsconfig'
-
-import { parse } from './utils/parse'
-import { visit } from './utils/visit'
-import { relative, resolve } from './utils/resolve'
-import { hasValidExtension, ignore } from './utils/ignore'
-import { hashObject } from './utils/hash'
-import {
-  isMaybeUnambiguousModule,
-  isUnambiguousModule,
-} from './utils/unambiguous'
+import type { Annotation } from 'doctrine'
+import doctrine from 'doctrine'
+import { SourceCode } from 'eslint'
+import type { AST } from 'eslint'
+import { getTsconfig } from 'get-tsconfig'
+import type { TsConfigJsonResolved } from 'get-tsconfig'
 
 import type {
   ChildContext,
@@ -23,8 +17,14 @@ import type {
   ExportNamespaceSpecifier,
   ParseError,
   RuleContext,
-} from './types'
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+} from '../types'
+
+import { hashObject } from './hash'
+import { hasValidExtension, ignore } from './ignore'
+import { parse } from './parse'
+import { relative, resolve } from './resolve'
+import { isMaybeUnambiguousModule, isUnambiguousModule } from './unambiguous'
+import { visit } from './visit'
 
 const log = debug('eslint-plugin-import-x:ExportMap')
 
@@ -37,19 +37,19 @@ export type DocStyleParsers = Record<
   (comments: TSESTree.Comment[]) => Annotation | undefined
 >
 
-export interface DeclarationMetadata {
+export type DeclarationMetadata = {
   source: Pick<TSESTree.Literal, 'value' | 'loc'>
   importedSpecifiers?: Set<string>
   dynamic?: boolean
   isOnlyImportingTypes?: boolean
 }
 
-export interface ModuleNamespace {
+export type ModuleNamespace = {
   doc?: Annotation
   namespace?: ExportMap | null
 }
 
-export interface ModuleImport {
+export type ModuleImport = {
   getter: () => ExportMap | null
   declarations: Set<DeclarationMetadata>
 }

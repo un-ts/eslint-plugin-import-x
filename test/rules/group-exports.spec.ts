@@ -1,8 +1,8 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/group-exports'
-
 import { parsers, test } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/group-exports'
 
 const errors = {
   named:

@@ -1,8 +1,8 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-webpack-loader-syntax'
-
 import { test } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-webpack-loader-syntax'
 
 const ruleTester = new TSESLint.RuleTester()
 
