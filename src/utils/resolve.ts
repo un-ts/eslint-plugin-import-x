@@ -47,7 +47,7 @@ export type Resolver = {
 export const CASE_SENSITIVE_FS = !fs.existsSync(
   path.resolve(
     __dirname,
-    path.basename(__filename.replace(/^resolve\./, 'reSOLVE.')),
+    path.basename(__filename).replace(/^resolve\./, 'reSOLVE.'),
   ),
 )
 
