@@ -47,16 +47,20 @@ jobs:
         env:
           SKIP_YARN_COREPACK_CHECK: 1
 
-      - name: Build, Lint and Test
+      - name: Build and Test
         run: |
-          yarn build
-          yarn lint
-          yarn test
           yarn test-compiled
+          yarn test
+        env:
+          SKIP_YARN_COREPACK_CHECK: 1
+
+      - name: Lint
+        run: yarn lint
         env:
           EFF_NO_LINK_RULES: true
           PARSER_NO_WATCH: true
           SKIP_YARN_COREPACK_CHECK: 1
+        if: ${{ matrix.node == 20 && matrix.eslint == 8 }}
 
       - name: Codecov
         uses: codecov/codecov-action@v3
