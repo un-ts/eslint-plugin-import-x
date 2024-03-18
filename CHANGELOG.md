@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 0.4.0
+
+### Minor Changes
+
+- [#54](https://github.com/un-ts/eslint-plugin-import-x/pull/54) [`54d0c95`](https://github.com/un-ts/eslint-plugin-import-x/commit/54d0c95a6543be85094a9d21d07d327dc42e4ab0) Thanks [@JounQin](https://github.com/JounQin)! - chore!: bump node requirement (>=16), enable more lint rules
+
 ## 0.3.1
 
 ### Patch Changes
