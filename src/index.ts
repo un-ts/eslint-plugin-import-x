@@ -35,6 +35,7 @@ import noNodejsModules from './rules/no-nodejs-modules'
 import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax'
 import order from './rules/order'
 import newlineAfterImport from './rules/newline-after-import'
+import preferDefaultExport from './rules/prefer-default-export'
 
 // configs
 import recommended from './config/recommended'
@@ -81,7 +82,7 @@ export const rules = {
   'no-webpack-loader-syntax': noWebpackLoaderSyntax,
   order,
   'newline-after-import': newlineAfterImport,
-  'prefer-default-export': require('./rules/prefer-default-export'),
+  'prefer-default-export': preferDefaultExport,
   'no-default-export': require('./rules/no-default-export'),
   'no-named-export': require('./rules/no-named-export'),
   'no-dynamic-require': require('./rules/no-dynamic-require'),

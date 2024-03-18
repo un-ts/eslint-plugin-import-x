@@ -1,20 +1,22 @@
 'use strict'
 
-import { docsUrl } from '../docs-url'
+import { TSESTree } from '@typescript-eslint/utils'
+import { createRule } from '../utils'
 
-const SINGLE_EXPORT_ERROR_MESSAGE =
-  'Prefer default export on a file with single export.'
-const ANY_EXPORT_ERROR_MESSAGE =
-  'Prefer default export to be present on every file that has export.'
+type Options = {
+  target?: 'single' | 'any'
+}
 
-module.exports = {
+type MessageId = 'single' | 'any'
+
+export = createRule<[Options?], MessageId>({
+  name: 'prefer-default-export',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Style guide',
       description:
         'Prefer a default export if module exports a single name or multiple names.',
-      url: docsUrl('prefer-default-export'),
     },
     schema: [
       {
@@ -29,26 +31,30 @@ module.exports = {
         additionalProperties: false,
       },
     ],
+    messages: {
+      single: 'Prefer default export on a file with single export.',
+      any: 'Prefer default export to be present on every file that has export.',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     let specifierExportCount = 0
     let hasDefaultExport = false
     let hasStarExport = false
     let hasTypeExport = false
-    let namedExportNode = null
+
+    let namedExportNode: TSESTree.Node
+
     // get options. by default we look into files with single export
     const { target = 'single' } = context.options[0] || {}
-    function captureDeclaration(identifierOrPattern) {
-      if (identifierOrPattern && identifierOrPattern.type === 'ObjectPattern') {
+
+    function captureDeclaration(identifierOrPattern?: TSESTree.Node | null) {
+      if (identifierOrPattern?.type === 'ObjectPattern') {
         // recursively capture
-        identifierOrPattern.properties.forEach(function (property) {
+        identifierOrPattern.properties.forEach(property => {
           captureDeclaration(property.value)
         })
-      } else if (
-        identifierOrPattern &&
-        identifierOrPattern.type === 'ArrayPattern'
-      ) {
+      } else if (identifierOrPattern?.type === 'ArrayPattern') {
         identifierOrPattern.elements.forEach(captureDeclaration)
       } else {
         // assume it's a single standard identifier
@@ -62,7 +68,10 @@ module.exports = {
       },
 
       ExportSpecifier(node) {
-        if ((node.exported.name || node.exported.value) === 'default') {
+        if (
+          (node.exported.name ||
+            ('value' in node.exported && node.exported.value)) === 'default'
+        ) {
           hasDefaultExport = true
         } else {
           specifierExportCount++
@@ -80,8 +89,10 @@ module.exports = {
 
         if (
           type === 'TSTypeAliasDeclaration' ||
-          type === 'TypeAlias' ||
           type === 'TSInterfaceDeclaration' ||
+          // @ts-expect-error - legacy parser type
+          type === 'TypeAlias' ||
+          // @ts-expect-error - legacy parser type
           type === 'InterfaceDeclaration'
         ) {
           specifierExportCount++
@@ -89,8 +100,11 @@ module.exports = {
           return
         }
 
-        if (node.declaration.declarations) {
-          node.declaration.declarations.forEach(function (declaration) {
+        if (
+          'declarations' in node.declaration &&
+          node.declaration.declarations
+        ) {
+          node.declaration.declarations.forEach(declaration => {
             captureDeclaration(declaration.id)
           })
         } else {
@@ -114,11 +128,17 @@ module.exports = {
           return
         }
         if (target === 'single' && specifierExportCount === 1) {
-          context.report(namedExportNode, SINGLE_EXPORT_ERROR_MESSAGE)
+          context.report({
+            node: namedExportNode,
+            messageId: 'single',
+          })
         } else if (target === 'any' && specifierExportCount > 0) {
-          context.report(namedExportNode, ANY_EXPORT_ERROR_MESSAGE)
+          context.report({
+            node: namedExportNode,
+            messageId: 'any',
+          })
         }
       },
     }
   },
-}
+})

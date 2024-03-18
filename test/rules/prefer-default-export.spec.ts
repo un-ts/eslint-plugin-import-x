@@ -1,18 +1,14 @@
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/prefer-default-export'
+
 import { test, testVersion, getNonDefaultParsers, parsers } from '../utils'
 
-import { RuleTester } from 'eslint'
-
-const ruleTester = new RuleTester()
-const rule = require('../../src/rules/prefer-default-export')
-
-const SINGLE_EXPORT_ERROR_MESSAGE =
-  'Prefer default export on a file with single export.'
-const ANY_EXPORT_ERROR_MESSAGE =
-  'Prefer default export to be present on every file that has export.'
+const ruleTester = new TSESLint.RuleTester()
 
 // test cases for default option { target: 'single' }
 ruleTester.run('prefer-default-export', rule, {
-  valid: [].concat(
+  valid: [
     test({
       code: `
         export const foo = 'foo';
@@ -101,11 +97,11 @@ ruleTester.run('prefer-default-export', rule, {
       parser: parsers.BABEL,
     }),
     // es2022: Arbitrary module namespae identifier names
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'let foo; export { foo as "default" };',
       parserOptions: { ecmaVersion: 2022 },
     })),
-  ),
+  ],
   invalid: [
     test({
       code: `
@@ -113,7 +109,7 @@ ruleTester.run('prefer-default-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: SINGLE_EXPORT_ERROR_MESSAGE,
+          messageId: 'single',
         },
       ],
     }),
@@ -123,7 +119,7 @@ ruleTester.run('prefer-default-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: SINGLE_EXPORT_ERROR_MESSAGE,
+          messageId: 'single',
         },
       ],
     }),
@@ -134,7 +130,7 @@ ruleTester.run('prefer-default-export', rule, {
       errors: [
         {
           type: 'ExportSpecifier',
-          message: SINGLE_EXPORT_ERROR_MESSAGE,
+          messageId: 'single',
         },
       ],
     }),
@@ -144,7 +140,7 @@ ruleTester.run('prefer-default-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: SINGLE_EXPORT_ERROR_MESSAGE,
+          messageId: 'single',
         },
       ],
     }),
@@ -154,7 +150,7 @@ ruleTester.run('prefer-default-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: SINGLE_EXPORT_ERROR_MESSAGE,
+          messageId: 'single',
         },
       ],
     }),
@@ -164,7 +160,7 @@ ruleTester.run('prefer-default-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration',
-          message: SINGLE_EXPORT_ERROR_MESSAGE,
+          messageId: 'single',
         },
       ],
     }),
@@ -174,7 +170,7 @@ ruleTester.run('prefer-default-export', rule, {
 // test cases for { target: 'any' }
 ruleTester.run('prefer-default-export', rule, {
   // Any exporting file must contain default export
-  valid: [].concat(
+  valid: [
     test({
       code: `
           export default function bar() {};`,
@@ -263,7 +259,7 @@ ruleTester.run('prefer-default-export', rule, {
       ],
     }),
     // es2022: Arbitrary module namespae identifier names
-    testVersion('>= 8.7', () => ({
+    ...testVersion('>= 8.7', () => ({
       code: 'export const a = 4; let foo; export { foo as "default" };',
       options: [
         {
@@ -272,9 +268,9 @@ ruleTester.run('prefer-default-export', rule, {
       ],
       parserOptions: { ecmaVersion: 2022 },
     })),
-  ),
+  ],
   // { target: 'any' } invalid cases when any exporting file must contain default export but does not
-  invalid: [].concat(
+  invalid: [
     test({
       code: `
         export const foo = 'foo';
@@ -286,7 +282,7 @@ ruleTester.run('prefer-default-export', rule, {
       ],
       errors: [
         {
-          message: ANY_EXPORT_ERROR_MESSAGE,
+          messageId: 'any',
         },
       ],
     }),
@@ -301,7 +297,7 @@ ruleTester.run('prefer-default-export', rule, {
       ],
       errors: [
         {
-          message: ANY_EXPORT_ERROR_MESSAGE,
+          messageId: 'any',
         },
       ],
     }),
@@ -316,7 +312,7 @@ ruleTester.run('prefer-default-export', rule, {
       ],
       errors: [
         {
-          message: ANY_EXPORT_ERROR_MESSAGE,
+          messageId: 'any',
         },
       ],
     }),
@@ -332,7 +328,7 @@ ruleTester.run('prefer-default-export', rule, {
       ],
       errors: [
         {
-          message: ANY_EXPORT_ERROR_MESSAGE,
+          messageId: 'any',
         },
       ],
     }),
@@ -346,7 +342,7 @@ ruleTester.run('prefer-default-export', rule, {
       ],
       errors: [
         {
-          message: ANY_EXPORT_ERROR_MESSAGE,
+          messageId: 'any',
         },
       ],
     }),
@@ -361,7 +357,7 @@ ruleTester.run('prefer-default-export', rule, {
       ],
       errors: [
         {
-          message: ANY_EXPORT_ERROR_MESSAGE,
+          messageId: 'any',
         },
       ],
     }),
@@ -375,7 +371,7 @@ ruleTester.run('prefer-default-export', rule, {
       ],
       errors: [
         {
-          message: ANY_EXPORT_ERROR_MESSAGE,
+          messageId: 'any',
         },
       ],
     }),
@@ -389,11 +385,11 @@ ruleTester.run('prefer-default-export', rule, {
       ],
       errors: [
         {
-          message: ANY_EXPORT_ERROR_MESSAGE,
+          messageId: 'any',
         },
       ],
     }),
-  ),
+  ],
 })
 
 describe('TypeScript', () => {
@@ -407,7 +403,7 @@ describe('TypeScript', () => {
     }
 
     ruleTester.run('prefer-default-export', rule, {
-      valid: [].concat(
+      valid: [
         // Exporting types
         test({
           code: `
@@ -437,7 +433,7 @@ describe('TypeScript', () => {
           code: `export interface foo { bar: string; }; export function goo() {} /* ${parser.replace(process.cwd(), '$$PWD')}*/`,
           ...parserConfig,
         }),
-      ),
+      ],
       invalid: [],
     })
   })
