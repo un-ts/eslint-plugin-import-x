@@ -77,5 +77,11 @@ module.exports = {
         'import-x/default': 0,
       },
     },
+    {
+      files: 'global.d.ts',
+      rules: {
+        'import-x/no-extraneous-dependencies': 0,
+      },
+    },
   ],
 }

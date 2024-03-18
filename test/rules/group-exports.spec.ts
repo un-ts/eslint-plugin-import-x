@@ -18,7 +18,7 @@ const ruleTester = new TSESLint.RuleTester({
     babelOptions: {
       configFile: false,
       babelrc: false,
-      presets: ['@babel/preset-flow'],
+      presets: ['@babel/flow'],
     },
   },
 })

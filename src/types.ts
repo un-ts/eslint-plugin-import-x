@@ -1,9 +1,13 @@
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { TsResolverOptions } from 'eslint-import-resolver-typescript'
-import type { KebabCase, LiteralUnion } from 'type-fest'
 import type { ResolveOptions } from 'enhanced-resolve'
+import type { MinimatchOptions } from 'minimatch'
+import type { KebabCase, LiteralUnion } from 'type-fest'
 
+import type { ImportType as ImportType_ } from './core/import-type'
 import type { PluginName } from './utils'
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+
+export type ImportType = ImportType_ | 'object' | 'type'
 
 export interface NodeResolverOptions {
   extensions?: readonly string[]
@@ -24,6 +28,15 @@ export type DocStyle = 'jsdoc' | 'tomdoc'
 
 export type Arrayable<T> = T | readonly T[]
 
+export type ImportResolver =
+  | LiteralUnion<'node' | 'typescript' | 'webpack', string>
+  | {
+      node?: boolean | NodeResolverOptions
+      typescript?: boolean | TsResolverOptions
+      webpack?: WebpackResolverOptions
+      [resolve: string]: unknown
+    }
+
 export interface ImportSettings {
   cache?: {
     lifetime?: number | '∞' | 'Infinity'
@@ -36,15 +49,7 @@ export interface ImportSettings {
   internalRegex?: string
   parsers?: Record<string, readonly FileExtension[]>
   resolve?: NodeResolverOptions
-  resolver?: Arrayable<
-    | LiteralUnion<'node' | 'typescript' | 'webpack', string>
-    | {
-        node?: boolean | NodeResolverOptions
-        typescript?: boolean | TsResolverOptions
-        webpack?: WebpackResolverOptions
-        [resolve: string]: unknown
-      }
-  >
+  resolver?: Arrayable<ImportResolver>
 }
 
 export type WithPluginName<T extends string | object> = T extends string
@@ -100,3 +105,16 @@ export type ExportNamespaceSpecifier = CustomESTreeNode<
   'ExportNamespaceSpecifier',
   { exported: TSESTree.Identifier }
 >
+
+export interface PathGroup {
+  pattern: string
+  group: ImportType
+  patternOptions?: MinimatchOptions
+  position?: 'before' | 'after'
+}
+
+export interface AlphabetizeOptions {
+  caseInsensitive: boolean
+  order: 'ignore' | 'asc' | 'desc'
+  orderImportKind: 'ignore' | 'asc' | 'desc'
+}

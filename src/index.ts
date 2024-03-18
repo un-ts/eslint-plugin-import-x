@@ -24,6 +24,30 @@ import noNamedAsDefault from './rules/no-named-as-default'
 import noNamedAsDefaultMember from './rules/no-named-as-default-member'
 import noAnonymousDefaultExport from './rules/no-anonymous-default-export'
 import noUnusedModules from './rules/no-unused-modules'
+import noCommonjs from './rules/no-commonjs'
+import noAmd from './rules/no-amd'
+import noDuplicates from './rules/no-duplicates'
+import first from './rules/first'
+import maxDependencies from './rules/max-dependencies'
+import noExtraneousDependencies from './rules/no-extraneous-dependencies'
+import noAbsolutePath from './rules/no-absolute-path'
+import noNodejsModules from './rules/no-nodejs-modules'
+import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax'
+import order from './rules/order'
+import newlineAfterImport from './rules/newline-after-import'
+import preferDefaultExport from './rules/prefer-default-export'
+import noDefaultExport from './rules/no-default-export'
+import noNamedExport from './rules/no-named-export'
+import noDynamicRequire from './rules/no-dynamic-require'
+import unambiguous from './rules/unambiguous'
+import noUnassignedImport from './rules/no-unassigned-import'
+import noUselessPathSegments from './rules/no-useless-path-segments'
+import dynamicImportChunkname from './rules/dynamic-import-chunkname'
+import noImportModuleExports from './rules/no-import-module-exports'
+import noEmptyNamedBlocks from './rules/no-empty-named-blocks'
+import exportsLast from './rules/exports-last'
+import noDeprecated from './rules/no-deprecated'
+import importsFirst from './rules/imports-first'
 
 // configs
 import recommended from './config/recommended'
@@ -59,36 +83,36 @@ export const rules = {
   'no-anonymous-default-export': noAnonymousDefaultExport,
   'no-unused-modules': noUnusedModules,
 
-  'no-commonjs': require('./rules/no-commonjs'),
-  'no-amd': require('./rules/no-amd'),
-  'no-duplicates': require('./rules/no-duplicates'),
-  first: require('./rules/first'),
-  'max-dependencies': require('./rules/max-dependencies'),
-  'no-extraneous-dependencies': require('./rules/no-extraneous-dependencies'),
-  'no-absolute-path': require('./rules/no-absolute-path'),
-  'no-nodejs-modules': require('./rules/no-nodejs-modules'),
-  'no-webpack-loader-syntax': require('./rules/no-webpack-loader-syntax'),
-  order: require('./rules/order'),
-  'newline-after-import': require('./rules/newline-after-import'),
-  'prefer-default-export': require('./rules/prefer-default-export'),
-  'no-default-export': require('./rules/no-default-export'),
-  'no-named-export': require('./rules/no-named-export'),
-  'no-dynamic-require': require('./rules/no-dynamic-require'),
-  unambiguous: require('./rules/unambiguous'),
-  'no-unassigned-import': require('./rules/no-unassigned-import'),
-  'no-useless-path-segments': require('./rules/no-useless-path-segments'),
-  'dynamic-import-chunkname': require('./rules/dynamic-import-chunkname'),
-  'no-import-module-exports': require('./rules/no-import-module-exports'),
-  'no-empty-named-blocks': require('./rules/no-empty-named-blocks'),
+  'no-commonjs': noCommonjs,
+  'no-amd': noAmd,
+  'no-duplicates': noDuplicates,
+  first,
+  'max-dependencies': maxDependencies,
+  'no-extraneous-dependencies': noExtraneousDependencies,
+  'no-absolute-path': noAbsolutePath,
+  'no-nodejs-modules': noNodejsModules,
+  'no-webpack-loader-syntax': noWebpackLoaderSyntax,
+  order,
+  'newline-after-import': newlineAfterImport,
+  'prefer-default-export': preferDefaultExport,
+  'no-default-export': noDefaultExport,
+  'no-named-export': noNamedExport,
+  'no-dynamic-require': noDynamicRequire,
+  unambiguous,
+  'no-unassigned-import': noUnassignedImport,
+  'no-useless-path-segments': noUselessPathSegments,
+  'dynamic-import-chunkname': dynamicImportChunkname,
+  'no-import-module-exports': noImportModuleExports,
+  'no-empty-named-blocks': noEmptyNamedBlocks,
 
   // export
-  'exports-last': require('./rules/exports-last'),
+  'exports-last': exportsLast,
 
   // metadata-based
-  'no-deprecated': require('./rules/no-deprecated'),
+  'no-deprecated': noDeprecated,
 
   // deprecated aliases to rules
-  'imports-first': require('./rules/imports-first'),
+  'imports-first': importsFirst,
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
 export const configs = {

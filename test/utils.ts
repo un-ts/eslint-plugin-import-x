@@ -33,7 +33,7 @@ export function testFilePath(relativePath = 'foo.js') {
 }
 
 export function getNonDefaultParsers() {
-  return [parsers.TS, parsers.BABEL]
+  return [parsers.TS, parsers.BABEL] as const
 }
 
 const FILENAME = testFilePath()
@@ -44,7 +44,7 @@ export function eslintVersionSatisfies(specifier: string) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
 export type ValidTestCase = TSESLint.ValidTestCase<any> & {
-  errors?: readonly InvalidTestCaseError[]
+  errors?: readonly InvalidTestCaseError[] | number
 }
 
 export type InvalidTestCase = // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
@@ -67,13 +67,9 @@ export type InvalidTestCaseError =
       type?: `${TSESTree.AST_NODE_TYPES}`
     })
 
-export function test<
-  T extends ValidTestCase & {
-    errors?: readonly InvalidTestCaseError[]
-  },
->(
+export function test<T extends ValidTestCase>(
   t: T,
-): T extends { errors?: InvalidTestCaseError[] }
+): T extends { errors: InvalidTestCaseError[] | number }
   ? InvalidTestCase
   : ValidTestCase {
   if (arguments.length !== 1) {
