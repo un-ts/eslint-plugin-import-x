@@ -1,10 +1,12 @@
+import { TSESLint } from '@typescript-eslint/utils'
+
+import rule from '../../src/rules/no-useless-path-segments'
+
 import { parsers, test } from '../utils'
-import { RuleTester } from 'eslint'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/no-useless-path-segments')
+const ruleTester = new TSESLint.RuleTester()
 
-function runResolverTests(resolver) {
+function runResolverTests(resolver: 'node' | 'webpack') {
   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
     valid: [
       // CommonJS modules with default options
@@ -298,4 +300,4 @@ function runResolverTests(resolver) {
   })
 }
 
-;['node', 'webpack'].forEach(runResolverTests)
+;(['node', 'webpack'] as const).forEach(runResolverTests)

@@ -1,13 +1,13 @@
 /**
- * @fileOverview Ensures that there are no useless path segments
- * @author Thomas Grainger
+ * Ensures that there are no useless path segments
  */
 
-import { getFileExtensions } from '../utils/ignore'
-import { moduleVisitor } from '../utils/module-visitor'
-import { resolve } from '../utils/resolve'
 import path from 'path'
-import { docsUrl } from '../docs-url'
+
+import { getFileExtensions } from '../utils/ignore'
+import { ModuleOptions, moduleVisitor } from '../utils/module-visitor'
+import { resolve } from '../utils/resolve'
+import { createRule } from '../utils'
 
 /**
  * convert a potentially relative path from node utils into a true
@@ -19,35 +19,39 @@ import { docsUrl } from '../docs-url'
  * ..foo/bar -> ./..foo/bar
  * foo/bar -> ./foo/bar
  *
- * @param relativePath {string} relative posix path potentially missing leading './'
- * @returns {string} relative posix path that always starts with a ./
+ * @param relativePath relative posix path potentially missing leading './'
+ * @returns relative posix path that always starts with a ./
  **/
-function toRelativePath(relativePath) {
+function toRelativePath(relativePath: string): string {
   const stripped = relativePath.replace(/\/$/g, '') // Remove trailing /
 
   return /^((\.\.)|(\.))($|\/)/.test(stripped) ? stripped : `./${stripped}`
 }
 
-function normalize(fn) {
-  return toRelativePath(path.posix.normalize(fn))
+function normalize(filepath: string) {
+  return toRelativePath(path.posix.normalize(filepath))
 }
 
-function countRelativeParents(pathSegments) {
+function countRelativeParents(pathSegments: string[]) {
   return pathSegments.filter(x => x === '..').length
 }
 
-module.exports = {
+type Options = ModuleOptions & {
+  noUselessIndex?: boolean
+}
+
+type MessageId = 'useless'
+
+export = createRule<[Options?], MessageId>({
+  name: 'no-useless-path-segments',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Static analysis',
       description:
         'Forbid unnecessary path segments in import and require statements.',
-      url: docsUrl('no-useless-path-segments'),
     },
-
     fixable: 'code',
-
     schema: [
       {
         type: 'object',
@@ -58,27 +62,36 @@ module.exports = {
         additionalProperties: false,
       },
     ],
+    messages: {
+      useless:
+        'Useless path segments for "{{importPath}}", should be "{{proposedPath}}"',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     const currentDir = path.dirname(
       context.getPhysicalFilename
         ? context.getPhysicalFilename()
         : context.getFilename(),
     )
-    const options = context.options[0]
 
-    function checkSourceValue(source) {
+    const options = context.options[0] || {}
+
+    return moduleVisitor(source => {
       const { value: importPath } = source
 
-      function reportWithProposedPath(proposedPath) {
+      function reportWithProposedPath(proposedPath: string) {
         context.report({
           node: source,
-          // Note: Using messageIds is not possible due to the support for ESLint 2 and 3
-          message: `Useless path segments for "${importPath}", should be "${proposedPath}"`,
+          messageId: 'useless',
+          data: {
+            importPath,
+            proposedPath,
+          },
           fix: fixer =>
-            proposedPath &&
-            fixer.replaceText(source, JSON.stringify(proposedPath)),
+            proposedPath
+              ? fixer.replaceText(source, JSON.stringify(proposedPath))
+              : null,
         })
       }
 
@@ -88,7 +101,7 @@ module.exports = {
       }
 
       // Report rule violation if path is not the shortest possible
-      const resolvedPath = resolve(importPath, context)
+      const resolvedPath = resolve(importPath, context)!
       const normedPath = normalize(importPath)
       const resolvedNormedPath = resolve(normedPath, context)
       if (normedPath !== importPath && resolvedPath === resolvedNormedPath) {
@@ -101,11 +114,7 @@ module.exports = {
       )
 
       // Check if path contains unnecessary index (including a configured extension)
-      if (
-        options &&
-        options.noUselessIndex &&
-        regexUnnecessaryIndex.test(importPath)
-      ) {
+      if (options.noUselessIndex && regexUnnecessaryIndex.test(importPath)) {
         const parentDirectory = path.dirname(importPath)
 
         // Try to find ambiguous imports
@@ -154,8 +163,6 @@ module.exports = {
             .join('/'),
         ),
       )
-    }
-
-    return moduleVisitor(checkSourceValue, options)
+    }, options)
   },
-}
+})
