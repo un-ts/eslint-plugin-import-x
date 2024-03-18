@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 0.4.1
+
+### Patch Changes
+
+- [#56](https://github.com/un-ts/eslint-plugin-import-x/pull/56) [`843cf49`](https://github.com/un-ts/eslint-plugin-import-x/commit/843cf494e0c58279d310b052c591c6952a024172) Thanks [@JounQin](https://github.com/JounQin)! - fix: known compatibility issues
+
 ## 0.4.0
 
 ### Minor Changes
