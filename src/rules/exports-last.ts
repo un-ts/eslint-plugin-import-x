@@ -2,6 +2,17 @@ import type { TSESTree } from '@typescript-eslint/utils'
 
 import { createRule } from '../utils'
 
+const findLastIndex = <T>(array: T[], predicate: (item: T) => boolean) => {
+  let i = array.length - 1
+  while (i >= 0) {
+    if (predicate(array[i])) {
+      return i
+    }
+    i--
+  }
+  return -1
+}
+
 function isNonExportStatement({ type }: TSESTree.Node) {
   return (
     type !== 'ExportDefaultDeclaration' &&
@@ -27,8 +38,10 @@ export = createRule({
   create(context) {
     return {
       Program({ body }) {
-        const lastNonExportStatementIndex =
-          body.findLastIndex(isNonExportStatement)
+        const lastNonExportStatementIndex = findLastIndex(
+          body,
+          isNonExportStatement,
+        )
 
         if (lastNonExportStatementIndex !== -1) {
           for (const node of body.slice(0, lastNonExportStatementIndex)) {
