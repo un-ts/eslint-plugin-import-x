@@ -1,18 +1,35 @@
-import { RuleTester } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, testVersion } from '../utils'
+import rule from '../../src/rules/newline-after-import'
 
-const IMPORT_ERROR_MESSAGE =
-  'Expected 1 empty line after import statement not followed by another import.'
-const IMPORT_ERROR_MESSAGE_MULTIPLE = count =>
-  `Expected ${count} empty lines after import statement not followed by another import.`
-const REQUIRE_ERROR_MESSAGE =
-  'Expected 1 empty line after require statement not followed by another require.'
+import { parsers } from '../utils'
 
-const ruleTester = new RuleTester()
+const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
-  valid: [].concat(
+const getImportError = (count: number) => ({
+  messageId: 'newline' as const,
+  data: {
+    count,
+    lineSuffix: count > 1 ? 's' : '',
+    type: 'import',
+  },
+})
+
+const IMPORT_ERROR = getImportError(1)
+
+const getRequireError = (count: number) => ({
+  messageId: 'newline' as const,
+  data: {
+    count,
+    lineSuffix: count > 1 ? 's' : '',
+    type: 'require',
+  },
+})
+
+const REQUIRE_ERROR = getRequireError(1)
+
+ruleTester.run('newline-after-import', rule, {
+  valid: [
     `var path = require('path');\nvar foo = require('foo');\n`,
     `require('foo');`,
     `switch ('foo') { case 'bar': require('baz'); }`,
@@ -395,9 +412,9 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
       `,
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
     },
-  ),
+  ],
 
-  invalid: [].concat(
+  invalid: [
     {
       code: `
         import { A, B, C, D } from
@@ -416,7 +433,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 3,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -445,7 +462,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 3,
           column: 9,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -468,7 +485,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 3,
           column: 9,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -481,7 +498,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -494,7 +511,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -506,7 +523,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -519,7 +536,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -531,12 +548,12 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
         {
           line: 4,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -548,12 +565,12 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
         {
           line: 4,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -565,12 +582,12 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
         {
           line: 4,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -582,7 +599,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 2,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
       ],
     },
@@ -593,7 +610,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 2,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
       ],
     },
@@ -604,7 +621,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 3,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
       ],
     },
@@ -615,7 +632,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 6,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
       ],
     },
@@ -626,7 +643,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 2,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -638,7 +655,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 25,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -650,7 +667,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -663,7 +680,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -676,7 +693,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 2,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { sourceType: 'module' },
@@ -689,13 +706,13 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 2,
           column: 1,
-          message: REQUIRE_ERROR_MESSAGE,
+          ...REQUIRE_ERROR,
         },
       ],
       parserOptions: { sourceType: 'module' },
       parser: parsers.BABEL,
     },
-    testVersion('>= 6', () => ({
+    {
       code: `
         // issue 1784
         import { map } from 'rxjs/operators';
@@ -713,12 +730,12 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 3,
           column: 9,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { sourceType: 'module' },
       parser: parsers.BABEL,
-    })) || [],
+    },
     {
       code: `import foo from 'foo';\n\nexport default function() {};`,
       output: `import foo from 'foo';\n\n\nexport default function() {};`,
@@ -727,7 +744,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -740,7 +757,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -753,7 +770,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -766,7 +783,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -779,7 +796,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -792,7 +809,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -805,7 +822,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -818,7 +835,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -831,7 +848,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE_MULTIPLE(2),
+          ...getImportError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -855,7 +872,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 2,
           column: 9,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -869,7 +886,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
@@ -882,8 +899,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message:
-            'Expected 2 empty lines after require statement not followed by another require.',
+          ...getRequireError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015 },
@@ -896,8 +912,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message:
-            'Expected 2 empty lines after require statement not followed by another require.',
+          ...getRequireError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015 },
@@ -910,7 +925,7 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
         {
           line: 1,
           column: 1,
-          message: IMPORT_ERROR_MESSAGE,
+          ...IMPORT_ERROR,
         },
       ],
       parserOptions: {
@@ -921,16 +936,16 @@ ruleTester.run('newline-after-import', require('rules/newline-after-import'), {
     },
     {
       code: `const foo = require('foo');\n\n\n// some random comment\nconst bar = function() {};`,
+      output: null,
       options: [{ count: 2, exactCount: true, considerComments: true }],
       errors: [
         {
           line: 1,
           column: 1,
-          message:
-            'Expected 2 empty lines after require statement not followed by another require.',
+          ...getRequireError(2),
         },
       ],
       parserOptions: { ecmaVersion: 2015 },
     },
-  ),
+  ],
 })

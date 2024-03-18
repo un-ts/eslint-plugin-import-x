@@ -1,72 +1,95 @@
 /**
  * Rule to enforce new line after import not followed by another import.
  */
+import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import debug from 'debug'
 
 import { isStaticRequire } from '../core/static-require'
-import { docsUrl } from '../docs-url'
 
-import debug from 'debug'
+import { createRule } from '../utils'
+
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')
 
-function containsNodeOrEqual(outerNode, innerNode) {
+function containsNodeOrEqual(
+  outerNode: TSESTree.Node,
+  innerNode: TSESTree.Node,
+) {
   return (
     outerNode.range[0] <= innerNode.range[0] &&
     outerNode.range[1] >= innerNode.range[1]
   )
 }
 
-function getScopeBody(scope) {
+function getScopeBody(scope: TSESLint.Scope.Scope) {
   if (scope.block.type === 'SwitchStatement') {
     log('SwitchStatement scopes not supported')
-    return null
+    return []
   }
 
-  const { body } = scope.block
-  if (body && body.type === 'BlockStatement') {
+  const body = 'body' in scope.block ? scope.block.body : null
+
+  if (body && 'type' in body && body.type === 'BlockStatement') {
     return body.body
   }
 
-  return body
+  return Array.isArray(body) ? body : []
 }
 
-function findNodeIndexInScopeBody(body, nodeToFind) {
+function findNodeIndexInScopeBody(
+  body: TSESTree.ProgramStatement[],
+  nodeToFind: TSESTree.Node,
+) {
   return body.findIndex(node => containsNodeOrEqual(node, nodeToFind))
 }
 
-function getLineDifference(node, nextNode) {
+function getLineDifference(
+  node: TSESTree.Node,
+  nextNode: TSESTree.Comment | TSESTree.Node,
+) {
   return nextNode.loc.start.line - node.loc.end.line
 }
 
-function isClassWithDecorator(node) {
-  return (
-    node.type === 'ClassDeclaration' &&
-    node.decorators &&
-    node.decorators.length
-  )
+function isClassWithDecorator(
+  node: TSESTree.Node,
+): node is TSESTree.ClassDeclaration & { decorators: TSESTree.Decorator[] } {
+  return node.type === 'ClassDeclaration' && !!node.decorators?.length
 }
 
-function isExportDefaultClass(node) {
+function isExportDefaultClass(
+  node: TSESTree.Node,
+): node is TSESTree.ExportDefaultDeclaration {
   return (
     node.type === 'ExportDefaultDeclaration' &&
     node.declaration.type === 'ClassDeclaration'
   )
 }
 
-function isExportNameClass(node) {
+function isExportNameClass(
+  node: TSESTree.Node,
+): node is TSESTree.ExportNamedDeclaration & {
+  declaration: TSESTree.ClassDeclaration
+} {
   return (
     node.type === 'ExportNamedDeclaration' &&
-    node.declaration &&
-    node.declaration.type === 'ClassDeclaration'
+    node.declaration?.type === 'ClassDeclaration'
   )
 }
 
-module.exports = {
+type Options = {
+  count?: number
+  exactCount?: boolean
+  considerComments?: boolean
+}
+
+type MessageId = 'newline'
+
+export = createRule<[Options?], MessageId>({
+  name: 'newline-after-import',
   meta: {
     type: 'layout',
     docs: {
       category: 'Style guide',
       description: 'Enforce a newline after import statements.',
-      url: docsUrl('newline-after-import'),
     },
     fixable: 'whitespace',
     schema: [
@@ -83,10 +106,17 @@ module.exports = {
         additionalProperties: false,
       },
     ],
+    messages: {
+      newline:
+        'Expected {{count}} empty line{{lineSuffix}} after {{type}} statement not followed by another {{type}}.',
+    },
   },
+  defaultOptions: [],
   create(context) {
     let level = 0
-    const requireCalls = []
+
+    const requireCalls: TSESTree.CallExpression[] = []
+
     const options = {
       count: 1,
       exactCount: false,
@@ -94,7 +124,11 @@ module.exports = {
       ...context.options[0],
     }
 
-    function checkForNewLine(node, nextNode, type) {
+    function checkForNewLine(
+      node: TSESTree.Statement,
+      nextNode: TSESTree.Node,
+      type: 'import' | 'require',
+    ) {
       if (isExportDefaultClass(nextNode) || isExportNameClass(nextNode)) {
         const classNode = nextNode.declaration
 
@@ -123,7 +157,12 @@ module.exports = {
             line: node.loc.end.line,
             column,
           },
-          message: `Expected ${options.count} empty line${options.count > 1 ? 's' : ''} after ${type} statement not followed by another ${type}.`,
+          messageId: 'newline',
+          data: {
+            count: options.count,
+            lineSuffix: options.count > 1 ? 's' : '',
+            type,
+          },
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
@@ -136,7 +175,10 @@ module.exports = {
       }
     }
 
-    function commentAfterImport(node, nextComment) {
+    function commentAfterImport(
+      node: TSESTree.Node,
+      nextComment: TSESTree.Comment,
+    ) {
       const lineDifference = getLineDifference(node, nextComment)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
 
@@ -152,7 +194,12 @@ module.exports = {
             line: node.loc.end.line,
             column,
           },
-          message: `Expected ${options.count} empty line${options.count > 1 ? 's' : ''} after import statement not followed by another import.`,
+          messageId: 'newline',
+          data: {
+            count: options.count,
+            lineSuffix: options.count > 1 ? 's' : '',
+            type: 'import',
+          },
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
@@ -172,20 +219,25 @@ module.exports = {
       level--
     }
 
-    function checkImport(node) {
+    function checkImport(
+      node: TSESTree.ImportDeclaration | TSESTree.TSImportEqualsDeclaration,
+    ) {
       const { parent } = node
 
-      if (!parent || !parent.body) {
+      if (!parent || !('body' in parent) || !parent.body) {
         return
       }
 
-      const nodePosition = parent.body.indexOf(node)
-      const nextNode = parent.body[nodePosition + 1]
-      const endLine = node.loc.end.line
-      let nextComment
+      const root = parent as TSESTree.Program
 
-      if (typeof parent.comments !== 'undefined' && options.considerComments) {
-        nextComment = parent.comments.find(
+      const nodePosition = root.body.indexOf(node)
+      const nextNode = root.body[nodePosition + 1]
+      const endLine = node.loc.end.line
+
+      let nextComment: TSESTree.Comment | undefined
+
+      if (typeof root.comments !== 'undefined' && options.considerComments) {
+        nextComment = root.comments.find(
           o =>
             o.loc.start.line >= endLine &&
             o.loc.start.line <= endLine + options.count + 1,
@@ -224,10 +276,12 @@ module.exports = {
             : context.getFilename(),
         )
         const scopeBody = getScopeBody(context.getScope())
+
         log('got scope:', scopeBody)
 
         requireCalls.forEach((node, index) => {
           const nodePosition = findNodeIndexInScopeBody(scopeBody, node)
+
           log('node position in scope:', nodePosition)
 
           const statementWithRequireCall = scopeBody[nodePosition]
@@ -264,4 +318,4 @@ module.exports = {
       'Decorator:exit': decrementLevel,
     }
   },
-}
+})
