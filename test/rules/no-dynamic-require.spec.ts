@@ -1,17 +1,18 @@
-import { parsers, test, testVersion } from '../utils'
+import { TSESLint } from '@typescript-eslint/utils'
 
-import { RuleTester } from 'eslint'
+import rule from '../../src/rules/no-dynamic-require'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/no-dynamic-require')
+import { ValidTestCase, parsers, test } from '../utils'
+
+const ruleTester = new TSESLint.RuleTester()
 
 const error = {
-  message: 'Calls to require() should use string literals',
-}
+  messageId: 'require',
+} as const
 
 const dynamicImportError = {
-  message: 'Calls to import() should use string literals',
-}
+  messageId: 'import',
+} as const
 
 ruleTester.run('no-dynamic-require', rule, {
   valid: [
@@ -29,11 +30,9 @@ ruleTester.run('no-dynamic-require', rule, {
 
     //dynamic import
     ...[parsers.ESPREE, parsers.BABEL].flatMap(parser => {
-      const _test =
-        parser === parsers.ESPREE
-          ? testObj => testVersion('>= 6.2.0', () => testObj)
-          : testObj => test(testObj)
-      return [].concat(
+      const _test = <T extends ValidTestCase>(testObj: T) =>
+        parser === parsers.ESPREE ? testObj : test(testObj)
+      return [
         _test({
           code: 'import("foo")',
           options: [{ esmodule: true }],
@@ -114,7 +113,7 @@ ruleTester.run('no-dynamic-require', rule, {
             ecmaVersion: 2020,
           },
         }),
-      )
+      ]
     }),
   ],
   invalid: [
@@ -142,11 +141,9 @@ ruleTester.run('no-dynamic-require', rule, {
 
     // dynamic import
     ...[parsers.ESPREE, parsers.BABEL].flatMap(parser => {
-      const _test =
-        parser === parsers.ESPREE
-          ? testObj => testVersion('>= 6.2.0', () => testObj)
-          : testObj => test(testObj)
-      return [].concat(
+      const _test = <T extends ValidTestCase>(testObj: T) =>
+        parser === parsers.ESPREE ? testObj : test(testObj)
+      return [
         _test({
           code: 'import("../" + name)',
           errors: [dynamicImportError],
@@ -183,7 +180,7 @@ ruleTester.run('no-dynamic-require', rule, {
             ecmaVersion: 2020,
           },
         }),
-      )
+      ]
     }),
     test({
       code: 'require(`foo${x}`)',

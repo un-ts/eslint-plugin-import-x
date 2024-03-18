@@ -38,6 +38,7 @@ import newlineAfterImport from './rules/newline-after-import'
 import preferDefaultExport from './rules/prefer-default-export'
 import noDefaultExport from './rules/no-default-export'
 import noNamedExport from './rules/no-named-export'
+import noDynamicRequire from './rules/no-dynamic-require'
 
 // configs
 import recommended from './config/recommended'
@@ -87,7 +88,7 @@ export const rules = {
   'prefer-default-export': preferDefaultExport,
   'no-default-export': noDefaultExport,
   'no-named-export': noNamedExport,
-  'no-dynamic-require': require('./rules/no-dynamic-require'),
+  'no-dynamic-require': noDynamicRequire,
   unambiguous: require('./rules/unambiguous'),
   'no-unassigned-import': require('./rules/no-unassigned-import'),
   'no-useless-path-segments': require('./rules/no-useless-path-segments'),

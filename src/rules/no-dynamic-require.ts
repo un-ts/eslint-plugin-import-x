@@ -1,6 +1,8 @@
-import { docsUrl } from '../docs-url'
+import { TSESTree } from '@typescript-eslint/utils'
 
-function isRequire(node) {
+import { createRule } from '../utils'
+
+function isRequire(node: TSESTree.CallExpression) {
   return (
     node &&
     node.callee &&
@@ -10,26 +12,37 @@ function isRequire(node) {
   )
 }
 
-function isDynamicImport(node) {
-  return node && node.callee && node.callee.type === 'Import'
-}
-
-function isStaticValue(arg) {
+function isDynamicImport(node: TSESTree.CallExpression) {
   return (
-    arg.type === 'Literal' ||
-    (arg.type === 'TemplateLiteral' && arg.expressions.length === 0)
+    node &&
+    node.callee &&
+    // @ts-expect-error - legacy parser type
+    node.callee.type === 'Import'
   )
 }
 
-const dynamicImportErrorMessage = 'Calls to import() should use string literals'
+function isStaticValue(
+  node: TSESTree.Node,
+): node is TSESTree.Literal | TSESTree.TemplateLiteral {
+  return (
+    node.type === 'Literal' ||
+    (node.type === 'TemplateLiteral' && node.expressions.length === 0)
+  )
+}
 
-module.exports = {
+type Options = {
+  esmodule?: boolean
+}
+
+type MessageId = 'import' | 'require'
+
+export = createRule<[Options?], MessageId>({
+  name: 'no-dynamic-require',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Static analysis',
       description: 'Forbid `require()` calls with expressions.',
-      url: docsUrl('no-dynamic-require'),
     },
     schema: [
       {
@@ -42,8 +55,12 @@ module.exports = {
         additionalProperties: false,
       },
     ],
+    messages: {
+      import: 'Calls to import() should use string literals',
+      require: 'Calls to require() should use string literals',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
 
@@ -55,13 +72,13 @@ module.exports = {
         if (isRequire(node)) {
           return context.report({
             node,
-            message: 'Calls to require() should use string literals',
+            messageId: 'require',
           })
         }
         if (options.esmodule && isDynamicImport(node)) {
           return context.report({
             node,
-            message: dynamicImportErrorMessage,
+            messageId: 'import',
           })
         }
       },
@@ -71,9 +88,9 @@ module.exports = {
         }
         return context.report({
           node,
-          message: dynamicImportErrorMessage,
+          messageId: 'import',
         })
       },
     }
   },
-}
+})
