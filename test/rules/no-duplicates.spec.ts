@@ -1,23 +1,18 @@
-import * as path from 'path'
+import path from 'path'
+
+import { TSESLint } from '@typescript-eslint/utils'
+
 import {
-  test as testUtil,
+  test,
   parsers,
   tsVersionSatisfies,
   typescriptEslintParserSatisfies,
 } from '../utils'
 import jsxConfig from '../../src/config/react'
 
-import { RuleTester } from 'eslint'
-import eslintPkg from 'eslint/package.json'
-import semver from 'semver'
+import rule from '../../src/rules/no-duplicates'
 
-const ruleTester = new RuleTester()
-const rule = require('rules/no-duplicates')
-
-// autofix only possible with eslint 4+
-const test = semver.satisfies(eslintPkg.version, '< 4')
-  ? t => testUtil({ ...t, output: t.code })
-  : testUtil
+const ruleTester = new TSESLint.RuleTester()
 
 ruleTester.run('no-duplicates', rule, {
   valid: [
