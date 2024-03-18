@@ -32,6 +32,7 @@
   "scripts": {
     "build": "tsc -p src",
     "clean": "rimraf lib",
+    "codesandbox:install": "yarn --ignore-engines",
     "lint": "run-p lint:*",
     "lint:docs": "yarn update:eslint-docs --check",
     "lint:es": "eslint . --cache",

@@ -248,7 +248,7 @@ export = createRule<[Options?], MessageId>({
         return
       }
 
-      if (nextComment && nextComment !== undefined) {
+      if (nextComment) {
         commentAfterImport(node, nextComment)
       } else if (
         nextNode &&
