@@ -1,9 +1,10 @@
-import path from 'path'
 import fs from 'fs/promises'
+import path from 'path'
 
 import type { TSESLint } from '@typescript-eslint/utils'
 
 import { moduleRequire, pluginName } from '../src/utils'
+
 import { srcDir } from './utils'
 
 function isSourceFile(f: string) {

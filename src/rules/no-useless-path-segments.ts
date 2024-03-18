@@ -4,10 +4,8 @@
 
 import path from 'path'
 
-import { getFileExtensions } from '../utils/ignore'
-import { ModuleOptions, moduleVisitor } from '../utils/module-visitor'
-import { resolve } from '../utils/resolve'
-import { createRule } from '../utils'
+import type { ModuleOptions } from '../utils'
+import { createRule, moduleVisitor, resolve, getFileExtensions } from '../utils'
 
 /**
  * convert a potentially relative path from node utils into a true

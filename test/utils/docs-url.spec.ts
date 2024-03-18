@@ -1,6 +1,5 @@
-import pkg from '../../package.json'
-
-import { docsUrl } from '../../src/docs-url'
+import { docsUrl } from 'eslint-plugin-import-x/docs-url'
+import pkg from 'eslint-plugin-import-x/package.json'
 
 describe('docsUrl', () => {
   it('returns the rule documentation URL when given a rule name', () => {

@@ -1,17 +1,16 @@
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 
 import { TSESLint } from '@typescript-eslint/utils'
-
-import rule from '../../src/rules/no-extraneous-dependencies'
-import typescriptConfig from '../../src/config/typescript'
 
 import {
   dependencies as deps,
   devDependencies as devDeps,
 } from '../fixtures/package.json'
-
 import { parsers, test, testFilePath } from '../utils'
+
+import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
+import rule from 'eslint-plugin-import-x/rules/no-extraneous-dependencies'
 
 const ruleTester = new TSESLint.RuleTester()
 const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
@@ -22,7 +21,7 @@ const packageFileWithSyntaxErrorMessage = (() => {
   try {
     JSON.parse(
       fs.readFileSync(
-        path.join(packageDirWithSyntaxError, 'package.json'),
+        path.resolve(packageDirWithSyntaxError, 'package.json'),
         'utf8',
       ),
     )
@@ -94,12 +93,12 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.spec.js'] }],
-      filename: path.join(process.cwd(), 'foo.spec.js'),
+      filename: path.resolve('foo.spec.js'),
     }),
     test({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
-      filename: path.join(process.cwd(), 'foo.spec.js'),
+      filename: path.resolve('foo.spec.js'),
     }),
     test({ code: 'require(6)' }),
     test({
@@ -330,7 +329,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js'] }],
-      filename: path.join(process.cwd(), 'foo.tes.js'),
+      filename: path.resolve('foo.tes.js'),
       errors: [
         {
           message:
@@ -352,7 +351,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
-      filename: path.join(process.cwd(), 'foo.tes.js'),
+      filename: path.resolve('foo.tes.js'),
       errors: [
         {
           message:

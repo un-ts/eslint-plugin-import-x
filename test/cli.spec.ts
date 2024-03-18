@@ -6,7 +6,8 @@ import path from 'path'
 import { ESLint } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
-import * as importPlugin from 'eslint-plugin-import-x'
+
+import importPlugin from 'eslint-plugin-import-x'
 
 describe('CLI regression tests', () => {
   describe('issue #210', () => {
@@ -21,7 +22,8 @@ describe('CLI regression tests', () => {
           },
         },
         plugins: {
-          'eslint-plugin-import-x': importPlugin as unknown as ESLint.Plugin,
+          // @ts-expect-error - incompatible types
+          'eslint-plugin-import-x': importPlugin,
         },
       })
       return eslint.lintFiles(['./test/fixtures/issue210.js'])
@@ -37,7 +39,8 @@ describe('CLI regression tests', () => {
         rulePaths: ['./src/rules'],
         ignore: false,
         plugins: {
-          'eslint-plugin-import-x': importPlugin as unknown as ESLint.Plugin,
+          // @ts-expect-error - incompatible types
+          'eslint-plugin-import-x': importPlugin,
         },
       })
       const results = await eslint.lintFiles([invalidJSON])

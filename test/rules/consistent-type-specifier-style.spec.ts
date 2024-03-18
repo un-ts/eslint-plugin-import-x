@@ -1,8 +1,8 @@
 import { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/consistent-type-specifier-style'
-
 import { test, parsers } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/consistent-type-specifier-style'
 
 const COMMON_TESTS = {
   valid: [

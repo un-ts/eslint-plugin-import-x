@@ -2,9 +2,10 @@ import path from 'path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
-import rule from '../../src/rules/default'
 import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/default'
+import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
 const ruleTester = new TSESLint.RuleTester()
 

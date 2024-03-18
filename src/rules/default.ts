@@ -1,6 +1,6 @@
-import { TSESTree } from '@typescript-eslint/utils'
-import { ExportMap } from '../export-map'
-import { createRule } from '../utils'
+import type { TSESTree } from '@typescript-eslint/utils'
+
+import { ExportMap, createRule } from '../utils'
 
 type MessageId = 'noDefaultExport'
 

@@ -2,15 +2,15 @@
  * Ensures that no imported module imports the linted module.
  */
 
-import { resolve } from '../utils/resolve'
-import { DeclarationMetadata, ExportMap } from '../export-map'
-import { isExternalModule } from '../core/import-type'
+import type { DeclarationMetadata, ModuleOptions } from '../utils'
 import {
+  ExportMap,
+  isExternalModule,
+  createRule,
   moduleVisitor,
   makeOptionsSchema,
-  ModuleOptions,
-} from '../utils/module-visitor'
-import { createRule } from '../utils'
+  resolve,
+} from '../utils'
 
 type Options = ModuleOptions & {
   allowUnsafeDynamicCyclicDependency?: boolean
@@ -21,7 +21,7 @@ type Options = ModuleOptions & {
 type MessageId = 'cycle'
 
 type Traverser = {
-  mget: () => ExportMap | null
+  mget(): ExportMap | null
   route: Array<DeclarationMetadata['source']>
 }
 

@@ -2,9 +2,9 @@ import path from 'path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-unassigned-import'
-
 import { test } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-unassigned-import'
 
 const ruleTester = new TSESLint.RuleTester()
 
@@ -68,12 +68,12 @@ ruleTester.run('no-unassigned-import', rule, {
     test({
       code: 'import "./styles/app.css"',
       options: [{ allow: ['src/styles/**'] }],
-      filename: path.join(process.cwd(), 'src/app.js'),
+      filename: path.resolve('src/app.js'),
     }),
     test({
       code: 'import "../scripts/register.js"',
       options: [{ allow: ['src/styles/**', '**/scripts/*.js'] }],
-      filename: path.join(process.cwd(), 'src/app.js'),
+      filename: path.resolve('src/app.js'),
     }),
   ],
   invalid: [

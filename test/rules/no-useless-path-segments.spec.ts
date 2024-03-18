@@ -1,8 +1,8 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-useless-path-segments'
-
 import { parsers, test } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-useless-path-segments'
 
 const ruleTester = new TSESLint.RuleTester()
 

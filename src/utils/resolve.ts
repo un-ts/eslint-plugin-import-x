@@ -1,5 +1,3 @@
-'use strict'
-
 import fs from 'fs'
 import Module from 'module'
 import path from 'path'
@@ -14,15 +12,14 @@ import type {
 
 import { hashObject } from './hash'
 import { ModuleCache } from './module-cache'
-
 import { pkgDir } from './pkg-dir'
 
-export interface ResultNotFound {
+export type ResultNotFound = {
   found: false
   path?: undefined
 }
 
-export interface ResultFound {
+export type ResultFound = {
   found: true
   path: string | null
 }
@@ -48,7 +45,10 @@ export type Resolver = {
 }
 
 export const CASE_SENSITIVE_FS = !fs.existsSync(
-  path.join(__dirname.toUpperCase(), 'reSOLVE.js'),
+  path.resolve(
+    __dirname,
+    path.basename(__filename).replace(/^resolve\./, 'reSOLVE.'),
+  ),
 )
 
 const ERROR_NAME = 'EslintPluginImportResolveError'

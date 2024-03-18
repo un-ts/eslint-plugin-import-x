@@ -1,18 +1,18 @@
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 import { setTimeout } from 'timers/promises'
 
 import type { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 
+import { testContext, testFilePath } from '../utils'
+
 import {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
   resolve,
-} from '../../src/utils/resolve'
-
-import { testContext, testFilePath } from '../utils'
+} from 'eslint-plugin-import-x/utils'
 
 describe('resolve', () => {
   it('throws on bad parameters', () => {
@@ -179,7 +179,7 @@ describe('resolve', () => {
     ).toBe(testFilePath('./bar.jsx'))
   })
 
-  it('finds resolvers from the source files rather than ../../../src/utils', () => {
+  it('finds resolvers from the source files rather than eslint-plugin-import-x/utils', () => {
     const context = testContext({ 'import-x/resolver': { foo: {} } })
 
     expect(
@@ -455,7 +455,7 @@ describe('resolve', () => {
         ).toBe(testFilePath('./bar.jsx'))
       })
 
-      it('finds resolvers from the source files rather than ../../../src/utils', () => {
+      it('finds resolvers from the source files rather than eslint-plugin-import-x/utils', () => {
         const context = testContext({
           'import-x/resolver': { foo: {} },
         })
@@ -580,7 +580,7 @@ describe('resolve', () => {
     })
 
     it('detecting case does not include parent folder path (issue #720)', () => {
-      const f = path.join(
+      const f = path.resolve(
         process.cwd().toUpperCase(),
         './test/fixtures/jsx/MyUnCoolComponent.jsx',
       )
@@ -588,7 +588,7 @@ describe('resolve', () => {
     })
 
     it('detecting case should include parent folder path', () => {
-      const f = path.join(
+      const f = path.resolve(
         process.cwd().toUpperCase(),
         './test/fixtures/jsx/MyUnCoolComponent.jsx',
       )

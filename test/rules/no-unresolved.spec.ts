@@ -2,16 +2,17 @@ import path from 'path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
-import rule from '../../src/rules/no-unresolved'
-
 import {
   test,
   SYNTAX_CASES,
   testVersion,
   parsers,
-  ValidTestCase,
+  testFilePath,
 } from '../utils'
+import type { ValidTestCase } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-unresolved'
+import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
 const ruleTester = new TSESLint.RuleTester()
 
@@ -386,9 +387,7 @@ ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
       code: "import { DEEP } from 'in-alternate-root';",
       settings: {
         'import-x/resolve': {
-          paths: [
-            path.join(process.cwd(), 'test', 'fixtures', 'alternate-root'),
-          ],
+          paths: [testFilePath('alternate-root')],
         },
       },
     }),
@@ -397,10 +396,7 @@ ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
       code: "import { DEEP } from 'in-alternate-root'; import { bar } from 'src-bar';",
       settings: {
         'import-x/resolve': {
-          paths: [
-            path.join('test', 'fixtures', 'src-root'),
-            path.join('test', 'fixtures', 'alternate-root'),
-          ],
+          paths: [testFilePath('src-root'), testFilePath('alternate-root')],
         },
       },
     }),

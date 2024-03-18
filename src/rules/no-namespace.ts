@@ -2,7 +2,7 @@
  * Rule to disallow namespace import
  */
 
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
 import { createRule } from '../utils'

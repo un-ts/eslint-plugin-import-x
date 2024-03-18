@@ -2,19 +2,21 @@
  * Ensures that modules contain exports and/or all
  * modules are consumed within other modules.
  */
+import { dirname, join } from 'path'
+
 import { TSESTree } from '@typescript-eslint/utils'
 import { FileEnumerator } from 'eslint/use-at-your-own-risk'
 
-import { getFileExtensions } from '../utils/ignore'
-import { resolve } from '../utils/resolve'
-import { visit } from '../utils/visit'
-import { dirname, join } from 'path'
-import { readPkgUp } from '../utils/read-pkg-ip'
-
-import { ExportMap, recursivePatternCapture } from '../export-map'
 import type { FileExtension, RuleContext } from '../types'
-
-import { createRule } from '../utils'
+import {
+  ExportMap,
+  recursivePatternCapture,
+  createRule,
+  resolve,
+  getFileExtensions,
+  readPkgUp,
+  visit,
+} from '../utils'
 
 function listFilesToProcess(src: string[], extensions: FileExtension[]) {
   const e = new FileEnumerator({

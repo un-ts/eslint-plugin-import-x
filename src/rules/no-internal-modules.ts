@@ -1,9 +1,6 @@
 import { makeRe } from 'minimatch'
 
-import { resolve } from '../utils/resolve'
-import { importType } from '../core/import-type'
-import { moduleVisitor } from '../utils/module-visitor'
-import { createRule } from '../utils'
+import { importType, createRule, moduleVisitor, resolve } from '../utils'
 
 // minimatch patterns are expected to use / path separators, like import
 // statements, so normalize paths to use the same

@@ -1,9 +1,8 @@
-import { declaredScope } from '../utils/declared-scope'
-import { ExportMap } from '../export-map'
+import type { TSESTree } from '@typescript-eslint/utils'
+
 import { importDeclaration } from '../import-declaration'
-import { createRule } from '../utils'
-import { RuleContext } from '../types'
-import { TSESTree } from '@typescript-eslint/utils'
+import type { RuleContext } from '../types'
+import { ExportMap, createRule, declaredScope } from '../utils'
 
 type MessageId =
   | 'noNamesFound'

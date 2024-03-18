@@ -1,8 +1,8 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/newline-after-import'
-
 import { parsers } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/newline-after-import'
 
 const ruleTester = new TSESLint.RuleTester()
 

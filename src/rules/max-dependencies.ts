@@ -1,7 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { moduleVisitor } from '../utils/module-visitor'
-import { createRule } from '../utils'
+import { createRule, moduleVisitor } from '../utils'
 
 type Options = {
   ignoreTypeImports?: boolean

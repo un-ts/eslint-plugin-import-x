@@ -1,5 +1,4 @@
-import { moduleVisitor } from '../utils/module-visitor'
-import { createRule } from '../utils'
+import { createRule, moduleVisitor } from '../utils'
 
 export = createRule({
   name: 'no-webpack-loader-syntax',

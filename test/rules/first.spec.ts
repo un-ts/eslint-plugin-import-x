@@ -2,9 +2,9 @@ import fs from 'fs'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/first'
-
 import { test, parsers, testFilePath } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/first'
 
 const ruleTester = new TSESLint.RuleTester()
 

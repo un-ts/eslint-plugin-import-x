@@ -2,18 +2,16 @@
  * Ensures that an imported path exists, given resolution rules.
  */
 
+import type { ModuleOptions } from '../utils'
 import {
+  createRule,
+  makeOptionsSchema,
+  moduleVisitor,
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
   resolve,
-} from '../utils/resolve'
-import { ModuleCache } from '../utils/module-cache'
-import {
-  ModuleOptions,
-  makeOptionsSchema,
-  moduleVisitor,
-} from '../utils/module-visitor'
-import { createRule } from '../utils'
+  ModuleCache,
+} from '../utils'
 
 type Options = ModuleOptions & {
   caseSensitive?: boolean
@@ -34,7 +32,7 @@ export = createRule<[Options?], MessageId>({
     messages: {
       unresolved: "Unable to resolve path to module '{{module}}'.",
       casingMismatch:
-        "Casing of '{{module}}' does not match the underlying filesystem.",
+        'Casing of {{module}} does not match the underlying filesystem.',
     },
     schema: [
       makeOptionsSchema({

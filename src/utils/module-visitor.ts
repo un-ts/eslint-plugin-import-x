@@ -13,7 +13,7 @@ type Visitor = (
     | TSESTree.StringLiteral,
 ) => void
 
-export interface ModuleOptions {
+export type ModuleOptions = {
   amd?: boolean
   commonjs?: boolean
   esmodule?: boolean

@@ -50,21 +50,40 @@ module.exports = {
     'import-x/unambiguous': 'off',
   },
 
-  settings: {
-    'import-x/resolver': {
-      node: {
-        paths: ['src'],
-      },
-    },
-  },
-
   overrides: [
     {
-      files: ['*.js', '*.ts'],
+      files: ['*.ts'],
       excludedFiles: ['test/fixtures'],
+      rules: {
+        '@typescript-eslint/array-type': [
+          2,
+          {
+            default: 'array-simple',
+          },
+        ],
+        '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+        '@typescript-eslint/consistent-type-imports': [
+          'error',
+          {
+            fixStyle: 'inline-type-imports',
+          },
+        ],
+        'import-x/consistent-type-specifier-style': 'error',
+        'import-x/order': [
+          'error',
+          {
+            alphabetize: {
+              order: 'asc',
+            },
+            'newlines-between': 'always',
+          },
+        ],
+      },
       settings: {
         'import-x/resolver': {
-          typescript: true,
+          typescript: {
+            project: 'tsconfig.base.json',
+          },
         },
       },
     },
@@ -72,9 +91,6 @@ module.exports = {
       files: 'test/**',
       env: {
         jest: true,
-      },
-      rules: {
-        'import-x/default': 0,
       },
     },
     {

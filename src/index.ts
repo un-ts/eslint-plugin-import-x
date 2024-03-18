@@ -1,65 +1,79 @@
 import type { TSESLint } from '@typescript-eslint/utils'
 
-import type { PluginConfig } from './types'
-
 // rules
-import noUnresolved from './rules/no-unresolved'
-import named from './rules/named'
-import default_ from './rules/default'
-import namespace from './rules/namespace'
-import noNamespace from './rules/no-namespace'
-import export_ from './rules/export'
-import noMutableExports from './rules/no-mutable-exports'
-import extensions from './rules/extensions'
-import noRestrictedPaths from './rules/no-restricted-paths'
-import noInternalModules from './rules/no-internal-modules'
-import groupExports from './rules/group-exports'
-import noRelativePackages from './rules/no-relative-packages'
-import noRelativeParentImports from './rules/no-relative-parent-imports'
-import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
-import noSelfImport from './rules/no-self-import'
-import noCycle from './rules/no-cycle'
-import noNamedDefault from './rules/no-named-default'
-import noNamedAsDefault from './rules/no-named-as-default'
-import noNamedAsDefaultMember from './rules/no-named-as-default-member'
-import noAnonymousDefaultExport from './rules/no-anonymous-default-export'
-import noUnusedModules from './rules/no-unused-modules'
-import noCommonjs from './rules/no-commonjs'
-import noAmd from './rules/no-amd'
-import noDuplicates from './rules/no-duplicates'
-import first from './rules/first'
-import maxDependencies from './rules/max-dependencies'
-import noExtraneousDependencies from './rules/no-extraneous-dependencies'
-import noAbsolutePath from './rules/no-absolute-path'
-import noNodejsModules from './rules/no-nodejs-modules'
-import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax'
-import order from './rules/order'
-import newlineAfterImport from './rules/newline-after-import'
-import preferDefaultExport from './rules/prefer-default-export'
-import noDefaultExport from './rules/no-default-export'
-import noNamedExport from './rules/no-named-export'
-import noDynamicRequire from './rules/no-dynamic-require'
-import unambiguous from './rules/unambiguous'
-import noUnassignedImport from './rules/no-unassigned-import'
-import noUselessPathSegments from './rules/no-useless-path-segments'
-import dynamicImportChunkname from './rules/dynamic-import-chunkname'
-import noImportModuleExports from './rules/no-import-module-exports'
-import noEmptyNamedBlocks from './rules/no-empty-named-blocks'
-import exportsLast from './rules/exports-last'
-import noDeprecated from './rules/no-deprecated'
-import importsFirst from './rules/imports-first'
-
-// configs
-import recommended from './config/recommended'
+import electron from './config/electron'
 import errors from './config/errors'
-import warnings from './config/warnings'
-import stage0 from './config/stage-0'
 import react from './config/react'
 import reactNative from './config/react-native'
-import electron from './config/electron'
+import recommended from './config/recommended'
+import stage0 from './config/stage-0'
 import typescript from './config/typescript'
+import warnings from './config/warnings'
+import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
+import default_ from './rules/default'
+import dynamicImportChunkname from './rules/dynamic-import-chunkname'
+import export_ from './rules/export'
+import exportsLast from './rules/exports-last'
+import extensions from './rules/extensions'
+import first from './rules/first'
+import groupExports from './rules/group-exports'
+import importsFirst from './rules/imports-first'
+import maxDependencies from './rules/max-dependencies'
+import named from './rules/named'
+import namespace from './rules/namespace'
+import newlineAfterImport from './rules/newline-after-import'
+import noAbsolutePath from './rules/no-absolute-path'
+import noAmd from './rules/no-amd'
+import noAnonymousDefaultExport from './rules/no-anonymous-default-export'
+import noCommonjs from './rules/no-commonjs'
+import noCycle from './rules/no-cycle'
+import noDefaultExport from './rules/no-default-export'
+import noDeprecated from './rules/no-deprecated'
+import noDuplicates from './rules/no-duplicates'
+import noDynamicRequire from './rules/no-dynamic-require'
+import noEmptyNamedBlocks from './rules/no-empty-named-blocks'
+import noExtraneousDependencies from './rules/no-extraneous-dependencies'
+import noImportModuleExports from './rules/no-import-module-exports'
+import noInternalModules from './rules/no-internal-modules'
+import noMutableExports from './rules/no-mutable-exports'
+import noNamedAsDefault from './rules/no-named-as-default'
+import noNamedAsDefaultMember from './rules/no-named-as-default-member'
+import noNamedDefault from './rules/no-named-default'
+import noNamedExport from './rules/no-named-export'
+import noNamespace from './rules/no-namespace'
+import noNodejsModules from './rules/no-nodejs-modules'
+import noRelativePackages from './rules/no-relative-packages'
+import noRelativeParentImports from './rules/no-relative-parent-imports'
+import noRestrictedPaths from './rules/no-restricted-paths'
+import noSelfImport from './rules/no-self-import'
+import noUnassignedImport from './rules/no-unassigned-import'
+import noUnresolved from './rules/no-unresolved'
+import noUnusedModules from './rules/no-unused-modules'
+import noUselessPathSegments from './rules/no-useless-path-segments'
+import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax'
+import order from './rules/order'
+import preferDefaultExport from './rules/prefer-default-export'
+import unambiguous from './rules/unambiguous'
+// configs
+import type { PluginConfig } from './types'
 
-export const rules = {
+const configs = {
+  recommended,
+
+  errors,
+  warnings,
+
+  // shhhh... work in progress "secret" rules
+  'stage-0': stage0,
+
+  // useful stuff for folks using various environments
+  react,
+  'react-native': reactNative,
+  electron,
+  typescript,
+} satisfies Record<string, PluginConfig>
+
+const rules = {
   'no-unresolved': noUnresolved,
   named,
   default: default_,
@@ -115,18 +129,7 @@ export const rules = {
   'imports-first': importsFirst,
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
-export const configs = {
-  recommended,
-
-  errors,
-  warnings,
-
-  // shhhh... work in progress "secret" rules
-  'stage-0': stage0,
-
-  // useful stuff for folks using various environments
-  react,
-  'react-native': reactNative,
-  electron,
-  typescript,
-} satisfies Record<string, PluginConfig>
+export = {
+  configs,
+  rules,
+}

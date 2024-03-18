@@ -1,17 +1,17 @@
 import path from 'path'
 
-import { TSESTree } from '@typescript-eslint/utils'
+import type { TSESTree } from '@typescript-eslint/utils'
 
-import { readPkgUp } from '../utils/read-pkg-ip'
-import { resolve } from '../utils/resolve'
+import type { RuleContext } from '../types'
+import type { ModuleOptions } from '../utils'
 import {
+  importType,
+  createRule,
   moduleVisitor,
   makeOptionsSchema,
-  ModuleOptions,
-} from '../utils/module-visitor'
-import { importType } from '../core/import-type'
-import { createRule } from '../utils'
-import { RuleContext } from '../types'
+  resolve,
+  readPkgUp,
+} from '../utils'
 
 function toPosixPath(filePath: string) {
   return filePath.replace(/\\/g, '/')
@@ -20,7 +20,7 @@ function toPosixPath(filePath: string) {
 function findNamedPackage(filePath: string) {
   const found = readPkgUp({ cwd: filePath })
   if (found.pkg && !found.pkg.name) {
-    return findNamedPackage(path.join(found.path, '../..'))
+    return findNamedPackage(path.resolve(found.path, '../..'))
   }
   return found
 }

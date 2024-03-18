@@ -1,8 +1,7 @@
 import path from 'path'
 
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
-
-import { CASE_SENSITIVE_FS } from '../../src/utils/resolve'
+import type { TSESTree } from '@typescript-eslint/utils'
+import { TSESLint } from '@typescript-eslint/utils'
 
 import {
   test,
@@ -12,7 +11,8 @@ import {
   parsers,
 } from '../utils'
 
-import rule from '../../src/rules/named'
+import rule from 'eslint-plugin-import-x/rules/named'
+import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
 const ruleTester = new TSESLint.RuleTester()
 

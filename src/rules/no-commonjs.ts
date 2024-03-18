@@ -2,7 +2,8 @@
  * Rule to prefer ES6 to CJS
  */
 
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+
 import { createRule } from '../utils'
 
 type NormalizedOptions = {

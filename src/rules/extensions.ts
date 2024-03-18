@@ -1,12 +1,18 @@
 import path from 'path'
 
-import { resolve } from '../utils/resolve'
-import { isBuiltIn, isExternalModule, isScoped } from '../core/import-type'
-import { moduleVisitor } from '../utils/module-visitor'
-import { createRule } from '../utils'
-import { FileExtension, RuleContext } from '../types'
+import type { FileExtension, RuleContext } from '../types'
+import {
+  isBuiltIn,
+  isExternalModule,
+  isScoped,
+  createRule,
+  moduleVisitor,
+  resolve,
+} from '../utils'
 
-const enumValues = { enum: ['always', 'ignorePackages', 'never'] as const }
+const enumValues = {
+  enum: ['always', 'ignorePackages', 'never'] as const,
+}
 
 const patternProperties = {
   type: 'object',

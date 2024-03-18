@@ -1,8 +1,8 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-absolute-path'
-
 import { test } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-absolute-path'
 
 const ruleTester = new TSESLint.RuleTester()
 

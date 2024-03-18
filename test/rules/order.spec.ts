@@ -2,15 +2,10 @@ import { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 
-import rule from '../../src/rules/order'
+import { test, parsers, getNonDefaultParsers, testFilePath } from '../utils'
+import type { ValidTestCase } from '../utils'
 
-import {
-  test,
-  parsers,
-  getNonDefaultParsers,
-  testFilePath,
-  ValidTestCase,
-} from '../utils'
+import rule from 'eslint-plugin-import-x/rules/order'
 
 const ruleTester = new TSESLint.RuleTester()
 

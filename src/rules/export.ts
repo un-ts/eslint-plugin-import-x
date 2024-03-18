@@ -1,6 +1,6 @@
-import { TSESTree } from '@typescript-eslint/utils'
-import { ExportMap, recursivePatternCapture } from '../export-map'
-import { createRule } from '../utils'
+import type { TSESTree } from '@typescript-eslint/utils'
+
+import { ExportMap, recursivePatternCapture, createRule } from '../utils'
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:

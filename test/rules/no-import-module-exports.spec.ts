@@ -2,9 +2,9 @@ import path from 'path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-import-module-exports'
-
 import { test } from '../utils'
+
+import rule from 'eslint-plugin-import-x/rules/no-import-module-exports'
 
 const ruleTester = new TSESLint.RuleTester({
   parserOptions: { ecmaVersion: 6, sourceType: 'module' },
@@ -54,7 +54,7 @@ ruleTester.run('no-import-module-exports', rule, {
       `,
       // When the file matches the entry point defined in package.json
       // See test/fixtures/package.json
-      filename: path.join(process.cwd(), 'test/fixtures/index.js'),
+      filename: path.resolve('test/fixtures/index.js'),
     }),
     test({
       code: `

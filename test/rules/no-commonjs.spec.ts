@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-commonjs'
+import rule from 'eslint-plugin-import-x/rules/no-commonjs'
 
 const EXPORT = 'export'
 const IMPORT = 'import'

@@ -1,8 +1,8 @@
-import { TSESTree } from '@typescript-eslint/utils'
+import type { TSESTree } from '@typescript-eslint/utils'
 
 export function visit(
   node: TSESTree.Node,
-  keys: { [k in TSESTree.Node['type']]?: (keyof TSESTree.Node)[] } | null,
+  keys: { [k in TSESTree.Node['type']]?: Array<keyof TSESTree.Node> } | null,
   visitorSpec: {
     [k in TSESTree.Node['type'] | `${TSESTree.Node['type']}:Exit`]?: (
       node: TSESTree.Node,

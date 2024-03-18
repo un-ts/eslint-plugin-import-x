@@ -1,8 +1,9 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-relative-parent-imports'
+import { parsers, test as _test, testFilePath } from '../utils'
+import type { ValidTestCase } from '../utils'
 
-import { parsers, test as _test, testFilePath, ValidTestCase } from '../utils'
+import rule from 'eslint-plugin-import-x/rules/no-relative-parent-imports'
 
 const test = <T extends ValidTestCase>(def: T) =>
   _test({

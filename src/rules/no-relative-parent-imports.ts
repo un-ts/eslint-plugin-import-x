@@ -1,13 +1,13 @@
 import { basename, dirname, relative } from 'path'
 
+import type { ModuleOptions } from '../utils'
 import {
+  importType,
+  createRule,
   moduleVisitor,
   makeOptionsSchema,
-  ModuleOptions,
-} from '../utils/module-visitor'
-import { resolve } from '../utils/resolve'
-import { importType } from '../core/import-type'
-import { createRule } from '../utils'
+  resolve,
+} from '../utils'
 
 type MessageId = 'noAllowed'
 

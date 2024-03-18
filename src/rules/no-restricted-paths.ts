@@ -1,14 +1,11 @@
 import path from 'path'
 
+import type { TSESTree } from '@typescript-eslint/utils'
 import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
 
-import { resolve } from '../utils/resolve'
-import { moduleVisitor } from '../utils/module-visitor'
-import { importType } from '../core/import-type'
-import { createRule } from '../utils'
-import { Arrayable } from '../types'
-import { TSESTree } from '@typescript-eslint/utils'
+import type { Arrayable } from '../types'
+import { importType, createRule, moduleVisitor, resolve } from '../utils'
 
 const containsPath = (filepath: string, target: string) => {
   const relative = path.relative(target, filepath)

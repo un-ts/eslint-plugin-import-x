@@ -1,14 +1,17 @@
 import fs from 'fs'
-
-import semver from 'semver'
-import eslintPkg from 'eslint/package.json'
-import getTsconfig from 'get-tsconfig'
 import { setTimeout } from 'timers/promises'
 
-import { ExportMap } from '../../src/export-map'
+import eslintPkg from 'eslint/package.json'
+import getTsconfig from 'get-tsconfig'
+import semver from 'semver'
+
 import { testFilePath } from '../utils'
-import { isMaybeUnambiguousModule } from '../../src/utils/unambiguous'
-import type { ChildContext, RuleContext } from '../../src/types'
+
+import type { ChildContext, RuleContext } from 'eslint-plugin-import-x/types'
+import {
+  ExportMap,
+  isMaybeUnambiguousModule,
+} from 'eslint-plugin-import-x/utils'
 
 describe('ExportMap', () => {
   const fakeContext = {

@@ -4,11 +4,11 @@ import { TSESLint } from '@typescript-eslint/utils'
 // @ts-expect-error - no types yet
 import { FlatRuleTester } from 'eslint/use-at-your-own-risk'
 
-import jsxConfig from '../../src/config/react'
-import typescriptConfig from '../../src/config/typescript'
-import rule from '../../src/rules/no-unused-modules'
-
 import { test, testVersion, testFilePath, parsers } from '../utils'
+
+import jsxConfig from 'eslint-plugin-import-x/config/react'
+import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
+import rule from 'eslint-plugin-import-x/rules/no-unused-modules'
 
 const ruleTester = new TSESLint.RuleTester()
 const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)

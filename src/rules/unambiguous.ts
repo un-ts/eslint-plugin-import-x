@@ -2,8 +2,7 @@
  * Report modules that could parse incorrectly as scripts.
  */
 
-import { isUnambiguousModule } from '../utils/unambiguous'
-import { createRule } from '../utils'
+import { createRule, isUnambiguousModule } from '../utils'
 
 export = createRule({
   name: 'unambiguous',

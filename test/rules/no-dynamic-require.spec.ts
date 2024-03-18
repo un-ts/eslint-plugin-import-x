@@ -1,8 +1,9 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import rule from '../../src/rules/no-dynamic-require'
+import { parsers, test } from '../utils'
+import type { ValidTestCase } from '../utils'
 
-import { ValidTestCase, parsers, test } from '../utils'
+import rule from 'eslint-plugin-import-x/rules/no-dynamic-require'
 
 const ruleTester = new TSESLint.RuleTester()
 
