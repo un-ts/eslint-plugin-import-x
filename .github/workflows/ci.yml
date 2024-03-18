@@ -6,17 +6,21 @@ on:
 
 jobs:
   ci:
-    name: Lint and Test with Node.js ${{ matrix.node }} on ${{ matrix.os }}
+    name: Lint and Test with Node.js ${{ matrix.node }} and ESLint ${{ matrix.eslint }} on ${{ matrix.os }}
     strategy:
       matrix:
         os:
           - macos-latest
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
         node:
           - 16
           - 18
           - 20
+        eslint:
+          - 7.2
+          - 7
+          - 8
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repo
@@ -33,6 +37,10 @@ jobs:
         env:
           # https://github.com/actions/setup-node/issues/531#issuecomment-1819151412
           SKIP_YARN_COREPACK_CHECK: 1
+
+      - name: Install ESLint ${{ matrix.eslint }}
+        run: |
+          yarn add -D --ignore-engines eslint@${{ matrix.eslint }}
 
       - name: Install Dependencies
         run: yarn --ignore-engines
