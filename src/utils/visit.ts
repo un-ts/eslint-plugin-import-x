@@ -24,14 +24,14 @@ export function visit(
     return
   }
 
-  childFields.forEach(fieldName => {
-    ;[node[fieldName]].flat().forEach(item => {
+  for (const fieldName of childFields) {
+    for (const item of [node[fieldName]].flat()) {
       if (!item || typeof item !== 'object' || !('type' in item)) {
-        return
+        continue
       }
       visit(item, keys, visitorSpec)
-    })
-  })
+    }
+  }
 
   const exit = visitorSpec[`${type}:Exit`]
 

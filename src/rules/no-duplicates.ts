@@ -66,7 +66,7 @@ function getFix(
   // `sourceCode.getCommentsBefore` was added in 4.0, so that's an easy thing to
   // check for.
   if (typeof sourceCode.getCommentsBefore !== 'function') {
-    return undefined
+    return
   }
 
   // Adjusting the first import might make it multiline, which could break
@@ -74,7 +74,7 @@ function getFix(
   // import has comments. Also, if the first import is `import * as ns from
   // './foo'` there's nothing we can do.
   if (hasProblematicComments(first, sourceCode) || hasNamespace(first)) {
-    return undefined
+    return
   }
 
   const defaultImportNames = new Set(
@@ -84,7 +84,7 @@ function getFix(
   // Bail if there are multiple different default import names – it's up to the
   // user to choose which one to keep.
   if (defaultImportNames.size > 1) {
-    return undefined
+    return
   }
 
   // Leave it to the user to handle comments. Also skip `import * as ns from
@@ -100,7 +100,7 @@ function getFix(
       const closeBrace = tokens.find(token => isPunctuator(token, '}'))
 
       if (openBrace == null || closeBrace == null) {
-        return undefined
+        return
       }
 
       return {
@@ -128,7 +128,7 @@ function getFix(
   const shouldRemoveUnnecessary = unnecessaryImports.length > 0
 
   if (!(shouldAddDefault || shouldAddSpecifiers || shouldRemoveUnnecessary)) {
-    return undefined
+    return
   }
 
   return (fixer: TSESLint.RuleFixer) => {
@@ -249,7 +249,7 @@ function getFix(
         importNode.range[1],
         importNode.range[1] + 1,
       ] as const
-      const charAfterImport = sourceCode.text.substring(
+      const charAfterImport = sourceCode.text.slice(
         charAfterImportRange[0],
         charAfterImportRange[1],
       )
@@ -265,7 +265,7 @@ function getFix(
       fixes.push(fixer.remove(node))
 
       const charAfterImportRange = [node.range[1], node.range[1] + 1] as const
-      const charAfterImport = sourceCode.text.substring(
+      const charAfterImport = sourceCode.text.slice(
         charAfterImportRange[0],
         charAfterImportRange[1],
       )
@@ -287,7 +287,7 @@ function getDefaultImportName(node: TSESTree.ImportDeclaration) {
   const defaultSpecifier = node.specifiers.find(
     specifier => specifier.type === 'ImportDefaultSpecifier',
   )
-  return defaultSpecifier != null ? defaultSpecifier.local.name : undefined
+  return defaultSpecifier == null ? undefined : defaultSpecifier.local.name
 }
 
 // Checks whether `node` has a namespace import.
@@ -355,9 +355,10 @@ function hasCommentInsideNonSpecifiers(
   // the `{`, but not before the `}` (hence the `+1`s).
   const someTokens =
     openBraceIndex >= 0 && closeBraceIndex >= 0
-      ? tokens
-          .slice(1, openBraceIndex + 1)
-          .concat(tokens.slice(closeBraceIndex + 1))
+      ? [
+          ...tokens.slice(1, openBraceIndex + 1),
+          ...tokens.slice(closeBraceIndex + 1),
+        ]
       : tokens.slice(1)
   return someTokens.some(
     token => sourceCode.getCommentsBefore(token).length > 0,

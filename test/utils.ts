@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { RuleTester } from 'eslint'
@@ -6,7 +6,7 @@ import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
-import type { PluginSettings, RuleContext } from '../src/types'
+import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x/types'
 
 // warms up the module cache. this import takes a while (>500ms)
 import '@babel/eslint-parser'
@@ -69,6 +69,7 @@ export type InvalidTestCaseError =
       type?: `${TSESTree.AST_NODE_TYPES}`
     })
 
+// eslint-disable-next-line eslint-plugin/require-meta-docs-description, eslint-plugin/require-meta-type, eslint-plugin/prefer-message-ids, eslint-plugin/prefer-object-rule, eslint-plugin/require-meta-schema
 export function test<T extends ValidTestCase>(
   t: T,
 ): T extends { errors: InvalidTestCaseError[] | number }

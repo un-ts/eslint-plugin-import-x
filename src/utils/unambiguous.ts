@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-const pattern = /(^|;)\s*(export|import)((\s+\w)|(\s*[{*=]))|import\(/m
+const pattern = /(^|;)\s*(export|import)((\s+\w)|(\s*[*={]))|import\(/m
 /**
  * detect possible imports/exports without a full parse.
  *

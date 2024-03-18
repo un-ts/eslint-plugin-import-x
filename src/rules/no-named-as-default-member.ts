@@ -1,10 +1,10 @@
 /**
  * Rule to warn about potentially confused use of name exports
  */
+
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { importDeclaration } from '../import-declaration'
-import { ExportMap, createRule } from '../utils'
+import { importDeclaration, ExportMap, createRule } from '../utils'
 
 type MessageId = 'member'
 
@@ -51,7 +51,7 @@ export = createRule<[], MessageId>({
           return
         }
 
-        if (exportMap.errors.length) {
+        if (exportMap.errors.length > 0) {
           exportMap.reportErrors(context, declaration)
           return
         }
@@ -92,10 +92,10 @@ export = createRule<[], MessageId>({
       },
 
       'Program:exit'() {
-        allPropertyLookups.forEach((lookups, objectName) => {
+        for (const [objectName, lookups] of allPropertyLookups.entries()) {
           const fileImport = fileImports.get(objectName)
           if (fileImport == null) {
-            return
+            continue
           }
 
           for (const { propName, node } of lookups) {
@@ -117,7 +117,7 @@ export = createRule<[], MessageId>({
               },
             })
           }
-        })
+        }
       },
     }
   },

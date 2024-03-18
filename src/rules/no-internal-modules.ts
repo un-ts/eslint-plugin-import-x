@@ -16,17 +16,17 @@ function toSteps(somePath: string) {
       if (step === '..') {
         return acc.slice(0, -1)
       }
-      return acc.concat(step)
+      return [...acc, step]
     }, [])
 }
 
-const potentialViolationTypes = [
+const potentialViolationTypes = new Set([
   'parent',
   'index',
   'sibling',
   'external',
   'internal',
-]
+])
 
 type Options = {
   allow?: string[]
@@ -155,7 +155,7 @@ export = createRule<[Options?], MessageId>({
       source => {
         const importPath = source.value
         if (
-          potentialViolationTypes.includes(importType(importPath, context)) &&
+          potentialViolationTypes.has(importType(importPath, context)) &&
           isReachViolation(importPath)
         ) {
           context.report({

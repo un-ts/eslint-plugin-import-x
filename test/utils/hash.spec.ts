@@ -1,5 +1,5 @@
-import type { Hash } from 'crypto'
-import { createHash } from 'crypto'
+import type { Hash } from 'node:crypto'
+import { createHash } from 'node:crypto'
 
 import { hashify, hashArray, hashObject } from 'eslint-plugin-import-x/utils'
 
@@ -17,7 +17,7 @@ describe('hash', () => {
     })
 
     it('handles undefined', () => {
-      expectHash(hashify(undefined), 'undefined')
+      expectHash(hashify(), 'undefined')
     })
 
     it('handles numbers', () => {

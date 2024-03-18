@@ -1,6 +1,6 @@
-import fs from 'fs'
-import path from 'path'
-import { setTimeout } from 'timers/promises'
+import fs from 'node:fs'
+import path from 'node:path'
+import { setTimeout } from 'node:timers/promises'
 
 import type { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
@@ -13,6 +13,12 @@ import {
   fileExistsWithCaseSync,
   resolve,
 } from 'eslint-plugin-import-x/utils'
+
+function unexpectedCallToGetFilename(): string {
+  throw new Error(
+    'Expected to call to getPhysicalFilename() instead of getFilename()',
+  )
+}
 
 describe('resolve', () => {
   it('throws on bad parameters', () => {
@@ -285,12 +291,6 @@ describe('resolve', () => {
   ;(semver.satisfies(eslintPkg.version, '>= 7.28') ? describe : describe.skip)(
     'getPhysicalFilename()',
     () => {
-      function unexpectedCallToGetFilename(): string {
-        throw new Error(
-          'Expected to call to getPhysicalFilename() instead of getFilename()',
-        )
-      }
-
       it('resolves via a custom resolver with interface version 1', () => {
         const context = testContext({
           'import-x/resolver': './foo-bar-resolver-v1',
@@ -613,16 +613,16 @@ describe('resolve', () => {
 
     const pairs = [['./CaseyKasem.js', './CASEYKASEM2.js']]
 
-    pairs.forEach(([original, changed]) => {
+    for (const [original, changed] of pairs) {
       describe(`${original} => ${changed}`, () => {
         beforeAll(() => {
           expect(resolve(original, context)).toBeDefined()
           expect(resolve(changed, context)).toBeFalsy()
 
           // settings are part of cache key
-          infiniteContexts.forEach(([, c]) => {
+          for (const [, c] of infiniteContexts) {
             expect(resolve(original, c)).toBeDefined()
-          })
+          }
         })
 
         beforeAll(() =>
@@ -656,12 +656,12 @@ describe('resolve', () => {
 
           beforeAll(() => setTimeout(1100))
 
-          infiniteContexts.forEach(([inf, infiniteContext]) => {
+          for (const [inf, infiniteContext] of infiniteContexts) {
             it(`lifetime: ${inf} still gets cached values after ~1s`, () => {
               // original
               expect(resolve(original, infiniteContext)).toBeDefined()
             })
-          })
+          }
         })
 
         describe('finite cache', () => {
@@ -673,6 +673,6 @@ describe('resolve', () => {
           })
         })
       })
-    })
+    }
   })
 })

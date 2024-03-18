@@ -39,7 +39,7 @@ export = createRule<[], MessageId>({
         return
       }
 
-      if (imports.errors.length) {
+      if (imports.errors.length > 0) {
         imports.reportErrors(context, node)
       } else if (imports.get('default') === undefined) {
         context.report({

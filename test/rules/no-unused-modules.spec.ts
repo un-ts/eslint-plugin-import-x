@@ -1,4 +1,4 @@
-import fs from 'fs'
+import fs from 'node:fs'
 
 import { TSESLint } from '@typescript-eslint/utils'
 // @ts-expect-error - no types yet

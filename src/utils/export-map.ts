@@ -1,14 +1,14 @@
-import fs from 'fs'
-import { resolve as pathResolve } from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 import type { Annotation } from 'doctrine'
 import doctrine from 'doctrine'
-import { SourceCode } from 'eslint'
 import type { AST } from 'eslint'
-import { getTsconfig } from 'get-tsconfig'
+import { SourceCode } from 'eslint'
 import type { TsConfigJsonResolved } from 'get-tsconfig'
+import { getTsconfig } from 'get-tsconfig'
 
 import type {
   ChildContext,
@@ -56,7 +56,7 @@ export type ModuleImport = {
 
 export class ExportMap {
   static for(context: ChildContext) {
-    const { path } = context
+    const { path: filepath } = context
 
     const cacheKey = context.cacheKey || hashObject(context).digest('hex')
     let exportMap = exportCache.get(cacheKey)
@@ -66,43 +66,43 @@ export class ExportMap {
       return null
     }
 
-    const stats = fs.statSync(path)
-    if (exportMap != null) {
-      // date equality check
-      if (exportMap.mtime.valueOf() - stats.mtime.valueOf() === 0) {
-        return exportMap
-      }
-      // future: check content equality?
+    const stats = fs.statSync(context.path)
+    if (
+      exportMap != null && // date equality check
+      exportMap.mtime.valueOf() - stats.mtime.valueOf() === 0
+    ) {
+      return exportMap
     }
+    // future: check content equality?
 
     // check valid extensions first
-    if (!hasValidExtension(path, context)) {
+    if (!hasValidExtension(filepath, context)) {
       exportCache.set(cacheKey, null)
       return null
     }
 
     // check for and cache ignore
-    if (ignore(path, context)) {
-      log('ignored path due to ignore settings:', path)
+    if (ignore(filepath, context)) {
+      log('ignored path due to ignore settings:', filepath)
       exportCache.set(cacheKey, null)
       return null
     }
 
-    const content = fs.readFileSync(path, { encoding: 'utf8' })
+    const content = fs.readFileSync(filepath, { encoding: 'utf8' })
 
     // check for and cache unambiguous modules
     if (!isMaybeUnambiguousModule(content)) {
-      log('ignored path due to unambiguous regex:', path)
+      log('ignored path due to unambiguous regex:', filepath)
       exportCache.set(cacheKey, null)
       return null
     }
 
-    log('cache miss', cacheKey, 'for path', path)
-    exportMap = ExportMap.parse(path, content, context)
+    log('cache miss', cacheKey, 'for path', filepath)
+    exportMap = ExportMap.parse(filepath, content, context)
 
     // ambiguous modules return null
     if (exportMap == null) {
-      log('ignored path due to ambiguous parse:', path)
+      log('ignored path due to ambiguous parse:', filepath)
       exportCache.set(cacheKey, null)
       return null
     }
@@ -123,16 +123,16 @@ export class ExportMap {
     return ExportMap.for(childContext(path, context))
   }
 
-  static parse(path: string, content: string, context: ChildContext) {
-    const m = new ExportMap(path)
+  static parse(filepath: string, content: string, context: ChildContext) {
+    const m = new ExportMap(filepath)
     const isEsModuleInteropTrue = isEsModuleInterop()
 
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
     try {
-      ;({ ast, visitorKeys } = parse(path, content, context))
-    } catch (err) {
-      m.errors.push(err as ParseError)
+      ;({ ast, visitorKeys } = parse(filepath, content, context))
+    } catch (error) {
+      m.errors.push(error as ParseError)
       return m // can't continue
     }
 
@@ -189,9 +189,9 @@ export class ExportMap {
 
     const docStyleParsers = {} as DocStyleParsers
 
-    docStyles.forEach(style => {
+    for (const style of docStyles) {
       docStyleParsers[style] = availableDocStyleParsers[style]
-    })
+    }
 
     // attempt to collect module doc
     if (ast.comments) {
@@ -205,7 +205,7 @@ export class ExportMap {
             m.doc = doc
             return true
           }
-        } catch (err) {
+        } catch {
           /* ignore */
         }
         return false
@@ -215,7 +215,7 @@ export class ExportMap {
     const namespaces = new Map()
 
     function remotePath(value: string) {
-      return relative(value, path, context.settings)
+      return relative(value, filepath, context.settings)
     }
 
     function resolveImport(value: string) {
@@ -269,13 +269,14 @@ export class ExportMap {
       let local: string
 
       switch (s.type) {
-        case 'ExportDefaultSpecifier':
+        case 'ExportDefaultSpecifier': {
           if (!nsource) {
             return
           }
           local = 'default'
           break
-        case 'ExportNamespaceSpecifier':
+        }
+        case 'ExportNamespaceSpecifier': {
           m.namespace.set(
             s.exported.name,
             Object.defineProperty(exportMeta, 'namespace', {
@@ -285,7 +286,8 @@ export class ExportMap {
             }),
           )
           return
-        case 'ExportAllDeclaration':
+        }
+        case 'ExportAllDeclaration': {
           m.namespace.set(
             s.exported!.name ||
               // @ts-expect-error - legacy parser type
@@ -293,7 +295,8 @@ export class ExportMap {
             addNamespace(exportMeta, s.source.value),
           )
           return
-        case 'ExportSpecifier':
+        }
+        case 'ExportSpecifier': {
           if (!('source' in n && n.source)) {
             m.namespace.set(
               s.exported.name ||
@@ -303,6 +306,7 @@ export class ExportMap {
             )
             return
           }
+        }
         // else falls through
         default: {
           if ('local' in s) {
@@ -336,7 +340,7 @@ export class ExportMap {
       // shouldn't be considered to be just importing types
       let specifiersOnlyImportingTypes = n.specifiers.length > 0
       const importedSpecifiers = new Set<string>()
-      n.specifiers.forEach(specifier => {
+      for (const specifier of n.specifiers) {
         if (specifier.type === 'ImportSpecifier') {
           importedSpecifiers.add(
             specifier.imported.name ||
@@ -354,7 +358,7 @@ export class ExportMap {
           (specifier.importKind === 'type' ||
             // @ts-expect-error - flow type
             specifier.importKind === 'typeof')
-      })
+      }
       captureDependency(
         n,
         declarationIsType || specifiersOnlyImportingTypes,
@@ -413,7 +417,7 @@ export class ExportMap {
         project,
       }).digest('hex')
       let tsConfig = tsconfigCache.get(cacheKey)
-      if (typeof tsConfig === 'undefined') {
+      if (tsConfig === undefined) {
         tsconfigRootDir = tsconfigRootDir || process.cwd()
         let tsconfigResult
         if (project) {
@@ -422,7 +426,7 @@ export class ExportMap {
             tsconfigResult = getTsconfig(
               project === true
                 ? context.filename
-                : pathResolve(tsconfigRootDir, project),
+                : path.resolve(tsconfigRootDir, project),
             )
             if (tsconfigResult) {
               break
@@ -440,14 +444,14 @@ export class ExportMap {
         : false
     }
 
-    ast.body.forEach(function (n) {
+    for (const n of ast.body) {
       if (n.type === 'ExportDefaultDeclaration') {
         const exportMeta = captureDoc(source, docStyleParsers, n)
         if (n.declaration.type === 'Identifier') {
           addNamespace(exportMeta, n.declaration)
         }
         m.namespace.set('default', exportMeta)
-        return
+        continue
       }
 
       if (n.type === 'ExportAllDeclaration') {
@@ -458,7 +462,7 @@ export class ExportMap {
         if (n.exported) {
           processSpecifier(n, n.exported, m)
         }
-        return
+        continue
       }
 
       // capture namespaces in case of later export
@@ -469,7 +473,7 @@ export class ExportMap {
         if (ns) {
           namespaces.set(ns.local.name, n.source.value)
         }
-        return
+        continue
       }
 
       if (n.type === 'ExportNamedDeclaration') {
@@ -493,28 +497,30 @@ export class ExportMap {
             case 'TSInterfaceDeclaration':
             // @ts-expect-error - legacy parser type
             case 'TSAbstractClassDeclaration':
-            case 'TSModuleDeclaration':
+            case 'TSModuleDeclaration': {
               m.namespace.set(
                 (n.declaration.id as TSESTree.Identifier).name,
                 captureDoc(source, docStyleParsers, n),
               )
               break
+            }
             /* eslint-enable no-fallthrough */
-            case 'VariableDeclaration':
-              n.declaration.declarations.forEach(d => {
+            case 'VariableDeclaration': {
+              for (const d of n.declaration.declarations) {
                 recursivePatternCapture(d.id, id =>
                   m.namespace.set(
                     (id as TSESTree.Identifier).name,
                     captureDoc(source, docStyleParsers, d, n),
                   ),
                 )
-              })
+              }
               break
+            }
             default:
           }
         }
 
-        n.specifiers.forEach(s => processSpecifier(s, n, m))
+        for (const s of n.specifiers) processSpecifier(s, n, m)
       }
 
       const exports = ['TSExportAssignment']
@@ -538,7 +544,7 @@ export class ExportMap {
                     n.expression.id &&
                     n.expression.id.name))) ||
               null
-        const declTypes = [
+        const declTypes = new Set([
           'VariableDeclaration',
           'ClassDeclaration',
           'TSDeclareFunction',
@@ -547,10 +553,10 @@ export class ExportMap {
           'TSInterfaceDeclaration',
           'TSAbstractClassDeclaration',
           'TSModuleDeclaration',
-        ]
+        ])
         const exportedDecls = ast.body.filter(node => {
           return (
-            declTypes.includes(node.type) &&
+            declTypes.has(node.type) &&
             (('id' in node &&
               node.id &&
               'name' in node.id &&
@@ -564,7 +570,7 @@ export class ExportMap {
         if (exportedDecls.length === 0) {
           // Export is not referencing any local declaration, must be re-exporting
           m.namespace.set('default', captureDoc(source, docStyleParsers, n))
-          return
+          continue
         }
         if (
           isEsModuleInteropTrue && // esModuleInterop is on in tsconfig
@@ -572,7 +578,7 @@ export class ExportMap {
         ) {
           m.namespace.set('default', {}) // add default export
         }
-        exportedDecls.forEach(decl => {
+        for (const decl of exportedDecls) {
           if (decl.type === 'TSModuleDeclaration') {
             if (decl.body && decl.body.type === 'TSModuleDeclaration') {
               m.namespace.set(
@@ -580,7 +586,7 @@ export class ExportMap {
                 captureDoc(source, docStyleParsers, decl.body),
               )
             } else if (decl.body && decl.body.body) {
-              decl.body.body.forEach(moduleBlockNode => {
+              for (const moduleBlockNode of decl.body.body) {
                 // Export-assignment exports all members in the namespace,
                 // explicitly exported or not.
                 const namespaceDecl =
@@ -591,7 +597,7 @@ export class ExportMap {
                 if (!namespaceDecl) {
                   // TypeScript can check this for us; we needn't
                 } else if (namespaceDecl.type === 'VariableDeclaration') {
-                  namespaceDecl.declarations.forEach(d =>
+                  for (const d of namespaceDecl.declarations)
                     recursivePatternCapture(d.id, id =>
                       m.namespace.set(
                         (id as TSESTree.Identifier).name,
@@ -603,15 +609,14 @@ export class ExportMap {
                           moduleBlockNode,
                         ),
                       ),
-                    ),
-                  )
+                    )
                 } else if ('id' in namespaceDecl) {
                   m.namespace.set(
                     (namespaceDecl.id as TSESTree.Identifier).name,
                     captureDoc(source, docStyleParsers, moduleBlockNode),
                   )
                 }
-              })
+              }
             }
           } else {
             // Export as default
@@ -620,9 +625,9 @@ export class ExportMap {
               captureDoc(source, docStyleParsers, decl),
             )
           }
-        })
+        }
       }
-    })
+    }
 
     if (
       isEsModuleInteropTrue && // esModuleInterop is on in tsconfig
@@ -677,14 +682,14 @@ export class ExportMap {
 
   get size() {
     let size = this.namespace.size + this.reexports.size
-    this.dependencies.forEach(dep => {
+    for (const dep of this.dependencies) {
       const d = dep()
       // CJS / ignored dependencies won't exist (#717)
       if (d == null) {
-        return
+        continue
       }
       size += d.size
-    })
+    }
     return size
   }
 
@@ -829,16 +834,17 @@ export class ExportMap {
     ) => void,
     thisArg?: unknown,
   ) {
-    this.namespace.forEach((v, n) => {
+    for (const [n, v] of this.namespace.entries()) {
       callback.call(thisArg, v, n, this)
-    })
+    }
 
-    this.reexports.forEach((reexports, name) => {
+    for (const [name, reexports] of this.reexports.entries()) {
       const reexported = reexports.getImport()
       // can't look up meta for ignored re-exports (#348)
       callback.call(thisArg, reexported?.get(reexports.local), name, this)
-    })
+    }
 
+    // eslint-disable-next-line unicorn/no-array-for-each
     this.dependencies.forEach(dep => {
       const d = dep()
       // CJS / ignored dependencies won't exist (#717)
@@ -846,6 +852,7 @@ export class ExportMap {
         return
       }
 
+      // eslint-disable-next-line unicorn/no-array-for-each
       d.forEach((v, n) => {
         if (n !== 'default') {
           callback.call(thisArg, v, n, this)
@@ -932,17 +939,17 @@ function captureJsDoc(comments: TSESTree.Comment[]) {
   let doc: Annotation | undefined
 
   // capture XSDoc
-  comments.forEach(comment => {
+  for (const comment of comments) {
     // skip non-block comments
     if (comment.type !== 'Block') {
-      return
+      continue
     }
     try {
       doc = doctrine.parse(comment.value, { unwrap: true })
-    } catch (err) {
+    } catch {
       /* don't care, for now? maybe add to `errors?` */
     }
-  })
+  }
 
   return doc
 }
@@ -953,9 +960,8 @@ function captureJsDoc(comments: TSESTree.Comment[]) {
 function captureTomDoc(comments: TSESTree.Comment[]): Annotation | undefined {
   // collect lines up to first paragraph break
   const lines = []
-  for (let i = 0; i < comments.length; i++) {
-    const comment = comments[i]
-    if (comment.value.match(/^\s*$/)) {
+  for (const comment of comments) {
+    if (/^\s*$/.test(comment.value)) {
       break
     }
     lines.push(comment.value.trim())
@@ -1001,28 +1007,29 @@ export function recursivePatternCapture(
   callback: (node: TSESTree.DestructuringPattern) => void,
 ) {
   switch (pattern.type) {
-    case 'Identifier': // base case
+    case 'Identifier': {
+      // base case
       callback(pattern)
       break
-
-    case 'ObjectPattern':
-      pattern.properties.forEach(p => {
+    }
+    case 'ObjectPattern': {
+      for (const p of pattern.properties) {
         if (
           // @ts-expect-error - legacy experimental
           p.type === 'ExperimentalRestProperty' ||
           p.type === 'RestElement'
         ) {
           callback(p.argument)
-          return
+          continue
         }
         recursivePatternCapture(p.value, callback)
-      })
+      }
       break
-
-    case 'ArrayPattern':
-      pattern.elements.forEach(element => {
+    }
+    case 'ArrayPattern': {
+      for (const element of pattern.elements) {
         if (element == null) {
-          return
+          continue
         }
         if (
           // @ts-expect-error - legacy experimental
@@ -1030,15 +1037,16 @@ export function recursivePatternCapture(
           element.type === 'RestElement'
         ) {
           callback(element.argument)
-          return
+          continue
         }
         recursivePatternCapture(element, callback)
-      })
+      }
       break
-
-    case 'AssignmentPattern':
+    }
+    case 'AssignmentPattern': {
       callback(pattern.left)
       break
+    }
     default:
   }
 }

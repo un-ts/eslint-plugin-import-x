@@ -207,7 +207,7 @@ ruleTester.run('no-cycle', rule, {
       }),
       test({
         code: `import { foo } from "./${testDialect}/depth-two"`,
-        options: [{ ...opts, maxDepth: Infinity }],
+        options: [{ ...opts, maxDepth: Number.POSITIVE_INFINITY }],
         errors: [error(`Dependency cycle via ./depth-one:1`)],
       }),
       test({
@@ -229,7 +229,7 @@ ruleTester.run('no-cycle', rule, {
     }),
     test({
       code: `import { foo } from "./${testDialect}/depth-two"`,
-      options: [{ maxDepth: Infinity }],
+      options: [{ maxDepth: Number.POSITIVE_INFINITY }],
       errors: [error(`Dependency cycle via ./depth-one:1`)],
     }),
     test({

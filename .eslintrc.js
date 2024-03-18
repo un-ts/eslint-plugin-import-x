@@ -1,14 +1,16 @@
 /**
  * @type {import('eslint').Linter.Config}
  */
+// eslint-disable-next-line unicorn/prefer-module
 module.exports = {
   root: true,
-  plugins: ['eslint-plugin', 'import-x'],
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:eslint-plugin/recommended',
     'plugin:import-x/recommended',
+    'plugin:n/recommended',
+    'plugin:unicorn/recommended',
     'plugin:prettier/recommended',
   ],
   env: {
@@ -36,6 +38,16 @@ module.exports = {
     ],
     'eslint-plugin/require-meta-schema': 'error',
     'eslint-plugin/require-meta-type': 'error',
+    'n/no-extraneous-require': 'off',
+    'n/no-missing-import': 'off',
+    'n/no-missing-require': 'off',
+    'n/no-unsupported-features/es-syntax': 'off',
+    'unicorn/no-array-callback-reference': 'off',
+    'unicorn/no-array-reduce': 'off',
+    'unicorn/no-null': 'off',
+    'unicorn/prefer-module': 'off',
+    'unicorn/prevent-abbreviations': 'off',
+    'unicorn/prefer-at': 'off',
 
     // dog fooding
     'import-x/no-extraneous-dependencies': [
@@ -66,6 +78,13 @@ module.exports = {
           'error',
           {
             fixStyle: 'inline-type-imports',
+          },
+        ],
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            argsIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
           },
         ],
         'import-x/consistent-type-specifier-style': 'error',

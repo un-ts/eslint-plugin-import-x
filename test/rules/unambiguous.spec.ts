@@ -53,7 +53,7 @@ ruleTester.run('unambiguous', rule, {
     {
       code: 'function x() {}',
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      output: 'function x() {}',
+      output: null,
       errors: [
         {
           messageId: 'module',

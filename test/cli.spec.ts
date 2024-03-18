@@ -1,7 +1,8 @@
 /**
  * tests that require fully booting up ESLint
  */
-import path from 'path'
+
+import path from 'node:path'
 
 import { ESLint } from 'eslint'
 import eslintPkg from 'eslint/package.json'

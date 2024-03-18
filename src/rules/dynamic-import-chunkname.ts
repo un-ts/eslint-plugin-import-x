@@ -1,4 +1,4 @@
-import vm from 'vm'
+import vm from 'node:vm'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
@@ -67,9 +67,9 @@ export = createRule<[Options?], MessageId>({
       webpackChunknameFormat = '([0-9a-zA-Z-_/.]|\\[(request|index)\\])+',
     } = context.options[0] || {}
 
-    const paddedCommentRegex = /^ (\S[\s\S]+\S) $/
+    const paddedCommentRegex = /^ (\S[\S\s]+\S) $/
     const commentStyleRegex =
-      /^( ((webpackChunkName: .+)|((webpackPrefetch|webpackPreload): (true|false|-?[0-9]+))|(webpackIgnore: (true|false))|((webpackInclude|webpackExclude): \/.*\/)|(webpackMode: ["'](lazy|lazy-once|eager|weak)["'])|(webpackExports: (['"]\w+['"]|\[(['"]\w+['"], *)+(['"]\w+['"]*)\]))),?)+ $/
+      /^( ((webpackChunkName: .+)|((webpackPrefetch|webpackPreload): (true|false|-?\d+))|(webpackIgnore: (true|false))|((webpackInclude|webpackExclude): \/.*\/)|(webpackMode: ["'](lazy|lazy-once|eager|weak)["'])|(webpackExports: (["']\w+["']|\[(["']\w+["'], *)+(["']\w+["']*)]))),?)+ $/
     const chunkSubstrFormat = ` webpackChunkName: ["']${webpackChunknameFormat}["'],? `
     const chunkSubstrRegex = new RegExp(chunkSubstrFormat)
 
@@ -107,7 +107,7 @@ export = createRule<[Options?], MessageId>({
         try {
           // just like webpack itself does
           vm.runInNewContext(`(function() {return {${comment.value}}})()`)
-        } catch (error) {
+        } catch {
           context.report({
             node,
             messageId: 'webpackComment',
@@ -149,7 +149,7 @@ export = createRule<[Options?], MessageId>({
           // @ts-expect-error - legacy parser type
           node.callee.type !== 'Import' &&
           'name' in node.callee &&
-          importFunctions.indexOf(node.callee.name) < 0
+          !importFunctions.includes(node.callee.name)
         ) {
           return
         }

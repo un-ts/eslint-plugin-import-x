@@ -1,5 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
@@ -51,16 +51,14 @@ const packageDirBundledDepsRaceCondition = testFilePath(
 
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
-    ...Object.keys(deps)
-      .concat(Object.keys(devDeps))
-      .flatMap(pkg => [
-        test({ code: `import "${pkg}"` }),
-        test({ code: `import foo, { bar } from "${pkg}"` }),
-        test({ code: `require("${pkg}")` }),
-        test({ code: `var foo = require("${pkg}")` }),
-        test({ code: `export { foo } from "${pkg}"` }),
-        test({ code: `export * from "${pkg}"` }),
-      ]),
+    ...[...Object.keys(deps), ...Object.keys(devDeps)].flatMap(pkg => [
+      test({ code: `import "${pkg}"` }),
+      test({ code: `import foo, { bar } from "${pkg}"` }),
+      test({ code: `require("${pkg}")` }),
+      test({ code: `var foo = require("${pkg}")` }),
+      test({ code: `export { foo } from "${pkg}"` }),
+      test({ code: `export * from "${pkg}"` }),
+    ]),
     test({ code: 'import "eslint"' }),
     test({ code: 'import "eslint/lib/api"' }),
     test({ code: 'import "fs"' }),

@@ -401,11 +401,11 @@ const invalid = [
 ///////////////////////
 // deep dereferences //
 //////////////////////
-;[
+for (const [folder, parser] of [
   ['deep'],
   // FIXME: check and enable
   // ['deep-es7', parsers.BABEL],
-].forEach(function ([folder, parser]) {
+]) {
   // close over params
   valid.push(
     test({
@@ -467,6 +467,6 @@ const invalid = [
         errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
       }),
     )
-})
+}
 
 ruleTester.run('namespace', rule, { valid, invalid })

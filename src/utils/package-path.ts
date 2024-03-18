@@ -1,4 +1,4 @@
-import { dirname } from 'path'
+import path from 'node:path'
 
 import type { RuleContext } from '../types'
 
@@ -14,14 +14,14 @@ export function getContextPackagePath(context: RuleContext) {
 }
 
 export function getFilePackagePath(filePath: string) {
-  return dirname(pkgUp({ cwd: filePath })!)
+  return path.dirname(pkgUp({ cwd: filePath })!)
 }
 
 export function getFilePackageName(filePath: string): string | null {
-  const { pkg, path } = readPkgUp({ cwd: filePath })
+  const { pkg, path: pkgPath } = readPkgUp({ cwd: filePath })
   if (pkg) {
     // recursion in case of intermediate esm package.json without name found
-    return pkg.name || getFilePackageName(dirname(dirname(path)))
+    return pkg.name || getFilePackageName(path.resolve(pkgPath, '../..'))
   }
   return null
 }

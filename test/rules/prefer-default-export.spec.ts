@@ -393,7 +393,7 @@ ruleTester.run('prefer-default-export', rule, {
 })
 
 describe('TypeScript', () => {
-  getNonDefaultParsers().forEach(parser => {
+  for (const parser of getNonDefaultParsers()) {
     const parserConfig = {
       parser,
       settings: {
@@ -436,5 +436,5 @@ describe('TypeScript', () => {
       ],
       invalid: [],
     })
-  })
+  }
 })

@@ -1,6 +1,6 @@
 import { ESLintUtils } from '@typescript-eslint/utils'
 
-import { docsUrl } from '../docs-url'
+import { docsUrl } from '../utils/docs-url'
 
 import first from './first'
 

@@ -1,12 +1,8 @@
-import {
-  isAbsolute as nodeIsAbsolute,
-  relative,
-  resolve as nodeResolve,
-} from 'path'
+import { isBuiltin } from 'node:module'
+import path from 'node:path'
 
 import type { PluginSettings, RuleContext } from '../types'
 
-import { isCoreModule } from './is-core-module'
 import { getContextPackagePath } from './package-path'
 import { resolve } from './resolve'
 
@@ -25,26 +21,26 @@ function isInternalRegexMatch(name: string, settings: PluginSettings) {
 }
 
 export function isAbsolute(name?: string | boolean | number | null) {
-  return typeof name === 'string' && nodeIsAbsolute(name)
+  return typeof name === 'string' && path.isAbsolute(name)
 }
 
 // path is defined only when a resolver resolves to a non-standard path
 export function isBuiltIn(
   name: string,
   settings: PluginSettings,
-  path?: string | null,
+  modulePath?: string | null,
 ) {
-  if (path || !name) {
+  if (modulePath || !name) {
     return false
   }
   const base = baseModule(name)
   const extras = (settings && settings['import-x/core-modules']) || []
-  return isCoreModule(base) || extras.indexOf(base) > -1
+  return isBuiltin(base) || extras.includes(base)
 }
 
 export function isExternalModule(
   name: string,
-  path: string,
+  modulePath: string,
   context: RuleContext,
 ) {
   if (arguments.length < 3) {
@@ -54,13 +50,13 @@ export function isExternalModule(
   }
   return (
     (isModule(name) || isScoped(name)) &&
-    typeTest(name, context, path) === 'external'
+    typeTest(name, context, modulePath) === 'external'
   )
 }
 
 export function isExternalModuleMain(
   name: string,
-  path: string,
+  modulePath: string,
   context: RuleContext,
 ) {
   if (arguments.length < 3) {
@@ -68,19 +64,21 @@ export function isExternalModuleMain(
       'isExternalModule: name, path, and context are all required',
     )
   }
-  return isModuleMain(name) && typeTest(name, context, path) === 'external'
+  return (
+    isModuleMain(name) && typeTest(name, context, modulePath) === 'external'
+  )
 }
 
 const moduleRegExp = /^\w/
 
 function isModule(name: string) {
-  return name && moduleRegExp.test(name)
+  return !!name && moduleRegExp.test(name)
 }
 
-const moduleMainRegExp = /^[\w]((?!\/).)*$/
+const moduleMainRegExp = /^\w((?!\/).)*$/
 
 function isModuleMain(name: string) {
-  return name && moduleMainRegExp.test(name)
+  return !!name && moduleMainRegExp.test(name)
 }
 
 const scopedRegExp = /^@[^/]+\/?[^/]+/
@@ -92,32 +90,35 @@ export function isScoped(name: string) {
 const scopedMainRegExp = /^@[^/]+\/?[^/]+$/
 
 export function isScopedMain(name: string) {
-  return name && scopedMainRegExp.test(name)
+  return !!name && scopedMainRegExp.test(name)
 }
 
 function isRelativeToParent(name: string) {
-  return /^\.\.$|^\.\.[\\/]/.test(name)
+  return /^\.\.$|^\.\.[/\\]/.test(name)
 }
 
-const indexFiles = ['.', './', './index', './index.js']
+const indexFiles = new Set(['.', './', './index', './index.js'])
 
 function isIndex(name: string) {
-  return indexFiles.includes(name)
+  return indexFiles.has(name)
 }
 
 function isRelativeToSibling(name: string) {
-  return /^\.[\\/]/.test(name)
+  return /^\.[/\\]/.test(name)
 }
 
-function isExternalPath(path: string | null | undefined, context: RuleContext) {
-  if (!path) {
+function isExternalPath(
+  filepath: string | null | undefined,
+  context: RuleContext,
+) {
+  if (!filepath) {
     return false
   }
 
   const { settings } = context
   const packagePath = getContextPackagePath(context)
 
-  if (relative(packagePath, path).startsWith('..')) {
+  if (path.relative(packagePath, filepath).startsWith('..')) {
     return true
   }
 
@@ -125,18 +126,21 @@ function isExternalPath(path: string | null | undefined, context: RuleContext) {
     'node_modules',
   ]
   return folders.some(folder => {
-    const folderPath = nodeResolve(packagePath, folder)
-    const relativePath = relative(folderPath, path)
+    const folderPath = path.resolve(packagePath, folder)
+    const relativePath = path.relative(folderPath, filepath)
     return !relativePath.startsWith('..')
   })
 }
 
-function isInternalPath(path: string | null | undefined, context: RuleContext) {
-  if (!path) {
+function isInternalPath(
+  filepath: string | null | undefined,
+  context: RuleContext,
+) {
+  if (!filepath) {
     return false
   }
   const packagePath = getContextPackagePath(context)
-  return !relative(packagePath, path).startsWith('../')
+  return !path.relative(packagePath, filepath).startsWith('../')
 }
 
 function isExternalLookingName(name: string) {

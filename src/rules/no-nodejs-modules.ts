@@ -42,7 +42,7 @@ export = createRule<[Options?], MessageId>({
       (source, node) => {
         const moduleName = source.value
         if (
-          allowed.indexOf(moduleName) === -1 &&
+          !allowed.includes(moduleName) &&
           importType(moduleName, context) === 'builtin'
         ) {
           context.report({

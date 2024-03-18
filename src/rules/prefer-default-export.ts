@@ -50,11 +50,13 @@ export = createRule<[Options?], MessageId>({
     function captureDeclaration(identifierOrPattern?: TSESTree.Node | null) {
       if (identifierOrPattern?.type === 'ObjectPattern') {
         // recursively capture
-        identifierOrPattern.properties.forEach(property => {
+        for (const property of identifierOrPattern.properties) {
           captureDeclaration(property.value)
-        })
+        }
       } else if (identifierOrPattern?.type === 'ArrayPattern') {
-        identifierOrPattern.elements.forEach(captureDeclaration)
+        for (const el of identifierOrPattern.elements) {
+          captureDeclaration(el)
+        }
       } else {
         // assume it's a single standard identifier
         specifierExportCount++
@@ -103,9 +105,9 @@ export = createRule<[Options?], MessageId>({
           'declarations' in node.declaration &&
           node.declaration.declarations
         ) {
-          node.declaration.declarations.forEach(declaration => {
+          for (const declaration of node.declaration.declarations) {
             captureDeclaration(declaration.id)
-          })
+          }
         } else {
           // captures 'export function foo() {}' syntax
           specifierExportCount++

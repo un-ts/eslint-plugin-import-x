@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
@@ -16,10 +16,6 @@ export = createRule<[ModuleOptions?], MessageId>({
       description:
         'Ensure named imports correspond to a named export in the remote file.',
     },
-    messages: {
-      notFound: "{{name}} not found in '{{path}}'",
-      notFoundDeep: '{{name}} not found via {{deepPath}}',
-    },
     schema: [
       {
         type: 'object',
@@ -31,6 +27,10 @@ export = createRule<[ModuleOptions?], MessageId>({
         additionalProperties: false,
       },
     ],
+    messages: {
+      notFound: "{{name}} not found in '{{path}}'",
+      notFoundDeep: '{{name}} not found via {{deepPath}}',
+    },
   },
   defaultOptions: [],
   create(context) {
@@ -62,12 +62,12 @@ export = createRule<[ModuleOptions?], MessageId>({
         return
       }
 
-      if (imports.errors.length) {
+      if (imports.errors.length > 0) {
         imports.reportErrors(context, node)
         return
       }
 
-      node.specifiers.forEach(function (im) {
+      for (const im of node.specifiers) {
         if (
           im.type !== type ||
           // ignore type imports
@@ -76,7 +76,7 @@ export = createRule<[ModuleOptions?], MessageId>({
               // @ts-expect-error - flow type
               im.importKind === 'typeof'))
         ) {
-          return
+          continue
         }
 
         /**
@@ -126,7 +126,7 @@ export = createRule<[ModuleOptions?], MessageId>({
             })
           }
         }
-      })
+      }
     }
 
     return {
@@ -176,7 +176,7 @@ export = createRule<[ModuleOptions?], MessageId>({
           return
         }
 
-        if (variableExports.errors.length) {
+        if (variableExports.errors.length > 0) {
           variableExports.reportErrors(
             context,
             // @ts-expect-error - FIXME: no idea yet
@@ -185,13 +185,13 @@ export = createRule<[ModuleOptions?], MessageId>({
           return
         }
 
-        variableImports.forEach(function (im) {
+        for (const im of variableImports) {
           if (
             im.type !== 'Property' ||
             !im.key ||
             im.key.type !== 'Identifier'
           ) {
-            return
+            continue
           }
 
           const deepLookup = variableExports.hasDeep(im.key.name)
@@ -223,7 +223,7 @@ export = createRule<[ModuleOptions?], MessageId>({
               })
             }
           }
-        })
+        }
       },
     }
   },

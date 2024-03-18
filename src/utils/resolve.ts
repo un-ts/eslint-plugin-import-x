@@ -1,6 +1,6 @@
-import fs from 'fs'
-import Module from 'module'
-import path from 'path'
+import fs from 'node:fs'
+import { createRequire } from 'node:module'
+import path from 'node:path'
 
 import type {
   Arrayable,
@@ -62,18 +62,16 @@ function tryRequire<T>(
   let resolved
   try {
     // Check if the target exists
-    if (sourceFile != null) {
+    if (sourceFile == null) {
+      resolved = require.resolve(target)
+    } else {
       try {
-        resolved = Module.createRequire(path.resolve(sourceFile)).resolve(
-          target,
-        )
-      } catch (e) {
+        resolved = createRequire(path.resolve(sourceFile)).resolve(target)
+      } catch {
         resolved = require.resolve(target)
       }
-    } else {
-      resolved = require.resolve(target)
     }
-  } catch (e) {
+  } catch {
     // If the target does not exist then just return undefined
     return undefined
   }
@@ -113,11 +111,9 @@ export function fileExistsWithCaseSync(
     result = true
   } else {
     const filenames = fs.readdirSync(dir)
-    if (filenames.indexOf(parsedPath.base) === -1) {
-      result = false
-    } else {
-      result = fileExistsWithCaseSync(dir, cacheSettings, strict)
-    }
+    result = filenames.includes(parsedPath.base)
+      ? fileExistsWithCaseSync(dir, cacheSettings, strict)
+      : false
   }
   fileExistsCache.set(filepath, result)
   return result
@@ -220,7 +216,7 @@ function resolverReducer(
   map: Map<string, unknown>,
 ) {
   if (Array.isArray(resolvers)) {
-    ;(resolvers as ImportResolver[]).forEach(r => resolverReducer(r, map))
+    for (const r of resolvers as ImportResolver[]) resolverReducer(r, map)
     return map
   }
 
@@ -298,8 +294,8 @@ export function resolve(p: string, context: RuleContext) {
         : context.getFilename(),
       context.settings,
     )
-  } catch (err) {
-    const error = err as Error
+  } catch (error_) {
+    const error = error_ as Error
     if (!erroredContexts.has(context)) {
       // The `err.stack` string starts with `err.name` followed by colon and `err.message`.
       // We're filtering out the default `err.name` because it adds little value to the message.

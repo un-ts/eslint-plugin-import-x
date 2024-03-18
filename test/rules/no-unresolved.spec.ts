@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
@@ -147,15 +147,6 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         ],
       }),
 
-      rest({
-        code: "import bar from './baz';",
-        errors: [
-          {
-            message: "Unable to resolve path to module './baz'.",
-            type: 'Literal',
-          },
-        ],
-      }),
       rest({
         code: "import bar from './baz';",
         errors: [
@@ -317,7 +308,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
     const cwd = process.cwd()
     const mismatchedPath = path
       .join(cwd.toUpperCase(), relativePath)
-      .replace(/\\/g, '/')
+      .replaceAll('\\', '/')
 
     ruleTester.run('case sensitivity', rule, {
       valid: [
@@ -379,7 +370,9 @@ function runResolverTests(resolver: 'node' | 'webpack') {
   }
 }
 
-;(['node', 'webpack'] as const).forEach(runResolverTests)
+for (const resolver of ['node', 'webpack'] as const) {
+  runResolverTests(resolver)
+}
 
 ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
   valid: [

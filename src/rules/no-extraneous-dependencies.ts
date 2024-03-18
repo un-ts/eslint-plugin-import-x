@@ -1,5 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
@@ -32,9 +32,9 @@ function arrayOrKeys(arrayOrObject: object | string[]) {
 function readJSON<T>(jsonPath: string, throwException: boolean) {
   try {
     return JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as T
-  } catch (err) {
+  } catch (error) {
     if (throwException) {
-      throw err
+      throw error
     }
   }
 }
@@ -74,23 +74,21 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
     }
 
     if (packageDir && packageDir.length > 0) {
-      if (Array.isArray(packageDir)) {
-        paths = packageDir.map(dir => path.resolve(dir))
-      } else {
-        paths = [path.resolve(packageDir)]
-      }
+      paths = Array.isArray(packageDir)
+        ? packageDir.map(dir => path.resolve(dir))
+        : [path.resolve(packageDir)]
     }
 
     if (paths.length > 0) {
       // use rule config to find package.json
-      paths.forEach(dir => {
+      for (const dir of paths) {
         const packageJsonPath = path.resolve(dir, 'package.json')
         const packageContent_ = getPackageDepFields(packageJsonPath, true)!
-        Object.keys(packageContent).forEach(depsKey => {
+        for (const depsKey of Object.keys(packageContent)) {
           const key = depsKey as keyof PackageDeps
           Object.assign(packageContent[key], packageContent_[key])
-        })
-      })
+        }
+      }
     } else {
       // use closest package.json
       const packageJsonPath = pkgUp({
@@ -119,8 +117,8 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
     }
 
     return packageContent
-  } catch (err) {
-    const error = err as Error & { code: string }
+  } catch (error_) {
+    const error = error_ as Error & { code: string }
 
     if (paths.length > 0 && error.code === 'ENOENT') {
       context.report({
@@ -169,12 +167,12 @@ function checkDependencyDeclaration(
   const packageHierarchy: string[] = []
   const packageNameParts = packageName ? packageName.split('/') : []
 
-  packageNameParts.forEach((namePart, index) => {
+  for (const [index, namePart] of packageNameParts.entries()) {
     if (!namePart.startsWith('@')) {
       const ancestor = packageNameParts.slice(0, index + 1).join('/')
       packageHierarchy.push(ancestor)
     }
-  })
+  }
 
   return packageHierarchy.reduce(
     (result, ancestorName) => ({
@@ -190,7 +188,7 @@ function checkDependencyDeclaration(
         deps.peerDependencies[ancestorName] !== undefined,
       isInBundledDeps:
         result.isInBundledDeps ||
-        deps.bundledDependencies.indexOf(ancestorName) !== -1,
+        deps.bundledDependencies.includes(ancestorName),
     }),
     newDeclarationStatus,
   )
@@ -222,7 +220,7 @@ function reportIfMissing(
       ('exportKind' in node && node.exportKind === 'type') ||
       ('specifiers' in node &&
         Array.isArray(node.specifiers) &&
-        !!node.specifiers.length &&
+        node.specifiers.length > 0 &&
         (
           node.specifiers as Array<
             TSESTree.ExportSpecifier | TSESTree.ImportClause
@@ -321,7 +319,7 @@ function reportIfMissing(
 
 function testConfig(config: string[] | boolean | undefined, filename: string) {
   // Simplest configuration first, either a boolean or nothing.
-  if (typeof config === 'boolean' || typeof config === 'undefined') {
+  if (typeof config === 'boolean' || config === undefined) {
     return config
   }
   // Array of globs.

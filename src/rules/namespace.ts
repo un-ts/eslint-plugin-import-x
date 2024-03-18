@@ -1,8 +1,12 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { importDeclaration } from '../import-declaration'
 import type { RuleContext } from '../types'
-import { ExportMap, createRule, declaredScope } from '../utils'
+import {
+  importDeclaration,
+  ExportMap,
+  createRule,
+  declaredScope,
+} from '../utils'
 
 type MessageId =
   | 'noNamesFound'
@@ -39,10 +43,10 @@ function processBodyStatement(
     return
   }
 
-  declaration.specifiers.forEach(specifier => {
+  for (const specifier of declaration.specifiers) {
     switch (specifier.type) {
-      case 'ImportNamespaceSpecifier':
-        if (!imports.size) {
+      case 'ImportNamespaceSpecifier': {
+        if (imports.size === 0) {
           context.report({
             node: specifier,
             messageId: 'noNamesFound',
@@ -53,6 +57,7 @@ function processBodyStatement(
         }
         namespaces.set(specifier.local.name, imports)
         break
+      }
       case 'ImportDefaultSpecifier':
       case 'ImportSpecifier': {
         const meta = imports.get(
@@ -71,7 +76,7 @@ function processBodyStatement(
       }
       default:
     }
-  })
+  }
 }
 
 function makeMessage(
@@ -140,9 +145,9 @@ export = createRule<[Options], MessageId>({
     return {
       // pick up all imports at body entry time, to properly respect hoisting
       Program({ body }) {
-        body.forEach(x => {
+        for (const x of body) {
           processBodyStatement(context, namespaces, x)
-        })
+        }
       },
 
       // same as above, but does not add names to local map
@@ -154,12 +159,12 @@ export = createRule<[Options], MessageId>({
           return null
         }
 
-        if (imports.errors.length) {
+        if (imports.errors.length > 0) {
           imports.reportErrors(context, declaration)
           return
         }
 
-        if (!imports.size) {
+        if (imports.size === 0) {
           context.report({
             node: namespace,
             messageId: 'noNamesFound',

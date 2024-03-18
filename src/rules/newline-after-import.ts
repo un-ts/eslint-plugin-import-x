@@ -1,6 +1,7 @@
 /**
  * Rule to enforce new line after import not followed by another import.
  */
+
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 
@@ -234,7 +235,7 @@ export = createRule<[Options?], MessageId>({
 
       let nextComment: TSESTree.Comment | undefined
 
-      if (typeof root.comments !== 'undefined' && options.considerComments) {
+      if (root.comments !== undefined && options.considerComments) {
         nextComment = root.comments.find(
           o =>
             o.loc.start.line >= endLine &&
@@ -247,7 +248,7 @@ export = createRule<[Options?], MessageId>({
         return
       }
 
-      if (nextComment && typeof nextComment !== 'undefined') {
+      if (nextComment && nextComment !== undefined) {
         commentAfterImport(node, nextComment)
       } else if (
         nextNode &&
@@ -277,7 +278,7 @@ export = createRule<[Options?], MessageId>({
 
         log('got scope:', scopeBody)
 
-        requireCalls.forEach((node, index) => {
+        for (const [index, node] of requireCalls.entries()) {
           const nodePosition = findNodeIndexInScopeBody(scopeBody, node)
 
           log('node position in scope:', nodePosition)
@@ -290,7 +291,7 @@ export = createRule<[Options?], MessageId>({
             nextRequireCall &&
             containsNodeOrEqual(statementWithRequireCall, nextRequireCall)
           ) {
-            return
+            continue
           }
 
           if (
@@ -300,7 +301,7 @@ export = createRule<[Options?], MessageId>({
           ) {
             checkForNewLine(statementWithRequireCall, nextStatement, 'require')
           }
-        })
+        }
       },
       FunctionDeclaration: incrementLevel,
       FunctionExpression: incrementLevel,

@@ -91,79 +91,79 @@ ruleTester.run('no-commonjs', rule, {
     // imports
     {
       code: 'var x = require("x")',
-      output: 'var x = require("x")',
+      output: null,
       errors: [{ messageId: IMPORT }],
     },
     {
       code: 'x = require("x")',
-      output: 'x = require("x")',
+      output: null,
       errors: [{ messageId: IMPORT }],
     },
     {
       code: 'require("x")',
-      output: 'require("x")',
+      output: null,
       errors: [{ messageId: IMPORT }],
     },
     {
       code: 'require(`x`)',
-      output: 'require(`x`)',
+      output: null,
       errors: [{ messageId: IMPORT }],
     },
     {
       code: 'if (typeof window !== "undefined") require("x")',
       options: [{ allowConditionalRequire: false }],
-      output: 'if (typeof window !== "undefined") require("x")',
+      output: null,
       errors: [{ messageId: IMPORT }],
     },
     {
       code: 'if (typeof window !== "undefined") { require("x") }',
       options: [{ allowConditionalRequire: false }],
-      output: 'if (typeof window !== "undefined") { require("x") }',
+      output: null,
       errors: [{ messageId: IMPORT }],
     },
     {
       code: 'try { require("x") } catch (error) {}',
       options: [{ allowConditionalRequire: false }],
-      output: 'try { require("x") } catch (error) {}',
+      output: null,
       errors: [{ messageId: IMPORT }],
     },
 
     // exports
     {
       code: 'exports.face = "palm"',
-      output: 'exports.face = "palm"',
+      output: null,
       errors: [{ messageId: EXPORT }],
     },
     {
       code: 'module.exports.face = "palm"',
-      output: 'module.exports.face = "palm"',
+      output: null,
       errors: [{ messageId: EXPORT }],
     },
     {
       code: 'module.exports = face',
-      output: 'module.exports = face',
+      output: null,
       errors: [{ messageId: EXPORT }],
     },
     {
       code: 'exports = module.exports = {}',
-      output: 'exports = module.exports = {}',
+      output: null,
       errors: [{ messageId: EXPORT }],
     },
     {
       code: 'var x = module.exports = {}',
-      output: 'var x = module.exports = {}',
+      output: null,
       errors: [{ messageId: EXPORT }],
     },
     {
       code: 'module.exports = {}',
       options: ['allow-primitive-modules'],
-      output: 'module.exports = {}',
+      output: null,
       errors: [{ messageId: EXPORT }],
     },
     {
       code: 'var x = module.exports',
       options: ['allow-primitive-modules'],
-      output: 'var x = module.exports',
+      output: null,
       errors: [{ messageId: EXPORT }],
     },
   ],
