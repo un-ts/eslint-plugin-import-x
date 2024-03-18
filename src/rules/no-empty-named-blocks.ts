@@ -1,6 +1,8 @@
-import { docsUrl } from '../docs-url'
+import type { TSESTree } from '@typescript-eslint/utils'
 
-function getEmptyBlockRange(tokens, index) {
+import { createRule } from '../utils'
+
+function getEmptyBlockRange(tokens: TSESTree.Token[], index: number) {
   const token = tokens[index]
   const nextToken = tokens[index + 1]
   const prevToken = tokens[index - 1]
@@ -16,24 +18,29 @@ function getEmptyBlockRange(tokens, index) {
     start = prevToken.range[0]
   }
 
-  return [start, end]
+  return [start, end] as const
 }
 
-module.exports = {
+export = createRule({
+  name: 'no-empty-named-blocks',
   meta: {
     type: 'suggestion',
     docs: {
       category: 'Helpful warnings',
       description: 'Forbid empty named import blocks.',
-      url: docsUrl('no-empty-named-blocks'),
     },
     fixable: 'code',
     schema: [],
     hasSuggestions: true,
+    messages: {
+      emptyNamed: 'Unexpected empty named import block',
+      unused: 'Remove unused import',
+      emptyImport: 'Remove empty import block',
+    },
   },
-
+  defaultOptions: [],
   create(context) {
-    const importsWithoutNameds = []
+    const importsWithoutNameds: TSESTree.ImportDeclaration[] = []
 
     return {
       ImportDeclaration(node) {
@@ -42,18 +49,23 @@ module.exports = {
         }
       },
 
-      'Program:exit'(program) {
-        const importsTokens = importsWithoutNameds.map(node => [
-          node,
-          program.tokens.filter(
-            x => x.range[0] >= node.range[0] && x.range[1] <= node.range[1],
-          ),
-        ])
+      'Program:exit'(program: TSESTree.Program) {
+        const importsTokens = importsWithoutNameds.map(
+          node =>
+            [
+              node,
+              program.tokens!.filter(
+                x => x.range[0] >= node.range[0] && x.range[1] <= node.range[1],
+              ),
+            ] as const,
+        )
+
+        const pTokens = program.tokens || []
 
         importsTokens.forEach(([node, tokens]) => {
           tokens.forEach(token => {
-            const idx = program.tokens.indexOf(token)
-            const nextToken = program.tokens[idx + 1]
+            const idx = pTokens.indexOf(token)
+            const nextToken = pTokens[idx + 1]
 
             if (nextToken && token.value === '{' && nextToken.value === '}') {
               const hasOtherIdentifiers = tokens.some(
@@ -69,39 +81,40 @@ module.exports = {
               if (!hasOtherIdentifiers) {
                 context.report({
                   node,
-                  message: 'Unexpected empty named import block',
+                  messageId: 'emptyNamed',
                   suggest: [
                     {
-                      desc: 'Remove unused import',
+                      messageId: 'unused',
                       fix(fixer) {
                         // Remove the whole import
                         return fixer.remove(node)
                       },
                     },
                     {
-                      desc: 'Remove empty import block',
+                      messageId: 'emptyImport',
                       fix(fixer) {
                         // Remove the empty block and the 'from' token, leaving the import only for its side
                         // effects, e.g. `import 'mod'`
                         const sourceCode = context.getSourceCode()
-                        const fromToken = program.tokens.find(
-                          t => t.value === 'from',
-                        )
-                        const importToken = program.tokens.find(
+                        const fromToken = pTokens.find(t => t.value === 'from')!
+                        const importToken = pTokens.find(
                           t => t.value === 'import',
-                        )
-                        const hasSpaceAfterFrom = sourceCode.isSpaceBetween(
+                        )!
+                        const hasSpaceAfterFrom = sourceCode.isSpaceBetween!(
                           fromToken,
-                          sourceCode.getTokenAfter(fromToken),
+                          sourceCode.getTokenAfter(fromToken)!,
                         )
-                        const hasSpaceAfterImport = sourceCode.isSpaceBetween(
+                        const hasSpaceAfterImport = sourceCode.isSpaceBetween!(
                           importToken,
-                          sourceCode.getTokenAfter(fromToken),
+                          sourceCode.getTokenAfter(fromToken)!,
                         )
 
-                        const [start] = getEmptyBlockRange(program.tokens, idx)
+                        const [start] = getEmptyBlockRange(pTokens, idx)
                         const [, end] = fromToken.range
-                        const range = [start, hasSpaceAfterFrom ? end + 1 : end]
+                        const range = [
+                          start,
+                          hasSpaceAfterFrom ? end + 1 : end,
+                        ] as const
 
                         return fixer.replaceTextRange(
                           range,
@@ -114,11 +127,9 @@ module.exports = {
               } else {
                 context.report({
                   node,
-                  message: 'Unexpected empty named import block',
+                  messageId: 'emptyNamed',
                   fix(fixer) {
-                    return fixer.removeRange(
-                      getEmptyBlockRange(program.tokens, idx),
-                    )
+                    return fixer.removeRange(getEmptyBlockRange(pTokens, idx))
                   },
                 })
               }
@@ -128,4 +139,4 @@ module.exports = {
       },
     }
   },
-}
+})

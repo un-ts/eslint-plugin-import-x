@@ -44,6 +44,7 @@ import noUnassignedImport from './rules/no-unassigned-import'
 import noUselessPathSegments from './rules/no-useless-path-segments'
 import dynamicImportChunkname from './rules/dynamic-import-chunkname'
 import noImportModuleExports from './rules/no-import-module-exports'
+import noEmptyNamedBlocks from './rules/no-empty-named-blocks'
 
 // configs
 import recommended from './config/recommended'
@@ -99,7 +100,7 @@ export const rules = {
   'no-useless-path-segments': noUselessPathSegments,
   'dynamic-import-chunkname': dynamicImportChunkname,
   'no-import-module-exports': noImportModuleExports,
-  'no-empty-named-blocks': require('./rules/no-empty-named-blocks'),
+  'no-empty-named-blocks': noEmptyNamedBlocks,
 
   // export
   'exports-last': require('./rules/exports-last'),
