@@ -1,3 +1,4 @@
+import type { Options as SwcOptions } from '@swc/core'
 import type { Config } from 'jest'
 
 const testCompiled = process.env.TEST_COMPILED === '1'
@@ -5,7 +6,6 @@ const testCompiled = process.env.TEST_COMPILED === '1'
 const srcDir = testCompiled ? 'lib' : 'src'
 
 export default {
-  preset: 'ts-jest',
   collectCoverage: !testCompiled,
   modulePathIgnorePatterns: ['<rootDir>/test/fixtures/with-syntax-error'],
   moduleNameMapper: {
@@ -15,6 +15,6 @@ export default {
   },
   testMatch: ['<rootDir>/test/**/*.spec.ts'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.base.json' }],
+    '^.+\\.(t|j)sx?$': ['@swc-node/jest', {} satisfies SwcOptions],
   },
 } satisfies Config
