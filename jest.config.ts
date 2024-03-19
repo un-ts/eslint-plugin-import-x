@@ -1,5 +1,5 @@
-import type { Config } from 'jest'
 import type { Options as SwcOptions } from '@swc/core'
+import type { Config } from 'jest'
 
 const testCompiled = process.env.TEST_COMPILED === '1'
 
