@@ -37,3 +37,4 @@ lib/
 
 # macOS
 .DS_Store
+.*cache
