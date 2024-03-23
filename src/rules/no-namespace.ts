@@ -59,7 +59,13 @@ export = createRule<[Options?], MessageId>({
           return
         }
 
-        const scopeVariables = context.getScope().variables
+        // For ESLint v9
+        const scope: TSESLint.Scope.Scope = (context as any)?.sourceCode
+          ?.getScope
+          ? (context as any).sourceCode.getScope(node)
+          : context.getScope()
+
+        const scopeVariables = scope.variables
         const namespaceVariable = scopeVariables.find(
           variable => variable.defs[0].node === node,
         )!

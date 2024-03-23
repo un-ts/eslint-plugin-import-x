@@ -48,14 +48,22 @@ export = createRule<[], MessageId>({
 
     return {
       ExportDefaultDeclaration(node) {
-        const scope = context.getScope()
+        // For ESLint v9
+        const scope: TSESLint.Scope.Scope = (context as any)?.sourceCode
+          ?.getScope
+          ? (context as any).sourceCode.getScope(node)
+          : context.getScope()
 
         if ('name' in node.declaration) {
           checkDeclarationsInScope(scope, node.declaration.name)
         }
       },
       ExportNamedDeclaration(node) {
-        const scope = context.getScope()
+        // For ESLint v9
+        const scope: TSESLint.Scope.Scope = (context as any)?.sourceCode
+          ?.getScope
+          ? (context as any).sourceCode.getScope(node)
+          : context.getScope()
 
         if (node.declaration) {
           checkDeclaration(node.declaration)

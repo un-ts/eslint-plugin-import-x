@@ -267,14 +267,20 @@ export = createRule<[Options?], MessageId>({
           requireCalls.push(node)
         }
       },
-      'Program:exit'() {
+      'Program:exit'(node) {
         log(
           'exit processing for',
           context.getPhysicalFilename
             ? context.getPhysicalFilename()
             : context.getFilename(),
         )
-        const scopeBody = getScopeBody(context.getScope())
+
+        // For ESLint v9
+        const scope = (context as any)?.sourceCode?.getScope
+          ? (context as any).sourceCode.getScope(node)
+          : context.getScope()
+
+        const scopeBody = getScopeBody(scope)
 
         log('got scope:', scopeBody)
 

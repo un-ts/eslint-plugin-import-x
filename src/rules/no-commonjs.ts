@@ -122,9 +122,15 @@ export = createRule<[Options?], MessageId>({
 
         // exports.
         if ('name' in node.object && node.object.name === 'exports') {
-          const isInScope = context
-            .getScope()
-            .variables.some(variable => variable.name === 'exports')
+          // For ESLint v9
+          const scope: TSESLint.Scope.Scope = (context as any)?.sourceCode
+            ?.getScope
+            ? (context as any).sourceCode.getScope(node)
+            : context.getScope()
+
+          const isInScope = scope.variables.some(
+            variable => variable.name === 'exports',
+          )
           if (!isInScope) {
             context.report({ node, messageId: 'export' })
           }

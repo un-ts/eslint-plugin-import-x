@@ -186,7 +186,10 @@ export = createRule<[Options], MessageId>({
           return
         }
 
-        if (declaredScope(context, dereference.object.name) !== 'module') {
+        if (
+          declaredScope(context, dereference.object.name, dereference) !==
+          'module'
+        ) {
           return
         }
 
@@ -249,7 +252,8 @@ export = createRule<[Options], MessageId>({
         }
       },
 
-      VariableDeclarator({ id, init }) {
+      VariableDeclarator(node) {
+        const { id, init } = node
         if (init == null) {
           return
         }
@@ -261,7 +265,7 @@ export = createRule<[Options], MessageId>({
         }
 
         // check for redefinition in intermediate scopes
-        if (declaredScope(context, init.name) !== 'module') {
+        if (declaredScope(context, init.name, node) !== 'module') {
           return
         }
 

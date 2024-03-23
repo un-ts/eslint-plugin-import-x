@@ -45,7 +45,7 @@
     "watch": "yarn test --watch"
   },
   "peerDependencies": {
-    "eslint": "^7.2.0 || ^8"
+    "eslint": "^7.2.0 || ^8 || ^9.0.0-0"
   },
   "dependencies": {
     "@typescript-eslint/utils": "^5.62.0",
@@ -92,7 +92,7 @@
     "cross-env": "^7.0.3",
     "enhanced-resolve": "^5.16.0",
     "escope": "^4.0.0",
-    "eslint": "^7.2.0 || ^8",
+    "eslint": "^8",
     "eslint-config-prettier": "^9.1.0",
     "eslint-doc-generator": "^1.7.0",
     "eslint-import-resolver-typescript": "^3.6.1",

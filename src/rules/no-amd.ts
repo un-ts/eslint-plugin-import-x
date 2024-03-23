@@ -2,6 +2,7 @@
  * Rule to prefer imports to AMD
  */
 
+import { TSESLint } from '@typescript-eslint/utils'
 import { createRule } from '../utils'
 
 type MessageId = 'amd'
@@ -23,7 +24,13 @@ export = createRule<[], MessageId>({
   create(context) {
     return {
       CallExpression(node) {
-        if (context.getScope().type !== 'module') {
+        // For ESLint v9
+        const scope: TSESLint.Scope.Scope = (context as any)?.sourceCode
+          ?.getScope
+          ? (context as any).sourceCode.getScope(node)
+          : context.getScope()
+
+        if (scope.type !== 'module') {
           return
         }
 
