@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 0.4.3
+
+### Patch Changes
+
+- [#64](https://github.com/un-ts/eslint-plugin-import-x/pull/64) [`b858aee`](https://github.com/un-ts/eslint-plugin-import-x/commit/b858aee6b664be076c2c543543f36e6d9b653497) Thanks [@JounQin](https://github.com/JounQin)! - fix(export-map): incorrect internal `namespaces` info
+
 ## 0.4.2
 
 ### Patch Changes
