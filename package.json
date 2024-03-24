@@ -45,7 +45,7 @@
     "watch": "yarn test --watch"
   },
   "peerDependencies": {
-    "eslint": "^7.2.0 || ^8"
+    "eslint": "^7.2.0 || ^8 || ^9.0.0-0"
   },
   "dependencies": {
     "@typescript-eslint/utils": "^5.62.0",
