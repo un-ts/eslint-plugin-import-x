@@ -1,4 +1,5 @@
 import type { TSESTree } from '@typescript-eslint/utils'
+import { getSourceCode } from 'eslint-compat-utils'
 
 import { createRule } from '../utils'
 
@@ -103,7 +104,7 @@ export = createRule({
                       fix(fixer) {
                         // Remove the empty block and the 'from' token, leaving the import only for its side
                         // effects, e.g. `import 'mod'`
-                        const sourceCode = context.getSourceCode()
+                        const sourceCode = getSourceCode(context)
                         const fromToken = pTokens.find(t => t.value === 'from')!
                         const importToken = pTokens.find(
                           t => t.value === 'import',

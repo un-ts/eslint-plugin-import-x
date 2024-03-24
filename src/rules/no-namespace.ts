@@ -3,9 +3,10 @@
  */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { getSourceCode } from 'eslint-compat-utils'
 import { minimatch } from 'minimatch'
 
-import { createRule } from '../utils'
+import { createRule, getScope } from '../utils'
 
 type MessageId = 'noNamespace'
 
@@ -59,7 +60,7 @@ export = createRule<[Options?], MessageId>({
           return
         }
 
-        const scopeVariables = context.getScope().variables
+        const scopeVariables = getScope(context, node).variables
         const namespaceVariable = scopeVariables.find(
           variable => variable.defs[0].node === node,
         )!
@@ -76,7 +77,7 @@ export = createRule<[Options?], MessageId>({
           messageId: `noNamespace`,
           fix: canFix
             ? fixer => {
-                const scopeManager = context.getSourceCode().scopeManager!
+                const scopeManager = getSourceCode(context).scopeManager!
                 const fixes: TSESLint.RuleFix[] = []
 
                 // Pass 1: Collect variable names that are already in scope for each reference we want

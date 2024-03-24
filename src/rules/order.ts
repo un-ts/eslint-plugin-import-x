@@ -1,4 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { getSourceCode } from 'eslint-compat-utils'
 import { minimatch } from 'minimatch'
 import type { MinimatchOptions } from 'minimatch'
 
@@ -305,7 +306,7 @@ function fixOutOfOrder(
   secondNode: ImportEntryWithRank,
   order: 'before' | 'after',
 ) {
-  const sourceCode = context.getSourceCode()
+  const sourceCode = getSourceCode(context)
 
   const firstRoot = findRootNode(firstNode.node)
   const firstRootStart = findStartOfLineWithComments(sourceCode, firstRoot)
@@ -703,7 +704,7 @@ function fixNewLineAfterImport(
 ) {
   const prevRoot = findRootNode(previousImport.node)
   const tokensToEndOfLine = takeTokensAfterWhile(
-    context.getSourceCode(),
+    getSourceCode(context),
     prevRoot,
     commentOnSameLineAs(prevRoot),
   )
@@ -721,7 +722,7 @@ function removeNewLineAfterImport(
   currentImport: ImportEntry,
   previousImport: ImportEntry,
 ) {
-  const sourceCode = context.getSourceCode()
+  const sourceCode = getSourceCode(context)
   const prevRoot = findRootNode(previousImport.node)
   const currRoot = findRootNode(currentImport.node)
   const rangeToRemove = [
@@ -1017,7 +1018,7 @@ export = createRule<[Options?], MessageId>({
           type = 'import'
         } else {
           value = ''
-          displayName = context.getSourceCode().getText(node.moduleReference)
+          displayName = getSourceCode(context).getText(node.moduleReference)
           type = 'import:object'
         }
         registerNode(

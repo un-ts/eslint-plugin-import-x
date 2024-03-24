@@ -4,6 +4,8 @@
 
 import path from 'node:path'
 
+import { getPhysicalFilename } from 'eslint-compat-utils'
+
 import type { ModuleOptions } from '../utils'
 import { createRule, moduleVisitor, resolve, getFileExtensions } from '../utils'
 
@@ -67,11 +69,7 @@ export = createRule<[Options?], MessageId>({
   },
   defaultOptions: [],
   create(context) {
-    const currentDir = path.dirname(
-      context.getPhysicalFilename
-        ? context.getPhysicalFilename()
-        : context.getFilename(),
-    )
+    const currentDir = path.dirname(getPhysicalFilename(context))
 
     const options = context.options[0] || {}
 

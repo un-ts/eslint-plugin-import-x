@@ -6,6 +6,7 @@
 import path from 'node:path'
 
 import { TSESTree } from '@typescript-eslint/utils'
+import { getPhysicalFilename } from 'eslint-compat-utils'
 
 import type { FileExtension, RuleContext } from '../types'
 import {
@@ -485,9 +486,7 @@ export = createRule<Options[], MessageId>({
       doPreparation(src, ignoreExports, context)
     }
 
-    const file = context.getPhysicalFilename
-      ? context.getPhysicalFilename()
-      : context.getFilename()
+    const file = getPhysicalFilename(context)
 
     const checkExportPresence = (node: TSESTree.Program) => {
       if (!missingExports) {

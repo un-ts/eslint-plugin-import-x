@@ -1,16 +1,14 @@
 import path from 'node:path'
 
+import { getPhysicalFilename } from 'eslint-compat-utils'
+
 import type { RuleContext } from '../types'
 
 import { pkgUp } from './pkg-up'
 import { readPkgUp } from './read-pkg-up'
 
 export function getContextPackagePath(context: RuleContext) {
-  return getFilePackagePath(
-    context.getPhysicalFilename
-      ? context.getPhysicalFilename()
-      : context.getFilename(),
-  )
+  return getFilePackagePath(getPhysicalFilename(context))
 }
 
 export function getFilePackagePath(filePath: string) {

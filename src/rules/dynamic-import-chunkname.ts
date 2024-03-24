@@ -1,6 +1,7 @@
 import vm from 'node:vm'
 
 import type { TSESTree } from '@typescript-eslint/utils'
+import { getSourceCode } from 'eslint-compat-utils'
 
 import { createRule } from '../utils'
 
@@ -74,7 +75,7 @@ export = createRule<[Options?], MessageId>({
     const chunkSubstrRegex = new RegExp(chunkSubstrFormat)
 
     function run(node: TSESTree.Node, arg: TSESTree.Node) {
-      const sourceCode = context.getSourceCode()
+      const sourceCode = getSourceCode(context)
       const leadingComments = sourceCode.getCommentsBefore(arg)
 
       if ((!leadingComments || leadingComments.length === 0) && !allowEmpty) {

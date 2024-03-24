@@ -4,7 +4,7 @@
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule, getScope } from '../utils'
 
 type NormalizedOptions = {
   allowPrimitiveModules?: boolean
@@ -122,16 +122,16 @@ export = createRule<[Options?], MessageId>({
 
         // exports.
         if ('name' in node.object && node.object.name === 'exports') {
-          const isInScope = context
-            .getScope()
-            .variables.some(variable => variable.name === 'exports')
+          const isInScope = getScope(context, node).variables.some(
+            variable => variable.name === 'exports',
+          )
           if (!isInScope) {
             context.report({ node, messageId: 'export' })
           }
         }
       },
       CallExpression(call) {
-        if (!validateScope(context.getScope())) {
+        if (!validateScope(getScope(context, call))) {
           return
         }
 

@@ -152,7 +152,7 @@ export = createRule<[Options], MessageId>({
 
       // same as above, but does not add names to local map
       ExportNamespaceSpecifier(namespace) {
-        const declaration = importDeclaration(context)
+        const declaration = importDeclaration(context, namespace)
 
         const imports = ExportMap.get(declaration.source.value, context)
         if (imports == null) {
@@ -186,7 +186,10 @@ export = createRule<[Options], MessageId>({
           return
         }
 
-        if (declaredScope(context, dereference.object.name) !== 'module') {
+        if (
+          declaredScope(context, dereference, dereference.object.name) !==
+          'module'
+        ) {
           return
         }
 
@@ -249,7 +252,9 @@ export = createRule<[Options], MessageId>({
         }
       },
 
-      VariableDeclarator({ id, init }) {
+      VariableDeclarator(node) {
+        const { id, init } = node
+
         if (init == null) {
           return
         }
@@ -261,7 +266,7 @@ export = createRule<[Options], MessageId>({
         }
 
         // check for redefinition in intermediate scopes
-        if (declaredScope(context, init.name) !== 'module') {
+        if (declaredScope(context, node, init.name) !== 'module') {
           return
         }
 

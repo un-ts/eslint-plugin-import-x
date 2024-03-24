@@ -1,0 +1,40 @@
+diff --git a/node_modules/eslint-compat-utils/dist/index.d.ts b/node_modules/eslint-compat-utils/dist/index.d.ts
+index 993098a..ccb61ad 100644
+--- a/node_modules/eslint-compat-utils/dist/index.d.ts
++++ b/node_modules/eslint-compat-utils/dist/index.d.ts
+@@ -1,21 +1,23 @@
+-import { Rule, SourceCode } from 'eslint';
++import { TSESLint } from '@typescript-eslint/utils'
++
++type RuleContext = TSESLint.RuleContext<string, readonly unknown[]>
+ 
+ /**
+  * Returns an extended instance of `context.sourceCode` or the result of `context.getSourceCode()`.
+  * Extended instances can use new APIs such as `getScope(node)` even with old ESLint.
+  */
+-declare function getSourceCode(context: Rule.RuleContext): SourceCode;
++declare function getSourceCode(context: RuleContext): TSESLint.SourceCode;
+ 
+ /**
+  * Gets the value of `context.cwd`, but for older ESLint it returns the result of `context.getCwd()`.
+  * Versions older than v6.6.0 return a value from the result of `process.cwd()`.
+  */
+-declare function getCwd(context: Rule.RuleContext): string;
++declare function getCwd(context: RuleContext): string;
+ 
+ /**
+  * Gets the value of `context.filename`, but for older ESLint it returns the result of `context.getFilename()`.
+  */
+-declare function getFilename(context: Rule.RuleContext): string;
++declare function getFilename(context: RuleContext): string;
+ 
+ /**
+  * Gets the value of `context.physicalFilename`,
+@@ -23,6 +25,6 @@ declare function getFilename(context: Rule.RuleContext): string;
+  * Versions older than v7.28.0 return a value guessed from the result of `context.getFilename()`,
+  * but it may be incorrect.
+  */
+-declare function getPhysicalFilename(context: Rule.RuleContext): string;
++declare function getPhysicalFilename(context: RuleContext): string;
+ 
+ export { getCwd, getFilename, getPhysicalFilename, getSourceCode };

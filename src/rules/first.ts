@@ -1,5 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { getSourceCode } from 'eslint-compat-utils'
 
+import type { RuleContext } from '../types'
 import { createRule } from '../utils'
 
 function getImportValue(node: TSESTree.ProgramStatement) {
@@ -51,7 +53,7 @@ export = createRule<['absolute-first'?], MessageId>({
         }
 
         const absoluteFirst = context.options[0] === 'absolute-first'
-        const sourceCode = context.getSourceCode()
+        const sourceCode = getSourceCode(context)
         const originSourceCode = sourceCode.getText()
 
         let nonImportCount = 0
@@ -95,7 +97,12 @@ export = createRule<['absolute-first'?], MessageId>({
             }
 
             if (nonImportCount > 0) {
-              for (const variable of context.getDeclaredVariables(node)) {
+              /**
+               * @see https://eslint.org/docs/next/use/migrate-to-9.0.0#-removed-multiple-context-methods
+               */
+              for (const variable of (
+                sourceCode as unknown as RuleContext
+              ).getDeclaredVariables(node)) {
                 if (!shouldSort) {
                   break
                 }

@@ -2,7 +2,7 @@
  * Rule to prefer imports to AMD
  */
 
-import { createRule } from '../utils'
+import { createRule, getScope } from '../utils'
 
 type MessageId = 'amd'
 
@@ -23,7 +23,7 @@ export = createRule<[], MessageId>({
   create(context) {
     return {
       CallExpression(node) {
-        if (context.getScope().type !== 'module') {
+        if (getScope(context, node).type !== 'module') {
           return
         }
 
