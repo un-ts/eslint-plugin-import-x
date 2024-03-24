@@ -535,6 +535,7 @@ export class ExportMap {
                     n.expression.id &&
                     n.expression.id.name))) ||
               null
+
         const declTypes = new Set([
           'VariableDeclaration',
           'ClassDeclaration',
@@ -545,38 +546,68 @@ export class ExportMap {
           'TSAbstractClassDeclaration',
           'TSModuleDeclaration',
         ])
+
+        const getRoot = (
+          node: TSESTree.TSQualifiedName,
+        ): TSESTree.Identifier => {
+          if (node.left.type === 'TSQualifiedName') {
+            return getRoot(node.left)
+          }
+          return node.left as TSESTree.Identifier
+        }
+
         const exportedDecls = ast.body.filter(node => {
           return (
             declTypes.has(node.type) &&
             (('id' in node &&
               node.id &&
-              'name' in node.id &&
-              node.id.name === exportedName) ||
+              ('name' in node.id
+                ? node.id.name === exportedName
+                : 'left' in node.id &&
+                  getRoot(node.id).name === exportedName)) ||
               ('declarations' in node &&
                 node.declarations.find(
                   d => 'name' in d.id && d.id.name === exportedName,
                 )))
           )
         })
+
         if (exportedDecls.length === 0) {
           // Export is not referencing any local declaration, must be re-exporting
           m.namespace.set('default', captureDoc(source, docStyleParsers, n))
           continue
         }
+
         if (
           isEsModuleInteropTrue && // esModuleInterop is on in tsconfig
           !m.namespace.has('default') // and default isn't added already
         ) {
           m.namespace.set('default', {}) // add default export
         }
+
         for (const decl of exportedDecls) {
           if (decl.type === 'TSModuleDeclaration') {
-            if (decl.body && decl.body.type === 'TSModuleDeclaration') {
+            const type = decl.body?.type
+
+            // @ts-expect-error - legacy parser type
+            if (type === 'TSModuleDeclaration') {
               m.namespace.set(
+                // @ts-expect-error - legacy parser type
                 (decl.body.id as TSESTree.Identifier).name,
                 captureDoc(source, docStyleParsers, decl.body),
               )
-            } else if (decl.body && decl.body.body) {
+              continue
+            } else if (type === 'TSModuleBlock' && decl.kind === 'namespace') {
+              const metadata = captureDoc(source, docStyleParsers, decl.body)
+              if ('name' in decl.id) {
+                m.namespace.set(decl.id.name, metadata)
+              } else {
+                // TODO: handle left TSQualifiedName: `declare module foo.bar.baz`
+                m.namespace.set(decl.id.right.name, metadata)
+              }
+            }
+
+            if (decl.body?.body) {
               for (const moduleBlockNode of decl.body.body) {
                 // Export-assignment exports all members in the namespace,
                 // explicitly exported or not.
@@ -879,7 +910,7 @@ export class ExportMap {
 function captureDoc(
   source: SourceCode,
   docStyleParsers: DocStyleParsers,
-  ...nodes: TSESTree.Node[]
+  ...nodes: Array<TSESTree.Node | undefined>
 ) {
   const metadata: {
     doc?: Annotation
@@ -887,6 +918,10 @@ function captureDoc(
 
   // 'some' short-circuits on first 'true'
   nodes.some(n => {
+    if (!n) {
+      return false
+    }
+
     try {
       let leadingComments: TSESTree.Comment[] | undefined
 

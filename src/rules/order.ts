@@ -875,7 +875,7 @@ export = createRule<[Options?], MessageId>({
                 },
                 group: {
                   type: 'string',
-                  enum: types,
+                  enum: [...types],
                 },
                 position: {
                   type: 'string',
@@ -887,6 +887,7 @@ export = createRule<[Options?], MessageId>({
             },
           },
           'newlines-between': {
+            type: 'string',
             enum: ['ignore', 'always', 'always-and-inside-groups', 'never'],
           },
           alphabetize: {
@@ -897,10 +898,12 @@ export = createRule<[Options?], MessageId>({
                 default: false,
               },
               order: {
+                type: 'string',
                 enum: ['ignore', 'asc', 'desc'],
                 default: 'ignore',
               },
               orderImportKind: {
+                type: 'string',
                 enum: ['ignore', 'asc', 'desc'],
                 default: 'ignore',
               },
@@ -1004,6 +1007,7 @@ export = createRule<[Options?], MessageId>({
         let displayName: string
         let value: string
         let type: 'import:object' | 'import'
+        // @ts-expect-error - legacy parser type
         // skip "export import"s
         if (node.isExport) {
           return

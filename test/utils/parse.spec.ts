@@ -216,18 +216,23 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
 
   it('requires only one of the parse methods', () => {
     expect(
-      parse.bind(null, filepath, content, {
-        settings: {},
-        parserPath: null,
-        languageOptions: {
-          parser: {
-            parseForESLint: () => ({
-              // @ts-expect-error - testing
-              ast: {},
-            }),
+      parse.bind(
+        null,
+        filepath,
+        content,
+        // @ts-expect-error - testing
+        {
+          settings: {},
+          parserPath: null,
+          languageOptions: {
+            parser: {
+              parseForESLint: () => ({
+                ast: {},
+              }),
+            },
           },
         },
-      }),
+      ),
     ).not.toThrow()
   })
 
@@ -256,15 +261,20 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   it('uses parseForESLint from languageOptions.parser', () => {
     const parseSpy = jest.fn(() => ({ ast: {} }))
     expect(
-      parse.bind(null, filepath, content, {
-        settings: {},
-        languageOptions: {
-          parser: {
-            // @ts-expect-error - testing
-            parseForESLint: parseSpy,
+      parse.bind(
+        null,
+        filepath,
+        content,
+        // @ts-expect-error - testing
+        {
+          settings: {},
+          languageOptions: {
+            parser: {
+              parseForESLint: parseSpy,
+            },
           },
         },
-      }),
+      ),
     ).not.toThrow()
     // passed parser to be called once
     expect(parseSpy).toHaveBeenCalledTimes(1)
@@ -274,18 +284,23 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     const parseSpy = jest.fn()
     parseStubParser.parse = parseSpy
     expect(
-      parse.bind(null, filepath, content, {
-        settings: { 'import-x/parsers': { [parseStubParserPath]: ['.js'] } },
-        parserPath: null,
-        languageOptions: {
-          parser: {
-            // @ts-expect-error - testing
-            parse() {
-              //
+      parse.bind(
+        null,
+        filepath,
+        content,
+        // @ts-expect-error - testing
+        {
+          settings: { 'import-x/parsers': { [parseStubParserPath]: ['.js'] } },
+          parserPath: null,
+          languageOptions: {
+            parser: {
+              parse() {
+                //
+              },
             },
           },
         },
-      }),
+      ),
     ).not.toThrow()
     // custom parser to be called once
     expect(parseSpy).toHaveBeenCalledTimes(1)

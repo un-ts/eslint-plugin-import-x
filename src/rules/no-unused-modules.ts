@@ -421,6 +421,7 @@ export = createRule<Options[], MessageId>({
     },
     schema: [
       {
+        type: 'object',
         properties: {
           src: {
             description: 'files/paths to be analyzed (only for unused exports)',
@@ -452,17 +453,26 @@ export = createRule<Options[], MessageId>({
         },
         anyOf: [
           {
+            type: 'object',
             properties: {
-              unusedExports: { enum: [true] },
+              unusedExports: {
+                type: 'boolean',
+                enum: [true],
+              },
               src: {
+                type: 'array',
                 minItems: 1,
               },
             },
             required: ['unusedExports'],
           },
           {
+            type: 'object',
             properties: {
-              missingExports: { enum: [true] },
+              missingExports: {
+                type: 'boolean',
+                enum: [true],
+              },
             },
             required: ['missingExports'],
           },

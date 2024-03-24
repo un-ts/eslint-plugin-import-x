@@ -44,7 +44,7 @@ export = createRule<[], 'ExportNamedDeclaration' | 'AssignmentExpression'>({
       description:
         'Prefer named exports to be grouped together in a single export declaration.',
     },
-    schema: {},
+    schema: [],
     messages: {
       ExportNamedDeclaration:
         'Multiple named export declarations; consolidate all named exports into a single export declaration',

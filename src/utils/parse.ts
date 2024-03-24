@@ -96,7 +96,7 @@ export function parse(
   // require the parser relative to the main module (i.e., ESLint)
   const parser =
     typeof parserOrPath === 'string'
-      ? moduleRequire<TSESLint.Linter.ParserModule>(parserOrPath)
+      ? moduleRequire<TSESLint.Parser.ParserModule>(parserOrPath)
       : parserOrPath
 
   // replicate bom strip and hashbang transform of ESLint
@@ -156,7 +156,7 @@ function getParser(path: string, context: ChildContext | RuleContext) {
       ('parseForESLint' in parser &&
         typeof parser.parseForESLint === 'function'))
   ) {
-    return parser
+    return parser as TSESLint.Parser.ParserModule
   }
 
   return null
