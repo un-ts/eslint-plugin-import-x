@@ -107,10 +107,14 @@ describe('ExportMap', () => {
           .readFileSync(path, { encoding: 'utf8' })
           .replaceAll(/\r?\n/g, lineEnding)
 
-        const imports = ExportMap.parse(path, contents, parseContext)!
+        let imports: ExportMap
 
-        // sanity checks
-        expect(imports.errors).toHaveLength(0)
+        beforeAll(() => {
+          imports = ExportMap.parse(path, contents, parseContext)!
+
+          // sanity checks
+          expect(imports.errors).toHaveLength(0)
+        })
 
         it('works with named imports.', () => {
           expect(imports.has('fn')).toBe(true)
@@ -184,10 +188,15 @@ describe('ExportMap', () => {
       describe('full module', () => {
         const path = testFilePath('deprecated-file.js')
         const contents = fs.readFileSync(path, { encoding: 'utf8' })
-        const imports = ExportMap.parse(path, contents, parseContext)!
 
-        // sanity checks
-        expect(imports.errors).toHaveLength(0)
+        let imports: ExportMap
+
+        beforeAll(() => {
+          imports = ExportMap.parse(path, contents, parseContext)!
+
+          // sanity checks
+          expect(imports.errors).toHaveLength(0)
+        })
 
         it('has JSDoc metadata', () => {
           expect(imports.doc).toBeDefined()
@@ -281,8 +290,7 @@ describe('ExportMap', () => {
       expect(def.get('default')!.namespace!.has('c')).toBe(true)
     })
 
-    // FIXME: check and enable
-    it.skip('works with @babel/eslint-parser & ES7 namespace exports', function () {
+    it('works with @babel/eslint-parser & ES7 namespace exports', function () {
       const path = testFilePath('deep-es7/a.js')
       const contents = fs.readFileSync(path, { encoding: 'utf8' })
       const a = ExportMap.parse(path, contents, babelContext)!
@@ -376,10 +384,8 @@ describe('ExportMap', () => {
       settings: { 'import-x/extensions': ['.js'] as const },
     }
 
-    const imports = ExportMap.get('./typescript.ts', context)
-
     it('returns nothing for a TypeScript file', () => {
-      expect(imports).toBeFalsy()
+      expect(ExportMap.get('./typescript.ts', context)).toBeFalsy()
     })
   })
 
@@ -395,9 +401,17 @@ describe('ExportMap', () => {
 
       jest.setTimeout(20e3) // takes a long time :shrug:
 
-      const spied = jest.spyOn(getTsconfig, 'getTsconfig').mockClear()
+      const spied = jest.spyOn(getTsconfig, 'getTsconfig')
 
-      const imports = ExportMap.get('./typescript.ts', context)!
+      let imports: ExportMap
+
+      beforeAll(() => {
+        imports = ExportMap.get('./typescript.ts', context)!
+      })
+
+      beforeEach(() => {
+        spied.mockClear()
+      })
 
       afterAll(() => {
         spied.mockRestore()

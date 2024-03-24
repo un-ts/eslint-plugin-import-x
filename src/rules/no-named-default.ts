@@ -1,4 +1,4 @@
-import { createRule } from '../utils'
+import { createRule, getValue } from '../utils'
 
 type MessageId = 'default'
 
@@ -31,9 +31,7 @@ export = createRule<[], MessageId>({
 
           if (
             im.type === 'ImportSpecifier' &&
-            (im.imported.name ||
-              // @ts-expect-error - legacy parser type
-              im.imported.value) === 'default'
+            getValue(im.imported) === 'default'
           ) {
             context.report({
               node: im.local,

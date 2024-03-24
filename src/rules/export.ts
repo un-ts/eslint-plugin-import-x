@@ -1,6 +1,11 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { ExportMap, recursivePatternCapture, createRule } from '../utils'
+import {
+  ExportMap,
+  recursivePatternCapture,
+  createRule,
+  getValue,
+} from '../utils'
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:
@@ -181,9 +186,7 @@ export = createRule<[], MessageId>({
 
       ExportSpecifier(node) {
         addNamed(
-          node.exported.name ||
-            // @ts-expect-error - legacy parser type
-            node.exported.value,
+          getValue(node.exported),
           node.exported,
           getParent(node.parent!),
         )

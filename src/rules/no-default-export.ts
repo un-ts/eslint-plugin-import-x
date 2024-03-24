@@ -42,7 +42,7 @@ export = createRule({
             'default',
         )) {
           const { loc } = getSourceCode(context).getFirstTokens(node)[1] || {}
-          // @ts-expect-error - legacy parser type
+          // @ts-expect-error - experimental parser type
           if (specifier.type === 'ExportDefaultSpecifier') {
             context.report({
               node,

@@ -17,6 +17,7 @@ import {
   getFileExtensions,
   readPkgUp,
   visit,
+  getValue,
 } from '../utils'
 
 function listFilesToProcess(src: string[], extensions: FileExtension[]) {
@@ -633,11 +634,7 @@ export = createRule<Options[], MessageId>({
           if (s.specifiers.length > 0) {
             for (const specifier of s.specifiers) {
               if (specifier.exported) {
-                newExportIdentifiers.add(
-                  specifier.exported.name ||
-                    // @ts-expect-error - legacy parser type
-                    specifier.exported.value,
-                )
+                newExportIdentifiers.add(getValue(specifier.exported))
               }
             }
           }
@@ -753,10 +750,7 @@ export = createRule<Options[], MessageId>({
             context,
           )
           for (const specifier of astNode.specifiers) {
-            const name =
-              specifier.local.name ||
-              // @ts-expect-error - legacy parser type
-              specifier.local.value
+            const name = getValue(specifier.local)
             if (name === DEFAULT) {
               newDefaultImports.add(resolvedPath!)
             } else {
@@ -800,12 +794,7 @@ export = createRule<Options[], MessageId>({
               specifier.type !== AST_NODE_TYPES.ImportNamespaceSpecifier,
           )) {
             if ('imported' in specifier) {
-              newImports.set(
-                specifier.imported.name ||
-                  // @ts-expect-error - legacy parser type
-                  specifier.imported.value,
-                resolvedPath,
-              )
+              newImports.set(getValue(specifier.imported), resolvedPath)
             }
           }
         }
@@ -1004,12 +993,7 @@ export = createRule<Options[], MessageId>({
       },
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers) {
-          checkUsage(
-            specifier,
-            specifier.exported.name ||
-              // @ts-expect-error - legacy parser type
-              specifier.exported.value,
-          )
+          checkUsage(specifier, getValue(specifier.exported))
         }
         forEachDeclarationIdentifier(node.declaration, name => {
           checkUsage(node, name)
