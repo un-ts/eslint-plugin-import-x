@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 0.4.2
+
+### Patch Changes
+
+- [#62](https://github.com/un-ts/eslint-plugin-import-x/pull/62) [`1dbb323`](https://github.com/un-ts/eslint-plugin-import-x/commit/1dbb323945ffb14332f59c3d17034c11d5ec90fd) Thanks [@JounQin](https://github.com/JounQin)! - feat: use eslint-compat-utils to support eslint v9 (not flat config yet)
+
 ## 0.4.1
 
 ### Patch Changes
