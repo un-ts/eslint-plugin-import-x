@@ -19,6 +19,7 @@ import type {
   RuleContext,
 } from '../types'
 
+import { getValue } from './get-value'
 import { hashObject } from './hash'
 import { hasValidExtension, ignore } from './ignore'
 import { parse } from './parse'
@@ -212,7 +213,7 @@ export class ExportMap {
       })
     }
 
-    const namespaces = new Map()
+    const namespaces = new Map</* identifier */ string, /* source */ string>()
 
     function remotePath(value: string) {
       return relative(value, filepath, context.settings)
@@ -226,25 +227,18 @@ export class ExportMap {
       return ExportMap.for(childContext(rp, context))
     }
 
-    function getNamespace(identifier: TSESTree.Identifier | string) {
-      const namespace =
-        typeof identifier === 'string' ? identifier : identifier.name
+    function getNamespace(namespace: string) {
       if (!namespaces.has(namespace)) {
         return
       }
 
       return function () {
-        return resolveImport(namespaces.get(namespace))
+        return resolveImport(namespaces.get(namespace)!)
       }
     }
 
-    function addNamespace(
-      object: object,
-      identifier: TSESTree.Identifier | string,
-    ) {
-      const namespace =
-        typeof identifier === 'string' ? identifier : identifier.name
-      const nsfn = getNamespace(namespace)
+    function addNamespace(object: object, identifier: TSESTree.Identifier) {
+      const nsfn = getNamespace(getValue(identifier))
       if (nsfn) {
         Object.defineProperty(object, 'namespace', { get: nsfn })
       }
@@ -289,19 +283,16 @@ export class ExportMap {
         }
         case 'ExportAllDeclaration': {
           m.namespace.set(
-            s.exported!.name ||
-              // @ts-expect-error - legacy parser type
-              s.exported!.value,
-            addNamespace(exportMeta, s.source.value),
+            getValue(s.exported!),
+            addNamespace(exportMeta, s.exported!),
           )
+
           return
         }
         case 'ExportSpecifier': {
           if (!('source' in n && n.source)) {
             m.namespace.set(
-              s.exported.name ||
-                // @ts-expect-error - legacy parser type
-                s.exported.value,
+              getValue(s.exported),
               addNamespace(exportMeta, s.local),
             )
             return
@@ -342,11 +333,7 @@ export class ExportMap {
       const importedSpecifiers = new Set<string>()
       for (const specifier of n.specifiers) {
         if (specifier.type === 'ImportSpecifier') {
-          importedSpecifiers.add(
-            specifier.imported.name ||
-              // @ts-expect-error - legacy parser type
-              specifier.imported.value,
-          )
+          importedSpecifiers.add(getValue(specifier.imported))
         } else if (supportedImportTypes.has(specifier.type)) {
           importedSpecifiers.add(specifier.type)
         }
@@ -460,6 +447,7 @@ export class ExportMap {
           m.dependencies.add(getter)
         }
         if (n.exported) {
+          namespaces.set(n.exported.name, n.source.value)
           processSpecifier(n, n.exported, m)
         }
         continue
@@ -520,7 +508,9 @@ export class ExportMap {
           }
         }
 
-        for (const s of n.specifiers) processSpecifier(s, n, m)
+        for (const s of n.specifiers) {
+          processSpecifier(s, n, m)
+        }
       }
 
       const exports = ['TSExportAssignment']

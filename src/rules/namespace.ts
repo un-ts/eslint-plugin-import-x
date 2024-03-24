@@ -6,6 +6,7 @@ import {
   ExportMap,
   createRule,
   declaredScope,
+  getValue,
 } from '../utils'
 
 type MessageId =
@@ -62,9 +63,7 @@ function processBodyStatement(
       case 'ImportSpecifier': {
         const meta = imports.get(
           'imported' in specifier && specifier.imported
-            ? specifier.imported.name ||
-                // @ts-expect-error - legacy parser node
-                specifier.imported.value
+            ? getValue(specifier.imported)
             : // default to 'default' for default
               'default',
         )
