@@ -1,3 +1,5 @@
+import { getSourceCode } from 'eslint-compat-utils'
+
 import { createRule } from '../utils'
 
 export = createRule({
@@ -24,7 +26,7 @@ export = createRule({
 
     return {
       ExportDefaultDeclaration(node) {
-        const { loc } = context.getSourceCode().getFirstTokens(node)[1] || {}
+        const { loc } = getSourceCode(context).getFirstTokens(node)[1] || {}
         context.report({
           node,
           messageId: 'preferNamed',
@@ -39,7 +41,7 @@ export = createRule({
               ('value' in specifier.exported && specifier.exported.value)) ===
             'default',
         )) {
-          const { loc } = context.getSourceCode().getFirstTokens(node)[1] || {}
+          const { loc } = getSourceCode(context).getFirstTokens(node)[1] || {}
           // @ts-expect-error - legacy parser type
           if (specifier.type === 'ExportDefaultSpecifier') {
             context.report({

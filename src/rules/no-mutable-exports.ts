@@ -1,6 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule, getScope } from '../utils'
 
 type MessageId = 'noMutable'
 
@@ -48,14 +48,14 @@ export = createRule<[], MessageId>({
 
     return {
       ExportDefaultDeclaration(node) {
-        const scope = context.getScope()
+        const scope = getScope(context, node)
 
         if ('name' in node.declaration) {
           checkDeclarationsInScope(scope, node.declaration.name)
         }
       },
       ExportNamedDeclaration(node) {
-        const scope = context.getScope()
+        const scope = getScope(context, node)
 
         if (node.declaration) {
           checkDeclaration(node.declaration)

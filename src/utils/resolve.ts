@@ -2,6 +2,8 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
+import { getPhysicalFilename } from 'eslint-compat-utils'
+
 import type {
   Arrayable,
   ImportResolver,
@@ -287,13 +289,7 @@ const erroredContexts = new Set<RuleContext>()
  */
 export function resolve(p: string, context: RuleContext) {
   try {
-    return relative(
-      p,
-      context.getPhysicalFilename
-        ? context.getPhysicalFilename()
-        : context.getFilename(),
-      context.settings,
-    )
+    return relative(p, getPhysicalFilename(context), context.settings)
   } catch (error_) {
     const error = error_ as Error
     if (!erroredContexts.has(context)) {

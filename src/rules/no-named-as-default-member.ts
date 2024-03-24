@@ -45,7 +45,7 @@ export = createRule<[], MessageId>({
 
     return {
       ImportDefaultSpecifier(node) {
-        const declaration = importDeclaration(context)
+        const declaration = importDeclaration(context, node)
         const exportMap = ExportMap.get(declaration.source.value, context)
         if (exportMap == null) {
           return

@@ -34,7 +34,7 @@ export = createRule<[], MessageId>({
         return
       }
 
-      const declaration = importDeclaration(context)
+      const declaration = importDeclaration(context, defaultSpecifier)
 
       const imports = ExportMap.get(declaration.source.value, context)
       if (imports == null) {

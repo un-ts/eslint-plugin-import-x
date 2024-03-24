@@ -1,4 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { getSourceCode } from 'eslint-compat-utils'
 import semver from 'semver'
 import type { PackageJson } from 'type-fest'
 
@@ -28,7 +29,7 @@ function checkImports(
   for (const [module, nodes] of imported.entries()) {
     if (nodes.length > 1) {
       const [first, ...rest] = nodes
-      const sourceCode = context.getSourceCode()
+      const sourceCode = getSourceCode(context)
       const fix = getFix(first, rest, sourceCode, context)
 
       context.report({
