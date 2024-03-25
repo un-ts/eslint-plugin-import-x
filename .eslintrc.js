@@ -12,7 +12,7 @@ module.exports = {
     'plugin:eslint-plugin/recommended',
     'plugin:import-x/recommended',
     'plugin:n/recommended',
-    semver.satisfies(eslintPkg.version, '>=8')
+    semver.satisfies(eslintPkg.version, '>=8.56')
       ? 'plugin:unicorn/recommended'
       : undefined,
     'plugin:prettier/recommended',
