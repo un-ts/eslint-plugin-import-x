@@ -228,7 +228,7 @@ const valid = [
     `,
   }),
 
-  ...testVersion('>= 6', () => ({
+  test({
     code: `
     import * as middle from './middle';
 
@@ -238,7 +238,8 @@ const valid = [
     parserOptions: {
       ecmaVersion: 2020,
     },
-  })),
+  }),
+
   // es2022: Arbitrary module namespace identifier names
   ...testVersion('>= 8.7', () => ({
     code: "import * as names from './default-export-string';",

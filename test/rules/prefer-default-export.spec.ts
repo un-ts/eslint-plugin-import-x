@@ -96,7 +96,7 @@ ruleTester.run('prefer-default-export', rule, {
       `,
       parser: parsers.BABEL,
     }),
-    // es2022: Arbitrary module namespae identifier names
+    // es2022: Arbitrary module namespace identifier names
     ...testVersion('>= 8.7', () => ({
       code: 'let foo; export { foo as "default" };',
       parserOptions: { ecmaVersion: 2022 },
@@ -258,7 +258,7 @@ ruleTester.run('prefer-default-export', rule, {
         },
       ],
     }),
-    // es2022: Arbitrary module namespae identifier names
+    // es2022: Arbitrary module namespace identifier names
     ...testVersion('>= 8.7', () => ({
       code: 'export const a = 4; let foo; export { foo as "default" };',
       options: [

@@ -88,7 +88,7 @@ ruleTester.run('no-named-as-default', rule, {
       ],
     }),
 
-    // es2022: Arbitrary module namespae identifier names
+    // es2022: Arbitrary module namespace identifier names
     ...testVersion('>= 8.7', () => ({
       code: 'import foo from "./export-default-string-and-named"',
       errors: [

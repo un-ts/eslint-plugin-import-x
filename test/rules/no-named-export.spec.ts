@@ -30,7 +30,7 @@ ruleTester.run('no-named-export', rule, {
       code: `import {default as foo} from './foo';`,
     }),
 
-    // es2022: Arbitrary module namespae identifier names
+    // es2022: Arbitrary module namespace identifier names
     ...testVersion('>= 8.7', () => ({
       code: 'let foo; export { foo as "default" }',
       parserOptions: { ecmaVersion: 2022 },

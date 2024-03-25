@@ -202,25 +202,25 @@ ruleTester.run('named', rule, {
 
     ...SYNTAX_CASES,
 
-    ...testVersion('>= 6', () => ({
+    test({
       code: `import { ExtfieldModel, Extfield2Model } from './models';`,
       filename: testFilePath('./export-star/downstream.js'),
       parserOptions: {
         sourceType: 'module',
         ecmaVersion: 2020,
       },
-    })),
+    }),
 
-    ...testVersion('>=7.8.0', () => ({
+    test({
       code: 'const { something } = require("./dynamic-import-in-commonjs")',
       parserOptions: { ecmaVersion: 2021 },
       options: [{ commonjs: true }],
-    })),
+    }),
 
-    ...testVersion('>=7.8.0', () => ({
+    test({
       code: 'import { something } from "./dynamic-import-in-commonjs"',
       parserOptions: { ecmaVersion: 2021 },
-    })),
+    }),
 
     // es2022: Arbitrary module namespace identifier names
     ...testVersion('>= 8.7', () => ({

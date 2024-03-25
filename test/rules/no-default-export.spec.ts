@@ -164,7 +164,7 @@ ruleTester.run('no-default-export', rule, {
         },
       ],
     }),
-    // es2022: Arbitrary module namespae identifier names
+    // es2022: Arbitrary module namespace identifier names
     ...testVersion('>= 8.7', () => ({
       code: 'let foo; export { foo as "default" }',
       errors: [
