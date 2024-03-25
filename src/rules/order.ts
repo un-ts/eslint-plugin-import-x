@@ -1061,7 +1061,7 @@ export = createRule<[Options?], MessageId>({
           pathGroupsExcludedImportTypes,
         )
       },
-      'Program:exit': function reportAndReset() {
+      'Program:exit'() {
         for (const imported of importMap.values()) {
           if (newlinesBetweenImports !== 'ignore') {
             makeNewlinesBetweenReport(
