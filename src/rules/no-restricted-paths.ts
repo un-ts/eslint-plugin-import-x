@@ -113,7 +113,7 @@ export = createRule<[Options?], MessageId>({
     },
   },
   defaultOptions: [],
-  create: function noRestrictedPaths(context) {
+  create(context) {
     const options = context.options[0] || {}
     const restrictedPaths = options.zones || []
     const basePath = options.basePath || process.cwd()

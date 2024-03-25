@@ -112,7 +112,7 @@ export = createRule<[], 'ExportNamedDeclaration' | 'AssignmentExpression'>({
         }
       },
 
-      'Program:exit': function onExit() {
+      'Program:exit'() {
         // Report multiple `export` declarations (ES2015 modules)
         if (nodes.modules.set.size > 1) {
           for (const node of nodes.modules.set) {

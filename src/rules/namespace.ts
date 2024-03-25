@@ -62,7 +62,7 @@ function processBodyStatement(
       case 'ImportDefaultSpecifier':
       case 'ImportSpecifier': {
         const meta = imports.get(
-          'imported' in specifier && specifier.imported
+          'imported' in specifier
             ? getValue(specifier.imported)
             : // default to 'default' for default
               'default',
@@ -135,7 +135,7 @@ export = createRule<[Options], MessageId>({
       allowComputed: false,
     },
   ],
-  create: function namespaceRule(context) {
+  create(context) {
     // read options
     const { allowComputed } = context.options[0] || {}
 

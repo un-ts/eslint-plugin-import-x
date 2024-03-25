@@ -442,13 +442,14 @@ export class ExportMap {
       }
 
       if (n.type === 'ExportAllDeclaration') {
-        const getter = captureDependency(n, n.exportKind === 'type')
-        if (getter) {
-          m.dependencies.add(getter)
-        }
         if (n.exported) {
           namespaces.set(n.exported.name, n.source.value)
           processSpecifier(n, n.exported, m)
+        } else {
+          const getter = captureDependency(n, n.exportKind === 'type')
+          if (getter) {
+            m.dependencies.add(getter)
+          }
         }
         continue
       }
@@ -693,6 +694,7 @@ export class ExportMap {
     if (this.namespace.has(name)) {
       return true
     }
+
     if (this.reexports.has(name)) {
       return true
     }
