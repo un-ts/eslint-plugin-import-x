@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 0.4.4
+
+### Patch Changes
+
+- [#67](https://github.com/un-ts/eslint-plugin-import-x/pull/67) [`7a6145c`](https://github.com/un-ts/eslint-plugin-import-x/commit/7a6145c1d6d7fdf8b9610756e6c0bc4aa65ad36d) Thanks [@JounQin](https://github.com/JounQin)! - fix: only add `dependencies` when no `exported` found
+
 ## 0.4.3
 
 ### Patch Changes
