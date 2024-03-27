@@ -1,6 +1,5 @@
 import path from 'node:path'
 
-import { getPhysicalFilename } from 'eslint-compat-utils'
 import { minimatch } from 'minimatch'
 
 import { isStaticRequire, createRule } from '../utils'
@@ -65,7 +64,7 @@ export = createRule<[Options?], MessageId>({
   create(context) {
     const options = context.options[0] || {}
 
-    const filename = getPhysicalFilename(context)
+    const filename = context.physicalFilename
 
     const isAllow = (source: string) =>
       testIsAllow(options.allow, filename, source)

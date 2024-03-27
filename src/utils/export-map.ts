@@ -1111,15 +1111,9 @@ function childContext(
     parserPath,
     path,
     filename:
-      'getPhysicalFilename' in context &&
-      typeof context.getPhysicalFilename === 'function'
-        ? context.getPhysicalFilename()
-        : 'physicalFilename' in context && context.physicalFilename != null
-          ? (context.physicalFilename as string)
-          : 'getFilename' in context &&
-              typeof context.getFilename === 'function'
-            ? context.getFilename()
-            : ('filename' in context && context.filename) || undefined,
+      'physicalFilename' in context
+        ? context.physicalFilename
+        : context.filename,
   }
 }
 

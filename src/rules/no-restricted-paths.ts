@@ -1,7 +1,6 @@
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import { getPhysicalFilename } from 'eslint-compat-utils'
 import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
 
@@ -117,12 +116,12 @@ export = createRule<[Options?], MessageId>({
     const options = context.options[0] || {}
     const restrictedPaths = options.zones || []
     const basePath = options.basePath || process.cwd()
-    const currentFilename = getPhysicalFilename(context)
+    const filename = context.physicalFilename
     const matchingZones = restrictedPaths.filter(zone =>
       [zone.target]
         .flat()
         .map(target => path.resolve(basePath, target))
-        .some(targetPath => isMatchingTargetPath(currentFilename, targetPath)),
+        .some(targetPath => isMatchingTargetPath(filename, targetPath)),
     )
 
     function isValidExceptionPath(

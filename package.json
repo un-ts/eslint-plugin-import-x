@@ -51,7 +51,6 @@
     "@typescript-eslint/utils": "^7.4.0",
     "debug": "^4.3.4",
     "doctrine": "^3.0.0",
-    "eslint-compat-utils": "^0.5.0",
     "eslint-import-resolver-node": "^0.3.9",
     "get-tsconfig": "^4.7.3",
     "is-glob": "^4.0.3",

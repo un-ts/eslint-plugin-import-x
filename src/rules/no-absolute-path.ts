@@ -1,7 +1,5 @@
 import path from 'node:path'
 
-import { getPhysicalFilename } from 'eslint-compat-utils'
-
 import {
   isAbsolute,
   createRule,
@@ -37,10 +35,9 @@ export = createRule<[ModuleOptions?], MessageId>({
         node: source,
         messageId: 'absolute',
         fix(fixer) {
-          const resolvedContext = getPhysicalFilename(context)
           // node.js and web imports work with posix style paths ("/")
           let relativePath = path.posix.relative(
-            path.dirname(resolvedContext),
+            path.dirname(context.physicalFilename),
             source.value,
           )
           if (!relativePath.startsWith('.')) {

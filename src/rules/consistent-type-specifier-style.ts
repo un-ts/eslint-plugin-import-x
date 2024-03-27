@@ -1,5 +1,4 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { getSourceCode } from 'eslint-compat-utils'
 
 import { createRule } from '../utils'
 
@@ -74,7 +73,7 @@ export = createRule<[Options?], MessageId>({
   },
   defaultOptions: [],
   create(context) {
-    const sourceCode = getSourceCode(context)
+    const { sourceCode } = context
 
     if (context.options[0] === 'prefer-inline') {
       return {

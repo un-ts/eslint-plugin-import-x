@@ -1527,11 +1527,8 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
     invalid: [],
   })
 })
-;(FlatRuleTester ? describe : describe.skip)('supports flat eslint', () => {
-  if (typeof FlatRuleTester !== 'function') {
-    return
-  }
 
+describe('supports flat eslint', () => {
   const flatRuleTester = new FlatRuleTester() as TSESLint.RuleTester
   flatRuleTester.run('no-unused-modules', rule, {
     valid: [

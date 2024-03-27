@@ -2,8 +2,6 @@
  * Ensures that no imported module imports the linted module.
  */
 
-import { getPhysicalFilename } from 'eslint-compat-utils'
-
 import type { DeclarationMetadata, ModuleOptions } from '../utils'
 import {
   ExportMap,
@@ -72,7 +70,7 @@ export = createRule<[Options?], MessageId>({
   },
   defaultOptions: [],
   create(context) {
-    const filename = getPhysicalFilename(context)
+    const filename = context.physicalFilename
 
     if (filename === '<text>') {
       return {}

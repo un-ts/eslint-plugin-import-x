@@ -3,7 +3,6 @@
  */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { getSourceCode } from 'eslint-compat-utils'
 import { minimatch } from 'minimatch'
 
 import { createRule, getScope } from '../utils'
@@ -77,7 +76,7 @@ export = createRule<[Options?], MessageId>({
           messageId: `noNamespace`,
           fix: canFix
             ? fixer => {
-                const scopeManager = getSourceCode(context).scopeManager!
+                const scopeManager = context.sourceCode.scopeManager!
                 const fixes: TSESLint.RuleFix[] = []
 
                 // Pass 1: Collect variable names that are already in scope for each reference we want

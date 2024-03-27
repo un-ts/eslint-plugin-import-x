@@ -4,7 +4,6 @@
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
-import { getPhysicalFilename } from 'eslint-compat-utils'
 
 import { isStaticRequire, createRule, getScope } from '../utils'
 
@@ -275,7 +274,8 @@ export = createRule<[Options?], MessageId>({
         }
       },
       'Program:exit'(node) {
-        log('exit processing for', getPhysicalFilename(context))
+        log('exit processing for', context.physicalFilename)
+
         const scopeBody = getScopeBody(getScope(context, node))
 
         log('got scope:', scopeBody)

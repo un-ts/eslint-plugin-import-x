@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import { getPhysicalFilename } from 'eslint-compat-utils'
 import { minimatch } from 'minimatch'
 import type { PackageJson } from 'type-fest'
 
@@ -93,7 +92,7 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
     } else {
       // use closest package.json
       const packageJsonPath = pkgUp({
-        cwd: getPhysicalFilename(context),
+        cwd: context.physicalFilename,
       })!
 
       const packageContent_ = getPackageDepFields(packageJsonPath, false)
@@ -382,7 +381,7 @@ export = createRule<[Options?], MessageId>({
   create(context) {
     const options = context.options[0] || {}
 
-    const filename = getPhysicalFilename(context)
+    const filename = context.physicalFilename
 
     const deps =
       getDependencies(context, options.packageDir) || extractDepFields({})

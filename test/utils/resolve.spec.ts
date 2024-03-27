@@ -14,12 +14,6 @@ import {
   resolve,
 } from 'eslint-plugin-import-x/utils'
 
-function unexpectedCallToGetFilename(): string {
-  throw new Error(
-    'Expected to call to getPhysicalFilename() instead of getFilename()',
-  )
-}
-
 describe('resolve', () => {
   it('throws on bad parameters', () => {
     expect(
@@ -37,26 +31,19 @@ describe('resolve', () => {
       'import-x/resolver': './foo-bar-resolver-v1',
     })
 
-    expect(
-      resolve('../fixtures/foo', {
-        ...context,
-        getFilename: testFilePath,
-      }),
-    ).toBe(testFilePath('./bar.jsx'))
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
 
     expect(
       resolve('../fixtures/exception', {
         ...context,
-        getFilename: () => testFilePath('exception.js'),
+        physicalFilename: testFilePath('exception.js'),
       }),
     ).toBeUndefined()
 
     expect(
       resolve('../fixtures/not-found', {
         ...context,
-        getFilename() {
-          return testFilePath('not-found.js')
-        },
+        physicalFilename: testFilePath('not-found.js'),
       }),
     ).toBeUndefined()
   })
@@ -66,30 +53,19 @@ describe('resolve', () => {
       'import-x/resolver': './foo-bar-resolver-no-version',
     })
 
-    expect(
-      resolve('../fixtures/foo', {
-        ...context,
-        getFilename() {
-          return testFilePath('foo.js')
-        },
-      }),
-    ).toBe(testFilePath('./bar.jsx'))
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
 
     expect(
       resolve('../fixtures/exception', {
         ...context,
-        getFilename() {
-          return testFilePath('exception.js')
-        },
+        physicalFilename: testFilePath('exception.js'),
       }),
     ).toBeUndefined()
 
     expect(
       resolve('../fixtures/not-found', {
         ...context,
-        getFilename() {
-          return testFilePath('not-found.js')
-        },
+        physicalFilename: testFilePath('not-found.js'),
       }),
     ).toBeUndefined()
   })
@@ -103,22 +79,13 @@ describe('resolve', () => {
       testContextReports.push(reportInfo)
     }
 
-    expect(
-      resolve('../fixtures/foo', {
-        ...context,
-        getFilename() {
-          return testFilePath('foo.js')
-        },
-      }),
-    ).toBe(testFilePath('./bar.jsx'))
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
 
     testContextReports.length = 0
     expect(
       resolve('../fixtures/exception', {
         ...context,
-        getFilename() {
-          return testFilePath('exception.js')
-        },
+        physicalFilename: testFilePath('exception.js'),
       }),
     ).toBeUndefined()
     expect(testContextReports[0]).toBeInstanceOf(Object)
@@ -131,9 +98,7 @@ describe('resolve', () => {
     expect(
       resolve('../fixtures/not-found', {
         ...context,
-        getFilename() {
-          return testFilePath('not-found.js')
-        },
+        physicalFilename: testFilePath('not-found.js'),
       }),
     ).toBeUndefined()
     expect(testContextReports.length).toBe(0)
@@ -144,14 +109,7 @@ describe('resolve', () => {
       'import-x/resolver': ['./foo-bar-resolver-v2', './foo-bar-resolver-v1'],
     })
 
-    expect(
-      resolve('../fixtures/foo', {
-        ...context,
-        getFilename() {
-          return testFilePath('foo.js')
-        },
-      }),
-    ).toBe(testFilePath('./bar.jsx'))
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
   })
 
   it('respects import-x/resolver as object', () => {
@@ -159,14 +117,7 @@ describe('resolve', () => {
       'import-x/resolver': { './foo-bar-resolver-v2': {} },
     })
 
-    expect(
-      resolve('../fixtures/foo', {
-        ...context,
-        getFilename() {
-          return testFilePath('foo.js')
-        },
-      }),
-    ).toBe(testFilePath('./bar.jsx'))
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
   })
 
   it('respects import-x/resolver as array of objects', () => {
@@ -177,25 +128,13 @@ describe('resolve', () => {
       ],
     })
 
-    expect(
-      resolve('../fixtures/foo', {
-        ...context,
-        getFilename: () => testFilePath('foo.js'),
-      }),
-    ).toBe(testFilePath('./bar.jsx'))
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
   })
 
   it('finds resolvers from the source files rather than eslint-plugin-import-x/utils', () => {
     const context = testContext({ 'import-x/resolver': { foo: {} } })
 
-    expect(
-      resolve('../fixtures/foo', {
-        ...context,
-        getFilename() {
-          return testFilePath('foo.js')
-        },
-      }),
-    ).toBe(testFilePath('./bar.jsx'))
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
   })
 
   it('reports invalid import-x/resolver config', () => {
@@ -211,14 +150,7 @@ describe('resolve', () => {
     }
 
     testContextReports.length = 0
-    expect(
-      resolve('../fixtures/foo', {
-        ...context,
-        getFilename() {
-          return testFilePath('foo.js')
-        },
-      }),
-    ).toBeUndefined()
+    expect(resolve('../fixtures/foo', context)).toBeUndefined()
     expect(testContextReports[0]).toBeInstanceOf(Object)
     expect(
       'message' in testContextReports[0] && testContextReports[0].message,
@@ -236,12 +168,7 @@ describe('resolve', () => {
       testContextReports.push(reportInfo)
     }
 
-    expect(
-      resolve('../fixtures/foo', {
-        ...context,
-        getFilename: testFilePath,
-      }),
-    ).toBeUndefined()
+    expect(resolve('../fixtures/foo', context)).toBeUndefined()
     expect(testContextReports[0]).toBeInstanceOf(Object)
     expect(
       'message' in testContextReports[0] && testContextReports[0].message,
@@ -275,9 +202,7 @@ describe('resolve', () => {
     expect(
       resolve('../fixtures/exception', {
         ...context,
-        getFilename() {
-          return testFilePath('exception.js')
-        },
+        physicalFilename: testFilePath('exception.js'),
       }),
     ).toBeUndefined()
     expect(testContextReports[0]).toBeInstanceOf(Object)
@@ -296,33 +221,21 @@ describe('resolve', () => {
           'import-x/resolver': './foo-bar-resolver-v1',
         })
 
-        expect(
-          resolve('../fixtures/foo', {
-            ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename() {
-              return testFilePath('foo.js')
-            },
-          }),
-        ).toBe(testFilePath('./bar.jsx'))
+        expect(resolve('../fixtures/foo', context)).toBe(
+          testFilePath('./bar.jsx'),
+        )
 
         expect(
           resolve('../fixtures/exception', {
             ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename() {
-              return testFilePath('exception.js')
-            },
+            physicalFilename: testFilePath('exception.js'),
           }),
         ).toBeUndefined()
 
         expect(
           resolve('../fixtures/not-found', {
             ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename() {
-              return testFilePath('not-found.js')
-            },
+            physicalFilename: testFilePath('not-found.js'),
           }),
         ).toBeUndefined()
       })
@@ -332,33 +245,21 @@ describe('resolve', () => {
           'import-x/resolver': './foo-bar-resolver-no-version',
         })
 
-        expect(
-          resolve('../fixtures/foo', {
-            ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename() {
-              return testFilePath('foo.js')
-            },
-          }),
-        ).toBe(testFilePath('./bar.jsx'))
+        expect(resolve('../fixtures/foo', context)).toBe(
+          testFilePath('./bar.jsx'),
+        )
 
         expect(
           resolve('../fixtures/exception', {
             ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename() {
-              return testFilePath('exception.js')
-            },
+            physicalFilename: testFilePath('exception.js'),
           }),
         ).toBeUndefined()
 
         expect(
           resolve('../fixtures/not-found', {
             ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename() {
-              return testFilePath('not-found.js')
-            },
+            physicalFilename: testFilePath('not-found.js'),
           }),
         ).toBeUndefined()
       })
@@ -372,22 +273,15 @@ describe('resolve', () => {
           testContextReports.push(reportInfo)
         }
 
-        expect(
-          resolve('../fixtures/foo', {
-            ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename: testFilePath,
-          }),
-        ).toBe(testFilePath('./bar.jsx'))
+        expect(resolve('../fixtures/foo', context)).toBe(
+          testFilePath('./bar.jsx'),
+        )
 
         testContextReports.length = 0
         expect(
           resolve('../fixtures/exception', {
             ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename() {
-              return testFilePath('exception.js')
-            },
+            physicalFilename: testFilePath('exception.js'),
           }),
         ).toBeUndefined()
         expect(testContextReports[0]).toBeInstanceOf(Object)
@@ -400,8 +294,7 @@ describe('resolve', () => {
         expect(
           resolve('../fixtures/not-found', {
             ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename: () => testFilePath('not-found.js'),
+            physicalFilename: testFilePath('not-found.js'),
           }),
         ).toBeUndefined()
         expect(testContextReports.length).toBe(0)
@@ -415,13 +308,9 @@ describe('resolve', () => {
           ],
         })
 
-        expect(
-          resolve('../fixtures/foo', {
-            ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename: testFilePath,
-          }),
-        ).toBe(testFilePath('./bar.jsx'))
+        expect(resolve('../fixtures/foo', context)).toBe(
+          testFilePath('./bar.jsx'),
+        )
       })
 
       it('respects import-x/resolver as object', () => {
@@ -429,13 +318,9 @@ describe('resolve', () => {
           'import-x/resolver': { './foo-bar-resolver-v2': {} },
         })
 
-        expect(
-          resolve('../fixtures/foo', {
-            ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename: testFilePath,
-          }),
-        ).toBe(testFilePath('./bar.jsx'))
+        expect(resolve('../fixtures/foo', context)).toBe(
+          testFilePath('./bar.jsx'),
+        )
       })
 
       it('respects import-x/resolver as array of objects', () => {
@@ -446,13 +331,9 @@ describe('resolve', () => {
           ],
         })
 
-        expect(
-          resolve('../fixtures/foo', {
-            ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename: testFilePath,
-          }),
-        ).toBe(testFilePath('./bar.jsx'))
+        expect(resolve('../fixtures/foo', context)).toBe(
+          testFilePath('./bar.jsx'),
+        )
       })
 
       it('finds resolvers from the source files rather than eslint-plugin-import-x/utils', () => {
@@ -460,13 +341,9 @@ describe('resolve', () => {
           'import-x/resolver': { foo: {} },
         })
 
-        expect(
-          resolve('../fixtures/foo', {
-            ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename: testFilePath,
-          }),
-        ).toBe(testFilePath('./bar.jsx'))
+        expect(resolve('../fixtures/foo', context)).toBe(
+          testFilePath('./bar.jsx'),
+        )
       })
 
       it('reports invalid import-x/resolver config', () => {
@@ -480,13 +357,7 @@ describe('resolve', () => {
         }
 
         testContextReports.length = 0
-        expect(
-          resolve('../fixtures/foo', {
-            ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename: testFilePath,
-          }),
-        ).toBeUndefined()
+        expect(resolve('../fixtures/foo', context)).toBeUndefined()
         expect(testContextReports[0]).toBeInstanceOf(Object)
         expect(
           'message' in testContextReports[0] && testContextReports[0].message,
@@ -503,13 +374,7 @@ describe('resolve', () => {
         context.report = reportInfo => {
           testContextReports.push(reportInfo)
         }
-        expect(
-          resolve('../fixtures/foo', {
-            ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename: testFilePath,
-          }),
-        ).toBeUndefined()
+        expect(resolve('../fixtures/foo', context)).toBeUndefined()
         expect(testContextReports[0]).toBeInstanceOf(Object)
         expect(
           'message' in testContextReports[0] && testContextReports[0].message,
@@ -541,8 +406,7 @@ describe('resolve', () => {
         expect(
           resolve('../fixtures/exception', {
             ...context,
-            getFilename: unexpectedCallToGetFilename,
-            getPhysicalFilename: () => testFilePath('exception.js'),
+            physicalFilename: testFilePath('exception.js'),
           }),
         ).toBeUndefined()
         expect(testContextReports[0]).toBeInstanceOf(Object)
