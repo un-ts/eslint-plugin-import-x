@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, test, testVersion } from '../utils'
+import { parsers, test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-mutable-exports'
 
@@ -34,11 +34,10 @@ ruleTester.run('no-mutable-exports', rule, {
       parser: parsers.BABEL,
       code: 'type Foo = {}\nexport type {Foo}',
     }),
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'const count = 1\nexport { count as "counter" }',
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
   ],
   invalid: [
     test({
@@ -73,12 +72,11 @@ ruleTester.run('no-mutable-exports', rule, {
       code: 'var count = 1\nexport default count',
       errors: ["Exporting mutable 'var' binding, use 'const' instead."],
     }),
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'let count = 1\nexport { count as "counter" }',
       errors: ["Exporting mutable 'let' binding, use 'const' instead."],
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
 
     // todo: undeclared globals
     // test({

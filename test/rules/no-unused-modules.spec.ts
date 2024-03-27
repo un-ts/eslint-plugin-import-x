@@ -4,7 +4,7 @@ import { TSESLint } from '@typescript-eslint/utils'
 // @ts-expect-error - no typings yet
 import { FlatRuleTester } from 'eslint/use-at-your-own-risk'
 
-import { test, testVersion, testFilePath, parsers } from '../utils'
+import { test, testFilePath, parsers } from '../utils'
 
 import jsxConfig from 'eslint-plugin-import-x/config/react'
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
@@ -1426,34 +1426,36 @@ describe('support (nested) destructuring assignment', () => {
 describe('support ES2022 Arbitrary module namespace identifier names', () => {
   ruleTester.run('no-unused-module', rule, {
     valid: [
-      ...testVersion('>= 8.7', () => ({
+      test({
         options: unusedExportsOptions,
         code: `import { "foo" as foo } from "./arbitrary-module-namespace-identifier-name-a"`,
         parserOptions: { ecmaVersion: 2022 },
         filename: testFilePath(
           './no-unused-modules/arbitrary-module-namespace-identifier-name-b.js',
         ),
-      })),
-      ...testVersion('>= 8.7', () => ({
+      }),
+      test({
         options: unusedExportsOptions,
         code: 'const foo = 333;\nexport { foo as "foo" }',
         parserOptions: { ecmaVersion: 2022 },
         filename: testFilePath(
           './no-unused-modules/arbitrary-module-namespace-identifier-name-a.js',
         ),
-      })),
+      }),
     ],
-    invalid: testVersion('>= 8.7', () => ({
-      options: unusedExportsOptions,
-      code: 'const foo = 333\nexport { foo as "foo" }',
-      parserOptions: { ecmaVersion: 2022 },
-      filename: testFilePath(
-        './no-unused-modules/arbitrary-module-namespace-identifier-name-c.js',
-      ),
-      errors: [
-        error(`exported declaration 'foo' not used within other modules`),
-      ],
-    })),
+    invalid: [
+      test({
+        options: unusedExportsOptions,
+        code: 'const foo = 333\nexport { foo as "foo" }',
+        parserOptions: { ecmaVersion: 2022 },
+        filename: testFilePath(
+          './no-unused-modules/arbitrary-module-namespace-identifier-name-c.js',
+        ),
+        errors: [
+          error(`exported declaration 'foo' not used within other modules`),
+        ],
+      }),
+    ],
   })
 })
 

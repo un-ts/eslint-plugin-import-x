@@ -1,12 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import {
-  test,
-  SYNTAX_CASES,
-  testVersion,
-  testFilePath,
-  parsers,
-} from '../utils'
+import { test, SYNTAX_CASES, testFilePath, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/namespace'
 
@@ -240,31 +234,30 @@ const valid = [
     },
   }),
 
-  // es2022: Arbitrary module namespace identifier names
-  ...testVersion('>= 8.7', () => ({
+  test({
     code: "import * as names from './default-export-string';",
     parserOptions: { ecmaVersion: 2022 },
-  })),
-  ...testVersion('>= 8.7', () => ({
+  }),
+  test({
     code: "import * as names from './default-export-string'; console.log(names.default)",
     parserOptions: { ecmaVersion: 2022 },
-  })),
-  ...testVersion('>= 8.7', () => ({
+  }),
+  test({
     code: "import * as names from './default-export-namespace-string';",
     parserOptions: { ecmaVersion: 2022 },
-  })),
-  ...testVersion('>= 8.7', () => ({
+  }),
+  test({
     code: "import * as names from './default-export-namespace-string'; console.log(names.default)",
     parserOptions: { ecmaVersion: 2022 },
-  })),
-  ...testVersion('>= 8.7', () => ({
+  }),
+  test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.d.e)`,
     parserOptions: { ecmaVersion: 2022 },
-  })),
-  ...testVersion('>= 8.7', () => ({
+  }),
+  test({
     code: `import { "b" as b } from "./deep/a"; var {c:{d:{e}}} = b`,
     parserOptions: { ecmaVersion: 2022 },
-  })),
+  }),
 ]
 
 const invalid = [
@@ -385,17 +378,16 @@ const invalid = [
     },
   }),
 
-  // es2022: Arbitrary module namespace identifier names
-  ...testVersion('>= 8.7', () => ({
+  test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.e)`,
     errors: ["'e' not found in imported namespace 'b'."],
     parserOptions: { ecmaVersion: 2022 },
-  })),
-  ...testVersion('>= 8.7', () => ({
+  }),
+  test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.e)`,
     errors: ["'e' not found in deeply imported namespace 'b.c'."],
     parserOptions: { ecmaVersion: 2022 },
-  })),
+  }),
 ]
 
 ///////////////////////

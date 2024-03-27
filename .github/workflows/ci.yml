@@ -18,7 +18,7 @@ jobs:
           - 18
           - 20
         eslint:
-          - '8.0'
+          - '8.56'
           - '8'
     runs-on: ${{ matrix.os }}
     steps:
@@ -59,7 +59,7 @@ jobs:
           EFF_NO_LINK_RULES: true
           PARSER_NO_WATCH: true
           SKIP_YARN_COREPACK_CHECK: 1
-        if: ${{ matrix.node == 20 && matrix.eslint == '8' }}
+        if: ${{ matrix.node == 20 }}
 
       - name: Codecov
         uses: codecov/codecov-action@v3
