@@ -1,5 +1,13 @@
 # eslint-plugin-import-x
 
+## 0.5.0
+
+### Minor Changes
+
+- [#66](https://github.com/un-ts/eslint-plugin-import-x/pull/66) [`49418a0`](https://github.com/un-ts/eslint-plugin-import-x/commit/49418a0352e77a88e00c0f4cdb98f87b8d3ab5b1) Thanks [@JounQin](https://github.com/JounQin)! - chore(dep)!: drop eslint <8.56 support
+
+- [#66](https://github.com/un-ts/eslint-plugin-import-x/pull/66) [`49418a0`](https://github.com/un-ts/eslint-plugin-import-x/commit/49418a0352e77a88e00c0f4cdb98f87b8d3ab5b1) Thanks [@JounQin](https://github.com/JounQin)! - feat!: upgrade @typescript-eslint/utils to v7
+
 ## 0.4.4
 
 ### Patch Changes
