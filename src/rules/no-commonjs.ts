@@ -127,9 +127,9 @@ export = createRule<[Options?], MessageId>({
 
         // exports.
         if ('name' in node.object && node.object.name === 'exports') {
-          const isInScope = context.sourceCode.getScope(node).variables.some(
-            variable => variable.name === 'exports',
-          )
+          const isInScope = context.sourceCode
+            .getScope(node)
+            .variables.some(variable => variable.name === 'exports')
           if (!isInScope) {
             context.report({ node, messageId: 'export' })
           }
