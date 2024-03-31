@@ -3,7 +3,6 @@
  */
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import { getPhysicalFilename } from 'eslint-compat-utils'
 
 import type { RuleContext } from '../types'
 import { createRule, moduleVisitor, resolve } from '../utils'
@@ -15,10 +14,10 @@ function isImportingSelf(
   node: TSESTree.Node,
   requireName: string,
 ) {
-  const filePath = getPhysicalFilename(context)
+  const filename = context.physicalFilename
 
   // If the input is from stdin, this test can't fail
-  if (filePath !== '<text>' && filePath === resolve(requireName, context)) {
+  if (filename !== '<text>' && filename === resolve(requireName, context)) {
     context.report({
       node,
       messageId: 'self',

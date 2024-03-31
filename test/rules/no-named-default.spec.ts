@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
+import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-default'
 
@@ -52,8 +52,7 @@ ruleTester.run('no-named-default', rule, {
       ],
     }),
 
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'import { "default" as bar } from "./bar";',
       errors: [
         {
@@ -64,6 +63,6 @@ ruleTester.run('no-named-default', rule, {
       parserOptions: {
         ecmaVersion: 2022,
       },
-    })),
+    }),
   ],
 })

@@ -1,7 +1,6 @@
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import { getFilename, getPhysicalFilename } from 'eslint-compat-utils'
 
 import { ExportMap, createRule } from '../utils'
 import type { ModuleOptions } from '../utils'
@@ -97,10 +96,7 @@ export = createRule<[ModuleOptions?], MessageId>({
           if (deepLookup.path.length > 1) {
             const deepPath = deepLookup.path
               .map(i =>
-                path.relative(
-                  path.dirname(getPhysicalFilename(context)),
-                  i.path,
-                ),
+                path.relative(path.dirname(context.physicalFilename), i.path),
               )
               .join(' -> ')
 
@@ -196,9 +192,7 @@ export = createRule<[ModuleOptions?], MessageId>({
           if (!deepLookup.found) {
             if (deepLookup.path.length > 1) {
               const deepPath = deepLookup.path
-                .map(i =>
-                  path.relative(path.dirname(getFilename(context)), i.path),
-                )
+                .map(i => path.relative(path.dirname(context.filename), i.path))
                 .join(' -> ')
 
               context.report({

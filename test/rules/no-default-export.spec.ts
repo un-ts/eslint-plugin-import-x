@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, test, testVersion } from '../utils'
+import { parsers, test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-default-export'
 
@@ -164,8 +164,7 @@ ruleTester.run('no-default-export', rule, {
         },
       ],
     }),
-    // es2022: Arbitrary module namespae identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'let foo; export { foo as "default" }',
       errors: [
         {
@@ -175,6 +174,6 @@ ruleTester.run('no-default-export', rule, {
         },
       ],
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
   ],
 })

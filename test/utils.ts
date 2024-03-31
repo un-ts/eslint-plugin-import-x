@@ -38,7 +38,7 @@ export function getNonDefaultParsers() {
   return [parsers.TS, parsers.BABEL] as const
 }
 
-const TEST_FILENAME = testFilePath()
+export const TEST_FILENAME = testFilePath()
 
 export function eslintVersionSatisfies(specifier: string) {
   return semver.satisfies(eslintPkg.version, specifier)
@@ -92,9 +92,7 @@ export function test<T extends ValidTestCase>(
 
 export function testContext(settings?: PluginSettings) {
   return {
-    getFilename() {
-      return TEST_FILENAME
-    },
+    physicalFilename: TEST_FILENAME,
     settings: settings || {},
   } as RuleContext
 }

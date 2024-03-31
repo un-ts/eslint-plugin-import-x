@@ -1,11 +1,9 @@
 import fs from 'node:fs'
 import { setTimeout } from 'node:timers/promises'
 
-import eslintPkg from 'eslint/package.json'
 import getTsconfig from 'get-tsconfig'
-import semver from 'semver'
 
-import { testFilePath } from '../utils'
+import { TEST_FILENAME, testFilePath } from '../utils'
 
 import type { ChildContext, RuleContext } from 'eslint-plugin-import-x/types'
 import {
@@ -15,16 +13,7 @@ import {
 
 describe('ExportMap', () => {
   const fakeContext = {
-    ...(semver.satisfies(eslintPkg.version, '>= 7.28')
-      ? {
-          getFilename() {
-            throw new Error(
-              'Should call getPhysicalFilename() instead of getFilename()',
-            )
-          },
-          getPhysicalFilename: testFilePath,
-        }
-      : { getFilename: testFilePath }),
+    physicalFilename: TEST_FILENAME,
     settings: {},
     parserPath: '@babel/eslint-parser',
   } as RuleContext

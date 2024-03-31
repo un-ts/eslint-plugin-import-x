@@ -11,19 +11,22 @@ import {
 } from '../utils'
 
 const enumValues = {
-  enum: ['always', 'ignorePackages', 'never'] as const,
+  type: 'string' as const,
+  enum: ['always', 'ignorePackages', 'never'],
 }
 
 const patternProperties = {
-  type: 'object',
+  type: 'object' as const,
   patternProperties: { '.*': enumValues },
 }
 
 const properties = {
-  type: 'object',
+  type: 'object' as const,
   properties: {
     pattern: patternProperties,
-    ignorePackages: { type: 'boolean' },
+    ignorePackages: {
+      type: 'boolean' as const,
+    },
   },
 }
 

@@ -1,5 +1,4 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { getSourceCode } from 'eslint-compat-utils'
 import { minimatch } from 'minimatch'
 import type { MinimatchOptions } from 'minimatch'
 
@@ -306,7 +305,7 @@ function fixOutOfOrder(
   secondNode: ImportEntryWithRank,
   order: 'before' | 'after',
 ) {
-  const sourceCode = getSourceCode(context)
+  const { sourceCode } = context
 
   const firstRoot = findRootNode(firstNode.node)
   const firstRootStart = findStartOfLineWithComments(sourceCode, firstRoot)
@@ -704,7 +703,7 @@ function fixNewLineAfterImport(
 ) {
   const prevRoot = findRootNode(previousImport.node)
   const tokensToEndOfLine = takeTokensAfterWhile(
-    getSourceCode(context),
+    context.sourceCode,
     prevRoot,
     commentOnSameLineAs(prevRoot),
   )
@@ -722,7 +721,7 @@ function removeNewLineAfterImport(
   currentImport: ImportEntry,
   previousImport: ImportEntry,
 ) {
-  const sourceCode = getSourceCode(context)
+  const { sourceCode } = context
   const prevRoot = findRootNode(previousImport.node)
   const currRoot = findRootNode(currentImport.node)
   const rangeToRemove = [
@@ -875,7 +874,7 @@ export = createRule<[Options?], MessageId>({
                 },
                 group: {
                   type: 'string',
-                  enum: types,
+                  enum: [...types],
                 },
                 position: {
                   type: 'string',
@@ -887,6 +886,7 @@ export = createRule<[Options?], MessageId>({
             },
           },
           'newlines-between': {
+            type: 'string',
             enum: ['ignore', 'always', 'always-and-inside-groups', 'never'],
           },
           alphabetize: {
@@ -897,10 +897,12 @@ export = createRule<[Options?], MessageId>({
                 default: false,
               },
               order: {
+                type: 'string',
                 enum: ['ignore', 'asc', 'desc'],
                 default: 'ignore',
               },
               orderImportKind: {
+                type: 'string',
                 enum: ['ignore', 'asc', 'desc'],
                 default: 'ignore',
               },
@@ -1004,6 +1006,7 @@ export = createRule<[Options?], MessageId>({
         let displayName: string
         let value: string
         let type: 'import:object' | 'import'
+        // @ts-expect-error - legacy parser type
         // skip "export import"s
         if (node.isExport) {
           return
@@ -1018,7 +1021,7 @@ export = createRule<[Options?], MessageId>({
           type = 'import'
         } else {
           value = ''
-          displayName = getSourceCode(context).getText(node.moduleReference)
+          displayName = context.sourceCode.getText(node.moduleReference)
           type = 'import:object'
         }
         registerNode(

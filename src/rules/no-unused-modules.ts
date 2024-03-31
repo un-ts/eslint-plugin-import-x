@@ -6,7 +6,7 @@
 import path from 'node:path'
 
 import { TSESTree } from '@typescript-eslint/utils'
-import { getPhysicalFilename } from 'eslint-compat-utils'
+import { FileEnumerator } from 'eslint/use-at-your-own-risk'
 
 import type { FileExtension, RuleContext } from '../types'
 import {
@@ -21,15 +21,6 @@ import {
 } from '../utils'
 
 function listFilesToProcess(src: string[], extensions: FileExtension[]) {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  let FileEnumerator: typeof import('eslint/use-at-your-own-risk').FileEnumerator
-
-  try {
-    ;({ FileEnumerator } = require('eslint/use-at-your-own-risk'))
-  } catch {
-    ;({ FileEnumerator } = require('eslint/lib/cli-engine/file-enumerator'))
-  }
-
   const enumerator = new FileEnumerator({
     extensions,
   })
@@ -421,6 +412,7 @@ export = createRule<Options[], MessageId>({
     },
     schema: [
       {
+        type: 'object',
         properties: {
           src: {
             description: 'files/paths to be analyzed (only for unused exports)',
@@ -452,17 +444,26 @@ export = createRule<Options[], MessageId>({
         },
         anyOf: [
           {
+            type: 'object',
             properties: {
-              unusedExports: { enum: [true] },
+              unusedExports: {
+                type: 'boolean',
+                enum: [true],
+              },
               src: {
+                type: 'array',
                 minItems: 1,
               },
             },
             required: ['unusedExports'],
           },
           {
+            type: 'object',
             properties: {
-              missingExports: { enum: [true] },
+              missingExports: {
+                type: 'boolean',
+                enum: [true],
+              },
             },
             required: ['missingExports'],
           },
@@ -487,18 +488,18 @@ export = createRule<Options[], MessageId>({
       doPreparation(src, ignoreExports, context)
     }
 
-    const file = getPhysicalFilename(context)
+    const filename = context.physicalFilename
 
     const checkExportPresence = (node: TSESTree.Program) => {
       if (!missingExports) {
         return
       }
 
-      if (ignoredFiles.has(file)) {
+      if (ignoredFiles.has(filename)) {
         return
       }
 
-      const exportCount = exportList.get(file)!
+      const exportCount = exportList.get(filename)!
       const exportAll = exportCount.get(AST_NODE_TYPES.ExportAllDeclaration)!
       const namespaceImports = exportCount.get(
         AST_NODE_TYPES.ImportNamespaceSpecifier,
@@ -523,32 +524,32 @@ export = createRule<Options[], MessageId>({
         return
       }
 
-      if (ignoredFiles.has(file)) {
+      if (ignoredFiles.has(filename)) {
         return
       }
 
-      if (fileIsInPkg(file)) {
+      if (fileIsInPkg(filename)) {
         return
       }
 
-      if (filesOutsideSrc.has(file)) {
+      if (filesOutsideSrc.has(filename)) {
         return
       }
 
       // make sure file to be linted is included in source files
-      if (!srcFiles.has(file)) {
+      if (!srcFiles.has(filename)) {
         srcFiles = resolveFiles(getSrc(src), ignoreExports, context)
-        if (!srcFiles.has(file)) {
-          filesOutsideSrc.add(file)
+        if (!srcFiles.has(filename)) {
+          filesOutsideSrc.add(filename)
           return
         }
       }
 
-      const exports = exportList.get(file)
+      const exports = exportList.get(filename)
 
       if (!exports) {
         console.error(
-          `file \`${file}\` has no exports. Please update to the latest, and if it still happens, report this on https://github.com/import-js/eslint-plugin-import/issues/2866!`,
+          `file \`${filename}\` has no exports. Please update to the latest, and if it still happens, report this on https://github.com/import-js/eslint-plugin-import/issues/2866!`,
         )
         return
       }
@@ -614,14 +615,15 @@ export = createRule<Options[], MessageId>({
      * update lists of existing exports during runtime
      */
     const updateExportUsage = (node: TSESTree.Program) => {
-      if (ignoredFiles.has(file)) {
+      if (ignoredFiles.has(filename)) {
         return
       }
 
       // new module has been created during runtime
       // include it in further processing
       const exports =
-        exportList.get(file) ?? new Map<string, { whereUsed: Set<string> }>()
+        exportList.get(filename) ??
+        new Map<string, { whereUsed: Set<string> }>()
 
       const newExports = new Map<string, { whereUsed: Set<string> }>()
       const newExportIdentifiers = new Set<string>()
@@ -666,7 +668,7 @@ export = createRule<Options[], MessageId>({
 
       newExports.set(AST_NODE_TYPES.ExportAllDeclaration, exportAll)
       newExports.set(AST_NODE_TYPES.ImportNamespaceSpecifier, namespaceImports)
-      exportList.set(file, newExports)
+      exportList.set(filename, newExports)
     }
 
     /**
@@ -680,7 +682,7 @@ export = createRule<Options[], MessageId>({
       }
 
       const oldImportPaths =
-        importList.get(file) ?? new Map<string, Set<string>>()
+        importList.get(filename) ?? new Map<string, Set<string>>()
 
       const oldNamespaceImports = new Set<string>()
       const newNamespaceImports = new Set<string>()
@@ -724,7 +726,7 @@ export = createRule<Options[], MessageId>({
         newNamespaceImports.add(p)
       }
 
-      visit(node, visitorKeyMap.get(file), {
+      visit(node, visitorKeyMap.get(filename), {
         ImportExpression(child) {
           processDynamicImport((child as TSESTree.ImportExpression).source)
         },
@@ -817,12 +819,12 @@ export = createRule<Options[], MessageId>({
 
           if (currentExport === undefined) {
             const whereUsed = new Set<string>()
-            whereUsed.add(file)
+            whereUsed.add(filename)
             exports.set(AST_NODE_TYPES.ExportAllDeclaration, {
               whereUsed,
             })
           } else {
-            currentExport.whereUsed.add(file)
+            currentExport.whereUsed.add(filename)
           }
         }
       }
@@ -838,7 +840,7 @@ export = createRule<Options[], MessageId>({
               AST_NODE_TYPES.ExportAllDeclaration,
             )
             if (currentExport !== undefined) {
-              currentExport.whereUsed.delete(file)
+              currentExport.whereUsed.delete(filename)
             }
           }
         }
@@ -864,12 +866,12 @@ export = createRule<Options[], MessageId>({
 
           if (currentExport === undefined) {
             const whereUsed = new Set<string>()
-            whereUsed.add(file)
+            whereUsed.add(filename)
             exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
               whereUsed,
             })
           } else {
-            currentExport.whereUsed.add(file)
+            currentExport.whereUsed.add(filename)
           }
         }
       }
@@ -885,7 +887,7 @@ export = createRule<Options[], MessageId>({
               AST_NODE_TYPES.ImportDefaultSpecifier,
             )
             if (currentExport !== undefined) {
-              currentExport.whereUsed.delete(file)
+              currentExport.whereUsed.delete(filename)
             }
           }
         }
@@ -911,12 +913,12 @@ export = createRule<Options[], MessageId>({
 
           if (currentExport === undefined) {
             const whereUsed = new Set<string>()
-            whereUsed.add(file)
+            whereUsed.add(filename)
             exports.set(AST_NODE_TYPES.ImportNamespaceSpecifier, {
               whereUsed,
             })
           } else {
-            currentExport.whereUsed.add(file)
+            currentExport.whereUsed.add(filename)
           }
         }
       }
@@ -932,7 +934,7 @@ export = createRule<Options[], MessageId>({
               AST_NODE_TYPES.ImportNamespaceSpecifier,
             )
             if (currentExport !== undefined) {
-              currentExport.whereUsed.delete(file)
+              currentExport.whereUsed.delete(filename)
             }
           }
         }
@@ -958,10 +960,10 @@ export = createRule<Options[], MessageId>({
 
           if (currentExport === undefined) {
             const whereUsed = new Set<string>()
-            whereUsed.add(file)
+            whereUsed.add(filename)
             exports.set(key, { whereUsed })
           } else {
-            currentExport.whereUsed.add(file)
+            currentExport.whereUsed.add(filename)
           }
         }
       }
@@ -975,7 +977,7 @@ export = createRule<Options[], MessageId>({
           if (exports !== undefined) {
             const currentExport = exports.get(key)
             if (currentExport !== undefined) {
-              currentExport.whereUsed.delete(file)
+              currentExport.whereUsed.delete(filename)
             }
           }
         }

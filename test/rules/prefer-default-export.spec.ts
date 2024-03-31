@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, testVersion, getNonDefaultParsers, parsers } from '../utils'
+import { test, getNonDefaultParsers, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/prefer-default-export'
 
@@ -96,11 +96,10 @@ ruleTester.run('prefer-default-export', rule, {
       `,
       parser: parsers.BABEL,
     }),
-    // es2022: Arbitrary module namespae identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'let foo; export { foo as "default" };',
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
   ],
   invalid: [
     test({
@@ -258,16 +257,11 @@ ruleTester.run('prefer-default-export', rule, {
         },
       ],
     }),
-    // es2022: Arbitrary module namespae identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'export const a = 4; let foo; export { foo as "default" };',
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
   ],
   // { target: 'any' } invalid cases when any exporting file must contain default export but does not
   invalid: [

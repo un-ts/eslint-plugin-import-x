@@ -3,13 +3,7 @@ import path from 'node:path'
 import type { TSESTree } from '@typescript-eslint/utils'
 import { TSESLint } from '@typescript-eslint/utils'
 
-import {
-  test,
-  SYNTAX_CASES,
-  testFilePath,
-  testVersion,
-  parsers,
-} from '../utils'
+import { test, SYNTAX_CASES, testFilePath, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/named'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
@@ -202,36 +196,34 @@ ruleTester.run('named', rule, {
 
     ...SYNTAX_CASES,
 
-    ...testVersion('>= 6', () => ({
+    test({
       code: `import { ExtfieldModel, Extfield2Model } from './models';`,
       filename: testFilePath('./export-star/downstream.js'),
       parserOptions: {
         sourceType: 'module',
         ecmaVersion: 2020,
       },
-    })),
+    }),
 
-    ...testVersion('>=7.8.0', () => ({
+    test({
       code: 'const { something } = require("./dynamic-import-in-commonjs")',
       parserOptions: { ecmaVersion: 2021 },
       options: [{ commonjs: true }],
-    })),
+    }),
 
-    ...testVersion('>=7.8.0', () => ({
+    test({
       code: 'import { something } from "./dynamic-import-in-commonjs"',
       parserOptions: { ecmaVersion: 2021 },
-    })),
+    }),
 
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'import { "foo" as foo } from "./bar"',
       parserOptions: { ecmaVersion: 2022 },
-    })),
-
-    ...testVersion('>= 8.7', () => ({
+    }),
+    test({
       code: 'import { "foo" as foo } from "./empty-module"',
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
   ],
 
   invalid: [
@@ -373,25 +365,24 @@ ruleTester.run('named', rule, {
       errors: [`default not found in './re-export'`],
     }),
 
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'import { "somethingElse" as somethingElse } from "./test-module"',
       errors: [error('somethingElse', './test-module', 'Literal')],
       parserOptions: { ecmaVersion: 2022 },
-    })),
-    ...testVersion('>= 8.7', () => ({
+    }),
+    test({
       code: 'import { "baz" as baz, "bop" as bop } from "./bar"',
       errors: [
         error('baz', './bar', 'Literal'),
         error('bop', './bar', 'Literal'),
       ],
       parserOptions: { ecmaVersion: 2022 },
-    })),
-    ...testVersion('>= 8.7', () => ({
+    }),
+    test({
       code: 'import { "default" as barDefault } from "./re-export"',
       errors: [`default not found in './re-export'`],
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
   ],
 })
 

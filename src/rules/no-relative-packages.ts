@@ -1,7 +1,6 @@
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import { getPhysicalFilename } from 'eslint-compat-utils'
 
 import type { RuleContext } from '../types'
 import type { ModuleOptions } from '../utils'
@@ -40,7 +39,7 @@ function checkImportForRelativePackage(
   }
 
   const resolvedImport = resolve(importPath, context)
-  const resolvedContext = getPhysicalFilename(context)
+  const resolvedContext = context.physicalFilename
 
   if (!resolvedImport || !resolvedContext) {
     return

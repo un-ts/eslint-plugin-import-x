@@ -1,7 +1,6 @@
 import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { getPhysicalFilename, getSourceCode } from 'eslint-compat-utils'
 import { minimatch } from 'minimatch'
 
 import type { RuleContext } from '../types'
@@ -9,7 +8,7 @@ import { createRule, pkgUp } from '../utils'
 
 function getEntryPoint(context: RuleContext) {
   const pkgPath = pkgUp({
-    cwd: getPhysicalFilename(context),
+    cwd: context.physicalFilename,
   })!
   try {
     return require.resolve(path.dirname(pkgPath))
@@ -21,7 +20,7 @@ function getEntryPoint(context: RuleContext) {
 }
 
 function findScope(context: RuleContext, identifier: string) {
-  const { scopeManager } = getSourceCode(context)
+  const { scopeManager } = context.sourceCode
   return (
     scopeManager?.scopes
       // eslint-disable-next-line unicorn/prefer-spread
@@ -91,8 +90,8 @@ export = createRule<[Options?], MessageId>({
           return
         }
 
-        const fileName = getPhysicalFilename(context)
-        const isEntryPoint = entryPoint === fileName
+        const filename = context.physicalFilename
+        const isEntryPoint = entryPoint === filename
         const isIdentifier = node.object.type === 'Identifier'
 
         if (!('name' in node.object)) {
@@ -109,9 +108,9 @@ export = createRule<[Options?], MessageId>({
         const isImportBinding = variableDefinition?.type === 'ImportBinding'
         const hasCJSExportReference =
           hasKeywords && (!objectScope || objectScope.type === 'module')
-        const isException =
-          !!options.exceptions &&
-          options.exceptions.some(glob => minimatch(fileName, glob))
+        const isException = !!options.exceptions?.some(glob =>
+          minimatch(filename, glob),
+        )
 
         if (
           isIdentifier &&

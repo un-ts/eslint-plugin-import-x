@@ -1,5 +1,4 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { getSourceCode } from 'eslint-compat-utils'
 
 import type { RuleContext } from '../types'
 import { createRule } from '../utils'
@@ -53,7 +52,7 @@ export = createRule<['absolute-first'?], MessageId>({
         }
 
         const absoluteFirst = context.options[0] === 'absolute-first'
-        const sourceCode = getSourceCode(context)
+        const { sourceCode } = context
         const originSourceCode = sourceCode.getText()
 
         let nonImportCount = 0

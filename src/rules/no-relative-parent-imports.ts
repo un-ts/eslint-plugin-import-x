@@ -1,7 +1,5 @@
 import path from 'node:path'
 
-import { getPhysicalFilename } from 'eslint-compat-utils'
-
 import type { ModuleOptions } from '../utils'
 import {
   importType,
@@ -29,7 +27,7 @@ export = createRule<[ModuleOptions?], MessageId>({
   },
   defaultOptions: [],
   create(context) {
-    const filename = getPhysicalFilename(context)
+    const filename = context.physicalFilename
 
     if (filename === '<text>') {
       return {}

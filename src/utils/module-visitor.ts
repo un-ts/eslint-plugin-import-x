@@ -1,6 +1,4 @@
-import type { TSESTree } from '@typescript-eslint/typescript-estree'
-import type { TSESLint } from '@typescript-eslint/utils'
-import type { JSONSchema4 } from 'json-schema'
+import type { JSONSchema, TSESLint, TSESTree } from '@typescript-eslint/utils'
 
 type Visitor = (
   source: TSESTree.StringLiteral,
@@ -192,8 +190,10 @@ export function moduleVisitor(visitor: Visitor, options?: ModuleOptions) {
 /**
  * make an options schema for the module visitor, optionally adding extra fields.
  */
-export function makeOptionsSchema(additionalProperties?: JSONSchema4) {
-  const base: JSONSchema4 = {
+export function makeOptionsSchema(
+  additionalProperties?: Record<string, JSONSchema.JSONSchema4>,
+) {
+  const base: JSONSchema.JSONSchema4 = {
     type: 'object',
     properties: {
       commonjs: { type: 'boolean' },

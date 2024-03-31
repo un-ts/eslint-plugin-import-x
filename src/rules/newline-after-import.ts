@@ -4,7 +4,6 @@
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
-import { getPhysicalFilename } from 'eslint-compat-utils'
 
 import { isStaticRequire, createRule, getScope } from '../utils'
 
@@ -245,7 +244,11 @@ export = createRule<[Options?], MessageId>({
       }
 
       // skip "export import"s
-      if (node.type === 'TSImportEqualsDeclaration' && node.isExport) {
+      if (
+        node.type === 'TSImportEqualsDeclaration' &&
+        // @ts-expect-error - legacy parser type
+        node.isExport
+      ) {
         return
       }
 
@@ -254,7 +257,9 @@ export = createRule<[Options?], MessageId>({
       } else if (
         nextNode &&
         nextNode.type !== 'ImportDeclaration' &&
-        (nextNode.type !== 'TSImportEqualsDeclaration' || nextNode.isExport)
+        (nextNode.type !== 'TSImportEqualsDeclaration' ||
+          // @ts-expect-error - legacy parser type
+          nextNode.isExport)
       ) {
         checkForNewLine(node, nextNode, 'import')
       }
@@ -269,7 +274,8 @@ export = createRule<[Options?], MessageId>({
         }
       },
       'Program:exit'(node) {
-        log('exit processing for', getPhysicalFilename(context))
+        log('exit processing for', context.physicalFilename)
+
         const scopeBody = getScopeBody(getScope(context, node))
 
         log('got scope:', scopeBody)

@@ -1,12 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import {
-  test,
-  testFilePath,
-  SYNTAX_CASES,
-  parsers,
-  testVersion,
-} from '../utils'
+import { test, testFilePath, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/export'
 
@@ -148,8 +142,7 @@ ruleTester.run('export', rule, {
       errors: [`No named exports found in module './default-export'.`],
     }),
 
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'let foo; export { foo as "foo" }; export * from "./export-all"',
       errors: [
         "Multiple exports of name 'foo'.",
@@ -158,7 +151,7 @@ ruleTester.run('export', rule, {
       parserOptions: {
         ecmaVersion: 2022,
       },
-    })),
+    }),
   ],
 })
 

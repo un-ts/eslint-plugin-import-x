@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, testVersion, SYNTAX_CASES } from '../utils'
+import { test, SYNTAX_CASES } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default-member'
 
@@ -17,12 +17,10 @@ ruleTester.run('no-named-as-default-member', rule, {
     test({
       code: 'import foo from "./default-export-default-property"; const a = foo.default',
     }),
-
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
 
     ...SYNTAX_CASES,
   ],
@@ -68,8 +66,7 @@ ruleTester.run('no-named-as-default-member', rule, {
         },
       ],
     }),
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'import bar from "./export-default-string-and-named"; const foo = bar.foo;',
       errors: [
         {
@@ -79,6 +76,6 @@ ruleTester.run('no-named-as-default-member', rule, {
         },
       ],
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
   ],
 })

@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
+import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/default'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
@@ -97,13 +97,12 @@ ruleTester.run('default', rule, {
       parser: parsers.BABEL,
     }),
 
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'export { "default" as bar } from "./bar"',
       parserOptions: {
         ecmaVersion: 2022,
       },
-    })),
+    }),
 
     ...SYNTAX_CASES,
   ],

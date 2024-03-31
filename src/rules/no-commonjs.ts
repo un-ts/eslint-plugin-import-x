@@ -76,7 +76,12 @@ export = createRule<[Options?], MessageId>({
       anyOf: [
         {
           type: 'array',
-          items: [{ enum: ['allow-primitive-modules'] }],
+          items: [
+            {
+              type: 'string',
+              enum: ['allow-primitive-modules'],
+            },
+          ],
           additionalItems: false,
         },
         {

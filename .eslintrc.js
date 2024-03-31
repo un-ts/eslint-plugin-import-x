@@ -1,6 +1,3 @@
-const eslintPkg = require('eslint/package.json')
-const semver = require('semver')
-
 /**
  * @type {import('eslint').Linter.Config}
  */
@@ -12,11 +9,9 @@ module.exports = {
     'plugin:eslint-plugin/recommended',
     'plugin:import-x/recommended',
     'plugin:n/recommended',
-    semver.satisfies(eslintPkg.version, '>=8')
-      ? 'plugin:unicorn/recommended'
-      : undefined,
+    'plugin:unicorn/recommended',
     'plugin:prettier/recommended',
-  ].filter(Boolean),
+  ],
   env: {
     node: true,
     es6: true,

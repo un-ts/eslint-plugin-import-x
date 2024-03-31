@@ -68,13 +68,11 @@ export type PluginConfig = {
 export type RuleContext<
   TMessageIds extends string = string,
   TOptions extends readonly unknown[] = readonly unknown[],
-> = {
-  languageOptions?: {
-    parser?: TSESLint.Linter.ParserModule
-    parserOptions?: TSESLint.ParserOptions
-  }
+> = Readonly<{
+  languageOptions?: TSESLint.FlatConfig.LanguageOptions
   settings: PluginSettings
-} & Omit<TSESLint.RuleContext<TMessageIds, TOptions>, 'settings'>
+}> &
+  Omit<TSESLint.RuleContext<TMessageIds, TOptions>, 'settings'>
 
 export type ChildContext = {
   cacheKey: string

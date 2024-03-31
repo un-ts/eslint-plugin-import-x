@@ -2,13 +2,7 @@ import path from 'node:path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import {
-  test,
-  SYNTAX_CASES,
-  testVersion,
-  parsers,
-  testFilePath,
-} from '../utils'
+import { test, SYNTAX_CASES, parsers, testFilePath } from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-unresolved'
@@ -44,12 +38,10 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       }),
 
       // check with eslint parser
-      ...testVersion('>= 7', () =>
-        rest({
-          code: "import('fs');",
-          parserOptions: { ecmaVersion: 2021 },
-        }),
-      ),
+      rest({
+        code: "import('fs');",
+        parserOptions: { ecmaVersion: 2021 },
+      }),
 
       rest({ code: 'import * as foo from "a"' }),
 
@@ -197,18 +189,16 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       }),
 
       // check with eslint parser
-      ...testVersion('>= 7', () =>
-        rest({
-          code: "import('in-alternate-root').then(function({DEEP}) {});",
-          errors: [
-            {
-              message: "Unable to resolve path to module 'in-alternate-root'.",
-              type: 'Literal',
-            },
-          ],
-          parserOptions: { ecmaVersion: 2021 },
-        }),
-      ),
+      rest({
+        code: "import('in-alternate-root').then(function({DEEP}) {});",
+        errors: [
+          {
+            message: "Unable to resolve path to module 'in-alternate-root'.",
+            type: 'Literal',
+          },
+        ],
+        parserOptions: { ecmaVersion: 2021 },
+      }),
 
       // export symmetry proposal
       rest({
@@ -519,17 +509,21 @@ ruleTester.run('no-unresolved syntax verification', rule, {
 
 // https://github.com/import-js/eslint-plugin-import-x/issues/2024
 ruleTester.run('import() with built-in parser', rule, {
-  valid: testVersion('>=7', () => ({
-    code: "import('fs');",
-    parserOptions: { ecmaVersion: 2021 },
-  })),
-  invalid: testVersion('>=7', () => ({
-    code: 'import("./does-not-exist-l0w9ssmcqy9").then(() => {})',
-    parserOptions: { ecmaVersion: 2021 },
-    errors: [
-      "Unable to resolve path to module './does-not-exist-l0w9ssmcqy9'.",
-    ],
-  })),
+  valid: [
+    test({
+      code: "import('fs');",
+      parserOptions: { ecmaVersion: 2021 },
+    }),
+  ],
+  invalid: [
+    test({
+      code: 'import("./does-not-exist-l0w9ssmcqy9").then(() => {})',
+      parserOptions: { ecmaVersion: 2021 },
+      errors: [
+        "Unable to resolve path to module './does-not-exist-l0w9ssmcqy9'.",
+      ],
+    }),
+  ],
 })
 
 describe('TypeScript', () => {

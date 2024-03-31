@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, testVersion, SYNTAX_CASES, parsers } from '../utils'
+import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
@@ -20,11 +20,10 @@ ruleTester.run('no-named-as-default', rule, {
     // #566: don't false-positive on `default` itself
     test({ code: 'export default from "./bar";', parser: parsers.BABEL }),
 
-    // es2022: Arbitrary module namespace identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
 
     ...SYNTAX_CASES,
   ],
@@ -88,8 +87,7 @@ ruleTester.run('no-named-as-default', rule, {
       ],
     }),
 
-    // es2022: Arbitrary module namespae identifier names
-    ...testVersion('>= 8.7', () => ({
+    test({
       code: 'import foo from "./export-default-string-and-named"',
       errors: [
         {
@@ -99,8 +97,8 @@ ruleTester.run('no-named-as-default', rule, {
         },
       ],
       parserOptions: { ecmaVersion: 2022 },
-    })),
-    ...testVersion('>= 8.7', () => ({
+    }),
+    test({
       code: 'import foo, { foo as bar } from "./export-default-string-and-named"',
       errors: [
         {
@@ -110,6 +108,6 @@ ruleTester.run('no-named-as-default', rule, {
         },
       ],
       parserOptions: { ecmaVersion: 2022 },
-    })),
+    }),
   ],
 })

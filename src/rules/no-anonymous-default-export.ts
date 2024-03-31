@@ -105,7 +105,7 @@ const schemaProperties = Object.fromEntries(
     def.option,
     {
       description: def.description,
-      type: 'boolean',
+      type: 'boolean' as const,
     },
   ]),
 )
