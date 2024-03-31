@@ -5,7 +5,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
-import { createRule, getScope } from '../utils'
+import { createRule } from '../utils'
 
 type MessageId = 'noNamespace'
 
@@ -59,7 +59,7 @@ export = createRule<[Options?], MessageId>({
           return
         }
 
-        const scopeVariables = getScope(context, node).variables
+        const scopeVariables = context.sourceCode.getScope(node).variables
         const namespaceVariable = scopeVariables.find(
           variable => variable.defs[0].node === node,
         )!
