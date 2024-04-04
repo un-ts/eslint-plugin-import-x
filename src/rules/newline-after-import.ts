@@ -5,7 +5,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 
-import { isStaticRequire, createRule, getScope } from '../utils'
+import { isStaticRequire, createRule } from '../utils'
 
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')
 
@@ -276,7 +276,7 @@ export = createRule<[Options?], MessageId>({
       'Program:exit'(node) {
         log('exit processing for', context.physicalFilename)
 
-        const scopeBody = getScopeBody(getScope(context, node))
+        const scopeBody = getScopeBody(context.sourceCode.getScope(node))
 
         log('got scope:', scopeBody)
 
