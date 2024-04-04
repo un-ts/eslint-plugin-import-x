@@ -181,6 +181,9 @@ export class RuleTester extends TSESLint.RuleTester {
     super(option)
   }
 
+  /**
+   * Since we can't override the original `run` method, we have to create a new one that accepts our custom rule module with custom meta.
+   */
   run$<MessageIds extends string, Options extends Readonly<unknown[]>>(
     ruleName: string,
     rule: RuleModuleWithCustomMeta<MessageIds, Options>,
