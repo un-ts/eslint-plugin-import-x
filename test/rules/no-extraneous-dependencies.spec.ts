@@ -1,19 +1,17 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
-
 import {
   dependencies as deps,
   devDependencies as devDeps,
 } from '../fixtures/package.json'
-import { parsers, test, testFilePath, wrapRun } from '../utils'
+import { parsers, test, testFilePath, RuleTester } from '../utils'
 
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-extraneous-dependencies'
 
-const ruleTester = new TSESLint.RuleTester()
-const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
+const ruleTester = new RuleTester()
+const typescriptRuleTester = new RuleTester(typescriptConfig)
 
 const packageDirWithSyntaxError = testFilePath('with-syntax-error')
 
@@ -49,7 +47,7 @@ const packageDirBundledDepsRaceCondition = testFilePath(
   'bundled-dependencies/race-condition',
 )
 
-wrapRun(ruleTester.run)('no-extraneous-dependencies', rule, {
+ruleTester.run$('no-extraneous-dependencies', rule, {
   valid: [
     ...[...Object.keys(deps), ...Object.keys(devDeps)].flatMap(pkg => [
       test({ code: `import "${pkg}"` }),
@@ -538,7 +536,7 @@ describe('TypeScript', () => {
     },
   }
 
-  wrapRun(ruleTester.run)('no-extraneous-dependencies', rule, {
+  ruleTester.run$('no-extraneous-dependencies', rule, {
     valid: [
       test({
         code: 'import type T from "a";',
@@ -612,7 +610,7 @@ describe('TypeScript', () => {
   })
 })
 
-wrapRun(typescriptRuleTester.run)(
+typescriptRuleTester.run$(
   'no-extraneous-dependencies typescript type imports',
   rule,
   {

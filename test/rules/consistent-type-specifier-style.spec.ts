@@ -1,6 +1,6 @@
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { TSESTree } from '@typescript-eslint/utils'
 
-import { parsers, test, wrapRun } from '../utils'
+import { parsers, test, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/consistent-type-specifier-style'
 
@@ -445,28 +445,28 @@ const FLOW_ONLY = {
 } as const
 
 describe('TypeScript', () => {
-  const ruleTester = new TSESLint.RuleTester({
+  const ruleTester = new RuleTester({
     parser: parsers.TS,
     parserOptions: {
       ecmaVersion: 6,
       sourceType: 'module',
     },
   })
-  wrapRun(ruleTester.run)('consistent-type-specifier-style', rule, {
+  ruleTester.run$('consistent-type-specifier-style', rule, {
     valid: [...COMMON_TESTS.valid, ...TS_ONLY.valid],
     invalid: [...COMMON_TESTS.invalid, ...TS_ONLY.invalid],
   })
 })
 
 describe('Babel/Flow', () => {
-  const ruleTester = new TSESLint.RuleTester({
+  const ruleTester = new RuleTester({
     parser: parsers.BABEL,
     parserOptions: {
       ecmaVersion: 6,
       sourceType: 'module',
     },
   })
-  wrapRun(ruleTester.run)('consistent-type-specifier-style', rule, {
+  ruleTester.run$('consistent-type-specifier-style', rule, {
     valid: [...COMMON_TESTS.valid, ...FLOW_ONLY.valid],
     invalid: [...COMMON_TESTS.invalid, ...FLOW_ONLY.invalid],
   })

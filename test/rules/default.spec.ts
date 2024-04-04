@@ -1,15 +1,13 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test, SYNTAX_CASES, parsers, wrapRun } from '../utils'
+import { test, SYNTAX_CASES, parsers, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/default'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
-wrapRun(ruleTester.run)('default', rule, {
+ruleTester.run$('default', rule, {
   valid: [
     test({ code: 'import "./malformed.js"' }),
 
@@ -161,7 +159,7 @@ wrapRun(ruleTester.run)('default', rule, {
 
 // #311: import of mismatched case
 if (!CASE_SENSITIVE_FS) {
-  wrapRun(ruleTester.run)('default (path case-insensitivity)', rule, {
+  ruleTester.run$('default (path case-insensitivity)', rule, {
     valid: [
       test({
         code: 'import foo from "./jsx/MyUncoolComponent.jsx"',
@@ -180,7 +178,7 @@ if (!CASE_SENSITIVE_FS) {
 
 describe('TypeScript', () => {
   const parser = parsers.TS
-  wrapRun(ruleTester.run)(`default`, rule, {
+  ruleTester.run$(`default`, rule, {
     valid: [
       test({
         code: `import foobar from "./typescript-default"`,

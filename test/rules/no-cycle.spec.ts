@@ -1,11 +1,9 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { parsers, test as _test, testFilePath, wrapRun } from '../utils'
+import { parsers, test as _test, testFilePath, RuleTester } from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-cycle'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
 const error = (message: string) => ({ message })
 
@@ -17,7 +15,7 @@ const test = <T extends ValidTestCase>(def: T) =>
 
 const testDialect = 'es6'
 
-wrapRun(ruleTester.run)('no-cycle', rule, {
+ruleTester.run$('no-cycle', rule, {
   valid: [
     // this rule doesn't care if the cycle length is 0
     test({ code: 'import foo from "./foo.js"' }),

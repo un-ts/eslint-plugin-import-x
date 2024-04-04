@@ -1,4 +1,3 @@
-import { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 
@@ -7,15 +6,15 @@ import {
   parsers,
   getNonDefaultParsers,
   testFilePath,
-  wrapRun,
+  RuleTester,
 } from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/order'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
-const flowRuleTester = new TSESLint.RuleTester({
+const flowRuleTester = new RuleTester({
   parser: parsers.BABEL,
   parserOptions: {
     requireConfigFile: false,
@@ -31,7 +30,7 @@ function withoutAutofixOutput<T extends ValidTestCase>(test: T) {
   return { ...test, output: test.code }
 }
 
-wrapRun(ruleTester.run)('order', rule, {
+ruleTester.run$('order', rule, {
   valid: [
     // Default order using require
     test({
@@ -3046,7 +3045,7 @@ describe('TypeScript', () => {
       },
     }
 
-    wrapRun(ruleTester.run)('order', rule, {
+    ruleTester.run$('order', rule, {
       valid: [
         // #1667: typescript type import support
 
@@ -3591,7 +3590,7 @@ describe('TypeScript', () => {
   }
 })
 
-wrapRun(flowRuleTester.run)('order', rule, {
+flowRuleTester.run$('order', rule, {
   valid: [
     test({
       options: [

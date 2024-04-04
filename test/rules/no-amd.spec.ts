@@ -1,14 +1,12 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { wrapRun } from '../utils'
+import { RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-amd'
 
-const ruleTester = new TSESLint.RuleTester({
+const ruleTester = new RuleTester({
   parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
 })
 
-wrapRun(ruleTester.run)('no-amd', rule, {
+ruleTester.run$('no-amd', rule, {
   valid: [
     'import "x";',
     'import x from "x"',

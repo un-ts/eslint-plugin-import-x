@@ -1,16 +1,14 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test, testFilePath, wrapRun } from '../utils'
+import { test, testFilePath, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-self-import'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
 const error = {
   message: 'Module imports itself.',
 }
 
-wrapRun(ruleTester.run)('no-self-import', rule, {
+ruleTester.run$('no-self-import', rule, {
   valid: [
     test({
       code: 'import _ from "lodash"',

@@ -1,10 +1,8 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test, SYNTAX_CASES, testFilePath, parsers, wrapRun } from '../utils'
+import { test, SYNTAX_CASES, testFilePath, parsers, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/namespace'
 
-const ruleTester = new TSESLint.RuleTester({
+const ruleTester = new RuleTester({
   parserOptions: { env: { es6: true } },
 })
 
@@ -457,4 +455,4 @@ for (const [folder, parser] of [['deep'], ['deep-es7', parsers.BABEL]]) {
   )
 }
 
-wrapRun(ruleTester.run)('namespace', rule, { valid, invalid })
+ruleTester.run$('namespace', rule, { valid, invalid })

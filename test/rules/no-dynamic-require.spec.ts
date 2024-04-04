@@ -1,11 +1,9 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { parsers, test, wrapRun } from '../utils'
+import { parsers, test, RuleTester } from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-dynamic-require'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
 const error = {
   messageId: 'require',
@@ -15,7 +13,7 @@ const dynamicImportError = {
   messageId: 'import',
 } as const
 
-wrapRun(ruleTester.run)('no-dynamic-require', rule, {
+ruleTester.run$('no-dynamic-require', rule, {
   valid: [
     test({ code: 'import _ from "lodash"' }),
     test({ code: 'require("foo")' }),

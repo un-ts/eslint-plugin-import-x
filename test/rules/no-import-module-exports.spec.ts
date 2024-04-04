@@ -1,12 +1,10 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test, wrapRun } from '../utils'
+import { test, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-import-module-exports'
 
-const ruleTester = new TSESLint.RuleTester({
+const ruleTester = new RuleTester({
   parserOptions: { ecmaVersion: 6, sourceType: 'module' },
 })
 
@@ -15,7 +13,7 @@ const error = {
   type: 'ImportDeclaration',
 } as const
 
-wrapRun(ruleTester.run)('no-import-module-exports', rule, {
+ruleTester.run$('no-import-module-exports', rule, {
   valid: [
     test({
       code: `

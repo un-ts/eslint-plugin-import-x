@@ -1,10 +1,10 @@
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { TSESTree } from '@typescript-eslint/utils'
 
-import { SYNTAX_CASES, parsers, wrapRun } from '../utils'
+import { SYNTAX_CASES, parsers, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/dynamic-import-chunkname'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
 const pickyCommentFormat = '[a-zA-Z-_/.]+'
 
@@ -43,7 +43,7 @@ const pickyChunkNameFormatError = {
   },
 } as const
 
-wrapRun(ruleTester.run)('dynamic-import-chunkname', rule, {
+ruleTester.run$('dynamic-import-chunkname', rule, {
   valid: [
     {
       code: `dynamicImport(
@@ -971,7 +971,7 @@ describe('TypeScript', () => {
   const typescriptParser = parsers.TS
   const nodeType = TSESTree.AST_NODE_TYPES.ImportExpression
 
-  wrapRun(ruleTester.run)('dynamic-import-chunkname', rule, {
+  ruleTester.run$('dynamic-import-chunkname', rule, {
     valid: [
       {
         code: `import('test')`,

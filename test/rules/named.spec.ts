@@ -1,14 +1,13 @@
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_CASES, testFilePath, parsers, wrapRun } from '../utils'
+import { test, SYNTAX_CASES, testFilePath, parsers, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/named'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
 function error(
   name: string,
@@ -18,7 +17,7 @@ function error(
   return { message: `${name} not found in '${module}'`, type }
 }
 
-wrapRun(ruleTester.run)('named', rule, {
+ruleTester.run$('named', rule, {
   valid: [
     test({ code: 'import "./malformed.js"' }),
 
@@ -388,7 +387,7 @@ wrapRun(ruleTester.run)('named', rule, {
 
 // #311: import of mismatched case
 if (!CASE_SENSITIVE_FS) {
-  wrapRun(ruleTester.run)('named (path case-insensitivity)', rule, {
+  ruleTester.run$('named (path case-insensitivity)', rule, {
     valid: [
       test({
         code: 'import { b } from "./Named-Exports"',
@@ -404,7 +403,7 @@ if (!CASE_SENSITIVE_FS) {
 }
 
 // export-all
-wrapRun(ruleTester.run)('named (export *)', rule, {
+ruleTester.run$('named (export *)', rule, {
   valid: [
     test({
       code: 'import { foo } from "./export-all"',
@@ -565,7 +564,7 @@ describe('TypeScript', () => {
     )
   }
 
-  wrapRun(ruleTester.run)(`named [TypeScript]`, rule, {
+  ruleTester.run$(`named [TypeScript]`, rule, {
     valid,
     invalid,
   })

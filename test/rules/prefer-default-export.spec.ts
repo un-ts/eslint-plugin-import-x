@@ -1,13 +1,11 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test, getNonDefaultParsers, parsers, wrapRun } from '../utils'
+import { test, getNonDefaultParsers, parsers, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/prefer-default-export'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
 // test cases for default option { target: 'single' }
-wrapRun(ruleTester.run)('prefer-default-export', rule, {
+ruleTester.run$('prefer-default-export', rule, {
   valid: [
     test({
       code: `
@@ -167,7 +165,7 @@ wrapRun(ruleTester.run)('prefer-default-export', rule, {
 })
 
 // test cases for { target: 'any' }
-wrapRun(ruleTester.run)('prefer-default-export', rule, {
+ruleTester.run$('prefer-default-export', rule, {
   // Any exporting file must contain default export
   valid: [
     test({
@@ -396,7 +394,7 @@ describe('TypeScript', () => {
       },
     }
 
-    wrapRun(ruleTester.run)('prefer-default-export', rule, {
+    ruleTester.run$('prefer-default-export', rule, {
       valid: [
         // Exporting types
         test({

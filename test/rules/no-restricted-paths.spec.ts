@@ -1,12 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { parsers, test, testFilePath, wrapRun } from '../utils'
+import { parsers, test, testFilePath, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-restricted-paths'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
-wrapRun(ruleTester.run)('no-restricted-paths', rule, {
+ruleTester.run$('no-restricted-paths', rule, {
   valid: [
     test({
       code: 'import a from "../client/a.js"',
@@ -770,7 +768,7 @@ describe('Typescript', () => {
     'import-x/parsers': { [parser]: ['.ts'] },
     'import-x/resolver': { 'eslint-import-resolver-typescript': true },
   }
-  wrapRun(ruleTester.run)('no-restricted-paths', rule, {
+  ruleTester.run$('no-restricted-paths', rule, {
     valid: [
       test({
         code: 'import type a from "../client/a.ts"',

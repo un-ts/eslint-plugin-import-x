@@ -1,6 +1,4 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { parsers, test, wrapRun } from '../utils'
+import { parsers, test, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/group-exports'
 
@@ -11,7 +9,7 @@ const errors = {
     'Multiple CommonJS exports; consolidate all exports into a single assignment to `module.exports`',
 }
 
-const ruleTester = new TSESLint.RuleTester({
+const ruleTester = new RuleTester({
   parser: parsers.BABEL,
   parserOptions: {
     requireConfigFile: false,
@@ -23,7 +21,7 @@ const ruleTester = new TSESLint.RuleTester({
   },
 })
 
-wrapRun(ruleTester.run)('group-exports', rule, {
+ruleTester.run$('group-exports', rule, {
   valid: [
     test({ code: 'export const test = true' }),
     test({

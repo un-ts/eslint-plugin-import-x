@@ -1,12 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { parsers, test, wrapRun } from '../utils'
+import { parsers, test, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-export'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
-wrapRun(ruleTester.run)('no-named-export', rule, {
+ruleTester.run$('no-named-export', rule, {
   valid: [
     test({
       code: 'export default function bar() {};',

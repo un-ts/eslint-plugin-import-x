@@ -1,12 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test, testFilePath, parsers, wrapRun } from '../utils'
+import { test, testFilePath, parsers, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/extensions'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
-wrapRun(ruleTester.run)('extensions', rule, {
+ruleTester.run$('extensions', rule, {
   valid: [
     test({ code: 'import a from "@/a"' }),
     test({ code: 'import a from "a"' }),
@@ -662,7 +660,7 @@ wrapRun(ruleTester.run)('extensions', rule, {
 describe('TypeScript', () => {
   const parser = parsers.TS
 
-  wrapRun(ruleTester.run)(`${parser}: extensions ignore type-only`, rule, {
+  ruleTester.run$(`${parser}: extensions ignore type-only`, rule, {
     valid: [
       test({
         code: 'import type T from "./typescript-declare";',

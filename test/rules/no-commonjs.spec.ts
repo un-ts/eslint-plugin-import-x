@@ -1,20 +1,18 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { wrapRun } from '../utils'
+import { RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-commonjs'
 
 const EXPORT = 'export'
 const IMPORT = 'import'
 
-const ruleTester = new TSESLint.RuleTester({
+const ruleTester = new RuleTester({
   parserOptions: {
     ecmaVersion: 2015,
     sourceType: 'module',
   },
 })
 
-wrapRun(ruleTester.run)('no-commonjs', rule, {
+ruleTester.run$('no-commonjs', rule, {
   valid: [
     // imports
     { code: 'import "x";' },

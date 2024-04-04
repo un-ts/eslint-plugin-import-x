@@ -1,18 +1,16 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test, wrapRun } from '../utils'
+import { test, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-unassigned-import'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
 const error = {
   messageId: 'unassigned',
 } as const
 
-wrapRun(ruleTester.run)('no-unassigned-import', rule, {
+ruleTester.run$('no-unassigned-import', rule, {
   valid: [
     test({ code: 'import _ from "lodash"' }),
     test({ code: 'import _, {foo} from "lodash"' }),

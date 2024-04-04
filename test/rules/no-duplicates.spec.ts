@@ -1,21 +1,19 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
-
 import {
   test,
   parsers,
   tsVersionSatisfies,
   typescriptEslintParserSatisfies,
-  wrapRun,
+  RuleTester,
 } from '../utils'
 
 import jsxConfig from 'eslint-plugin-import-x/config/react'
 import rule from 'eslint-plugin-import-x/rules/no-duplicates'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
-wrapRun(ruleTester.run)('no-duplicates', rule, {
+ruleTester.run$('no-duplicates', rule, {
   valid: [
     test({ code: 'import "./malformed.js"' }),
 
@@ -920,7 +918,7 @@ describe('TypeScript', () => {
         ]),
   ]
 
-  wrapRun(ruleTester.run)('no-duplicates', rule, {
+  ruleTester.run$('no-duplicates', rule, {
     valid,
     invalid,
   })

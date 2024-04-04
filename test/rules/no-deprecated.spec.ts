@@ -1,12 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test, SYNTAX_CASES, parsers, wrapRun } from '../utils'
+import { test, SYNTAX_CASES, parsers, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-deprecated'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
-wrapRun(ruleTester.run)('no-deprecated', rule, {
+ruleTester.run$('no-deprecated', rule, {
   valid: [
     test({ code: "import { x } from './fake' " }),
     test({ code: "import bar from './bar'" }),
@@ -218,7 +216,7 @@ wrapRun(ruleTester.run)('no-deprecated', rule, {
   ],
 })
 
-wrapRun(ruleTester.run)('no-deprecated: hoisting', rule, {
+ruleTester.run$('no-deprecated: hoisting', rule, {
   valid: [
     test({
       code: "function x(deepDep) { console.log(deepDep.MY_TERRIBLE_ACTION) } import { deepDep } from './deep-deprecated'",
@@ -253,7 +251,7 @@ describe('TypeScript', () => {
     },
   }
 
-  wrapRun(ruleTester.run)(parser, rule, {
+  ruleTester.run$(parser, rule, {
     valid: [
       test({
         code: "import * as hasDeprecated from './ts-deprecated.ts'",
