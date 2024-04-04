@@ -2,13 +2,13 @@ import path from 'node:path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, testFilePath } from '../utils'
+import { test, testFilePath, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-relative-packages'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('no-relative-packages', rule, {
+wrapRun(ruleTester.run)('no-relative-packages', rule, {
   valid: [
     test({
       code: 'import foo from "./index.js"',

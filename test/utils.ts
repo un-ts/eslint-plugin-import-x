@@ -7,6 +7,7 @@ import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
 import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x/types'
+import type { RuleModuleWithCustomMeta } from 'eslint-plugin-import-x/utils'
 
 // warms up the module cache. this import takes a while (>500ms)
 import '@babel/eslint-parser'
@@ -164,3 +165,32 @@ export const SYNTAX_CASES = [
 export const testCompiled = process.env.TEST_COMPILED === '1'
 
 export const srcDir = testCompiled ? 'lib' : 'src'
+
+export const wrapRun = (run: TSESLint.RuleTester['run']) => {
+  return function runWrapped<
+    MessageIds extends string,
+    Options extends Readonly<unknown[]>,
+  >(
+    ruleName: string,
+    rule: RuleModuleWithCustomMeta<MessageIds, Options>,
+    tests: TSESLint.RunTests<MessageIds, Options>,
+  ) {
+    const { meta, ...ruleWithoutMeta } = rule
+    const { docs, ...metaWithoutDocs } = meta
+    const {
+      category: _1,
+      recommended: _2,
+      ...docsWithoutCategoryAndRecommend
+    } = docs
+
+    const modifiedRule: Parameters<TSESLint.RuleTester['run']>[1] = {
+      ...ruleWithoutMeta,
+      meta: {
+        ...metaWithoutDocs,
+        docs: docsWithoutCategoryAndRecommend,
+      },
+    }
+
+    return run(ruleName, modifiedRule, tests)
+  }
+}

@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test } from '../utils'
+import { test, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-absolute-path'
 
@@ -10,7 +10,7 @@ const error = {
   messageId: 'absolute',
 }
 
-ruleTester.run('no-absolute-path', rule, {
+wrapRun(ruleTester.run)('no-absolute-path', rule, {
   valid: [
     test({ code: 'import _ from "lodash"' }),
     test({ code: 'import find from "lodash.find"' }),

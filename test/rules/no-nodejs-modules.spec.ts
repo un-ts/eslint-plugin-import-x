@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test } from '../utils'
+import { test, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-nodejs-modules'
 
@@ -10,7 +10,7 @@ const error = (message: string) => ({
   message,
 })
 
-ruleTester.run('no-nodejs-modules', rule, {
+wrapRun(ruleTester.run)('no-nodejs-modules', rule, {
   valid: [
     test({ code: 'import _ from "lodash"' }),
     test({ code: 'import find from "lodash.find"' }),

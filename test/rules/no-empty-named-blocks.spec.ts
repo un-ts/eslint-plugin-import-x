@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, test } from '../utils'
+import { parsers, test, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-empty-named-blocks'
 
@@ -29,7 +29,7 @@ function generateSuggestionsTestCases(cases: string[], parser?: string) {
   )
 }
 
-ruleTester.run('no-empty-named-blocks', rule, {
+wrapRun(ruleTester.run)('no-empty-named-blocks', rule, {
   valid: [
     test({ code: `import 'mod';` }),
     test({ code: `import Default from 'mod';` }),

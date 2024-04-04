@@ -1,12 +1,12 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, test } from '../utils'
+import { parsers, test, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-default-export'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('no-default-export', rule, {
+wrapRun(ruleTester.run)('no-default-export', rule, {
   valid: [
     test({
       code: `

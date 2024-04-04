@@ -1,12 +1,12 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, parsers } from '../utils'
+import { test, parsers, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/max-dependencies'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('max-dependencies', rule, {
+wrapRun(ruleTester.run)('max-dependencies', rule, {
   valid: [
     test({ code: 'import "./foo.js"' }),
 
@@ -99,7 +99,7 @@ ruleTester.run('max-dependencies', rule, {
 describe('TypeScript', () => {
   const parser = parsers.TS
 
-  ruleTester.run('max-dependencies', rule, {
+  wrapRun(ruleTester.run)('max-dependencies', rule, {
     valid: [
       test({
         code: "import type { x } from './foo'; import { y } from './bar';",

@@ -1,12 +1,12 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, testFilePath, SYNTAX_CASES, parsers } from '../utils'
+import { test, testFilePath, SYNTAX_CASES, parsers, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/export'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('export', rule, {
+wrapRun(ruleTester.run)('export', rule, {
   valid: [
     test({ code: 'import "./malformed.js"' }),
 
@@ -166,7 +166,7 @@ describe('TypeScript', () => {
     },
   }
 
-  ruleTester.run('export', rule, {
+  wrapRun(ruleTester.run)('export', rule, {
     valid: [
       // type/value name clash
       test({

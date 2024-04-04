@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, test as _test, testFilePath } from '../utils'
+import { parsers, test as _test, testFilePath, wrapRun } from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-relative-parent-imports'
@@ -14,7 +14,7 @@ const test = <T extends ValidTestCase>(def: T) =>
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('no-relative-parent-imports', rule, {
+wrapRun(ruleTester.run)('no-relative-parent-imports', rule, {
   valid: [
     test({
       code: 'import foo from "./internal.js"',

@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_CASES, parsers, testFilePath } from '../utils'
+import { test, SYNTAX_CASES, parsers, testFilePath, wrapRun } from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-unresolved'
@@ -24,7 +24,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
     })
   }
 
-  ruleTester.run(`no-unresolved (${resolver})`, rule, {
+  wrapRun(ruleTester.run)(`no-unresolved (${resolver})`, rule, {
     valid: [
       test({ code: 'import "./malformed.js"' }),
 
@@ -272,7 +272,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
     ],
   })
 
-  ruleTester.run(`issue #333 (${resolver})`, rule, {
+  wrapRun(ruleTester.run)(`issue #333 (${resolver})`, rule, {
     valid: [
       rest({ code: 'import foo from "./bar.json"' }),
       rest({ code: 'import foo from "./bar"' }),
@@ -300,7 +300,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       .join(cwd.toUpperCase(), relativePath)
       .replaceAll('\\', '/')
 
-    ruleTester.run('case sensitivity', rule, {
+    wrapRun(ruleTester.run)('case sensitivity', rule, {
       valid: [
         rest({
           // test with explicit flag
@@ -328,7 +328,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       ],
     })
 
-    ruleTester.run('case sensitivity strict', rule, {
+    wrapRun(ruleTester.run)('case sensitivity strict', rule, {
       valid: [
         // #1259 issue
         rest({
@@ -364,7 +364,7 @@ for (const resolver of ['node', 'webpack'] as const) {
   runResolverTests(resolver)
 }
 
-ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
+wrapRun(ruleTester.run)('no-unresolved (import-x/resolve legacy)', rule, {
   valid: [
     test({
       code: "import { DEEP } from 'in-alternate-root';",
@@ -398,7 +398,7 @@ ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
   ],
 })
 
-ruleTester.run('no-unresolved (webpack-specific)', rule, {
+wrapRun(ruleTester.run)('no-unresolved (webpack-specific)', rule, {
   valid: [
     test({
       // default webpack config in fixtures/webpack.config.js knows about jsx
@@ -423,7 +423,7 @@ ruleTester.run('no-unresolved (webpack-specific)', rule, {
   ],
 })
 
-ruleTester.run('no-unresolved ignore list', rule, {
+wrapRun(ruleTester.run)('no-unresolved ignore list', rule, {
   valid: [
     test({
       code: 'import "./malformed.js"',
@@ -460,7 +460,7 @@ ruleTester.run('no-unresolved ignore list', rule, {
   ],
 })
 
-ruleTester.run('no-unresolved unknown resolver', rule, {
+wrapRun(ruleTester.run)('no-unresolved unknown resolver', rule, {
   valid: [],
 
   invalid: [
@@ -487,7 +487,7 @@ ruleTester.run('no-unresolved unknown resolver', rule, {
   ],
 })
 
-ruleTester.run('no-unresolved electron', rule, {
+wrapRun(ruleTester.run)('no-unresolved electron', rule, {
   valid: [
     test({
       code: 'import "electron"',
@@ -502,13 +502,13 @@ ruleTester.run('no-unresolved electron', rule, {
   ],
 })
 
-ruleTester.run('no-unresolved syntax verification', rule, {
+wrapRun(ruleTester.run)('no-unresolved syntax verification', rule, {
   valid: SYNTAX_CASES,
   invalid: [],
 })
 
 // https://github.com/import-js/eslint-plugin-import-x/issues/2024
-ruleTester.run('import() with built-in parser', rule, {
+wrapRun(ruleTester.run)('import() with built-in parser', rule, {
   valid: [
     test({
       code: "import('fs');",
@@ -529,7 +529,7 @@ ruleTester.run('import() with built-in parser', rule, {
 describe('TypeScript', () => {
   // Type-only imports were added in TypeScript ESTree 2.23.0
   const parser = parsers.TS
-  ruleTester.run(`${parser}: no-unresolved ignore type-only`, rule, {
+  wrapRun(ruleTester.run)(`${parser}: no-unresolved ignore type-only`, rule, {
     valid: [
       test({
         code: 'import type { JSONSchema7Type } from "@types/json-schema";',

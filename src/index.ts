@@ -1,5 +1,3 @@
-import type { TSESLint } from '@typescript-eslint/utils'
-
 // rules
 import electron from './config/electron'
 import errors from './config/errors'
@@ -56,6 +54,7 @@ import preferDefaultExport from './rules/prefer-default-export'
 import unambiguous from './rules/unambiguous'
 // configs
 import type { PluginConfig } from './types'
+import type { RuleModuleWithCustomMeta } from './utils'
 
 const configs = {
   recommended,
@@ -127,7 +126,7 @@ const rules = {
 
   // deprecated aliases to rules
   'imports-first': importsFirst,
-} satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
+} satisfies Record<string, RuleModuleWithCustomMeta<string, readonly unknown[]>>
 
 export = {
   configs,

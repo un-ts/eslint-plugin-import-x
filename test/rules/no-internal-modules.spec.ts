@@ -1,12 +1,12 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, testFilePath, parsers } from '../utils'
+import { test, testFilePath, parsers, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-internal-modules'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('no-internal-modules', rule, {
+wrapRun(ruleTester.run)('no-internal-modules', rule, {
   valid: [
     // imports
     test({

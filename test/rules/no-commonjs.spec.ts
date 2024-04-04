@@ -1,5 +1,7 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
+import { wrapRun } from '../utils'
+
 import rule from 'eslint-plugin-import-x/rules/no-commonjs'
 
 const EXPORT = 'export'
@@ -12,7 +14,7 @@ const ruleTester = new TSESLint.RuleTester({
   },
 })
 
-ruleTester.run('no-commonjs', rule, {
+wrapRun(ruleTester.run)('no-commonjs', rule, {
   valid: [
     // imports
     { code: 'import "x";' },

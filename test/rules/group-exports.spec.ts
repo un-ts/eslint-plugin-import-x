@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, test } from '../utils'
+import { parsers, test, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/group-exports'
 
@@ -23,7 +23,7 @@ const ruleTester = new TSESLint.RuleTester({
   },
 })
 
-ruleTester.run('group-exports', rule, {
+wrapRun(ruleTester.run)('group-exports', rule, {
   valid: [
     test({ code: 'export const test = true' }),
     test({

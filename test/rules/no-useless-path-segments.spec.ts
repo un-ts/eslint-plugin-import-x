@@ -1,13 +1,13 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, test } from '../utils'
+import { parsers, test, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-useless-path-segments'
 
 const ruleTester = new TSESLint.RuleTester()
 
 function runResolverTests(resolver: 'node' | 'webpack') {
-  ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
+  wrapRun(ruleTester.run)(`no-useless-path-segments (${resolver})`, rule, {
     valid: [
       // CommonJS modules with default options
       test({ code: 'require("./../fixtures/malformed.js")' }),

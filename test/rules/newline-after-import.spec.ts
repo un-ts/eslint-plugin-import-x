@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers } from '../utils'
+import { parsers, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/newline-after-import'
 
@@ -28,7 +28,7 @@ const getRequireError = (count: number) => ({
 
 const REQUIRE_ERROR = getRequireError(1)
 
-ruleTester.run('newline-after-import', rule, {
+wrapRun(ruleTester.run)('newline-after-import', rule, {
   valid: [
     `var path = require('path');\nvar foo = require('foo');\n`,
     `require('foo');`,

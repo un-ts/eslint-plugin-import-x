@@ -1,7 +1,7 @@
 import { TSESLint } from '@typescript-eslint/utils'
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { test } from '../utils'
+import { test, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/exports-last'
 
@@ -13,7 +13,7 @@ const error = (type: `${TSESTree.AST_NODE_TYPES}`) =>
     type,
   }) as const
 
-ruleTester.run('exports-last', rule, {
+wrapRun(ruleTester.run)('exports-last', rule, {
   valid: [
     // Empty file
     test({

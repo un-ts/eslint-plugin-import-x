@@ -1,12 +1,12 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers } from '../utils'
+import { parsers, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/unambiguous'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('unambiguous', rule, {
+wrapRun(ruleTester.run)('unambiguous', rule, {
   valid: [
     'function x() {}',
     '"use strict"; function y() {}',

@@ -1,12 +1,12 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, test } from '../utils'
+import { parsers, test, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-mutable-exports'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('no-mutable-exports', rule, {
+wrapRun(ruleTester.run)('no-mutable-exports', rule, {
   valid: [
     test({ code: 'export const count = 1' }),
     test({ code: 'export function getCount() {}' }),

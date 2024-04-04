@@ -1,6 +1,6 @@
 import { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import { SYNTAX_CASES, parsers } from '../utils'
+import { SYNTAX_CASES, parsers, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/dynamic-import-chunkname'
 
@@ -43,7 +43,7 @@ const pickyChunkNameFormatError = {
   },
 } as const
 
-ruleTester.run('dynamic-import-chunkname', rule, {
+wrapRun(ruleTester.run)('dynamic-import-chunkname', rule, {
   valid: [
     {
       code: `dynamicImport(
@@ -971,7 +971,7 @@ describe('TypeScript', () => {
   const typescriptParser = parsers.TS
   const nodeType = TSESTree.AST_NODE_TYPES.ImportExpression
 
-  ruleTester.run('dynamic-import-chunkname', rule, {
+  wrapRun(ruleTester.run)('dynamic-import-chunkname', rule, {
     valid: [
       {
         code: `import('test')`,

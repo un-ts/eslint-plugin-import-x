@@ -2,13 +2,13 @@ import fs from 'node:fs'
 
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, parsers, testFilePath } from '../utils'
+import { test, parsers, testFilePath, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/first'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('first', rule, {
+wrapRun(ruleTester.run)('first', rule, {
   valid: [
     test({
       code: "import { x } from './foo'; import { y } from './bar';\
@@ -101,7 +101,7 @@ describe('TypeScript', () => {
     },
   }
 
-  ruleTester.run('order', rule, {
+  wrapRun(ruleTester.run)('order', rule, {
     valid: [
       test({
         code: `

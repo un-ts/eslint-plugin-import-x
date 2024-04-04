@@ -2,7 +2,13 @@ import { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 
-import { test, parsers, getNonDefaultParsers, testFilePath } from '../utils'
+import {
+  test,
+  parsers,
+  getNonDefaultParsers,
+  testFilePath,
+  wrapRun,
+} from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/order'
@@ -25,7 +31,7 @@ function withoutAutofixOutput<T extends ValidTestCase>(test: T) {
   return { ...test, output: test.code }
 }
 
-ruleTester.run('order', rule, {
+wrapRun(ruleTester.run)('order', rule, {
   valid: [
     // Default order using require
     test({
@@ -3040,7 +3046,7 @@ describe('TypeScript', () => {
       },
     }
 
-    ruleTester.run('order', rule, {
+    wrapRun(ruleTester.run)('order', rule, {
       valid: [
         // #1667: typescript type import support
 
@@ -3585,7 +3591,7 @@ describe('TypeScript', () => {
   }
 })
 
-flowRuleTester.run('order', rule, {
+wrapRun(flowRuleTester.run)('order', rule, {
   valid: [
     test({
       options: [

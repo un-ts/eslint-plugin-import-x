@@ -1,6 +1,6 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test } from '../utils'
+import { test, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-webpack-loader-syntax'
 
@@ -8,7 +8,7 @@ const ruleTester = new TSESLint.RuleTester()
 
 const message = 'Do not use import syntax to configure webpack loaders.'
 
-ruleTester.run('no-webpack-loader-syntax', rule, {
+wrapRun(ruleTester.run)('no-webpack-loader-syntax', rule, {
   valid: [
     test({ code: 'import _ from "lodash"' }),
     test({ code: 'import find from "lodash.find"' }),

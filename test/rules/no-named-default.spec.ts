@@ -1,12 +1,12 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_CASES, parsers } from '../utils'
+import { test, SYNTAX_CASES, parsers, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-default'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('no-named-default', rule, {
+wrapRun(ruleTester.run)('no-named-default', rule, {
   valid: [
     test({ code: 'import bar from "./bar";' }),
     test({ code: 'import bar, { foo } from "./bar";' }),

@@ -7,7 +7,7 @@ import {
   dependencies as deps,
   devDependencies as devDeps,
 } from '../fixtures/package.json'
-import { parsers, test, testFilePath } from '../utils'
+import { parsers, test, testFilePath, wrapRun } from '../utils'
 
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-extraneous-dependencies'
@@ -49,7 +49,7 @@ const packageDirBundledDepsRaceCondition = testFilePath(
   'bundled-dependencies/race-condition',
 )
 
-ruleTester.run('no-extraneous-dependencies', rule, {
+wrapRun(ruleTester.run)('no-extraneous-dependencies', rule, {
   valid: [
     ...[...Object.keys(deps), ...Object.keys(devDeps)].flatMap(pkg => [
       test({ code: `import "${pkg}"` }),
@@ -538,7 +538,7 @@ describe('TypeScript', () => {
     },
   }
 
-  ruleTester.run('no-extraneous-dependencies', rule, {
+  wrapRun(ruleTester.run)('no-extraneous-dependencies', rule, {
     valid: [
       test({
         code: 'import type T from "a";',
@@ -612,7 +612,7 @@ describe('TypeScript', () => {
   })
 })
 
-typescriptRuleTester.run(
+wrapRun(typescriptRuleTester.run)(
   'no-extraneous-dependencies typescript type imports',
   rule,
   {

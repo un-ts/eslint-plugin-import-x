@@ -1,12 +1,12 @@
 import { TSESLint } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_CASES } from '../utils'
+import { test, SYNTAX_CASES, wrapRun } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-anonymous-default-export'
 
 const ruleTester = new TSESLint.RuleTester()
 
-ruleTester.run('no-anonymous-default-export', rule, {
+wrapRun(ruleTester.run)('no-anonymous-default-export', rule, {
   valid: [
     // Exports with identifiers are valid
     test({ code: 'const foo = 123\nexport default foo' }),
