@@ -2,6 +2,7 @@
   "extends": "../tsconfig.base",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "../lib"
+    "outDir": "../lib",
+    "importHelpers": false
   }
 }
