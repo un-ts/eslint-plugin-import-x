@@ -55,7 +55,8 @@
     "get-tsconfig": "^4.7.3",
     "is-glob": "^4.0.3",
     "minimatch": "^9.0.3",
-    "semver": "^7.6.0"
+    "semver": "^7.6.0",
+    "tslib": "^2.6.2"
   },
   "devDependencies": {
     "@1stg/prettier-config": "^4.0.1",
