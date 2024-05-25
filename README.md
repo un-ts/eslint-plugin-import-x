@@ -120,7 +120,7 @@ extends:
 
 # or configure manually:
 plugins:
-  - import
+  - import-x
 
 rules:
   import-x/no-unresolved: [2, { commonjs: true, amd: true }]
