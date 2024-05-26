@@ -1091,7 +1091,7 @@ function childContext(
   path: string,
   context: RuleContext | ChildContext,
 ): ChildContext {
-  const { settings, parserOptions, parserPath } = context
+  const { settings, parserOptions, parserPath, languageOptions } = context
 
   if (JSON.stringify(settings) !== prevSettings) {
     settingsHash = hashObject({ settings }).digest('hex')
@@ -1109,6 +1109,7 @@ function childContext(
     settings,
     parserOptions,
     parserPath,
+    languageOptions,
     path,
     filename:
       'physicalFilename' in context
