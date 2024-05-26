@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 0.5.1
+
+### Patch Changes
+
+- [#82](https://github.com/un-ts/eslint-plugin-import-x/pull/82) [`e29ba7f`](https://github.com/un-ts/eslint-plugin-import-x/commit/e29ba7fbfadb877b386160d9ecab290ef15fb899) Thanks [@unzico](https://github.com/unzico)! - fix: cannot find module 'tslib'
+
 ## 0.5.0
 
 ### Minor Changes
