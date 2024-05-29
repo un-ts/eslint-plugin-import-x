@@ -20,7 +20,7 @@ import type {
 } from '../types'
 
 import { getValue } from './get-value'
-import { hashObject } from './hash'
+import { hashObject, hashify } from './hash'
 import { hasValidExtension, ignore } from './ignore'
 import { parse } from './parse'
 import { relative, resolve } from './resolve'
@@ -1078,11 +1078,6 @@ export function recursivePatternCapture(
   }
 }
 
-let parserOptionsHash = ''
-let prevParserOptions = ''
-let settingsHash = ''
-let prevSettings = ''
-
 /**
  * don't hold full context object in memory, just grab what we need.
  * also calculate a cacheKey, where parts of the cacheKey hash are memoized
@@ -1093,19 +1088,8 @@ function childContext(
 ): ChildContext {
   const { settings, parserOptions, parserPath, languageOptions } = context
 
-  if (JSON.stringify(settings) !== prevSettings) {
-    settingsHash = hashObject({ settings }).digest('hex')
-    prevSettings = JSON.stringify(settings)
-  }
-
-  if (JSON.stringify(parserOptions) !== prevParserOptions) {
-    parserOptionsHash = hashObject({ parserOptions }).digest('hex')
-    prevParserOptions = JSON.stringify(parserOptions)
-  }
-
   return {
-    cacheKey:
-      String(parserPath) + parserOptionsHash + settingsHash + String(path),
+    cacheKey: makeContextCacheKey(context) + String(path),
     settings,
     parserOptions,
     parserPath,
@@ -1116,6 +1100,49 @@ function childContext(
         ? context.physicalFilename
         : context.filename,
   }
+}
+
+const optionsHashesCache: Record<
+  string,
+  { value: string; hash: string } | undefined
+> = {}
+
+function getOptionsHash(key: string, value: unknown) {
+  const entry = optionsHashesCache[key]
+  const stringifiedValue = JSON.stringify(value)
+
+  if (stringifiedValue === entry?.value) {
+    return entry.hash
+  }
+
+  const hash = hashify(value).digest('hex')
+  optionsHashesCache[key] = { value: stringifiedValue, hash }
+
+  return hash
+}
+
+function makeContextCacheKey(context: RuleContext | ChildContext) {
+  const { settings, parserPath, parserOptions, languageOptions } = context
+
+  let hash = getOptionsHash('settings', settings)
+
+  const usedParserOptions = languageOptions
+    ? languageOptions.parserOptions
+    : parserOptions
+
+  hash += getOptionsHash('parserOptions', usedParserOptions)
+
+  if (languageOptions) {
+    const { parser: { meta } = {}, ecmaVersion, sourceType } = languageOptions
+    hash +=
+      getOptionsHash('parserMeta', meta) +
+      String(ecmaVersion) +
+      String(sourceType)
+  } else {
+    hash += String(parserPath)
+  }
+
+  return hash
 }
 
 /**
