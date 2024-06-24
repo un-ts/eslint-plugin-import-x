@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 0.5.2
+
+### Patch Changes
+
+- [#93](https://github.com/un-ts/eslint-plugin-import-x/pull/93) [`64bf1a6`](https://github.com/un-ts/eslint-plugin-import-x/commit/64bf1a6be90c54a34115e83894de8b4e57ce6a33) Thanks [@SukkaW](https://github.com/SukkaW)! - fix: enable isolation parsing w/ typescript-eslint v8
+
 ## 0.5.1
 
 ### Patch Changes
