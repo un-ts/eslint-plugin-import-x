@@ -89,8 +89,11 @@ export function parse(
   // "project" or "projects" in parserOptions. Removing these options means the parser will
   // only parse one file in isolate mode, which is much, much faster.
   // https://github.com/import-js/eslint-plugin-import/issues/1408#issuecomment-509298962
+
+  // TODO: prefer https://github.com/typescript-eslint/typescript-eslint/pull/9233 when typescript-eslint v8
+  // become stable
   delete parserOptions.EXPERIMENTAL_useProjectService
-  delete parserOptions.useProjectService
+  delete parserOptions.projectService
   delete parserOptions.project
   delete parserOptions.projects
 
