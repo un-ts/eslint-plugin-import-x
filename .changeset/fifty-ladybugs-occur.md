@@ -2,4 +2,4 @@
 "eslint-plugin-import-x": patch
 ---
 
-enable isolation mode w/ typescript-eslint v8
+fix: enable isolation parsing w/ typescript-eslint v8
