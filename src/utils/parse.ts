@@ -90,6 +90,7 @@ export function parse(
   // only parse one file in isolate mode, which is much, much faster.
   // https://github.com/import-js/eslint-plugin-import/issues/1408#issuecomment-509298962
   delete parserOptions.EXPERIMENTAL_useProjectService
+  delete parserOptions.useProjectService
   delete parserOptions.project
   delete parserOptions.projects
 
