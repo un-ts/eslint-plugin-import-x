@@ -53,6 +53,7 @@ import noUselessPathSegments from './rules/no-useless-path-segments'
 import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax'
 import order from './rules/order'
 import preferDefaultExport from './rules/prefer-default-export'
+import preferNodeProtocol from './rules/prefer-node-protocol'
 import unambiguous from './rules/unambiguous'
 // configs
 import type { PluginConfig } from './types'
@@ -108,7 +109,6 @@ const rules = {
   'no-webpack-loader-syntax': noWebpackLoaderSyntax,
   order,
   'newline-after-import': newlineAfterImport,
-  'prefer-default-export': preferDefaultExport,
   'no-default-export': noDefaultExport,
   'no-named-export': noNamedExport,
   'no-dynamic-require': noDynamicRequire,
@@ -118,6 +118,8 @@ const rules = {
   'dynamic-import-chunkname': dynamicImportChunkname,
   'no-import-module-exports': noImportModuleExports,
   'no-empty-named-blocks': noEmptyNamedBlocks,
+  'prefer-default-export': preferDefaultExport,
+  'prefer-node-protocol': preferNodeProtocol,
 
   // export
   'exports-last': exportsLast,
