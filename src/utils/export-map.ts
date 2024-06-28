@@ -1104,7 +1104,7 @@ function childContext(
 }
 
 type OptionsHashesCache = Record<
-  'settings' | 'parserOptions' | 'parserMeta' | 'languageOptions',
+  'settings' | 'parserOptions' | 'parserMeta',
   { value: unknown; hash: string }
 >
 
@@ -1112,7 +1112,6 @@ const optionsHashesCache: OptionsHashesCache = {
   settings: { value: null, hash: '' },
   parserOptions: { value: null, hash: '' },
   parserMeta: { value: null, hash: '' },
-  languageOptions: { value: null, hash: '' },
 }
 
 function getOptionsHash(key: keyof OptionsHashesCache, value: unknown) {
