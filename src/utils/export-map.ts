@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
+import { dequal } from 'dequal'
 import type { Annotation } from 'doctrine'
 import doctrine from 'doctrine'
 import type { AST } from 'eslint'
@@ -1102,21 +1103,29 @@ function childContext(
   }
 }
 
-const optionsHashesCache: Record<
-  string,
-  { value: string; hash: string } | undefined
-> = {}
+type OptionsHashesCache = Record<
+  'settings' | 'parserOptions' | 'parserMeta' | 'languageOptions',
+  { value: unknown; hash: string }
+>
 
-function getOptionsHash(key: string, value: unknown) {
+const optionsHashesCache: OptionsHashesCache = {
+  settings: { value: null, hash: '' },
+  parserOptions: { value: null, hash: '' },
+  parserMeta: { value: null, hash: '' },
+  languageOptions: { value: null, hash: '' },
+}
+
+function getOptionsHash(key: keyof OptionsHashesCache, value: unknown) {
   const entry = optionsHashesCache[key]
-  const stringifiedValue = JSON.stringify(value)
 
-  if (stringifiedValue === entry?.value) {
+  if (dequal(value, entry.value)) {
     return entry.hash
   }
 
   const hash = hashify(value).digest('hex')
-  optionsHashesCache[key] = { value: stringifiedValue, hash }
+
+  optionsHashesCache[key].value = value
+  optionsHashesCache[key].hash = hash
 
   return hash
 }
