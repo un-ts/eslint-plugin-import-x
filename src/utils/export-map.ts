@@ -21,7 +21,7 @@ import type {
 } from '../types'
 
 import { getValue } from './get-value'
-import { hashObject, hashify } from './hash'
+import { hashObject } from './hash'
 import { hasValidExtension, ignore } from './ignore'
 import { parse } from './parse'
 import { relative, resolve } from './resolve'
@@ -1103,55 +1103,46 @@ function childContext(
   }
 }
 
-type OptionsHashesCache = Record<
-  'settings' | 'parserOptions' | 'parserMeta',
-  { value: unknown; hash: string }
+type OptionsVersionsCache = Record<
+  'settings' | 'parserOptions' | 'parser',
+  { value: unknown; version: number }
 >
 
-const optionsHashesCache: OptionsHashesCache = {
-  settings: { value: null, hash: '' },
-  parserOptions: { value: null, hash: '' },
-  parserMeta: { value: null, hash: '' },
+const optionsVersionsCache: OptionsVersionsCache = {
+  settings: { value: null, version: 0 },
+  parserOptions: { value: null, version: 0 },
+  parser: { value: null, version: 0 },
 }
 
-function getOptionsHash(key: keyof OptionsHashesCache, value: unknown) {
-  const entry = optionsHashesCache[key]
+function getOptionsVersion(key: keyof OptionsVersionsCache, value: unknown) {
+  const entry = optionsVersionsCache[key]
 
-  if (dequal(value, entry.value)) {
-    return entry.hash
+  if (!dequal(value, entry.value)) {
+    entry.value = value
+    entry.version += 1
   }
 
-  const hash = hashify(value).digest('hex')
-
-  optionsHashesCache[key].value = value
-  optionsHashesCache[key].hash = hash
-
-  return hash
+  return String(entry.version)
 }
 
 function makeContextCacheKey(context: RuleContext | ChildContext) {
   const { settings, parserPath, parserOptions, languageOptions } = context
 
-  let hash = getOptionsHash('settings', settings)
+  let hash = getOptionsVersion('settings', settings)
 
   const usedParserOptions = languageOptions?.parserOptions ?? parserOptions
 
-  hash += getOptionsHash('parserOptions', usedParserOptions)
+  hash += getOptionsVersion('parserOptions', usedParserOptions)
 
   if (languageOptions) {
     const { ecmaVersion, sourceType } = languageOptions
     hash += String(ecmaVersion) + String(sourceType)
   }
 
-  if (parserPath) {
-    hash += parserPath
-  } else {
-    const { meta } = languageOptions?.parser ?? {}
-
-    if (meta) {
-      hash += getOptionsHash('parserMeta', meta)
-    }
-  }
+  hash += getOptionsVersion(
+    'parser',
+    parserPath ?? languageOptions?.parser?.meta ?? languageOptions?.parser,
+  )
 
   return hash
 }
