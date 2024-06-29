@@ -1134,20 +1134,23 @@ function makeContextCacheKey(context: RuleContext | ChildContext) {
 
   let hash = getOptionsHash('settings', settings)
 
-  const usedParserOptions = languageOptions
-    ? languageOptions.parserOptions
-    : parserOptions
+  const usedParserOptions = languageOptions?.parserOptions ?? parserOptions
 
   hash += getOptionsHash('parserOptions', usedParserOptions)
 
   if (languageOptions) {
-    const { parser: { meta } = {}, ecmaVersion, sourceType } = languageOptions
-    hash +=
-      getOptionsHash('parserMeta', meta) +
-      String(ecmaVersion) +
-      String(sourceType)
+    const { ecmaVersion, sourceType } = languageOptions
+    hash += String(ecmaVersion) + String(sourceType)
+  }
+
+  if (parserPath) {
+    hash += parserPath
   } else {
-    hash += String(parserPath)
+    const { meta } = languageOptions?.parser ?? {}
+
+    if (meta) {
+      hash += getOptionsHash('parserMeta', meta)
+    }
   }
 
   return hash
