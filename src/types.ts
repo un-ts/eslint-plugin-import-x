@@ -79,6 +79,7 @@ export type ChildContext = {
   settings: PluginSettings
   parserPath?: string | null
   parserOptions?: TSESLint.ParserOptions
+  languageOptions?: TSESLint.FlatConfig.LanguageOptions
   path: string
   filename?: string
 }

@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
+import { dequal } from 'dequal'
 import type { Annotation } from 'doctrine'
 import doctrine from 'doctrine'
 import type { AST } from 'eslint'
@@ -1078,11 +1079,6 @@ export function recursivePatternCapture(
   }
 }
 
-let parserOptionsHash = ''
-let prevParserOptions = ''
-let settingsHash = ''
-let prevSettings = ''
-
 /**
  * don't hold full context object in memory, just grab what we need.
  * also calculate a cacheKey, where parts of the cacheKey hash are memoized
@@ -1091,30 +1087,64 @@ function childContext(
   path: string,
   context: RuleContext | ChildContext,
 ): ChildContext {
-  const { settings, parserOptions, parserPath } = context
-
-  if (JSON.stringify(settings) !== prevSettings) {
-    settingsHash = hashObject({ settings }).digest('hex')
-    prevSettings = JSON.stringify(settings)
-  }
-
-  if (JSON.stringify(parserOptions) !== prevParserOptions) {
-    parserOptionsHash = hashObject({ parserOptions }).digest('hex')
-    prevParserOptions = JSON.stringify(parserOptions)
-  }
+  const { settings, parserOptions, parserPath, languageOptions } = context
 
   return {
-    cacheKey:
-      String(parserPath) + parserOptionsHash + settingsHash + String(path),
+    cacheKey: makeContextCacheKey(context) + String(path),
     settings,
     parserOptions,
     parserPath,
+    languageOptions,
     path,
     filename:
       'physicalFilename' in context
         ? context.physicalFilename
         : context.filename,
   }
+}
+
+type OptionsVersionsCache = Record<
+  'settings' | 'parserOptions' | 'parser',
+  { value: unknown; version: number }
+>
+
+const optionsVersionsCache: OptionsVersionsCache = {
+  settings: { value: null, version: 0 },
+  parserOptions: { value: null, version: 0 },
+  parser: { value: null, version: 0 },
+}
+
+function getOptionsVersion(key: keyof OptionsVersionsCache, value: unknown) {
+  const entry = optionsVersionsCache[key]
+
+  if (!dequal(value, entry.value)) {
+    entry.value = value
+    entry.version += 1
+  }
+
+  return String(entry.version)
+}
+
+function makeContextCacheKey(context: RuleContext | ChildContext) {
+  const { settings, parserPath, parserOptions, languageOptions } = context
+
+  let hash = getOptionsVersion('settings', settings)
+
+  const usedParserOptions = languageOptions?.parserOptions ?? parserOptions
+
+  hash += getOptionsVersion('parserOptions', usedParserOptions)
+
+  if (languageOptions) {
+    const { ecmaVersion, sourceType } = languageOptions
+    hash += String(ecmaVersion) + String(sourceType)
+  }
+
+  hash += getOptionsVersion(
+    'parser',
+    parserPath ?? languageOptions?.parser?.meta ?? languageOptions?.parser,
+  )
+
+  return hash
 }
 
 /**
