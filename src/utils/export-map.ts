@@ -3,13 +3,13 @@ import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
-import { dequal } from 'dequal'
 import type { Annotation } from 'doctrine'
 import doctrine from 'doctrine'
 import type { AST } from 'eslint'
 import { SourceCode } from 'eslint'
 import type { TsConfigJsonResolved } from 'get-tsconfig'
 import { getTsconfig } from 'get-tsconfig'
+import stableHash from 'stable-hash'
 
 import type {
   ChildContext,
@@ -1105,24 +1105,25 @@ function childContext(
 
 type OptionsVersionsCache = Record<
   'settings' | 'parserOptions' | 'parser',
-  { value: unknown; version: number }
+  { value: unknown; hash: string }
 >
 
 const optionsVersionsCache: OptionsVersionsCache = {
-  settings: { value: null, version: 0 },
-  parserOptions: { value: null, version: 0 },
-  parser: { value: null, version: 0 },
+  settings: { value: null, hash: '' },
+  parserOptions: { value: null, hash: '' },
+  parser: { value: null, hash: '' },
 }
 
 function getOptionsVersion(key: keyof OptionsVersionsCache, value: unknown) {
   const entry = optionsVersionsCache[key]
+  const newHash = stableHash(value)
 
-  if (!dequal(value, entry.value)) {
+  if (newHash !== entry.hash) {
     entry.value = value
-    entry.version += 1
+    entry.hash = newHash
   }
 
-  return String(entry.version)
+  return newHash
 }
 
 function makeContextCacheKey(context: RuleContext | ChildContext) {
