@@ -1721,6 +1721,72 @@ describe('TypeScript', () => {
           },
         ],
       },
+      {
+        code: `import(
+          /* webpackChunkName: "someModule", webpackPrefetch: true */
+          /* webpackMode: "eager" */
+          'someModule'
+        )`,
+        options,
+        parser,
+        output: null,
+        errors: [
+          {
+            messageId: 'webpackEagerModeNoChunkName',
+            type: nodeType,
+            suggestions: [
+              {
+                messageId: 'webpackRemoveChunkName',
+                output: `import(
+          /* webpackPrefetch: true */
+          /* webpackMode: "eager" */
+          'someModule'
+        )`,
+              },
+              {
+                messageId: 'webpackRemoveEagerMode',
+                output: `import(
+          /* webpackChunkName: "someModule", webpackPrefetch: true */
+          'someModule'
+        )`,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        code: `import(
+          /* webpackChunkName: "someModule" */
+          /* webpackMode: "eager", webpackPrefetch: true */
+          'someModule'
+        )`,
+        options,
+        parser,
+        output: null,
+        errors: [
+          {
+            messageId: 'webpackEagerModeNoChunkName',
+            type: nodeType,
+            suggestions: [
+              {
+                messageId: 'webpackRemoveChunkName',
+                output: `import(
+          /* webpackMode: "eager", webpackPrefetch: true */
+          'someModule'
+        )`,
+              },
+              {
+                messageId: 'webpackRemoveEagerMode',
+                output: `import(
+          /* webpackChunkName: "someModule" */
+          /* webpackPrefetch: true */
+          'someModule'
+        )`,
+              },
+            ],
+          },
+        ],
+      },
     ],
   })
 })
