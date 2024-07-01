@@ -1103,45 +1103,17 @@ function childContext(
   }
 }
 
-type OptionsVersionsCache = Record<
-  'settings' | 'parserOptions' | 'parser',
-  { value: unknown; hash: string }
->
-
-const optionsVersionsCache: OptionsVersionsCache = {
-  settings: { value: null, hash: '' },
-  parserOptions: { value: null, hash: '' },
-  parser: { value: null, hash: '' },
-}
-
-function getOptionsVersion(key: keyof OptionsVersionsCache, value: unknown) {
-  const entry = optionsVersionsCache[key]
-  const newHash = stableHash(value)
-
-  if (newHash !== entry.hash) {
-    entry.value = value
-    entry.hash = newHash
-  }
-
-  return newHash
-}
-
 function makeContextCacheKey(context: RuleContext | ChildContext) {
   const { settings, parserPath, parserOptions, languageOptions } = context
 
-  let hash = getOptionsVersion('settings', settings)
-
-  const usedParserOptions = languageOptions?.parserOptions ?? parserOptions
-
-  hash += getOptionsVersion('parserOptions', usedParserOptions)
+  let hash = stableHash(settings)
+    + stableHash(languageOptions?.parserOptions ?? parserOptions)
 
   if (languageOptions) {
-    const { ecmaVersion, sourceType } = languageOptions
-    hash += String(ecmaVersion) + String(sourceType)
+    hash += String(languageOptions.ecmaVersion) + String(languageOptions.sourceType)
   }
 
-  hash += getOptionsVersion(
-    'parser',
+  hash += stableHash(
     parserPath ?? languageOptions?.parser?.meta ?? languageOptions?.parser,
   )
 
