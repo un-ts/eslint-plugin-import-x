@@ -3,13 +3,13 @@ import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
-import { dequal } from 'dequal'
 import type { Annotation } from 'doctrine'
 import doctrine from 'doctrine'
 import type { AST } from 'eslint'
 import { SourceCode } from 'eslint'
 import type { TsConfigJsonResolved } from 'get-tsconfig'
 import { getTsconfig } from 'get-tsconfig'
+import stableHash from 'stable-hash'
 
 import type {
   ChildContext,
@@ -1103,44 +1103,19 @@ function childContext(
   }
 }
 
-type OptionsVersionsCache = Record<
-  'settings' | 'parserOptions' | 'parser',
-  { value: unknown; version: number }
->
-
-const optionsVersionsCache: OptionsVersionsCache = {
-  settings: { value: null, version: 0 },
-  parserOptions: { value: null, version: 0 },
-  parser: { value: null, version: 0 },
-}
-
-function getOptionsVersion(key: keyof OptionsVersionsCache, value: unknown) {
-  const entry = optionsVersionsCache[key]
-
-  if (!dequal(value, entry.value)) {
-    entry.value = value
-    entry.version += 1
-  }
-
-  return String(entry.version)
-}
-
 function makeContextCacheKey(context: RuleContext | ChildContext) {
   const { settings, parserPath, parserOptions, languageOptions } = context
 
-  let hash = getOptionsVersion('settings', settings)
-
-  const usedParserOptions = languageOptions?.parserOptions ?? parserOptions
-
-  hash += getOptionsVersion('parserOptions', usedParserOptions)
+  let hash =
+    stableHash(settings) +
+    stableHash(languageOptions?.parserOptions ?? parserOptions)
 
   if (languageOptions) {
-    const { ecmaVersion, sourceType } = languageOptions
-    hash += String(ecmaVersion) + String(sourceType)
+    hash +=
+      String(languageOptions.ecmaVersion) + String(languageOptions.sourceType)
   }
 
-  hash += getOptionsVersion(
-    'parser',
+  hash += stableHash(
     parserPath ?? languageOptions?.parser?.meta ?? languageOptions?.parser,
   )
 
