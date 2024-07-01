@@ -39,7 +39,7 @@ const parser = parsers.BABEL
 const pickyChunkNameFormatError = {
   messageId: 'chunknameFormat',
   data: {
-    format: ` webpackChunkName: ["']${pickyCommentFormat}["'],? `,
+    format: `webpackChunkName: ["']${pickyCommentFormat}["'],?`,
   },
 } as const
 
@@ -369,7 +369,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
     {
       code: `import(
         /* webpackChunkName: "someModule" */
-        /* webpackMode: "eager" */
+        /* webpackMode: "lazy" */
         'someModule'
       )`,
       options,
@@ -426,7 +426,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         /* webpackPrefetch: true */
         /* webpackPreload: true */
         /* webpackIgnore: false */
-        /* webpackMode: "eager" */
+        /* webpackMode: "lazy" */
         /* webpackExports: ["default", "named"] */
         'someModule'
       )`,
@@ -1223,7 +1223,7 @@ describe('TypeScript', () => {
       {
         code: `import(
             /* webpackChunkName: "someModule" */
-            /* webpackMode: "eager" */
+            /* webpackMode: "lazy" */
             'someModule'
           )`,
         options,
@@ -1280,7 +1280,7 @@ describe('TypeScript', () => {
             /* webpackPrefetch: true */
             /* webpackPreload: true */
             /* webpackIgnore: false */
-            /* webpackMode: "eager" */
+            /* webpackMode: "lazy" */
             /* webpackExports: ["default", "named"] */
             'someModule'
           )`,
@@ -1706,6 +1706,40 @@ describe('TypeScript', () => {
             type: nodeType,
           },
         ],
+      },
+      {
+        code: `import(
+          /* webpackChunkName: "someModule" */
+          /* webpackMode: "eager" */
+          'someModule'
+        )`,
+        options,
+        parser,
+        output: `import(
+          /* webpackChunkName: "someModule" */
+          /* webpackMode: "eager" */
+          'someModule'
+        )`,
+        errors: [{
+          messageId: 'webpackEagerModeNoChunkName',
+          type: nodeType,
+          suggestions: [
+            {
+              messageId: 'webpackRemoveChunkName',
+              output: `import(
+          /* webpackMode: "eager" */
+          'someModule'
+        )`,
+            },
+            {
+              messageId: 'webpackRemoveEagerMode',
+              output: `import(
+          /* webpackChunkName: "someModule" */
+          'someModule'
+        )`,
+            },
+          ],
+        }],
       },
     ],
   })

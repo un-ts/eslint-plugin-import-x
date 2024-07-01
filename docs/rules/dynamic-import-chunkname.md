@@ -56,6 +56,13 @@ import(
   // webpackChunkName: "someModule"
   'someModule'
 )
+
+// chunk names are disallowed when eager mode is set
+import(
+  /* webpackMode: "eager" */
+  /* webpackChunkName: "someModule" */
+  'someModule',
+)
 ```
 
 ### valid
