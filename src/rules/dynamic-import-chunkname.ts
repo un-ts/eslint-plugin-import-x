@@ -78,7 +78,7 @@ export = createRule<[Options?], MessageId>({
 
     const paddedCommentRegex = /^ (\S[\S\s]+\S) $/
     const commentStyleRegex =
-      /^( ((webpackChunkName: .+)|((webpackPrefetch|webpackPreload): (true|false|-?\d+))|(webpackIgnore: (true|false))|((webpackInclude|webpackExclude): \/.*\/)|(webpackMode: ["'](lazy|lazy-once|eager|weak)["'])|(webpackExports: (["']\w+["']|\[(["']\w+["'], *)+(["']\w+["']*)]))),?)+ $/
+      /^( (((webpackChunkName|webpackFetchPriority): .+)|((webpackPrefetch|webpackPreload): (true|false|-?\d+))|(webpackIgnore: (true|false))|((webpackInclude|webpackExclude): \/.+\/)|(webpackMode: ["'](lazy|lazy-once|eager|weak)["'])|(webpackExports: (["']\w+["']|\[(["']\w+["'], *)+(["']\w+["']*)]))),?)+ $/
 
     const chunkSubstrFormat = `webpackChunkName: ["']${webpackChunknameFormat}["'],?`
     const chunkSubstrRegex = new RegExp(chunkSubstrFormat)
