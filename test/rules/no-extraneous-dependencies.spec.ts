@@ -48,9 +48,7 @@ const packageDirBundledDepsAsObject = testFilePath(
 const packageDirBundledDepsRaceCondition = testFilePath(
   'bundled-dependencies/race-condition',
 )
-const emptyPackageDir = testFilePath(
-  'empty-folder',
-)
+const emptyPackageDir = testFilePath('empty-folder')
 
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
