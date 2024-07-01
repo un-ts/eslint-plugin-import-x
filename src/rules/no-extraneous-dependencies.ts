@@ -55,8 +55,11 @@ function extractDepFields(pkg: PackageJson) {
 
 function getPackageDepFields(packageJsonPath: string, throwAtRead: boolean) {
   if (!depFieldCache.has(packageJsonPath)) {
-    const depFields = extractDepFields(readJSON(packageJsonPath, throwAtRead)!)
-    depFieldCache.set(packageJsonPath, depFields)
+    const packageJson = readJSON<PackageJson>(packageJsonPath, throwAtRead);
+    if (packageJson) {
+      const depFields = extractDepFields(packageJson);
+      depFieldCache.set(packageJsonPath, depFields);
+    }
   }
   return depFieldCache.get(packageJsonPath)
 }
@@ -83,10 +86,12 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
       // use rule config to find package.json
       for (const dir of paths) {
         const packageJsonPath = path.resolve(dir, 'package.json')
-        const packageContent_ = getPackageDepFields(packageJsonPath, true)!
-        for (const depsKey of Object.keys(packageContent)) {
-          const key = depsKey as keyof PackageDeps
-          Object.assign(packageContent[key], packageContent_[key])
+        const packageContent_ = getPackageDepFields(packageJsonPath, paths.length === 1)
+        if (packageContent_) {
+          for (const depsKey of Object.keys(packageContent)) {
+            const key = depsKey as keyof PackageDeps
+            Object.assign(packageContent[key], packageContent_[key])
+          }
         }
       }
     } else {
