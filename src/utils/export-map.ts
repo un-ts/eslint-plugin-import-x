@@ -1106,11 +1106,13 @@ function childContext(
 function makeContextCacheKey(context: RuleContext | ChildContext) {
   const { settings, parserPath, parserOptions, languageOptions } = context
 
-  let hash = stableHash(settings)
-    + stableHash(languageOptions?.parserOptions ?? parserOptions)
+  let hash =
+    stableHash(settings) +
+    stableHash(languageOptions?.parserOptions ?? parserOptions)
 
   if (languageOptions) {
-    hash += String(languageOptions.ecmaVersion) + String(languageOptions.sourceType)
+    hash +=
+      String(languageOptions.ecmaVersion) + String(languageOptions.sourceType)
   }
 
   hash += stableHash(
