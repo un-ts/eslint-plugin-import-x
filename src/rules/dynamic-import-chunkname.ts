@@ -1,9 +1,9 @@
 import vm from 'node:vm'
 
 import type { TSESTree } from '@typescript-eslint/utils'
+import type { RuleFixer } from '@typescript-eslint/utils/dist/ts-eslint'
 
 import { createRule } from '../utils'
-import type { RuleFixer } from '@typescript-eslint/utils/dist/ts-eslint'
 
 type Options = {
   allowEmpty?: boolean
@@ -64,10 +64,8 @@ export = createRule<[Options?], MessageId>({
         'dynamic imports require a leading comment in the form /* {{format}} */',
       webpackEagerModeNoChunkName:
         'dynamic imports using eager mode do not need a webpackChunkName',
-      webpackRemoveEagerMode:
-        'Remove webpackMode',
-      webpackRemoveChunkName:
-        'Remove webpackChunkName'
+      webpackRemoveEagerMode: 'Remove webpackMode',
+      webpackRemoveChunkName: 'Remove webpackChunkName',
     },
   },
   defaultOptions: [],
@@ -82,10 +80,10 @@ export = createRule<[Options?], MessageId>({
     const commentStyleRegex =
       /^( ((webpackChunkName: .+)|((webpackPrefetch|webpackPreload): (true|false|-?\d+))|(webpackIgnore: (true|false))|((webpackInclude|webpackExclude): \/.*\/)|(webpackMode: ["'](lazy|lazy-once|eager|weak)["'])|(webpackExports: (["']\w+["']|\[(["']\w+["'], *)+(["']\w+["']*)]))),?)+ $/
 
-    const chunkSubstrFormat = `webpackChunkName: ["']${webpackChunknameFormat}["'],?`;
+    const chunkSubstrFormat = `webpackChunkName: ["']${webpackChunknameFormat}["'],?`
     const chunkSubstrRegex = new RegExp(chunkSubstrFormat)
-    const eagerModeFormat = `webpackMode: ["']eager["'],?`;
-    const eagerModeRegex = new RegExp(eagerModeFormat);
+    const eagerModeFormat = `webpackMode: ["']eager["'],?`
+    const eagerModeRegex = new RegExp(eagerModeFormat)
 
     function run(node: TSESTree.Node, arg: TSESTree.Node) {
       const { sourceCode } = context
@@ -100,7 +98,7 @@ export = createRule<[Options?], MessageId>({
       }
 
       let isChunknamePresent = false
-      let isEagerModePresent = false;
+      let isEagerModePresent = false
 
       for (const comment of leadingComments) {
         if (comment.type !== 'Block') {
@@ -139,7 +137,7 @@ export = createRule<[Options?], MessageId>({
         }
 
         if (eagerModeRegex.test(comment.value)) {
-          isEagerModePresent = true;
+          isEagerModePresent = true
         }
 
         if (chunkSubstrRegex.test(comment.value)) {
@@ -147,16 +145,25 @@ export = createRule<[Options?], MessageId>({
         }
       }
 
-      const removeCommentsAndLeadingSpaces = (fixer: RuleFixer, comment: TSESTree.Comment) => {
-        const leftToken = sourceCode.getTokenBefore(comment);
-        const leftComments = sourceCode.getCommentsBefore(comment);
+      const removeCommentsAndLeadingSpaces = (
+        fixer: RuleFixer,
+        comment: TSESTree.Comment,
+      ) => {
+        const leftToken = sourceCode.getTokenBefore(comment)
+        const leftComments = sourceCode.getCommentsBefore(comment)
         if (leftToken) {
           if (leftComments.length > 0) {
-            return fixer.removeRange([Math.max(leftToken.range[1], leftComments[leftComments.length - 1].range[1]), comment.range[1]])
+            return fixer.removeRange([
+              Math.max(
+                leftToken.range[1],
+                leftComments[leftComments.length - 1].range[1],
+              ),
+              comment.range[1],
+            ])
           }
           return fixer.removeRange([leftToken.range[1], comment.range[1]])
         }
-        return fixer.remove(comment);
+        return fixer.remove(comment)
       }
 
       if (isChunknamePresent && isEagerModePresent) {
@@ -169,17 +176,18 @@ export = createRule<[Options?], MessageId>({
               fix(fixer) {
                 for (const comment of leadingComments) {
                   if (chunkSubstrRegex.test(comment.value)) {
-                    const replacement = comment.value.replace(chunkSubstrRegex, '').trim().replace(/,$/, '');
+                    const replacement = comment.value
+                      .replace(chunkSubstrRegex, '')
+                      .trim()
+                      .replace(/,$/, '')
 
-                    if (replacement === '') {
-                      return removeCommentsAndLeadingSpaces(fixer, comment);
-                    } else {
-                      return fixer.replaceText(comment, `/* ${replacement} */`);
-                    }
+                    return replacement === ''
+                      ? removeCommentsAndLeadingSpaces(fixer, comment)
+                      : fixer.replaceText(comment, `/* ${replacement} */`)
                   }
                 }
 
-                return null;
+                return null
               },
             },
             {
@@ -187,20 +195,21 @@ export = createRule<[Options?], MessageId>({
               fix(fixer) {
                 for (const comment of leadingComments) {
                   if (eagerModeRegex.test(comment.value)) {
-                    const replacement = comment.value.replace(eagerModeRegex, '').trim().replace(/,$/, '');
-                    if (replacement === '') {
-                      return removeCommentsAndLeadingSpaces(fixer, comment);
-                    } else {
-                      return fixer.replaceText(comment, `/* ${replacement} */`);
-                    }
+                    const replacement = comment.value
+                      .replace(eagerModeRegex, '')
+                      .trim()
+                      .replace(/,$/, '')
+                    return replacement === ''
+                      ? removeCommentsAndLeadingSpaces(fixer, comment)
+                      : fixer.replaceText(comment, `/* ${replacement} */`)
                   }
                 }
 
-                return null;
+                return null
               },
             },
           ],
-        });
+        })
       }
 
       if (!isChunknamePresent && !allowEmpty && !isEagerModePresent) {

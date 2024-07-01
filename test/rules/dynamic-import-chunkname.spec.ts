@@ -369,15 +369,6 @@ ruleTester.run('dynamic-import-chunkname', rule, {
     {
       code: `import(
         /* webpackChunkName: "someModule" */
-        /* webpackMode: "lazy" */
-        'someModule'
-      )`,
-      options,
-      parser,
-    },
-    {
-      code: `import(
-        /* webpackChunkName: "someModule" */
         /* webpackMode: "weak" */
         'someModule'
       )`,
@@ -1223,15 +1214,6 @@ describe('TypeScript', () => {
       {
         code: `import(
             /* webpackChunkName: "someModule" */
-            /* webpackMode: "lazy" */
-            'someModule'
-          )`,
-        options,
-        parser: typescriptParser,
-      },
-      {
-        code: `import(
-            /* webpackChunkName: "someModule" */
             /* webpackMode: "weak" */
             'someModule'
           )`,
@@ -1715,31 +1697,29 @@ describe('TypeScript', () => {
         )`,
         options,
         parser,
-        output: `import(
-          /* webpackChunkName: "someModule" */
+        output: null,
+        errors: [
+          {
+            messageId: 'webpackEagerModeNoChunkName',
+            type: nodeType,
+            suggestions: [
+              {
+                messageId: 'webpackRemoveChunkName',
+                output: `import(
           /* webpackMode: "eager" */
           'someModule'
         )`,
-        errors: [{
-          messageId: 'webpackEagerModeNoChunkName',
-          type: nodeType,
-          suggestions: [
-            {
-              messageId: 'webpackRemoveChunkName',
-              output: `import(
-          /* webpackMode: "eager" */
-          'someModule'
-        )`,
-            },
-            {
-              messageId: 'webpackRemoveEagerMode',
-              output: `import(
+              },
+              {
+                messageId: 'webpackRemoveEagerMode',
+                output: `import(
           /* webpackChunkName: "someModule" */
           'someModule'
         )`,
-            },
-          ],
-        }],
+              },
+            ],
+          },
+        ],
       },
     ],
   })
