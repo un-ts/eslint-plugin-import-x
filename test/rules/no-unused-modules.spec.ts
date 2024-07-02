@@ -1,18 +1,17 @@
 import fs from 'node:fs'
 
-import { TSESLint } from '@typescript-eslint/utils'
 // @ts-expect-error - no typings yet
 import { FlatRuleTester } from 'eslint/use-at-your-own-risk'
 
-import { test, testFilePath, parsers } from '../utils'
+import { test, testFilePath, parsers, RuleTester } from '../utils'
 
 import jsxConfig from 'eslint-plugin-import-x/config/react'
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-unused-modules'
 
-const ruleTester = new TSESLint.RuleTester()
-const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
-const jsxRuleTester = new TSESLint.RuleTester(jsxConfig)
+const ruleTester = new RuleTester()
+const typescriptRuleTester = new RuleTester(typescriptConfig)
+const jsxRuleTester = new RuleTester(jsxConfig)
 
 const error = (message: string) => ({ message })
 
@@ -47,7 +46,7 @@ const unusedExportsJsxOptions = [
 ]
 
 // tests for missing exports
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       code: 'export default function noOptions() {}',
@@ -112,7 +111,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // tests for exports
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -222,7 +221,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // test for unused exports
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [],
   invalid: [
     test({
@@ -281,7 +280,7 @@ describe('dynamic imports', () => {
   jest.setTimeout(10e3)
 
   // test for unused exports with `import()`
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -319,7 +318,7 @@ describe('dynamic imports', () => {
       }),
     ],
   })
-  typescriptRuleTester.run('no-unused-modules', rule, {
+  typescriptRuleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsTypescriptOptions,
@@ -354,7 +353,7 @@ describe('dynamic imports', () => {
 })
 
 // // test for export from
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -374,7 +373,7 @@ ruleTester.run('no-unused-modules', rule, {
   ],
 })
 
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -386,7 +385,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // test for ignored files
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -423,7 +422,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // add named import for file with default export
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -446,7 +445,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // add default import for file with default export
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -463,7 +462,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // add default import for file with named export
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -484,7 +483,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // add named import for file with named export
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -503,7 +502,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // add different named import for file with named export
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -524,7 +523,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // add renamed named import for file with named export
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -543,7 +542,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // add different renamed named import for file with named export
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -564,7 +563,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // remove default import for file with default export
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -587,7 +586,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // add namespace import for file with unused exports
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [],
   invalid: [
     test({
@@ -602,7 +601,7 @@ ruleTester.run('no-unused-modules', rule, {
     }),
   ],
 })
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -621,7 +620,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // remove all exports
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -645,7 +644,7 @@ ruleTester.run('no-unused-modules', rule, {
   ],
 })
 
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -655,7 +654,7 @@ ruleTester.run('no-unused-modules', rule, {
   ],
   invalid: [],
 })
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [],
   invalid: [
     test({
@@ -669,7 +668,7 @@ ruleTester.run('no-unused-modules', rule, {
   ],
 })
 
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [],
   invalid: [
     test({
@@ -694,7 +693,7 @@ ruleTester.run('no-unused-modules', rule, {
   ],
 })
 
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     /* TODO:
     test({
@@ -726,7 +725,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 // Test that import and export in the same file both counts as usage
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -738,7 +737,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 describe('renameDefault', () => {
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -757,7 +756,7 @@ describe('renameDefault', () => {
     ],
     invalid: [],
   })
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -787,7 +786,7 @@ describe('test behavior for new file', () => {
   })
 
   // add import in newly created file
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -806,7 +805,7 @@ describe('test behavior for new file', () => {
   })
 
   // add export for newly created file
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [],
     invalid: [
       test({
@@ -820,7 +819,7 @@ describe('test behavior for new file', () => {
     ],
   })
 
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -839,7 +838,7 @@ describe('test behavior for new file', () => {
   })
 
   // export * only considers named imports. default imports still need to be reported
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -866,7 +865,7 @@ describe('test behavior for new file', () => {
       }),
     ],
   })
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -878,7 +877,7 @@ describe('test behavior for new file', () => {
   })
 
   // remove export *. all exports need to be reported
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [],
     invalid: [
       test({
@@ -911,7 +910,7 @@ describe('test behavior for new file', () => {
         { encoding: 'utf8', flag: 'w' },
       )
     })
-    ruleTester.run('no-unused-modules', rule, {
+    ruleTester.run$('no-unused-modules', rule, {
       valid: [
         test({
           options: unusedExportsOptions,
@@ -955,7 +954,7 @@ describe('test behavior for new file', () => {
       flag: 'w',
     })
   })
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -986,7 +985,7 @@ describe('test behavior for new file', () => {
       flag: 'w',
     })
   })
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1011,7 +1010,7 @@ describe('test behavior for new file', () => {
 })
 
 describe('test behavior for destructured exports', () => {
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1047,7 +1046,7 @@ describe('test behavior for new file', () => {
       { encoding: 'utf8', flag: 'w' },
     )
   })
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1072,7 +1071,7 @@ describe('test behavior for new file', () => {
 })
 
 describe('do not report missing export for ignored file', () => {
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: [
@@ -1091,7 +1090,7 @@ describe('do not report missing export for ignored file', () => {
 })
 
 // lint file not available in `src`
-ruleTester.run('no-unused-modules', rule, {
+ruleTester.run$('no-unused-modules', rule, {
   valid: [
     test({
       options: unusedExportsOptions,
@@ -1103,7 +1102,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 describe('do not report unused export for files mentioned in package.json', () => {
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1147,7 +1146,7 @@ describe('do not report unused export for files mentioned in package.json', () =
 })
 
 describe('Avoid errors if re-export all from umd compiled library', () => {
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1162,7 +1161,7 @@ describe('Avoid errors if re-export all from umd compiled library', () => {
 describe('TypeScript', () => {
   const parser = parsers.TS
 
-  typescriptRuleTester.run('no-unused-modules', rule, {
+  typescriptRuleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsTypescriptOptions,
@@ -1333,7 +1332,7 @@ describe('TypeScript', () => {
 })
 
 describe('correctly work with JSX only files', () => {
-  jsxRuleTester.run('no-unused-modules', rule, {
+  jsxRuleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsJsxOptions,
@@ -1357,7 +1356,7 @@ describe('correctly work with JSX only files', () => {
 })
 
 describe('ignore flow types', () => {
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1404,7 +1403,7 @@ describe('ignore flow types', () => {
 })
 
 describe('support (nested) destructuring assignment', () => {
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1424,7 +1423,7 @@ describe('support (nested) destructuring assignment', () => {
 })
 
 describe('support ES2022 Arbitrary module namespace identifier names', () => {
-  ruleTester.run('no-unused-module', rule, {
+  ruleTester.run$('no-unused-module', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1461,7 +1460,7 @@ describe('support ES2022 Arbitrary module namespace identifier names', () => {
 
 describe('parser ignores prefixes like BOM and hashbang', () => {
   // bom, hashbang
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1477,7 +1476,7 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
     invalid: [],
   })
   // no bom, hashbang
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1493,7 +1492,7 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
     invalid: [],
   })
   // bom, no hashbang
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1511,7 +1510,7 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
     invalid: [],
   })
   // no bom, no hashbang
-  ruleTester.run('no-unused-modules', rule, {
+  ruleTester.run$('no-unused-modules', rule, {
     valid: [
       test({
         options: unusedExportsOptions,
@@ -1529,7 +1528,7 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
 })
 
 describe('supports flat eslint', () => {
-  const flatRuleTester = new FlatRuleTester() as TSESLint.RuleTester
+  const flatRuleTester = new FlatRuleTester()
   flatRuleTester.run('no-unused-modules', rule, {
     valid: [
       {

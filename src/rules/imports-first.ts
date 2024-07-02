@@ -1,15 +1,10 @@
-import { ESLintUtils } from '@typescript-eslint/utils'
-
-import { docsUrl } from '../utils/docs-url'
+import { createRule } from '../utils'
 
 import first from './first'
 
-const createRule = ESLintUtils.RuleCreator(ruleName =>
-  docsUrl(ruleName, '7b25c1cb95ee18acc1531002fd343e1e6031f9ed'),
-)
-
 export = createRule({
   ...first,
+  commitHash: '7b25c1cb95ee18acc1531002fd343e1e6031f9ed',
   name: 'imports-first',
   meta: {
     ...first.meta,

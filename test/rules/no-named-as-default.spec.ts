@@ -1,12 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test, SYNTAX_CASES, parsers } from '../utils'
+import { test, SYNTAX_CASES, parsers, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
-ruleTester.run('no-named-as-default', rule, {
+ruleTester.run$('no-named-as-default', rule, {
   valid: [
     test({ code: 'import "./malformed.js"' }),
 
