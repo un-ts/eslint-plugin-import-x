@@ -1,5 +1,17 @@
 # eslint-plugin-import-x
 
+## 0.5.3
+
+### Patch Changes
+
+- [#101](https://github.com/un-ts/eslint-plugin-import-x/pull/101) [`c0cea7b`](https://github.com/un-ts/eslint-plugin-import-x/commit/c0cea7bd361c02197a9ddfc6cfcf787248df4eda) Thanks [@SukkaW](https://github.com/SukkaW)! - Allow incorrect file path in extraneous deps check
+
+- [#100](https://github.com/un-ts/eslint-plugin-import-x/pull/100) [`293fcf4`](https://github.com/un-ts/eslint-plugin-import-x/commit/293fcf43f30b11b51a6ad320abed23d2139659ba) Thanks [@SukkaW](https://github.com/SukkaW)! - feat: webpack comment regex support `webpackFetchPriority`
+
+- [#85](https://github.com/un-ts/eslint-plugin-import-x/pull/85) [`ded3e80`](https://github.com/un-ts/eslint-plugin-import-x/commit/ded3e80fbf6eb2b4d0211a33c46b63496ddaca07) Thanks [@kosmotema](https://github.com/kosmotema)! - add languageOptions to ChildContext
+
+- [#100](https://github.com/un-ts/eslint-plugin-import-x/pull/100) [`293fcf4`](https://github.com/un-ts/eslint-plugin-import-x/commit/293fcf43f30b11b51a6ad320abed23d2139659ba) Thanks [@SukkaW](https://github.com/SukkaW)! - Allow empty chunk name when webpackMode: 'eager' is set; add suggestions to remove name in eager mode
+
 ## 0.5.2
 
 ### Patch Changes
