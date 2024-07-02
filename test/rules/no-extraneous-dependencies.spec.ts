@@ -48,6 +48,7 @@ const packageDirBundledDepsAsObject = testFilePath(
 const packageDirBundledDepsRaceCondition = testFilePath(
   'bundled-dependencies/race-condition',
 )
+const emptyPackageDir = testFilePath('empty-folder')
 
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
@@ -129,6 +130,14 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import leftpad from "left-pad";',
       options: [{ packageDir: packageDirMonoRepoRoot }],
+    }),
+    test({
+      code: 'import leftpad from "left-pad";',
+      options: [{ packageDir: [emptyPackageDir, packageDirMonoRepoRoot] }],
+    }),
+    test({
+      code: 'import leftpad from "left-pad";',
+      options: [{ packageDir: [packageDirMonoRepoRoot, emptyPackageDir] }],
     }),
     test({
       code: 'import react from "react";',
