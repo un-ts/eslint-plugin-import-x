@@ -4,6 +4,7 @@ import type { PackageJson } from 'type-fest'
 
 import type { RuleContext } from '../types'
 import { createRule, resolve } from '../utils'
+import { lazy } from '../utils/lazy-value'
 
 let typescriptPkg: PackageJson | undefined
 
@@ -43,7 +44,7 @@ function checkImports(
           module,
         },
         // Attach the autofix (if any) to the first import only
-        fix: i === 0 ? getFix(nodes, sourceCode, context) : undefined,
+        fix: i === 0 ? getFix(nodes, sourceCode, context) : null,
       })
     }
   })
@@ -55,7 +56,7 @@ function getFix(
   context: RuleContext<MessageId, [Options?]>,
 ): TSESLint.ReportFixFunction | null {
   const first = nodes[0]
-  const [_, ...rest] = nodes
+  const rest = nodes.slice(1)
 
   // Adjusting the first import might make it multiline, which could break
   // `eslint-disable-next-line` comments and similar, so bail if the first
@@ -118,12 +119,13 @@ function getFix(
       ),
   )
 
-  const shouldAddDefault =
-    getDefaultImportName(first) == null && defaultImportNames.size === 1
   const shouldAddSpecifiers = specifiers.length > 0
   const shouldRemoveUnnecessary = unnecessaryImports.length > 0
+  const shouldAddDefault = lazy(
+    () => getDefaultImportName(first) == null && defaultImportNames.size === 1,
+  )
 
-  if (!(shouldAddDefault || shouldAddSpecifiers || shouldRemoveUnnecessary)) {
+  if (!shouldAddSpecifiers && !shouldRemoveUnnecessary && !shouldAddDefault()) {
     return null
   }
 
@@ -199,7 +201,7 @@ function getFix(
 
     const fixes = []
 
-    if (shouldAddDefault && openBrace == null && shouldAddSpecifiers) {
+    if (shouldAddDefault() && openBrace == null && shouldAddSpecifiers) {
       // `import './foo'` → `import def, {...} from './foo'`
       fixes.push(
         fixer.insertTextAfter(
@@ -207,12 +209,16 @@ function getFix(
           ` ${defaultImportName}, {${specifiersText}} from`,
         ),
       )
-    } else if (shouldAddDefault && openBrace == null && !shouldAddSpecifiers) {
+    } else if (
+      shouldAddDefault() &&
+      openBrace == null &&
+      !shouldAddSpecifiers
+    ) {
       // `import './foo'` → `import def from './foo'`
       fixes.push(
         fixer.insertTextAfter(firstToken, ` ${defaultImportName} from`),
       )
-    } else if (shouldAddDefault && openBrace != null && closeBrace != null) {
+    } else if (shouldAddDefault() && openBrace != null && closeBrace != null) {
       // `import {...} from './foo'` → `import def, {...} from './foo'`
       fixes.push(fixer.insertTextAfter(firstToken, ` ${defaultImportName},`))
       if (shouldAddSpecifiers) {
@@ -283,7 +289,7 @@ function getDefaultImportName(node: TSESTree.ImportDeclaration) {
   const defaultSpecifier = node.specifiers.find(
     specifier => specifier.type === 'ImportDefaultSpecifier',
   )
-  return defaultSpecifier == null ? undefined : defaultSpecifier.local.name
+  return defaultSpecifier?.local.name
 }
 
 // Checks whether `node` has a namespace import.
