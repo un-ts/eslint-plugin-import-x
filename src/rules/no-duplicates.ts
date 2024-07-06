@@ -129,6 +129,14 @@ function getFix(
     return null
   }
 
+  // pre-caculate preferInline before actual fix function
+  const preferInline = context.options[0] && context.options[0]['prefer-inline']
+  // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
+  // pre-calculate if the TypeScript version is supported
+  const isTypeScriptVersionSupportPreferInline = lazy(
+    () => !typescriptPkg || !semver.satisfies(typescriptPkg.version!, '>= 4.5'),
+  )
+
   return (fixer: TSESLint.RuleFixer) => {
     const tokens = sourceCode.getTokens(first)
     const openBrace = tokens.find(token => isPunctuator(token, '{'))!
@@ -155,14 +163,7 @@ function getFix(
           'importNode' in specifier &&
           specifier.importNode.importKind === 'type'
 
-        const preferInline =
-          context.options[0] && context.options[0]['prefer-inline']
-        // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
-        if (
-          preferInline &&
-          (!typescriptPkg ||
-            !semver.satisfies(typescriptPkg.version!, '>= 4.5'))
-        ) {
+        if (preferInline && isTypeScriptVersionSupportPreferInline()) {
           throw new Error(
             'Your version of TypeScript does not support inline type imports.',
           )
@@ -393,6 +394,8 @@ export = createRule<[Options?], MessageId>({
   },
   defaultOptions: [],
   create(context) {
+    const preferInline = context.options[0]?.['prefer-inline']
+
     // Prepare the resolver from options.
     const considerQueryStringOption = context.options[0]?.considerQueryString
     const defaultResolver = (sourcePath: string) =>
@@ -428,7 +431,6 @@ export = createRule<[Options?], MessageId>({
         })
       }
       const map = moduleMaps.get(parent)!
-      const preferInline = context.options[0]?.['prefer-inline']
       if (!preferInline && n.importKind === 'type') {
         return n.specifiers.length > 0 &&
           n.specifiers[0].type === 'ImportDefaultSpecifier'
