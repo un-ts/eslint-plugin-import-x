@@ -25,66 +25,54 @@ function checkImports(
   imported: Map<string, TSESTree.ImportDeclaration[]>,
   context: RuleContext<MessageId, [Options?]>,
 ) {
-  for (const [module, nodes] of imported.entries()) {
-    if (nodes.length > 1) {
-      const [first, ...rest] = nodes
-      const { sourceCode } = context
-      const fix = getFix(first, rest, sourceCode, context)
+  // eslint-disable-next-line unicorn/no-array-for-each -- Map.forEach is faster than Map.entries
+  imported.forEach((nodes, module) => {
+    if (nodes.length <= 1) {
+      // not enough imports, definitely not duplicates
+      return
+    }
 
+    const { sourceCode } = context
+
+    for (let i = 0, len = nodes.length; i < len; i++) {
+      const node = nodes[i]
       context.report({
-        node: first.source,
+        node: node.source,
         messageId: 'duplicate',
         data: {
           module,
         },
-        fix, // Attach the autofix (if any) to the first import.
+        // Attach the autofix (if any) to the first import only
+        fix: i === 0 ? getFix(nodes, sourceCode, context) : undefined,
       })
-
-      for (const node of rest) {
-        context.report({
-          node: node.source,
-          messageId: 'duplicate',
-          data: {
-            module,
-          },
-        })
-      }
     }
-  }
+  })
 }
 
 function getFix(
-  first: TSESTree.ImportDeclaration,
-  rest: TSESTree.ImportDeclaration[],
+  nodes: TSESTree.ImportDeclaration[],
   sourceCode: TSESLint.SourceCode,
   context: RuleContext<MessageId, [Options?]>,
-) {
-  // Sorry ESLint <= 3 users, no autofix for you. Autofixing duplicate imports
-  // requires multiple `fixer.whatever()` calls in the `fix`: We both need to
-  // update the first one, and remove the rest. Support for multiple
-  // `fixer.whatever()` in a single `fix` was added in ESLint 4.1.
-  // `sourceCode.getCommentsBefore` was added in 4.0, so that's an easy thing to
-  // check for.
-  if (typeof sourceCode.getCommentsBefore !== 'function') {
-    return
-  }
+): TSESLint.ReportFixFunction | null {
+  const first = nodes[0]
+  const [_, ...rest] = nodes
 
   // Adjusting the first import might make it multiline, which could break
   // `eslint-disable-next-line` comments and similar, so bail if the first
   // import has comments. Also, if the first import is `import * as ns from
   // './foo'` there's nothing we can do.
   if (hasProblematicComments(first, sourceCode) || hasNamespace(first)) {
-    return
+    return null
   }
 
   const defaultImportNames = new Set(
-    [first, ...rest].flatMap(x => getDefaultImportName(x) || []),
+    nodes.flatMap(x => getDefaultImportName(x) || []),
   )
 
   // Bail if there are multiple different default import names – it's up to the
   // user to choose which one to keep.
   if (defaultImportNames.size > 1) {
-    return
+    return null
   }
 
   // Leave it to the user to handle comments. Also skip `import * as ns from
@@ -128,7 +116,7 @@ function getFix(
   const shouldRemoveUnnecessary = unnecessaryImports.length > 0
 
   if (!(shouldAddDefault || shouldAddSpecifiers || shouldRemoveUnnecessary)) {
-    return
+    return null
   }
 
   return (fixer: TSESLint.RuleFixer) => {
