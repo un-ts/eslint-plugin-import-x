@@ -6,14 +6,20 @@ import type { RuleContext } from '../types'
 import { createRule, resolve } from '../utils'
 import { lazy } from '../utils/lazy-value'
 
-let typescriptPkg: PackageJson | undefined
+// a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
+// pre-calculate if the TypeScript version is supported
+const isTypeScriptVersionSupportPreferInline = lazy(() => {
+  let typescriptPkg: PackageJson | undefined
 
-try {
-  // eslint-disable-next-line import-x/no-extraneous-dependencies
-  typescriptPkg = require('typescript/package.json') as PackageJson
-} catch {
-  //
-}
+  try {
+    // eslint-disable-next-line import-x/no-extraneous-dependencies
+    typescriptPkg = require('typescript/package.json') as PackageJson
+  } catch {
+    //
+  }
+
+  return !typescriptPkg || !semver.satisfies(typescriptPkg.version!, '>= 4.5')
+})
 
 type Options = {
   considerQueryString?: boolean
@@ -33,8 +39,6 @@ function checkImports(
       return
     }
 
-    const { sourceCode } = context
-
     for (let i = 0, len = nodes.length; i < len; i++) {
       const node = nodes[i]
       context.report({
@@ -44,7 +48,7 @@ function checkImports(
           module,
         },
         // Attach the autofix (if any) to the first import only
-        fix: i === 0 ? getFix(nodes, sourceCode, context) : null,
+        fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
       })
     }
   })
@@ -129,11 +133,6 @@ function getFix(
 
   // pre-caculate preferInline before actual fix function
   const preferInline = context.options[0] && context.options[0]['prefer-inline']
-  // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
-  // pre-calculate if the TypeScript version is supported
-  const isTypeScriptVersionSupportPreferInline = lazy(
-    () => !typescriptPkg || !semver.satisfies(typescriptPkg.version!, '>= 4.5'),
-  )
 
   return (fixer: TSESLint.RuleFixer) => {
     const tokens = sourceCode.getTokens(first)
