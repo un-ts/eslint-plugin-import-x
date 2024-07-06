@@ -286,18 +286,14 @@ function getDefaultImportName(node: TSESTree.ImportDeclaration) {
 
 // Checks whether `node` has a namespace import.
 function hasNamespace(node: TSESTree.ImportDeclaration) {
-  const specifiers = node.specifiers.filter(
+  return node.specifiers.some(
     specifier => specifier.type === 'ImportNamespaceSpecifier',
   )
-  return specifiers.length > 0
 }
 
 // Checks whether `node` has any non-default specifiers.
 function hasSpecifiers(node: TSESTree.ImportDeclaration) {
-  const specifiers = node.specifiers.filter(
-    specifier => specifier.type === 'ImportSpecifier',
-  )
-  return specifiers.length > 0
+  return node.specifiers.some(specifier => specifier.type === 'ImportSpecifier')
 }
 
 // It's not obvious what the user wants to do with comments associated with
