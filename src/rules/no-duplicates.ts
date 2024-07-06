@@ -77,14 +77,14 @@ function getFix(
 
   // Leave it to the user to handle comments. Also skip `import * as ns from
   // './foo'` imports, since they cannot be merged into another import.
-  const restWithoutComments = rest.filter(
+  const restWithoutCommentsAndNamespaces = rest.filter(
     node => !hasProblematicComments(node, sourceCode) && !hasNamespace(node),
   )
 
   const restWithoutCommentsHasSpecifiers =
-    restWithoutComments.map(hasSpecifiers)
+    restWithoutCommentsAndNamespaces.map(hasSpecifiers)
 
-  const specifiers = restWithoutComments.reduce<
+  const specifiers = restWithoutCommentsAndNamespaces.reduce<
     Array<{
       importNode: TSESTree.ImportDeclaration
       identifiers: string[]
@@ -110,10 +110,9 @@ function getFix(
     return acc
   }, [])
 
-  const unnecessaryImports = restWithoutComments.filter(
+  const unnecessaryImports = restWithoutCommentsAndNamespaces.filter(
     (node, nodeIndex) =>
       !restWithoutCommentsHasSpecifiers[nodeIndex] &&
-      !hasNamespace(node) &&
       !specifiers.some(
         specifier => 'importNode' in specifier && specifier.importNode === node,
       ),
