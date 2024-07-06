@@ -4,15 +4,22 @@ import type { PackageJson } from 'type-fest'
 
 import type { RuleContext } from '../types'
 import { createRule, resolve } from '../utils'
+import { lazy } from '../utils/lazy-value'
 
-let typescriptPkg: PackageJson | undefined
+// a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
+// pre-calculate if the TypeScript version is supported
+const isTypeScriptVersionSupportPreferInline = lazy(() => {
+  let typescriptPkg: PackageJson | undefined
 
-try {
-  // eslint-disable-next-line import-x/no-extraneous-dependencies
-  typescriptPkg = require('typescript/package.json') as PackageJson
-} catch {
-  //
-}
+  try {
+    // eslint-disable-next-line import-x/no-extraneous-dependencies
+    typescriptPkg = require('typescript/package.json') as PackageJson
+  } catch {
+    //
+  }
+
+  return !typescriptPkg || !semver.satisfies(typescriptPkg.version!, '>= 4.5')
+})
 
 type Options = {
   considerQueryString?: boolean
@@ -25,111 +32,108 @@ function checkImports(
   imported: Map<string, TSESTree.ImportDeclaration[]>,
   context: RuleContext<MessageId, [Options?]>,
 ) {
-  for (const [module, nodes] of imported.entries()) {
-    if (nodes.length > 1) {
-      const [first, ...rest] = nodes
-      const { sourceCode } = context
-      const fix = getFix(first, rest, sourceCode, context)
+  // eslint-disable-next-line unicorn/no-array-for-each -- Map.forEach is faster than Map.entries
+  imported.forEach((nodes, module) => {
+    if (nodes.length <= 1) {
+      // not enough imports, definitely not duplicates
+      return
+    }
 
+    for (let i = 0, len = nodes.length; i < len; i++) {
+      const node = nodes[i]
       context.report({
-        node: first.source,
+        node: node.source,
         messageId: 'duplicate',
         data: {
           module,
         },
-        fix, // Attach the autofix (if any) to the first import.
+        // Attach the autofix (if any) to the first import only
+        fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
       })
-
-      for (const node of rest) {
-        context.report({
-          node: node.source,
-          messageId: 'duplicate',
-          data: {
-            module,
-          },
-        })
-      }
     }
-  }
+  })
 }
 
 function getFix(
-  first: TSESTree.ImportDeclaration,
-  rest: TSESTree.ImportDeclaration[],
+  nodes: TSESTree.ImportDeclaration[],
   sourceCode: TSESLint.SourceCode,
   context: RuleContext<MessageId, [Options?]>,
-) {
-  // Sorry ESLint <= 3 users, no autofix for you. Autofixing duplicate imports
-  // requires multiple `fixer.whatever()` calls in the `fix`: We both need to
-  // update the first one, and remove the rest. Support for multiple
-  // `fixer.whatever()` in a single `fix` was added in ESLint 4.1.
-  // `sourceCode.getCommentsBefore` was added in 4.0, so that's an easy thing to
-  // check for.
-  if (typeof sourceCode.getCommentsBefore !== 'function') {
-    return
-  }
+): TSESLint.ReportFixFunction | null {
+  const first = nodes[0]
 
   // Adjusting the first import might make it multiline, which could break
   // `eslint-disable-next-line` comments and similar, so bail if the first
   // import has comments. Also, if the first import is `import * as ns from
   // './foo'` there's nothing we can do.
   if (hasProblematicComments(first, sourceCode) || hasNamespace(first)) {
-    return
+    return null
   }
 
   const defaultImportNames = new Set(
-    [first, ...rest].flatMap(x => getDefaultImportName(x) || []),
+    nodes.flatMap(x => getDefaultImportName(x) || []),
   )
 
   // Bail if there are multiple different default import names – it's up to the
   // user to choose which one to keep.
   if (defaultImportNames.size > 1) {
-    return
+    return null
   }
+
+  const rest = nodes.slice(1)
 
   // Leave it to the user to handle comments. Also skip `import * as ns from
   // './foo'` imports, since they cannot be merged into another import.
-  const restWithoutComments = rest.filter(
+  const restWithoutCommentsAndNamespaces = rest.filter(
     node => !hasProblematicComments(node, sourceCode) && !hasNamespace(node),
   )
 
-  const specifiers = restWithoutComments
-    .map(node => {
-      const tokens = sourceCode.getTokens(node)
-      const openBrace = tokens.find(token => isPunctuator(token, '{'))
-      const closeBrace = tokens.find(token => isPunctuator(token, '}'))
+  const restWithoutCommentsAndNamespacesHasSpecifiers =
+    restWithoutCommentsAndNamespaces.map(hasSpecifiers)
 
-      if (openBrace == null || closeBrace == null) {
-        return
-      }
+  const specifiers = restWithoutCommentsAndNamespaces.reduce<
+    Array<{
+      importNode: TSESTree.ImportDeclaration
+      identifiers: string[]
+      isEmpty: boolean
+    }>
+  >((acc, node, nodeIndex) => {
+    const tokens = sourceCode.getTokens(node)
+    const openBrace = tokens.find(token => isPunctuator(token, '{'))
+    const closeBrace = tokens.find(token => isPunctuator(token, '}'))
 
-      return {
-        importNode: node,
-        identifiers: sourceCode.text
-          .slice(openBrace.range[1], closeBrace.range[0])
-          .split(','), // Split the text into separate identifiers (retaining any whitespace before or after)
-        isEmpty: !hasSpecifiers(node),
-      }
+    if (openBrace == null || closeBrace == null) {
+      return acc
+    }
+
+    acc.push({
+      importNode: node,
+      identifiers: sourceCode.text
+        .slice(openBrace.range[1], closeBrace.range[0])
+        .split(','), // Split the text into separate identifiers (retaining any whitespace before or after)
+      isEmpty: !restWithoutCommentsAndNamespacesHasSpecifiers[nodeIndex],
     })
-    .filter(Boolean)
 
-  const unnecessaryImports = restWithoutComments.filter(
-    node =>
-      !hasSpecifiers(node) &&
-      !hasNamespace(node) &&
-      !specifiers.some(
-        specifier => 'importNode' in specifier && specifier.importNode === node,
-      ),
+    return acc
+  }, [])
+
+  const unnecessaryImports = restWithoutCommentsAndNamespaces.filter(
+    (node, nodeIndex) =>
+      !restWithoutCommentsAndNamespacesHasSpecifiers[nodeIndex] &&
+      !specifiers.some(specifier => specifier.importNode === node),
   )
 
-  const shouldAddDefault =
-    getDefaultImportName(first) == null && defaultImportNames.size === 1
   const shouldAddSpecifiers = specifiers.length > 0
   const shouldRemoveUnnecessary = unnecessaryImports.length > 0
+  const shouldAddDefault = lazy(
+    () => getDefaultImportName(first) == null && defaultImportNames.size === 1,
+  )
 
-  if (!(shouldAddDefault || shouldAddSpecifiers || shouldRemoveUnnecessary)) {
-    return
+  if (!shouldAddSpecifiers && !shouldRemoveUnnecessary && !shouldAddDefault()) {
+    return null
   }
+
+  // pre-caculate preferInline before actual fix function
+  const preferInline = context.options[0] && context.options[0]['prefer-inline']
 
   return (fixer: TSESLint.RuleFixer) => {
     const tokens = sourceCode.getTokens(first)
@@ -157,14 +161,7 @@ function getFix(
           'importNode' in specifier &&
           specifier.importNode.importKind === 'type'
 
-        const preferInline =
-          context.options[0] && context.options[0]['prefer-inline']
-        // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
-        if (
-          preferInline &&
-          (!typescriptPkg ||
-            !semver.satisfies(typescriptPkg.version!, '>= 4.5'))
-        ) {
+        if (preferInline && isTypeScriptVersionSupportPreferInline()) {
           throw new Error(
             'Your version of TypeScript does not support inline type imports.',
           )
@@ -203,7 +200,7 @@ function getFix(
 
     const fixes = []
 
-    if (shouldAddDefault && openBrace == null && shouldAddSpecifiers) {
+    if (openBrace == null && shouldAddSpecifiers && shouldAddDefault()) {
       // `import './foo'` → `import def, {...} from './foo'`
       fixes.push(
         fixer.insertTextAfter(
@@ -211,19 +208,27 @@ function getFix(
           ` ${defaultImportName}, {${specifiersText}} from`,
         ),
       )
-    } else if (shouldAddDefault && openBrace == null && !shouldAddSpecifiers) {
+    } else if (
+      openBrace == null &&
+      !shouldAddSpecifiers &&
+      shouldAddDefault()
+    ) {
       // `import './foo'` → `import def from './foo'`
       fixes.push(
         fixer.insertTextAfter(firstToken, ` ${defaultImportName} from`),
       )
-    } else if (shouldAddDefault && openBrace != null && closeBrace != null) {
+    } else if (openBrace != null && closeBrace != null && shouldAddDefault()) {
       // `import {...} from './foo'` → `import def, {...} from './foo'`
       fixes.push(fixer.insertTextAfter(firstToken, ` ${defaultImportName},`))
       if (shouldAddSpecifiers) {
         // `import def, {...} from './foo'` → `import def, {..., ...} from './foo'`
         fixes.push(fixer.insertTextBefore(closeBrace, specifiersText))
       }
-    } else if (!shouldAddDefault && openBrace == null && shouldAddSpecifiers) {
+    } else if (
+      openBrace == null &&
+      shouldAddSpecifiers &&
+      !shouldAddDefault()
+    ) {
       if (first.specifiers.length === 0) {
         // `import './foo'` → `import {...} from './foo'`
         fixes.push(
@@ -235,7 +240,7 @@ function getFix(
           fixer.insertTextAfter(first.specifiers[0], `, {${specifiersText}}`),
         )
       }
-    } else if (!shouldAddDefault && openBrace != null && closeBrace != null) {
+    } else if (openBrace != null && closeBrace != null && !shouldAddDefault()) {
       // `import {...} './foo'` → `import {..., ...} from './foo'`
       fixes.push(fixer.insertTextBefore(closeBrace, specifiersText))
     }
@@ -287,23 +292,19 @@ function getDefaultImportName(node: TSESTree.ImportDeclaration) {
   const defaultSpecifier = node.specifiers.find(
     specifier => specifier.type === 'ImportDefaultSpecifier',
   )
-  return defaultSpecifier == null ? undefined : defaultSpecifier.local.name
+  return defaultSpecifier?.local.name
 }
 
 // Checks whether `node` has a namespace import.
 function hasNamespace(node: TSESTree.ImportDeclaration) {
-  const specifiers = node.specifiers.filter(
+  return node.specifiers.some(
     specifier => specifier.type === 'ImportNamespaceSpecifier',
   )
-  return specifiers.length > 0
 }
 
 // Checks whether `node` has any non-default specifiers.
 function hasSpecifiers(node: TSESTree.ImportDeclaration) {
-  const specifiers = node.specifiers.filter(
-    specifier => specifier.type === 'ImportSpecifier',
-  )
-  return specifiers.length > 0
+  return node.specifiers.some(specifier => specifier.type === 'ImportSpecifier')
 }
 
 // It's not obvious what the user wants to do with comments associated with
@@ -395,6 +396,8 @@ export = createRule<[Options?], MessageId>({
   },
   defaultOptions: [],
   create(context) {
+    const preferInline = context.options[0]?.['prefer-inline']
+
     // Prepare the resolver from options.
     const considerQueryStringOption = context.options[0]?.considerQueryString
     const defaultResolver = (sourcePath: string) =>
@@ -421,16 +424,19 @@ export = createRule<[Options?], MessageId>({
 
     function getImportMap(n: TSESTree.ImportDeclaration) {
       const parent = n.parent!
-      if (!moduleMaps.has(parent)) {
-        moduleMaps.set(parent, {
+      let map
+      if (moduleMaps.has(parent)) {
+        map = moduleMaps.get(parent)!
+      } else {
+        map = {
           imported: new Map(),
           nsImported: new Map(),
           defaultTypesImported: new Map(),
           namedTypesImported: new Map(),
-        })
+        }
+        moduleMaps.set(parent, map)
       }
-      const map = moduleMaps.get(parent)!
-      const preferInline = context.options[0]?.['prefer-inline']
+
       if (!preferInline && n.importKind === 'type') {
         return n.specifiers.length > 0 &&
           n.specifiers[0].type === 'ImportDefaultSpecifier'
