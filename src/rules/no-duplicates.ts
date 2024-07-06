@@ -81,13 +81,16 @@ function getFix(
     node => !hasProblematicComments(node, sourceCode) && !hasNamespace(node),
   )
 
+  const restWithoutCommentsHasSpecifiers =
+    restWithoutComments.map(hasSpecifiers)
+
   const specifiers = restWithoutComments.reduce<
     Array<{
       importNode: TSESTree.ImportDeclaration
       identifiers: string[]
       isEmpty: boolean
     }>
-  >((acc, node) => {
+  >((acc, node, nodeIndex) => {
     const tokens = sourceCode.getTokens(node)
     const openBrace = tokens.find(token => isPunctuator(token, '{'))
     const closeBrace = tokens.find(token => isPunctuator(token, '}'))
@@ -101,15 +104,15 @@ function getFix(
       identifiers: sourceCode.text
         .slice(openBrace.range[1], closeBrace.range[0])
         .split(','), // Split the text into separate identifiers (retaining any whitespace before or after)
-      isEmpty: !hasSpecifiers(node),
+      isEmpty: !restWithoutCommentsHasSpecifiers[nodeIndex],
     })
 
     return acc
   }, [])
 
   const unnecessaryImports = restWithoutComments.filter(
-    node =>
-      !hasSpecifiers(node) &&
+    (node, nodeIndex) =>
+      !restWithoutCommentsHasSpecifiers[nodeIndex] &&
       !hasNamespace(node) &&
       !specifiers.some(
         specifier => 'importNode' in specifier && specifier.importNode === node,
