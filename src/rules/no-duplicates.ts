@@ -60,7 +60,6 @@ function getFix(
   context: RuleContext<MessageId, [Options?]>,
 ): TSESLint.ReportFixFunction | null {
   const first = nodes[0]
-  const rest = nodes.slice(1)
 
   // Adjusting the first import might make it multiline, which could break
   // `eslint-disable-next-line` comments and similar, so bail if the first
@@ -79,6 +78,8 @@ function getFix(
   if (defaultImportNames.size > 1) {
     return null
   }
+
+  const rest = nodes.slice(1)
 
   // Leave it to the user to handle comments. Also skip `import * as ns from
   // './foo'` imports, since they cannot be merged into another import.
