@@ -82,7 +82,7 @@ function getFix(
     node => !hasProblematicComments(node, sourceCode) && !hasNamespace(node),
   )
 
-  const restWithoutCommentsHasSpecifiers =
+  const restWithoutCommentsAndNamespacesHasSpecifiers =
     restWithoutCommentsAndNamespaces.map(hasSpecifiers)
 
   const specifiers = restWithoutCommentsAndNamespaces.reduce<
@@ -105,7 +105,7 @@ function getFix(
       identifiers: sourceCode.text
         .slice(openBrace.range[1], closeBrace.range[0])
         .split(','), // Split the text into separate identifiers (retaining any whitespace before or after)
-      isEmpty: !restWithoutCommentsHasSpecifiers[nodeIndex],
+      isEmpty: !restWithoutCommentsAndNamespacesHasSpecifiers[nodeIndex],
     })
 
     return acc
@@ -113,10 +113,8 @@ function getFix(
 
   const unnecessaryImports = restWithoutCommentsAndNamespaces.filter(
     (node, nodeIndex) =>
-      !restWithoutCommentsHasSpecifiers[nodeIndex] &&
-      !specifiers.some(
-        specifier => 'importNode' in specifier && specifier.importNode === node,
-      ),
+      !restWithoutCommentsAndNamespacesHasSpecifiers[nodeIndex] &&
+      !specifiers.some(specifier => specifier.importNode === node),
   )
 
   const shouldAddSpecifiers = specifiers.length > 0
@@ -202,7 +200,7 @@ function getFix(
 
     const fixes = []
 
-    if (shouldAddDefault() && openBrace == null && shouldAddSpecifiers) {
+    if (openBrace == null && shouldAddSpecifiers && shouldAddDefault()) {
       // `import './foo'` → `import def, {...} from './foo'`
       fixes.push(
         fixer.insertTextAfter(
@@ -211,22 +209,26 @@ function getFix(
         ),
       )
     } else if (
-      shouldAddDefault() &&
       openBrace == null &&
-      !shouldAddSpecifiers
+      !shouldAddSpecifiers &&
+      shouldAddDefault()
     ) {
       // `import './foo'` → `import def from './foo'`
       fixes.push(
         fixer.insertTextAfter(firstToken, ` ${defaultImportName} from`),
       )
-    } else if (shouldAddDefault() && openBrace != null && closeBrace != null) {
+    } else if (openBrace != null && closeBrace != null && shouldAddDefault()) {
       // `import {...} from './foo'` → `import def, {...} from './foo'`
       fixes.push(fixer.insertTextAfter(firstToken, ` ${defaultImportName},`))
       if (shouldAddSpecifiers) {
         // `import def, {...} from './foo'` → `import def, {..., ...} from './foo'`
         fixes.push(fixer.insertTextBefore(closeBrace, specifiersText))
       }
-    } else if (!shouldAddDefault && openBrace == null && shouldAddSpecifiers) {
+    } else if (
+      openBrace == null &&
+      shouldAddSpecifiers &&
+      !shouldAddDefault()
+    ) {
       if (first.specifiers.length === 0) {
         // `import './foo'` → `import {...} from './foo'`
         fixes.push(
@@ -238,7 +240,7 @@ function getFix(
           fixer.insertTextAfter(first.specifiers[0], `, {${specifiersText}}`),
         )
       }
-    } else if (!shouldAddDefault && openBrace != null && closeBrace != null) {
+    } else if (openBrace != null && closeBrace != null && !shouldAddDefault()) {
       // `import {...} './foo'` → `import {..., ...} from './foo'`
       fixes.push(fixer.insertTextBefore(closeBrace, specifiersText))
     }
