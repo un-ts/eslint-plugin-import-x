@@ -81,25 +81,31 @@ function getFix(
     node => !hasProblematicComments(node, sourceCode) && !hasNamespace(node),
   )
 
-  const specifiers = restWithoutComments
-    .map(node => {
-      const tokens = sourceCode.getTokens(node)
-      const openBrace = tokens.find(token => isPunctuator(token, '{'))
-      const closeBrace = tokens.find(token => isPunctuator(token, '}'))
+  const specifiers = restWithoutComments.reduce<
+    Array<{
+      importNode: TSESTree.ImportDeclaration
+      identifiers: string[]
+      isEmpty: boolean
+    }>
+  >((acc, node) => {
+    const tokens = sourceCode.getTokens(node)
+    const openBrace = tokens.find(token => isPunctuator(token, '{'))
+    const closeBrace = tokens.find(token => isPunctuator(token, '}'))
 
-      if (openBrace == null || closeBrace == null) {
-        return
-      }
+    if (openBrace == null || closeBrace == null) {
+      return acc
+    }
 
-      return {
-        importNode: node,
-        identifiers: sourceCode.text
-          .slice(openBrace.range[1], closeBrace.range[0])
-          .split(','), // Split the text into separate identifiers (retaining any whitespace before or after)
-        isEmpty: !hasSpecifiers(node),
-      }
+    acc.push({
+      importNode: node,
+      identifiers: sourceCode.text
+        .slice(openBrace.range[1], closeBrace.range[0])
+        .split(','), // Split the text into separate identifiers (retaining any whitespace before or after)
+      isEmpty: !hasSpecifiers(node),
     })
-    .filter(Boolean)
+
+    return acc
+  }, [])
 
   const unnecessaryImports = restWithoutComments.filter(
     node =>
