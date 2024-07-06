@@ -422,15 +422,19 @@ export = createRule<[Options?], MessageId>({
 
     function getImportMap(n: TSESTree.ImportDeclaration) {
       const parent = n.parent!
-      if (!moduleMaps.has(parent)) {
-        moduleMaps.set(parent, {
+      let map
+      if (moduleMaps.has(parent)) {
+        map = moduleMaps.get(parent)!
+      } else {
+        map = {
           imported: new Map(),
           nsImported: new Map(),
           defaultTypesImported: new Map(),
           namedTypesImported: new Map(),
-        })
+        }
+        moduleMaps.set(parent, map)
       }
-      const map = moduleMaps.get(parent)!
+
       if (!preferInline && n.importKind === 'type') {
         return n.specifiers.length > 0 &&
           n.specifiers[0].type === 'ImportDefaultSpecifier'
