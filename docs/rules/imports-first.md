@@ -6,4 +6,4 @@
 
 <!-- end auto-generated rule header -->
 
-This rule was **deprecated** in eslint-plugin-import v2.0.0. Please use the corresponding rule [`first`](https://github.com/import-js/eslint-plugin-import/blob/HEAD/docs/rules/first.md).
+This rule was **deprecated** in eslint-plugin-import v2.0.0. Please use the corresponding rule [`first`](https://github.com/un-ts/eslint-plugin-import-x/blob/HEAD/docs/rules/first.md).
