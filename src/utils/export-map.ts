@@ -131,7 +131,7 @@ export class ExportMap {
 
   static parse(filepath: string, content: string, context: ChildContext) {
     const m = new ExportMap(filepath)
-    const isEsModuleInteropTrue = isEsModuleInterop()
+    const isEsModuleInteropTrue = lazy(isEsModuleInterop);
 
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
@@ -405,8 +405,11 @@ export class ExportMap {
       let tsconfigRootDir = parserOptions.tsconfigRootDir
       const project = parserOptions.project
       const cacheKey = stableHash({ tsconfigRootDir, project });
-      let tsConfig = tsconfigCache.get(cacheKey)
-      if (tsConfig === undefined) {
+      let tsConfig: TsConfigJsonResolved | null;
+
+      if (tsconfigCache.has(cacheKey)) {
+        tsConfig = tsconfigCache.get(cacheKey)!
+      } else {
         tsconfigRootDir = tsconfigRootDir || process.cwd()
         let tsconfigResult
         if (project) {
@@ -428,9 +431,7 @@ export class ExportMap {
         tsconfigCache.set(cacheKey, tsConfig)
       }
 
-      return tsConfig && tsConfig.compilerOptions
-        ? tsConfig.compilerOptions.esModuleInterop
-        : false
+      return tsConfig?.compilerOptions?.esModuleInterop ?? false
     }
 
     for (const n of ast.body) {
@@ -517,7 +518,7 @@ export class ExportMap {
       }
 
       const exports = ['TSExportAssignment']
-      if (isEsModuleInteropTrue) {
+      if (isEsModuleInteropTrue()) {
         exports.push('TSNamespaceExportDeclaration')
       }
 
@@ -581,7 +582,7 @@ export class ExportMap {
         }
 
         if (
-          isEsModuleInteropTrue && // esModuleInterop is on in tsconfig
+          isEsModuleInteropTrue() && // esModuleInterop is on in tsconfig
           !m.namespace.has('default') // and default isn't added already
         ) {
           m.namespace.set('default', {}) // add default export
@@ -654,7 +655,7 @@ export class ExportMap {
     }
 
     if (
-      isEsModuleInteropTrue && // esModuleInterop is on in tsconfig
+      isEsModuleInteropTrue() && // esModuleInterop is on in tsconfig
       m.namespace.size > 0 && // anything is exported
       !m.namespace.has('default') // and default isn't added already
     ) {
