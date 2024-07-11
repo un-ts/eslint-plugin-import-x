@@ -5,6 +5,7 @@
 import type { DeclarationMetadata, ModuleOptions } from '../utils'
 import {
   ExportMap,
+  StronglyConnectedComponents,
   isExternalModule,
   createRule,
   moduleVisitor,
@@ -87,6 +88,8 @@ export = createRule<[Options?], MessageId>({
       options.ignoreExternal &&
       isExternalModule(name, resolve(name, context)!, context)
 
+    const scc = StronglyConnectedComponents.get(filename, context);
+
     return {
       ...moduleVisitor(function checkSourceValue(sourceNode, importer) {
         if (ignoreModule(sourceNode.value)) {
@@ -124,6 +127,18 @@ export = createRule<[Options?], MessageId>({
 
         if (imported.path === filename) {
           return // no-self-import territory
+        }
+
+        /* If we're in the same Strongly Connected Component,
+         * Then there exists a path from each node in the SCC to every other node in the SCC,
+         * Then there exists at least one path from them to us and from us to them,
+         * Then we have a cycle between us.
+         */
+        if (scc) {
+          const hasDependencyCycle = scc[filename] === scc[imported.path];
+          if (!hasDependencyCycle) {
+            return;
+          }
         }
 
         const untraversed: Traverser[] = [{ mget: () => imported, route: [] }]
