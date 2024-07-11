@@ -56,6 +56,17 @@ export type ModuleImport = {
   declarations: Set<DeclarationMetadata>
 }
 
+const declTypes = new Set([
+  'VariableDeclaration',
+  'ClassDeclaration',
+  'TSDeclareFunction',
+  'TSEnumDeclaration',
+  'TSTypeAliasDeclaration',
+  'TSInterfaceDeclaration',
+  'TSAbstractClassDeclaration',
+  'TSModuleDeclaration',
+])
+
 export class ExportMap {
   static for(context: ChildContext) {
     const filepath = context.path
@@ -522,17 +533,6 @@ export class ExportMap {
                   n.expression.id &&
                   n.expression.id.name))) ||
             null
-
-        const declTypes = new Set([
-          'VariableDeclaration',
-          'ClassDeclaration',
-          'TSDeclareFunction',
-          'TSEnumDeclaration',
-          'TSTypeAliasDeclaration',
-          'TSInterfaceDeclaration',
-          'TSAbstractClassDeclaration',
-          'TSModuleDeclaration',
-        ])
 
         const getRoot = (
           node: TSESTree.TSQualifiedName,
