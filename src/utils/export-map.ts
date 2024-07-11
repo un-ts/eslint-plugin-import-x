@@ -666,9 +666,14 @@ export class ExportMap {
       m.namespace.set('default', {}) // add default export
     }
 
-    if (unambiguouslyESM()) {
-      m.parseGoal = 'Module'
-    }
+    const prevParseGoal = m.parseGoal;
+    defineLazyProperty(m, 'parseGoal', () => {
+      if (prevParseGoal !== 'Module' && unambiguouslyESM()) {
+        return 'Module'
+      }
+      return prevParseGoal
+    })
+
     return m
   }
 
