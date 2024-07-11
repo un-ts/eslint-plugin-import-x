@@ -382,7 +382,7 @@ export class ExportMap {
       return getter
     }
 
-    const source = makeSourceCode(content, ast)
+    const source = new SourceCode({ text: content, ast: ast as AST.Program })
 
     function isEsModuleInterop() {
       const parserOptions = context.parserOptions || {}
@@ -1127,17 +1127,4 @@ function makeContextCacheKey(context: RuleContext | ChildContext) {
   )
 
   return hash
-}
-
-/**
- * sometimes legacy support isn't _that_ hard... right?
- */
-function makeSourceCode(text: string, ast: TSESTree.Program) {
-  if (SourceCode.length > 1) {
-    // ESLint 3
-    return new SourceCode(text, ast as AST.Program)
-  }
-
-  // ESLint 4+
-  return new SourceCode({ text, ast: ast as AST.Program })
 }
