@@ -47,7 +47,11 @@ export function getFileExtensions(settings: PluginSettings) {
 
 // In ExportMap.for, ignore() is called after hasValidExtension() check.
 // Add an argument to skip the check
-export function ignore(filepath: string, context: ChildContext | RuleContext, skipExtensionCheck = false) {
+export function ignore(
+  filepath: string,
+  context: ChildContext | RuleContext,
+  skipExtensionCheck = false,
+) {
   // check extension whitelist first (cheap)
   if (!skipExtensionCheck && !hasValidExtension(filepath, context)) {
     return true

@@ -23,11 +23,11 @@ import type {
 import { getValue } from './get-value'
 import { hashObject } from './hash'
 import { hasValidExtension, ignore } from './ignore'
+import { lazy } from './lazy-value'
 import { parse } from './parse'
 import { relative, resolve } from './resolve'
 import { isMaybeUnambiguousModule, isUnambiguousModule } from './unambiguous'
 import { visit } from './visit'
-import { lazy } from './lazy-value'
 
 const log = debug('eslint-plugin-import-x:ExportMap')
 
@@ -63,7 +63,7 @@ export class ExportMap {
     const cacheKey = context.cacheKey || hashObject(context).digest('hex')
     let exportMap = exportCache.get(cacheKey)
 
-    const stats = lazy(() => fs.statSync(context.path));
+    const stats = lazy(() => fs.statSync(context.path))
 
     if (exportCache.has(cacheKey)) {
       const exportMap = exportCache.get(cacheKey)
@@ -73,9 +73,12 @@ export class ExportMap {
         return null
       }
 
-      // check if cached map has expired
-      if (exportMap != null && exportMap.mtime.valueOf() - stats().mtime.valueOf() === 0) {
-        return exportMap;
+      // check if the file has been modified since cached exportmap generation
+      if (
+        exportMap != null &&
+        exportMap.mtime.valueOf() - stats().mtime.valueOf() === 0
+      ) {
+        return exportMap
       }
 
       // future: check content equality?
@@ -107,7 +110,7 @@ export class ExportMap {
     exportMap = ExportMap.parse(filepath, content, context)
 
     // ambiguous modules return null
-    if (exportMap == null) {
+    if (exportMap === null) {
       log('ignored path due to ambiguous parse:', filepath)
       exportCache.set(cacheKey, null)
       return null
@@ -131,12 +134,12 @@ export class ExportMap {
 
   static parse(filepath: string, content: string, context: ChildContext) {
     const m = new ExportMap(filepath)
-    const isEsModuleInteropTrue = lazy(isEsModuleInterop);
+    const isEsModuleInteropTrue = lazy(isEsModuleInterop)
 
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
     try {
-      ; ({ ast, visitorKeys } = parse(filepath, content, context))
+      ;({ ast, visitorKeys } = parse(filepath, content, context))
     } catch (error) {
       m.errors.push(error as ParseError)
       return m // can't continue
@@ -404,8 +407,8 @@ export class ExportMap {
       const parserOptions = context.parserOptions || {}
       let tsconfigRootDir = parserOptions.tsconfigRootDir
       const project = parserOptions.project
-      const cacheKey = stableHash({ tsconfigRootDir, project });
-      let tsConfig: TsConfigJsonResolved | null;
+      const cacheKey = stableHash({ tsconfigRootDir, project })
+      let tsConfig: TsConfigJsonResolved | null
 
       if (tsconfigCache.has(cacheKey)) {
         tsConfig = tsconfigCache.get(cacheKey)!
@@ -527,17 +530,17 @@ export class ExportMap {
         const exportedName =
           n.type === 'TSNamespaceExportDeclaration'
             ? (
-              n.id ||
-              // @ts-expect-error - legacy parser type
-              n.name
-            ).name
+                n.id ||
+                // @ts-expect-error - legacy parser type
+                n.name
+              ).name
             : ('expression' in n &&
-              n.expression &&
-              (('name' in n.expression && n.expression.name) ||
-                ('id' in n.expression &&
-                  n.expression.id &&
-                  n.expression.id.name))) ||
-            null
+                n.expression &&
+                (('name' in n.expression && n.expression.name) ||
+                  ('id' in n.expression &&
+                    n.expression.id &&
+                    n.expression.id.name))) ||
+              null
 
         const declTypes = new Set([
           'VariableDeclaration',
@@ -567,7 +570,7 @@ export class ExportMap {
               ('name' in node.id
                 ? node.id.name === exportedName
                 : 'left' in node.id &&
-                getRoot(node.id).name === exportedName)) ||
+                  getRoot(node.id).name === exportedName)) ||
               ('declarations' in node &&
                 node.declarations.find(
                   d => 'name' in d.id && d.id.name === exportedName,
@@ -699,7 +702,7 @@ export class ExportMap {
 
   declare doc: Annotation
 
-  constructor(public path: string) { }
+  constructor(public path: string) {}
 
   get hasDefault() {
     return this.get('default') != null
