@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 3.0.1
+
+### Patch Changes
+
+- [#109](https://github.com/un-ts/eslint-plugin-import-x/pull/109) [`fe3121a`](https://github.com/un-ts/eslint-plugin-import-x/commit/fe3121a2d74db1c2178d1ab189ef59b80c5b90c4) Thanks [@SukkaW](https://github.com/SukkaW)! - Make `eslint-plugin-import-x` overall faster by refactoring the `ExportMap` util
+
+- [#111](https://github.com/un-ts/eslint-plugin-import-x/pull/111) [`5cce946`](https://github.com/un-ts/eslint-plugin-import-x/commit/5cce9461c2863c31af126afb7c59d67deb13a6e7) Thanks [@SukkaW](https://github.com/SukkaW)! - Drastically improve `no-cycle`'s performance by skipping unnecessary BFSes using [Tarjan's SCC](https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm).
+
+- [#109](https://github.com/un-ts/eslint-plugin-import-x/pull/109) [`fe3121a`](https://github.com/un-ts/eslint-plugin-import-x/commit/fe3121a2d74db1c2178d1ab189ef59b80c5b90c4) Thanks [@SukkaW](https://github.com/SukkaW)! - Make `no-cycle` rule faster
+
 ## 3.0.0
 
 ### Major Changes
