@@ -45,9 +45,11 @@ export function getFileExtensions(settings: PluginSettings) {
   return exts
 }
 
-export function ignore(filepath: string, context: ChildContext | RuleContext) {
+// In ExportMap.for, ignore() is called after hasValidExtension() check.
+// Add an argument to skip the check
+export function ignore(filepath: string, context: ChildContext | RuleContext, skipExtensionCheck = false) {
   // check extension whitelist first (cheap)
-  if (!hasValidExtension(filepath, context)) {
+  if (!skipExtensionCheck && !hasValidExtension(filepath, context)) {
     return true
   }
 
@@ -57,7 +59,8 @@ export function ignore(filepath: string, context: ChildContext | RuleContext) {
     return false
   }
 
-  for (const ignoreString of ignoreStrings) {
+  for (let i = 0, len = ignoreStrings.length; i < len; i++) {
+    const ignoreString = ignoreStrings[i]
     const regex = new RegExp(ignoreString)
     if (regex.test(filepath)) {
       log(`ignoring ${filepath}, matched pattern /${ignoreString}/`)
