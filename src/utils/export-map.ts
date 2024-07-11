@@ -75,7 +75,7 @@ export class ExportMap {
       // check if the file has been modified since cached exportmap generation
       if (
         exportMap != null &&
-        exportMap.mtime.valueOf() - stats().mtime.valueOf() === 0
+        exportMap.mtime - stats().mtime.valueOf() === 0
       ) {
         return exportMap
       }
@@ -115,7 +115,7 @@ export class ExportMap {
       return null
     }
 
-    exportMap.mtime = stats().mtime
+    exportMap.mtime = stats().mtime.valueOf();
 
     exportCache.set(cacheKey, exportMap)
 
@@ -699,7 +699,7 @@ export class ExportMap {
 
   declare visitorKeys: TSESLint.SourceCode.VisitorKeys | null
 
-  private declare mtime: Date
+  private declare mtime: number
 
   declare doc: Annotation | undefined
 
