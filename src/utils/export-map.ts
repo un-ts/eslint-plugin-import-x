@@ -404,10 +404,7 @@ export class ExportMap {
       const parserOptions = context.parserOptions || {}
       let tsconfigRootDir = parserOptions.tsconfigRootDir
       const project = parserOptions.project
-      const cacheKey = hashObject({
-        tsconfigRootDir,
-        project,
-      }).digest('hex')
+      const cacheKey = stableHash({ tsconfigRootDir, project });
       let tsConfig = tsconfigCache.get(cacheKey)
       if (tsConfig === undefined) {
         tsconfigRootDir = tsconfigRootDir || process.cwd()
