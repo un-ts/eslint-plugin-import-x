@@ -88,7 +88,7 @@ export = createRule<[Options?], MessageId>({
       options.ignoreExternal &&
       isExternalModule(name, resolve(name, context)!, context)
 
-    const scc = StronglyConnectedComponents.get(filename, context);
+    const scc = StronglyConnectedComponents.get(filename, context)
 
     return {
       ...moduleVisitor(function checkSourceValue(sourceNode, importer) {
@@ -135,9 +135,9 @@ export = createRule<[Options?], MessageId>({
          * Then we have a cycle between us.
          */
         if (scc) {
-          const hasDependencyCycle = scc[filename] === scc[imported.path];
+          const hasDependencyCycle = scc[filename] === scc[imported.path]
           if (!hasDependencyCycle) {
-            return;
+            return
           }
         }
 
