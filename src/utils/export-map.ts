@@ -22,7 +22,7 @@ import type {
 
 import { getValue } from './get-value'
 import { hasValidExtension, ignore } from './ignore'
-import { lazy } from './lazy-value'
+import { lazy, defineLazyProperty } from './lazy-value'
 import { parse } from './parse'
 import { relative, resolve } from './resolve'
 import { isMaybeUnambiguousModule, isUnambiguousModule } from './unambiguous'
@@ -62,7 +62,7 @@ export class ExportMap {
     const cacheKey = context.cacheKey
     let exportMap = exportCache.get(cacheKey)
 
-    const stats = lazy(() => fs.statSync(context.path))
+    const stats = lazy(() => fs.statSync(filepath))
 
     if (exportCache.has(cacheKey)) {
       const exportMap = exportCache.get(cacheKey)
@@ -138,7 +138,7 @@ export class ExportMap {
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
     try {
-      ;({ ast, visitorKeys } = parse(filepath, content, context))
+      ; ({ ast, visitorKeys } = parse(filepath, content, context))
     } catch (error) {
       m.errors.push(error as ParseError)
       return m // can't continue
@@ -187,9 +187,10 @@ export class ExportMap {
       },
     })
 
-    const unambiguouslyESM = isUnambiguousModule(ast)
-    if (!unambiguouslyESM && !hasDynamicImports) {
-      return null
+    const unambiguouslyESM = lazy(() => isUnambiguousModule(ast))
+
+    if (!hasDynamicImports && !unambiguouslyESM()) {
+      return null;
     }
 
     const docStyles = (context.settings &&
@@ -199,25 +200,6 @@ export class ExportMap {
 
     for (const style of docStyles) {
       docStyleParsers[style] = availableDocStyleParsers[style]
-    }
-
-    // attempt to collect module doc
-    if (ast.comments) {
-      ast.comments.some(c => {
-        if (c.type !== 'Block') {
-          return false
-        }
-        try {
-          const doc = doctrine.parse(c.value, { unwrap: true })
-          if (doc.tags.some(t => t.title === 'module')) {
-            m.doc = doc
-            return true
-          }
-        } catch {
-          /* ignore */
-        }
-        return false
-      })
     }
 
     const namespaces = new Map</* identifier */ string, /* source */ string>()
@@ -529,17 +511,17 @@ export class ExportMap {
         const exportedName =
           n.type === 'TSNamespaceExportDeclaration'
             ? (
-                n.id ||
-                // @ts-expect-error - legacy parser type
-                n.name
-              ).name
+              n.id ||
+              // @ts-expect-error - legacy parser type
+              n.name
+            ).name
             : ('expression' in n &&
-                n.expression &&
-                (('name' in n.expression && n.expression.name) ||
-                  ('id' in n.expression &&
-                    n.expression.id &&
-                    n.expression.id.name))) ||
-              null
+              n.expression &&
+              (('name' in n.expression && n.expression.name) ||
+                ('id' in n.expression &&
+                  n.expression.id &&
+                  n.expression.id.name))) ||
+            null
 
         const declTypes = new Set([
           'VariableDeclaration',
@@ -569,7 +551,7 @@ export class ExportMap {
               ('name' in node.id
                 ? node.id.name === exportedName
                 : 'left' in node.id &&
-                  getRoot(node.id).name === exportedName)) ||
+                getRoot(node.id).name === exportedName)) ||
               ('declarations' in node &&
                 node.declarations.find(
                   d => 'name' in d.id && d.id.name === exportedName,
@@ -656,6 +638,27 @@ export class ExportMap {
       }
     }
 
+    // attempt to collect module doc
+    defineLazyProperty(m, 'doc', () => {
+      if (ast.comments) {
+        for (let i = 0, len = ast.comments.length; i < len; i++) {
+          const c = ast.comments[i]
+          if (c.type !== 'Block') {
+            continue
+          }
+          try {
+            const doc = doctrine.parse(c.value, { unwrap: true })
+            if (doc.tags.some(t => t.title === 'module')) {
+              return doc
+              break
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    })
+
     if (
       isEsModuleInteropTrue() && // esModuleInterop is on in tsconfig
       m.namespace.size > 0 && // anything is exported
@@ -664,7 +667,7 @@ export class ExportMap {
       m.namespace.set('default', {}) // add default export
     }
 
-    if (unambiguouslyESM) {
+    if (unambiguouslyESM()) {
       m.parseGoal = 'Module'
     }
     return m
@@ -699,9 +702,9 @@ export class ExportMap {
 
   private declare mtime: Date
 
-  declare doc: Annotation
+  declare doc: Annotation | undefined
 
-  constructor(public path: string) {}
+  constructor(public path: string) { }
 
   get hasDefault() {
     return this.get('default') != null
