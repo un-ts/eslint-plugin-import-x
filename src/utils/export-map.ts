@@ -27,6 +27,7 @@ import { parse } from './parse'
 import { relative, resolve } from './resolve'
 import { isMaybeUnambiguousModule, isUnambiguousModule } from './unambiguous'
 import { visit } from './visit'
+import { lazy } from './lazy-value'
 
 const log = debug('eslint-plugin-import-x:ExportMap')
 
@@ -58,8 +59,7 @@ export type ModuleImport = {
 
 export class ExportMap {
   static for(context: ChildContext) {
-    const { path: filepath } = context
-
+    const filepath = context.path
     const cacheKey = context.cacheKey || hashObject(context).digest('hex')
     let exportMap = exportCache.get(cacheKey)
 
@@ -68,13 +68,14 @@ export class ExportMap {
       return null
     }
 
-    const stats = fs.statSync(context.path)
-    if (
-      exportMap != null && // date equality check
-      exportMap.mtime.valueOf() - stats.mtime.valueOf() === 0
-    ) {
-      return exportMap
+    const stats = lazy(() => fs.statSync(context.path));
+
+    if (exportMap != null) {
+      if (exportMap.mtime.valueOf() - stats().mtime.valueOf() === 0) {
+        return exportMap
+      }
     }
+
     // future: check content equality?
 
     // check valid extensions first
@@ -109,7 +110,7 @@ export class ExportMap {
       return null
     }
 
-    exportMap.mtime = stats.mtime
+    exportMap.mtime = stats().mtime
 
     exportCache.set(cacheKey, exportMap)
 
@@ -1090,7 +1091,7 @@ function childContext(
   const { settings, parserOptions, parserPath, languageOptions } = context
 
   return {
-    cacheKey: makeContextCacheKey(context) + String(path),
+    cacheKey: makeContextCacheKey(context) + path,
     settings,
     parserOptions,
     parserPath,

@@ -12,11 +12,11 @@ import {
   resolve,
 } from '../utils'
 
-interface Options extends ModuleOptions {
+type Options = {
   allowUnsafeDynamicCyclicDependency?: boolean
   ignoreExternal?: boolean
   maxDepth?: number
-}
+} & ModuleOptions
 
 type MessageId = 'cycle'
 
@@ -84,7 +84,8 @@ export = createRule<[Options?], MessageId>({
         : Number.POSITIVE_INFINITY
 
     const ignoreModule = options.ignoreExternal
-      ? (name: string) => isExternalModule(name, resolve(name, context)!, context)
+      ? (name: string) =>
+          isExternalModule(name, resolve(name, context)!, context)
       : () => false
 
     return {
