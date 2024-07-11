@@ -45,10 +45,8 @@ export class ModuleCache {
 
     // parse infinity
     if (
-      (['∞', 'Infinity'] as const).includes(
-        // @ts-expect-error - TS can't narrow properly from `includes`
-        cacheSettings.lifetime,
-      )
+      typeof cacheSettings.lifetime === 'string' &&
+      (['∞', 'Infinity'] as const).includes(cacheSettings.lifetime)
     ) {
       cacheSettings.lifetime = Number.POSITIVE_INFINITY
     }
