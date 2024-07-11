@@ -21,7 +21,6 @@ import type {
 } from '../types'
 
 import { getValue } from './get-value'
-import { hashObject } from './hash'
 import { hasValidExtension, ignore } from './ignore'
 import { lazy } from './lazy-value'
 import { parse } from './parse'
@@ -60,7 +59,7 @@ export type ModuleImport = {
 export class ExportMap {
   static for(context: ChildContext) {
     const filepath = context.path
-    const cacheKey = context.cacheKey || hashObject(context).digest('hex')
+    const cacheKey = context.cacheKey
     let exportMap = exportCache.get(cacheKey)
 
     const stats = lazy(() => fs.statSync(context.path))

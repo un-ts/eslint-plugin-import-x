@@ -10,9 +10,9 @@ import type {
   RuleContext,
 } from '../types'
 
-import { hashObject } from './hash'
 import { ModuleCache } from './module-cache'
 import { pkgDir } from './pkg-dir'
+import stableHash from 'stable-hash'
 
 export type ResultNotFound = {
   found: false
@@ -139,7 +139,7 @@ function fullResolve(
   const sourceDir = path.dirname(sourceFile)
 
   if (prevSettings !== settings) {
-    memoizedHash = hashObject(settings).digest('hex')
+    memoizedHash = stableHash(settings)
     prevSettings = settings
   }
 
