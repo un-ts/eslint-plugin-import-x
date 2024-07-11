@@ -2,6 +2,8 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
+import stableHash from 'stable-hash'
+
 import type {
   Arrayable,
   ImportResolver,
@@ -10,7 +12,6 @@ import type {
   RuleContext,
 } from '../types'
 
-import { hashObject } from './hash'
 import { ModuleCache } from './module-cache'
 import { pkgDir } from './pkg-dir'
 
@@ -139,7 +140,7 @@ function fullResolve(
   const sourceDir = path.dirname(sourceFile)
 
   if (prevSettings !== settings) {
-    memoizedHash = hashObject(settings).digest('hex')
+    memoizedHash = stableHash(settings)
     prevSettings = settings
   }
 

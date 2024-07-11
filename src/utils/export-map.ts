@@ -21,8 +21,8 @@ import type {
 } from '../types'
 
 import { getValue } from './get-value'
-import { hashObject } from './hash'
 import { hasValidExtension, ignore } from './ignore'
+import { lazy, defineLazyProperty } from './lazy-value'
 import { parse } from './parse'
 import { relative, resolve } from './resolve'
 import { isMaybeUnambiguousModule, isUnambiguousModule } from './unambiguous'
@@ -56,26 +56,43 @@ export type ModuleImport = {
   declarations: Set<DeclarationMetadata>
 }
 
+const declTypes = new Set([
+  'VariableDeclaration',
+  'ClassDeclaration',
+  'TSDeclareFunction',
+  'TSEnumDeclaration',
+  'TSTypeAliasDeclaration',
+  'TSInterfaceDeclaration',
+  'TSAbstractClassDeclaration',
+  'TSModuleDeclaration',
+])
+
 export class ExportMap {
   static for(context: ChildContext) {
-    const { path: filepath } = context
-
-    const cacheKey = context.cacheKey || hashObject(context).digest('hex')
+    const filepath = context.path
+    const cacheKey = context.cacheKey
     let exportMap = exportCache.get(cacheKey)
 
-    // return cached ignore
-    if (exportMap === null) {
-      return null
-    }
+    const stats = lazy(() => fs.statSync(filepath))
 
-    const stats = fs.statSync(context.path)
-    if (
-      exportMap != null && // date equality check
-      exportMap.mtime.valueOf() - stats.mtime.valueOf() === 0
-    ) {
-      return exportMap
+    if (exportCache.has(cacheKey)) {
+      const exportMap = exportCache.get(cacheKey)
+
+      // return cached ignore
+      if (exportMap === null) {
+        return null
+      }
+
+      // check if the file has been modified since cached exportmap generation
+      if (
+        exportMap != null &&
+        exportMap.mtime - stats().mtime.valueOf() === 0
+      ) {
+        return exportMap
+      }
+
+      // future: check content equality?
     }
-    // future: check content equality?
 
     // check valid extensions first
     if (!hasValidExtension(filepath, context)) {
@@ -84,7 +101,7 @@ export class ExportMap {
     }
 
     // check for and cache ignore
-    if (ignore(filepath, context)) {
+    if (ignore(filepath, context, true)) {
       log('ignored path due to ignore settings:', filepath)
       exportCache.set(cacheKey, null)
       return null
@@ -103,13 +120,13 @@ export class ExportMap {
     exportMap = ExportMap.parse(filepath, content, context)
 
     // ambiguous modules return null
-    if (exportMap == null) {
+    if (exportMap === null) {
       log('ignored path due to ambiguous parse:', filepath)
       exportCache.set(cacheKey, null)
       return null
     }
 
-    exportMap.mtime = stats.mtime
+    exportMap.mtime = stats().mtime.valueOf()
 
     exportCache.set(cacheKey, exportMap)
 
@@ -127,7 +144,7 @@ export class ExportMap {
 
   static parse(filepath: string, content: string, context: ChildContext) {
     const m = new ExportMap(filepath)
-    const isEsModuleInteropTrue = isEsModuleInterop()
+    const isEsModuleInteropTrue = lazy(isEsModuleInterop)
 
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
@@ -181,8 +198,9 @@ export class ExportMap {
       },
     })
 
-    const unambiguouslyESM = isUnambiguousModule(ast)
-    if (!unambiguouslyESM && !hasDynamicImports) {
+    const unambiguouslyESM = lazy(() => isUnambiguousModule(ast))
+
+    if (!hasDynamicImports && !unambiguouslyESM()) {
       return null
     }
 
@@ -193,25 +211,6 @@ export class ExportMap {
 
     for (const style of docStyles) {
       docStyleParsers[style] = availableDocStyleParsers[style]
-    }
-
-    // attempt to collect module doc
-    if (ast.comments) {
-      ast.comments.some(c => {
-        if (c.type !== 'Block') {
-          return false
-        }
-        try {
-          const doc = doctrine.parse(c.value, { unwrap: true })
-          if (doc.tags.some(t => t.title === 'module')) {
-            m.doc = doc
-            return true
-          }
-        } catch {
-          /* ignore */
-        }
-        return false
-      })
     }
 
     const namespaces = new Map</* identifier */ string, /* source */ string>()
@@ -394,18 +393,18 @@ export class ExportMap {
       return getter
     }
 
-    const source = makeSourceCode(content, ast)
+    const source = new SourceCode({ text: content, ast: ast as AST.Program })
 
     function isEsModuleInterop() {
       const parserOptions = context.parserOptions || {}
       let tsconfigRootDir = parserOptions.tsconfigRootDir
       const project = parserOptions.project
-      const cacheKey = hashObject({
-        tsconfigRootDir,
-        project,
-      }).digest('hex')
-      let tsConfig = tsconfigCache.get(cacheKey)
-      if (tsConfig === undefined) {
+      const cacheKey = stableHash({ tsconfigRootDir, project })
+      let tsConfig: TsConfigJsonResolved | null
+
+      if (tsconfigCache.has(cacheKey)) {
+        tsConfig = tsconfigCache.get(cacheKey)!
+      } else {
         tsconfigRootDir = tsconfigRootDir || process.cwd()
         let tsconfigResult
         if (project) {
@@ -427,9 +426,7 @@ export class ExportMap {
         tsconfigCache.set(cacheKey, tsConfig)
       }
 
-      return tsConfig && tsConfig.compilerOptions
-        ? tsConfig.compilerOptions.esModuleInterop
-        : false
+      return tsConfig?.compilerOptions?.esModuleInterop ?? false
     }
 
     for (const n of ast.body) {
@@ -516,7 +513,7 @@ export class ExportMap {
       }
 
       const exports = ['TSExportAssignment']
-      if (isEsModuleInteropTrue) {
+      if (isEsModuleInteropTrue()) {
         exports.push('TSNamespaceExportDeclaration')
       }
 
@@ -536,17 +533,6 @@ export class ExportMap {
                     n.expression.id &&
                     n.expression.id.name))) ||
               null
-
-        const declTypes = new Set([
-          'VariableDeclaration',
-          'ClassDeclaration',
-          'TSDeclareFunction',
-          'TSEnumDeclaration',
-          'TSTypeAliasDeclaration',
-          'TSInterfaceDeclaration',
-          'TSAbstractClassDeclaration',
-          'TSModuleDeclaration',
-        ])
 
         const getRoot = (
           node: TSESTree.TSQualifiedName,
@@ -580,7 +566,7 @@ export class ExportMap {
         }
 
         if (
-          isEsModuleInteropTrue && // esModuleInterop is on in tsconfig
+          isEsModuleInteropTrue() && // esModuleInterop is on in tsconfig
           !m.namespace.has('default') // and default isn't added already
         ) {
           m.namespace.set('default', {}) // add default export
@@ -652,17 +638,42 @@ export class ExportMap {
       }
     }
 
+    // attempt to collect module doc
+    defineLazyProperty(m, 'doc', () => {
+      if (ast.comments) {
+        for (let i = 0, len = ast.comments.length; i < len; i++) {
+          const c = ast.comments[i]
+          if (c.type !== 'Block') {
+            continue
+          }
+          try {
+            const doc = doctrine.parse(c.value, { unwrap: true })
+            if (doc.tags.some(t => t.title === 'module')) {
+              return doc
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    })
+
     if (
-      isEsModuleInteropTrue && // esModuleInterop is on in tsconfig
+      isEsModuleInteropTrue() && // esModuleInterop is on in tsconfig
       m.namespace.size > 0 && // anything is exported
       !m.namespace.has('default') // and default isn't added already
     ) {
       m.namespace.set('default', {}) // add default export
     }
 
-    if (unambiguouslyESM) {
-      m.parseGoal = 'Module'
-    }
+    const prevParseGoal = m.parseGoal
+    defineLazyProperty(m, 'parseGoal', () => {
+      if (prevParseGoal !== 'Module' && unambiguouslyESM()) {
+        return 'Module'
+      }
+      return prevParseGoal
+    })
+
     return m
   }
 
@@ -693,9 +704,9 @@ export class ExportMap {
 
   declare visitorKeys: TSESLint.SourceCode.VisitorKeys | null
 
-  private declare mtime: Date
+  private declare mtime: number
 
-  declare doc: Annotation
+  declare doc: Annotation | undefined
 
   constructor(public path: string) {}
 
@@ -914,41 +925,43 @@ function captureDoc(
   ...nodes: Array<TSESTree.Node | undefined>
 ) {
   const metadata: {
-    doc?: Annotation
+    doc?: Annotation | undefined
   } = {}
 
-  // 'some' short-circuits on first 'true'
-  nodes.some(n => {
-    if (!n) {
-      return false
-    }
-
-    try {
-      let leadingComments: TSESTree.Comment[] | undefined
-
-      // n.leadingComments is legacy `attachComments` behavior
-      if ('leadingComments' in n && Array.isArray(n.leadingComments)) {
-        leadingComments = n.leadingComments as TSESTree.Comment[]
-      } else if (n.range) {
-        leadingComments = (
-          source as unknown as TSESLint.SourceCode
-        ).getCommentsBefore(n)
+  defineLazyProperty(metadata, 'doc', () => {
+    for (let i = 0, len = nodes.length; i < len; i++) {
+      const n = nodes[i]
+      if (!n) {
+        continue
       }
 
-      if (!leadingComments || leadingComments.length === 0) {
-        return false
-      }
+      try {
+        let leadingComments: TSESTree.Comment[] | undefined
 
-      for (const parser of Object.values(docStyleParsers)) {
-        const doc = parser(leadingComments)
-        if (doc) {
-          metadata.doc = doc
+        // n.leadingComments is legacy `attachComments` behavior
+        if ('leadingComments' in n && Array.isArray(n.leadingComments)) {
+          leadingComments = n.leadingComments as TSESTree.Comment[]
+        } else if (n.range) {
+          leadingComments = (
+            source as unknown as TSESLint.SourceCode
+          ).getCommentsBefore(n)
         }
-      }
 
-      return true
-    } catch {
-      return false
+        if (!leadingComments || leadingComments.length === 0) {
+          continue
+        }
+
+        for (const parser of Object.values(docStyleParsers)) {
+          const doc = parser(leadingComments)
+          if (doc) {
+            return doc
+          }
+        }
+
+        return
+      } catch {
+        continue
+      }
     }
   })
 
@@ -964,22 +977,20 @@ const availableDocStyleParsers = {
  * parse JSDoc from leading comments
  */
 function captureJsDoc(comments: TSESTree.Comment[]) {
-  let doc: Annotation | undefined
-
   // capture XSDoc
-  for (const comment of comments) {
+
+  for (let i = comments.length - 1; i >= 0; i--) {
+    const comment = comments[i]
     // skip non-block comments
     if (comment.type !== 'Block') {
       continue
     }
     try {
-      doc = doctrine.parse(comment.value, { unwrap: true })
+      return doctrine.parse(comment.value, { unwrap: true })
     } catch {
       /* don't care, for now? maybe add to `errors?` */
     }
   }
-
-  return doc
 }
 
 /**
@@ -1090,7 +1101,7 @@ function childContext(
   const { settings, parserOptions, parserPath, languageOptions } = context
 
   return {
-    cacheKey: makeContextCacheKey(context) + String(path),
+    cacheKey: makeContextCacheKey(context) + path,
     settings,
     parserOptions,
     parserPath,
@@ -1120,17 +1131,4 @@ function makeContextCacheKey(context: RuleContext | ChildContext) {
   )
 
   return hash
-}
-
-/**
- * sometimes legacy support isn't _that_ hard... right?
- */
-function makeSourceCode(text: string, ast: TSESTree.Program) {
-  if (SourceCode.length > 1) {
-    // ESLint 3
-    return new SourceCode(text, ast as AST.Program)
-  }
-
-  // ESLint 4+
-  return new SourceCode({ text, ast: ast as AST.Program })
 }

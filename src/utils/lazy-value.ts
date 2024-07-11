@@ -16,3 +16,35 @@ export const lazy = <T>(cb: () => T): LazyValue<T> => {
 }
 
 export type LazyValue<T> = () => Readonly<T>
+
+export function defineLazyProperty<
+  ObjectType,
+  PropertyNameType extends string,
+  PropertyValueType,
+>(
+  object: ObjectType,
+  propertyName: PropertyNameType,
+  valueGetter: () => PropertyValueType,
+) {
+  const define = (value: PropertyValueType) =>
+    Object.defineProperty(object, propertyName, {
+      value,
+      enumerable: true,
+      writable: true,
+    })
+
+  Object.defineProperty(object, propertyName, {
+    configurable: true,
+    enumerable: true,
+    get() {
+      const result = valueGetter()
+      define(result)
+      return result
+    },
+    set(value) {
+      define(value)
+    },
+  })
+
+  return object
+}

@@ -43,11 +43,6 @@ export function isExternalModule(
   modulePath: string,
   context: RuleContext,
 ) {
-  if (arguments.length < 3) {
-    throw new TypeError(
-      'isExternalModule: name, path, and context are all required',
-    )
-  }
   return (
     (isModule(name) || isScoped(name)) &&
     typeTest(name, context, modulePath) === 'external'
