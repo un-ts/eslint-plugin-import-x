@@ -2,6 +2,8 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
+import stableHash from 'stable-hash'
+
 import type {
   Arrayable,
   ImportResolver,
@@ -12,7 +14,6 @@ import type {
 
 import { ModuleCache } from './module-cache'
 import { pkgDir } from './pkg-dir'
-import stableHash from 'stable-hash'
 
 export type ResultNotFound = {
   found: false

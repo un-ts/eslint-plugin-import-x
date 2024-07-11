@@ -138,7 +138,7 @@ export class ExportMap {
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
     try {
-      ; ({ ast, visitorKeys } = parse(filepath, content, context))
+      ;({ ast, visitorKeys } = parse(filepath, content, context))
     } catch (error) {
       m.errors.push(error as ParseError)
       return m // can't continue
@@ -190,7 +190,7 @@ export class ExportMap {
     const unambiguouslyESM = lazy(() => isUnambiguousModule(ast))
 
     if (!hasDynamicImports && !unambiguouslyESM()) {
-      return null;
+      return null
     }
 
     const docStyles = (context.settings &&
@@ -511,17 +511,17 @@ export class ExportMap {
         const exportedName =
           n.type === 'TSNamespaceExportDeclaration'
             ? (
-              n.id ||
-              // @ts-expect-error - legacy parser type
-              n.name
-            ).name
+                n.id ||
+                // @ts-expect-error - legacy parser type
+                n.name
+              ).name
             : ('expression' in n &&
-              n.expression &&
-              (('name' in n.expression && n.expression.name) ||
-                ('id' in n.expression &&
-                  n.expression.id &&
-                  n.expression.id.name))) ||
-            null
+                n.expression &&
+                (('name' in n.expression && n.expression.name) ||
+                  ('id' in n.expression &&
+                    n.expression.id &&
+                    n.expression.id.name))) ||
+              null
 
         const declTypes = new Set([
           'VariableDeclaration',
@@ -551,7 +551,7 @@ export class ExportMap {
               ('name' in node.id
                 ? node.id.name === exportedName
                 : 'left' in node.id &&
-                getRoot(node.id).name === exportedName)) ||
+                  getRoot(node.id).name === exportedName)) ||
               ('declarations' in node &&
                 node.declarations.find(
                   d => 'name' in d.id && d.id.name === exportedName,
@@ -650,7 +650,6 @@ export class ExportMap {
             const doc = doctrine.parse(c.value, { unwrap: true })
             if (doc.tags.some(t => t.title === 'module')) {
               return doc
-              break
             }
           } catch {
             /* ignore */
@@ -704,7 +703,7 @@ export class ExportMap {
 
   declare doc: Annotation | undefined
 
-  constructor(public path: string) { }
+  constructor(public path: string) {}
 
   get hasDefault() {
     return this.get('default') != null
@@ -921,41 +920,43 @@ function captureDoc(
   ...nodes: Array<TSESTree.Node | undefined>
 ) {
   const metadata: {
-    doc?: Annotation
+    doc?: Annotation | undefined
   } = {}
 
-  // 'some' short-circuits on first 'true'
-  nodes.some(n => {
-    if (!n) {
-      return false
-    }
-
-    try {
-      let leadingComments: TSESTree.Comment[] | undefined
-
-      // n.leadingComments is legacy `attachComments` behavior
-      if ('leadingComments' in n && Array.isArray(n.leadingComments)) {
-        leadingComments = n.leadingComments as TSESTree.Comment[]
-      } else if (n.range) {
-        leadingComments = (
-          source as unknown as TSESLint.SourceCode
-        ).getCommentsBefore(n)
+  defineLazyProperty(metadata, 'doc', () => {
+    for (let i = 0, len = nodes.length; i < len; i++) {
+      const n = nodes[i]
+      if (!n) {
+        continue
       }
 
-      if (!leadingComments || leadingComments.length === 0) {
-        return false
-      }
+      try {
+        let leadingComments: TSESTree.Comment[] | undefined
 
-      for (const parser of Object.values(docStyleParsers)) {
-        const doc = parser(leadingComments)
-        if (doc) {
-          metadata.doc = doc
+        // n.leadingComments is legacy `attachComments` behavior
+        if ('leadingComments' in n && Array.isArray(n.leadingComments)) {
+          leadingComments = n.leadingComments as TSESTree.Comment[]
+        } else if (n.range) {
+          leadingComments = (
+            source as unknown as TSESLint.SourceCode
+          ).getCommentsBefore(n)
         }
-      }
 
-      return true
-    } catch {
-      return false
+        if (!leadingComments || leadingComments.length === 0) {
+          continue
+        }
+
+        for (const parser of Object.values(docStyleParsers)) {
+          const doc = parser(leadingComments)
+          if (doc) {
+            return doc
+          }
+        }
+
+        return
+      } catch {
+        continue
+      }
     }
   })
 
