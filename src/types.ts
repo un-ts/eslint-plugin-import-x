@@ -89,11 +89,10 @@ export type ParseError = {
   column: number
 } & Error
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type CustomESTreeNode<Type extends string, T extends object = {}> = Omit<
-  TSESTree.BaseNode,
-  'type'
-> & {
+export type CustomESTreeNode<
+  Type extends string,
+  T extends object = object,
+> = Omit<TSESTree.BaseNode, 'type'> & {
   type: Type
 } & T
 

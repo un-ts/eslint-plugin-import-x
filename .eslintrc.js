@@ -23,7 +23,7 @@ module.exports = {
   },
   rules: {
     '@typescript-eslint/no-non-null-assertion': 'off',
-    '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/no-require-imports': 'off',
 
     'eslint-plugin/consistent-output': ['error', 'always'],
     'eslint-plugin/meta-property-ordering': 'error',
