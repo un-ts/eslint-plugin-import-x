@@ -1,14 +1,16 @@
 import fs from 'node:fs'
 
 import { TSESLint } from '@typescript-eslint/utils'
-// @ts-expect-error - no typings yet
-import { FlatRuleTester } from 'eslint/use-at-your-own-risk'
+import { version } from 'eslint/package.json'
+import semver from 'semver'
 
 import { test, testFilePath, parsers } from '../utils'
 
 import jsxConfig from 'eslint-plugin-import-x/config/react'
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-unused-modules'
+
+const FlatRuleTester = semver.satisfies(version, '8') ? require('eslint/use-at-your-own-risk').FlatRuleTester : require('eslint').RuleTester
 
 const ruleTester = new TSESLint.RuleTester()
 const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
