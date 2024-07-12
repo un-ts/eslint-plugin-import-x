@@ -14,9 +14,9 @@ jobs:
           - ubuntu-latest
           # - windows-latest
         node:
-          - 16
           - 18
           - 20
+          - 22
         eslint:
           - '8.56'
           - '8'
