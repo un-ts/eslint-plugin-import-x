@@ -2,4 +2,6 @@ import { ESLintUtils } from '@typescript-eslint/utils'
 
 import { docsUrl } from './docs-url'
 
-export const createRule = ESLintUtils.RuleCreator(docsUrl)
+export const createRule = ESLintUtils.RuleCreator<{ recommended?: true }>(
+  docsUrl,
+)
