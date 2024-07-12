@@ -1,18 +1,3 @@
-diff --git a/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts b/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts
-index e74b5d6..8b0aa7d 100644
---- a/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts
-+++ b/node_modules/@typescript-eslint/utils/dist/ts-eslint/Rule.d.ts
-@@ -11,6 +11,10 @@ export interface RuleRecommendationAcrossConfigs<Options extends readonly unknow
-     strict: Partial<Options>;
- }
- export interface RuleMetaDataDocs {
-+    /**
-+     * The category the rule falls under
-+     */
-+    category?: string;
-     /**
-      * Concise description of the rule.
-      */
 diff --git a/node_modules/@typescript-eslint/utils/dist/ts-eslint/RuleTester.d.ts b/node_modules/@typescript-eslint/utils/dist/ts-eslint/RuleTester.d.ts
 index ee1176f..7868f50 100644
 --- a/node_modules/@typescript-eslint/utils/dist/ts-eslint/RuleTester.d.ts
