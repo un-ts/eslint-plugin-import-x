@@ -129,7 +129,9 @@ function fullResolve(
   settings: PluginSettings,
 ) {
   // check if this is a bonus core module
-  const coreSet = new Set(settings['import-x/core-modules'])
+  const coreSet = new Set(
+    settings['import-x/core-modules'] || settings['import/core-modules'],
+  )
   if (coreSet.has(modulePath)) {
     return {
       found: true,
@@ -181,8 +183,11 @@ function fullResolve(
   }
 
   const configResolvers = settings['import-x/resolver'] || {
-    node: settings['import-x/resolve'],
-  } // backward compatibility
+      node: settings['import-x/resolve'],
+    } ||
+    settings['import/resolver'] || {
+      node: settings['import/resolve'],
+    } // backward compatibility
 
   const resolvers = resolverReducer(configResolvers, new Map())
 

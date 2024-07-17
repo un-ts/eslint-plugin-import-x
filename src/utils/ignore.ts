@@ -28,13 +28,15 @@ function validExtensions(context: ChildContext | RuleContext) {
 export function getFileExtensions(settings: PluginSettings) {
   // start with explicit JS-parsed extensions
   const exts = new Set<FileExtension>(
-    settings['import-x/extensions'] || ['.js'],
+    settings['import-x/extensions'] || settings['import/extensions'] || ['.js'],
   )
 
+  const parsers = settings['import-x/parsers'] || settings['import/parsers']
+
   // all alternate parser extensions are also valid
-  if ('import-x/parsers' in settings) {
-    for (const parser in settings['import-x/parsers']) {
-      const parserSettings = settings['import-x/parsers'][parser]
+  if (parsers) {
+    for (const parser in parsers) {
+      const parserSettings = parsers[parser]
       if (!Array.isArray(parserSettings)) {
         throw new TypeError(`"settings" for ${parser} must be an array`)
       }
@@ -57,7 +59,8 @@ export function ignore(
     return true
   }
 
-  const ignoreStrings = context.settings['import-x/ignore']
+  const ignoreStrings =
+    context.settings['import-x/ignore'] || context.settings['import/ignore']
 
   if (!ignoreStrings?.length) {
     return false

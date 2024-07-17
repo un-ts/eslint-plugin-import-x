@@ -40,7 +40,7 @@ export class ModuleCache {
   static getSettings(settings: PluginSettings) {
     const cacheSettings = {
       lifetime: 30, // seconds
-      ...settings['import-x/cache'],
+      ...(settings['import-x/cache'] || settings['import/cache']),
     }
 
     // parse infinity

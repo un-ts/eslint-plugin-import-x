@@ -16,7 +16,8 @@ function baseModule(name: string) {
 }
 
 function isInternalRegexMatch(name: string, settings: PluginSettings) {
-  const internalScope = settings?.['import-x/internal-regex']
+  const internalScope =
+    settings?.['import-x/internal-regex'] || settings?.['import/internal-regex']
   return internalScope && new RegExp(internalScope).test(name)
 }
 
@@ -34,7 +35,10 @@ export function isBuiltIn(
     return false
   }
   const base = baseModule(name)
-  const extras = (settings && settings['import-x/core-modules']) || []
+  const extras =
+    (settings &&
+      (settings['import-x/core-modules'] || settings['import/core-modules'])) ||
+    []
   return isBuiltin(base) || extras.includes(base)
 }
 
@@ -117,9 +121,8 @@ function isExternalPath(
     return true
   }
 
-  const folders = settings?.['import-x/external-module-folders'] || [
-    'node_modules',
-  ]
+  const folders = settings?.['import-x/external-module-folders'] ||
+    settings?.['import/external-module-folders'] || ['node_modules']
   return folders.some(folder => {
     const folderPath = path.resolve(packagePath, folder)
     const relativePath = path.relative(folderPath, filepath)
