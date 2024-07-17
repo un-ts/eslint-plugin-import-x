@@ -1,3 +1,5 @@
 export const pluginName = 'import-x'
 
-export type PluginName = typeof pluginName
+export const plguinNameLegacy = 'import'
+
+export type PluginName = typeof pluginName | typeof plguinNameLegacy
