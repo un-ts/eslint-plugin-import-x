@@ -38,6 +38,15 @@ const unusedExportsTypescriptOptions = [
   },
 ]
 
+const unusedExportsTypescriptIgnoreUnusedTypesOptions = [
+  {
+    unusedExports: true,
+    ignoreUnusedTypeExports: true,
+    src: [testFilePath('./no-unused-modules/typescript')],
+    ignoreExports: undefined,
+  },
+]
+
 const unusedExportsJsxOptions = [
   {
     unusedExports: true,
@@ -1329,6 +1338,66 @@ describe('TypeScript', () => {
         ],
       }),
     ],
+  })
+})
+
+describe('ignoreUnusedTypeExports', () => {
+  const parser = parsers.TS
+
+  typescriptRuleTester.run('no-unused-modules', rule, {
+    valid: [
+      // unused vars should not report
+      test({
+        options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
+        code: `export interface c {};`,
+        parser,
+        filename: testFilePath(
+          './no-unused-modules/typescript/file-ts-c-unused.ts',
+        ),
+      }),
+      test({
+        options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
+        code: `export type d = {};`,
+        parser,
+        filename: testFilePath(
+          './no-unused-modules/typescript/file-ts-d-unused.ts',
+        ),
+      }),
+      test({
+        options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
+        code: `export enum e { f };`,
+        parser,
+        filename: testFilePath(
+          './no-unused-modules/typescript/file-ts-e-unused.ts',
+        ),
+      }),
+      // used vars should not report
+      test({
+        options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
+        code: `export interface c {};`,
+        parser,
+        filename: testFilePath(
+          './no-unused-modules/typescript/file-ts-c-used-as-type.ts',
+        ),
+      }),
+      test({
+        options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
+        code: `export type d = {};`,
+        parser,
+        filename: testFilePath(
+          './no-unused-modules/typescript/file-ts-d-used-as-type.ts',
+        ),
+      }),
+      test({
+        options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
+        code: `export enum e { f };`,
+        parser,
+        filename: testFilePath(
+          './no-unused-modules/typescript/file-ts-e-used-as-type.ts',
+        ),
+      }),
+    ],
+    invalid: [],
   })
 })
 
