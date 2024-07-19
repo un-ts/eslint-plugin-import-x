@@ -37,33 +37,36 @@ const { AST_NODE_TYPES } = TSESTree
 
 function forEachDeclarationIdentifier(
   declaration: TSESTree.Node | null,
-  cb: (name: string) => void,
+  cb: (name: string, isTypeExport: boolean) => void,
 ) {
   if (declaration) {
-    if (
-      declaration.type === AST_NODE_TYPES.FunctionDeclaration ||
-      declaration.type === AST_NODE_TYPES.ClassDeclaration ||
+    const isTypeDeclaration =
       declaration.type === AST_NODE_TYPES.TSInterfaceDeclaration ||
       declaration.type === AST_NODE_TYPES.TSTypeAliasDeclaration ||
       declaration.type === AST_NODE_TYPES.TSEnumDeclaration
+
+    if (
+      declaration.type === AST_NODE_TYPES.FunctionDeclaration ||
+      declaration.type === AST_NODE_TYPES.ClassDeclaration ||
+      isTypeDeclaration
     ) {
-      cb(declaration.id!.name)
+      cb(declaration.id!.name, isTypeDeclaration)
     } else if (declaration.type === AST_NODE_TYPES.VariableDeclaration) {
       for (const { id } of declaration.declarations) {
         if (id.type === AST_NODE_TYPES.ObjectPattern) {
           recursivePatternCapture(id, pattern => {
             if (pattern.type === AST_NODE_TYPES.Identifier) {
-              cb(pattern.name)
+              cb(pattern.name, false)
             }
           })
         } else if (id.type === AST_NODE_TYPES.ArrayPattern) {
           for (const el of id.elements) {
             if (el?.type === AST_NODE_TYPES.Identifier) {
-              cb(el.name)
+              cb(el.name, false)
             }
           }
         } else {
-          cb(id.name)
+          cb(id.name, false)
         }
       }
     }
@@ -397,6 +400,7 @@ type Options = {
   ignoreExports?: string[]
   missingExports?: string[]
   unusedExports?: boolean
+  ignoreUnusedTypeExports?: boolean
 }
 
 type MessageId = 'notFound' | 'unused'
@@ -441,6 +445,10 @@ export = createRule<Options[], MessageId>({
             description: 'report exports without any usage',
             type: 'boolean',
           },
+          ignoreUnusedTypeExports: {
+            description: 'ignore type exports without any usage',
+            type: 'boolean',
+          },
         },
         anyOf: [
           {
@@ -482,6 +490,7 @@ export = createRule<Options[], MessageId>({
       ignoreExports = [],
       missingExports,
       unusedExports,
+      ignoreUnusedTypeExports,
     } = context.options[0] || {}
 
     if (unusedExports) {
@@ -492,6 +501,10 @@ export = createRule<Options[], MessageId>({
 
     const checkExportPresence = (node: TSESTree.Program) => {
       if (!missingExports) {
+        return
+      }
+
+      if (ignoreUnusedTypeExports) {
         return
       }
 
@@ -519,8 +532,16 @@ export = createRule<Options[], MessageId>({
       exportCount.set(AST_NODE_TYPES.ImportNamespaceSpecifier, namespaceImports)
     }
 
-    const checkUsage = (node: TSESTree.Node, exportedValue: string) => {
+    const checkUsage = (
+      node: TSESTree.Node,
+      exportedValue: string,
+      isTypeExport: boolean,
+    ) => {
       if (!unusedExports) {
+        return
+      }
+
+      if (isTypeExport && ignoreUnusedTypeExports) {
         return
       }
 
@@ -991,14 +1012,14 @@ export = createRule<Options[], MessageId>({
         checkExportPresence(node)
       },
       ExportDefaultDeclaration(node) {
-        checkUsage(node, AST_NODE_TYPES.ImportDefaultSpecifier)
+        checkUsage(node, AST_NODE_TYPES.ImportDefaultSpecifier, false)
       },
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers) {
-          checkUsage(specifier, getValue(specifier.exported))
+          checkUsage(specifier, getValue(specifier.exported), false)
         }
-        forEachDeclarationIdentifier(node.declaration, name => {
-          checkUsage(node, name)
+        forEachDeclarationIdentifier(node.declaration, (name, isTypeExport) => {
+          checkUsage(node, name, isTypeExport)
         })
       },
     }
