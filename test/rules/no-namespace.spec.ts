@@ -1,14 +1,12 @@
-import { TSESLint } from '@typescript-eslint/utils'
-
-import { test } from '../utils'
+import { test, RuleTester } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-namespace'
 
 const ERROR_MESSAGE = 'Unexpected namespace import.'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new RuleTester()
 
-ruleTester.run('no-namespace', rule, {
+ruleTester.run$('no-namespace', rule, {
   valid: [
     {
       code: "import { a, b } from 'foo';",

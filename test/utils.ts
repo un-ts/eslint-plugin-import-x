@@ -1,12 +1,14 @@
 import path from 'node:path'
 
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import type { RuleTester } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
+import type { TSESTree } from '@typescript-eslint/utils'
+import type { RuleTester as ESLintRuleTester } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
 import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x/types'
+import type { RuleModuleWithCustomMeta } from 'eslint-plugin-import-x/utils'
 
 // warms up the module cache. this import takes a while (>500ms)
 import '@babel/eslint-parser'
@@ -65,7 +67,7 @@ export function testVersion<T extends ValidTestCase>(
 export type InvalidTestCaseError =
   | string
   | InvalidTestCase['errors'][number]
-  | (RuleTester.TestCaseError & {
+  | (ESLintRuleTester.TestCaseError & {
       type?: `${TSESTree.AST_NODE_TYPES}`
     })
 
@@ -164,3 +166,45 @@ export const SYNTAX_CASES = [
 export const testCompiled = process.env.TEST_COMPILED === '1'
 
 export const srcDir = testCompiled ? 'lib' : 'src'
+
+type RuleTesterOptions = {
+  parser?: string
+} & Omit<TSESLint.RuleTesterConfig, 'parser'>
+
+export class RuleTester extends TSESLint.RuleTester {
+  constructor(option: RuleTesterOptions = {}) {
+    /**
+     * The parser option is required in TSESLint.RuleTester, but not in ESLint.RuleTester.
+     * Since TSESLint.RuleTester is just an alias of ESLint.RuleTester, we can safely ignore the type error.
+     */
+    // @ts-expect-error -- parser is not required
+    super(option)
+  }
+
+  /**
+   * Since we can't override the original `run` method, we have to create a new one that accepts our custom rule module with custom meta.
+   */
+  run$<MessageIds extends string, Options extends Readonly<unknown[]>>(
+    ruleName: string,
+    rule: RuleModuleWithCustomMeta<MessageIds, Options>,
+    tests: TSESLint.RunTests<MessageIds, Options>,
+  ) {
+    const { meta, ...ruleWithoutMeta } = rule
+    const { docs, ...metaWithoutDocs } = meta
+    const {
+      category: _1,
+      recommended: _2,
+      ...docsWithoutCategoryAndRecommend
+    } = docs
+
+    const modifiedRule: Parameters<TSESLint.RuleTester['run']>[1] = {
+      ...ruleWithoutMeta,
+      meta: {
+        ...metaWithoutDocs,
+        docs: docsWithoutCategoryAndRecommend,
+      },
+    }
+
+    return super.run(ruleName, modifiedRule, tests)
+  }
+}
