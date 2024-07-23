@@ -1094,7 +1094,7 @@ export function recursivePatternCapture(
  * don't hold full context object in memory, just grab what we need.
  * also calculate a cacheKey, where parts of the cacheKey hash are memoized
  */
-export function childContext(
+function childContext(
   path: string,
   context: RuleContext | ChildContext,
 ): ChildContext {
