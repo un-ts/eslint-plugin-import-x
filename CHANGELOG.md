@@ -1,5 +1,17 @@
 # eslint-plugin-import-x
 
+## 3.1.0
+
+### Minor Changes
+
+- [#116](https://github.com/un-ts/eslint-plugin-import-x/pull/116) [`38aa4cb`](https://github.com/un-ts/eslint-plugin-import-x/commit/38aa4cb8433f24e5772fe1d224265acaedf67343) Thanks [@silverwind](https://github.com/silverwind)! - Add `ignoreUnusedTypeExports` option to `no-unused-modules`
+
+### Patch Changes
+
+- [#118](https://github.com/un-ts/eslint-plugin-import-x/pull/118) [`0307ff2`](https://github.com/un-ts/eslint-plugin-import-x/commit/0307ff2438f9255f95ee4f574f92c1c3b77fda60) Thanks [@SukkaW](https://github.com/SukkaW)! - Reverts #111. The introduction of SCC causes extra overhead that overcomes the early return it introduced.
+
+  A new `no-cycle-next` rule is being implemented using the graph. It won't be backward compatible with the current rule `no-cycle`. The current `no-cycle` rule will become `no-cycle-legacy` in the next major version.
+
 ## 3.0.1
 
 ### Patch Changes
