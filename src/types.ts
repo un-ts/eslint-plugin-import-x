@@ -1,6 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { ResolveOptions } from 'enhanced-resolve'
-import type { TsResolverOptions } from 'eslint-import-resolver-typescript'
 import type { MinimatchOptions } from 'minimatch'
 import type { KebabCase, LiteralUnion } from 'type-fest'
 
@@ -19,6 +18,12 @@ export type WebpackResolverOptions = {
   'config-index'?: number
   env?: Record<string, unknown>
   argv?: Record<string, unknown>
+}
+
+export interface TsResolverOptions extends Omit<ResolveOptions, 'fileSystem' | 'useSyncFileSystemCalls'> {
+  alwaysTryTypes?: boolean;
+  project?: string[] | string;
+  extensions?: string[];
 }
 
 export type FileExtension = `.${string}`

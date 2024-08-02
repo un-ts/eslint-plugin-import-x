@@ -1,8 +1,10 @@
 import fs from 'node:fs'
 
 import { TSESLint } from '@typescript-eslint/utils'
-import { version } from 'eslint/package.json'
-import semver from 'semver'
+// @ts-expect-error -- in correct types
+import { FlatRuleTester as ESLint8_56_FlatRuleTester } from 'eslint8.56/use-at-your-own-risk'
+import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester';
 
 import { test, testFilePath, parsers } from '../utils'
 
@@ -10,11 +12,9 @@ import jsxConfig from 'eslint-plugin-import-x/config/react'
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-unused-modules'
 
-const FlatRuleTester = semver.satisfies(version, '8') ? require('eslint/use-at-your-own-risk').FlatRuleTester : require('eslint').RuleTester
-
-const ruleTester = new TSESLint.RuleTester()
-const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
-const jsxRuleTester = new TSESLint.RuleTester(jsxConfig)
+const ruleTester = new TSESLintRuleTester()
+const typescriptRuleTester = new TSESLintRuleTester(typescriptConfig)
+const jsxRuleTester = new TSESLintRuleTester(jsxConfig)
 
 const error = (message: string) => ({ message })
 
@@ -1599,30 +1599,36 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
   })
 })
 
-describe('supports flat eslint', () => {
-  const flatRuleTester = new FlatRuleTester() as TSESLint.RuleTester
-  flatRuleTester.run('no-unused-modules', rule, {
-    valid: [
-      {
-        options: unusedExportsOptions,
-        code: 'import { o2 } from "./file-o"; export default () => 12',
-        filename: testFilePath('./no-unused-modules/file-a.js'),
-      },
-    ],
-    invalid: [
-      {
-        options: unusedExportsOptions,
-        code: 'export default () => 13',
-        filename: testFilePath('./no-unused-modules/file-f.js'),
-        errors: [
-          {
-            messageId: 'unused',
-            data: {
-              value: 'default',
+// [ESLint8_56_FlatRuleTester, ESLint9_FlatRuleTester]
+for (const [name, FlatRuleTester] of [
+  ['eslint 8.56 flat', ESLint8_56_FlatRuleTester],
+  ['eslint 9 flat', ESLint9_FlatRuleTester],
+] as const) {
+  describe('supports ' + name, () => {
+    const flatRuleTester = new FlatRuleTester() as TSESLint.RuleTester
+    flatRuleTester.run('no-unused-modules', rule, {
+      valid: [
+        {
+          options: unusedExportsOptions,
+          code: 'import { o2 } from "./file-o"; export default () => 12',
+          filename: testFilePath('./no-unused-modules/file-a.js'),
+        },
+      ],
+      invalid: [
+        {
+          options: unusedExportsOptions,
+          code: 'export default () => 13',
+          filename: testFilePath('./no-unused-modules/file-f.js'),
+          errors: [
+            {
+              messageId: 'unused',
+              data: {
+                value: 'default',
+              },
             },
-          },
-        ],
-      },
-    ],
+          ],
+        },
+      ],
+    })
   })
-})
+}
