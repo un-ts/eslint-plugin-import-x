@@ -88,12 +88,10 @@ ruleTester.run('no-cycle', rule, {
     test({
       code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 3`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
-      languageOptions: { parser: require(parsers.TS) },
     }),
     test({
       code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 4`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
-      languageOptions: { parser: require(parsers.TS) },
     }),
 
     test({
@@ -203,7 +201,7 @@ ruleTester.run('no-cycle', rule, {
         code: `import { bar } from "./${testDialect}/depth-three-indirect"`,
         options: [{ ...opts }],
         errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: `import { foo } from "./${testDialect}/depth-two"`,
@@ -251,12 +249,10 @@ ruleTester.run('no-cycle', rule, {
     test({
       code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 7`,
       errors: [error(`Dependency cycle detected.`)],
-      languageOptions: { parser: require(parsers.TS) },
     }),
     test({
       code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 8`,
       errors: [error(`Dependency cycle detected.`)],
-      languageOptions: { parser: require(parsers.TS) },
     }),
 
     test({

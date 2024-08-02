@@ -52,7 +52,6 @@ ruleTester.run('export', rule, {
           return param && param1;
         }
       `,
-      languageOptions: { parser: require(parsers.TS) },
     },
   ],
 

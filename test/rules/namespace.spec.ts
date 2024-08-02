@@ -5,7 +5,9 @@ import { test, SYNTAX_CASES, testFilePath, parsers } from '../utils'
 import rule from 'eslint-plugin-import-x/rules/namespace'
 
 const ruleTester = new TSESLintRuleTester({
-  parserOptions: { env: { es6: true } },
+  languageOptions: {
+    parserOptions: { env: { es6: true } },
+  },
 })
 
 function error(name: string, namespace: string) {
@@ -103,21 +105,21 @@ const valid = [
   /////////
   test({
     code: 'export * as names from "./named-exports"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
   test({
     code: 'export defport, * as names from "./named-exports"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
   // non-existent is handled by no-unresolved
   test({
     code: 'export * as names from "./does-not-exist"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   test({
     code: 'import * as Endpoints from "./issue-195/Endpoints"; console.log(Endpoints.Users)',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // respect hoisting
@@ -132,11 +134,11 @@ const valid = [
   }),
   test({
     code: 'export * as names from "./default-export"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
   test({
     code: 'export defport, * as names from "./default-export"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // #456: optionally ignore computed references
@@ -154,7 +156,7 @@ const valid = [
   }),
   test({
     code: `import * as names from './named-exports'; const {a, b, ...rest} = names;`,
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // #1144: should handle re-export CommonJS as namespace
@@ -178,7 +180,7 @@ const valid = [
       import * as foo from "./typescript-declare-nested"
       foo.bar.MyFunction()
     `,
-    parser: parsers.TS,
+
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -187,7 +189,7 @@ const valid = [
 
   test({
     code: `import { foobar } from "./typescript-declare-interface"`,
-    parser: parsers.TS,
+
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -196,7 +198,7 @@ const valid = [
 
   test({
     code: 'export * from "typescript/lib/typescript.d"',
-    parser: parsers.TS,
+
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -205,7 +207,7 @@ const valid = [
 
   test({
     code: 'export = function name() {}',
-    parser: parsers.TS,
+
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -330,7 +332,7 @@ const invalid = [
 
   test({
     code: 'import * as Endpoints from "./issue-195/Endpoints"; console.log(Endpoints.Foo)',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
     errors: ["'Foo' not found in imported namespace 'Endpoints'."],
   }),
 

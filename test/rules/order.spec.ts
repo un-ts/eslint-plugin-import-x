@@ -10,7 +10,7 @@ import rule from 'eslint-plugin-import-x/rules/order'
 const ruleTester = new TSESLintRuleTester()
 
 const flowRuleTester = new TSESLintRuleTester({
-  parser: parsers.BABEL,
+  languageOptions: { parser: require(parsers.BABEL) },
   parserOptions: {
     requireConfigFile: false,
     babelOptions: {
@@ -219,14 +219,12 @@ ruleTester.run('order', rule, {
         var relParent3 = require('../');
         var index = require('./');
       `,
-      languageOptions: { parser: require(parsers.TS) },
     }),
 
     test({
       code: `
         export import CreateSomething = _CreateSomething;
       `,
-      languageOptions: { parser: require(parsers.TS) },
     }),
     // Adding unknown import types (e.g. using a resolver alias via babel) to the groups.
     test({
@@ -896,7 +894,7 @@ ruleTester.run('order', rule, {
       code: `
         import blah = require('./blah');
         import { hello } from './hello';`,
-      languageOptions: { parser: require(parsers.TS) },
+
       options: [
         {
           alphabetize: {
@@ -910,7 +908,7 @@ ruleTester.run('order', rule, {
       code: `
         import blah = require('./blah');
         import log = console.log;`,
-      languageOptions: { parser: require(parsers.TS) },
+
       options: [
         {
           alphabetize: {
@@ -924,7 +922,7 @@ ruleTester.run('order', rule, {
       code: `
         import debug = console.debug;
         import log = console.log;`,
-      languageOptions: { parser: require(parsers.TS) },
+
       options: [
         {
           alphabetize: {
@@ -937,7 +935,7 @@ ruleTester.run('order', rule, {
       code: `
         import log = console.log;
         import debug = console.debug;`,
-      languageOptions: { parser: require(parsers.TS) },
+
       options: [
         {
           alphabetize: {
@@ -953,7 +951,7 @@ ruleTester.run('order', rule, {
             export import a2 = a;
         }
       `,
-      languageOptions: { parser: require(parsers.TS) },
+
       options: [
         {
           groups: ['external', 'index'],
@@ -1725,7 +1723,7 @@ ruleTester.run('order', rule, {
         import bar = require("../foo/bar");
         var fs = require('fs');
       `,
-      languageOptions: { parser: require(parsers.TS) },
+
       errors: [
         {
           message: '`fs` import should occur after import of `../foo/bar`',
@@ -1741,7 +1739,7 @@ ruleTester.run('order', rule, {
         var fs = require('fs');
         var async = require('async');
       `,
-      languageOptions: { parser: require(parsers.TS) },
+
       errors: [
         {
           message: '`fs` import should occur before import of `async`',
@@ -1767,7 +1765,7 @@ ruleTester.run('order', rule, {
           alphabetize: { order: 'asc' },
         },
       ],
-      languageOptions: { parser: require(parsers.TS) },
+
       errors: [
         {
           message: '`async` import should occur before import of `sync`',
@@ -1779,7 +1777,7 @@ ruleTester.run('order', rule, {
       code: `
         import log = console.log;
         import blah = require('./blah');`,
-      languageOptions: { parser: require(parsers.TS) },
+
       errors: [
         {
           message:

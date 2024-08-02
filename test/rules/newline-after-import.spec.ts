@@ -363,8 +363,6 @@ ruleTester.run('newline-after-import', rule, {
         import execa = require('execa');
       `,
       languageOptions: {
-        parser: require(parsers.TS),
-
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },
@@ -374,8 +372,6 @@ ruleTester.run('newline-after-import', rule, {
         import { ExecaReturnValue } from 'execa';
       `,
       languageOptions: {
-        parser: require(parsers.TS),
-
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },
@@ -386,8 +382,6 @@ ruleTester.run('newline-after-import', rule, {
         import { ExecbReturnValue } from 'execb';
       `,
       languageOptions: {
-        parser: require(parsers.TS),
-
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },
@@ -398,8 +392,6 @@ ruleTester.run('newline-after-import', rule, {
         import execb = require('execb');
       `,
       languageOptions: {
-        parser: require(parsers.TS),
-
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },
@@ -408,8 +400,6 @@ ruleTester.run('newline-after-import', rule, {
         export import a = obj;\nf(a);
       `,
       languageOptions: {
-        parser: require(parsers.TS),
-
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },
@@ -422,8 +412,6 @@ ruleTester.run('newline-after-import', rule, {
             f(a);
         }`,
       languageOptions: {
-        parser: require(parsers.TS),
-
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },
@@ -436,8 +424,6 @@ ruleTester.run('newline-after-import', rule, {
         }
       `,
       languageOptions: {
-        parser: require(parsers.TS),
-
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },
@@ -449,8 +435,6 @@ ruleTester.run('newline-after-import', rule, {
       export import Foo = ns.baz.bar.Foo;
     `,
       languageOptions: {
-        parser: require(parsers.TS),
-
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },

@@ -159,7 +159,6 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      languageOptions: { parser: require(parsers.TS) },
     }),
 
     // #2347: duplicate identifiers should be removed
@@ -171,7 +170,6 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      languageOptions: { parser: require(parsers.TS) },
     }),
 
     // #2347: duplicate identifiers should be removed, but not if they are adjacent to comments
@@ -182,7 +180,6 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      languageOptions: { parser: require(parsers.TS) },
     }),
 
     test({

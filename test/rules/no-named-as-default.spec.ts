@@ -14,11 +14,20 @@ ruleTester.run('no-named-as-default', rule, {
     test({ code: 'import bar, { foo } from "./empty-folder";' }),
 
     // es7
-    test({ code: 'export bar, { foo } from "./bar";', parser: parsers.BABEL }),
-    test({ code: 'export bar from "./bar";', parser: parsers.BABEL }),
+    test({
+      code: 'export bar, { foo } from "./bar";',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
+    test({
+      code: 'export bar from "./bar";',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
 
     // #566: don't false-positive on `default` itself
-    test({ code: 'export default from "./bar";', parser: parsers.BABEL }),
+    test({
+      code: 'export default from "./bar";',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
 
     test({
       code: 'import bar, { foo } from "./export-default-string-and-named"',

@@ -34,7 +34,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       rest({ code: "import fs from 'fs';" }),
       rest({
         code: "import('fs');",
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
 
       // check with eslint parser
@@ -52,11 +52,11 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       // stage 1 proposal for export symmetry,
       rest({
         code: 'export * as bar from "./bar"',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       rest({
         code: 'export bar from "./bar"',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       rest({ code: 'import foo from "./jsx/MyUnCoolComponent.jsx"' }),
 
@@ -176,7 +176,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
             type: 'Literal',
           },
         ],
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
 
       rest({
@@ -203,12 +203,12 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       // export symmetry proposal
       rest({
         code: 'export * as bar from "./does-not-exist"',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: ["Unable to resolve path to module './does-not-exist'."],
       }),
       rest({
         code: 'export bar from "./does-not-exist"',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: ["Unable to resolve path to module './does-not-exist'."],
       }),
 

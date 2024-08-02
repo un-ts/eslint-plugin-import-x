@@ -629,22 +629,22 @@ typescriptRuleTester.run(
       test({
         code: 'import type MyType from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import type { MyType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import { type MyType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import { type MyType, type OtherType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
     ],
     invalid: [
@@ -652,7 +652,7 @@ typescriptRuleTester.run(
         code: 'import type { MyType } from "not-a-dependency";',
         options: [{ includeTypes: true }],
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           {
             message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
@@ -663,7 +663,7 @@ typescriptRuleTester.run(
         code: `import type { Foo } from 'not-a-dependency';`,
         options: [{ includeTypes: true }],
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           {
             message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
@@ -673,7 +673,7 @@ typescriptRuleTester.run(
       test({
         code: 'import Foo, { type MyType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           {
             message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
@@ -683,7 +683,7 @@ typescriptRuleTester.run(
       test({
         code: 'import { type MyType, Foo } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           {
             message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,

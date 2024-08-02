@@ -9,7 +9,7 @@ const test = <T extends ValidTestCase>(def: T) =>
   _test({
     ...def,
     filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   })
 
 const ruleTester = new TSESLintRuleTester()

@@ -33,9 +33,15 @@ ruleTester.run('default', rule, {
     test({ code: 'import common from "./common";' }),
 
     // es7 export syntax
-    test({ code: 'export bar from "./bar"', parser: parsers.BABEL }),
+    test({
+      code: 'export bar from "./bar"',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
     test({ code: 'export { default as bar } from "./bar"' }),
-    test({ code: 'export bar, { foo } from "./bar"', parser: parsers.BABEL }),
+    test({
+      code: 'export bar, { foo } from "./bar"',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
     test({ code: 'export { default as bar, foo } from "./bar"' }),
     test({
       code: 'export bar, * as names from "./bar"',
@@ -184,7 +190,6 @@ describe('TypeScript', () => {
     valid: [
       test({
         code: `import foobar from "./typescript-default"`,
-        parser,
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -192,7 +197,6 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import foobar from "./typescript-export-assign-default"`,
-        parser,
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -200,7 +204,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import foobar from "./typescript-export-assign-function"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -208,7 +212,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import foobar from "./typescript-export-assign-mixed"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -216,7 +220,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import foobar from "./typescript-export-assign-default-reexport"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -224,7 +228,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import React from "./typescript-export-assign-default-namespace"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -238,7 +242,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import Foo from "./typescript-export-as-default-namespace"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -252,7 +256,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import Foo from "./typescript-export-react-test-renderer"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -266,7 +270,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import Foo from "./typescript-extended-config"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -280,7 +284,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import foobar from "./typescript-export-assign-property"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -291,7 +295,7 @@ describe('TypeScript', () => {
     invalid: [
       test({
         code: `import foobar from "./typescript"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -300,7 +304,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import React from "./typescript-export-assign-default-namespace"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -311,7 +315,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import FooBar from "./typescript-export-as-default-namespace"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -322,7 +326,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import Foo from "./typescript-export-as-default-namespace"`,
-        parser,
+
         settings: {
           'import-x/parsers': { [parser]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },

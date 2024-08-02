@@ -448,7 +448,6 @@ const FLOW_ONLY = {
 describe('TypeScript', () => {
   const ruleTester = new TSESLintRuleTester({
     languageOptions: {
-      parser: require(parsers.TS),
       parserOptions: {
         ecmaVersion: 6,
         sourceType: 'module',

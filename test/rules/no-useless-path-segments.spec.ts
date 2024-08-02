@@ -42,11 +42,17 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         options: [{ noUselessIndex: true }],
       }), // ./importType.js does not exist
 
-      test({ code: 'import(".")', parser: parsers.BABEL }),
-      test({ code: 'import("..")', parser: parsers.BABEL }),
+      test({
+        code: 'import(".")',
+        languageOptions: { parser: require(parsers.BABEL) },
+      }),
+      test({
+        code: 'import("..")',
+        languageOptions: { parser: require(parsers.BABEL) },
+      }),
       test({
         code: 'import("fs").then(function(fs) {})',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
     ],
 
@@ -282,19 +288,19 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         code: 'import("./")',
         output: 'import(".")',
         errors: ['Useless path segments for "./", should be "."'],
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import("../")',
         output: 'import("..")',
         errors: ['Useless path segments for "../", should be ".."'],
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import("./deep//a")',
         output: 'import("./deep/a")',
         errors: ['Useless path segments for "./deep//a", should be "./deep/a"'],
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
     ],
   })

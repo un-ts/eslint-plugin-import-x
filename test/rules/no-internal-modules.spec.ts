@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath, parsers } from '../utils'
+import { test, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-internal-modules'
 
@@ -149,7 +149,6 @@ ruleTester.run('no-internal-modules', rule, {
           }
         }
       `,
-      languageOptions: { parser: require(parsers.TS) },
     }),
     test({
       code: 'export * from "./plugin2/thing"',

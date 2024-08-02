@@ -303,7 +303,7 @@ describe('dynamic imports', () => {
             const d = 40
             export default d
             `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/exports-for-dynamic-js.js'),
       }),
     ],
@@ -317,7 +317,7 @@ describe('dynamic imports', () => {
         const d = 40
         export default d
         `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath(
           './no-unused-modules/exports-for-dynamic-js-2.js',
         ),
@@ -341,7 +341,6 @@ describe('dynamic imports', () => {
             const ts_d = 40
             export default ts_d
             `,
-        parser: parsers.TS,
         filename: testFilePath(
           './no-unused-modules/typescript/exports-for-dynamic-ts.ts',
         ),
@@ -351,7 +350,6 @@ describe('dynamic imports', () => {
         import App from './App';
       `,
         filename: testFilePath('./unused-modules-reexport-crash/src/index.tsx'),
-        parser: parsers.TS,
         options: [
           {
             unusedExports: true,
@@ -1409,7 +1407,7 @@ describe('correctly work with JSX only files', () => {
       test({
         options: unusedExportsJsxOptions,
         code: 'import a from "file-jsx-a";',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/jsx/file-jsx-a.jsx'),
       }),
     ],
@@ -1417,7 +1415,7 @@ describe('correctly work with JSX only files', () => {
       test({
         options: unusedExportsJsxOptions,
         code: `export const b = 2;`,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/jsx/file-jsx-b.jsx'),
         errors: [
           error(`exported declaration 'b' not used within other modules`),
@@ -1433,7 +1431,7 @@ describe('ignore flow types', () => {
       test({
         options: unusedExportsOptions,
         code: 'import { type FooType, type FooInterface } from "./flow-2";',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-0.js'),
       }),
       test({
@@ -1442,13 +1440,13 @@ describe('ignore flow types', () => {
                export type FooType = string;
                export interface FooInterface {};
                `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-2.js'),
       }),
       test({
         options: unusedExportsOptions,
         code: 'import type { FooType, FooInterface } from "./flow-4";',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-3.js'),
       }),
       test({
@@ -1457,7 +1455,7 @@ describe('ignore flow types', () => {
                export type FooType = string;
                export interface FooInterface {};
                `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-4.js'),
       }),
       test({
@@ -1466,7 +1464,7 @@ describe('ignore flow types', () => {
                export type Bar = number;
                export interface BarInterface {};
                `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-1.js'),
       }),
     ],
@@ -1480,13 +1478,13 @@ describe('support (nested) destructuring assignment', () => {
       test({
         options: unusedExportsOptions,
         code: 'import {a, b} from "./destructuring-b";',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/destructuring-a.js'),
       }),
       test({
         options: unusedExportsOptions,
         code: 'const obj = {a: 1, dummy: {b: 2}}; export const {a, dummy: {b}} = obj;',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/destructuring-b.js'),
       }),
     ],
