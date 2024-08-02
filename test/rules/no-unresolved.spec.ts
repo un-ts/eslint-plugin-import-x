@@ -533,23 +533,19 @@ describe('TypeScript', () => {
     valid: [
       test({
         code: 'import type { JSONSchema7Type } from "@types/json-schema";',
-        parser,
       }),
       test({
         code: 'export type { JSONSchema7Type } from "@types/json-schema";',
-        parser,
       }),
     ],
     invalid: [
       test({
         code: 'import { JSONSchema7Type } from "@types/json-schema";',
         errors: ["Unable to resolve path to module '@types/json-schema'."],
-        parser,
       }),
       test({
         code: 'export { JSONSchema7Type } from "@types/json-schema";',
         errors: ["Unable to resolve path to module '@types/json-schema'."],
-        parser,
       }),
     ],
   })

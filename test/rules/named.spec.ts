@@ -498,27 +498,27 @@ describe('TypeScript', () => {
       ...valid,
       test({
         code: `import { MyType } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
         code: `import { Foo } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
         code: `import { Bar } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
         code: `import { getFoo } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
         code: `import { MyEnum } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
@@ -526,7 +526,7 @@ describe('TypeScript', () => {
             import { MyModule } from "./${source}"
             MyModule.ModuleFunction()
           `,
-        parser,
+
         settings,
       }),
       test({
@@ -534,7 +534,7 @@ describe('TypeScript', () => {
             import { MyNamespace } from "./${source}"
             MyNamespace.NSModule.NSModuleFunction()
           `,
-        parser,
+
         settings,
       }),
     ]
@@ -542,7 +542,7 @@ describe('TypeScript', () => {
     invalid.push(
       test({
         code: `import { MissingType } from "./${source}"`,
-        parser,
+
         settings,
         errors: [
           {
@@ -553,7 +553,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import { NotExported } from "./${source}"`,
-        parser,
+
         settings,
         errors: [
           {

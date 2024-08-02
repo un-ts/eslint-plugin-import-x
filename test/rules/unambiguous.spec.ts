@@ -55,8 +55,8 @@ ruleTester.run('unambiguous', rule, {
     },
     {
       code: 'function x() {}; export * as y from "z"',
-      languageOptions: { parser: require(parsers.BABEL) },
       languageOptions: {
+        parser: require(parsers.BABEL),
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },

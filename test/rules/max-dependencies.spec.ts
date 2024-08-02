@@ -97,13 +97,11 @@ ruleTester.run('max-dependencies', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   ruleTester.run('max-dependencies', rule, {
     valid: [
       test({
         code: "import type { x } from './foo'; import { y } from './bar';",
-        parser,
+
         options: [
           {
             max: 1,
@@ -115,7 +113,7 @@ describe('TypeScript', () => {
     invalid: [
       test({
         code: "import type { x } from './foo'; import type { y } from './bar'",
-        parser,
+
         options: [
           {
             max: 1,
@@ -126,7 +124,7 @@ describe('TypeScript', () => {
 
       test({
         code: "import type { x } from './foo'; import type { y } from './bar'; import type { z } from './baz'",
-        parser,
+
         options: [
           {
             max: 2,

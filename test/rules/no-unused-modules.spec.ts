@@ -1169,8 +1169,6 @@ describe('Avoid errors if re-export all from umd compiled library', () => {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   typescriptRuleTester.run('no-unused-modules', rule, {
     valid: [
       test({
@@ -1185,31 +1183,31 @@ describe('TypeScript', () => {
         const a2: c = {};
         const a3: d = {};
         `,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export const b = 2;`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-b.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-c.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-d.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-e.ts'),
       }),
       test({
@@ -1225,7 +1223,7 @@ describe('TypeScript', () => {
         const a3: d = {};
         const a4: typeof e = undefined;
         `,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-a-import-type.ts',
         ),
@@ -1233,7 +1231,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export const b = 2;`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-b-used-as-type.ts',
         ),
@@ -1241,7 +1239,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-c-used-as-type.ts',
         ),
@@ -1249,7 +1247,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-d-used-as-type.ts',
         ),
@@ -1257,7 +1255,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-e-used-as-type.ts',
         ),
@@ -1266,19 +1264,19 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface g {}`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-g.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `import {g} from './file-ts-g';`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-f.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface g {}; /* used-as-type */`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-g-used-as-type.ts',
         ),
@@ -1286,7 +1284,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `import type {g} from './file-ts-g';`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-f-import-type.ts',
         ),
@@ -1296,7 +1294,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export const b = 2;`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-b-unused.ts',
         ),
@@ -1307,7 +1305,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-c-unused.ts',
         ),
@@ -1318,7 +1316,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-d-unused.ts',
         ),
@@ -1329,7 +1327,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-e-unused.ts',
         ),
@@ -1342,15 +1340,13 @@ describe('TypeScript', () => {
 })
 
 describe('ignoreUnusedTypeExports', () => {
-  const parser = parsers.TS
-
   typescriptRuleTester.run('no-unused-modules', rule, {
     valid: [
       // unused vars should not report
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-c-unused.ts',
         ),
@@ -1358,7 +1354,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-d-unused.ts',
         ),
@@ -1366,7 +1362,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-e-unused.ts',
         ),
@@ -1375,7 +1371,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-c-used-as-type.ts',
         ),
@@ -1383,7 +1379,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-d-used-as-type.ts',
         ),
@@ -1391,7 +1387,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-e-used-as-type.ts',
         ),

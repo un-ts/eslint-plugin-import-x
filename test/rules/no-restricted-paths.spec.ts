@@ -785,7 +785,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -801,7 +801,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -817,7 +817,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -833,7 +833,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -850,7 +850,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -867,7 +867,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -884,7 +884,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -901,14 +901,14 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       // no config
       test({ code: 'import type b from "../server/b.js"', parser, settings }),
       test({
         code: 'import type * as b from "../server/b.js"',
-        parser,
+
         settings,
       }),
     ],
@@ -934,7 +934,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -958,7 +958,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -990,7 +990,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1010,7 +1010,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1034,7 +1034,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1060,7 +1060,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1085,7 +1085,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1108,7 +1108,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1133,7 +1133,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
     ],

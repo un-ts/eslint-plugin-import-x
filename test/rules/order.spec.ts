@@ -10,13 +10,15 @@ import rule from 'eslint-plugin-import-x/rules/order'
 const ruleTester = new TSESLintRuleTester()
 
 const flowRuleTester = new TSESLintRuleTester({
-  languageOptions: { parser: require(parsers.BABEL) },
-  parserOptions: {
-    requireConfigFile: false,
-    babelOptions: {
-      configFile: false,
-      babelrc: false,
-      presets: ['@babel/flow'],
+  languageOptions: {
+    parser: require(parsers.BABEL),
+    parserOptions: {
+      requireConfigFile: false,
+      babelOptions: {
+        configFile: false,
+        babelrc: false,
+        presets: ['@babel/flow'],
+      },
     },
   },
 })

@@ -295,7 +295,6 @@ describe('TypeScript', () => {
             export * as A from './named-export-collision/a';
             export * as B from './named-export-collision/b';
           `,
-        parser,
       }),
 
       // Exports in ambient modules

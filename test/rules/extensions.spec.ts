@@ -670,7 +670,6 @@ describe('TypeScript', () => {
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
-        parser,
       }),
       test({
         code: 'export type { MyType } from "./typescript-declare";',
@@ -678,7 +677,6 @@ describe('TypeScript', () => {
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
-        parser,
       }),
     ],
     invalid: [
@@ -689,7 +687,6 @@ describe('TypeScript', () => {
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
-        parser,
       }),
       test({
         code: 'export { MyType } from "./typescript-declare";',
@@ -698,7 +695,6 @@ describe('TypeScript', () => {
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
-        parser,
       }),
     ],
   })

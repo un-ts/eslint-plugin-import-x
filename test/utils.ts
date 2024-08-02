@@ -1,10 +1,12 @@
 import path from 'node:path'
 
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { TSESTree } from '@typescript-eslint/utils'
 import type { RuleTester } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
+
+import { ValidTestCase as TSESLintValidTestCase, InvalidTestCase as TSESLintInvalidTestCase } from '@typescript-eslint/rule-tester';
 
 import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x/types'
 
@@ -45,12 +47,12 @@ export function eslintVersionSatisfies(specifier: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
-export type ValidTestCase = TSESLint.ValidTestCase<any> & {
+export type ValidTestCase = TSESLintValidTestCase<any> & {
   errors?: readonly InvalidTestCaseError[] | number
 }
 
 export type InvalidTestCase = // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
-  TSESLint.InvalidTestCase<any, readonly any[]>
+  TSESLintInvalidTestCase<any, any>
 
 export function testVersion<T extends ValidTestCase>(
   specifier: string,
@@ -82,11 +84,13 @@ export function test<T extends ValidTestCase>(
   return {
     filename: TEST_FILENAME,
     ...t,
-    parserOptions: {
-      sourceType: 'module',
-      ecmaVersion: 9,
-      ...t.parserOptions,
-    },
+    languageOptions: {
+      parserOptions: {
+        sourceType: 'module',
+        ecmaVersion: 9,
+        ...t.languageOptions,
+      },
+    }
   }
 }
 

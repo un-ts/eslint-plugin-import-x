@@ -185,7 +185,6 @@ if (!CASE_SENSITIVE_FS) {
 }
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
   ruleTester.run(`default`, rule, {
     valid: [
       test({
