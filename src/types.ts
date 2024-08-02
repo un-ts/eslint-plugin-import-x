@@ -20,11 +20,11 @@ export type WebpackResolverOptions = {
   argv?: Record<string, unknown>
 }
 
-export interface TsResolverOptions extends Omit<ResolveOptions, 'fileSystem' | 'useSyncFileSystemCalls'> {
-  alwaysTryTypes?: boolean;
-  project?: string[] | string;
-  extensions?: string[];
-}
+export type TsResolverOptions = {
+  alwaysTryTypes?: boolean
+  project?: string[] | string
+  extensions?: string[]
+} & Omit<ResolveOptions, 'fileSystem' | 'useSyncFileSystemCalls'>
 
 export type FileExtension = `.${string}`
 

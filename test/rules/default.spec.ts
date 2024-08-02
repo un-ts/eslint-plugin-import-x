@@ -1,13 +1,13 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/default'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('default', rule, {
   valid: [
@@ -39,14 +39,14 @@ ruleTester.run('default', rule, {
     test({ code: 'export { default as bar, foo } from "./bar"' }),
     test({
       code: 'export bar, * as names from "./bar"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // sanity check
     test({ code: 'export {a} from "./named-exports"' }),
     test({
       code: 'import twofer from "./trampoline"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // jsx
@@ -74,27 +74,27 @@ ruleTester.run('default', rule, {
     // from no-errors
     test({
       code: "import Foo from './jsx/FooES7.js';",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // #545: more ES7 cases
     test({
       code: "import bar from './default-export-from.js';",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: "import bar from './default-export-from-named.js';",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: "import bar from './default-export-from-ignored.js';",
       settings: { 'import-x/ignore': ['common'] },
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: "export bar from './default-export-from-ignored.js';",
       settings: { 'import-x/ignore': ['common'] },
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     test({
@@ -129,23 +129,23 @@ ruleTester.run('default', rule, {
     // es7 export syntax
     test({
       code: 'export baz from "./named-exports"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ['No default export found in imported module "./named-exports".'],
     }),
     test({
       code: 'export baz, { bar } from "./named-exports"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ['No default export found in imported module "./named-exports".'],
     }),
     test({
       code: 'export baz, * as names from "./named-exports"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ['No default export found in imported module "./named-exports".'],
     }),
     // exports default from a module with no default
     test({
       code: 'import twofer from "./broken-trampoline"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         'No default export found in imported module "./broken-trampoline".',
       ],

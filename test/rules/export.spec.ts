@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, testFilePath, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/export'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('export', rule, {
   valid: [
@@ -52,7 +52,7 @@ ruleTester.run('export', rule, {
           return param && param1;
         }
       `,
-      parser: parsers.TS,
+      languageOptions: { parser: require(parsers.TS) },
     },
   ],
 

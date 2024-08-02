@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TSESLint } from '@typescript-eslint/utils'
 // @ts-expect-error -- in correct types
 import { FlatRuleTester as ESLint8_56_FlatRuleTester } from 'eslint8.56/use-at-your-own-risk'
 import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
-import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester';
 
 import { test, testFilePath, parsers } from '../utils'
 
@@ -129,49 +129,49 @@ ruleTester.run('no-unused-modules', rule, {
       options: unusedExportsOptions,
       code: 'import { o2 } from "./file-o";export default () => 12',
       filename: testFilePath('./no-unused-modules/file-a.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'export const b = 2',
       filename: testFilePath('./no-unused-modules/file-b.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'const c1 = 3; function c2() { return 3 }; export { c1, c2 }',
       filename: testFilePath('./no-unused-modules/file-c.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'export function d() { return 4 }',
       filename: testFilePath('./no-unused-modules/file-d.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'export class q { q0() {} }',
       filename: testFilePath('./no-unused-modules/file-q.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'const e0 = 5; export { e0 as e }',
       filename: testFilePath('./no-unused-modules/file-e.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'const l0 = 5; const l = 10; export { l0 as l1, l }; export default () => {}',
       filename: testFilePath('./no-unused-modules/file-l.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'const o0 = 0; const o1 = 1; export { o0, o1 as o2 }; export default () => {}',
       filename: testFilePath('./no-unused-modules/file-o.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,

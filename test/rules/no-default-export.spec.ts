@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-default-export'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-default-export', rule, {
   valid: [
@@ -59,7 +59,7 @@ ruleTester.run('no-default-export', rule, {
     }),
     test({
       code: 'export { a, b } from "foo.js"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // no exports at all
@@ -75,15 +75,15 @@ ruleTester.run('no-default-export', rule, {
 
     test({
       code: `export type UserId = number;`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'export foo from "foo.js"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `export Memory, { MemoryValue } from './Memory'`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
   ],
   invalid: [
@@ -156,7 +156,7 @@ ruleTester.run('no-default-export', rule, {
     }),
     test({
       code: 'export default from "foo.js"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         {
           type: 'ExportNamedDeclaration',
@@ -173,7 +173,7 @@ ruleTester.run('no-default-export', rule, {
             'Do not alias `foo` as `default`. Just export `foo` itself instead.',
         },
       ],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
     }),
   ],
 })

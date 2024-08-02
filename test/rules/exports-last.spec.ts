@@ -1,11 +1,11 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import { test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/exports-last'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 const error = (type: `${TSESTree.AST_NODE_TYPES}`) =>
   ({

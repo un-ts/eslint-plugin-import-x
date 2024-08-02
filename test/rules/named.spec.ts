@@ -1,14 +1,14 @@
 import path from 'node:path'
 
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
-import { TSESLint } from '@typescript-eslint/utils'
 
 import { test, SYNTAX_CASES, testFilePath, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/named'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 function error(
   name: string,
@@ -68,11 +68,11 @@ ruleTester.run('named', rule, {
     // es7
     test({
       code: 'export bar, { foo } from "./bar"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { foo, bar } from "./named-trampoline"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // regression tests
@@ -87,43 +87,43 @@ ruleTester.run('named', rule, {
     // should ignore imported/exported flow types, even if they don’t exist
     test({
       code: 'import type { MissingType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import typeof { MissingType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import type { MyOpaqueType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import typeof { MyOpaqueType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { type MyOpaqueType, MyClass } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { typeof MyOpaqueType, MyClass } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import typeof MissingType from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import typeof * as MissingType from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'export type { MissingType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'export type { MyOpaqueType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // jsnext
@@ -207,22 +207,22 @@ ruleTester.run('named', rule, {
 
     test({
       code: 'const { something } = require("./dynamic-import-in-commonjs")',
-      parserOptions: { ecmaVersion: 2021 },
+      languageOptions: { parserOptions: { ecmaVersion: 2021 } },
       options: [{ commonjs: true }],
     }),
 
     test({
       code: 'import { something } from "./dynamic-import-in-commonjs"',
-      parserOptions: { ecmaVersion: 2021 },
+      languageOptions: { parserOptions: { ecmaVersion: 2021 } },
     }),
 
     test({
       code: 'import { "foo" as foo } from "./bar"',
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
     }),
     test({
       code: 'import { "foo" as foo } from "./empty-module"',
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
     }),
   ],
 
@@ -277,17 +277,17 @@ ruleTester.run('named', rule, {
     // es7
     test({
       code: 'export bar2, { bar } from "./bar"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ["bar not found in './bar'"],
     }),
     test({
       code: 'import { foo, bar, baz } from "./named-trampoline"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ["baz not found in './named-trampoline'"],
     }),
     test({
       code: 'import { baz } from "./broken-trampoline"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ['baz not found via broken-trampoline.js -> named-exports.js'],
     }),
 
@@ -331,7 +331,7 @@ ruleTester.run('named', rule, {
 
     test({
       code: 'import  { type MyOpaqueType, MyMissingClass } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ["MyMissingClass not found in './flowtypes'"],
     }),
 
@@ -368,7 +368,7 @@ ruleTester.run('named', rule, {
     test({
       code: 'import { "somethingElse" as somethingElse } from "./test-module"',
       errors: [error('somethingElse', './test-module', 'Literal')],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
     }),
     test({
       code: 'import { "baz" as baz, "bop" as bop } from "./bar"',
@@ -376,12 +376,12 @@ ruleTester.run('named', rule, {
         error('baz', './bar', 'Literal'),
         error('bop', './bar', 'Literal'),
       ],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
     }),
     test({
       code: 'import { "default" as barDefault } from "./re-export"',
       errors: [`default not found in './re-export'`],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
     }),
   ],
 })

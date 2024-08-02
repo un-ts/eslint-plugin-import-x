@@ -1,11 +1,11 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import rule from 'eslint-plugin-import-x/rules/no-commonjs'
 
 const EXPORT = 'export'
 const IMPORT = 'import'
 
-const ruleTester = new TSESLint.RuleTester({
+const ruleTester = new TSESLintRuleTester({
   parserOptions: {
     ecmaVersion: 2015,
     sourceType: 'module',

@@ -1,11 +1,11 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, test as _test, testFilePath } from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-cycle'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 const error = (message: string) => ({ message })
 
@@ -65,59 +65,59 @@ ruleTester.run('no-cycle', rule, {
     test({
       code: `import("./${testDialect}/depth-two").then(function({ foo }) {})`,
       options: [{ maxDepth: 1 }],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `import type { FooType } from "./${testDialect}/depth-one"`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `import type { FooType, BarType } from "./${testDialect}/depth-one"`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 1`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 2`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 3`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
-      parser: parsers.TS,
+      languageOptions: { parser: require(parsers.TS) },
     }),
     test({
       code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 4`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
-      parser: parsers.TS,
+      languageOptions: { parser: require(parsers.TS) },
     }),
 
     test({
       code: 'import { bar } from "./flow-types"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { bar } from "./flow-types-only-importing-type"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { bar } from "./flow-types-only-importing-multiple-types"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { bar } from "./flow-typeof"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
   ],
 
   invalid: [
     test({
       code: 'import { bar } from "./flow-types-some-type-imports"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [error(`Dependency cycle detected.`)],
     }),
     test({
@@ -220,12 +220,12 @@ ruleTester.run('no-cycle', rule, {
     test({
       code: `import("./${testDialect}/depth-three-star")`,
       errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `import("./${testDialect}/depth-three-indirect")`,
       errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `import { foo } from "./${testDialect}/depth-two"`,
@@ -240,28 +240,28 @@ ruleTester.run('no-cycle', rule, {
     test({
       code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 5`,
       errors: [error(`Dependency cycle detected.`)],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       // Dynamic import is not properly caracterized with eslint < 4
       code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 6`,
       errors: [error(`Dependency cycle detected.`)],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 7`,
       errors: [error(`Dependency cycle detected.`)],
-      parser: parsers.TS,
+      languageOptions: { parser: require(parsers.TS) },
     }),
     test({
       code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 8`,
       errors: [error(`Dependency cycle detected.`)],
-      parser: parsers.TS,
+      languageOptions: { parser: require(parsers.TS) },
     }),
 
     test({
       code: 'import { bar } from "./flow-types-depth-one"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         error(
           `Dependency cycle via ./flow-types-depth-two:4=>./es6/depth-one:1`,

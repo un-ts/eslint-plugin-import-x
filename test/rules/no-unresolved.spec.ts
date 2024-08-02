@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, SYNTAX_CASES, parsers, testFilePath } from '../utils'
 import type { ValidTestCase } from '../utils'
@@ -8,7 +8,7 @@ import type { ValidTestCase } from '../utils'
 import rule from 'eslint-plugin-import-x/rules/no-unresolved'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 function runResolverTests(resolver: 'node' | 'webpack') {
   // redefine 'test' to set a resolver
@@ -512,13 +512,13 @@ ruleTester.run('import() with built-in parser', rule, {
   valid: [
     test({
       code: "import('fs');",
-      parserOptions: { ecmaVersion: 2021 },
+      languageOptions: { parserOptions: { ecmaVersion: 2021 } },
     }),
   ],
   invalid: [
     test({
       code: 'import("./does-not-exist-l0w9ssmcqy9").then(() => {})',
-      parserOptions: { ecmaVersion: 2021 },
+      languageOptions: { parserOptions: { ecmaVersion: 2021 } },
       errors: [
         "Unable to resolve path to module './does-not-exist-l0w9ssmcqy9'.",
       ],

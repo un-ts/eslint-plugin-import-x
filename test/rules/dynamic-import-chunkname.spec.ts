@@ -1,10 +1,11 @@
-import { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import { TSESTree } from '@typescript-eslint/utils'
 
 import { SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/dynamic-import-chunkname'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 const pickyCommentFormat = '[a-zA-Z-_/.]+'
 
@@ -34,7 +35,7 @@ const multipleImportFunctionOptions = [
   },
 ] as const
 
-const parser = parsers.BABEL
+const babelParser = require(parsers.BABEL)
 
 const pickyChunkNameFormatError = {
   messageId: 'chunknameFormat',
@@ -104,7 +105,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
     {
       code: `import('test')`,
       options: allowEmptyOptions,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -112,7 +113,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options: allowEmptyOptions,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -120,7 +121,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -128,7 +129,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         "test"
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -136,7 +137,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         "test"
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -144,7 +145,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -152,7 +153,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -160,7 +161,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -168,7 +169,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -177,7 +178,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -186,7 +187,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -195,7 +196,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -204,7 +205,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'test'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -212,7 +213,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -220,7 +221,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options: pickyCommentOptions,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -228,7 +229,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -236,7 +237,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -244,7 +245,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -252,7 +253,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -261,7 +262,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -269,7 +270,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -278,7 +279,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -286,7 +287,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -295,7 +296,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -304,7 +305,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -313,7 +314,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -321,7 +322,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -330,7 +331,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -338,7 +339,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -347,7 +348,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -355,7 +356,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -364,7 +365,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -373,7 +374,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -382,7 +383,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -390,7 +391,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -399,7 +400,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -407,7 +408,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     {
       code: `import(
@@ -422,7 +423,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
     },
     ...SYNTAX_CASES,
   ],
@@ -434,7 +435,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -446,7 +447,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
     {
       code: "import('test')",
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -461,7 +462,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -476,7 +477,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -491,7 +492,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -506,7 +507,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -521,7 +522,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -536,7 +537,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -551,7 +552,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -566,7 +567,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -581,7 +582,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -596,7 +597,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -611,7 +612,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -626,7 +627,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -642,7 +643,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -657,7 +658,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -672,7 +673,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options: pickyCommentOptions,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -687,7 +688,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -702,7 +703,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -717,7 +718,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -732,7 +733,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -747,7 +748,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -762,7 +763,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -777,7 +778,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -792,7 +793,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -807,7 +808,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -822,7 +823,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -837,7 +838,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
         'someModule'
       )`,
       options,
-      parser,
+      languageOptions: { parser: babelParser },
       output: null,
       errors: [
         {
@@ -959,7 +960,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
 })
 
 describe('TypeScript', () => {
-  const typescriptParser = parsers.TS
+  const typescriptParser = require(parsers.TS)
   const nodeType = TSESTree.AST_NODE_TYPES.ImportExpression
 
   ruleTester.run('dynamic-import-chunkname', rule, {
@@ -967,7 +968,7 @@ describe('TypeScript', () => {
       {
         code: `import('test')`,
         options: allowEmptyOptions,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -975,7 +976,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options: allowEmptyOptions,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -983,7 +984,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -991,7 +992,7 @@ describe('TypeScript', () => {
             "test"
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -999,7 +1000,7 @@ describe('TypeScript', () => {
             "test"
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1007,7 +1008,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1015,7 +1016,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1023,7 +1024,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1031,7 +1032,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1040,7 +1041,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1049,7 +1050,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1058,7 +1059,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1067,7 +1068,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1075,7 +1076,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options: pickyCommentOptions,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1083,7 +1084,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1091,7 +1092,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1099,7 +1100,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1107,7 +1108,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1115,7 +1116,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1124,7 +1125,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1132,7 +1133,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1141,7 +1142,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1149,7 +1150,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1158,7 +1159,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1166,7 +1167,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1175,7 +1176,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1183,7 +1184,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1192,7 +1193,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1200,7 +1201,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1209,7 +1210,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1218,7 +1219,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1227,7 +1228,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1235,7 +1236,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1244,7 +1245,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1252,7 +1253,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
       {
         code: `import(
@@ -1267,7 +1268,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
       },
     ],
     invalid: [
@@ -1277,7 +1278,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1289,7 +1290,7 @@ describe('TypeScript', () => {
       {
         code: "import('test')",
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1304,7 +1305,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1319,7 +1320,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1334,7 +1335,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1349,7 +1350,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1364,7 +1365,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1379,7 +1380,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1394,7 +1395,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1409,7 +1410,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1424,7 +1425,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1440,7 +1441,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1455,7 +1456,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1470,7 +1471,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1485,7 +1486,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1500,7 +1501,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1515,7 +1516,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options: pickyCommentOptions,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1530,7 +1531,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1545,7 +1546,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1560,7 +1561,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1575,7 +1576,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1590,7 +1591,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1605,7 +1606,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1620,7 +1621,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1635,7 +1636,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1650,7 +1651,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1665,7 +1666,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1680,7 +1681,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        parser: typescriptParser,
+        languageOptions: { parser: typescriptParser },
         output: null,
         errors: [
           {
@@ -1696,7 +1697,7 @@ describe('TypeScript', () => {
           'someModule'
         )`,
         options,
-        parser,
+        languageOptions: { parser: babelParser },
         output: null,
         errors: [
           {
@@ -1728,7 +1729,7 @@ describe('TypeScript', () => {
           'someModule'
         )`,
         options,
-        parser,
+        languageOptions: { parser: babelParser },
         output: null,
         errors: [
           {
@@ -1761,7 +1762,7 @@ describe('TypeScript', () => {
           'someModule'
         )`,
         options,
-        parser,
+        languageOptions: { parser: babelParser },
         output: null,
         errors: [
           {

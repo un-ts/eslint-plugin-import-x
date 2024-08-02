@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, SYNTAX_CASES, testFilePath, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/namespace'
 
-const ruleTester = new TSESLint.RuleTester({
+const ruleTester = new TSESLintRuleTester({
   parserOptions: { env: { es6: true } },
 })
 

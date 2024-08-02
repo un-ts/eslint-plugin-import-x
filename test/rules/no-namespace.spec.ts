@@ -1,4 +1,4 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test } from '../utils'
 
@@ -6,29 +6,39 @@ import rule from 'eslint-plugin-import-x/rules/no-namespace'
 
 const ERROR_MESSAGE = 'Unexpected namespace import.'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-namespace', rule, {
   valid: [
     {
       code: "import { a, b } from 'foo';",
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: "import { a, b } from './foo';",
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: "import bar from 'bar';",
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: "import bar from './bar';",
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: "import * as bar from './ignored-module.ext';",
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ ignore: ['*.ext'] }],
     },
   ],

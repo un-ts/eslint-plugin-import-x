@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import {
   test,
@@ -12,7 +12,7 @@ import {
 import jsxConfig from 'eslint-plugin-import-x/config/react'
 import rule from 'eslint-plugin-import-x/rules/no-duplicates'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-duplicates', rule, {
   valid: [
@@ -28,7 +28,7 @@ ruleTester.run('no-duplicates', rule, {
     // #225: ignore duplicate if is a flow type import
     test({
       code: "import { x } from './foo'; import type { y } from './foo'",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // #1107: Using different query strings that trigger different webpack loaders.
@@ -117,7 +117,7 @@ ruleTester.run('no-duplicates', rule, {
     test({
       code: "import type { x } from './foo'; import type { y } from './foo'",
       output: "import type { x , y } from './foo'; ",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
@@ -159,7 +159,7 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS,
+      languageOptions: { parser: require(parsers.TS) },
     }),
 
     // #2347: duplicate identifiers should be removed
@@ -171,7 +171,7 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS,
+      languageOptions: { parser: require(parsers.TS) },
     }),
 
     // #2347: duplicate identifiers should be removed, but not if they are adjacent to comments
@@ -182,7 +182,7 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS,
+      languageOptions: { parser: require(parsers.TS) },
     }),
 
     test({

@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-named-as-default', rule, {
   valid: [
@@ -22,7 +22,7 @@ ruleTester.run('no-named-as-default', rule, {
 
     test({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
     }),
 
     ...SYNTAX_CASES,
@@ -53,7 +53,7 @@ ruleTester.run('no-named-as-default', rule, {
     // es7
     test({
       code: 'export foo from "./bar";',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         {
           message:
@@ -65,7 +65,7 @@ ruleTester.run('no-named-as-default', rule, {
     }),
     test({
       code: 'export foo, { foo as bar } from "./bar";',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         {
           message:
@@ -96,7 +96,7 @@ ruleTester.run('no-named-as-default', rule, {
           type: 'ImportDefaultSpecifier',
         },
       ],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
     }),
     test({
       code: 'import foo, { foo as bar } from "./export-default-string-and-named"',
@@ -107,7 +107,7 @@ ruleTester.run('no-named-as-default', rule, {
           type: 'ImportDefaultSpecifier',
         },
       ],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
     }),
   ],
 })

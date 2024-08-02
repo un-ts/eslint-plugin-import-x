@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import {
   dependencies as deps,
@@ -12,8 +12,8 @@ import { parsers, test, testFilePath } from '../utils'
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-extraneous-dependencies'
 
-const ruleTester = new TSESLint.RuleTester()
-const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
+const ruleTester = new TSESLintRuleTester()
+const typescriptRuleTester = new TSESLintRuleTester(typescriptConfig)
 
 const packageDirWithSyntaxError = testFilePath('with-syntax-error')
 
@@ -107,7 +107,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import type MyType from "myflowtyped";',
       options: [{ packageDir: packageDirWithFlowTyped }],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `
@@ -115,7 +115,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         import typeof TypeScriptModule from 'typescript';
       `,
       options: [{ packageDir: packageDirWithFlowTyped }],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import react from "react";',

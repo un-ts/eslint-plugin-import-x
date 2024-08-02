@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-default'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-named-default', rule, {
   valid: [
@@ -14,11 +14,11 @@ ruleTester.run('no-named-default', rule, {
     // Should ignore imported flow types
     test({
       code: 'import { type default as Foo } from "./bar";',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { typeof default as Foo } from "./bar";',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     ...SYNTAX_CASES,
@@ -31,7 +31,7 @@ ruleTester.run('no-named-default', rule, {
         message: 'Use default import syntax to import \'default\'.',
         type: 'Identifier',
       }],
-      parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) } ,
     }),*/
     test({
       code: 'import { default as bar } from "./bar";',
