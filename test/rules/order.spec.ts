@@ -3033,7 +3033,7 @@ describe('TypeScript', () => {
     const parserConfig = {
       parser,
       settings: {
-        'import-x/parsers': { [parser]: ['.ts'] },
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
         'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
     }
