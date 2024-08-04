@@ -41,6 +41,9 @@
     "release": "changeset publish",
     "test": "jest",
     "test-compiled": "yarn build && cross-env TEST_COMPILED=1 jest",
+    "test-examples": "yarn build && yarn test-example:legacy && yarn test-example:flat",
+    "test-example:legacy": "cd examples/legacy && yarn && yarn lint",
+    "test-example:flat": "cd examples/flat && yarn && yarn lint",
     "update:eslint-docs": "eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️",
     "watch": "yarn test --watch"
   },
@@ -48,6 +51,7 @@
     "eslint": "^8.56.0 || ^9.0.0-0"
   },
   "dependencies": {
+    "@nodelib/fs.walk": "^2.0.0",
     "@typescript-eslint/utils": "^7.4.0",
     "debug": "^4.3.4",
     "doctrine": "^3.0.0",

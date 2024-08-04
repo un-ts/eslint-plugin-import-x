@@ -565,7 +565,6 @@ export = createRule<Options[], MessageId>({
           return
         }
       }
-
       const exports = exportList.get(filename)
 
       if (!exports) {

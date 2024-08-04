@@ -1,4 +1,4 @@
-import type { PluginConfig } from '../types'
+import type { PluginFlatBaseConfig } from '../../types'
 
 /**
  * This config:
@@ -13,7 +13,7 @@ const typeScriptExtensions = ['.ts', '.tsx', '.cts', '.mts'] as const
 
 const allExtensions = [...typeScriptExtensions, '.js', '.jsx', '.cjs', '.mjs'] as const
 
-export = {
+export default {
   settings: {
     'import-x/extensions': allExtensions,
     'import-x/external-module-folders': ['node_modules', 'node_modules/@types'],
@@ -32,4 +32,4 @@ export = {
     // TypeScript compilation already ensures that named imports exist in the referenced module
     'import-x/named': 'off',
   },
-} satisfies PluginConfig
+} satisfies PluginFlatBaseConfig
