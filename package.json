@@ -35,7 +35,7 @@
     "codesandbox:install": "yarn --ignore-engines",
     "lint": "run-p lint:*",
     "lint:docs": "yarn update:eslint-docs --check",
-    "lint:es": "ESLINT_USE_FLAT_CONFIG=false eslint . --cache",
+    "lint:es": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint . --cache",
     "lint:tsc": "tsc -p tsconfig.base.json --noEmit",
     "prepare": "patch-package",
     "release": "changeset publish",
