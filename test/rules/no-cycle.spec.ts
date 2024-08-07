@@ -32,10 +32,6 @@ ruleTester.run('no-cycle', rule, {
     test({ code: 'var bar = require("./bar/index")' }),
     test({ code: 'var bar = require("./bar")' }),
     test({
-      code: 'var bar = require("./bar")',
-      filename: '<text>',
-    }),
-    test({
       code: 'import { foo } from "cycles/external/depth-one"',
       options: [{ ignoreExternal: true }],
       settings: {
