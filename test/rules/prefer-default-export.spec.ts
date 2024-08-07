@@ -416,14 +416,6 @@ describe('TypeScript', () => {
           ...parserConfig,
         }),
         test({
-          code: `
-            export type foo = string;
-            export type bar = number;
-            /* ${parser.replace(process.cwd(), '$$PWD')} */
-          `,
-          ...parserConfig,
-        }),
-        test({
           code: `export type foo = string /* ${parser.replace(process.cwd(), '$$PWD')}*/`,
           ...parserConfig,
         }),

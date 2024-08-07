@@ -1194,6 +1194,7 @@ ruleTester.run('order', rule, {
           message: '`fs` import should occur before import of `async`',
         },
       ],
+      languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // fix order with spaces on the end of line
     test({
@@ -1210,6 +1211,7 @@ ruleTester.run('order', rule, {
           message: '`fs` import should occur before import of `async`',
         },
       ],
+      languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // fix order with comment on the end of line
     test({
@@ -1226,6 +1228,7 @@ ruleTester.run('order', rule, {
           message: '`fs` import should occur before import of `async`',
         },
       ],
+      languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // fix order with comments at the end and start of line
     test({
@@ -1349,6 +1352,7 @@ ruleTester.run('order', rule, {
           message: '`fs` import should occur before import of `async`',
         },
       ],
+      languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // builtin before external module (import)
     test({
@@ -1747,6 +1751,7 @@ ruleTester.run('order', rule, {
           message: '`fs` import should occur before import of `async`',
         },
       ],
+      languageOptions: { parser: require(parsers.ESPREE) },
     }),
     test({
       code: `

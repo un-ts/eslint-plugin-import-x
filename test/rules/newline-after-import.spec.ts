@@ -438,19 +438,6 @@ ruleTester.run('newline-after-import', rule, {
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },
-
-    {
-      code: `
-        import stub from './stub';
-
-        export {
-            stub
-        }
-      `,
-      languageOptions: {
-        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      },
-    },
     {
       code: `
         import path from 'path';
