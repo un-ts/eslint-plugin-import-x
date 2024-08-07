@@ -11,7 +11,10 @@ const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('default', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) } }),
+    test({
+      code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
 
     test({ code: 'import foo from "./empty-folder";' }),
     test({ code: 'import { foo } from "./default-export";' }),
@@ -30,7 +33,10 @@ ruleTester.run('default', rule, {
     // core modules always have a default
     test({ code: 'import crypto from "crypto";' }),
 
-    test({ code: 'import common from "./common";', languageOptions: { parser: require(parsers.BABEL) }, }),
+    test({
+      code: 'import common from "./common";',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
 
     // es7 export syntax
     test({

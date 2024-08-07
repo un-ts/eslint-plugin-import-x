@@ -58,7 +58,7 @@ ruleTester.run('no-namespace', rule, {
     test({
       code: "import defaultExport, * as foo from 'foo';",
       output: "import defaultExport, * as foo from 'foo';",
-      languageOptions: { parser: require(parsers.ESPREE), },
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         {
           line: 1,

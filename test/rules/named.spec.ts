@@ -20,7 +20,10 @@ function error(
 
 ruleTester.run('named', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) } }),
+    test({
+      code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
 
     test({ code: 'import { foo } from "./bar"' }),
     test({ code: 'import { foo } from "./empty-module"' }),
@@ -152,7 +155,10 @@ ruleTester.run('named', rule, {
     }),
 
     // ignore CJS by default. always ignore ignore list
-    test({ code: 'import {a, b, d} from "./common"', languageOptions: { parser: require(parsers.BABEL) }, }),
+    test({
+      code: 'import {a, b, d} from "./common"',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
     test({
       code: 'import { baz } from "./bar"',
       settings: { 'import-x/ignore': ['bar'] },

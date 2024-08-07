@@ -26,7 +26,10 @@ function runResolverTests(resolver: 'node' | 'webpack') {
 
   ruleTester.run(`no-unresolved (${resolver})`, rule, {
     valid: [
-      test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) },  }),
+      test({
+        code: 'import "./malformed.js"',
+        languageOptions: { parser: require(parsers.ESPREE) },
+      }),
 
       rest({ code: 'import foo from "./bar";' }),
       rest({ code: "import bar from './bar.js';" }),

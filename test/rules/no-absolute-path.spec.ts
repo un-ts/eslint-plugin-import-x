@@ -42,7 +42,8 @@ ruleTester.run('no-absolute-path', rule, {
     // amd not enabled by default
     test({ code: 'require(["/some/path"], function (f) { /* ... */ })' }),
     test({
-      code: 'define(["/some/path"], function (f) { /* ... */ })', languageOptions: { parser: require(parsers.ESPREE), },
+      code: 'define(["/some/path"], function (f) { /* ... */ })',
+      languageOptions: { parser: require(parsers.ESPREE) },
     }),
     test({
       code: 'require(["./some/path"], function (f) { /* ... */ })',
@@ -121,7 +122,7 @@ ruleTester.run('no-absolute-path', rule, {
     test({
       code: 'define(["/some/path"], function (f) { /* ... */ })',
       filename: '/foo/bar/index.js',
-      languageOptions: { parser: require(parsers.ESPREE), },
+      languageOptions: { parser: require(parsers.ESPREE) },
       options: [{ amd: true }],
       errors: [error],
       output: 'define(["../../some/path"], function (f) { /* ... */ })',

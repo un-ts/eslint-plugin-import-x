@@ -17,7 +17,10 @@ function error(name: string, namespace: string) {
 }
 
 const valid = [
-  test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) } }),
+  test({
+    code: 'import "./malformed.js"',
+    languageOptions: { parser: require(parsers.ESPREE) },
+  }),
 
   test({ code: "import * as foo from './empty-folder';" }),
   test({
@@ -249,21 +252,27 @@ const valid = [
 
   test({
     code: "import * as names from './default-export-string';",
-    languageOptions: { parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 } },
+    languageOptions: {
+      parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 },
+    },
   }),
   test({
     code: "import * as names from './default-export-string'; console.log(names.default)",
-    languageOptions: { parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 } },
+    languageOptions: {
+      parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 },
+    },
   }),
   test({
     code: "import * as names from './default-export-namespace-string';",
     languageOptions: {
-      parserOptions: { parser: require(parsers.ESPREE), ecmaVersion: 2022 },
+      parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 },
     },
   }),
   test({
     code: "import * as names from './default-export-namespace-string'; console.log(names.default)",
-    languageOptions: { parserOptions: { parser: require(parsers.ESPREE), ecmaVersion: 2022 } },
+    languageOptions: {
+      parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 },
+    },
   }),
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.d.e)`,

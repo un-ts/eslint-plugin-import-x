@@ -18,11 +18,11 @@ function generateSuggestionsTestCases(cases: string[], parser?: any) {
         {
           suggestions: [
             {
-              desc: 'Remove unused import',
+              messageId: 'unused',
               output: '',
             },
             {
-              desc: 'Remove empty import block',
+              messageId: 'emptyImport',
               output: `import 'mod';`,
             },
           ],

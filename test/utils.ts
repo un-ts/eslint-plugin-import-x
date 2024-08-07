@@ -90,7 +90,7 @@ export function test<T extends ValidTestCase>(
       parserOptions: {
         sourceType: 'module',
         ecmaVersion: 9,
-        ...t.languageOptions?.parserOptions
+        ...t.languageOptions?.parserOptions,
       },
     },
   }

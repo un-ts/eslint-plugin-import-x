@@ -10,10 +10,16 @@ function runResolverTests(resolver: 'node' | 'webpack') {
   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
     valid: [
       // CommonJS modules with default options
-      test({ code: 'require("./../fixtures/malformed.js")', languageOptions: { parser: require(parsers.ESPREE) } }),
+      test({
+        code: 'require("./../fixtures/malformed.js")',
+        languageOptions: { parser: require(parsers.ESPREE) },
+      }),
 
       // ES modules with default options
-      test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) },  }),
+      test({
+        code: 'import "./malformed.js"',
+        languageOptions: { parser: require(parsers.ESPREE) },
+      }),
       test({ code: 'import "./test-module"' }),
       test({ code: 'import "./bar/"' }),
       test({ code: 'import "."' }),

@@ -10,7 +10,10 @@ console.log({ babel: require(parsers.BABEL) })
 
 ruleTester.run('no-named-as-default', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) },  }),
+    test({
+      code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
 
     test({ code: 'import bar, { foo } from "./bar";' }),
     test({ code: 'import bar, { foo } from "./empty-folder";' }),
@@ -33,7 +36,10 @@ ruleTester.run('no-named-as-default', rule, {
 
     test({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
-      languageOptions: { parser: require(parsers.ESPREE), parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
 
     ...SYNTAX_CASES,
@@ -89,7 +95,7 @@ ruleTester.run('no-named-as-default', rule, {
 
     test({
       code: 'import foo from "./malformed.js"',
-      languageOptions: { parser: require(parsers.BABEL) },
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         {
           message:
@@ -108,7 +114,10 @@ ruleTester.run('no-named-as-default', rule, {
           type: 'ImportDefaultSpecifier',
         },
       ],
-      languageOptions: { parser: require(parsers.ESPREE), parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
     test({
       code: 'import foo, { foo as bar } from "./export-default-string-and-named"',
@@ -119,7 +128,10 @@ ruleTester.run('no-named-as-default', rule, {
           type: 'ImportDefaultSpecifier',
         },
       ],
-      languageOptions: { parser: require(parsers.ESPREE), parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
 })
