@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, SYNTAX_CASES } from '../utils'
+import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-anonymous-default-export'
 
@@ -53,7 +53,10 @@ ruleTester.run('no-anonymous-default-export', rule, {
     test({ code: 'const foo = 123\nexport { foo as default }' }),
     test({
       code: 'const foo = 123\nexport { foo as "default" }',
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
 
     // Allow call expressions by default for backwards compatibility

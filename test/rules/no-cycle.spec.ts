@@ -15,8 +15,6 @@ const test = <T extends ValidTestCase>(def: T) =>
     filename: testFilePath('./cycles/depth-zero.js'),
   })
 
-const testDialect = 'es6'
-
 ruleTester.run('no-cycle', rule, {
   valid: [
     // this rule doesn't care if the cycle length is 0
@@ -55,42 +53,42 @@ ruleTester.run('no-cycle', rule, {
     }),
 
     test({
-      code: `import { foo } from "./${testDialect}/depth-two"`,
+      code: `import { foo } from "./es6/depth-two"`,
       options: [{ maxDepth: 1 }],
     }),
     test({
-      code: `import { foo, bar } from "./${testDialect}/depth-two"`,
+      code: `import { foo, bar } from "./es6/depth-two"`,
       options: [{ maxDepth: 1 }],
     }),
     test({
-      code: `import("./${testDialect}/depth-two").then(function({ foo }) {})`,
+      code: `import("./es6/depth-two").then(function({ foo }) {})`,
       options: [{ maxDepth: 1 }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
-      code: `import type { FooType } from "./${testDialect}/depth-one"`,
+      code: `import type { FooType } from "./es6/depth-one"`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
-      code: `import type { FooType, BarType } from "./${testDialect}/depth-one"`,
+      code: `import type { FooType, BarType } from "./es6/depth-one"`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
-      code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 1`,
+      code: `function bar(){ return import("./es6/depth-one"); } // #2265 1`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
-      code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 2`,
+      code: `import { foo } from "./es6/depth-one-dynamic"; // #2265 2`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
-      code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 3`,
+      code: `function bar(){ return import("./es6/depth-one"); } // #2265 3`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
     }),
     test({
-      code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 4`,
+      code: `import { foo } from "./es6/depth-one-dynamic"; // #2265 4`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
     }),
 
@@ -138,120 +136,120 @@ ruleTester.run('no-cycle', rule, {
     // Ensure behavior does not change for those tests, with or without
     ...[{}, { allowUnsafeDynamicCyclicDependency: true }].flatMap(opts => [
       test({
-        code: `import { foo } from "./${testDialect}/depth-one"`,
+        code: `import { foo } from "./es6/depth-one"`,
         options: [{ ...opts }],
         errors: [error(`Dependency cycle detected.`)],
       }),
       test({
-        code: `import { foo } from "./${testDialect}/depth-one"`,
+        code: `import { foo } from "./es6/depth-one"`,
         options: [{ ...opts, maxDepth: 1 }],
         errors: [error(`Dependency cycle detected.`)],
       }),
       test({
-        code: `const { foo } = require("./${testDialect}/depth-one")`,
+        code: `const { foo } = require("./es6/depth-one")`,
         errors: [error(`Dependency cycle detected.`)],
         options: [{ ...opts, commonjs: true }],
       }),
       test({
-        code: `require(["./${testDialect}/depth-one"], d1 => {})`,
+        code: `require(["./es6/depth-one"], d1 => {})`,
         errors: [error(`Dependency cycle detected.`)],
         options: [{ ...opts, amd: true }],
       }),
       test({
-        code: `define(["./${testDialect}/depth-one"], d1 => {})`,
+        code: `define(["./es6/depth-one"], d1 => {})`,
         errors: [error(`Dependency cycle detected.`)],
         options: [{ ...opts, amd: true }],
       }),
       test({
-        code: `import { foo } from "./${testDialect}/depth-one-reexport"`,
+        code: `import { foo } from "./es6/depth-one-reexport"`,
         options: [{ ...opts }],
         errors: [error(`Dependency cycle detected.`)],
       }),
       test({
-        code: `import { foo } from "./${testDialect}/depth-two"`,
+        code: `import { foo } from "./es6/depth-two"`,
         options: [{ ...opts }],
         errors: [error(`Dependency cycle via ./depth-one:1`)],
       }),
       test({
-        code: `import { foo } from "./${testDialect}/depth-two"`,
+        code: `import { foo } from "./es6/depth-two"`,
         options: [{ ...opts, maxDepth: 2 }],
         errors: [error(`Dependency cycle via ./depth-one:1`)],
       }),
       test({
-        code: `const { foo } = require("./${testDialect}/depth-two")`,
+        code: `const { foo } = require("./es6/depth-two")`,
         errors: [error(`Dependency cycle via ./depth-one:1`)],
         options: [{ ...opts, commonjs: true }],
       }),
       test({
-        code: `import { two } from "./${testDialect}/depth-three-star"`,
+        code: `import { two } from "./es6/depth-three-star"`,
         options: [{ ...opts }],
         errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
       }),
       test({
-        code: `import one, { two, three } from "./${testDialect}/depth-three-star"`,
+        code: `import one, { two, three } from "./es6/depth-three-star"`,
         options: [{ ...opts }],
         errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
       }),
       test({
-        code: `import { bar } from "./${testDialect}/depth-three-indirect"`,
+        code: `import { bar } from "./es6/depth-three-indirect"`,
         options: [{ ...opts }],
         errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
       }),
       test({
-        code: `import { bar } from "./${testDialect}/depth-three-indirect"`,
+        code: `import { bar } from "./es6/depth-three-indirect"`,
         options: [{ ...opts }],
         errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
         languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
-        code: `import { foo } from "./${testDialect}/depth-two"`,
+        code: `import { foo } from "./es6/depth-two"`,
         options: [{ ...opts, maxDepth: Number.POSITIVE_INFINITY }],
         errors: [error(`Dependency cycle via ./depth-one:1`)],
       }),
       test({
-        code: `import { foo } from "./${testDialect}/depth-two"`,
+        code: `import { foo } from "./es6/depth-two"`,
         options: [{ ...opts, maxDepth: '∞' }],
         errors: [error(`Dependency cycle via ./depth-one:1`)],
       }),
     ]),
 
     test({
-      code: `import("./${testDialect}/depth-three-star")`,
+      code: `import("./es6/depth-three-star")`,
       errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
-      code: `import("./${testDialect}/depth-three-indirect")`,
+      code: `import("./es6/depth-three-indirect")`,
       errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
-      code: `import { foo } from "./${testDialect}/depth-two"`,
+      code: `import { foo } from "./es6/depth-two"`,
       options: [{ maxDepth: Number.POSITIVE_INFINITY }],
       errors: [error(`Dependency cycle via ./depth-one:1`)],
     }),
     test({
-      code: `import { foo } from "./${testDialect}/depth-two"`,
+      code: `import { foo } from "./es6/depth-two"`,
       options: [{ maxDepth: '∞' }],
       errors: [error(`Dependency cycle via ./depth-one:1`)],
     }),
     test({
-      code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 5`,
+      code: `function bar(){ return import("./es6/depth-one"); } // #2265 5`,
       errors: [error(`Dependency cycle detected.`)],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       // Dynamic import is not properly caracterized with eslint < 4
-      code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 6`,
+      code: `import { foo } from "./es6/depth-one-dynamic"; // #2265 6`,
       errors: [error(`Dependency cycle detected.`)],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
-      code: `function bar(){ return import("./${testDialect}/depth-one"); } // #2265 7`,
+      code: `function bar(){ return import("./es6/depth-one"); } // #2265 7`,
       errors: [error(`Dependency cycle detected.`)],
     }),
     test({
-      code: `import { foo } from "./${testDialect}/depth-one-dynamic"; // #2265 8`,
+      code: `import { foo } from "./es6/depth-one-dynamic"; // #2265 8`,
       errors: [error(`Dependency cycle detected.`)],
     }),
 

@@ -98,7 +98,10 @@ ruleTester.run('prefer-default-export', rule, {
     }),
     test({
       code: 'let foo; export { foo as "default" };',
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
   invalid: [
@@ -260,7 +263,10 @@ ruleTester.run('prefer-default-export', rule, {
     test({
       code: 'export const a = 4; let foo; export { foo as "default" };',
       options: [{ target: 'any' }],
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
   // { target: 'any' } invalid cases when any exporting file must contain default export but does not

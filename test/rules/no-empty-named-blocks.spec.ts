@@ -6,6 +6,7 @@ import rule from 'eslint-plugin-import-x/rules/no-empty-named-blocks'
 
 const ruleTester = new TSESLintRuleTester()
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function generateSuggestionsTestCases(cases: string[], parser?: any) {
   return cases.map(code =>
     test({
@@ -97,14 +98,12 @@ ruleTester.run('no-empty-named-blocks', rule, {
     ]),
 
     // Typescript
-    ...generateSuggestionsTestCases(
-      [
-        `import type {} from 'mod';`,
-        `import type {}from 'mod';`,
-        `import type{}from 'mod';`,
-        `import type {}from'mod';`,
-      ]
-    ),
+    ...generateSuggestionsTestCases([
+      `import type {} from 'mod';`,
+      `import type {}from 'mod';`,
+      `import type{}from 'mod';`,
+      `import type {}from'mod';`,
+    ]),
     test({
       code: `import type Default, {} from 'mod';`,
       output: `import type Default from 'mod';`,

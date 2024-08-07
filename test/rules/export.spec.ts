@@ -43,7 +43,7 @@ ruleTester.run('export', rule, {
         parserOptions: {
           ecmaVersion: 2020,
         },
-      }
+      },
     }),
 
     {
@@ -150,10 +150,11 @@ ruleTester.run('export', rule, {
         "Multiple exports of name 'foo'.",
       ],
       languageOptions: {
+        parser: require(parsers.ESPREE),
         parserOptions: {
           ecmaVersion: 2022,
         },
-      }
+      },
     }),
   ],
 })

@@ -173,7 +173,10 @@ ruleTester.run('no-default-export', rule, {
             'Do not alias `foo` as `default`. Just export `foo` itself instead.',
         },
       ],
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
 })

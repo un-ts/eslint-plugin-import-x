@@ -967,7 +967,6 @@ describe('TypeScript', () => {
       {
         code: `import('test')`,
         options: allowEmptyOptions,
-
       },
       {
         code: `import(
@@ -975,7 +974,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options: allowEmptyOptions,
-
       },
       {
         code: `import(
@@ -983,7 +981,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -991,7 +988,6 @@ describe('TypeScript', () => {
             "test"
           )`,
         options,
-
       },
       {
         code: `import(
@@ -999,7 +995,6 @@ describe('TypeScript', () => {
             "test"
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1007,7 +1002,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1015,7 +1009,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1023,7 +1016,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1031,7 +1023,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1040,7 +1031,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1049,7 +1039,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1058,7 +1047,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1067,7 +1055,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1075,7 +1062,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options: pickyCommentOptions,
-
       },
       {
         code: `import(
@@ -1083,7 +1069,6 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1091,7 +1076,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1099,7 +1083,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1107,7 +1090,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1115,7 +1097,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1124,7 +1105,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1132,7 +1112,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1141,7 +1120,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1149,7 +1127,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1158,7 +1135,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1166,7 +1142,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1175,7 +1150,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1183,7 +1157,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1192,7 +1165,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1200,7 +1172,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1209,7 +1180,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1218,7 +1188,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1227,7 +1196,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1235,7 +1203,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1244,7 +1211,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1252,7 +1218,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
       {
         code: `import(
@@ -1267,7 +1232,6 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-
       },
     ],
     invalid: [

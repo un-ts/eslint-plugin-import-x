@@ -64,7 +64,7 @@ ruleTester.run('default', rule, {
           ecmaVersion: 6,
           ecmaFeatures: { jsx: true },
         },
-      }
+      },
     }),
 
     // #54: import of named export default
@@ -78,7 +78,7 @@ ruleTester.run('default', rule, {
         parserOptions: {
           ecmaFeatures: { jsx: true, modules: true },
         },
-      }
+      },
     }),
 
     // from no-errors
@@ -113,7 +113,7 @@ ruleTester.run('default', rule, {
         parserOptions: {
           ecmaVersion: 2022,
         },
-      }
+      },
     }),
 
     ...SYNTAX_CASES,
@@ -245,7 +245,7 @@ describe('TypeScript', () => {
               '../fixtures/typescript-export-assign-default-namespace/',
             ),
           },
-        }
+        },
       }),
       test({
         code: `import Foo from "./typescript-export-as-default-namespace"`,
@@ -262,7 +262,7 @@ describe('TypeScript', () => {
               '../fixtures/typescript-export-as-default-namespace/',
             ),
           },
-        }
+        },
       }),
       test({
         code: `import Foo from "./typescript-export-react-test-renderer"`,
@@ -278,7 +278,7 @@ describe('TypeScript', () => {
               '../fixtures/typescript-export-react-test-renderer/',
             ),
           },
-        }
+        },
       }),
       test({
         code: `import Foo from "./typescript-extended-config"`,
@@ -294,7 +294,7 @@ describe('TypeScript', () => {
               '../fixtures/typescript-extended-config/',
             ),
           },
-        }
+        },
       }),
       test({
         code: `import foobar from "./typescript-export-assign-property"`,

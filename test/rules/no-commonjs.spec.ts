@@ -11,7 +11,7 @@ const ruleTester = new TSESLintRuleTester({
       ecmaVersion: 2015,
       sourceType: 'module',
     },
-  }
+  },
 })
 
 ruleTester.run('no-commonjs', rule, {

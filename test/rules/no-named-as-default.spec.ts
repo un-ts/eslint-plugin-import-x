@@ -6,6 +6,8 @@ import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
 const ruleTester = new TSESLintRuleTester()
 
+console.log({ babel: require(parsers.BABEL) })
+
 ruleTester.run('no-named-as-default', rule, {
   valid: [
     test({ code: 'import "./malformed.js"' }),

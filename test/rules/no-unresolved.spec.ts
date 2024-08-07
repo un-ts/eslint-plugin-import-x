@@ -42,7 +42,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         code: "import('fs');",
         languageOptions: {
           parserOptions: { ecmaVersion: 2021 },
-        }
+        },
       }),
 
       rest({ code: 'import * as foo from "a"' }),
@@ -201,7 +201,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         ],
         languageOptions: {
           parserOptions: { ecmaVersion: 2021 },
-        }
+        },
       }),
 
       // export symmetry proposal

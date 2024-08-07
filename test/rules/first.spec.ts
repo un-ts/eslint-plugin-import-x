@@ -29,7 +29,7 @@ ruleTester.run('first', rule, {
       code: fs.readFileSync(testFilePath('component.html'), 'utf8'),
       languageOptions: {
         parser: require('@angular-eslint/template-parser'),
-      }
+      },
     }),
   ],
   invalid: [

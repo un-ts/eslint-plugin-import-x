@@ -204,7 +204,7 @@ ruleTester.run('named', rule, {
           sourceType: 'module',
           ecmaVersion: 2020,
         },
-      }
+      },
     }),
 
     test({
@@ -220,11 +220,17 @@ ruleTester.run('named', rule, {
 
     test({
       code: 'import { "foo" as foo } from "./bar"',
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
     test({
       code: 'import { "foo" as foo } from "./empty-module"',
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
 
@@ -370,7 +376,10 @@ ruleTester.run('named', rule, {
     test({
       code: 'import { "somethingElse" as somethingElse } from "./test-module"',
       errors: [error('somethingElse', './test-module', 'Literal')],
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
     test({
       code: 'import { "baz" as baz, "bop" as bop } from "./bar"',
@@ -378,12 +387,18 @@ ruleTester.run('named', rule, {
         error('baz', './bar', 'Literal'),
         error('bop', './bar', 'Literal'),
       ],
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
     test({
       code: 'import { "default" as barDefault } from "./re-export"',
       errors: [`default not found in './re-export'`],
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
 })

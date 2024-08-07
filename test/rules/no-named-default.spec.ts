@@ -61,10 +61,11 @@ ruleTester.run('no-named-default', rule, {
         },
       ],
       languageOptions: {
+        parser: require(parsers.ESPREE),
         parserOptions: {
           ecmaVersion: 2022,
         },
-      }
+      },
     }),
   ],
 })

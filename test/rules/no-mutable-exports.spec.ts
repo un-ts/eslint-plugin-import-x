@@ -36,7 +36,10 @@ ruleTester.run('no-mutable-exports', rule, {
     }),
     test({
       code: 'const count = 1\nexport { count as "counter" }',
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
   invalid: [
@@ -75,7 +78,10 @@ ruleTester.run('no-mutable-exports', rule, {
     test({
       code: 'let count = 1\nexport { count as "counter" }',
       errors: ["Exporting mutable 'let' binding, use 'const' instead."],
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
 
     // todo: undeclared globals

@@ -1,12 +1,14 @@
 import path from 'node:path'
 
+import type {
+  ValidTestCase as TSESLintValidTestCase,
+  InvalidTestCase as TSESLintInvalidTestCase,
+} from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { RuleTester } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
-
-import { ValidTestCase as TSESLintValidTestCase, InvalidTestCase as TSESLintInvalidTestCase } from '@typescript-eslint/rule-tester';
 
 import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x/types'
 
@@ -49,7 +51,7 @@ export function eslintVersionSatisfies(specifier: string) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
 export type ValidTestCase = TSESLintValidTestCase<any> & {
   errors?: readonly InvalidTestCaseError[] | number
-  parser?: never,
+  parser?: never
   parserOptions?: never
 }
 
@@ -93,7 +95,7 @@ export function test<T extends ValidTestCase>(
         ecmaVersion: 9,
       },
       ...t.languageOptions,
-    }
+    },
   }
 }
 
@@ -113,7 +115,10 @@ export const SYNTAX_CASES = [
   test({ code: 'for (let [ foo, bar ] of baz) {}' }),
 
   test({ code: 'const { x, y } = bar' }),
-  test({ code: 'const { x, y, ...z } = bar', languageOptions: { parser: require(parsers.BABEL) } }),
+  test({
+    code: 'const { x, y, ...z } = bar',
+    languageOptions: { parser: require(parsers.BABEL) },
+  }),
 
   // all the exports
   test({ code: 'let x; export { x }' }),

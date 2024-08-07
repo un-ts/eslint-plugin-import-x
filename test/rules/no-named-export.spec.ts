@@ -31,7 +31,10 @@ ruleTester.run('no-named-export', rule, {
     }),
     test({
       code: 'let foo; export { foo as "default" }',
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
   invalid: [

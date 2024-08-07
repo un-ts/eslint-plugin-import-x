@@ -5,7 +5,7 @@ import rule from 'eslint-plugin-import-x/rules/no-amd'
 const ruleTester = new TSESLintRuleTester({
   languageOptions: {
     parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-  }
+  },
 })
 
 ruleTester.run('no-amd', rule, {
