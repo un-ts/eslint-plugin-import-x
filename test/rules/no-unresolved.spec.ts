@@ -26,7 +26,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
 
   ruleTester.run(`no-unresolved (${resolver})`, rule, {
     valid: [
-      test({ code: 'import "./malformed.js"' }),
+      test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) },  }),
 
       rest({ code: 'import foo from "./bar";' }),
       rest({ code: "import bar from './bar.js';" }),
@@ -431,6 +431,7 @@ ruleTester.run('no-unresolved ignore list', rule, {
   valid: [
     test({
       code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.BABEL) },
       options: [{ ignore: ['.png$', '.gif$'] }],
     }),
     test({
@@ -471,6 +472,7 @@ ruleTester.run('no-unresolved unknown resolver', rule, {
     // logs resolver load error
     test({
       code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.BABEL) },
       settings: { 'import-x/resolver': 'doesnt-exist' },
       errors: [
         `Resolve error: unable to load resolver "doesnt-exist".`,

@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, SYNTAX_CASES } from '../utils'
+import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default-member'
 
@@ -19,7 +19,7 @@ ruleTester.run('no-named-as-default-member', rule, {
     }),
     test({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: { parser: require(parsers.ESPREE), parserOptions: { ecmaVersion: 2022 } },
     }),
 
     ...SYNTAX_CASES,
@@ -75,7 +75,7 @@ ruleTester.run('no-named-as-default-member', rule, {
           type: 'MemberExpression',
         },
       ],
-      languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+      languageOptions: { parser: require(parsers.ESPREE), parserOptions: { ecmaVersion: 2022 } },
     }),
   ],
 })

@@ -20,7 +20,7 @@ function error(
 
 ruleTester.run('named', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"' }),
+    test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) } }),
 
     test({ code: 'import { foo } from "./bar"' }),
     test({ code: 'import { foo } from "./empty-module"' }),

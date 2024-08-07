@@ -8,7 +8,7 @@ const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('export', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"' }),
+    test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) } }),
 
     // default
     test({ code: 'var foo = "foo"; export default foo;' }),
@@ -111,6 +111,7 @@ ruleTester.run('export', rule, {
     //       `npm up` first if it's failing.
     test({
       code: 'export * from "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         {
           message:

@@ -17,7 +17,7 @@ function error(name: string, namespace: string) {
 }
 
 const valid = [
-  test({ code: 'import "./malformed.js"' }),
+  test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) } }),
 
   test({ code: "import * as foo from './empty-folder';" }),
   test({

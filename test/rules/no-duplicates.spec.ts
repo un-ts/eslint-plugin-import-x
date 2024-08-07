@@ -16,7 +16,7 @@ const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-duplicates', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"' }),
+    test({ code: 'import "./malformed.js"', languageOptions: { parser: require(parsers.ESPREE) },  }),
 
     test({ code: "import { x } from './foo'; import { y } from './bar'" }),
 
