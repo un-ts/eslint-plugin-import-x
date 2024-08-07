@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test } from '../utils'
+import { parsers, test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-absolute-path'
 
@@ -41,7 +41,9 @@ ruleTester.run('no-absolute-path', rule, {
 
     // amd not enabled by default
     test({ code: 'require(["/some/path"], function (f) { /* ... */ })' }),
-    test({ code: 'define(["/some/path"], function (f) { /* ... */ })' }),
+    test({
+      code: 'define(["/some/path"], function (f) { /* ... */ })', languageOptions: { parser: require(parsers.ESPREE), },
+    }),
     test({
       code: 'require(["./some/path"], function (f) { /* ... */ })',
       options: [{ amd: true }],
@@ -119,6 +121,7 @@ ruleTester.run('no-absolute-path', rule, {
     test({
       code: 'define(["/some/path"], function (f) { /* ... */ })',
       filename: '/foo/bar/index.js',
+      languageOptions: { parser: require(parsers.ESPREE), },
       options: [{ amd: true }],
       errors: [error],
       output: 'define(["../../some/path"], function (f) { /* ... */ })',

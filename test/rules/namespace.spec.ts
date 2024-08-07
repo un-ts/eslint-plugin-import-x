@@ -135,6 +135,7 @@ const valid = [
   test({ code: "import * as names from './default-export';" }),
   test({
     code: "import * as names from './default-export'; console.log(names.default)",
+    languageOptions: { parser: require(parsers.ESPREE) },
   }),
   test({
     code: 'export * as names from "./default-export"',
@@ -248,21 +249,21 @@ const valid = [
 
   test({
     code: "import * as names from './default-export-string';",
-    languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+    languageOptions: { parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 } },
   }),
   test({
     code: "import * as names from './default-export-string'; console.log(names.default)",
-    languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+    languageOptions: { parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 } },
   }),
   test({
     code: "import * as names from './default-export-namespace-string';",
     languageOptions: {
-      parserOptions: { ecmaVersion: 2022 },
+      parserOptions: { parser: require(parsers.ESPREE), ecmaVersion: 2022 },
     },
   }),
   test({
     code: "import * as names from './default-export-namespace-string'; console.log(names.default)",
-    languageOptions: { parserOptions: { ecmaVersion: 2022 } },
+    languageOptions: { parserOptions: { parser: require(parsers.ESPREE), ecmaVersion: 2022 } },
   }),
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.d.e)`,

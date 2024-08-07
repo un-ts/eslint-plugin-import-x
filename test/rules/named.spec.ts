@@ -45,6 +45,7 @@ ruleTester.run('named', rule, {
     // validate that eslint-disable-line silences this properly
     test({
       code: 'import {a, b, d} from "./common"; // eslint-disable-line named',
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     test({ code: 'import { foo, bar } from "./re-export-names"' }),
@@ -52,6 +53,7 @@ ruleTester.run('named', rule, {
     test({
       code: 'import { foo, bar } from "./common"',
       settings: { 'import-x/ignore': ['common'] },
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // ignore core modules by default
@@ -150,7 +152,7 @@ ruleTester.run('named', rule, {
     }),
 
     // ignore CJS by default. always ignore ignore list
-    test({ code: 'import {a, b, d} from "./common"' }),
+    test({ code: 'import {a, b, d} from "./common"', languageOptions: { parser: require(parsers.BABEL) }, }),
     test({
       code: 'import { baz } from "./bar"',
       settings: { 'import-x/ignore': ['bar'] },

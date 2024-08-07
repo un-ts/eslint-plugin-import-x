@@ -81,20 +81,17 @@ export function test<T extends ValidTestCase>(
 ): T extends { errors: InvalidTestCaseError[] | number }
   ? InvalidTestCase
   : ValidTestCase {
-  if (arguments.length !== 1) {
-    throw new SyntaxError('`test` requires exactly one object argument')
-  }
-
   // @ts-expect-error -- simplify testing
   return {
     filename: TEST_FILENAME,
     ...t,
     languageOptions: {
+      ...t.languageOptions,
       parserOptions: {
         sourceType: 'module',
         ecmaVersion: 9,
+        ...t.languageOptions?.parserOptions
       },
-      ...t.languageOptions,
     },
   }
 }

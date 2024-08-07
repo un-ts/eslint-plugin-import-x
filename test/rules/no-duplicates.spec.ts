@@ -108,6 +108,7 @@ ruleTester.run('no-duplicates', rule, {
       code: "import foo from 'non-existent'; import bar from 'non-existent';",
       // Autofix bail because of different default import names.
       output: "import foo from 'non-existent'; import bar from 'non-existent';",
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         "'non-existent' imported multiple times.",
         "'non-existent' imported multiple times.",
@@ -136,6 +137,7 @@ ruleTester.run('no-duplicates', rule, {
     test({
       code: "import { x, /* x */ } from './foo'; import {//y\ny//y2\n} from './foo'",
       output: "import { x, /* x */ //y\ny//y2\n} from './foo'; ",
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",

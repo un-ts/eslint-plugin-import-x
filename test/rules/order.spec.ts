@@ -2219,6 +2219,7 @@ ruleTester.run('order', rule, {
           message: '`./local` import should occur after import of `global2`',
         },
       ],
+      languageOptions: { parser: require(parsers.ESPREE) }
     }),
     // reorder fix cannot cross function call on moving below #2
     test({
@@ -2243,6 +2244,7 @@ ruleTester.run('order', rule, {
           message: '`./local` import should occur after import of `global2`',
         },
       ],
+      languageOptions: { parser: require(parsers.ESPREE) }
     }),
     // reorder fix cannot cross function call on moving below #3
     test({
@@ -2296,6 +2298,7 @@ ruleTester.run('order', rule, {
             message: '`./local` import should occur after import of `global3`',
           },
         ],
+        languageOptions: { parser: require(parsers.ESPREE) }
       }),
     ),
     // reorder fix cannot cross function call on moving below
