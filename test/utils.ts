@@ -49,6 +49,7 @@ export function eslintVersionSatisfies(specifier: string) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
 export type ValidTestCase = TSESLintValidTestCase<any> & {
   errors?: readonly InvalidTestCaseError[] | number
+  parser?: never,
   parserOptions?: never
 }
 
@@ -90,8 +91,8 @@ export function test<T extends ValidTestCase>(
       parserOptions: {
         sourceType: 'module',
         ecmaVersion: 9,
-        ...t.languageOptions,
       },
+      ...t.languageOptions,
     }
   }
 }
@@ -112,7 +113,7 @@ export const SYNTAX_CASES = [
   test({ code: 'for (let [ foo, bar ] of baz) {}' }),
 
   test({ code: 'const { x, y } = bar' }),
-  test({ code: 'const { x, y, ...z } = bar', parser: parsers.BABEL }),
+  test({ code: 'const { x, y, ...z } = bar', languageOptions: { parser: require(parsers.BABEL) } }),
 
   // all the exports
   test({ code: 'let x; export { x }' }),
@@ -120,7 +121,7 @@ export const SYNTAX_CASES = [
 
   // not sure about these since they reference a file
   // test({ code: 'export { x } from "./y.js"'}),
-  // test({ code: 'export * as y from "./y.js"', parser: parsers.BABEL}),
+  // test({ code: 'export * as y from "./y.js"', languageOptions: { parser: require(parsers.BABEL) } }),
 
   test({ code: 'export const x = null' }),
   test({ code: 'export var x = null' }),

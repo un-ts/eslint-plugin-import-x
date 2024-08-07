@@ -532,8 +532,7 @@ ruleTester.run('import() with built-in parser', rule, {
 
 describe('TypeScript', () => {
   // Type-only imports were added in TypeScript ESTree 2.23.0
-  const parser = parsers.TS
-  ruleTester.run(`${parser}: no-unresolved ignore type-only`, rule, {
+  ruleTester.run(`${parsers.TS}: no-unresolved ignore type-only`, rule, {
     valid: [
       test({
         code: 'import type { JSONSchema7Type } from "@types/json-schema";',

@@ -430,7 +430,6 @@ describe('TypeScript', () => {
     test({
       code: `import x from './typescript-export-assign-object'`,
       languageOptions: {
-        parser: require(parsers.TS),
         parserOptions: {
           tsconfigRootDir: path.resolve(
             __dirname,
@@ -455,7 +454,6 @@ describe('TypeScript', () => {
     // }),
     test({
       code: `import { NotExported } from './typescript-export-assign-object'`,
-      parser: require(parsers.TS),
       languageOptions: {
         parserOptions: {
           tsconfigRootDir: path.resolve(
@@ -475,7 +473,6 @@ describe('TypeScript', () => {
     test({
       // `export =` syntax creates a default export only
       code: `import { FooBar } from './typescript-export-assign-object'`,
-      parser: require(parsers.TS),
       languageOptions: {
         parserOptions: {
           tsconfigRootDir: path.resolve(

@@ -537,10 +537,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': ['node', 'typescript'],

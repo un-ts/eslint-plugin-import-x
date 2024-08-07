@@ -390,7 +390,7 @@ describe('TypeScript', () => {
   for (const parser of getNonDefaultParsers()) {
     const parserConfig = {
       languageOptions: {
-        parser: require(parser),
+        ...(parser === parsers.BABEL && { parser: require(parsers.BABEL) }),
       },
       settings: {
         'import-x/parsers': { [parsers.TS]: ['.ts'] },

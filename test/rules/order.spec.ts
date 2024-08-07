@@ -3033,7 +3033,9 @@ ruleTester.run('order', rule, {
 describe('TypeScript', () => {
   for (const parser of getNonDefaultParsers()) {
     const parserConfig = {
-      parser,
+      languageOptions: {
+        ...(parser === parsers.BABEL && { parser: require(parsers.BABEL) }),
+      },
       settings: {
         'import-x/parsers': { [parsers.TS]: ['.ts'] },
         'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -3386,24 +3388,24 @@ describe('TypeScript', () => {
           ],
           errors: semver.satisfies(eslintPkg.version, '< 3')
             ? [
-                {
-                  message: '`Bar` import should occur before import of `bar`',
-                },
-                {
-                  message:
-                    '`Bar` type import should occur before type import of `foo`',
-                },
-              ]
+              {
+                message: '`Bar` import should occur before import of `bar`',
+              },
+              {
+                message:
+                  '`Bar` type import should occur before type import of `foo`',
+              },
+            ]
             : [
-                {
-                  message:
-                    /(`Bar` import should occur before import of `bar`)|(`bar` import should occur after import of `Bar`)/,
-                },
-                {
-                  message:
-                    /(`Bar` type import should occur before type import of `foo`)|(`foo` type import should occur after type import of `Bar`)/,
-                },
-              ],
+              {
+                message:
+                  /(`Bar` import should occur before import of `bar`)|(`bar` import should occur after import of `Bar`)/,
+              },
+              {
+                message:
+                  /(`Bar` type import should occur before type import of `foo`)|(`foo` type import should occur after type import of `Bar`)/,
+              },
+            ],
         }),
         // Option alphabetize: {order: 'desc'} with type group
         test({
@@ -3436,24 +3438,24 @@ describe('TypeScript', () => {
           ],
           errors: semver.satisfies(eslintPkg.version, '< 3')
             ? [
-                {
-                  message: '`bar` import should occur before import of `Bar`',
-                },
-                {
-                  message:
-                    '`foo` type import should occur before type import of `Bar`',
-                },
-              ]
+              {
+                message: '`bar` import should occur before import of `Bar`',
+              },
+              {
+                message:
+                  '`foo` type import should occur before type import of `Bar`',
+              },
+            ]
             : [
-                {
-                  message:
-                    /(`bar` import should occur before import of `Bar`)|(`Bar` import should occur after import of `bar`)/,
-                },
-                {
-                  message:
-                    /(`foo` type import should occur before type import of `Bar`)|(`Bar` type import should occur after import of type `foo`)/,
-                },
-              ],
+              {
+                message:
+                  /(`bar` import should occur before import of `Bar`)|(`Bar` import should occur after import of `bar`)/,
+              },
+              {
+                message:
+                  /(`foo` type import should occur before type import of `Bar`)|(`Bar` type import should occur after import of type `foo`)/,
+              },
+            ],
         }),
         // warns for out of order unassigned imports (warnOnUnassignedImports enabled)
         test({

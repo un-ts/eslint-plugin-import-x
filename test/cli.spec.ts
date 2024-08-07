@@ -14,9 +14,8 @@ describe('CLI regression tests', () => {
   describe('issue #210', () => {
     it("doesn't throw an error on gratuitous, erroneous self-reference", () => {
       const eslint = new ESLint({
-        useEslintrc: false,
         overrideConfigFile: './test/fixtures/issue210.config.js',
-        rulePaths: ['./src/rules'],
+        // rulePaths: ['./src/rules'],
         overrideConfig: {
           rules: {
             named: 2,
@@ -35,9 +34,7 @@ describe('CLI regression tests', () => {
     it('throws an error on invalid JSON', async () => {
       const invalidJSON = './test/fixtures/just-json-files/invalid.json'
       const eslint = new ESLint({
-        useEslintrc: false,
         overrideConfigFile: './test/fixtures/just-json-files/.eslintrc.json',
-        rulePaths: ['./src/rules'],
         ignore: false,
         plugins: {
           // @ts-expect-error - incompatible types

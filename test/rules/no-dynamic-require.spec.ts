@@ -30,15 +30,18 @@ ruleTester.run('no-dynamic-require', rule, {
     test({ code: 'var foo = require("@scope/foo")' }),
 
     //dynamic import
-    ...[parsers.ESPREE, parsers.BABEL].flatMap(parser => {
+    ...[parsers.ESPREE, parsers.BABEL].flatMap($parser => {
       const _test = <T extends ValidTestCase>(testObj: T) =>
-        parser === parsers.ESPREE ? testObj : test(testObj)
+        $parser === parsers.ESPREE ? testObj : test(testObj)
+
+      const parser = require($parser)
+
       return [
         _test({
           code: 'import("foo")',
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -47,8 +50,8 @@ ruleTester.run('no-dynamic-require', rule, {
         _test({
           code: 'import(`foo`)',
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -57,8 +60,8 @@ ruleTester.run('no-dynamic-require', rule, {
         _test({
           code: 'import("./foo")',
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -67,8 +70,8 @@ ruleTester.run('no-dynamic-require', rule, {
         _test({
           code: 'import("@scope/foo")',
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -77,8 +80,8 @@ ruleTester.run('no-dynamic-require', rule, {
         _test({
           code: 'var foo = import("foo")',
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -87,8 +90,8 @@ ruleTester.run('no-dynamic-require', rule, {
         _test({
           code: 'var foo = import(`foo`)',
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -97,8 +100,8 @@ ruleTester.run('no-dynamic-require', rule, {
         _test({
           code: 'var foo = import("./foo")',
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -107,8 +110,8 @@ ruleTester.run('no-dynamic-require', rule, {
         _test({
           code: 'var foo = import("@scope/foo")',
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -117,8 +120,8 @@ ruleTester.run('no-dynamic-require', rule, {
         _test({
           code: 'import("../" + name)',
           errors: [dynamicImportError],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -127,8 +130,8 @@ ruleTester.run('no-dynamic-require', rule, {
         _test({
           code: 'import(`../${name}`)',
           errors: [dynamicImportError],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -161,16 +164,19 @@ ruleTester.run('no-dynamic-require', rule, {
     }),
 
     // dynamic import
-    ...[parsers.ESPREE, parsers.BABEL].flatMap(parser => {
+    ...[parsers.ESPREE, parsers.BABEL].flatMap($parser => {
       const _test = <T extends ValidTestCase>(testObj: T) =>
-        parser === parsers.ESPREE ? testObj : test(testObj)
+        $parser === parsers.ESPREE ? testObj : test(testObj)
+
+      const parser = require($parser)
+
       return [
         _test({
           code: 'import("../" + name)',
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -180,8 +186,8 @@ ruleTester.run('no-dynamic-require', rule, {
           code: 'import(`../${name}`)',
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -191,8 +197,8 @@ ruleTester.run('no-dynamic-require', rule, {
           code: 'import(name)',
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },
@@ -202,8 +208,8 @@ ruleTester.run('no-dynamic-require', rule, {
           code: 'import(name())',
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
-          parser,
           languageOptions: {
+            parser,
             parserOptions: {
               ecmaVersion: 2020,
             },

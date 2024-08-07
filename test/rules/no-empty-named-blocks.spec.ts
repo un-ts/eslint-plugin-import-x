@@ -6,11 +6,13 @@ import rule from 'eslint-plugin-import-x/rules/no-empty-named-blocks'
 
 const ruleTester = new TSESLintRuleTester()
 
-function generateSuggestionsTestCases(cases: string[], parser?: string) {
+function generateSuggestionsTestCases(cases: string[], parser?: any) {
   return cases.map(code =>
     test({
       code,
-      parser,
+      languageOptions: {
+        ...(parser && { parser }),
+      },
       errors: [
         {
           suggestions: [
@@ -101,8 +103,7 @@ ruleTester.run('no-empty-named-blocks', rule, {
         `import type {}from 'mod';`,
         `import type{}from 'mod';`,
         `import type {}from'mod';`,
-      ],
-      parsers.TS,
+      ]
     ),
     test({
       code: `import type Default, {} from 'mod';`,

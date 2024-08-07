@@ -660,9 +660,7 @@ ruleTester.run('extensions', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
-  ruleTester.run(`${parser}: extensions ignore type-only`, rule, {
+  ruleTester.run(`${parsers.TS}: extensions ignore type-only`, rule, {
     valid: [
       test({
         code: 'import type T from "./typescript-declare";',

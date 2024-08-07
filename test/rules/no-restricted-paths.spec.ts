@@ -764,8 +764,6 @@ ruleTester.run('no-restricted-paths', rule, {
 })
 
 describe('Typescript', () => {
-  const parser = parsers.TS
-
   const settings = {
     'import-x/parsers': { [parsers.TS]: ['.ts'] },
     'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -905,7 +903,7 @@ describe('Typescript', () => {
         settings,
       }),
       // no config
-      test({ code: 'import type b from "../server/b.js"', parser, settings }),
+      test({ code: 'import type b from "../server/b.js"', settings }),
       test({
         code: 'import type * as b from "../server/b.js"',
 

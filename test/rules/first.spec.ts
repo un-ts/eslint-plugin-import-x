@@ -27,7 +27,9 @@ ruleTester.run('first', rule, {
     test({
       // issue #2210
       code: fs.readFileSync(testFilePath('component.html'), 'utf8'),
-      parser: require.resolve('@angular-eslint/template-parser'),
+      languageOptions: {
+        parser: require('@angular-eslint/template-parser'),
+      }
     }),
   ],
   invalid: [
@@ -91,10 +93,7 @@ ruleTester.run('first', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },

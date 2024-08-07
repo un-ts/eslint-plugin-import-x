@@ -243,17 +243,14 @@ ruleTester.run('no-deprecated: hoisting', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     },
   }
 
-  ruleTester.run(parser, rule, {
+  ruleTester.run(parsers.TS, rule, {
     valid: [
       test({
         code: "import * as hasDeprecated from './ts-deprecated.ts'",

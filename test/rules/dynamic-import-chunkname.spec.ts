@@ -960,7 +960,6 @@ ruleTester.run('dynamic-import-chunkname', rule, {
 })
 
 describe('TypeScript', () => {
-  const typescriptParser = require(parsers.TS)
   const nodeType = TSESTree.AST_NODE_TYPES.ImportExpression
 
   ruleTester.run('dynamic-import-chunkname', rule, {
@@ -968,7 +967,7 @@ describe('TypeScript', () => {
       {
         code: `import('test')`,
         options: allowEmptyOptions,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -976,7 +975,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options: allowEmptyOptions,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -984,7 +983,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -992,7 +991,7 @@ describe('TypeScript', () => {
             "test"
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1000,7 +999,7 @@ describe('TypeScript', () => {
             "test"
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1008,7 +1007,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1016,7 +1015,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1024,7 +1023,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1032,7 +1031,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1041,7 +1040,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1050,7 +1049,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1059,7 +1058,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1068,7 +1067,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1076,7 +1075,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options: pickyCommentOptions,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1084,7 +1083,7 @@ describe('TypeScript', () => {
             'test'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1092,7 +1091,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1100,7 +1099,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1108,7 +1107,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1116,7 +1115,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1125,7 +1124,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1133,7 +1132,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1142,7 +1141,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1150,7 +1149,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1159,7 +1158,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1167,7 +1166,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1176,7 +1175,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1184,7 +1183,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1193,7 +1192,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1201,7 +1200,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1210,7 +1209,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1219,7 +1218,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1228,7 +1227,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1236,7 +1235,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1245,7 +1244,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1253,7 +1252,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
       {
         code: `import(
@@ -1268,7 +1267,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
       },
     ],
     invalid: [
@@ -1278,7 +1277,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1290,7 +1289,7 @@ describe('TypeScript', () => {
       {
         code: "import('test')",
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1305,7 +1304,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1320,7 +1319,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1335,7 +1334,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1350,7 +1349,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1365,7 +1364,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1380,7 +1379,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1395,7 +1394,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1410,7 +1409,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1425,7 +1424,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1441,7 +1440,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1456,7 +1455,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1471,7 +1470,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1486,7 +1485,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1501,7 +1500,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1516,7 +1515,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options: pickyCommentOptions,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1531,7 +1530,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1546,7 +1545,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1561,7 +1560,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1576,7 +1575,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1591,7 +1590,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1606,7 +1605,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1621,7 +1620,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1636,7 +1635,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1651,7 +1650,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1666,7 +1665,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
@@ -1681,7 +1680,7 @@ describe('TypeScript', () => {
             'someModule'
           )`,
         options,
-        languageOptions: { parser: typescriptParser },
+
         output: null,
         errors: [
           {
