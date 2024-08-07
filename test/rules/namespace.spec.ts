@@ -426,60 +426,60 @@ for (const [folder, parser] of [['deep'], ['deep-es7', parsers.BABEL]]) {
   // close over params
   valid.push(
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.d.e)`,
     }),
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.c.d.e)`,
     }),
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.d.e.f)`,
     }),
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{c:{d:{e}}}} = a`,
     }),
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; var {c:{d:{e}}} = b`,
     }),
     // deep namespaces should include explicitly exported defaults
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.default)`,
     }),
   )
 
   invalid.push(
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.e)`,
       errors: ["'e' not found in deeply imported namespace 'a.b'."],
     }),
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.e)`,
       errors: ["'e' not found in imported namespace 'b'."],
     }),
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.e)`,
       errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
     }),
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.c.e)`,
       errors: ["'e' not found in deeply imported namespace 'b.c'."],
     }),
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{ e }} = a`,
       errors: ["'e' not found in deeply imported namespace 'a.b'."],
     }),
     test({
-      languageOptions: { parser: require(parser) },
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{c:{ e }}} = a`,
       errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
     }),
