@@ -119,7 +119,7 @@ ruleTester.run('no-empty-named-blocks', rule, {
         `import typeof {} from'mod';`,
         `import typeof{}from'mod';`,
       ],
-      parsers.BABEL,
+      require(parsers.BABEL),
     ),
     test({
       code: `import typeof Default, {} from 'mod';`,

@@ -2713,6 +2713,7 @@ ruleTester.run('order', rule, {
             message: '`fs` import should occur before import of `async`',
           },
         ],
+        languageOptions: { parser: require(parsers.ESPREE) }
       }),
     ),
     // reorder cannot cross function call (import statement)
@@ -3765,6 +3766,7 @@ flowRuleTester.run('order', rule, {
           column: 9,
         },
       ],
+      languageOptions: { parser: require(parsers.ESPREE) }
     }),
   ],
 })
