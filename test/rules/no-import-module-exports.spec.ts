@@ -7,7 +7,9 @@ import { test } from '../utils'
 import rule from 'eslint-plugin-import-x/rules/no-import-module-exports'
 
 const ruleTester = new TSESLintRuleTester({
-  parserOptions: { ecmaVersion: 6, sourceType: 'module' },
+  languageOptions: {
+    parserOptions: { ecmaVersion: 6, sourceType: 'module' },
+  }
 })
 
 const error = {
@@ -123,9 +125,11 @@ ruleTester.run('no-import-module-exports', rule, {
             });
         };
       `,
-      parserOptions: {
-        ecmaVersion: 2020,
-      },
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 2020,
+        },
+      }
     }),
   ],
   invalid: [

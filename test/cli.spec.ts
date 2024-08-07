@@ -58,6 +58,7 @@ describe('CLI regression tests', () => {
               nodeType: results[0].messages[0].nodeType, // we don't care about this one
               ruleId: 'json/*',
               severity: 2,
+              // @ts-expect-error - legacy types
               source: results[0].messages[0].source, // NewLine-characters might differ depending on git-settings
             },
           ],

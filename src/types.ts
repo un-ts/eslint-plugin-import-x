@@ -68,7 +68,7 @@ export type PluginConfig = {
   plugins?: [PluginName]
   settings?: PluginSettings
   rules?: Record<`${PluginName}/${string}`, TSESLint.Linter.RuleEntry>
-} & TSESLint.Linter.Config
+} & TSESLint.Linter.ConfigType
 
 export type RuleContext<
   TMessageIds extends string = string,

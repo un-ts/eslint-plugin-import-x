@@ -389,7 +389,9 @@ ruleTester.run('prefer-default-export', rule, {
 describe('TypeScript', () => {
   for (const parser of getNonDefaultParsers()) {
     const parserConfig = {
-      parser,
+      languageOptions: {
+        parser: require(parser),
+      },
       settings: {
         'import-x/parsers': { [parsers.TS]: ['.ts'] },
         'import-x/resolver': { 'eslint-import-resolver-typescript': true },

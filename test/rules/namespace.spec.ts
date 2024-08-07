@@ -32,11 +32,13 @@ const valid = [
   }),
   test({
     code: "import * as elements from './jsx';",
-    parserOptions: {
-      sourceType: 'module',
-      ecmaFeatures: { jsx: true },
-      ecmaVersion: 2015,
-    },
+    languageOptions: {
+      parserOptions: {
+        sourceType: 'module',
+        ecmaFeatures: { jsx: true },
+        ecmaVersion: 2015,
+      },
+    }
   }),
   // import re-exported jsx files, where jsx file exports a string
   test({
@@ -60,11 +62,13 @@ const valid = [
     settings: {
       'import-x/extensions': ['.js', '.jsx'],
     },
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
-    },
+    }
   }),
 
   test({ code: "import * as foo from './common';" }),
@@ -150,9 +154,11 @@ const valid = [
   // #656: should handle object-rest properties
   test({
     code: `import * as names from './named-exports'; const {a, b, ...rest} = names;`,
-    parserOptions: {
-      ecmaVersion: 2018,
-    },
+    languageOptions: {
+      parserOptions: {
+        ecmaVersion: 2018,
+      },
+    }
   }),
   test({
     code: `import * as names from './named-exports'; const {a, b, ...rest} = names;`,
@@ -167,11 +173,13 @@ const valid = [
   // JSX
   test({
     code: 'import * as Names from "./named-exports"; const Foo = <Names.a/>',
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
-    },
+    }
   }),
 
   // Typescript
@@ -231,34 +239,38 @@ const valid = [
     console.log(middle.myName);
   `,
     filename: testFilePath('export-star-2/downstream.js'),
-    parserOptions: {
-      ecmaVersion: 2020,
-    },
+    languageOptions: {
+      parserOptions: {
+        ecmaVersion: 2020,
+      },
+    }
   }),
 
   test({
     code: "import * as names from './default-export-string';",
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: { parserOptions: { ecmaVersion: 2022 }, }
   }),
   test({
     code: "import * as names from './default-export-string'; console.log(names.default)",
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: { parserOptions: { ecmaVersion: 2022 }, }
   }),
   test({
     code: "import * as names from './default-export-namespace-string';",
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: {
+      parserOptions: { ecmaVersion: 2022 },
+    }
   }),
   test({
     code: "import * as names from './default-export-namespace-string'; console.log(names.default)",
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: { parserOptions: { ecmaVersion: 2022 }, }
   }),
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.d.e)`,
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: { parserOptions: { ecmaVersion: 2022 }, }
   }),
   test({
     code: `import { "b" as b } from "./deep/a"; var {c:{d:{e}}} = b`,
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: { parserOptions: { ecmaVersion: 2022 }, }
   }),
 ]
 
@@ -373,22 +385,24 @@ const invalid = [
   test({
     code: 'import * as Names from "./named-exports"; const Foo = <Names.e/>',
     errors: [error('e', 'Names')],
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
-    },
+    }
   }),
 
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.e)`,
     errors: ["'e' not found in imported namespace 'b'."],
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: { parserOptions: { ecmaVersion: 2022 }, }
   }),
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.e)`,
     errors: ["'e' not found in deeply imported namespace 'b.c'."],
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: { parserOptions: { ecmaVersion: 2022 }, }
   }),
 ]
 

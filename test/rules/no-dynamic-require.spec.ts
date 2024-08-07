@@ -38,80 +38,100 @@ ruleTester.run('no-dynamic-require', rule, {
           code: 'import("foo")',
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import(`foo`)',
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import("./foo")',
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import("@scope/foo")',
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'var foo = import("foo")',
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'var foo = import(`foo`)',
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'var foo = import("./foo")',
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'var foo = import("@scope/foo")',
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import("../" + name)',
           errors: [dynamicImportError],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import(`../${name}`)',
           errors: [dynamicImportError],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
       ]
@@ -150,8 +170,10 @@ ruleTester.run('no-dynamic-require', rule, {
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
@@ -159,8 +181,10 @@ ruleTester.run('no-dynamic-require', rule, {
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
@@ -168,8 +192,10 @@ ruleTester.run('no-dynamic-require', rule, {
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
@@ -177,8 +203,10 @@ ruleTester.run('no-dynamic-require', rule, {
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
           parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
       ]

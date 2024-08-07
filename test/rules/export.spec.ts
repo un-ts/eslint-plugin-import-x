@@ -39,9 +39,11 @@ ruleTester.run('export', rule, {
         export * as A from './named-export-collision/a';
         export * as B from './named-export-collision/b';
       `,
-      parserOptions: {
-        ecmaVersion: 2020,
-      },
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 2020,
+        },
+      }
     }),
 
     {
@@ -147,9 +149,11 @@ ruleTester.run('export', rule, {
         "Multiple exports of name 'foo'.",
         "Multiple exports of name 'foo'.",
       ],
-      parserOptions: {
-        ecmaVersion: 2022,
-      },
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 2022,
+        },
+      }
     }),
   ],
 })

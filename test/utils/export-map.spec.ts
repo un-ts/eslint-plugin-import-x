@@ -251,7 +251,9 @@ describe('ExportMap', () => {
   describe('exported static namespaces', () => {
     const espreeContext = {
       parserPath: 'espree',
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       settings: {},
     } as ChildContext
 

@@ -60,9 +60,11 @@ ruleTester.run('no-named-default', rule, {
           type: 'Identifier',
         },
       ],
-      parserOptions: {
-        ecmaVersion: 2022,
-      },
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 2022,
+        },
+      }
     }),
   ],
 })

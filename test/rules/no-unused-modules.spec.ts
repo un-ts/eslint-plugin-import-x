@@ -1494,7 +1494,7 @@ describe('support ES2022 Arbitrary module namespace identifier names', () => {
       test({
         options: unusedExportsOptions,
         code: `import { "foo" as foo } from "./arbitrary-module-namespace-identifier-name-a"`,
-        parserOptions: { ecmaVersion: 2022 },
+        languageOptions: { parserOptions: { ecmaVersion: 2022 }, },
         filename: testFilePath(
           './no-unused-modules/arbitrary-module-namespace-identifier-name-b.js',
         ),
@@ -1502,7 +1502,7 @@ describe('support ES2022 Arbitrary module namespace identifier names', () => {
       test({
         options: unusedExportsOptions,
         code: 'const foo = 333;\nexport { foo as "foo" }',
-        parserOptions: { ecmaVersion: 2022 },
+        languageOptions: { parserOptions: { ecmaVersion: 2022 }, },
         filename: testFilePath(
           './no-unused-modules/arbitrary-module-namespace-identifier-name-a.js',
         ),
@@ -1512,7 +1512,7 @@ describe('support ES2022 Arbitrary module namespace identifier names', () => {
       test({
         options: unusedExportsOptions,
         code: 'const foo = 333\nexport { foo as "foo" }',
-        parserOptions: { ecmaVersion: 2022 },
+        languageOptions: { parserOptions: { ecmaVersion: 2022 }, },
         filename: testFilePath(
           './no-unused-modules/arbitrary-module-namespace-identifier-name-c.js',
         ),

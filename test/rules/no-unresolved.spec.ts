@@ -40,7 +40,9 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       // check with eslint parser
       rest({
         code: "import('fs');",
-        parserOptions: { ecmaVersion: 2021 },
+        languageOptions: {
+          parserOptions: { ecmaVersion: 2021 },
+        }
       }),
 
       rest({ code: 'import * as foo from "a"' }),
@@ -197,7 +199,9 @@ function runResolverTests(resolver: 'node' | 'webpack') {
             type: 'Literal',
           },
         ],
-        parserOptions: { ecmaVersion: 2021 },
+        languageOptions: {
+          parserOptions: { ecmaVersion: 2021 },
+        }
       }),
 
       // export symmetry proposal

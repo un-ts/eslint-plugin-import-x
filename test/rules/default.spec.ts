@@ -58,11 +58,13 @@ ruleTester.run('default', rule, {
     // jsx
     test({
       code: 'import MyCoolComponent from "./jsx/MyCoolComponent.jsx"',
-      parserOptions: {
-        sourceType: 'module',
-        ecmaVersion: 6,
-        ecmaFeatures: { jsx: true },
-      },
+      languageOptions: {
+        parserOptions: {
+          sourceType: 'module',
+          ecmaVersion: 6,
+          ecmaFeatures: { jsx: true },
+        },
+      }
     }),
 
     // #54: import of named export default
@@ -72,9 +74,11 @@ ruleTester.run('default', rule, {
     test({ code: 'import connectedApp from "./redux"' }),
     test({
       code: 'import App from "./jsx/App"',
-      parserOptions: {
-        ecmaFeatures: { jsx: true, modules: true },
-      },
+      languageOptions: {
+        parserOptions: {
+          ecmaFeatures: { jsx: true, modules: true },
+        },
+      }
     }),
 
     // from no-errors
@@ -105,9 +109,11 @@ ruleTester.run('default', rule, {
 
     test({
       code: 'export { "default" as bar } from "./bar"',
-      parserOptions: {
-        ecmaVersion: 2022,
-      },
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 2022,
+        },
+      }
     }),
 
     ...SYNTAX_CASES,
@@ -232,12 +238,14 @@ describe('TypeScript', () => {
           'import-x/parsers': { [parsers.TS]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
-        parserOptions: {
-          tsconfigRootDir: path.resolve(
-            __dirname,
-            '../fixtures/typescript-export-assign-default-namespace/',
-          ),
-        },
+        languageOptions: {
+          parserOptions: {
+            tsconfigRootDir: path.resolve(
+              __dirname,
+              '../fixtures/typescript-export-assign-default-namespace/',
+            ),
+          },
+        }
       }),
       test({
         code: `import Foo from "./typescript-export-as-default-namespace"`,
@@ -246,12 +254,15 @@ describe('TypeScript', () => {
           'import-x/parsers': { [parsers.TS]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
-        parserOptions: {
-          tsconfigRootDir: path.resolve(
-            __dirname,
-            '../fixtures/typescript-export-as-default-namespace/',
-          ),
-        },
+
+        languageOptions: {
+          parserOptions: {
+            tsconfigRootDir: path.resolve(
+              __dirname,
+              '../fixtures/typescript-export-as-default-namespace/',
+            ),
+          },
+        }
       }),
       test({
         code: `import Foo from "./typescript-export-react-test-renderer"`,
@@ -260,12 +271,14 @@ describe('TypeScript', () => {
           'import-x/parsers': { [parsers.TS]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
-        parserOptions: {
-          tsconfigRootDir: path.resolve(
-            __dirname,
-            '../fixtures/typescript-export-react-test-renderer/',
-          ),
-        },
+        languageOptions: {
+          parserOptions: {
+            tsconfigRootDir: path.resolve(
+              __dirname,
+              '../fixtures/typescript-export-react-test-renderer/',
+            ),
+          },
+        }
       }),
       test({
         code: `import Foo from "./typescript-extended-config"`,
@@ -274,12 +287,14 @@ describe('TypeScript', () => {
           'import-x/parsers': { [parsers.TS]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
-        parserOptions: {
-          tsconfigRootDir: path.resolve(
-            __dirname,
-            '../fixtures/typescript-extended-config/',
-          ),
-        },
+        languageOptions: {
+          parserOptions: {
+            tsconfigRootDir: path.resolve(
+              __dirname,
+              '../fixtures/typescript-extended-config/',
+            ),
+          },
+        }
       }),
       test({
         code: `import foobar from "./typescript-export-assign-property"`,
@@ -330,11 +345,13 @@ describe('TypeScript', () => {
           'import-x/parsers': { [parsers.TS]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
-        parserOptions: {
-          tsconfigRootDir: path.resolve(
-            __dirname,
-            '../fixtures/typescript-no-compiler-options/',
-          ),
+        languageOptions: {
+          parserOptions: {
+            tsconfigRootDir: path.resolve(
+              __dirname,
+              '../fixtures/typescript-no-compiler-options/',
+            ),
+          },
         },
         errors: [
           {

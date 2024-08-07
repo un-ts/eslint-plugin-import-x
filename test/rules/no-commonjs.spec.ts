@@ -6,10 +6,12 @@ const EXPORT = 'export'
 const IMPORT = 'import'
 
 const ruleTester = new TSESLintRuleTester({
-  parserOptions: {
-    ecmaVersion: 2015,
-    sourceType: 'module',
-  },
+  languageOptions: {
+    parserOptions: {
+      ecmaVersion: 2015,
+      sourceType: 'module',
+    },
+  }
 })
 
 ruleTester.run('no-commonjs', rule, {

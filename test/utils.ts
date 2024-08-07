@@ -49,6 +49,7 @@ export function eslintVersionSatisfies(specifier: string) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
 export type ValidTestCase = TSESLintValidTestCase<any> & {
   errors?: readonly InvalidTestCaseError[] | number
+  parserOptions?: never
 }
 
 export type InvalidTestCase = // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
@@ -80,6 +81,7 @@ export function test<T extends ValidTestCase>(
   if (arguments.length !== 1) {
     throw new SyntaxError('`test` requires exactly one object argument')
   }
+
   // @ts-expect-error -- simplify testing
   return {
     filename: TEST_FILENAME,

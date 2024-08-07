@@ -199,10 +199,12 @@ ruleTester.run('named', rule, {
     test({
       code: `import { ExtfieldModel, Extfield2Model } from './models';`,
       filename: testFilePath('./export-star/downstream.js'),
-      parserOptions: {
-        sourceType: 'module',
-        ecmaVersion: 2020,
-      },
+      languageOptions: {
+        parserOptions: {
+          sourceType: 'module',
+          ecmaVersion: 2020,
+        },
+      }
     }),
 
     test({
@@ -419,8 +421,6 @@ ruleTester.run('named (export *)', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const settings = {
     'import-x/parsers': { [parsers.TS]: ['.ts'] },
     'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -429,12 +429,14 @@ describe('TypeScript', () => {
   let valid = [
     test({
       code: `import x from './typescript-export-assign-object'`,
-      parser,
-      parserOptions: {
-        tsconfigRootDir: path.resolve(
-          __dirname,
-          '../fixtures/typescript-export-assign-object/',
-        ),
+      languageOptions: {
+        parser: require(parsers.TS),
+        parserOptions: {
+          tsconfigRootDir: path.resolve(
+            __dirname,
+            '../fixtures/typescript-export-assign-object/',
+          ),
+        },
       },
       settings,
     }),
@@ -453,12 +455,14 @@ describe('TypeScript', () => {
     // }),
     test({
       code: `import { NotExported } from './typescript-export-assign-object'`,
-      parser,
-      parserOptions: {
-        tsconfigRootDir: path.resolve(
-          __dirname,
-          '../fixtures/typescript-export-assign-object/',
-        ),
+      parser: require(parsers.TS),
+      languageOptions: {
+        parserOptions: {
+          tsconfigRootDir: path.resolve(
+            __dirname,
+            '../fixtures/typescript-export-assign-object/',
+          ),
+        },
       },
       settings,
       errors: [
@@ -471,12 +475,14 @@ describe('TypeScript', () => {
     test({
       // `export =` syntax creates a default export only
       code: `import { FooBar } from './typescript-export-assign-object'`,
-      parser,
-      parserOptions: {
-        tsconfigRootDir: path.resolve(
-          __dirname,
-          '../fixtures/typescript-export-assign-object/',
-        ),
+      parser: require(parsers.TS),
+      languageOptions: {
+        parserOptions: {
+          tsconfigRootDir: path.resolve(
+            __dirname,
+            '../fixtures/typescript-export-assign-object/',
+          ),
+        },
       },
       settings,
       errors: [

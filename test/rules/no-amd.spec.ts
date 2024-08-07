@@ -3,7 +3,9 @@ import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester
 import rule from 'eslint-plugin-import-x/rules/no-amd'
 
 const ruleTester = new TSESLintRuleTester({
-  parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+  languageOptions: {
+    parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+  }
 })
 
 ruleTester.run('no-amd', rule, {
