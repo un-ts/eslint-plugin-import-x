@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import {
   test,
@@ -12,11 +12,14 @@ import {
 import jsxConfig from 'eslint-plugin-import-x/config/react'
 import rule from 'eslint-plugin-import-x/rules/no-duplicates'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-duplicates', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"' }),
+    test({
+      code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
 
     test({ code: "import { x } from './foo'; import { y } from './bar'" }),
 
@@ -28,7 +31,7 @@ ruleTester.run('no-duplicates', rule, {
     // #225: ignore duplicate if is a flow type import
     test({
       code: "import { x } from './foo'; import type { y } from './foo'",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // #1107: Using different query strings that trigger different webpack loaders.
@@ -108,6 +111,7 @@ ruleTester.run('no-duplicates', rule, {
       code: "import foo from 'non-existent'; import bar from 'non-existent';",
       // Autofix bail because of different default import names.
       output: "import foo from 'non-existent'; import bar from 'non-existent';",
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         "'non-existent' imported multiple times.",
         "'non-existent' imported multiple times.",
@@ -117,7 +121,7 @@ ruleTester.run('no-duplicates', rule, {
     test({
       code: "import type { x } from './foo'; import type { y } from './foo'",
       output: "import type { x , y } from './foo'; ",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
@@ -136,6 +140,7 @@ ruleTester.run('no-duplicates', rule, {
     test({
       code: "import { x, /* x */ } from './foo'; import {//y\ny//y2\n} from './foo'",
       output: "import { x, /* x */ //y\ny//y2\n} from './foo'; ",
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
@@ -159,7 +164,6 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS,
     }),
 
     // #2347: duplicate identifiers should be removed
@@ -171,7 +175,6 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS,
     }),
 
     // #2347: duplicate identifiers should be removed, but not if they are adjacent to comments
@@ -182,7 +185,6 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS,
     }),
 
     test({
@@ -667,12 +669,9 @@ export default TestComponent;
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
-      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     },
   }

@@ -1,7 +1,7 @@
 import vm from 'node:vm'
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import type { RuleFixer } from '@typescript-eslint/utils/dist/ts-eslint'
+import type { RuleFixer } from '@typescript-eslint/utils/ts-eslint'
 
 import { createRule } from '../utils'
 

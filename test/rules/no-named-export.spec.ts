@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-export'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-named-export', rule, {
   valid: [
@@ -16,7 +16,7 @@ ruleTester.run('no-named-export', rule, {
     }),
     test({
       code: 'export default from "foo.js"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // no exports at all
@@ -31,7 +31,10 @@ ruleTester.run('no-named-export', rule, {
     }),
     test({
       code: 'let foo; export { foo as "default" }',
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
   invalid: [
@@ -181,7 +184,7 @@ ruleTester.run('no-named-export', rule, {
     }),
     test({
       code: 'export { a, b } from "foo.js"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         {
           type: 'ExportNamedDeclaration',
@@ -191,7 +194,7 @@ ruleTester.run('no-named-export', rule, {
     }),
     test({
       code: `export type UserId = number;`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         {
           type: 'ExportNamedDeclaration',
@@ -201,7 +204,7 @@ ruleTester.run('no-named-export', rule, {
     }),
     test({
       code: 'export foo from "foo.js"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         {
           type: 'ExportNamedDeclaration',
@@ -211,7 +214,7 @@ ruleTester.run('no-named-export', rule, {
     }),
     test({
       code: `export Memory, { MemoryValue } from './Memory'`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         {
           type: 'ExportNamedDeclaration',

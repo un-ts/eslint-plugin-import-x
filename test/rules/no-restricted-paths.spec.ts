@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, test, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-restricted-paths'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-restricted-paths', rule, {
   valid: [
@@ -764,10 +764,8 @@ ruleTester.run('no-restricted-paths', rule, {
 })
 
 describe('Typescript', () => {
-  const parser = parsers.TS
-
   const settings = {
-    'import-x/parsers': { [parser]: ['.ts'] },
+    'import-x/parsers': { [parsers.TS]: ['.ts'] },
     'import-x/resolver': { 'eslint-import-resolver-typescript': true },
   }
   ruleTester.run('no-restricted-paths', rule, {
@@ -785,7 +783,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -801,7 +799,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -817,7 +815,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -833,7 +831,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -850,7 +848,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -867,7 +865,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -884,7 +882,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -901,14 +899,14 @@ describe('Typescript', () => {
             ],
           },
         ],
-        parser,
+
         settings,
       }),
       // no config
-      test({ code: 'import type b from "../server/b.js"', parser, settings }),
+      test({ code: 'import type b from "../server/b.js"', settings }),
       test({
         code: 'import type * as b from "../server/b.js"',
-        parser,
+
         settings,
       }),
     ],
@@ -934,7 +932,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -958,7 +956,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -990,7 +988,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1010,7 +1008,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1034,7 +1032,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1060,7 +1058,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1085,7 +1083,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1108,7 +1106,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
       test({
@@ -1133,7 +1131,7 @@ describe('Typescript', () => {
             column: 20,
           },
         ],
-        parser,
+
         settings,
       }),
     ],

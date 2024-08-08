@@ -1,12 +1,12 @@
 import fs from 'node:fs'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, parsers, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/first'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('first', rule, {
   valid: [
@@ -27,7 +27,9 @@ ruleTester.run('first', rule, {
     test({
       // issue #2210
       code: fs.readFileSync(testFilePath('component.html'), 'utf8'),
-      parser: require.resolve('@angular-eslint/template-parser'),
+      languageOptions: {
+        parser: require('@angular-eslint/template-parser'),
+      },
     }),
   ],
   invalid: [
@@ -91,12 +93,9 @@ ruleTester.run('first', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
-      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     },
   }

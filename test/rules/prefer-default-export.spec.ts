@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, getNonDefaultParsers, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/prefer-default-export'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 // test cases for default option { target: 'single' }
 ruleTester.run('prefer-default-export', rule, {
@@ -66,7 +66,7 @@ ruleTester.run('prefer-default-export', rule, {
     }),
     test({
       code: `export Memory, { MemoryValue } from './Memory'`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // no exports at all
@@ -77,28 +77,31 @@ ruleTester.run('prefer-default-export', rule, {
 
     test({
       code: `export type UserId = number;`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // issue #653
     test({
       code: 'export default from "foo.js"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'export { a, b } from "foo.js"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     // ...SYNTAX_CASES,
     test({
       code: `
         export const [CounterProvider,, withCounter] = func();;
       `,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'let foo; export { foo as "default" };',
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
   invalid: [
@@ -232,7 +235,7 @@ ruleTester.run('prefer-default-export', rule, {
     }),
     test({
       code: `export Memory, { MemoryValue } from './Memory'`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       options: [
         {
           target: 'any',
@@ -260,7 +263,10 @@ ruleTester.run('prefer-default-export', rule, {
     test({
       code: 'export const a = 4; let foo; export { foo as "default" };',
       options: [{ target: 'any' }],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
   // { target: 'any' } invalid cases when any exporting file must contain default export but does not
@@ -328,7 +334,7 @@ ruleTester.run('prefer-default-export', rule, {
     }),
     test({
       code: 'export { a, b } from "foo.js"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       options: [
         {
           target: 'any',
@@ -389,9 +395,11 @@ ruleTester.run('prefer-default-export', rule, {
 describe('TypeScript', () => {
   for (const parser of getNonDefaultParsers()) {
     const parserConfig = {
-      parser,
+      languageOptions: {
+        ...(parser === parsers.BABEL && { parser: require(parsers.BABEL) }),
+      },
       settings: {
-        'import-x/parsers': { [parser]: ['.ts'] },
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
         'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
     }
@@ -399,14 +407,6 @@ describe('TypeScript', () => {
     ruleTester.run('prefer-default-export', rule, {
       valid: [
         // Exporting types
-        test({
-          code: `
-            export type foo = string;
-            export type bar = number;
-            /* ${parser.replace(process.cwd(), '$$PWD')} */
-          `,
-          ...parserConfig,
-        }),
         test({
           code: `
             export type foo = string;

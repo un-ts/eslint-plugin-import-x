@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-mutable-exports'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-mutable-exports', rule, {
   valid: [
@@ -27,16 +27,19 @@ ruleTester.run('no-mutable-exports', rule, {
     test({ code: 'class Counter {}\nexport default Counter' }),
     test({ code: 'class Counter {}\nexport { Counter as default }' }),
     test({
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       code: 'export Something from "./something";',
     }),
     test({
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       code: 'type Foo = {}\nexport type {Foo}',
     }),
     test({
       code: 'const count = 1\nexport { count as "counter" }',
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
   invalid: [
@@ -75,7 +78,10 @@ ruleTester.run('no-mutable-exports', rule, {
     test({
       code: 'let count = 1\nexport { count as "counter" }',
       errors: ["Exporting mutable 'let' binding, use 'const' instead."],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
 
     // todo: undeclared globals

@@ -1,12 +1,12 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-relative-packages'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-relative-packages', rule, {
   valid: [
