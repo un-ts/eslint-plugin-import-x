@@ -367,6 +367,9 @@ const invalid = [
   // parse errors
   test({
     code: "import * as namespace from './malformed.js';",
+    languageOptions: {
+      parser: require(parsers.ESPREE),
+    },
     errors: [
       {
         message:
