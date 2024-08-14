@@ -481,3 +481,19 @@ describe('Babel/Flow', () => {
     invalid: [...COMMON_TESTS.invalid, ...FLOW_ONLY.invalid],
   })
 })
+
+describe('Hermes/Flow', () => {
+  const ruleTester = new TSESLintRuleTester({
+    languageOptions: {
+      parser: require(parsers.HERMES),
+      parserOptions: {
+        ecmaVersion: 6,
+        sourceType: 'module',
+      },
+    },
+  })
+  ruleTester.run('consistent-type-specifier-style', rule, {
+    valid: [...COMMON_TESTS.valid, ...FLOW_ONLY.valid],
+    invalid: [...COMMON_TESTS.invalid, ...FLOW_ONLY.invalid],
+  })
+})

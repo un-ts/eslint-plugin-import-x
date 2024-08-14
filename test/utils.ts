@@ -19,6 +19,7 @@ export const parsers = {
   ESPREE: require.resolve('espree'),
   TS: require.resolve('@typescript-eslint/parser'),
   BABEL: require.resolve('@babel/eslint-parser'),
+  HERMES: require.resolve('hermes-eslint')
 }
 
 export function tsVersionSatisfies(specifier: string) {
