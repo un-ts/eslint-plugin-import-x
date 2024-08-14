@@ -467,6 +467,12 @@ describe('Babel/Flow', () => {
       parserOptions: {
         ecmaVersion: 6,
         sourceType: 'module',
+        requireConfigFile: false,
+        babelOptions: {
+          configFile: false,
+          babelrc: false,
+          presets: ['@babel/flow'],
+        },
       },
     },
   })
