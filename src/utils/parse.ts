@@ -130,7 +130,7 @@ export function parse(
       console.warn(
         // Can only be invalid for custom parser per imports/parser
         `\`parseForESLint\` from parser \`${typeof parserOrPath === 'string' ? parserOrPath : '`context.languageOptions.parser`'}\` is invalid and will just be ignored`,
-        { content },
+        { content, parser, parserOrPath },
       )
     } else {
       return makeParseReturn(ast, keysFromParser(parserOrPath, parser))

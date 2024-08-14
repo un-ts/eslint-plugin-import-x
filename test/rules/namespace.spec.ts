@@ -265,13 +265,13 @@ const valid = [
   test({
     code: "import * as names from './default-export-namespace-string';",
     languageOptions: {
-      parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 },
+      parserOptions: { parser: require(parsers.ESPREE), ecmaVersion: 2022 },
     },
   }),
   test({
     code: "import * as names from './default-export-namespace-string'; console.log(names.default)",
     languageOptions: {
-      parserOptions: { parser: require(parsers.BABEL), ecmaVersion: 2022 },
+      parserOptions: { parser: require(parsers.ESPREE), ecmaVersion: 2022 },
     },
   }),
   test({
