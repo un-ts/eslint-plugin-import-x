@@ -15,9 +15,9 @@ import { moduleRequire } from './module-require'
 const log = debug('eslint-plugin-import-x:parse')
 
 function keysFromParser(
-  parserPath: string | TSESLint.Linter.ParserModule,
-  parserInstance: TSESLint.Linter.ParserModule,
-  parsedResult?: TSESLint.Linter.ESLintParseResult,
+  parserPath: string | TSESLint.Parser.ParserModule,
+  parserInstance: TSESLint.Parser.ParserModule,
+  parsedResult?: TSESLint.Parser.ParseResult,
 ) {
   // Exposed by @typescript-eslint/parser and @babel/eslint-parser
   if (parsedResult && parsedResult.visitorKeys) {
@@ -130,7 +130,7 @@ export function parse(
       console.warn(
         // Can only be invalid for custom parser per imports/parser
         `\`parseForESLint\` from parser \`${typeof parserOrPath === 'string' ? parserOrPath : '`context.languageOptions.parser`'}\` is invalid and will just be ignored`,
-        { content, parser, parserOrPath },
+        { content, parserMeta: parser.meta },
       )
     } else {
       return makeParseReturn(ast, keysFromParser(parserOrPath, parser))
