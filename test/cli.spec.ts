@@ -4,7 +4,7 @@
 
 import path from 'node:path'
 
-import { ESLint } from 'eslint'
+import { LegacyESLint } from 'eslint/use-at-your-own-risk'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 
@@ -13,7 +13,7 @@ import importPlugin from 'eslint-plugin-import-x'
 describe('CLI regression tests', () => {
   describe('issue #210', () => {
     it("doesn't throw an error on gratuitous, erroneous self-reference", () => {
-      const eslint = new ESLint({
+      const eslint = new LegacyESLint({
         overrideConfigFile: './test/fixtures/issue210.config.js',
         // rulePaths: ['./src/rules'],
         overrideConfig: {
@@ -33,7 +33,7 @@ describe('CLI regression tests', () => {
   describe('issue #1645', () => {
     it('throws an error on invalid JSON', async () => {
       const invalidJSON = './test/fixtures/just-json-files/invalid.json'
-      const eslint = new ESLint({
+      const eslint = new LegacyESLint({
         overrideConfigFile: './test/fixtures/just-json-files/.eslintrc.json',
         ignore: false,
         plugins: {
