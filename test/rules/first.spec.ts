@@ -25,7 +25,7 @@ ruleTester.run('first', rule, {
             import { x } from 'foo';",
     }),
     test({
-      // issue #2210
+      name: '...component.html (issue #2210)',
       code: fs.readFileSync(testFilePath('component.html'), 'utf8'),
       languageOptions: {
         parser: require('@angular-eslint/template-parser'),
@@ -77,12 +77,23 @@ ruleTester.run('first', rule, {
               import { x } from './foo';\
               import { z } from './baz';",
       errors: 3,
-      output:
+      output: [
         "import { y } from './bar';\
               var a = 1;\
               if (true) { x() };\
               import { x } from './foo';\
               import { z } from './baz';",
+        "import { y } from './bar';\
+              import { x } from './foo';\
+              var a = 1;\
+              if (true) { x() };\
+              import { z } from './baz';",
+        "import { y } from './bar';\
+              import { x } from './foo';\
+              import { z } from './baz';\
+              var a = 1;\
+              if (true) { x() };",
+      ],
     }),
     test({
       code: "if (true) { console.log(1) }import a from 'b'",

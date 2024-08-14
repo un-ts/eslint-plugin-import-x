@@ -16,6 +16,7 @@ function generateSuggestionsTestCases(cases: string[], parser?: any) {
       },
       errors: [
         {
+          messageId: 'emptyNamed',
           suggestions: [
             {
               messageId: 'unused',
