@@ -23,10 +23,6 @@ const flowRuleTester = new TSESLintRuleTester({
   },
 })
 
-function withoutAutofixOutput<T extends ValidTestCase>(test: T) {
-  return { ...test, output: test.code }
-}
-
 ruleTester.run('order', rule, {
   valid: [
     // Default order using require
@@ -1442,11 +1438,18 @@ ruleTester.run('order', rule, {
     var async = require('async');
     var fs = require('fs');
   `,
-      output: `
+      output: [
+        `
     var async = require('async');
     var sibling = require('./sibling');
     var fs = require('fs');
   `,
+        `
+    var fs = require('fs');
+    var async = require('async');
+    var sibling = require('./sibling');
+  `,
+      ],
       errors: [
         {
           message: '`async` import should occur before import of `./sibling`',
@@ -1500,65 +1503,57 @@ ruleTester.run('order', rule, {
       ],
     }),
     // member expression of require
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         var foo = require('./foo').bar;
         var fs = require('fs');
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `./foo`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `./foo`',
+        },
+      ],
+    }),
     // nested member expression of require
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         var foo = require('./foo').bar.bar.bar;
         var fs = require('fs');
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `./foo`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `./foo`',
+        },
+      ],
+    }),
     // fix near nested member expression of require with newlines
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         var foo = require('./foo').bar
           .bar
           .bar;
         var fs = require('fs');
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `./foo`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `./foo`',
+        },
+      ],
+    }),
     // fix nested member expression of require with newlines
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         var foo = require('./foo');
         var fs = require('fs').bar
           .bar
           .bar;
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `./foo`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `./foo`',
+        },
+      ],
+    }),
     // Grouping import types
     test({
       code: `
@@ -1937,12 +1932,6 @@ ruleTester.run('order', rule, {
 
         var index = require('./');
       `,
-      output: `
-        var fs = require('fs'); /* multiline
-        comment */
-
-        var index = require('./');
-      `,
       options: [
         {
           groups: [['builtin'], ['index']],
@@ -2047,13 +2036,6 @@ ruleTester.run('order', rule, {
         import 'something-else';
         import _ from 'lodash';
       `,
-      output: `
-        import path from 'path';
-        import 'loud-rejection';
-
-        import 'something-else';
-        import _ from 'lodash';
-      `,
       options: [
         { 'newlines-between': 'never', warnOnUnassignedImports: false },
       ],
@@ -2090,13 +2072,6 @@ ruleTester.run('order', rule, {
     // Option newlines-between: 'never' cannot fix if there are other statements between imports
     test({
       code: `
-        import path from 'path';
-        export const abc = 123;
-
-        import 'something-else';
-        import _ from 'lodash';
-      `,
-      output: `
         import path from 'path';
         export const abc = 123;
 
@@ -2182,12 +2157,21 @@ ruleTester.run('order', rule, {
         2 */
         import _ from 'lodash';
       `,
-      output: `
+      output: [
+        `
         import path from 'path';
  /* 1
         2 */
         import _ from 'lodash';
       `,
+        `
+        import path from 'path';
+
+ /* 1
+        2 */
+        import _ from 'lodash';
+      `,
+      ],
       options: [{ 'newlines-between': 'always' }],
       errors: [
         {
@@ -2209,16 +2193,6 @@ ruleTester.run('order', rule, {
 
         fn_call();
       `,
-      output: `
-        const local = require('./local');
-
-        fn_call();
-
-        const global1 = require('global1');
-        const global2 = require('global2');
-
-        fn_call();
-      `,
       errors: [
         {
           message: '`./local` import should occur after import of `global2`',
@@ -2229,14 +2203,6 @@ ruleTester.run('order', rule, {
     // reorder fix cannot cross function call on moving below #2
     test({
       code: `
-        const local = require('./local');
-        fn_call();
-        const global1 = require('global1');
-        const global2 = require('global2');
-
-        fn_call();
-      `,
-      output: `
         const local = require('./local');
         fn_call();
         const global1 = require('global1');
@@ -2266,19 +2232,6 @@ ruleTester.run('order', rule, {
         const global5 = require('global5');
         fn_call();
       `,
-      output: `
-        const local1 = require('./local1');
-        const local2 = require('./local2');
-        const local3 = require('./local3');
-        const local4 = require('./local4');
-        fn_call();
-        const global1 = require('global1');
-        const global2 = require('global2');
-        const global3 = require('global3');
-        const global4 = require('global4');
-        const global5 = require('global5');
-        fn_call();
-      `,
       errors: [
         '`./local1` import should occur after import of `global5`',
         '`./local2` import should occur after import of `global5`',
@@ -2287,9 +2240,8 @@ ruleTester.run('order', rule, {
       ],
     }),
     // reorder fix cannot cross function call on moving below
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         const local = require('./local');
         const global1 = require('global1');
         const global2 = require('global2');
@@ -2298,14 +2250,13 @@ ruleTester.run('order', rule, {
 
         fn_call();
       `,
-        errors: [
-          {
-            message: '`./local` import should occur after import of `global3`',
-          },
-        ],
-        languageOptions: { parser: require(parsers.ESPREE) },
-      }),
-    ),
+      errors: [
+        {
+          message: '`./local` import should occur after import of `global3`',
+        },
+      ],
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
     // reorder fix cannot cross function call on moving below
     // fix imports that not crosses function call only
     test({
@@ -2615,33 +2566,21 @@ ruleTester.run('order', rule, {
     }),
 
     // reorder fix cannot cross non import or require
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         var async = require('async');
         fn_call();
         var fs = require('fs');
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `async`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `async`',
+        },
+      ],
+    }),
     // reorder fix cannot cross function call on moving below (from #1252)
     test({
       code: `
-        const env = require('./config');
-
-        Object.keys(env);
-
-        const http = require('http');
-        const express = require('express');
-
-        http.createServer(express());
-      `,
-      output: `
         const env = require('./config');
 
         Object.keys(env);
@@ -2658,124 +2597,108 @@ ruleTester.run('order', rule, {
       ],
     }),
     // reorder cannot cross non plain requires
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         var async = require('async');
         var a = require('./value.js')(a);
         var fs = require('fs');
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `async`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `async`',
+        },
+      ],
+    }),
     // reorder fixes cannot be applied to non plain requires #1
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         var async = require('async');
         var fs = require('fs')(a);
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `async`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `async`',
+        },
+      ],
+    }),
     // reorder fixes cannot be applied to non plain requires #2
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         var async = require('async')(a);
         var fs = require('fs');
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `async`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `async`',
+        },
+      ],
+    }),
     // cannot require in case of not assignment require
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         var async = require('async');
         require('./aa');
         var fs = require('fs');
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `async`',
-          },
-        ],
-        languageOptions: { parser: require(parsers.ESPREE) },
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `async`',
+        },
+      ],
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
     // reorder cannot cross function call (import statement)
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         import async from 'async';
         fn_call();
         import fs from 'fs';
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `async`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `async`',
+        },
+      ],
+    }),
     // reorder cannot cross variable assignment (import statement)
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         import async from 'async';
         var a = 1;
         import fs from 'fs';
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `async`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `async`',
+        },
+      ],
+    }),
     // reorder cannot cross non plain requires (import statement)
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         import async from 'async';
         var a = require('./value.js')(a);
         import fs from 'fs';
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `async`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `async`',
+        },
+      ],
+    }),
     // cannot reorder in case of not assignment import
-    test(
-      withoutAutofixOutput({
-        code: `
+    test({
+      code: `
         import async from 'async';
         import './aa';
         import fs from 'fs';
       `,
-        errors: [
-          {
-            message: '`fs` import should occur before import of `async`',
-          },
-        ],
-      }),
-    ),
+      errors: [
+        {
+          message: '`fs` import should occur before import of `async`',
+        },
+      ],
+    }),
     // Option alphabetize: {order: 'asc'}
     test({
       code: `
@@ -3021,12 +2944,20 @@ ruleTester.run('order', rule, {
           const blah = require('./blah');
           import { hello } from './hello';
         `,
-      output: `
+      output: [
+        `
           import { int } from './int';
           const { cello } = require('./cello');
           const blah = require('./blah');
           import { hello } from './hello';
         `,
+        `
+          import { int } from './int';
+          import { hello } from './hello';
+          const { cello } = require('./cello');
+          const blah = require('./blah');
+        `,
+      ],
       errors: [
         {
           message: '`./int` import should occur before import of `./cello`',
@@ -3474,12 +3405,6 @@ describe('TypeScript', () => {
               import local from './local2';
               import 'global2';
             `,
-          output: `
-              import './local1';
-              import global from 'global1';
-              import local from './local2';
-              import 'global2';
-            `,
           errors: [
             {
               message:
@@ -3495,14 +3420,6 @@ describe('TypeScript', () => {
         // fix cannot move below unassigned import (warnOnUnassignedImports enabled)
         test({
           code: `
-              import local from './local';
-
-              import 'global1';
-
-              import global2 from 'global2';
-              import global3 from 'global3';
-            `,
-          output: `
               import local from './local';
 
               import 'global1';
@@ -3703,7 +3620,8 @@ flowRuleTester.run('order', rule, {
         import { component } from '../../../../path/path/path/component';
         import { controller } from '../../../../path/path/path/controller';
       `
-        : `
+        : [
+            `
         import { helpers } from 'path/path/path/helpers';
         import { cfg } from 'path/path/path/src/Cfg';
         import { l10n } from 'path/src/l10n';
@@ -3712,6 +3630,16 @@ flowRuleTester.run('order', rule, {
         import { component } from '../../../../path/path/path/component';
         import { controller } from '../../../../path/path/path/controller';
       `,
+            `
+        import { helpers } from 'path/path/path/helpers';
+        import { cfg } from 'path/path/path/src/Cfg';
+        import { tip } from 'path/path/tip';
+        import { l10n } from 'path/src/l10n';
+
+        import { component } from '../../../../path/path/path/component';
+        import { controller } from '../../../../path/path/path/controller';
+      `,
+          ],
       options: [
         {
           groups: [

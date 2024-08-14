@@ -250,7 +250,7 @@ describe('TypeScript', () => {
     },
   }
 
-  ruleTester.run(parsers.TS, rule, {
+  ruleTester.run('no-deprecated', rule, {
     valid: [
       test({
         code: "import * as hasDeprecated from './ts-deprecated.ts'",

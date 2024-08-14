@@ -220,12 +220,12 @@ ruleTester.run('no-cycle', rule, {
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
-      code: `import { foo } from "./es6/depth-two"`,
+      code: `import("./es6/depth-two")`,
       options: [{ maxDepth: Number.POSITIVE_INFINITY }],
       errors: [error(`Dependency cycle via ./depth-one:1`)],
     }),
     test({
-      code: `import { foo } from "./es6/depth-two"`,
+      code: `import("./es6/depth-two")`,
       options: [{ maxDepth: '∞' }],
       errors: [error(`Dependency cycle via ./depth-one:1`)],
     }),

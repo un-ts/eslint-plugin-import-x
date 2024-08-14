@@ -371,7 +371,7 @@ for (const resolver of ['node', 'webpack'] as const) {
   runResolverTests(resolver)
 }
 
-ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
+ruleTester.run('no-unresolved (import-x resolve legacy)', rule, {
   valid: [
     test({
       code: "import { DEEP } from 'in-alternate-root';",
@@ -537,7 +537,7 @@ ruleTester.run('import() with built-in parser', rule, {
 
 describe('TypeScript', () => {
   // Type-only imports were added in TypeScript ESTree 2.23.0
-  ruleTester.run(`${parsers.TS}: no-unresolved ignore type-only`, rule, {
+  ruleTester.run('no-unresolved (ignore type-only)', rule, {
     valid: [
       test({
         code: 'import type { JSONSchema7Type } from "@types/json-schema";',

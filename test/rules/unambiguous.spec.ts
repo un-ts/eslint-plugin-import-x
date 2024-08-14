@@ -8,9 +8,18 @@ const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('unambiguous', rule, {
   valid: [
-    'function x() {}',
-    '"use strict"; function y() {}',
-
+    {
+      code: 'function x() {}',
+      languageOptions: {
+        parserOptions: { sourceType: 'commonjs' },
+      },
+    },
+    {
+      code: '"use strict"; function y() {}',
+      languageOptions: {
+        parserOptions: { sourceType: 'commonjs' },
+      },
+    },
     {
       code: 'import y from "z"; function x() {}',
       languageOptions: {

@@ -108,9 +108,8 @@ ruleTester.run('no-duplicates', rule, {
 
     // #86: duplicate unresolved modules should be flagged
     test({
-      code: "import foo from 'non-existent'; import bar from 'non-existent';",
       // Autofix bail because of different default import names.
-      output: "import foo from 'non-existent'; import bar from 'non-existent';",
+      code: "import foo from 'non-existent'; import bar from 'non-existent';",
       languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         "'non-existent' imported multiple times.",
@@ -291,9 +290,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: "import * as ns1 from './foo'; import * as ns2 from './foo'",
       // Autofix bail because cannot merge namespace imports.
-      output: "import * as ns1 from './foo'; import * as ns2 from './foo'",
+      code: "import * as ns1 from './foo'; import * as ns2 from './foo'",
       errors: [
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
@@ -322,13 +320,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        // some-tool-disable-next-line
-        import {x} from './foo'
-        import {//y\ny} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         // some-tool-disable-next-line
         import {x} from './foo'
         import {//y\ny} from './foo'
@@ -340,13 +333,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        // some-tool-disable-next-line
-        import {y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         // some-tool-disable-next-line
         import {y} from './foo'
@@ -358,12 +346,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo' // some-tool-disable-line
-        import {y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo' // some-tool-disable-line
         import {y} from './foo'
       `,
@@ -374,12 +358,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import {y} from './foo' // some-tool-disable-line
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import {y} from './foo' // some-tool-disable-line
       `,
@@ -390,12 +370,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        /* comment */ import {y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         /* comment */ import {y} from './foo'
       `,
@@ -406,13 +382,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import {y} from './foo' /* comment
-        multiline */
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import {y} from './foo' /* comment
         multiline */
@@ -460,12 +431,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import/* comment */{y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import/* comment */{y} from './foo'
       `,
@@ -476,12 +443,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import/* comment */'./foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import/* comment */'./foo'
       `,
@@ -492,12 +455,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import{y}/* comment */from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import{y}/* comment */from './foo'
       `,
@@ -508,12 +467,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import{y}from/* comment */'./foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import{y}from/* comment */'./foo'
       `,
@@ -524,14 +479,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from
-        // some-tool-disable-next-line
-        './foo'
-        import {y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from
         // some-tool-disable-next-line
         './foo'
@@ -738,7 +687,6 @@ describe('TypeScript', () => {
   const invalid = [
     test({
       code: "import type x from './foo'; import type y from './foo'",
-      output: "import type x from './foo'; import type y from './foo'",
       ...parserConfig,
       errors: [
         {

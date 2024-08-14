@@ -67,7 +67,10 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       // CommonJS modules
       test({
         code: 'require("./../fixtures/malformed.js")',
-        output: 'require("../fixtures/malformed.js")',
+        output: [
+          'require("../fixtures/malformed.js")',
+          'require("./malformed.js")',
+        ],
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
@@ -76,7 +79,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       }),
       test({
         code: 'require("./../fixtures/malformed")',
-        output: 'require("../fixtures/malformed")',
+        output: ['require("../fixtures/malformed")', 'require("./malformed")'],
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
@@ -190,7 +193,10 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       // ES modules
       test({
         code: 'import "./../fixtures/malformed.js"',
-        output: 'import "../fixtures/malformed.js"',
+        output: [
+          'import "../fixtures/malformed.js"',
+          'import "./malformed.js"',
+        ],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
           'Useless path segments for "./../fixtures/malformed.js", should be "../fixtures/malformed.js"',
@@ -198,7 +204,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       }),
       test({
         code: 'import "./../fixtures/malformed"',
-        output: 'import "../fixtures/malformed"',
+        output: ['import "../fixtures/malformed"', 'import "./malformed"'],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
           'Useless path segments for "./../fixtures/malformed", should be "../fixtures/malformed"',

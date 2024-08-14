@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers, test } from '../utils'
+import { test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-namespace'
 
@@ -46,7 +46,6 @@ ruleTester.run('no-namespace', rule, {
   invalid: [
     test({
       code: "import * as foo from 'foo';",
-      output: "import * as foo from 'foo';",
       errors: [
         {
           line: 1,
@@ -57,8 +56,6 @@ ruleTester.run('no-namespace', rule, {
     }),
     test({
       code: "import defaultExport, * as foo from 'foo';",
-      output: "import defaultExport, * as foo from 'foo';",
-      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         {
           line: 1,
@@ -69,7 +66,6 @@ ruleTester.run('no-namespace', rule, {
     }),
     test({
       code: "import * as foo from './foo';",
-      output: "import * as foo from './foo';",
       errors: [
         {
           line: 1,
