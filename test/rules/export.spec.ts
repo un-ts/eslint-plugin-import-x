@@ -1,14 +1,17 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, testFilePath, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/export'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('export', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"' }),
+    test({
+      code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
 
     // default
     test({ code: 'var foo = "foo"; export default foo;' }),
@@ -39,8 +42,10 @@ ruleTester.run('export', rule, {
         export * as A from './named-export-collision/a';
         export * as B from './named-export-collision/b';
       `,
-      parserOptions: {
-        ecmaVersion: 2020,
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 2020,
+        },
       },
     }),
 
@@ -52,7 +57,6 @@ ruleTester.run('export', rule, {
           return param && param1;
         }
       `,
-      parser: parsers.TS,
     },
   ],
 
@@ -110,6 +114,7 @@ ruleTester.run('export', rule, {
     //       `npm up` first if it's failing.
     test({
       code: 'export * from "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         {
           message:
@@ -148,20 +153,20 @@ ruleTester.run('export', rule, {
         "Multiple exports of name 'foo'.",
         "Multiple exports of name 'foo'.",
       ],
-      parserOptions: {
-        ecmaVersion: 2022,
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: {
+          ecmaVersion: 2022,
+        },
       },
     }),
   ],
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
-      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     },
   }
@@ -296,7 +301,6 @@ describe('TypeScript', () => {
             export * as A from './named-export-collision/a';
             export * as B from './named-export-collision/b';
           `,
-        parser,
       }),
 
       // Exports in ambient modules

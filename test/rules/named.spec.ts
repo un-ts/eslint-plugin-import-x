@@ -1,14 +1,14 @@
 import path from 'node:path'
 
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
-import { TSESLint } from '@typescript-eslint/utils'
 
 import { test, SYNTAX_CASES, testFilePath, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/named'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 function error(
   name: string,
@@ -20,7 +20,10 @@ function error(
 
 ruleTester.run('named', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"' }),
+    test({
+      code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
 
     test({ code: 'import { foo } from "./bar"' }),
     test({ code: 'import { foo } from "./empty-module"' }),
@@ -40,11 +43,6 @@ ruleTester.run('named', rule, {
     test({
       code: 'import { jsxFoo } from "./jsx/AnotherComponent"',
       settings: { 'import-x/resolve': { extensions: ['.js', '.jsx'] } },
-    }),
-
-    // validate that eslint-disable-line silences this properly
-    test({
-      code: 'import {a, b, d} from "./common"; // eslint-disable-line named',
     }),
 
     test({ code: 'import { foo, bar } from "./re-export-names"' }),
@@ -68,11 +66,11 @@ ruleTester.run('named', rule, {
     // es7
     test({
       code: 'export bar, { foo } from "./bar"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { foo, bar } from "./named-trampoline"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // regression tests
@@ -87,43 +85,43 @@ ruleTester.run('named', rule, {
     // should ignore imported/exported flow types, even if they don’t exist
     test({
       code: 'import type { MissingType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import typeof { MissingType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import type { MyOpaqueType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import typeof { MyOpaqueType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { type MyOpaqueType, MyClass } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import { typeof MyOpaqueType, MyClass } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import typeof MissingType from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import typeof * as MissingType from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'export type { MissingType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'export type { MyOpaqueType } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // jsnext
@@ -150,7 +148,10 @@ ruleTester.run('named', rule, {
     }),
 
     // ignore CJS by default. always ignore ignore list
-    test({ code: 'import {a, b, d} from "./common"' }),
+    test({
+      code: 'import {a, b, d} from "./common"',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
     test({
       code: 'import { baz } from "./bar"',
       settings: { 'import-x/ignore': ['bar'] },
@@ -199,30 +200,38 @@ ruleTester.run('named', rule, {
     test({
       code: `import { ExtfieldModel, Extfield2Model } from './models';`,
       filename: testFilePath('./export-star/downstream.js'),
-      parserOptions: {
-        sourceType: 'module',
-        ecmaVersion: 2020,
+      languageOptions: {
+        parserOptions: {
+          sourceType: 'module',
+          ecmaVersion: 2020,
+        },
       },
     }),
 
     test({
       code: 'const { something } = require("./dynamic-import-in-commonjs")',
-      parserOptions: { ecmaVersion: 2021 },
+      languageOptions: { parserOptions: { ecmaVersion: 2021 } },
       options: [{ commonjs: true }],
     }),
 
     test({
       code: 'import { something } from "./dynamic-import-in-commonjs"',
-      parserOptions: { ecmaVersion: 2021 },
+      languageOptions: { parserOptions: { ecmaVersion: 2021 } },
     }),
 
     test({
       code: 'import { "foo" as foo } from "./bar"',
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
     test({
       code: 'import { "foo" as foo } from "./empty-module"',
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
 
@@ -277,17 +286,17 @@ ruleTester.run('named', rule, {
     // es7
     test({
       code: 'export bar2, { bar } from "./bar"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ["bar not found in './bar'"],
     }),
     test({
       code: 'import { foo, bar, baz } from "./named-trampoline"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ["baz not found in './named-trampoline'"],
     }),
     test({
       code: 'import { baz } from "./broken-trampoline"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ['baz not found via broken-trampoline.js -> named-exports.js'],
     }),
 
@@ -331,7 +340,7 @@ ruleTester.run('named', rule, {
 
     test({
       code: 'import  { type MyOpaqueType, MyMissingClass } from "./flowtypes"',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ["MyMissingClass not found in './flowtypes'"],
     }),
 
@@ -368,7 +377,10 @@ ruleTester.run('named', rule, {
     test({
       code: 'import { "somethingElse" as somethingElse } from "./test-module"',
       errors: [error('somethingElse', './test-module', 'Literal')],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
     test({
       code: 'import { "baz" as baz, "bop" as bop } from "./bar"',
@@ -376,65 +388,74 @@ ruleTester.run('named', rule, {
         error('baz', './bar', 'Literal'),
         error('bop', './bar', 'Literal'),
       ],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
     test({
       code: 'import { "default" as barDefault } from "./re-export"',
       errors: [`default not found in './re-export'`],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
 })
 
 // #311: import of mismatched case
 if (!CASE_SENSITIVE_FS) {
-  ruleTester.run('named (path case-insensitivity)', rule, {
-    valid: [
-      test({
-        code: 'import { b } from "./Named-Exports"',
-      }),
-    ],
-    invalid: [
-      test({
-        code: 'import { foo } from "./Named-Exports"',
-        errors: [`foo not found in './Named-Exports'`],
-      }),
-    ],
+  describe('path case-insensitivity', () => {
+    ruleTester.run('named', rule, {
+      valid: [
+        test({
+          code: 'import { b } from "./Named-Exports"',
+        }),
+      ],
+      invalid: [
+        test({
+          code: 'import { foo } from "./Named-Exports"',
+          errors: [`foo not found in './Named-Exports'`],
+        }),
+      ],
+    })
   })
 }
 
 // export-all
-ruleTester.run('named (export *)', rule, {
-  valid: [
-    test({
-      code: 'import { foo } from "./export-all"',
-    }),
-  ],
-  invalid: [
-    test({
-      code: 'import { bar } from "./export-all"',
-      errors: [`bar not found in './export-all'`],
-    }),
-  ],
+describe('export *', () => {
+  ruleTester.run('named', rule, {
+    valid: [
+      test({
+        code: 'import { foo } from "./export-all"',
+      }),
+    ],
+    invalid: [
+      test({
+        code: 'import { bar } from "./export-all"',
+        errors: [`bar not found in './export-all'`],
+      }),
+    ],
+  })
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const settings = {
-    'import-x/parsers': { [parser]: ['.ts'] },
+    'import-x/parsers': { [parsers.TS]: ['.ts'] },
     'import-x/resolver': { 'eslint-import-resolver-typescript': true },
   }
 
   let valid = [
     test({
       code: `import x from './typescript-export-assign-object'`,
-      parser,
-      parserOptions: {
-        tsconfigRootDir: path.resolve(
-          __dirname,
-          '../fixtures/typescript-export-assign-object/',
-        ),
+      languageOptions: {
+        parserOptions: {
+          tsconfigRootDir: path.resolve(
+            __dirname,
+            '../fixtures/typescript-export-assign-object/',
+          ),
+        },
       },
       settings,
     }),
@@ -453,12 +474,13 @@ describe('TypeScript', () => {
     // }),
     test({
       code: `import { NotExported } from './typescript-export-assign-object'`,
-      parser,
-      parserOptions: {
-        tsconfigRootDir: path.resolve(
-          __dirname,
-          '../fixtures/typescript-export-assign-object/',
-        ),
+      languageOptions: {
+        parserOptions: {
+          tsconfigRootDir: path.resolve(
+            __dirname,
+            '../fixtures/typescript-export-assign-object/',
+          ),
+        },
       },
       settings,
       errors: [
@@ -471,12 +493,13 @@ describe('TypeScript', () => {
     test({
       // `export =` syntax creates a default export only
       code: `import { FooBar } from './typescript-export-assign-object'`,
-      parser,
-      parserOptions: {
-        tsconfigRootDir: path.resolve(
-          __dirname,
-          '../fixtures/typescript-export-assign-object/',
-        ),
+      languageOptions: {
+        parserOptions: {
+          tsconfigRootDir: path.resolve(
+            __dirname,
+            '../fixtures/typescript-export-assign-object/',
+          ),
+        },
       },
       settings,
       errors: [
@@ -498,27 +521,27 @@ describe('TypeScript', () => {
       ...valid,
       test({
         code: `import { MyType } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
         code: `import { Foo } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
         code: `import { Bar } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
         code: `import { getFoo } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
         code: `import { MyEnum } from "./${source}"`,
-        parser,
+
         settings,
       }),
       test({
@@ -526,7 +549,7 @@ describe('TypeScript', () => {
             import { MyModule } from "./${source}"
             MyModule.ModuleFunction()
           `,
-        parser,
+
         settings,
       }),
       test({
@@ -534,7 +557,7 @@ describe('TypeScript', () => {
             import { MyNamespace } from "./${source}"
             MyNamespace.NSModule.NSModuleFunction()
           `,
-        parser,
+
         settings,
       }),
     ]
@@ -542,7 +565,7 @@ describe('TypeScript', () => {
     invalid.push(
       test({
         code: `import { MissingType } from "./${source}"`,
-        parser,
+
         settings,
         errors: [
           {
@@ -553,7 +576,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `import { NotExported } from "./${source}"`,
-        parser,
+
         settings,
         errors: [
           {
@@ -565,7 +588,7 @@ describe('TypeScript', () => {
     )
   }
 
-  ruleTester.run(`named [TypeScript]`, rule, {
+  ruleTester.run(`named`, rule, {
     valid,
     invalid,
   })

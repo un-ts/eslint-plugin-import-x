@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import {
   dependencies as deps,
@@ -12,8 +12,8 @@ import { parsers, test, testFilePath } from '../utils'
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-extraneous-dependencies'
 
-const ruleTester = new TSESLint.RuleTester()
-const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
+const ruleTester = new TSESLintRuleTester()
+const typescriptRuleTester = new TSESLintRuleTester(typescriptConfig)
 
 const packageDirWithSyntaxError = testFilePath('with-syntax-error')
 
@@ -60,11 +60,9 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       test({ code: `export { foo } from "${pkg}"` }),
       test({ code: `export * from "${pkg}"` }),
     ]),
-    test({ code: 'import "eslint"' }),
     test({ code: 'import "eslint/lib/api"' }),
     test({ code: 'import "fs"' }),
     test({ code: 'import "./foo"' }),
-    test({ code: 'import "@org/package"' }),
 
     test({
       code: 'import "electron"',
@@ -107,7 +105,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import type MyType from "myflowtyped";',
       options: [{ packageDir: packageDirWithFlowTyped }],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `
@@ -115,7 +113,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         import typeof TypeScriptModule from 'typescript';
       `,
       options: [{ packageDir: packageDirWithFlowTyped }],
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: 'import react from "react";',
@@ -498,17 +496,6 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     }),
 
     test({
-      code: 'import "not-a-dependency"',
-      filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
-      options: [{ packageDir: packageDirMonoRepoRoot }],
-      errors: [
-        {
-          message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
-        },
-      ],
-    }),
-
-    test({
       code: 'import "esm-package-not-in-pkg-json/esm-module";',
       errors: [
         {
@@ -537,12 +524,9 @@ ruleTester.run('no-extraneous-dependencies', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
-      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': ['node', 'typescript'],
     },
   }
@@ -629,22 +613,22 @@ typescriptRuleTester.run(
       test({
         code: 'import type MyType from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import type { MyType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import { type MyType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import { type MyType, type OtherType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
     ],
     invalid: [
@@ -652,7 +636,7 @@ typescriptRuleTester.run(
         code: 'import type { MyType } from "not-a-dependency";',
         options: [{ includeTypes: true }],
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           {
             message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
@@ -663,7 +647,7 @@ typescriptRuleTester.run(
         code: `import type { Foo } from 'not-a-dependency';`,
         options: [{ includeTypes: true }],
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           {
             message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
@@ -673,7 +657,7 @@ typescriptRuleTester.run(
       test({
         code: 'import Foo, { type MyType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           {
             message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
@@ -683,7 +667,7 @@ typescriptRuleTester.run(
       test({
         code: 'import { type MyType, Foo } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           {
             message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,

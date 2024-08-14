@@ -1,11 +1,13 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, SYNTAX_CASES, testFilePath, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/namespace'
 
-const ruleTester = new TSESLint.RuleTester({
-  parserOptions: { env: { es6: true } },
+const ruleTester = new TSESLintRuleTester({
+  languageOptions: {
+    parserOptions: { env: { es6: true } },
+  },
 })
 
 function error(name: string, namespace: string) {
@@ -15,7 +17,10 @@ function error(name: string, namespace: string) {
 }
 
 const valid = [
-  test({ code: 'import "./malformed.js"' }),
+  test({
+    code: 'import "./malformed.js"',
+    languageOptions: { parser: require(parsers.ESPREE) },
+  }),
 
   test({ code: "import * as foo from './empty-folder';" }),
   test({
@@ -30,10 +35,12 @@ const valid = [
   }),
   test({
     code: "import * as elements from './jsx';",
-    parserOptions: {
-      sourceType: 'module',
-      ecmaFeatures: { jsx: true },
-      ecmaVersion: 2015,
+    languageOptions: {
+      parserOptions: {
+        sourceType: 'module',
+        ecmaFeatures: { jsx: true },
+        ecmaVersion: 2015,
+      },
     },
   }),
   // import re-exported jsx files, where jsx file exports a string
@@ -58,9 +65,11 @@ const valid = [
     settings: {
       'import-x/extensions': ['.js', '.jsx'],
     },
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
     },
   }),
@@ -103,21 +112,21 @@ const valid = [
   /////////
   test({
     code: 'export * as names from "./named-exports"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
   test({
     code: 'export defport, * as names from "./named-exports"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
   // non-existent is handled by no-unresolved
   test({
     code: 'export * as names from "./does-not-exist"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   test({
     code: 'import * as Endpoints from "./issue-195/Endpoints"; console.log(Endpoints.Users)',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // respect hoisting
@@ -129,14 +138,15 @@ const valid = [
   test({ code: "import * as names from './default-export';" }),
   test({
     code: "import * as names from './default-export'; console.log(names.default)",
+    languageOptions: { parser: require(parsers.ESPREE) },
   }),
   test({
     code: 'export * as names from "./default-export"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
   test({
     code: 'export defport, * as names from "./default-export"',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // #456: optionally ignore computed references
@@ -148,13 +158,15 @@ const valid = [
   // #656: should handle object-rest properties
   test({
     code: `import * as names from './named-exports'; const {a, b, ...rest} = names;`,
-    parserOptions: {
-      ecmaVersion: 2018,
+    languageOptions: {
+      parserOptions: {
+        ecmaVersion: 2018,
+      },
     },
   }),
   test({
     code: `import * as names from './named-exports'; const {a, b, ...rest} = names;`,
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // #1144: should handle re-export CommonJS as namespace
@@ -165,9 +177,11 @@ const valid = [
   // JSX
   test({
     code: 'import * as Names from "./named-exports"; const Foo = <Names.a/>',
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
     },
   }),
@@ -178,7 +192,7 @@ const valid = [
       import * as foo from "./typescript-declare-nested"
       foo.bar.MyFunction()
     `,
-    parser: parsers.TS,
+
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -187,7 +201,7 @@ const valid = [
 
   test({
     code: `import { foobar } from "./typescript-declare-interface"`,
-    parser: parsers.TS,
+
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -196,7 +210,7 @@ const valid = [
 
   test({
     code: 'export * from "typescript/lib/typescript.d"',
-    parser: parsers.TS,
+
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -205,7 +219,7 @@ const valid = [
 
   test({
     code: 'export = function name() {}',
-    parser: parsers.TS,
+
     settings: {
       'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
@@ -229,34 +243,54 @@ const valid = [
     console.log(middle.myName);
   `,
     filename: testFilePath('export-star-2/downstream.js'),
-    parserOptions: {
-      ecmaVersion: 2020,
+    languageOptions: {
+      parserOptions: {
+        ecmaVersion: 2020,
+      },
     },
   }),
 
   test({
     code: "import * as names from './default-export-string';",
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: {
+      parser: require(parsers.BABEL),
+      parserOptions: { ecmaVersion: 2022 },
+    },
   }),
   test({
     code: "import * as names from './default-export-string'; console.log(names.default)",
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: {
+      parser: require(parsers.BABEL),
+      parserOptions: { ecmaVersion: 2022 },
+    },
   }),
   test({
     code: "import * as names from './default-export-namespace-string';",
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: {
+      parser: require(parsers.ESPREE),
+      parserOptions: { ecmaVersion: 2022 },
+    },
   }),
   test({
     code: "import * as names from './default-export-namespace-string'; console.log(names.default)",
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: {
+      parser: require(parsers.ESPREE),
+      parserOptions: { ecmaVersion: 2022 },
+    },
   }),
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.d.e)`,
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: {
+      parser: require(parsers.ESPREE),
+      parserOptions: { ecmaVersion: 2022 },
+    },
   }),
   test({
     code: `import { "b" as b } from "./deep/a"; var {c:{d:{e}}} = b`,
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: {
+      parser: require(parsers.ESPREE),
+      parserOptions: { ecmaVersion: 2022 },
+    },
   }),
 ]
 
@@ -330,13 +364,16 @@ const invalid = [
 
   test({
     code: 'import * as Endpoints from "./issue-195/Endpoints"; console.log(Endpoints.Foo)',
-    parser: parsers.BABEL,
+    languageOptions: { parser: require(parsers.BABEL) },
     errors: ["'Foo' not found in imported namespace 'Endpoints'."],
   }),
 
   // parse errors
   test({
     code: "import * as namespace from './malformed.js';",
+    languageOptions: {
+      parser: require(parsers.ESPREE),
+    },
     errors: [
       {
         message:
@@ -371,9 +408,11 @@ const invalid = [
   test({
     code: 'import * as Names from "./named-exports"; const Foo = <Names.e/>',
     errors: [error('e', 'Names')],
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
     },
   }),
@@ -381,12 +420,18 @@ const invalid = [
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.e)`,
     errors: ["'e' not found in imported namespace 'b'."],
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: {
+      parser: require(parsers.ESPREE),
+      parserOptions: { ecmaVersion: 2022 },
+    },
   }),
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.e)`,
     errors: ["'e' not found in deeply imported namespace 'b.c'."],
-    parserOptions: { ecmaVersion: 2022 },
+    languageOptions: {
+      parser: require(parsers.ESPREE),
+      parserOptions: { ecmaVersion: 2022 },
+    },
   }),
 ]
 
@@ -397,60 +442,60 @@ for (const [folder, parser] of [['deep'], ['deep-es7', parsers.BABEL]]) {
   // close over params
   valid.push(
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.d.e)`,
     }),
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.c.d.e)`,
     }),
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.d.e.f)`,
     }),
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{c:{d:{e}}}} = a`,
     }),
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; var {c:{d:{e}}} = b`,
     }),
     // deep namespaces should include explicitly exported defaults
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.default)`,
     }),
   )
 
   invalid.push(
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.e)`,
       errors: ["'e' not found in deeply imported namespace 'a.b'."],
     }),
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.e)`,
       errors: ["'e' not found in imported namespace 'b'."],
     }),
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.e)`,
       errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
     }),
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.c.e)`,
       errors: ["'e' not found in deeply imported namespace 'b.c'."],
     }),
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{ e }} = a`,
       errors: ["'e' not found in deeply imported namespace 'a.b'."],
     }),
     test({
-      parser,
+      languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{c:{ e }}} = a`,
       errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
     }),

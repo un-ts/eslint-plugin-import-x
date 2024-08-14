@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/max-dependencies'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('max-dependencies', rule, {
   valid: [
@@ -73,7 +73,7 @@ ruleTester.run('max-dependencies', rule, {
 
     test({
       code: "import type { x } from './foo'; import type { y } from './bar'",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       options: [
         {
           max: 1,
@@ -84,7 +84,7 @@ ruleTester.run('max-dependencies', rule, {
 
     test({
       code: "import type { x } from './foo'; import type { y } from './bar'; import type { z } from './baz'",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       options: [
         {
           max: 2,
@@ -97,13 +97,11 @@ ruleTester.run('max-dependencies', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   ruleTester.run('max-dependencies', rule, {
     valid: [
       test({
         code: "import type { x } from './foo'; import { y } from './bar';",
-        parser,
+
         options: [
           {
             max: 1,
@@ -115,7 +113,7 @@ describe('TypeScript', () => {
     invalid: [
       test({
         code: "import type { x } from './foo'; import type { y } from './bar'",
-        parser,
+
         options: [
           {
             max: 1,
@@ -126,7 +124,7 @@ describe('TypeScript', () => {
 
       test({
         code: "import type { x } from './foo'; import type { y } from './bar'; import type { z } from './baz'",
-        parser,
+
         options: [
           {
             max: 2,

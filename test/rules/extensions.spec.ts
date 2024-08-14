@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath, parsers } from '../utils'
+import { test, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/extensions'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('extensions', rule, {
   valid: [
@@ -660,9 +660,7 @@ ruleTester.run('extensions', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
-  ruleTester.run(`${parser}: extensions ignore type-only`, rule, {
+  ruleTester.run(`typescript - extensions ignore type-only`, rule, {
     valid: [
       test({
         code: 'import type T from "./typescript-declare";',
@@ -670,7 +668,6 @@ describe('TypeScript', () => {
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
-        parser,
       }),
       test({
         code: 'export type { MyType } from "./typescript-declare";',
@@ -678,7 +675,6 @@ describe('TypeScript', () => {
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
-        parser,
       }),
     ],
     invalid: [
@@ -689,7 +685,6 @@ describe('TypeScript', () => {
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
-        parser,
       }),
       test({
         code: 'export { MyType } from "./typescript-declare";',
@@ -698,7 +693,6 @@ describe('TypeScript', () => {
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
-        parser,
       }),
     ],
   })

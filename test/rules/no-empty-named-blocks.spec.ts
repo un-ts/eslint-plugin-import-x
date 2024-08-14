@@ -1,25 +1,29 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-empty-named-blocks'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
-function generateSuggestionsTestCases(cases: string[], parser?: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function generateSuggestionsTestCases(cases: string[], parser?: any) {
   return cases.map(code =>
     test({
       code,
-      parser,
+      languageOptions: {
+        ...(parser && { parser }),
+      },
       errors: [
         {
+          messageId: 'emptyNamed',
           suggestions: [
             {
-              desc: 'Remove unused import',
+              messageId: 'unused',
               output: '',
             },
             {
-              desc: 'Remove empty import block',
+              messageId: 'emptyImport',
               output: `import 'mod';`,
             },
           ],
@@ -38,32 +42,29 @@ ruleTester.run('no-empty-named-blocks', rule, {
     test({ code: `import * as Namespace from 'mod';` }),
 
     // Typescript
-    test({ code: `import type Default from 'mod';`, parser: parsers.TS }),
+    test({ code: `import type Default from 'mod';` }),
     test({
       code: `import type { Named } from 'mod';`,
-      parser: parsers.TS,
     }),
     test({
       code: `import type Default, { Named } from 'mod';`,
-      parser: parsers.TS,
     }),
     test({
       code: `import type * as Namespace from 'mod';`,
-      parser: parsers.TS,
     }),
 
     // Flow
     test({
       code: `import typeof Default from 'mod'; // babel old`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `import typeof { Named } from 'mod'; // babel old`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `import typeof Default, { Named } from 'mod'; // babel old`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       code: `
@@ -98,19 +99,16 @@ ruleTester.run('no-empty-named-blocks', rule, {
     ]),
 
     // Typescript
-    ...generateSuggestionsTestCases(
-      [
-        `import type {} from 'mod';`,
-        `import type {}from 'mod';`,
-        `import type{}from 'mod';`,
-        `import type {}from'mod';`,
-      ],
-      parsers.TS,
-    ),
+    ...generateSuggestionsTestCases([
+      `import type {} from 'mod';`,
+      `import type {}from 'mod';`,
+      `import type{}from 'mod';`,
+      `import type {}from'mod';`,
+    ]),
     test({
       code: `import type Default, {} from 'mod';`,
       output: `import type Default from 'mod';`,
-      parser: parsers.TS,
+
       errors: ['Unexpected empty named import block'],
     }),
 
@@ -122,12 +120,12 @@ ruleTester.run('no-empty-named-blocks', rule, {
         `import typeof {} from'mod';`,
         `import typeof{}from'mod';`,
       ],
-      parsers.BABEL,
+      require(parsers.BABEL),
     ),
     test({
       code: `import typeof Default, {} from 'mod';`,
       output: `import typeof Default from 'mod';`,
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: ['Unexpected empty named import block'],
     }),
   ],

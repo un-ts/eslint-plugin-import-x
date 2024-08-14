@@ -1,19 +1,25 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, test } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-useless-path-segments'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 function runResolverTests(resolver: 'node' | 'webpack') {
   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
     valid: [
       // CommonJS modules with default options
-      test({ code: 'require("./../fixtures/malformed.js")' }),
+      test({
+        code: 'require("./../fixtures/malformed.js")',
+        languageOptions: { parser: require(parsers.ESPREE) },
+      }),
 
       // ES modules with default options
-      test({ code: 'import "./malformed.js"' }),
+      test({
+        code: 'import "./malformed.js"',
+        languageOptions: { parser: require(parsers.ESPREE) },
+      }),
       test({ code: 'import "./test-module"' }),
       test({ code: 'import "./bar/"' }),
       test({ code: 'import "."' }),
@@ -31,6 +37,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       test({ code: 'import "./bar/"', options: [{ noUselessIndex: true }] }), // ./bar.js exists
       test({
         code: 'import "./malformed.js"',
+        languageOptions: { parser: require(parsers.BABEL) },
         options: [{ noUselessIndex: true }],
       }), // ./malformed directory does not exist
       test({
@@ -42,11 +49,17 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         options: [{ noUselessIndex: true }],
       }), // ./importType.js does not exist
 
-      test({ code: 'import(".")', parser: parsers.BABEL }),
-      test({ code: 'import("..")', parser: parsers.BABEL }),
+      test({
+        code: 'import(".")',
+        languageOptions: { parser: require(parsers.BABEL) },
+      }),
+      test({
+        code: 'import("..")',
+        languageOptions: { parser: require(parsers.BABEL) },
+      }),
       test({
         code: 'import("fs").then(function(fs) {})',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
     ],
 
@@ -54,16 +67,21 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       // CommonJS modules
       test({
         code: 'require("./../fixtures/malformed.js")',
-        output: 'require("../fixtures/malformed.js")',
+        output: [
+          'require("../fixtures/malformed.js")',
+          'require("./malformed.js")',
+        ],
         options: [{ commonjs: true }],
+        languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
           'Useless path segments for "./../fixtures/malformed.js", should be "../fixtures/malformed.js"',
         ],
       }),
       test({
         code: 'require("./../fixtures/malformed")',
-        output: 'require("../fixtures/malformed")',
+        output: ['require("../fixtures/malformed")', 'require("./malformed")'],
         options: [{ commonjs: true }],
+        languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
           'Useless path segments for "./../fixtures/malformed", should be "../fixtures/malformed"',
         ],
@@ -72,6 +90,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         code: 'require("../fixtures/malformed.js")',
         output: 'require("./malformed.js")',
         options: [{ commonjs: true }],
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           'Useless path segments for "../fixtures/malformed.js", should be "./malformed.js"',
         ],
@@ -80,6 +99,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         code: 'require("../fixtures/malformed")',
         output: 'require("./malformed")',
         options: [{ commonjs: true }],
+        languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
           'Useless path segments for "../fixtures/malformed", should be "./malformed"',
         ],
@@ -88,6 +108,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         code: 'require("./test-module/")',
         output: 'require("./test-module")',
         options: [{ commonjs: true }],
+        languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
           'Useless path segments for "./test-module/", should be "./test-module"',
         ],
@@ -172,14 +193,19 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       // ES modules
       test({
         code: 'import "./../fixtures/malformed.js"',
-        output: 'import "../fixtures/malformed.js"',
+        output: [
+          'import "../fixtures/malformed.js"',
+          'import "./malformed.js"',
+        ],
+        languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
           'Useless path segments for "./../fixtures/malformed.js", should be "../fixtures/malformed.js"',
         ],
       }),
       test({
         code: 'import "./../fixtures/malformed"',
-        output: 'import "../fixtures/malformed"',
+        output: ['import "../fixtures/malformed"', 'import "./malformed"'],
+        languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
           'Useless path segments for "./../fixtures/malformed", should be "../fixtures/malformed"',
         ],
@@ -187,6 +213,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       test({
         code: 'import "../fixtures/malformed.js"',
         output: 'import "./malformed.js"',
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: [
           'Useless path segments for "../fixtures/malformed.js", should be "./malformed.js"',
         ],
@@ -194,6 +221,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       test({
         code: 'import "../fixtures/malformed"',
         output: 'import "./malformed"',
+        languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
           'Useless path segments for "../fixtures/malformed", should be "./malformed"',
         ],
@@ -282,19 +310,19 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         code: 'import("./")',
         output: 'import(".")',
         errors: ['Useless path segments for "./", should be "."'],
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import("../")',
         output: 'import("..")',
         errors: ['Useless path segments for "../", should be ".."'],
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       test({
         code: 'import("./deep//a")',
         output: 'import("./deep/a")',
         errors: ['Useless path segments for "./deep//a", should be "./deep/a"'],
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
     ],
   })

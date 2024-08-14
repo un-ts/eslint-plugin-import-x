@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-deprecated'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-deprecated', rule, {
   valid: [
@@ -243,17 +243,14 @@ ruleTester.run('no-deprecated: hoisting', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
-      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     },
   }
 
-  ruleTester.run(parser, rule, {
+  ruleTester.run('no-deprecated', rule, {
     valid: [
       test({
         code: "import * as hasDeprecated from './ts-deprecated.ts'",

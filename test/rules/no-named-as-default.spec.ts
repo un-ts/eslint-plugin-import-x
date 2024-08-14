@@ -1,28 +1,45 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, SYNTAX_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
+
+console.log({ babel: require(parsers.BABEL) })
 
 ruleTester.run('no-named-as-default', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"' }),
+    test({
+      code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
 
     test({ code: 'import bar, { foo } from "./bar";' }),
     test({ code: 'import bar, { foo } from "./empty-folder";' }),
 
     // es7
-    test({ code: 'export bar, { foo } from "./bar";', parser: parsers.BABEL }),
-    test({ code: 'export bar from "./bar";', parser: parsers.BABEL }),
+    test({
+      code: 'export bar, { foo } from "./bar";',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
+    test({
+      code: 'export bar from "./bar";',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
 
     // #566: don't false-positive on `default` itself
-    test({ code: 'export default from "./bar";', parser: parsers.BABEL }),
+    test({
+      code: 'export default from "./bar";',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
 
     test({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
 
     ...SYNTAX_CASES,
@@ -53,7 +70,7 @@ ruleTester.run('no-named-as-default', rule, {
     // es7
     test({
       code: 'export foo from "./bar";',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         {
           message:
@@ -65,7 +82,7 @@ ruleTester.run('no-named-as-default', rule, {
     }),
     test({
       code: 'export foo, { foo as bar } from "./bar";',
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         {
           message:
@@ -78,6 +95,7 @@ ruleTester.run('no-named-as-default', rule, {
 
     test({
       code: 'import foo from "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         {
           message:
@@ -96,7 +114,10 @@ ruleTester.run('no-named-as-default', rule, {
           type: 'ImportDefaultSpecifier',
         },
       ],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
     test({
       code: 'import foo, { foo as bar } from "./export-default-string-and-named"',
@@ -107,7 +128,10 @@ ruleTester.run('no-named-as-default', rule, {
           type: 'ImportDefaultSpecifier',
         },
       ],
-      parserOptions: { ecmaVersion: 2022 },
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
     }),
   ],
 })

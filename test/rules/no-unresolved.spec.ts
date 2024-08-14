@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, SYNTAX_CASES, parsers, testFilePath } from '../utils'
 import type { ValidTestCase } from '../utils'
@@ -8,7 +8,7 @@ import type { ValidTestCase } from '../utils'
 import rule from 'eslint-plugin-import-x/rules/no-unresolved'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 function runResolverTests(resolver: 'node' | 'webpack') {
   // redefine 'test' to set a resolver
@@ -26,7 +26,10 @@ function runResolverTests(resolver: 'node' | 'webpack') {
 
   ruleTester.run(`no-unresolved (${resolver})`, rule, {
     valid: [
-      test({ code: 'import "./malformed.js"' }),
+      test({
+        code: 'import "./malformed.js"',
+        languageOptions: { parser: require(parsers.ESPREE) },
+      }),
 
       rest({ code: 'import foo from "./bar";' }),
       rest({ code: "import bar from './bar.js';" }),
@@ -34,13 +37,15 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       rest({ code: "import fs from 'fs';" }),
       rest({
         code: "import('fs');",
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
 
       // check with eslint parser
       rest({
         code: "import('fs');",
-        parserOptions: { ecmaVersion: 2021 },
+        languageOptions: {
+          parserOptions: { ecmaVersion: 2021 },
+        },
       }),
 
       rest({ code: 'import * as foo from "a"' }),
@@ -52,11 +57,11 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       // stage 1 proposal for export symmetry,
       rest({
         code: 'export * as bar from "./bar"',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       rest({
         code: 'export bar from "./bar"',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
       rest({ code: 'import foo from "./jsx/MyUnCoolComponent.jsx"' }),
 
@@ -176,7 +181,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
             type: 'Literal',
           },
         ],
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
       }),
 
       rest({
@@ -197,18 +202,20 @@ function runResolverTests(resolver: 'node' | 'webpack') {
             type: 'Literal',
           },
         ],
-        parserOptions: { ecmaVersion: 2021 },
+        languageOptions: {
+          parserOptions: { ecmaVersion: 2021 },
+        },
       }),
 
       // export symmetry proposal
       rest({
         code: 'export * as bar from "./does-not-exist"',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: ["Unable to resolve path to module './does-not-exist'."],
       }),
       rest({
         code: 'export bar from "./does-not-exist"',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         errors: ["Unable to resolve path to module './does-not-exist'."],
       }),
 
@@ -364,7 +371,7 @@ for (const resolver of ['node', 'webpack'] as const) {
   runResolverTests(resolver)
 }
 
-ruleTester.run('no-unresolved (import-x/resolve legacy)', rule, {
+ruleTester.run('no-unresolved (import-x resolve legacy)', rule, {
   valid: [
     test({
       code: "import { DEEP } from 'in-alternate-root';",
@@ -427,6 +434,7 @@ ruleTester.run('no-unresolved ignore list', rule, {
   valid: [
     test({
       code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.BABEL) },
       options: [{ ignore: ['.png$', '.gif$'] }],
     }),
     test({
@@ -467,6 +475,7 @@ ruleTester.run('no-unresolved unknown resolver', rule, {
     // logs resolver load error
     test({
       code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.BABEL) },
       settings: { 'import-x/resolver': 'doesnt-exist' },
       errors: [
         `Resolve error: unable to load resolver "doesnt-exist".`,
@@ -512,13 +521,13 @@ ruleTester.run('import() with built-in parser', rule, {
   valid: [
     test({
       code: "import('fs');",
-      parserOptions: { ecmaVersion: 2021 },
+      languageOptions: { parserOptions: { ecmaVersion: 2021 } },
     }),
   ],
   invalid: [
     test({
       code: 'import("./does-not-exist-l0w9ssmcqy9").then(() => {})',
-      parserOptions: { ecmaVersion: 2021 },
+      languageOptions: { parserOptions: { ecmaVersion: 2021 } },
       errors: [
         "Unable to resolve path to module './does-not-exist-l0w9ssmcqy9'.",
       ],
@@ -528,28 +537,23 @@ ruleTester.run('import() with built-in parser', rule, {
 
 describe('TypeScript', () => {
   // Type-only imports were added in TypeScript ESTree 2.23.0
-  const parser = parsers.TS
-  ruleTester.run(`${parser}: no-unresolved ignore type-only`, rule, {
+  ruleTester.run('no-unresolved (ignore type-only)', rule, {
     valid: [
       test({
         code: 'import type { JSONSchema7Type } from "@types/json-schema";',
-        parser,
       }),
       test({
         code: 'export type { JSONSchema7Type } from "@types/json-schema";',
-        parser,
       }),
     ],
     invalid: [
       test({
         code: 'import { JSONSchema7Type } from "@types/json-schema";',
         errors: ["Unable to resolve path to module '@types/json-schema'."],
-        parser,
       }),
       test({
         code: 'export { JSONSchema7Type } from "@types/json-schema";',
         errors: ["Unable to resolve path to module '@types/json-schema'."],
-        parser,
       }),
     ],
   })

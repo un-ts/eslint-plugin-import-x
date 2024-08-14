@@ -1,6 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { ResolveOptions } from 'enhanced-resolve'
-import type { TsResolverOptions } from 'eslint-import-resolver-typescript'
 import type { MinimatchOptions } from 'minimatch'
 import type { KebabCase, LiteralUnion } from 'type-fest'
 
@@ -20,6 +19,12 @@ export type WebpackResolverOptions = {
   env?: Record<string, unknown>
   argv?: Record<string, unknown>
 }
+
+export type TsResolverOptions = {
+  alwaysTryTypes?: boolean
+  project?: string[] | string
+  extensions?: string[]
+} & Omit<ResolveOptions, 'fileSystem' | 'useSyncFileSystemCalls'>
 
 export type FileExtension = `.${string}`
 
@@ -63,7 +68,7 @@ export type PluginConfig = {
   plugins?: [PluginName]
   settings?: PluginSettings
   rules?: Record<`${PluginName}/${string}`, TSESLint.Linter.RuleEntry>
-} & TSESLint.Linter.Config
+} & TSESLint.Linter.ConfigType
 
 export type RuleContext<
   TMessageIds extends string = string,
@@ -89,11 +94,10 @@ export type ParseError = {
   column: number
 } & Error
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type CustomESTreeNode<Type extends string, T extends object = {}> = Omit<
-  TSESTree.BaseNode,
-  'type'
-> & {
+export type CustomESTreeNode<
+  Type extends string,
+  T extends object = object,
+> = Omit<TSESTree.BaseNode, 'type'> & {
   type: Type
 } & T
 

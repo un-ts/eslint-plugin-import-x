@@ -1,8 +1,10 @@
 import fs from 'node:fs'
 
-import { TSESLint } from '@typescript-eslint/utils'
-// @ts-expect-error - no typings yet
-import { FlatRuleTester } from 'eslint/use-at-your-own-risk'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TSESLint } from '@typescript-eslint/utils'
+// @ts-expect-error -- in correct types
+import { FlatRuleTester as ESLint8_56_FlatRuleTester } from 'eslint8.56/use-at-your-own-risk'
+import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
 
 import { test, testFilePath, parsers } from '../utils'
 
@@ -10,9 +12,9 @@ import jsxConfig from 'eslint-plugin-import-x/config/react'
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-unused-modules'
 
-const ruleTester = new TSESLint.RuleTester()
-const typescriptRuleTester = new TSESLint.RuleTester(typescriptConfig)
-const jsxRuleTester = new TSESLint.RuleTester(jsxConfig)
+const ruleTester = new TSESLintRuleTester()
+const typescriptRuleTester = new TSESLintRuleTester(typescriptConfig)
+const jsxRuleTester = new TSESLintRuleTester(jsxConfig)
 
 const error = (message: string) => ({ message })
 
@@ -127,49 +129,49 @@ ruleTester.run('no-unused-modules', rule, {
       options: unusedExportsOptions,
       code: 'import { o2 } from "./file-o";export default () => 12',
       filename: testFilePath('./no-unused-modules/file-a.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'export const b = 2',
       filename: testFilePath('./no-unused-modules/file-b.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'const c1 = 3; function c2() { return 3 }; export { c1, c2 }',
       filename: testFilePath('./no-unused-modules/file-c.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'export function d() { return 4 }',
       filename: testFilePath('./no-unused-modules/file-d.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'export class q { q0() {} }',
       filename: testFilePath('./no-unused-modules/file-q.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'const e0 = 5; export { e0 as e }',
       filename: testFilePath('./no-unused-modules/file-e.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'const l0 = 5; const l = 10; export { l0 as l1, l }; export default () => {}',
       filename: testFilePath('./no-unused-modules/file-l.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
       code: 'const o0 = 0; const o1 = 1; export { o0, o1 as o2 }; export default () => {}',
       filename: testFilePath('./no-unused-modules/file-o.js'),
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     test({
       options: unusedExportsOptions,
@@ -301,7 +303,7 @@ describe('dynamic imports', () => {
             const d = 40
             export default d
             `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/exports-for-dynamic-js.js'),
       }),
     ],
@@ -315,7 +317,7 @@ describe('dynamic imports', () => {
         const d = 40
         export default d
         `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath(
           './no-unused-modules/exports-for-dynamic-js-2.js',
         ),
@@ -339,7 +341,6 @@ describe('dynamic imports', () => {
             const ts_d = 40
             export default ts_d
             `,
-        parser: parsers.TS,
         filename: testFilePath(
           './no-unused-modules/typescript/exports-for-dynamic-ts.ts',
         ),
@@ -349,7 +350,6 @@ describe('dynamic imports', () => {
         import App from './App';
       `,
         filename: testFilePath('./unused-modules-reexport-crash/src/index.tsx'),
-        parser: parsers.TS,
         options: [
           {
             unusedExports: true,
@@ -1169,8 +1169,6 @@ describe('Avoid errors if re-export all from umd compiled library', () => {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   typescriptRuleTester.run('no-unused-modules', rule, {
     valid: [
       test({
@@ -1185,31 +1183,31 @@ describe('TypeScript', () => {
         const a2: c = {};
         const a3: d = {};
         `,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export const b = 2;`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-b.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-c.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-d.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-e.ts'),
       }),
       test({
@@ -1225,7 +1223,7 @@ describe('TypeScript', () => {
         const a3: d = {};
         const a4: typeof e = undefined;
         `,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-a-import-type.ts',
         ),
@@ -1233,7 +1231,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export const b = 2;`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-b-used-as-type.ts',
         ),
@@ -1241,7 +1239,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-c-used-as-type.ts',
         ),
@@ -1249,7 +1247,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-d-used-as-type.ts',
         ),
@@ -1257,7 +1255,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-e-used-as-type.ts',
         ),
@@ -1266,19 +1264,19 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface g {}`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-g.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `import {g} from './file-ts-g';`,
-        parser,
+
         filename: testFilePath('./no-unused-modules/typescript/file-ts-f.ts'),
       }),
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface g {}; /* used-as-type */`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-g-used-as-type.ts',
         ),
@@ -1286,7 +1284,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `import type {g} from './file-ts-g';`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-f-import-type.ts',
         ),
@@ -1296,7 +1294,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export const b = 2;`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-b-unused.ts',
         ),
@@ -1307,7 +1305,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-c-unused.ts',
         ),
@@ -1318,7 +1316,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-d-unused.ts',
         ),
@@ -1329,7 +1327,7 @@ describe('TypeScript', () => {
       test({
         options: unusedExportsTypescriptOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-e-unused.ts',
         ),
@@ -1342,15 +1340,13 @@ describe('TypeScript', () => {
 })
 
 describe('ignoreUnusedTypeExports', () => {
-  const parser = parsers.TS
-
   typescriptRuleTester.run('no-unused-modules', rule, {
     valid: [
       // unused vars should not report
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-c-unused.ts',
         ),
@@ -1358,7 +1354,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-d-unused.ts',
         ),
@@ -1366,7 +1362,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-e-unused.ts',
         ),
@@ -1375,7 +1371,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export interface c {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-c-used-as-type.ts',
         ),
@@ -1383,7 +1379,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export type d = {};`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-d-used-as-type.ts',
         ),
@@ -1391,7 +1387,7 @@ describe('ignoreUnusedTypeExports', () => {
       test({
         options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         code: `export enum e { f };`,
-        parser,
+
         filename: testFilePath(
           './no-unused-modules/typescript/file-ts-e-used-as-type.ts',
         ),
@@ -1407,7 +1403,7 @@ describe('correctly work with JSX only files', () => {
       test({
         options: unusedExportsJsxOptions,
         code: 'import a from "file-jsx-a";',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/jsx/file-jsx-a.jsx'),
       }),
     ],
@@ -1415,7 +1411,7 @@ describe('correctly work with JSX only files', () => {
       test({
         options: unusedExportsJsxOptions,
         code: `export const b = 2;`,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/jsx/file-jsx-b.jsx'),
         errors: [
           error(`exported declaration 'b' not used within other modules`),
@@ -1431,7 +1427,7 @@ describe('ignore flow types', () => {
       test({
         options: unusedExportsOptions,
         code: 'import { type FooType, type FooInterface } from "./flow-2";',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-0.js'),
       }),
       test({
@@ -1440,13 +1436,13 @@ describe('ignore flow types', () => {
                export type FooType = string;
                export interface FooInterface {};
                `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-2.js'),
       }),
       test({
         options: unusedExportsOptions,
         code: 'import type { FooType, FooInterface } from "./flow-4";',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-3.js'),
       }),
       test({
@@ -1455,7 +1451,7 @@ describe('ignore flow types', () => {
                export type FooType = string;
                export interface FooInterface {};
                `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-4.js'),
       }),
       test({
@@ -1464,7 +1460,7 @@ describe('ignore flow types', () => {
                export type Bar = number;
                export interface BarInterface {};
                `,
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/flow/flow-1.js'),
       }),
     ],
@@ -1478,13 +1474,13 @@ describe('support (nested) destructuring assignment', () => {
       test({
         options: unusedExportsOptions,
         code: 'import {a, b} from "./destructuring-b";',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/destructuring-a.js'),
       }),
       test({
         options: unusedExportsOptions,
         code: 'const obj = {a: 1, dummy: {b: 2}}; export const {a, dummy: {b}} = obj;',
-        parser: parsers.BABEL,
+        languageOptions: { parser: require(parsers.BABEL) },
         filename: testFilePath('./no-unused-modules/destructuring-b.js'),
       }),
     ],
@@ -1498,7 +1494,10 @@ describe('support ES2022 Arbitrary module namespace identifier names', () => {
       test({
         options: unusedExportsOptions,
         code: `import { "foo" as foo } from "./arbitrary-module-namespace-identifier-name-a"`,
-        parserOptions: { ecmaVersion: 2022 },
+        languageOptions: {
+          parser: require(parsers.ESPREE),
+          parserOptions: { ecmaVersion: 2022 },
+        },
         filename: testFilePath(
           './no-unused-modules/arbitrary-module-namespace-identifier-name-b.js',
         ),
@@ -1506,7 +1505,10 @@ describe('support ES2022 Arbitrary module namespace identifier names', () => {
       test({
         options: unusedExportsOptions,
         code: 'const foo = 333;\nexport { foo as "foo" }',
-        parserOptions: { ecmaVersion: 2022 },
+        languageOptions: {
+          parser: require(parsers.ESPREE),
+          parserOptions: { ecmaVersion: 2022 },
+        },
         filename: testFilePath(
           './no-unused-modules/arbitrary-module-namespace-identifier-name-a.js',
         ),
@@ -1516,7 +1518,10 @@ describe('support ES2022 Arbitrary module namespace identifier names', () => {
       test({
         options: unusedExportsOptions,
         code: 'const foo = 333\nexport { foo as "foo" }',
-        parserOptions: { ecmaVersion: 2022 },
+        languageOptions: {
+          parser: require(parsers.BABEL),
+          parserOptions: { ecmaVersion: 2022 },
+        },
         filename: testFilePath(
           './no-unused-modules/arbitrary-module-namespace-identifier-name-c.js',
         ),
@@ -1597,30 +1602,36 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
   })
 })
 
-describe('supports flat eslint', () => {
-  const flatRuleTester = new FlatRuleTester() as TSESLint.RuleTester
-  flatRuleTester.run('no-unused-modules', rule, {
-    valid: [
-      {
-        options: unusedExportsOptions,
-        code: 'import { o2 } from "./file-o"; export default () => 12',
-        filename: testFilePath('./no-unused-modules/file-a.js'),
-      },
-    ],
-    invalid: [
-      {
-        options: unusedExportsOptions,
-        code: 'export default () => 13',
-        filename: testFilePath('./no-unused-modules/file-f.js'),
-        errors: [
-          {
-            messageId: 'unused',
-            data: {
-              value: 'default',
+// [ESLint8_56_FlatRuleTester, ESLint9_FlatRuleTester]
+for (const [name, FlatRuleTester] of [
+  ['eslint 8.56 flat', ESLint8_56_FlatRuleTester],
+  ['eslint 9 flat', ESLint9_FlatRuleTester],
+] as const) {
+  describe('supports ' + name, () => {
+    const flatRuleTester = new FlatRuleTester() as TSESLint.RuleTester
+    flatRuleTester.run('no-unused-modules', rule, {
+      valid: [
+        {
+          options: unusedExportsOptions,
+          code: 'import { o2 } from "./file-o"; export default () => 12',
+          filename: testFilePath('./no-unused-modules/file-a.js'),
+        },
+      ],
+      invalid: [
+        {
+          options: unusedExportsOptions,
+          code: 'export default () => 13',
+          filename: testFilePath('./no-unused-modules/file-f.js'),
+          errors: [
+            {
+              messageId: 'unused',
+              data: {
+                value: 'default',
+              },
             },
-          },
-        ],
-      },
-    ],
+          ],
+        },
+      ],
+    })
   })
-})
+}

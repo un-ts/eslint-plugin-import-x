@@ -1,4 +1,4 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, test } from '../utils'
 
@@ -11,14 +11,16 @@ const errors = {
     'Multiple CommonJS exports; consolidate all exports into a single assignment to `module.exports`',
 }
 
-const ruleTester = new TSESLint.RuleTester({
-  parser: parsers.BABEL,
-  parserOptions: {
-    requireConfigFile: false,
-    babelOptions: {
-      configFile: false,
-      babelrc: false,
-      presets: ['@babel/flow'],
+const ruleTester = new TSESLintRuleTester({
+  languageOptions: {
+    parser: require(parsers.BABEL),
+    parserOptions: {
+      requireConfigFile: false,
+      babelOptions: {
+        configFile: false,
+        babelrc: false,
+        presets: ['@babel/flow'],
+      },
     },
   },
 })

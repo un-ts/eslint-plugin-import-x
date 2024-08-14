@@ -1,12 +1,12 @@
 import fs from 'node:fs'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { test, parsers, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/first'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('first', rule, {
   valid: [
@@ -25,9 +25,11 @@ ruleTester.run('first', rule, {
             import { x } from 'foo';",
     }),
     test({
-      // issue #2210
+      name: '...component.html (issue #2210)',
       code: fs.readFileSync(testFilePath('component.html'), 'utf8'),
-      parser: require.resolve('@angular-eslint/template-parser'),
+      languageOptions: {
+        parser: require('@angular-eslint/template-parser'),
+      },
     }),
   ],
   invalid: [
@@ -75,12 +77,23 @@ ruleTester.run('first', rule, {
               import { x } from './foo';\
               import { z } from './baz';",
       errors: 3,
-      output:
+      output: [
         "import { y } from './bar';\
               var a = 1;\
               if (true) { x() };\
               import { x } from './foo';\
               import { z } from './baz';",
+        "import { y } from './bar';\
+              import { x } from './foo';\
+              var a = 1;\
+              if (true) { x() };\
+              import { z } from './baz';",
+        "import { y } from './bar';\
+              import { x } from './foo';\
+              import { z } from './baz';\
+              var a = 1;\
+              if (true) { x() };",
+      ],
     }),
     test({
       code: "if (true) { console.log(1) }import a from 'b'",
@@ -91,12 +104,9 @@ ruleTester.run('first', rule, {
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
-      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     },
   }

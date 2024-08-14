@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath, parsers } from '../utils'
+import { test, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-internal-modules'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-internal-modules', rule, {
   valid: [
@@ -149,7 +149,6 @@ ruleTester.run('no-internal-modules', rule, {
           }
         }
       `,
-      parser: parsers.TS,
     }),
     test({
       code: 'export * from "./plugin2/thing"',

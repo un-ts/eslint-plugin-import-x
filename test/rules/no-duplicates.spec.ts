@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import {
   test,
@@ -12,11 +12,14 @@ import {
 import jsxConfig from 'eslint-plugin-import-x/config/react'
 import rule from 'eslint-plugin-import-x/rules/no-duplicates'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-duplicates', rule, {
   valid: [
-    test({ code: 'import "./malformed.js"' }),
+    test({
+      code: 'import "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
+    }),
 
     test({ code: "import { x } from './foo'; import { y } from './bar'" }),
 
@@ -28,7 +31,7 @@ ruleTester.run('no-duplicates', rule, {
     // #225: ignore duplicate if is a flow type import
     test({
       code: "import { x } from './foo'; import type { y } from './foo'",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // #1107: Using different query strings that trigger different webpack loaders.
@@ -105,9 +108,9 @@ ruleTester.run('no-duplicates', rule, {
 
     // #86: duplicate unresolved modules should be flagged
     test({
-      code: "import foo from 'non-existent'; import bar from 'non-existent';",
       // Autofix bail because of different default import names.
-      output: "import foo from 'non-existent'; import bar from 'non-existent';",
+      code: "import foo from 'non-existent'; import bar from 'non-existent';",
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         "'non-existent' imported multiple times.",
         "'non-existent' imported multiple times.",
@@ -117,7 +120,7 @@ ruleTester.run('no-duplicates', rule, {
     test({
       code: "import type { x } from './foo'; import type { y } from './foo'",
       output: "import type { x , y } from './foo'; ",
-      parser: parsers.BABEL,
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
@@ -136,6 +139,7 @@ ruleTester.run('no-duplicates', rule, {
     test({
       code: "import { x, /* x */ } from './foo'; import {//y\ny//y2\n} from './foo'",
       output: "import { x, /* x */ //y\ny//y2\n} from './foo'; ",
+      languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
@@ -159,7 +163,6 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS,
     }),
 
     // #2347: duplicate identifiers should be removed
@@ -171,7 +174,6 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS,
     }),
 
     // #2347: duplicate identifiers should be removed, but not if they are adjacent to comments
@@ -182,7 +184,6 @@ ruleTester.run('no-duplicates', rule, {
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
       ],
-      parser: parsers.TS,
     }),
 
     test({
@@ -289,9 +290,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: "import * as ns1 from './foo'; import * as ns2 from './foo'",
       // Autofix bail because cannot merge namespace imports.
-      output: "import * as ns1 from './foo'; import * as ns2 from './foo'",
+      code: "import * as ns1 from './foo'; import * as ns2 from './foo'",
       errors: [
         "'./foo' imported multiple times.",
         "'./foo' imported multiple times.",
@@ -320,13 +320,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        // some-tool-disable-next-line
-        import {x} from './foo'
-        import {//y\ny} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         // some-tool-disable-next-line
         import {x} from './foo'
         import {//y\ny} from './foo'
@@ -338,13 +333,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        // some-tool-disable-next-line
-        import {y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         // some-tool-disable-next-line
         import {y} from './foo'
@@ -356,12 +346,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo' // some-tool-disable-line
-        import {y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo' // some-tool-disable-line
         import {y} from './foo'
       `,
@@ -372,12 +358,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import {y} from './foo' // some-tool-disable-line
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import {y} from './foo' // some-tool-disable-line
       `,
@@ -388,12 +370,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        /* comment */ import {y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         /* comment */ import {y} from './foo'
       `,
@@ -404,13 +382,8 @@ ruleTester.run('no-duplicates', rule, {
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import {y} from './foo' /* comment
-        multiline */
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import {y} from './foo' /* comment
         multiline */
@@ -458,12 +431,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import/* comment */{y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import/* comment */{y} from './foo'
       `,
@@ -474,12 +443,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import/* comment */'./foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import/* comment */'./foo'
       `,
@@ -490,12 +455,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import{y}/* comment */from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import{y}/* comment */from './foo'
       `,
@@ -506,12 +467,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from './foo'
-        import{y}from/* comment */'./foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from './foo'
         import{y}from/* comment */'./foo'
       `,
@@ -522,14 +479,8 @@ import {x,y} from './foo'
     }),
 
     test({
-      code: `
-        import {x} from
-        // some-tool-disable-next-line
-        './foo'
-        import {y} from './foo'
-      `,
       // Autofix bail because of comment.
-      output: `
+      code: `
         import {x} from
         // some-tool-disable-next-line
         './foo'
@@ -667,12 +618,9 @@ export default TestComponent;
 })
 
 describe('TypeScript', () => {
-  const parser = parsers.TS
-
   const parserConfig = {
-    parser,
     settings: {
-      'import-x/parsers': { [parser]: ['.ts'] },
+      'import-x/parsers': { [parsers.TS]: ['.ts'] },
       'import-x/resolver': { 'eslint-import-resolver-typescript': true },
     },
   }
@@ -739,7 +687,6 @@ describe('TypeScript', () => {
   const invalid = [
     test({
       code: "import type x from './foo'; import type y from './foo'",
-      output: "import type x from './foo'; import type y from './foo'",
       ...parserConfig,
       errors: [
         {

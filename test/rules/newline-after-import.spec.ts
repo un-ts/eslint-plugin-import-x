@@ -1,10 +1,10 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/newline-after-import'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 const getImportError = (count: number) => ({
   messageId: 'newline' as const,
@@ -37,7 +37,7 @@ ruleTester.run('newline-after-import', rule, {
       code: `
         const x = () => require('baz')
             , y = () => require('bar')`,
-      parserOptions: { ecmaVersion: 6 },
+      languageOptions: { parserOptions: { ecmaVersion: 6 } },
     },
     {
       code: `
@@ -46,12 +46,12 @@ ruleTester.run('newline-after-import', rule, {
 
         // some comment here
       `,
-      parserOptions: { ecmaVersion: 6 },
+      languageOptions: { parserOptions: { ecmaVersion: 6 } },
       options: [{ considerComments: true }],
     },
     {
       code: `const x = () => require('baz') && require('bar')`,
-      parserOptions: { ecmaVersion: 6 },
+      languageOptions: { parserOptions: { ecmaVersion: 6 } },
     },
     {
       code: `
@@ -60,7 +60,7 @@ ruleTester.run('newline-after-import', rule, {
         // Some random single line comment
         var bar = 42;
       `,
-      parserOptions: { ecmaVersion: 6 },
+      languageOptions: { parserOptions: { ecmaVersion: 6 } },
       options: [{ considerComments: true }],
     },
     {
@@ -70,7 +70,7 @@ ruleTester.run('newline-after-import', rule, {
         // Some random single line comment
         var bar = 42;
       `,
-      parserOptions: { ecmaVersion: 6 },
+      languageOptions: { parserOptions: { ecmaVersion: 6 } },
       options: [{ considerComments: true, count: 1, exactCount: true }],
     },
     {
@@ -82,7 +82,7 @@ ruleTester.run('newline-after-import', rule, {
         **/
         var bar = 42;
       `,
-      parserOptions: { ecmaVersion: 6 },
+      languageOptions: { parserOptions: { ecmaVersion: 6 } },
     },
     `function x() { require('baz'); }`,
     `a(require('b'), require('c'), require('d'));`,
@@ -127,118 +127,168 @@ ruleTester.run('newline-after-import', rule, {
           return somethingElse();
       }
     }`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import path from 'path';\nimport foo from 'foo';\n`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import path from 'path';import foo from 'foo';\n`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import path from 'path';import foo from 'foo';\n\nvar bar = 42;`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n\n\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 2 }],
     },
     {
       code: `import foo from 'foo';\n\n\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 2, exactCount: true }],
     },
     {
       code: `import foo from 'foo';\n\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 1, exactCount: true }],
     },
     {
       code: `import foo from 'foo';\n\n// Some random comment\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 2, exactCount: true }],
     },
     {
       code: `import foo from 'foo';\n// Some random comment\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 1, exactCount: true }],
     },
     {
       code: `import foo from 'foo';\n\n\n// Some random comment\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 2, exactCount: true, considerComments: true }],
     },
     {
       code: `import foo from 'foo';\n\n// Some random comment\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 1, exactCount: true, considerComments: true }],
     },
     {
       code: `/**\n * A leading comment\n */\nimport foo from 'foo';\n\n// Some random comment\nexport {foo};`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 2, exactCount: true }],
     },
     {
       code: `import foo from 'foo';\n\n\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 1 }],
     },
     {
       code: `import foo from 'foo';\n\n\n\n\nvar bar = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 4 }],
     },
     {
       code: `var foo = require('foo-module');\n\nvar foo = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `var foo = require('foo-module');\n\n\nvar foo = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 2 }],
     },
     {
       code: `var foo = require('foo-module');\n\n\n\n\nvar foo = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 4 }],
     },
     {
       code: `var foo = require('foo-module');\n\n\n\n\nvar foo = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 4, exactCount: true }],
     },
     {
       code: `var foo = require('foo-module');\n\n// Some random comment\n\n\nvar foo = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 4, exactCount: true }],
     },
     {
       code: `var foo = require('foo-module');\n\n\n\n// Some random comment\nvar foo = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ count: 4, exactCount: true, considerComments: true }],
     },
     {
       code: `require('foo-module');\n\nvar foo = 'bar';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\nimport { bar } from './bar-lib';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n\nvar a = 123;\n\nimport { bar } from './bar-lib';`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `var foo = require('foo-module');\n\nvar a = 123;\n\nvar bar = require('bar-lib');`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -247,7 +297,9 @@ ruleTester.run('newline-after-import', rule, {
           foo();
         }
       `,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -256,7 +308,9 @@ ruleTester.run('newline-after-import', rule, {
           foo();
         }
       `,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -266,7 +320,9 @@ ruleTester.run('newline-after-import', rule, {
           var bar = 42;
         }
       `,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `//issue 592
@@ -274,23 +330,31 @@ ruleTester.run('newline-after-import', rule, {
         @SomeDecorator(require('./some-file'))
         class App {}
       `,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      parser: parsers.BABEL,
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+        parser: require(parsers.BABEL),
+      },
     },
     {
       code: `var foo = require('foo');\n\n@SomeDecorator(foo)\nclass Foo {}`,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      parser: parsers.BABEL,
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+        parser: require(parsers.BABEL),
+      },
     },
     {
       code: `// issue 1004\nimport foo from 'foo';\n\n@SomeDecorator(foo)\nexport default class Test {}`,
-      parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL,
+      languageOptions: {
+        parserOptions: { sourceType: 'module' },
+        parser: require(parsers.BABEL),
+      },
     },
     {
       code: `// issue 1004\nconst foo = require('foo');\n\n@SomeDecorator(foo)\nexport default class Test {}`,
-      parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL,
+      languageOptions: {
+        parserOptions: { sourceType: 'module' },
+        parser: require(parsers.BABEL),
+      },
     },
 
     {
@@ -298,16 +362,18 @@ ruleTester.run('newline-after-import', rule, {
         import { ExecaReturnValue } from 'execa';
         import execa = require('execa');
       `,
-      parser: parsers.TS,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
         import execa = require('execa');
         import { ExecaReturnValue } from 'execa';
       `,
-      parser: parsers.TS,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -315,8 +381,9 @@ ruleTester.run('newline-after-import', rule, {
         import execa = require('execa');
         import { ExecbReturnValue } from 'execb';
       `,
-      parser: parsers.TS,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -324,15 +391,17 @@ ruleTester.run('newline-after-import', rule, {
         import { ExecaReturnValue } from 'execa';
         import execb = require('execb');
       `,
-      parser: parsers.TS,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
         export import a = obj;\nf(a);
       `,
-      parser: parsers.TS,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -342,8 +411,9 @@ ruleTester.run('newline-after-import', rule, {
             export import a2 = a;
             f(a);
         }`,
-      parser: parsers.TS,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -353,8 +423,9 @@ ruleTester.run('newline-after-import', rule, {
             stub
         }
       `,
-      parser: parsers.TS,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -363,19 +434,9 @@ ruleTester.run('newline-after-import', rule, {
 
       export import Foo = ns.baz.bar.Foo;
     `,
-      parser: parsers.TS,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-    },
-
-    {
-      code: `
-        import stub from './stub';
-
-        export {
-            stub
-        }
-      `,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -387,7 +448,9 @@ ruleTester.run('newline-after-import', rule, {
         **/
         var bar = 42;
       `,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -399,7 +462,9 @@ ruleTester.run('newline-after-import', rule, {
         **/
         var bar = 42;
       `,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ considerComments: true }],
     },
     {
@@ -410,7 +475,9 @@ ruleTester.run('newline-after-import', rule, {
         // Some random single line comment
         var bar = 42;
       `,
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
   ],
 
@@ -436,7 +503,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ considerComments: true }],
     },
     {
@@ -465,7 +534,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ considerComments: true }],
     },
     {
@@ -488,7 +559,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ considerComments: true, count: 1 }],
     },
     {
@@ -501,7 +574,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n\nexport default function() {};`,
@@ -514,7 +589,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `var foo = require('foo-module');\nvar something = 123;`,
@@ -526,7 +603,9 @@ ruleTester.run('newline-after-import', rule, {
           ...REQUIRE_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\nexport default function() {};`,
@@ -539,7 +618,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\nvar a = 123;\n\nimport { bar } from './bar-lib';\nvar b=456;`,
@@ -556,7 +637,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `var foo = require('foo-module');\nvar a = 123;\n\nvar bar = require('bar-lib');\nvar b=456;`,
@@ -573,7 +656,9 @@ ruleTester.run('newline-after-import', rule, {
           ...REQUIRE_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `var foo = require('foo-module');\nvar a = 123;\n\nrequire('bar-lib');\nvar b=456;`,
@@ -590,7 +675,9 @@ ruleTester.run('newline-after-import', rule, {
           ...REQUIRE_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `var path = require('path');\nvar foo = require('foo');\nvar bar = 42;`,
@@ -646,7 +733,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import path from 'path';import foo from 'foo';var bar = 42;`,
@@ -658,7 +747,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n@SomeDecorator(foo)\nclass Foo {}`,
@@ -670,8 +761,10 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      parser: parsers.BABEL,
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+        parser: require(parsers.BABEL),
+      },
     },
     {
       code: `var foo = require('foo');\n@SomeDecorator(foo)\nclass Foo {}`,
@@ -683,8 +776,10 @@ ruleTester.run('newline-after-import', rule, {
           ...REQUIRE_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
-      parser: parsers.BABEL,
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+        parser: require(parsers.BABEL),
+      },
     },
     {
       code: `// issue 10042\nimport foo from 'foo';\n@SomeDecorator(foo)\nexport default class Test {}`,
@@ -696,8 +791,10 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL,
+      languageOptions: {
+        parserOptions: { sourceType: 'module' },
+        parser: require(parsers.BABEL),
+      },
     },
     {
       code: `// issue 1004\nconst foo = require('foo');\n@SomeDecorator(foo)\nexport default class Test {}`,
@@ -709,8 +806,10 @@ ruleTester.run('newline-after-import', rule, {
           ...REQUIRE_ERROR,
         },
       ],
-      parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL,
+      languageOptions: {
+        parserOptions: { sourceType: 'module' },
+        parser: require(parsers.BABEL),
+      },
     },
     {
       code: `
@@ -733,8 +832,10 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { sourceType: 'module' },
-      parser: parsers.BABEL,
+      languageOptions: {
+        parserOptions: { sourceType: 'module' },
+        parser: require(parsers.BABEL),
+      },
     },
     {
       code: `import foo from 'foo';\n\nexport default function() {};`,
@@ -747,7 +848,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n\n\n\nexport default function() {};`,
@@ -760,7 +863,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n\n\n\n\nexport default function() {};`,
@@ -773,7 +878,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n// some random comment\nexport default function() {};`,
@@ -786,7 +893,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n// some random comment\n\n\nexport default function() {};`,
@@ -799,7 +908,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n// some random comment\n\n\n\nexport default function() {};`,
@@ -812,7 +923,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n// some random comment\nexport default function() {};`,
@@ -825,7 +938,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n\n// some random comment\nexport default function() {};`,
@@ -838,7 +953,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `import foo from 'foo';\n\n\n\n// some random comment\nexport default function() {};`,
@@ -851,7 +968,9 @@ ruleTester.run('newline-after-import', rule, {
           ...getImportError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `
@@ -869,7 +988,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
       options: [{ considerComments: true, count: 1, exactCount: true }],
     },
     {
@@ -883,7 +1004,9 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
     },
     {
       code: `const foo = require('foo');\n\n\n\nconst bar = function() {};`,
@@ -896,7 +1019,7 @@ ruleTester.run('newline-after-import', rule, {
           ...getRequireError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015 },
+      languageOptions: { parserOptions: { ecmaVersion: 2015 } },
     },
     {
       code: `const foo = require('foo');\n\n\n\n// some random comment\nconst bar = function() {};`,
@@ -909,7 +1032,7 @@ ruleTester.run('newline-after-import', rule, {
           ...getRequireError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015 },
+      languageOptions: { parserOptions: { ecmaVersion: 2015 } },
     },
     {
       code: `import foo from 'foo';// some random comment\nexport default function() {};`,
@@ -922,10 +1045,12 @@ ruleTester.run('newline-after-import', rule, {
           ...IMPORT_ERROR,
         },
       ],
-      parserOptions: {
-        ecmaVersion: 2015,
-        considerComments: true,
-        sourceType: 'module',
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 2015,
+          considerComments: true,
+          sourceType: 'module',
+        },
       },
     },
     {
@@ -939,7 +1064,7 @@ ruleTester.run('newline-after-import', rule, {
           ...getRequireError(2),
         },
       ],
-      parserOptions: { ecmaVersion: 2015 },
+      languageOptions: { parserOptions: { ecmaVersion: 2015 } },
     },
   ],
 })

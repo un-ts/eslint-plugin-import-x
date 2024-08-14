@@ -4,8 +4,8 @@
 
 import path from 'node:path'
 
-import { ESLint } from 'eslint'
 import eslintPkg from 'eslint/package.json'
+import { LegacyESLint } from 'eslint/use-at-your-own-risk'
 import semver from 'semver'
 
 import importPlugin from 'eslint-plugin-import-x'
@@ -13,10 +13,9 @@ import importPlugin from 'eslint-plugin-import-x'
 describe('CLI regression tests', () => {
   describe('issue #210', () => {
     it("doesn't throw an error on gratuitous, erroneous self-reference", () => {
-      const eslint = new ESLint({
-        useEslintrc: false,
+      const eslint = new LegacyESLint({
         overrideConfigFile: './test/fixtures/issue210.config.js',
-        rulePaths: ['./src/rules'],
+        // rulePaths: ['./src/rules'],
         overrideConfig: {
           rules: {
             named: 2,
@@ -34,10 +33,8 @@ describe('CLI regression tests', () => {
   describe('issue #1645', () => {
     it('throws an error on invalid JSON', async () => {
       const invalidJSON = './test/fixtures/just-json-files/invalid.json'
-      const eslint = new ESLint({
-        useEslintrc: false,
+      const eslint = new LegacyESLint({
         overrideConfigFile: './test/fixtures/just-json-files/.eslintrc.json',
-        rulePaths: ['./src/rules'],
         ignore: false,
         plugins: {
           // @ts-expect-error - incompatible types
@@ -58,6 +55,7 @@ describe('CLI regression tests', () => {
               nodeType: results[0].messages[0].nodeType, // we don't care about this one
               ruleId: 'json/*',
               severity: 2,
+              // @ts-expect-error - legacy types
               source: results[0].messages[0].source, // NewLine-characters might differ depending on git-settings
             },
           ],

@@ -1,11 +1,11 @@
-import { TSESLint } from '@typescript-eslint/utils'
+import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, test } from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-dynamic-require'
 
-const ruleTester = new TSESLint.RuleTester()
+const ruleTester = new TSESLintRuleTester()
 
 const error = {
   messageId: 'require',
@@ -30,88 +30,111 @@ ruleTester.run('no-dynamic-require', rule, {
     test({ code: 'var foo = require("@scope/foo")' }),
 
     //dynamic import
-    ...[parsers.ESPREE, parsers.BABEL].flatMap(parser => {
+    ...[parsers.ESPREE, parsers.BABEL].flatMap($parser => {
       const _test = <T extends ValidTestCase>(testObj: T) =>
-        parser === parsers.ESPREE ? testObj : test(testObj)
+        $parser === parsers.ESPREE ? testObj : test(testObj)
+
+      const parser = require($parser)
+
       return [
         _test({
           code: 'import("foo")',
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import(`foo`)',
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import("./foo")',
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import("@scope/foo")',
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'var foo = import("foo")',
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'var foo = import(`foo`)',
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'var foo = import("./foo")',
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'var foo = import("@scope/foo")',
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import("../" + name)',
           errors: [dynamicImportError],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import(`../${name}`)',
           errors: [dynamicImportError],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
       ]
@@ -141,44 +164,55 @@ ruleTester.run('no-dynamic-require', rule, {
     }),
 
     // dynamic import
-    ...[parsers.ESPREE, parsers.BABEL].flatMap(parser => {
+    ...[parsers.ESPREE, parsers.BABEL].flatMap($parser => {
       const _test = <T extends ValidTestCase>(testObj: T) =>
-        parser === parsers.ESPREE ? testObj : test(testObj)
+        $parser === parsers.ESPREE ? testObj : test(testObj)
+
+      const parser = require($parser)
+
       return [
         _test({
           code: 'import("../" + name)',
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import(`../${name}`)',
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import(name)',
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
         _test({
           code: 'import(name())',
           errors: [dynamicImportError],
           options: [{ esmodule: true }],
-          parser,
-          parserOptions: {
-            ecmaVersion: 2020,
+          languageOptions: {
+            parser,
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
           },
         }),
       ]

@@ -1,5 +1,5 @@
 {
-  "extends": "@1stg/tsconfig/node",
+  "extends": "@1stg/tsconfig/node16",
   "compilerOptions": {
     "lib": ["ES2022"],
     "paths": {

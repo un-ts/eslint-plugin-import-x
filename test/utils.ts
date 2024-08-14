@@ -1,6 +1,10 @@
 import path from 'node:path'
 
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type {
+  ValidTestCase as TSESLintValidTestCase,
+  InvalidTestCase as TSESLintInvalidTestCase,
+} from '@typescript-eslint/rule-tester'
+import type { TSESTree } from '@typescript-eslint/utils'
 import type { RuleTester } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
@@ -15,6 +19,7 @@ export const parsers = {
   ESPREE: require.resolve('espree'),
   TS: require.resolve('@typescript-eslint/parser'),
   BABEL: require.resolve('@babel/eslint-parser'),
+  HERMES: require.resolve('hermes-eslint'),
 }
 
 export function tsVersionSatisfies(specifier: string) {
@@ -45,12 +50,14 @@ export function eslintVersionSatisfies(specifier: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
-export type ValidTestCase = TSESLint.ValidTestCase<any> & {
+export type ValidTestCase = TSESLintValidTestCase<any> & {
   errors?: readonly InvalidTestCaseError[] | number
+  parser?: never
+  parserOptions?: never
 }
 
 export type InvalidTestCase = // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
-  TSESLint.InvalidTestCase<any, readonly any[]>
+  TSESLintInvalidTestCase<any, any>
 
 export function testVersion<T extends ValidTestCase>(
   specifier: string,
@@ -75,17 +82,17 @@ export function test<T extends ValidTestCase>(
 ): T extends { errors: InvalidTestCaseError[] | number }
   ? InvalidTestCase
   : ValidTestCase {
-  if (arguments.length !== 1) {
-    throw new SyntaxError('`test` requires exactly one object argument')
-  }
   // @ts-expect-error -- simplify testing
   return {
     filename: TEST_FILENAME,
     ...t,
-    parserOptions: {
-      sourceType: 'module',
-      ecmaVersion: 9,
-      ...t.parserOptions,
+    languageOptions: {
+      ...t.languageOptions,
+      parserOptions: {
+        sourceType: 'module',
+        ecmaVersion: 9,
+        ...t.languageOptions?.parserOptions,
+      },
     },
   }
 }
@@ -106,7 +113,10 @@ export const SYNTAX_CASES = [
   test({ code: 'for (let [ foo, bar ] of baz) {}' }),
 
   test({ code: 'const { x, y } = bar' }),
-  test({ code: 'const { x, y, ...z } = bar', parser: parsers.BABEL }),
+  test({
+    code: 'const { x, y, ...z } = bar',
+    languageOptions: { parser: require(parsers.BABEL) },
+  }),
 
   // all the exports
   test({ code: 'let x; export { x }' }),
@@ -114,7 +124,7 @@ export const SYNTAX_CASES = [
 
   // not sure about these since they reference a file
   // test({ code: 'export { x } from "./y.js"'}),
-  // test({ code: 'export * as y from "./y.js"', parser: parsers.BABEL}),
+  // test({ code: 'export * as y from "./y.js"', languageOptions: { parser: require(parsers.BABEL) } }),
 
   test({ code: 'export const x = null' }),
   test({ code: 'export var x = null' }),
