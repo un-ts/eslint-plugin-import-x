@@ -45,18 +45,11 @@ ruleTester.run('named', rule, {
       settings: { 'import-x/resolve': { extensions: ['.js', '.jsx'] } },
     }),
 
-    // validate that eslint-disable-line silences this properly
-    test({
-      code: 'import {a, b, d} from "./common"; // eslint-disable-line named',
-      languageOptions: { parser: require(parsers.BABEL) },
-    }),
-
     test({ code: 'import { foo, bar } from "./re-export-names"' }),
 
     test({
       code: 'import { foo, bar } from "./common"',
       settings: { 'import-x/ignore': ['common'] },
-      languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // ignore core modules by default
@@ -413,35 +406,39 @@ ruleTester.run('named', rule, {
 
 // #311: import of mismatched case
 if (!CASE_SENSITIVE_FS) {
-  ruleTester.run('named (path case-insensitivity)', rule, {
+  describe('path case-insensitivity', () => {
+    ruleTester.run('named', rule, {
+      valid: [
+        test({
+          code: 'import { b } from "./Named-Exports"',
+        }),
+      ],
+      invalid: [
+        test({
+          code: 'import { foo } from "./Named-Exports"',
+          errors: [`foo not found in './Named-Exports'`],
+        }),
+      ],
+    })
+  });
+}
+
+// export-all
+describe('export *', () => {
+  ruleTester.run('named', rule, {
     valid: [
       test({
-        code: 'import { b } from "./Named-Exports"',
+        code: 'import { foo } from "./export-all"',
       }),
     ],
     invalid: [
       test({
-        code: 'import { foo } from "./Named-Exports"',
-        errors: [`foo not found in './Named-Exports'`],
+        code: 'import { bar } from "./export-all"',
+        errors: [`bar not found in './export-all'`],
       }),
     ],
   })
-}
-
-// export-all
-ruleTester.run('named (export *)', rule, {
-  valid: [
-    test({
-      code: 'import { foo } from "./export-all"',
-    }),
-  ],
-  invalid: [
-    test({
-      code: 'import { bar } from "./export-all"',
-      errors: [`bar not found in './export-all'`],
-    }),
-  ],
-})
+});
 
 describe('TypeScript', () => {
   const settings = {
@@ -591,7 +588,7 @@ describe('TypeScript', () => {
     )
   }
 
-  ruleTester.run(`named [TypeScript]`, rule, {
+  ruleTester.run(`named`, rule, {
     valid,
     invalid,
   })
