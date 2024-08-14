@@ -660,7 +660,7 @@ ruleTester.run('extensions', rule, {
 })
 
 describe('TypeScript', () => {
-  ruleTester.run(`extensions ignore type-only`, rule, {
+  ruleTester.run(`typescript - extensions ignore type-only`, rule, {
     valid: [
       test({
         code: 'import type T from "./typescript-declare";',
