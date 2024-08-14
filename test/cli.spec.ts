@@ -4,8 +4,8 @@
 
 import path from 'node:path'
 
-import { LegacyESLint } from 'eslint/use-at-your-own-risk'
 import eslintPkg from 'eslint/package.json'
+import { LegacyESLint } from 'eslint/use-at-your-own-risk'
 import semver from 'semver'
 
 import importPlugin from 'eslint-plugin-import-x'

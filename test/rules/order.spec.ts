@@ -3,7 +3,6 @@ import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 
 import { test, parsers, getNonDefaultParsers, testFilePath } from '../utils'
-import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/order'
 

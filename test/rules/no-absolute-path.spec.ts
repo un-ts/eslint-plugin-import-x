@@ -13,7 +13,7 @@ const error = {
 }
 
 function absolutePath(testPath: string) {
-  return path.join(__dirname, testPath);
+  return path.join(__dirname, testPath)
 }
 
 ruleTester.run('no-absolute-path', rule, {

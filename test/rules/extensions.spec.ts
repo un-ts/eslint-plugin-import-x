@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath, parsers } from '../utils'
+import { test, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/extensions'
 

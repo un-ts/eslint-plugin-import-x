@@ -420,7 +420,7 @@ if (!CASE_SENSITIVE_FS) {
         }),
       ],
     })
-  });
+  })
 }
 
 // export-all
@@ -438,7 +438,7 @@ describe('export *', () => {
       }),
     ],
   })
-});
+})
 
 describe('TypeScript', () => {
   const settings = {
