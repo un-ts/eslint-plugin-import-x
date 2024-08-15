@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.0.0
+
+### Major Changes
+
+- [#112](https://github.com/un-ts/eslint-plugin-import-x/pull/112) [`4ba14da`](https://github.com/un-ts/eslint-plugin-import-x/commit/4ba14daa29100566d468872205c8e5415edb1b69) Thanks [@SukkaW](https://github.com/SukkaW)! - Use typescript-eslint v8. The minimum supported ESLint version is now >= 8.57.0 and the minimum required Node.js version is now 18.18.0.
+
 ## 3.1.0
 
 ### Minor Changes
