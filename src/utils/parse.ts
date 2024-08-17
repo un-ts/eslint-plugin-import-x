@@ -1,6 +1,7 @@
 import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { withoutProjectParserOptions } from '@typescript-eslint/typescript-estree'
 import debug from 'debug'
 
 import type {
@@ -85,17 +86,12 @@ export function parse(
   // https://github.com/eslint/eslint/blob/3ec436ee/lib/linter.js#L637
   parserOptions.filePath = path
 
+  parserOptions = withoutProjectParserOptions(parserOptions) as TSESLint.ParserOptions
+
   // @typescript-eslint/parser will parse the entire project with typechecking if you provide
   // "project" or "projects" in parserOptions. Removing these options means the parser will
   // only parse one file in isolate mode, which is much, much faster.
   // https://github.com/import-js/eslint-plugin-import/issues/1408#issuecomment-509298962
-
-  // TODO: prefer https://github.com/typescript-eslint/typescript-eslint/pull/9233 when typescript-eslint v8
-  // become stable
-  delete parserOptions.EXPERIMENTAL_useProjectService
-  delete parserOptions.projectService
-  delete parserOptions.project
-  delete parserOptions.projects
 
   // require the parser relative to the main module (i.e., ESLint)
   const parser =
