@@ -12,7 +12,6 @@ ruleTester.run('no-named-as-default', rule, {
     'import klawSync from "klaw-sync";',
     'import ts from "typescript";',
     `import React from 'react';`,
-    `import z from 'zod';`,
     `import classNames from 'classnames';`,
 
     test({
@@ -138,5 +137,16 @@ ruleTester.run('no-named-as-default', rule, {
         parserOptions: { ecmaVersion: 2022 },
       },
     }),
+
+    test({
+      code: `import z from 'zod';`,
+      errors: [
+        {
+          message:
+            "Using exported name 'z' as identifier for default export.",
+          type: 'ImportDefaultSpecifier',
+        },
+      ],
+    })
   ],
 })
