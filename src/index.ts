@@ -18,7 +18,6 @@ import recommended from './config/recommended'
 import stage0 from './config/stage-0'
 import typescript from './config/typescript'
 import warnings from './config/warnings'
-
 // rules
 import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
 import default_ from './rules/default'
