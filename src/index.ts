@@ -18,7 +18,6 @@ import recommended from './config/recommended'
 import stage0 from './config/stage-0'
 import typescript from './config/typescript'
 import warnings from './config/warnings'
-
 // rules
 import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
 import default_ from './rules/default'
@@ -55,6 +54,7 @@ import noNamespace from './rules/no-namespace'
 import noNodejsModules from './rules/no-nodejs-modules'
 import noRelativePackages from './rules/no-relative-packages'
 import noRelativeParentImports from './rules/no-relative-parent-imports'
+import noRenameDefault from './rules/no-rename-default'
 import noRestrictedPaths from './rules/no-restricted-paths'
 import noSelfImport from './rules/no-self-import'
 import noUnassignedImport from './rules/no-unassigned-import'
@@ -94,6 +94,7 @@ const rules = {
   'no-named-as-default': noNamedAsDefault,
   'no-named-as-default-member': noNamedAsDefaultMember,
   'no-anonymous-default-export': noAnonymousDefaultExport,
+  'no-rename-default': noRenameDefault,
   'no-unused-modules': noUnusedModules,
 
   'no-commonjs': noCommonjs,

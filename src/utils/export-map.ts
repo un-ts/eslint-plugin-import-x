@@ -271,6 +271,7 @@ export class ExportMap {
           break
         }
         case 'ExportNamespaceSpecifier': {
+          m.exports.set(s.exported.name, n)
           m.namespace.set(
             s.exported.name,
             Object.defineProperty(exportMeta, 'namespace', {
@@ -282,6 +283,7 @@ export class ExportMap {
           return
         }
         case 'ExportAllDeclaration': {
+          m.exports.set(s.exported!.name, n)
           m.namespace.set(
             getValue(s.exported!),
             addNamespace(exportMeta, s.exported!),
@@ -291,6 +293,7 @@ export class ExportMap {
         }
         case 'ExportSpecifier': {
           if (!('source' in n && n.source)) {
+            m.exports.set(s.exported!.name, n)
             m.namespace.set(
               getValue(s.exported),
               addNamespace(exportMeta, s.local),
@@ -435,6 +438,7 @@ export class ExportMap {
         if (n.declaration.type === 'Identifier') {
           addNamespace(exportMeta, n.declaration)
         }
+        m.exports.set('default', n)
         m.namespace.set('default', exportMeta)
         continue
       }
@@ -485,6 +489,7 @@ export class ExportMap {
             // @ts-expect-error - legacy parser type
             case 'TSAbstractClassDeclaration':
             case 'TSModuleDeclaration': {
+              m.exports.set((n.declaration.id as TSESTree.Identifier).name, n)
               m.namespace.set(
                 (n.declaration.id as TSESTree.Identifier).name,
                 captureDoc(source, docStyleParsers, n),
@@ -494,12 +499,13 @@ export class ExportMap {
             /* eslint-enable no-fallthrough */
             case 'VariableDeclaration': {
               for (const d of n.declaration.declarations) {
-                recursivePatternCapture(d.id, id =>
+                recursivePatternCapture(d.id, id => {
+                  m.exports.set((id as TSESTree.Identifier).name, n)
                   m.namespace.set(
                     (id as TSESTree.Identifier).name,
                     captureDoc(source, docStyleParsers, d, n),
-                  ),
-                )
+                  )
+                })
               }
               break
             }
@@ -560,6 +566,7 @@ export class ExportMap {
         })
 
         if (exportedDecls.length === 0) {
+          m.exports.set('default', n)
           // Export is not referencing any local declaration, must be re-exporting
           m.namespace.set('default', captureDoc(source, docStyleParsers, n))
           continue
@@ -569,6 +576,7 @@ export class ExportMap {
           isEsModuleInteropTrue() && // esModuleInterop is on in tsconfig
           !m.namespace.has('default') // and default isn't added already
         ) {
+          m.exports.set('default', n)
           m.namespace.set('default', {}) // add default export
         }
 
@@ -578,6 +586,8 @@ export class ExportMap {
 
             // @ts-expect-error - legacy parser type
             if (type === 'TSModuleDeclaration') {
+              // @ts-expect-error - legacy parser type
+              m.exports.set((decl.body.id as TSESTree.Identifier).name, n)
               m.namespace.set(
                 // @ts-expect-error - legacy parser type
                 (decl.body.id as TSESTree.Identifier).name,
@@ -607,7 +617,8 @@ export class ExportMap {
                   // TypeScript can check this for us; we needn't
                 } else if (namespaceDecl.type === 'VariableDeclaration') {
                   for (const d of namespaceDecl.declarations)
-                    recursivePatternCapture(d.id, id =>
+                    recursivePatternCapture(d.id, id => {
+                      m.exports.set((id as TSESTree.Identifier).name, n)
                       m.namespace.set(
                         (id as TSESTree.Identifier).name,
                         captureDoc(
@@ -617,9 +628,13 @@ export class ExportMap {
                           namespaceDecl,
                           moduleBlockNode,
                         ),
-                      ),
-                    )
+                      )
+                    })
                 } else if ('id' in namespaceDecl) {
+                  m.exports.set(
+                    (namespaceDecl.id as TSESTree.Identifier).name,
+                    n,
+                  )
                   m.namespace.set(
                     (namespaceDecl.id as TSESTree.Identifier).name,
                     captureDoc(source, docStyleParsers, moduleBlockNode),
@@ -629,6 +644,7 @@ export class ExportMap {
             }
           } else {
             // Export as default
+            m.exports.set('default', n)
             m.namespace.set(
               'default',
               captureDoc(source, docStyleParsers, decl),
@@ -663,6 +679,7 @@ export class ExportMap {
       m.namespace.size > 0 && // anything is exported
       !m.namespace.has('default') // and default isn't added already
     ) {
+      m.exports.set('default', ast.body[0]) // add default export
       m.namespace.set('default', {}) // add default export
     }
 
@@ -697,6 +714,7 @@ export class ExportMap {
    * dependencies of this module that are not explicitly re-exported
    */
   imports = new Map<string, ModuleImport>()
+  exports = new Map<string, TSESTree.Identifier | TSESTree.ProgramStatement>()
 
   errors: ParseError[] = []
 
