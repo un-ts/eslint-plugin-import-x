@@ -1,5 +1,7 @@
 # import-x/no-rename-default
 
+⚠️ This rule _warns_ in the 🚸 `warnings` config.
+
 <!-- end auto-generated rule header -->
 
 Prohibit importing a default export by another name.
