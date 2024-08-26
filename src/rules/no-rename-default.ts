@@ -4,11 +4,12 @@
  * @author Sukka <https://skk.moe> - Port to TypeScript
  */
 
-import path from 'path';
-import { createRule, ExportMap } from '../utils';
-import type { ModuleOptions } from '../utils';
-import type { TSESTree } from '@typescript-eslint/typescript-estree';
-import type { VariableDeclaration } from 'typescript';
+import path from 'node:path'
+
+import type { TSESTree } from '@typescript-eslint/typescript-estree'
+
+import { createRule, ExportMap } from '../utils'
+import type { ModuleOptions } from '../utils'
 
 type Options = ModuleOptions & {
   preventRenamingBindings?: boolean
@@ -41,28 +42,23 @@ export = createRule<[Options?], MessageId>({
       },
     ],
     messages: {
-      renameDefault: 'Caution: `{{importBasename}}` has a default export `{{defaultExportName}}`. This imports `{{defaultExportName}}` as `${{importName}}`. Check if you meant to write {{suggestion}} instead.',
+      renameDefault:
+        'Caution: `{{importBasename}}` has a default export `{{defaultExportName}}`. This {{requiresOrImports}} `{{defaultExportName}}` as `{{importName}}`. Check if you meant to write `{{suggestion}}` instead.',
     },
   },
   defaultOptions: [],
   create(context) {
-    const {
-      commonjs = false,
-      preventRenamingBindings = true,
-    } = context.options[0] || {};
+    const { commonjs = false, preventRenamingBindings = true } =
+      context.options[0] || {}
 
-    function findDefaultDestructure(properties: (TSESTree.Property | TSESTree.RestElement)[]) {
-      const found = properties.find((property) => {
-        if ('key' in property && 'name' in property.key && property.key.name === 'default') {
-          return property;
-        }
-      });
-      return found;
-    }
-
-    function getDefaultExportName(targetNode: TSESTree.ExportSpecifier | TSESTree.DefaultExportDeclarations | TSESTree.CallExpressionArgument) {
+    function getDefaultExportName(
+      targetNode:
+        | TSESTree.ExportSpecifier
+        | TSESTree.DefaultExportDeclarations
+        | TSESTree.CallExpressionArgument,
+    ) {
       if (targetNode == null) {
-        return;
+        return
       }
       switch (targetNode.type) {
         case 'AssignmentExpression': {
@@ -71,29 +67,29 @@ export = createRule<[Options?], MessageId>({
             // option is set to `false`.
             //
             // export default Foo = 1;
-            return;
+            return
           }
           if (targetNode.left.type !== 'Identifier') {
-            return;
+            return
           }
-          return targetNode.left.name;
+          return targetNode.left.name
         }
         case 'CallExpression': {
-          const [argumentNode] = targetNode.arguments;
-          return getDefaultExportName(argumentNode);
+          const [argumentNode] = targetNode.arguments
+          return getDefaultExportName(argumentNode)
         }
         case 'ClassDeclaration': {
           if (targetNode.id && typeof targetNode.id.name === 'string') {
-            return targetNode.id.name;
+            return targetNode.id.name
           }
           // Here we have an anonymous class. We can skip here.
-          return;
+          return
         }
         case 'ExportSpecifier': {
-          return targetNode.local.name;
+          return targetNode.local.name
         }
         case 'FunctionDeclaration': {
-          return targetNode.id?.name;
+          return targetNode.id?.name
         }
         case 'Identifier': {
           if (!preventRenamingBindings) {
@@ -102,73 +98,58 @@ export = createRule<[Options?], MessageId>({
             //
             // const foo = 'foo';
             // export default foo;
-            return;
+            return
           }
-          return targetNode.name;
+          return targetNode.name
         }
         default:
-          // This type of node is not handled.
-          // Returning `undefined` here signifies this and causes the check to
-          // exit early.
-      }
-    }
-
-    function getDefaultExportNode(exportMap: ExportMap): TSESTree.DefaultExportDeclarations | TSESTree.ExportSpecifier | undefined {
-      const defaultExportNode = exportMap.exports.get('default');
-      if (defaultExportNode == null) {
-        return;
-      }
-      switch (defaultExportNode.type) {
-        case 'ExportDefaultDeclaration': {
-          return defaultExportNode.declaration;
-        }
-        case 'ExportNamedDeclaration': {
-          return defaultExportNode.specifiers.find((specifier) => specifier.exported.name === 'default');
-        }
-        default:
-          return;
+        // This type of node is not handled.
+        // Returning `undefined` here signifies this and causes the check to
+        // exit early.
       }
     }
 
     function getExportMap(source: TSESTree.StringLiteral | null) {
       if (!source) {
-        return;
+        return
       }
-      const exportMap = ExportMap.get(source.value, context);
+      const exportMap = ExportMap.get(source.value, context)
       if (exportMap == null) {
-        return;
+        return
       }
       if (exportMap.errors.length > 0) {
-        exportMap.reportErrors(context, { source });
-        return;
+        exportMap.reportErrors(context, { source })
+        return
       }
-      return exportMap;
+      return exportMap
     }
 
-    function handleImport(node: TSESTree.ImportDefaultSpecifier | TSESTree.ImportSpecifier) {
-      const exportMap = getExportMap(node.parent.source);
+    function handleImport(
+      node: TSESTree.ImportDefaultSpecifier | TSESTree.ImportSpecifier,
+    ) {
+      const exportMap = getExportMap(node.parent.source)
       if (exportMap == null) {
-        return;
+        return
       }
 
-      const defaultExportNode = getDefaultExportNode(exportMap);
+      const defaultExportNode = getDefaultExportNode(exportMap)
       if (defaultExportNode == null) {
-        return;
+        return
       }
 
-      const defaultExportName = getDefaultExportName(defaultExportNode);
+      const defaultExportName = getDefaultExportName(defaultExportNode)
       if (defaultExportName === undefined) {
-        return;
+        return
       }
 
-      const importTarget = node.parent.source?.value;
-      const importBasename = path.basename(exportMap.path);
+      const importTarget = node.parent.source?.value
+      const importBasename = path.basename(exportMap.path)
 
       if (node.type === 'ImportDefaultSpecifier') {
-        const importName = node.local.name;
+        const importName = node.local.name
 
         if (importName === defaultExportName) {
-          return;
+          return
         }
 
         context.report({
@@ -178,25 +159,26 @@ export = createRule<[Options?], MessageId>({
             importBasename,
             defaultExportName,
             importName,
+            requiresOrImports: 'imports',
             suggestion: `import ${defaultExportName} from '${importTarget}'`,
           },
-        });
+        })
 
-        return;
+        return
       }
 
       if (node.type !== 'ImportSpecifier') {
-        return;
+        return
       }
 
       if (node.imported.name !== 'default') {
-        return;
+        return
       }
 
-      const actualImportedName = node.local.name;
+      const actualImportedName = node.local.name
 
       if (actualImportedName === defaultExportName) {
-        return;
+        return
       }
 
       context.report({
@@ -206,68 +188,74 @@ export = createRule<[Options?], MessageId>({
           importBasename,
           defaultExportName,
           importName: actualImportedName,
+          requiresOrImports: 'imports',
           suggestion: `import { default as ${defaultExportName} } from '${importTarget}'`,
-        }
-      });
+        },
+      })
     }
 
     function handleRequire(node: TSESTree.VariableDeclarator) {
       if (
-        !commonjs
-        || node.type !== 'VariableDeclarator'
-        || !node.id || !(node.id.type === 'Identifier' || node.id.type === 'ObjectPattern')
-        || !node.init || node.init.type !== 'CallExpression'
+        !commonjs ||
+        node.type !== 'VariableDeclarator' ||
+        !node.id ||
+        !(node.id.type === 'Identifier' || node.id.type === 'ObjectPattern') ||
+        !node.init ||
+        node.init.type !== 'CallExpression'
       ) {
-        return;
+        return
       }
 
-      let defaultDestructure;
+      let defaultDestructure
       if (node.id.type === 'ObjectPattern') {
-        defaultDestructure = findDefaultDestructure(node.id.properties);
+        defaultDestructure = findDefaultDestructure(node.id.properties)
         if (defaultDestructure === undefined) {
-          return;
+          return
         }
       }
 
-      const call = node.init;
-      const [source] = call.arguments;
+      const call = node.init
+      const [source] = call.arguments
 
       if (
-        call.callee.type !== 'Identifier' || call.callee.name !== 'require' || call.arguments.length !== 1
-        || source.type !== 'Literal' || typeof source.value !== 'string'
+        call.callee.type !== 'Identifier' ||
+        call.callee.name !== 'require' ||
+        call.arguments.length !== 1 ||
+        source.type !== 'Literal' ||
+        typeof source.value !== 'string'
       ) {
-        return;
+        return
       }
 
-      const exportMap = getExportMap(source);
+      const exportMap = getExportMap(source)
       if (exportMap == null) {
-        return;
+        return
       }
 
-      const defaultExportNode = getDefaultExportNode(exportMap);
+      const defaultExportNode = getDefaultExportNode(exportMap)
       if (defaultExportNode == null) {
-        return;
+        return
       }
 
-      const defaultExportName = getDefaultExportName(defaultExportNode);
-      const requireTarget = source.value;
-      const requireBasename = path.basename(exportMap.path);
+      const defaultExportName = getDefaultExportName(defaultExportNode)
+      const requireTarget = source.value
+      const requireBasename = path.basename(exportMap.path)
 
-      let requireName;
+      let requireName
       if (node.id.type === 'Identifier') {
-        requireName = node.id.name;
+        requireName = node.id.name
       } else if (defaultDestructure?.value?.type === 'Identifier') {
-        requireName = defaultDestructure.value.name;
+        requireName = defaultDestructure.value.name
       } else {
-        requireName = '';
+        requireName = ''
       }
 
       if (defaultExportName === undefined) {
-        return;
+        return
       }
 
       if (requireName === defaultExportName) {
-        return;
+        return
       }
 
       if (node.id.type === 'Identifier') {
@@ -278,10 +266,11 @@ export = createRule<[Options?], MessageId>({
             importBasename: requireBasename,
             defaultExportName,
             importName: requireName,
-            suggestion: `const ${defaultExportName} = require('${requireTarget}')`
-          }
-        });
-        return;
+            requiresOrImports: 'requires',
+            suggestion: `const ${defaultExportName} = require('${requireTarget}')`,
+          },
+        })
+        return
       }
 
       context.report({
@@ -291,15 +280,53 @@ export = createRule<[Options?], MessageId>({
           importBasename: requireBasename,
           defaultExportName,
           importName: requireName,
-          suggestion: `const { default: ${defaultExportName} } = require('${requireTarget}')`
-        }
-      });
+          requiresOrImports: 'requires',
+          suggestion: `const { default: ${defaultExportName} } = require('${requireTarget}')`,
+        },
+      })
     }
 
     return {
       ImportDefaultSpecifier: handleImport,
       ImportSpecifier: handleImport,
       VariableDeclarator: handleRequire,
-    };
+    }
   },
-});
+})
+
+function findDefaultDestructure(
+  properties: Array<TSESTree.Property | TSESTree.RestElement>,
+) {
+  const found = properties.find(property => {
+    if (
+      'key' in property &&
+      'name' in property.key &&
+      property.key.name === 'default'
+    ) {
+      return property
+    }
+  })
+  return found
+}
+
+function getDefaultExportNode(
+  exportMap: ExportMap,
+): TSESTree.DefaultExportDeclarations | TSESTree.ExportSpecifier | undefined {
+  const defaultExportNode = exportMap.exports.get('default')
+  if (defaultExportNode == null) {
+    return
+  }
+  switch (defaultExportNode.type) {
+    case 'ExportDefaultDeclaration': {
+      return defaultExportNode.declaration
+    }
+    case 'ExportNamedDeclaration': {
+      return defaultExportNode.specifiers.find(
+        specifier => specifier.exported.name === 'default',
+      )
+    }
+    default: {
+      return
+    }
+  }
+}

@@ -149,7 +149,7 @@ export class ExportMap {
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
     try {
-      ; ({ ast, visitorKeys } = parse(filepath, content, context))
+      ;({ ast, visitorKeys } = parse(filepath, content, context))
     } catch (error) {
       m.errors.push(error as ParseError)
       return m // can't continue
@@ -271,7 +271,7 @@ export class ExportMap {
           break
         }
         case 'ExportNamespaceSpecifier': {
-          m.exports.set(s.exported.name, n);
+          m.exports.set(s.exported.name, n)
           m.namespace.set(
             s.exported.name,
             Object.defineProperty(exportMeta, 'namespace', {
@@ -283,7 +283,7 @@ export class ExportMap {
           return
         }
         case 'ExportAllDeclaration': {
-          m.exports.set(s.exported!.name || (s.exported as any).value, n);
+          m.exports.set(s.exported!.name, n)
           m.namespace.set(
             getValue(s.exported!),
             addNamespace(exportMeta, s.exported!),
@@ -293,7 +293,7 @@ export class ExportMap {
         }
         case 'ExportSpecifier': {
           if (!('source' in n && n.source)) {
-            m.exports.set(s.exported!.name || (s.exported as any).value, n);
+            m.exports.set(s.exported!.name, n)
             m.namespace.set(
               getValue(s.exported),
               addNamespace(exportMeta, s.local),
@@ -489,7 +489,7 @@ export class ExportMap {
             // @ts-expect-error - legacy parser type
             case 'TSAbstractClassDeclaration':
             case 'TSModuleDeclaration': {
-              m.exports.set((n.declaration.id as TSESTree.Identifier).name, n);
+              m.exports.set((n.declaration.id as TSESTree.Identifier).name, n)
               m.namespace.set(
                 (n.declaration.id as TSESTree.Identifier).name,
                 captureDoc(source, docStyleParsers, n),
@@ -500,7 +500,7 @@ export class ExportMap {
             case 'VariableDeclaration': {
               for (const d of n.declaration.declarations) {
                 recursivePatternCapture(d.id, id => {
-                  m.exports.set((id as TSESTree.Identifier).name, n);
+                  m.exports.set((id as TSESTree.Identifier).name, n)
                   m.namespace.set(
                     (id as TSESTree.Identifier).name,
                     captureDoc(source, docStyleParsers, d, n),
@@ -528,17 +528,17 @@ export class ExportMap {
         const exportedName =
           n.type === 'TSNamespaceExportDeclaration'
             ? (
-              n.id ||
-              // @ts-expect-error - legacy parser type
-              n.name
-            ).name
+                n.id ||
+                // @ts-expect-error - legacy parser type
+                n.name
+              ).name
             : ('expression' in n &&
-              n.expression &&
-              (('name' in n.expression && n.expression.name) ||
-                ('id' in n.expression &&
-                  n.expression.id &&
-                  n.expression.id.name))) ||
-            null
+                n.expression &&
+                (('name' in n.expression && n.expression.name) ||
+                  ('id' in n.expression &&
+                    n.expression.id &&
+                    n.expression.id.name))) ||
+              null
 
         const getRoot = (
           node: TSESTree.TSQualifiedName,
@@ -557,7 +557,7 @@ export class ExportMap {
               ('name' in node.id
                 ? node.id.name === exportedName
                 : 'left' in node.id &&
-                getRoot(node.id).name === exportedName)) ||
+                  getRoot(node.id).name === exportedName)) ||
               ('declarations' in node &&
                 node.declarations.find(
                   d => 'name' in d.id && d.id.name === exportedName,
@@ -566,7 +566,7 @@ export class ExportMap {
         })
 
         if (exportedDecls.length === 0) {
-          m.exports.set('default', n);
+          m.exports.set('default', n)
           // Export is not referencing any local declaration, must be re-exporting
           m.namespace.set('default', captureDoc(source, docStyleParsers, n))
           continue
@@ -576,7 +576,7 @@ export class ExportMap {
           isEsModuleInteropTrue() && // esModuleInterop is on in tsconfig
           !m.namespace.has('default') // and default isn't added already
         ) {
-          m.exports.set('default', n);
+          m.exports.set('default', n)
           m.namespace.set('default', {}) // add default export
         }
 
@@ -618,7 +618,7 @@ export class ExportMap {
                 } else if (namespaceDecl.type === 'VariableDeclaration') {
                   for (const d of namespaceDecl.declarations)
                     recursivePatternCapture(d.id, id => {
-                      m.exports.set((id as TSESTree.Identifier).name, n);
+                      m.exports.set((id as TSESTree.Identifier).name, n)
                       m.namespace.set(
                         (id as TSESTree.Identifier).name,
                         captureDoc(
@@ -631,7 +631,10 @@ export class ExportMap {
                       )
                     })
                 } else if ('id' in namespaceDecl) {
-                  m.exports.set((namespaceDecl.id as TSESTree.Identifier).name, n);
+                  m.exports.set(
+                    (namespaceDecl.id as TSESTree.Identifier).name,
+                    n,
+                  )
                   m.namespace.set(
                     (namespaceDecl.id as TSESTree.Identifier).name,
                     captureDoc(source, docStyleParsers, moduleBlockNode),
@@ -641,7 +644,7 @@ export class ExportMap {
             }
           } else {
             // Export as default
-            m.exports.set('default', n);
+            m.exports.set('default', n)
             m.namespace.set(
               'default',
               captureDoc(source, docStyleParsers, decl),
@@ -711,7 +714,7 @@ export class ExportMap {
    * dependencies of this module that are not explicitly re-exported
    */
   imports = new Map<string, ModuleImport>()
-  exports = new Map<string, TSESTree.Identifier | TSESTree.ProgramStatement>();
+  exports = new Map<string, TSESTree.Identifier | TSESTree.ProgramStatement>()
 
   errors: ParseError[] = []
 
@@ -723,7 +726,7 @@ export class ExportMap {
 
   declare doc: Annotation | undefined
 
-  constructor(public path: string) { }
+  constructor(public path: string) {}
 
   get hasDefault() {
     return this.get('default') != null
