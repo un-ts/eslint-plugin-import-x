@@ -1,4 +1,4 @@
-# import/no-rename-default
+# import-x/no-rename-default
 
 <!-- end auto-generated rule header -->
 
@@ -16,7 +16,7 @@ export default async function getUsers() {}
 ...this would be valid:
 
 ```js
-import getUsers from './api/get-users.js';
+import getUsers from './api/get-users.js'
 ```
 
 ...and the following would be reported:
@@ -25,5 +25,5 @@ import getUsers from './api/get-users.js';
 // Caution: `get-users.js` has a default export `getUsers`.
 // This imports `getUsers` as `findUsers`.
 // Check if you meant to write `import getUsers from './api/get-users'` instead.
-import findUsers from './get-users';
+import findUsers from './get-users'
 ```
