@@ -1,5 +1,22 @@
 # eslint-plugin-import-x
 
+## 4.1.0
+
+### Minor Changes
+
+- [#122](https://github.com/un-ts/eslint-plugin-import-x/pull/122) [`cd52e86`](https://github.com/un-ts/eslint-plugin-import-x/commit/cd52e86f44754b4dd0c1aae1e9fd5e952e90938f) Thanks [@michaelfaith](https://github.com/michaelfaith)! - Add ESLint flat configuration presets. You can access them with:
+
+  ```ts
+  import eslintPluginImportX from "eslint-plugin-import-x";
+
+  eslintPluginImportX.flatConfigs.recommended;
+  eslintPluginImportX.flatConfigs.react;
+  eslintPluginImportX.flatConfigs.typescript;
+  eslintPluginImportX.flatConfigs.electron;
+  ```
+
+- [#132](https://github.com/un-ts/eslint-plugin-import-x/pull/132) [`9948c78`](https://github.com/un-ts/eslint-plugin-import-x/commit/9948c7894758dd461f6d75b89c6425fee304789a) Thanks [@SukkaW](https://github.com/SukkaW)! - Added `no-rename-default` that forbid importing a default export by a different name. Originally created by @whitneyit, ported by @SukkaW
+
 ## 4.0.0
 
 ### Major Changes
