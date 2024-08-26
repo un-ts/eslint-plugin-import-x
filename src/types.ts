@@ -70,6 +70,15 @@ export type PluginConfig = {
   rules?: Record<`${PluginName}/${string}`, TSESLint.Linter.RuleEntry>
 } & TSESLint.Linter.ConfigType
 
+export type PluginFlatBaseConfig = {
+  settings?: PluginSettings
+  rules?: Record<`${PluginName}/${string}`, TSESLint.FlatConfig.RuleEntry>
+} & TSESLint.FlatConfig.Config
+
+export type PluginFlatConfig = PluginFlatBaseConfig & {
+  name?: `${PluginName}/${string}`
+}
+
 export type RuleContext<
   TMessageIds extends string = string,
   TOptions extends readonly unknown[] = readonly unknown[],

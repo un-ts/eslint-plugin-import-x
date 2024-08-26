@@ -28,7 +28,7 @@ function validExtensions(context: ChildContext | RuleContext) {
 export function getFileExtensions(settings: PluginSettings) {
   // start with explicit JS-parsed extensions
   const exts = new Set<FileExtension>(
-    settings['import-x/extensions'] || ['.js'],
+    settings['import-x/extensions'] || ['.js', '.mjs', '.cjs'],
   )
 
   // all alternate parser extensions are also valid

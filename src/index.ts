@@ -1,14 +1,25 @@
 import type { TSESLint } from '@typescript-eslint/utils'
 
-// rules
+import { name, version } from '../package.json'
+
 import electron from './config/electron'
 import errors from './config/errors'
+import electronFlat from './config/flat/electron'
+import errorsFlat from './config/flat/errors'
+import reactFlat from './config/flat/react'
+import reactNativeFlat from './config/flat/react-native'
+import recommendedFlat from './config/flat/recommended'
+import stage0Flat from './config/flat/stage-0'
+import typescriptFlat from './config/flat/typescript'
+import warningsFlat from './config/flat/warnings'
 import react from './config/react'
 import reactNative from './config/react-native'
 import recommended from './config/recommended'
 import stage0 from './config/stage-0'
 import typescript from './config/typescript'
 import warnings from './config/warnings'
+
+// rules
 import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
 import default_ from './rules/default'
 import dynamicImportChunkname from './rules/dynamic-import-chunkname'
@@ -55,23 +66,11 @@ import order from './rules/order'
 import preferDefaultExport from './rules/prefer-default-export'
 import unambiguous from './rules/unambiguous'
 // configs
-import type { PluginConfig } from './types'
-
-const configs = {
-  recommended,
-
-  errors,
-  warnings,
-
-  // shhhh... work in progress "secret" rules
-  'stage-0': stage0,
-
-  // useful stuff for folks using various environments
-  react,
-  'react-native': reactNative,
-  electron,
-  typescript,
-} satisfies Record<string, PluginConfig>
+import type {
+  PluginConfig,
+  PluginFlatBaseConfig,
+  PluginFlatConfig,
+} from './types'
 
 const rules = {
   'no-unresolved': noUnresolved,
@@ -129,7 +128,56 @@ const rules = {
   'imports-first': importsFirst,
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
+const configs = {
+  recommended,
+
+  errors,
+  warnings,
+
+  // shhhh... work in progress "secret" rules
+  'stage-0': stage0,
+
+  // useful stuff for folks using various environments
+  react,
+  'react-native': reactNative,
+  electron,
+  typescript,
+} satisfies Record<string, PluginConfig>
+
+// Base Plugin Object
+const plugin = {
+  meta: { name, version },
+  rules,
+}
+
+// Create flat configs (Only ones that declare plugins and parser options need to be different from the legacy config)
+const createFlatConfig = (
+  baseConfig: PluginFlatBaseConfig,
+  configName: string,
+): PluginFlatConfig => ({
+  ...baseConfig,
+  name: `import-x/${configName}`,
+  plugins: { 'import-x': plugin },
+})
+
+const flatConfigs = {
+  recommended: createFlatConfig(recommendedFlat, 'recommended'),
+
+  errors: createFlatConfig(errorsFlat, 'errors'),
+  warnings: createFlatConfig(warningsFlat, 'warnings'),
+
+  // shhhh... work in progress "secret" rules
+  'stage-0': createFlatConfig(stage0Flat, 'stage-0'),
+
+  // useful stuff for folks using various environments
+  react: reactFlat,
+  'react-native': reactNativeFlat,
+  electron: electronFlat,
+  typescript: typescriptFlat,
+} satisfies Record<string, PluginFlatConfig>
+
 export = {
   configs,
+  flatConfigs,
   rules,
 }
