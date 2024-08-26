@@ -52,7 +52,6 @@ describe('package', () => {
         continue
       }
       for (const rule of Object.keys(config.rules)) {
-        console.log({ rule, preamble })
         expect(() =>
           require(getRulePath(rule.slice(preamble.length))),
         ).not.toThrow()

@@ -6,17 +6,22 @@ import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
 const ruleTester = new TSESLintRuleTester()
 
-console.log({ babel: require(parsers.BABEL) })
-
 ruleTester.run('no-named-as-default', rule, {
   valid: [
+    // https://github.com/un-ts/eslint-plugin-import-x/issues/123
+    'import klawSync from "klaw-sync";',
+    'import ts from "typescript";',
+    `import React from 'react';`,
+    `import z from 'zod';`,
+    `import classNames from 'classnames';`,
+
     test({
       code: 'import "./malformed.js"',
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
 
-    test({ code: 'import bar, { foo } from "./bar";' }),
-    test({ code: 'import bar, { foo } from "./empty-folder";' }),
+    'import bar, { foo } from "./bar";',
+    'import bar, { foo } from "./empty-folder";',
 
     // es7
     test({

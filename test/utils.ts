@@ -109,29 +109,29 @@ export function testContext(settings?: PluginSettings) {
  * to crash at runtime
  */
 export const SYNTAX_CASES = [
-  test({ code: 'for (let { foo, bar } of baz) {}' }),
-  test({ code: 'for (let [ foo, bar ] of baz) {}' }),
+  'for (let { foo, bar } of baz) {}',
+  'for (let [ foo, bar ] of baz) {}',
 
-  test({ code: 'const { x, y } = bar' }),
+  'const { x, y } = bar',
   test({
     code: 'const { x, y, ...z } = bar',
     languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // all the exports
-  test({ code: 'let x; export { x }' }),
-  test({ code: 'let x; export { x as y }' }),
+  'let x; export { x }',
+  'let x; export { x as y }',
 
   // not sure about these since they reference a file
-  // test({ code: 'export { x } from "./y.js"'}),
-  // test({ code: 'export * as y from "./y.js"', languageOptions: { parser: require(parsers.BABEL) } }),
+  // 'export { x } from "./y.js"'}),
+  // 'export * as y from "./y.js"', languageOptions: { parser: require(parsers.BABEL) } }),
 
-  test({ code: 'export const x = null' }),
-  test({ code: 'export var x = null' }),
-  test({ code: 'export let x = null' }),
+  'export const x = null',
+  'export var x = null',
+  'export let x = null',
 
-  test({ code: 'export default x' }),
-  test({ code: 'export default class x {}' }),
+  'export default x',
+  'export default class x {}',
 
   // issue #267: parser opt-in extension list
   test({
