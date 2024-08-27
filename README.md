@@ -107,8 +107,15 @@ This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, a
 npm install eslint-plugin-import-x --save-dev
 ```
 
-All rules are off by default. However, you may configure them manually
-in your `.eslintrc.(yml|json|js)`, or extend one of the canned configs:
+## Configuration (legacy: `.eslintrc*`)
+
+> [!TIP]
+> If your eslint is `>=8.23.0`, you're 100% ready to use the new config system.
+> See dedicated section below.
+
+> [!NOTE]
+> All rules are off by default. However, you may configure them manually
+> in your `.eslintrc.(yml|json|js)`, or extend one of the canned configs:
 
 ```yaml
 ---
@@ -132,11 +139,12 @@ rules:
   # etc...
 ```
 
-## TypeScript
+### TypeScript
 
 You may use the following snippet or assemble your own config using the granular settings described below it.
 
-Make sure you have installed [`@typescript-eslint/parser`] and [`eslint-import-resolver-typescript`] which are used in the following configuration.
+> [!WARNING]
+> Make sure you have installed [`@typescript-eslint/parser`] and [`eslint-import-resolver-typescript`] which are used in the following configuration.
 
 ```yaml
 extends:
@@ -154,6 +162,62 @@ settings:
 
 [`@typescript-eslint/parser`]: https://github.com/typescript-eslint/typescript-eslint/tree/HEAD/packages/parser
 [`eslint-import-resolver-typescript`]: https://github.com/import-js/eslint-import-resolver-typescript
+
+## Configuration (new: `eslint.config.js`)
+
+From [`v8.21.0`](https://github.com/eslint/eslint/releases/tag/v8.21.0), ESLint announced a new config system.
+In the new system, `.eslintrc*` is no longer used. `eslint.config.js` would be the default config file name.
+
+<details>
+  <summary>JS example</summary>
+
+```js
+import js from '@eslint/js'
+import eslintPluginImportX from 'eslint-plugin-import-x'
+
+export default [
+  js.configs.recommended,
+  eslintPluginImportX.flatConfigs.recommended,
+]
+```
+
+</details>
+
+<details>
+  <summary>Typescript example</summary>
+
+```js
+import js from '@eslint/js'
+import eslintPluginImportX from 'eslint-plugin-import-x'
+import tsParser from '@typescript-eslint/parser'
+
+export default [
+  js.configs.recommended,
+  eslintPluginImportX.flatConfigs.recommended,
+  eslintPluginImportX.flatConfigs.typescript,
+  {
+    files: ['**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}'],
+    languageOptions: {
+      parser: tsParser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
+    ignores: ['eslint.config.js'],
+    rules: {
+      'no-unused-vars': 'off',
+      'import/no-dynamic-require': 'warn',
+      'import/no-nodejs-modules': 'warn',
+    },
+  },
+]
+```
+
+</details>
+
+---
+
+> [!NOTE]
+> A complete list of available configuration can be found in [config/flat folders](src/config/flat)
 
 ## Resolvers
 
