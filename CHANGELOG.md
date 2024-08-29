@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.1.1
+
+### Patch Changes
+
+- [#133](https://github.com/un-ts/eslint-plugin-import-x/pull/133) [`757ffa9`](https://github.com/un-ts/eslint-plugin-import-x/commit/757ffa9d4850d4decac467bf3b5e8c950a8a720e) Thanks [@SukkaW](https://github.com/SukkaW)! - Fix #123 where the rule `no-named-as-default` will confuse TypeScript namespace exports with actual exports.
+
 ## 4.1.0
 
 ### Minor Changes
