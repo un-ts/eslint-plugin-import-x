@@ -6,17 +6,54 @@ import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
 const ruleTester = new TSESLintRuleTester()
 
-console.log({ babel: require(parsers.BABEL) })
-
 ruleTester.run('no-named-as-default', rule, {
   valid: [
+    // https://github.com/un-ts/eslint-plugin-import-x/issues/123
+    test({
+      code: `/** TypeScript */ import klawSync from "klaw-sync";`,
+      settings: {
+        'import-x/extensions': [
+          '.ts',
+          '.cts',
+          '.mts',
+          '.tsx',
+          '.js',
+          '.cjs',
+          '.mjs',
+          '.jsx',
+        ],
+        'import-x/external-module-folders': [
+          'node_modules',
+          'node_modules/@types',
+        ],
+        'import-x/parsers': {
+          '@typescript-eslint/parser': ['.ts', '.cts', '.mts', '.tsx'],
+        },
+        'import-x/resolver': {
+          typescript: true,
+          node: {
+            extensions: [
+              '.ts',
+              '.cts',
+              '.mts',
+              '.tsx',
+              '.js',
+              '.cjs',
+              '.mjs',
+              '.jsx',
+            ],
+          },
+        },
+      },
+    }),
+
     test({
       code: 'import "./malformed.js"',
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
 
-    test({ code: 'import bar, { foo } from "./bar";' }),
-    test({ code: 'import bar, { foo } from "./empty-folder";' }),
+    'import bar, { foo } from "./bar";',
+    'import bar, { foo } from "./empty-folder";',
 
     // es7
     test({
@@ -132,6 +169,16 @@ ruleTester.run('no-named-as-default', rule, {
         parser: require(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
       },
+    }),
+
+    test({
+      code: `import z from 'zod';`,
+      errors: [
+        {
+          message: "Using exported name 'z' as identifier for default export.",
+          type: 'ImportDefaultSpecifier',
+        },
+      ],
     }),
   ],
 })

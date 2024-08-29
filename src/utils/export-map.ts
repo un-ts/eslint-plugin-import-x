@@ -283,7 +283,7 @@ export class ExportMap {
           return
         }
         case 'ExportAllDeclaration': {
-          m.exports.set(s.exported!.name, n)
+          m.exports.set(getValue(s.exported!), n)
           m.namespace.set(
             getValue(s.exported!),
             addNamespace(exportMeta, s.exported!),
@@ -293,7 +293,7 @@ export class ExportMap {
         }
         case 'ExportSpecifier': {
           if (!('source' in n && n.source)) {
-            m.exports.set(s.exported!.name, n)
+            m.exports.set(getValue(s.exported!), n)
             m.namespace.set(
               getValue(s.exported),
               addNamespace(exportMeta, s.local),
