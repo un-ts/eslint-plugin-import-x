@@ -95,7 +95,6 @@
     "@typescript-eslint/parser": "^8.1.0",
     "@typescript-eslint/rule-tester": "^8.1.0",
     "@unts/patch-package": "^8.0.0",
-    "classnames": "^2.5.1",
     "cross-env": "^7.0.3",
     "enhanced-resolve": "^5.16.0",
     "escope": "^4.0.0",
