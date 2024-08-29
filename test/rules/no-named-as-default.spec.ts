@@ -12,23 +12,35 @@ ruleTester.run('no-named-as-default', rule, {
     test({
       code: `/** TypeScript */ import klawSync from "klaw-sync";`,
       settings: {
-        "import-x/extensions": [
-          ".ts", ".cts", ".mts", ".tsx",
-          ".js", ".cjs", ".mjs", ".jsx",
+        'import-x/extensions': [
+          '.ts',
+          '.cts',
+          '.mts',
+          '.tsx',
+          '.js',
+          '.cjs',
+          '.mjs',
+          '.jsx',
         ],
-        "import-x/external-module-folders": [
-          "node_modules",
-          "node_modules/@types",
+        'import-x/external-module-folders': [
+          'node_modules',
+          'node_modules/@types',
         ],
-        "import-x/parsers": {
-          "@typescript-eslint/parser": [".ts", ".cts", ".mts", ".tsx"],
+        'import-x/parsers': {
+          '@typescript-eslint/parser': ['.ts', '.cts', '.mts', '.tsx'],
         },
-        "import-x/resolver": {
+        'import-x/resolver': {
           typescript: true,
           node: {
             extensions: [
-              ".ts", ".cts", ".mts", ".tsx",
-              ".js", ".cjs", ".mjs", ".jsx",
+              '.ts',
+              '.cts',
+              '.mts',
+              '.tsx',
+              '.js',
+              '.cjs',
+              '.mjs',
+              '.jsx',
             ],
           },
         },
@@ -163,11 +175,10 @@ ruleTester.run('no-named-as-default', rule, {
       code: `import z from 'zod';`,
       errors: [
         {
-          message:
-            "Using exported name 'z' as identifier for default export.",
+          message: "Using exported name 'z' as identifier for default export.",
           type: 'ImportDefaultSpecifier',
         },
       ],
-    })
+    }),
   ],
 })

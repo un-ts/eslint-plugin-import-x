@@ -21,9 +21,7 @@ export = createRule<[], MessageId>({
   },
   defaultOptions: [],
   create(context) {
-    function createCheckDefault(
-      nameKey: 'local' | 'exported',
-    ) {
+    function createCheckDefault(nameKey: 'local' | 'exported') {
       return function checkDefault(
         defaultSpecifier: TSESTree.ImportDefaultSpecifier,
         // | TSESTree.ExportDefaultSpecifier,
@@ -38,7 +36,10 @@ export = createRule<[], MessageId>({
 
         const declaration = importDeclaration(context, defaultSpecifier)
 
-        const exportMapOfImported = ExportMap.get(declaration.source.value, context)
+        const exportMapOfImported = ExportMap.get(
+          declaration.source.value,
+          context,
+        )
         if (exportMapOfImported == null) {
           return
         }
@@ -48,7 +49,10 @@ export = createRule<[], MessageId>({
           return
         }
 
-        if (exportMapOfImported.exports.has('default') && exportMapOfImported.exports.has(nameValue)) {
+        if (
+          exportMapOfImported.exports.has('default') &&
+          exportMapOfImported.exports.has(nameValue)
+        ) {
           context.report({
             node: defaultSpecifier,
             messageId: 'default',
