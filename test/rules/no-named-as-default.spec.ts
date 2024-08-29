@@ -6,12 +6,45 @@ import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
 const ruleTester = new TSESLintRuleTester()
 
+const ALL_EXTENSIONS = [
+  ".ts", ".cts", ".mts", ".tsx",
+  ".js",
+  ".cjs",
+  ".mjs",
+  ".jsx",
+];
+
 ruleTester.run('no-named-as-default', rule, {
   valid: [
     // https://github.com/un-ts/eslint-plugin-import-x/issues/123
     'import klawSync from "klaw-sync";',
+    test({
+      code: `/** TypeScript */ import klawSync from "klaw-sync";`,
+      settings: {
+        "import-x/extensions": [
+          ".ts", ".cts", ".mts", ".tsx",
+          ".js", ".cjs", ".mjs", ".jsx",
+        ],
+        "import-x/external-module-folders": [
+          "node_modules",
+          "node_modules/@types",
+        ],
+        "import-x/parsers": {
+          "@typescript-eslint/parser": [".ts", ".cts", ".mts", ".tsx"],
+        },
+        "import-x/resolver": {
+          typescript: true,
+          node: {
+            extensions: [
+              ".ts", ".cts", ".mts", ".tsx",
+              ".js", ".cjs", ".mjs", ".jsx",
+            ],
+          },
+        },
+      },
+    }),
+
     'import ts from "typescript";',
-    `import React from 'react';`,
     `import classNames from 'classnames';`,
 
     test({
