@@ -49,7 +49,6 @@ export = createRule<[], MessageId>({
         }
 
         if (exportMapOfImported.exports.has('default') && exportMapOfImported.exports.has(nameValue)) {
-          console.log(nameValue, exportMapOfImported)
           context.report({
             node: defaultSpecifier,
             messageId: 'default',
