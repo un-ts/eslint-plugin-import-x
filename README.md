@@ -186,6 +186,12 @@ export default [
 <details>
   <summary>Typescript example</summary>
 
+You have to install `eslint-import-resolver-typescript`:
+
+```shell
+npm install eslint-import-resolver-typescript --save-dev
+```
+
 ```js
 import js from '@eslint/js'
 import eslintPluginImportX from 'eslint-plugin-import-x'
@@ -207,6 +213,11 @@ export default [
       'no-unused-vars': 'off',
       'import/no-dynamic-require': 'warn',
       'import/no-nodejs-modules': 'warn',
+    },
+    settings: {
+      'import-x/resolver': {
+        typescript: true,
+      },
     },
   },
 ]
