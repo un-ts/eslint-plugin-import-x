@@ -294,7 +294,7 @@ function reportIfMissing(
   const packageName = realPackageName || importPackageName
 
   if (whitelist.includes(packageName)) {
-    return;
+    return
   }
 
   if (declarationStatus.isInDevDeps && !depsOptions.allowDevDeps) {
@@ -411,7 +411,7 @@ export = createRule<[Options?], MessageId>({
       verifyTypeImports: !!options.includeTypes,
     }
 
-    const whitelist = options.whitelist ?? [];
+    const whitelist = options.whitelist ?? []
 
     return {
       ...moduleVisitor(
