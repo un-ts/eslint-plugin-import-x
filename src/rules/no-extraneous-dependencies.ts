@@ -416,7 +416,14 @@ export = createRule<[Options?], MessageId>({
     return {
       ...moduleVisitor(
         (source, node) => {
-          reportIfMissing(context, deps, depsOptions, node, source.value, whitelist)
+          reportIfMissing(
+            context,
+            deps,
+            depsOptions,
+            node,
+            source.value,
+            whitelist,
+          )
         },
         { commonjs: true },
       ),
