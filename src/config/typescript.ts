@@ -27,9 +27,7 @@ export = {
       '@typescript-eslint/parser': [...typeScriptExtensions],
     },
     'import-x/resolver': {
-      node: {
-        extensions: allExtensions,
-      },
+      typescript: true,
     },
   },
   rules: {
