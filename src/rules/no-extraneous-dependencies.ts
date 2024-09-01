@@ -215,7 +215,7 @@ function reportIfMissing(
   depsOptions: DepsOptions,
   node: TSESTree.Node,
   name: string,
-  whitelist: string[],
+  whitelist: Set<string> | undefined,
 ) {
   // Do not report when importing types unless option is enabled
   if (
@@ -293,7 +293,7 @@ function reportIfMissing(
 
   const packageName = realPackageName || importPackageName
 
-  if (whitelist.includes(packageName)) {
+  if (whitelist?.has(packageName)) {
     return
   }
 
@@ -411,8 +411,6 @@ export = createRule<[Options?], MessageId>({
       verifyTypeImports: !!options.includeTypes,
     }
 
-    const whitelist = options.whitelist ?? []
-
     return {
       ...moduleVisitor(
         (source, node) => {
@@ -422,7 +420,7 @@ export = createRule<[Options?], MessageId>({
             depsOptions,
             node,
             source.value,
-            whitelist,
+            options.whitelist ? new Set(options.whitelist) : undefined,
           )
         },
         { commonjs: true },
