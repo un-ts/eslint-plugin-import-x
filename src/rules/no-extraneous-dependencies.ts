@@ -376,6 +376,7 @@ export = createRule<[Options?], MessageId>({
           packageDir: { type: ['string', 'array'] },
           includeInternal: { type: ['boolean'] },
           includeTypes: { type: ['boolean'] },
+          whitelist: { type: ['array'] },
         },
         additionalProperties: false,
       },
