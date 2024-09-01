@@ -203,21 +203,16 @@ export default [
   eslintPluginImportX.flatConfigs.typescript,
   {
     files: ['**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}'],
+    ignores: ['eslint.config.js'],
     languageOptions: {
       parser: tsParser,
       ecmaVersion: 'latest',
       sourceType: 'module',
     },
-    ignores: ['eslint.config.js'],
     rules: {
       'no-unused-vars': 'off',
       'import/no-dynamic-require': 'warn',
       'import/no-nodejs-modules': 'warn',
-    },
-    settings: {
-      'import-x/resolver': {
-        typescript: true,
-      },
     },
   },
 ]
