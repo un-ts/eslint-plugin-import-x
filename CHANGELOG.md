@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 4.2.1
+
+### Patch Changes
+
+- [#148](https://github.com/un-ts/eslint-plugin-import-x/pull/148) [`d228129`](https://github.com/un-ts/eslint-plugin-import-x/commit/d228129e21804e35d68af9f3ac18864349f99a6f) Thanks [@SukkaW](https://github.com/SukkaW)! - Fix `newline-after-import`'s `considerComments` options when linting `require`, backports https://github.com/import-js/eslint-plugin-import/pull/2952
+
+- [#147](https://github.com/un-ts/eslint-plugin-import-x/pull/147) [`eca73ed`](https://github.com/un-ts/eslint-plugin-import-x/commit/eca73edf9ce69ca2e07555a7f34702a5c1e2d75a) Thanks [@nchevsky](https://github.com/nchevsky)! - Fix regression in rule `no-unused-modules` which would incorrectly initialize option `src` to `[]` instead of `[process.cwd()]`, breaking file discovery.
+
+- [#148](https://github.com/un-ts/eslint-plugin-import-x/pull/148) [`d228129`](https://github.com/un-ts/eslint-plugin-import-x/commit/d228129e21804e35d68af9f3ac18864349f99a6f) Thanks [@SukkaW](https://github.com/SukkaW)! - Fix `no-duplicates` for TypeScript, backports https://github.com/import-js/eslint-plugin-import/pull/3033
+
 ## 4.2.0
 
 ### Minor Changes
