@@ -200,6 +200,32 @@ function getFix(
 
     const fixes = []
 
+    if (shouldAddSpecifiers && preferInline && first.importKind === 'type') {
+      // `import type {a} from './foo'` → `import {type a} from './foo'`
+      const typeIdentifierToken = tokens.find(
+        token => token.type === 'Identifier' && token.value === 'type',
+      )
+      if (typeIdentifierToken) {
+        fixes.push(
+          fixer.removeRange([
+            typeIdentifierToken.range[0],
+            typeIdentifierToken.range[1] + 1,
+          ]),
+        )
+      }
+
+      for (const identifier of tokens.filter(token =>
+        firstExistingIdentifiers.has(token.value),
+      )) {
+        fixes.push(
+          fixer.replaceTextRange(
+            [identifier.range[0], identifier.range[1]],
+            `type ${identifier.value}`,
+          ),
+        )
+      }
+    }
+
     if (openBrace == null && shouldAddSpecifiers && shouldAddDefault()) {
       // `import './foo'` → `import def, {...} from './foo'`
       fixes.push(
