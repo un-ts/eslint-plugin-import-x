@@ -260,7 +260,7 @@ ruleTester.run('newline-after-import', rule, {
       options: [{ count: 4, exactCount: true }],
     },
     {
-      code: `var foo = require('foo-module');\n\n\n\n// Some random comment\nvar foo = 'bar';`,
+      code: `var foo = require('foo-module');\n\n\n\n\n// Some random comment\nvar foo = 'bar';`,
       languageOptions: {
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
@@ -477,6 +477,21 @@ ruleTester.run('newline-after-import', rule, {
       `,
       languageOptions: {
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+    },
+    {
+      code: `var foo = require('foo-module');\n\n\n// Some random comment\nvar foo = 'bar';`,
+      options: [{ count: 2, considerComments: true }],
+    },
+    {
+      code: `var foo = require('foo-module');\n\n\n/**\n * Test comment\n */\nvar foo = 'bar';`,
+      options: [{ count: 2, considerComments: true }],
+    },
+    {
+      code: `const foo = require('foo');\n\n\n// some random comment\nconst bar = function() {};`,
+      options: [{ count: 2, exactCount: true, considerComments: true }],
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015 },
       },
     },
   ],
@@ -1054,17 +1069,39 @@ ruleTester.run('newline-after-import', rule, {
       },
     },
     {
-      code: `const foo = require('foo');\n\n\n// some random comment\nconst bar = function() {};`,
-      output: null,
-      options: [{ count: 2, exactCount: true, considerComments: true }],
+      code: `var foo = require('foo-module');\nvar foo = require('foo-module');\n\n// Some random comment\nvar foo = 'bar';`,
+      output: `var foo = require('foo-module');\nvar foo = require('foo-module');\n\n\n// Some random comment\nvar foo = 'bar';`,
+      errors: [
+        {
+          line: 2,
+          column: 1,
+          messageId: `newline`,
+        },
+      ],
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 2015,
+          sourceType: 'module',
+        },
+      },
+      options: [{ considerComments: true, count: 2 }],
+    },
+    {
+      code: `var foo = require('foo-module');\n\n/**\n * Test comment\n */\nvar foo = 'bar';`,
+      output: `var foo = require('foo-module');\n\n\n/**\n * Test comment\n */\nvar foo = 'bar';`,
       errors: [
         {
           line: 1,
           column: 1,
-          ...getRequireError(2),
+          messageId: `newline`,
         },
       ],
-      languageOptions: { parserOptions: { ecmaVersion: 2015 } },
+      languageOptions: {
+        parserOptions: {
+          ecmaVersion: 2015,
+        },
+      },
+      options: [{ considerComments: true, count: 2 }],
     },
   ],
 })
