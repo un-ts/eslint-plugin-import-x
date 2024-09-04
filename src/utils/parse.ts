@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { withoutProjectParserOptions } from '@typescript-eslint/typescript-estree'
+// import { withoutProjectParserOptions } from '@typescript-eslint/typescript-estree'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 
@@ -12,6 +12,18 @@ import type {
 } from '../types'
 
 import { moduleRequire } from './module-require'
+
+function withoutProjectParserOptions(
+  opts: TSESLint.ParserOptions,
+): Exclude<
+  TSESLint.ParserOptions,
+  'EXPERIMENTAL_useProjectService' | 'project' | 'projectService'
+> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- The variables are meant to be omitted
+  const { EXPERIMENTAL_useProjectService, project, projectService, ...rest } =
+    opts
+  return rest
+}
 
 const log = debug('eslint-plugin-import-x:parse')
 
@@ -90,9 +102,7 @@ export function parse(
   // "project" or "projects" in parserOptions. Removing these options means the parser will
   // only parse one file in isolate mode, which is much, much faster.
   // https://github.com/import-js/eslint-plugin-import/issues/1408#issuecomment-509298962
-  parserOptions = withoutProjectParserOptions(
-    parserOptions,
-  ) as TSESLint.ParserOptions
+  parserOptions = withoutProjectParserOptions(parserOptions)
 
   // require the parser relative to the main module (i.e., ESLint)
   const parser =
