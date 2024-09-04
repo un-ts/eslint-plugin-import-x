@@ -6,7 +6,7 @@
 
 import path from 'node:path'
 
-import type { TSESTree } from '@typescript-eslint/typescript-estree'
+import type { TSESTree } from '@typescript-eslint/utils'
 
 import { createRule, ExportMap } from '../utils'
 import type { ModuleOptions } from '../utils'
