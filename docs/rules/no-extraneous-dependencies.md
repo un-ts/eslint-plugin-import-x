@@ -9,7 +9,7 @@ Modules have to be installed for this rule to work.
 
 ## Options
 
-This rule supports the following options:
+### Dependency Options
 
 `devDependencies`: If set to `false`, then the rule will show an error when `devDependencies` are imported. Defaults to `true`.
 Type imports are ignored by default.
@@ -34,27 +34,41 @@ You can also use an array of globs instead of literal booleans:
 
 When using an array of globs, the setting will be set to `true` (no errors reported) if the name of the file being linted (i.e. not the imported file/module) matches a single glob in the array, and `false` otherwise.
 
+### Other Options
+
+#### `includeInternal` & `includeTypes`
+
 There are 2 boolean options to opt into checking extra imports that are normally ignored: `includeInternal`, which enables the checking of internal modules, and `includeTypes`, which enables checking of type imports in TypeScript.
 
 ```js
 "import-x/no-extraneous-dependencies": ["error", {"includeInternal": true, "includeTypes": true}]
 ```
 
-Also there is one more option called `packageDir`, this option is to specify the path to the folder containing package.json.
+#### `packageDir`
+
+The `packageDir` option is to specify the path to the folder containing package.json.
 
 If provided as a relative path string, will be computed relative to the current working directory at linter execution time. If this is not ideal (does not work with some editor integrations), consider using `__dirname` to provide a path relative to your configuration.
 
 ```js
-"import-x/no-extraneous-dependencies": ["error", {"packageDir": './some-dir/'}]
+"import-x/no-extraneous-dependencies": ["error", {"packageDir": "./some-dir/"}]
 // or
-"import-x/no-extraneous-dependencies": ["error", {"packageDir": path.join(__dirname, 'some-dir')}]
+"import-x/no-extraneous-dependencies": ["error", {"packageDir": path.join(__dirname, "some-dir")}]
 ```
 
 It may also be an array of multiple paths, to support monorepos or other novel project
 folder layouts:
 
 ```js
-"import-x/no-extraneous-dependencies": ["error", {"packageDir": ['./some-dir/', './root-pkg']}]
+"import-x/no-extraneous-dependencies": ["error", {"packageDir": ["./some-dir/", "./root-pkg"]}]
+```
+
+#### `whitelist`
+
+The `whitelist` option is an optional string array to specify the names of packages that this rule should ignore.
+
+```js
+"import-x/no-extraneous-dependencies": ["error", {"whitelist": ["foo", "bar"]}]
 ```
 
 ## Rule Details

@@ -215,6 +215,7 @@ function reportIfMissing(
   depsOptions: DepsOptions,
   node: TSESTree.Node,
   name: string,
+  whitelist: Set<string> | undefined,
 ) {
   // Do not report when importing types unless option is enabled
   if (
@@ -292,6 +293,10 @@ function reportIfMissing(
 
   const packageName = realPackageName || importPackageName
 
+  if (whitelist?.has(packageName)) {
+    return
+  }
+
   if (declarationStatus.isInDevDeps && !depsOptions.allowDevDeps) {
     context.report({
       node,
@@ -342,6 +347,7 @@ type Options = {
   bundledDependencies?: boolean
   includeInternal?: boolean
   includeTypes?: boolean
+  whitelist?: string[]
 }
 
 type MessageId =
@@ -370,6 +376,7 @@ export = createRule<[Options?], MessageId>({
           packageDir: { type: ['string', 'array'] },
           includeInternal: { type: ['boolean'] },
           includeTypes: { type: ['boolean'] },
+          whitelist: { type: ['array'] },
         },
         additionalProperties: false,
       },
@@ -408,7 +415,14 @@ export = createRule<[Options?], MessageId>({
     return {
       ...moduleVisitor(
         (source, node) => {
-          reportIfMissing(context, deps, depsOptions, node, source.value)
+          reportIfMissing(
+            context,
+            deps,
+            depsOptions,
+            node,
+            source.value,
+            options.whitelist ? new Set(options.whitelist) : undefined,
+          )
         },
         { commonjs: true },
       ),
