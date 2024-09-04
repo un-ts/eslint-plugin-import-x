@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 4.2.0
+
+### Minor Changes
+
+- [#142](https://github.com/un-ts/eslint-plugin-import-x/pull/142) [`f12447e`](https://github.com/un-ts/eslint-plugin-import-x/commit/f12447e72a1104305c852436577df2eadb4acd44) Thanks [@Zamiell](https://github.com/Zamiell)! - Add new option "whitelist" for rule "no-extraneous-dependencies"
+
+### Patch Changes
+
+- [#146](https://github.com/un-ts/eslint-plugin-import-x/pull/146) [`e5e4580`](https://github.com/un-ts/eslint-plugin-import-x/commit/e5e45805e64ebb49a0331b21785a5f9d03b5cc02) Thanks [@SukkaW](https://github.com/SukkaW)! - Fix https://github.com/nuxt/eslint/issues/494 by avoid importing from `@typescript-eslint/typescript-estree`.
+
 ## 4.1.1
 
 ### Patch Changes
