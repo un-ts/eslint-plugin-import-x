@@ -177,6 +177,7 @@ export = createRule<[Options?], MessageId>({
     function commentAfterImport(
       node: TSESTree.Node,
       nextComment: TSESTree.Comment,
+      type: 'import' | 'require',
     ) {
       const lineDifference = getLineDifference(node, nextComment)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
@@ -197,7 +198,7 @@ export = createRule<[Options?], MessageId>({
           data: {
             count: options.count,
             lineSuffix: options.count > 1 ? 's' : '',
-            type: 'import',
+            type,
           },
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
@@ -253,7 +254,7 @@ export = createRule<[Options?], MessageId>({
       }
 
       if (nextComment) {
-        commentAfterImport(node, nextComment)
+        commentAfterImport(node, nextComment, 'import')
       } else if (
         nextNode &&
         nextNode.type !== 'ImportDeclaration' &&
@@ -301,7 +302,33 @@ export = createRule<[Options?], MessageId>({
             (!nextRequireCall ||
               !containsNodeOrEqual(nextStatement, nextRequireCall))
           ) {
-            checkForNewLine(statementWithRequireCall, nextStatement, 'require')
+            let nextComment
+            if (
+              'comments' in statementWithRequireCall.parent &&
+              statementWithRequireCall.parent.comments !== undefined &&
+              options.considerComments
+            ) {
+              const endLine = node.loc.end.line
+              nextComment = statementWithRequireCall.parent.comments.find(
+                o =>
+                  o.loc.start.line >= endLine &&
+                  o.loc.start.line <= endLine + options.count + 1,
+              )
+            }
+
+            if (nextComment && nextComment !== undefined) {
+              commentAfterImport(
+                statementWithRequireCall,
+                nextComment,
+                'require',
+              )
+            } else {
+              checkForNewLine(
+                statementWithRequireCall,
+                nextStatement,
+                'require',
+              )
+            }
           }
         }
       },
