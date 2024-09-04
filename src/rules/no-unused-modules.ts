@@ -291,13 +291,6 @@ const determineUsage = () => {
   }
 }
 
-const getSrc = (src?: string[]) => {
-  if (src) {
-    return src
-  }
-  return [process.cwd()]
-}
-
 /**
  * prepare the lists of existing imports and exports - should only be executed once at
  * the start of a new eslint run
@@ -306,7 +299,7 @@ let srcFiles: Set<string>
 let lastPrepareKey: string
 
 const doPreparation = (
-  src: string[] = [],
+  src: string[],
   ignoreExports: string[],
   context: RuleContext,
 ) => {
@@ -324,7 +317,7 @@ const doPreparation = (
   ignoredFiles.clear()
   filesOutsideSrc.clear()
 
-  srcFiles = resolveFiles(getSrc(src), ignoreExports, context)
+  srcFiles = resolveFiles(src, ignoreExports, context)
   prepareImportsAndExports(srcFiles, context)
   determineUsage()
   lastPrepareKey = prepareKey
@@ -486,7 +479,7 @@ export = createRule<Options[], MessageId>({
   defaultOptions: [],
   create(context) {
     const {
-      src,
+      src = [process.cwd()],
       ignoreExports = [],
       missingExports,
       unusedExports,
@@ -559,7 +552,7 @@ export = createRule<Options[], MessageId>({
 
       // make sure file to be linted is included in source files
       if (!srcFiles.has(filename)) {
-        srcFiles = resolveFiles(getSrc(src), ignoreExports, context)
+        srcFiles = resolveFiles(src, ignoreExports, context)
         if (!srcFiles.has(filename)) {
           filesOutsideSrc.add(filename)
           return
