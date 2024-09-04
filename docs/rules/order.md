@@ -77,6 +77,25 @@ import foo from './foo'
 var path = require('path')
 ```
 
+## Limitations of `--fix`
+
+Unbound imports are assumed to have side effects, and will never be moved/reordered. This can cause other imports to get "stuck" around them, and the fix to fail.
+
+```javascript
+import b from 'b'
+import 'format.css' // This will prevent --fix from working.
+import a from 'a'
+```
+
+As a workaround, move unbound imports to be entirely above or below bound ones.
+
+```javascript
+import 'format1.css' // OK
+import b from 'b'
+import a from 'a'
+import 'format2.css' // OK
+```
+
 ## Options
 
 This rule supports the following options:
@@ -180,7 +199,8 @@ Example:
 ### `pathGroupsExcludedImportTypes: [array]`
 
 This defines import types that are not handled by configured pathGroups.
-This is mostly needed when you want to handle path groups that look like external imports.
+
+If you have added path groups with patterns that look like `"builtin"` or `"external"` imports, you have to remove this group (`"builtin"` and/or `"external"`) from the default exclusion list (e.g., `["builtin", "external", "object"]`, etc) to sort these path groups correctly.
 
 Example:
 
@@ -202,29 +222,7 @@ Example:
 }
 ```
 
-You can also use `patterns`(e.g., `react`, `react-router-dom`, etc).
-
-Example:
-
-```json
-{
-  "import-x/order": [
-    "error",
-    {
-      "pathGroups": [
-        {
-          "pattern": "react",
-          "group": "builtin",
-          "position": "before"
-        }
-      ],
-      "pathGroupsExcludedImportTypes": ["react"]
-    }
-  ]
-}
-```
-
-The default value is `["builtin", "external", "object"]`.
+[Import Type](https://github.com/un-ts/eslint-plugin-import-x/blob/ea7c13eb9b18357432e484b25dfa4451eca69c5b/src/utils/import-type.ts#L145) is resolved as a fixed string in predefined set, it can't be a `patterns` (e.g., `react`, `react-router-dom`, etc).
 
 ### `newlines-between: [ignore|always|always-and-inside-groups|never]`
 
