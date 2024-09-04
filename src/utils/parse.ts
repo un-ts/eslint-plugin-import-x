@@ -13,6 +13,7 @@ import type {
 
 import { moduleRequire } from './module-require'
 
+// https://github.com/nuxt/eslint/issues/494
 function withoutProjectParserOptions(
   opts: TSESLint.ParserOptions,
 ): Exclude<
