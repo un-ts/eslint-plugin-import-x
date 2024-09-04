@@ -224,7 +224,9 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     test({
       code: 'import "not-a-dependency"',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
-      options: [{ packageDir: packageDirMonoRepoRoot, whitelist: ["not-a-dependency"] }],
+      options: [
+        { packageDir: packageDirMonoRepoRoot, whitelist: ['not-a-dependency'] },
+      ],
     }),
   ],
   invalid: [
