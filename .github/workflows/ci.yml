@@ -4,6 +4,10 @@ on:
   - push
   - pull_request
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   ci:
     name: Lint and Test with Node.js ${{ matrix.node }} and ESLint ${{ matrix.eslint }} on ${{ matrix.os }}
