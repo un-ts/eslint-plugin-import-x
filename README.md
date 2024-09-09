@@ -211,8 +211,8 @@ export default [
     },
     rules: {
       'no-unused-vars': 'off',
-      'import/no-dynamic-require': 'warn',
-      'import/no-nodejs-modules': 'warn',
+      'import-x/no-dynamic-require': 'warn',
+      'import-x/no-nodejs-modules': 'warn',
     },
   },
 ]
