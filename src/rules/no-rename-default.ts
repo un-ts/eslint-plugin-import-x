@@ -182,8 +182,8 @@ export = createRule<[Options?], MessageId>({
       }
 
       // Some packages have a default export that is meant to be renamed, like "typescript-eslint".
-      if (defaultExportName === "_default") {
-        return;
+      if (defaultExportName === '_default') {
+        return
       }
 
       context.report({
