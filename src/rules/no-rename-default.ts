@@ -102,7 +102,10 @@ export default createRule<[Options?], MessageId>({
       // "typescript-eslint" has a default export of "_default" and "eslint-plugin-jsdoc" has a
       // default export of "index".
       const defaultExportNameTrimmed = defaultExportName.replace(/^_+/, '') // Trim leading underscores.
-      if (defaultExportNameTrimmed === 'default' || defaultExportNameTrimmed == 'index') {
+      if (
+        defaultExportNameTrimmed === 'default' ||
+        defaultExportNameTrimmed == 'index'
+      ) {
         return
       }
 
