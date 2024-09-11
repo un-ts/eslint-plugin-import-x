@@ -32,14 +32,73 @@ export type DocStyle = 'jsdoc' | 'tomdoc'
 
 export type Arrayable<T> = T | readonly T[]
 
+export type ResultNotFound = {
+  found: false
+  path?: undefined
+}
+
+export type ResultFound = {
+  found: true
+  path: string | null
+}
+
+export type ResolvedResult = ResultNotFound | ResultFound
+
+export type ResolverResolve = (
+  modulePath: string,
+  sourceFile: string,
+  config: unknown,
+) => ResolvedResult
+
+export type ResolverResolveImport = (
+  modulePath: string,
+  sourceFile: string,
+  config: unknown,
+) => string | undefined
+
+export type Resolver = {
+  interfaceVersion?: 1 | 2
+  resolve: ResolverResolve
+  resolveImport: ResolverResolveImport
+}
+
+export type ResolverName = LiteralUnion<
+  'node' | 'typescript' | 'webpack',
+  string
+>
+
+export type ResolverRecord = {
+  node?: boolean | NodeResolverOptions
+  typescript?: boolean | TsResolverOptions
+  webpack?: WebpackResolverOptions
+  [resolve: string]: unknown
+}
+
+export type ResolverObject = {
+  // node, typescript, webpack...
+  name: ResolverName
+
+  // Enabled by default
+  enable?: boolean
+
+  // Options passed to the resolver
+  options?:
+    | NodeResolverOptions
+    | TsResolverOptions
+    | WebpackResolverOptions
+    | unknown
+
+  // Any object satisfied Resolver type
+  resolver: Resolver
+}
+
 export type ImportResolver =
-  | LiteralUnion<'node' | 'typescript' | 'webpack', string>
-  | {
-      node?: boolean | NodeResolverOptions
-      typescript?: boolean | TsResolverOptions
-      webpack?: WebpackResolverOptions
-      [resolve: string]: unknown
-    }
+  | ResolverName
+  | ResolverRecord
+  | ResolverObject
+  | ResolverName[]
+  | ResolverRecord[]
+  | ResolverObject[]
 
 export type ImportSettings = {
   cache?: {
@@ -53,7 +112,7 @@ export type ImportSettings = {
   internalRegex?: string
   parsers?: Record<string, readonly FileExtension[]>
   resolve?: NodeResolverOptions
-  resolver?: Arrayable<ImportResolver>
+  resolver?: ImportResolver
 }
 
 export type WithPluginName<T extends string | object> = T extends string
