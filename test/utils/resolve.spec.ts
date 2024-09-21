@@ -104,39 +104,6 @@ describe('resolve', () => {
     expect(testContextReports.length).toBe(0)
   })
 
-  it('respects import-x/resolver as array of strings', () => {
-    const context = testContext({
-      'import-x/resolver': ['./foo-bar-resolver-v2', './foo-bar-resolver-v1'],
-    })
-
-    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
-  })
-
-  it('respects import-x/resolver as object', () => {
-    const context = testContext({
-      'import-x/resolver': { './foo-bar-resolver-v2': {} },
-    })
-
-    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
-  })
-
-  it('respects import-x/resolver as array of objects', () => {
-    const context = testContext({
-      'import-x/resolver': [
-        { './foo-bar-resolver-v2': {} },
-        { './foo-bar-resolver-v1': {} },
-      ],
-    })
-
-    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
-  })
-
-  it('finds resolvers from the source files rather than eslint-plugin-import-x/utils', () => {
-    const context = testContext({ 'import-x/resolver': { foo: {} } })
-
-    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
-  })
-
   it('reports invalid import-x/resolver config', () => {
     const context = testContext({
       // @ts-expect-error - testing
@@ -298,52 +265,6 @@ describe('resolve', () => {
           }),
         ).toBeUndefined()
         expect(testContextReports.length).toBe(0)
-      })
-
-      it('respects import-x/resolver as array of strings', () => {
-        const context = testContext({
-          'import-x/resolver': [
-            './foo-bar-resolver-v2',
-            './foo-bar-resolver-v1',
-          ],
-        })
-
-        expect(resolve('../fixtures/foo', context)).toBe(
-          testFilePath('./bar.jsx'),
-        )
-      })
-
-      it('respects import-x/resolver as object', () => {
-        const context = testContext({
-          'import-x/resolver': { './foo-bar-resolver-v2': {} },
-        })
-
-        expect(resolve('../fixtures/foo', context)).toBe(
-          testFilePath('./bar.jsx'),
-        )
-      })
-
-      it('respects import-x/resolver as array of objects', () => {
-        const context = testContext({
-          'import-x/resolver': [
-            { './foo-bar-resolver-v2': {} },
-            { './foo-bar-resolver-v1': {} },
-          ],
-        })
-
-        expect(resolve('../fixtures/foo', context)).toBe(
-          testFilePath('./bar.jsx'),
-        )
-      })
-
-      it('finds resolvers from the source files rather than eslint-plugin-import-x/utils', () => {
-        const context = testContext({
-          'import-x/resolver': { foo: {} },
-        })
-
-        expect(resolve('../fixtures/foo', context)).toBe(
-          testFilePath('./bar.jsx'),
-        )
       })
 
       it('reports invalid import-x/resolver config', () => {
@@ -538,5 +459,214 @@ describe('resolve', () => {
         })
       })
     }
+  })
+
+  describe('respects import-x/resolver', () => {
+    it('as resolver package name(s)', () => {
+      expect(
+        resolve(
+          '../fixtures/foo',
+          testContext({ 'import-x/resolver': { 'foo-v2': {} } }),
+        ),
+      ).toBe(testFilePath('./bar.jsx'))
+
+      expect(
+        resolve(
+          '../fixtures/foo',
+          testContext({
+            'import-x/resolver': [{ 'foo-v2': {} }, { 'foo-v1': {} }],
+          }),
+        ),
+      ).toBe(testFilePath('./bar.jsx'))
+    })
+
+    it('as resolver file path(s)', () => {
+      expect(
+        resolve(
+          '../fixtures/foo',
+          testContext({
+            'import-x/resolver': './foo-bar-resolver-v2',
+          }),
+        ),
+      ).toBe(testFilePath('./bar.jsx'))
+
+      expect(
+        resolve(
+          '../fixtures/foo',
+          testContext({
+            'import-x/resolver': [
+              './foo-bar-resolver-v2',
+              './foo-bar-resolver-v1',
+            ],
+          }),
+        ),
+      ).toBe(testFilePath('./bar.jsx'))
+    })
+
+    it('as resolver record(s)', () => {
+      expect(
+        resolve(
+          '../fixtures/foo',
+          testContext({
+            'import-x/resolver': { './foo-bar-resolver-v2': {} },
+          }),
+        ),
+      ).toBe(testFilePath('./bar.jsx'))
+
+      expect(
+        resolve(
+          '../fixtures/foo',
+          testContext({
+            'import-x/resolver': [
+              { './foo-bar-resolver-v2': {} },
+              { './foo-bar-resolver-v1': {} },
+            ],
+          }),
+        ),
+      ).toBe(testFilePath('./bar.jsx'))
+    })
+
+    it('as resolver object(s)', async () => {
+      // @ts-expect-error - no types for resolver
+      const resolverV1 = await import('../fixtures/foo-bar-resolver-v1.js')
+      // @ts-expect-error - no types for resolver
+      const resolverV2 = await import('../fixtures/foo-bar-resolver-v2.js')
+
+      expect(
+        resolve(
+          '../fixtures/foo',
+          testContext({
+            'import-x/resolver': {
+              name: 'foo-bar-resolver-v2',
+              resolver: resolverV2,
+            },
+          }),
+        ),
+      ).toBe(testFilePath('./bar.jsx'))
+
+      expect(
+        resolve(
+          '../fixtures/foo',
+          testContext({
+            'import-x/resolver': [
+              {
+                name: 'foo-bar-resolver-v2',
+                resolver: resolverV2,
+              },
+              {
+                name: 'foo-bar-resolver-v1',
+                resolver: resolverV1,
+              },
+            ],
+          }),
+        ),
+      ).toBe(testFilePath('./bar.jsx'))
+    })
+
+    // context.getPhysicalFilename() is available in ESLint 7.28+
+    ;(semver.satisfies(eslintPkg.version, '>= 7.28')
+      ? describe
+      : describe.skip)('getPhysicalFilename()', () => {
+      it('as resolver package name(s)', () => {
+        expect(
+          resolve(
+            '../fixtures/foo',
+            testContext({ 'import-x/resolver': { 'foo-v2': {} } }),
+          ),
+        ).toBe(testFilePath('./bar.jsx'))
+
+        expect(
+          resolve(
+            '../fixtures/foo',
+            testContext({
+              'import-x/resolver': [{ 'foo-v2': {} }, { 'foo-v1': {} }],
+            }),
+          ),
+        ).toBe(testFilePath('./bar.jsx'))
+      })
+
+      it('as resolver file path(s)', () => {
+        expect(
+          resolve(
+            '../fixtures/foo',
+            testContext({
+              'import-x/resolver': './foo-bar-resolver-v2',
+            }),
+          ),
+        ).toBe(testFilePath('./bar.jsx'))
+
+        expect(
+          resolve(
+            '../fixtures/foo',
+            testContext({
+              'import-x/resolver': [
+                './foo-bar-resolver-v2',
+                './foo-bar-resolver-v1',
+              ],
+            }),
+          ),
+        ).toBe(testFilePath('./bar.jsx'))
+      })
+
+      it('as resolver record(s)', () => {
+        expect(
+          resolve(
+            '../fixtures/foo',
+            testContext({
+              'import-x/resolver': { './foo-bar-resolver-v2': {} },
+            }),
+          ),
+        ).toBe(testFilePath('./bar.jsx'))
+
+        expect(
+          resolve(
+            '../fixtures/foo',
+            testContext({
+              'import-x/resolver': [
+                { './foo-bar-resolver-v2': {} },
+                { './foo-bar-resolver-v1': {} },
+              ],
+            }),
+          ),
+        ).toBe(testFilePath('./bar.jsx'))
+      })
+
+      it('as resolver object(s)', async () => {
+        // @ts-expect-error - no types for resolver
+        const resolverV1 = await import('../fixtures/foo-bar-resolver-v1.js')
+        // @ts-expect-error - no types for resolver
+        const resolverV2 = await import('../fixtures/foo-bar-resolver-v2.js')
+
+        expect(
+          resolve(
+            '../fixtures/foo',
+            testContext({
+              'import-x/resolver': {
+                name: 'foo-bar-resolver-v2',
+                resolver: resolverV2,
+              },
+            }),
+          ),
+        ).toBe(testFilePath('./bar.jsx'))
+
+        expect(
+          resolve(
+            '../fixtures/foo',
+            testContext({
+              'import-x/resolver': [
+                {
+                  name: 'foo-bar-resolver-v2',
+                  resolver: resolverV2,
+                },
+                {
+                  name: 'foo-bar-resolver-v1',
+                  resolver: resolverV1,
+                },
+              ],
+            }),
+          ),
+        ).toBe(testFilePath('./bar.jsx'))
+      })
+    })
   })
 })
