@@ -302,15 +302,15 @@ module.exports = {
 
 ```js
 // .eslintrc.mjs
-import myResolver from '../../../my-resolver'
+import tsResolver from 'eslint-import-resolver-typescript'
 
 export default {
   settings: {
     'import-x/resolver': {
-      name: 'myResolver', // required, could be any string you like
+      name: 'tsResolver', // required, could be any string you like
       // enable: false, // optional, defaults to true
       options: { someConfig: value }, // optional, options to pass to the resolver
-      resolver: myResolver, // required, the resolver object
+      resolver: tsResolver, // required, the resolver object
     },
   },
 }
@@ -318,15 +318,15 @@ export default {
 
 ```js
 // .eslintrc.cjs
-const myResolver = require('../../../my-resolver')
+const tsResolver = require('eslint-import-resolver-typescript')
 
 module.exports = {
   settings: {
     'import-x/resolver': {
-      name: 'myResolver', // required, could be any string you like
+      name: 'tsResolver', // required, could be any string you like
       // enable: false, // optional, defaults to true
       options: { someConfig: value }, // optional, options to pass to the resolver
-      resolver: myResolver, // required, the resolver object
+      resolver: tsResolver, // required, the resolver object
     },
   },
 }
