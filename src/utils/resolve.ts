@@ -238,7 +238,6 @@ function normalizeConfigResolvers(
     }
   }
 
-
   return [...map.values()]
 }
 

@@ -44,22 +44,22 @@ export type ResultFound = {
 
 export type ResolvedResult = ResultNotFound | ResultFound
 
-export type ResolverResolve = (
+export type ResolverResolve<T = unknown> = (
   modulePath: string,
   sourceFile: string,
-  config: unknown,
+  config: T,
 ) => ResolvedResult
 
-export type ResolverResolveImport = (
+export type ResolverResolveImport<T = unknown> = (
   modulePath: string,
   sourceFile: string,
-  config: unknown,
+  config: T,
 ) => string | undefined
 
-export type Resolver = {
+export type Resolver<T = unknown, U = T> = {
   interfaceVersion?: 1 | 2
-  resolve: ResolverResolve
-  resolveImport: ResolverResolveImport
+  resolve: ResolverResolve<T>
+  resolveImport: ResolverResolveImport<U>
 }
 
 export type ResolverName = LiteralUnion<
