@@ -298,6 +298,40 @@ module.exports = {
 }
 ```
 
+- use the `import` or `require` syntax to directly import the resolver object:
+
+```js
+// .eslintrc.mjs
+import myResolver from '../../../my-resolver'
+
+export default {
+  settings: {
+    'import-x/resolver': {
+      name: 'myResolver', // required, could be any string you like
+      // enable: false, // optional, defaults to true
+      options: { someConfig: value }, // optional, options to pass to the resolver
+      resolver: myResolver, // required, the resolver object
+    },
+  },
+}
+```
+
+```js
+// .eslintrc.cjs
+const myResolver = require('../../../my-resolver')
+
+module.exports = {
+  settings: {
+    'import-x/resolver': {
+      name: 'myResolver', // required, could be any string you like
+      // enable: false, // optional, defaults to true
+      options: { someConfig: value }, // optional, options to pass to the resolver
+      resolver: myResolver, // required, the resolver object
+    },
+  },
+}
+```
+
 Relative paths will be resolved relative to the source's nearest `package.json` or
 the process's current working directory if no `package.json` is found.
 
