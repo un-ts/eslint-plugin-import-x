@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.3.0
+
+### Minor Changes
+
+- [#159](https://github.com/un-ts/eslint-plugin-import-x/pull/159) [`4da5388`](https://github.com/un-ts/eslint-plugin-import-x/commit/4da5388d49ab457d22cb3eb846b0120f1914a0d1) Thanks [@GoodbyeNJN](https://github.com/GoodbyeNJN)! - feat: add support for using resolver object directly in settings
+
 ## 4.2.1
 
 ### Patch Changes
