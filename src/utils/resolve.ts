@@ -5,45 +5,17 @@ import path from 'node:path'
 import stableHash from 'stable-hash'
 
 import type {
-  Arrayable,
-  ImportResolver,
   ImportSettings,
   PluginSettings,
   RuleContext,
+  Resolver,
+  ImportResolver,
+  ResolverRecord,
+  ResolverObject,
 } from '../types'
 
 import { ModuleCache } from './module-cache'
 import { pkgDir } from './pkg-dir'
-
-export type ResultNotFound = {
-  found: false
-  path?: undefined
-}
-
-export type ResultFound = {
-  found: true
-  path: string | null
-}
-
-export type ResolvedResult = ResultNotFound | ResultFound
-
-export type ResolverResolve = (
-  modulePath: string,
-  sourceFile: string,
-  config: unknown,
-) => ResolvedResult
-
-export type ResolverResolveImport = (
-  modulePath: string,
-  sourceFile: string,
-  config: unknown,
-) => string | undefined
-
-export type Resolver = {
-  interfaceVersion?: 1 | 2
-  resolve: ResolverResolve
-  resolveImport: ResolverResolveImport
-}
 
 export const CASE_SENSITIVE_FS = !fs.existsSync(
   path.resolve(
@@ -184,11 +156,14 @@ function fullResolve(
     node: settings['import-x/resolve'],
   } // backward compatibility
 
-  const resolvers = resolverReducer(configResolvers, new Map())
+  const resolvers = normalizeConfigResolvers(configResolvers, sourceFile)
 
-  for (const [name, config] of resolvers) {
-    const resolver = requireResolver(name, sourceFile)
-    const resolved = withResolver(resolver, config)
+  for (const { enable, options, resolver } of resolvers) {
+    if (!enable) {
+      continue
+    }
+
+    const resolved = withResolver(resolver, options)
 
     if (!resolved.found) {
       continue
@@ -212,30 +187,58 @@ export function relative(
   return fullResolve(modulePath, sourceFile, settings).path
 }
 
-function resolverReducer(
-  resolvers: Arrayable<ImportResolver>,
-  map: Map<string, unknown>,
+function normalizeConfigResolvers(
+  resolvers: ImportResolver,
+  sourceFile: string,
 ) {
-  if (Array.isArray(resolvers)) {
-    for (const r of resolvers as ImportResolver[]) resolverReducer(r, map)
-    return map
-  }
+  const resolverArray = Array.isArray(resolvers) ? resolvers : [resolvers]
+  const map = new Map<string, Required<ResolverObject>>()
 
-  if (typeof resolvers === 'string') {
-    map.set(resolvers, null)
-    return map
-  }
+  for (const nameOrRecordOrObject of resolverArray) {
+    if (typeof nameOrRecordOrObject === 'string') {
+      const name = nameOrRecordOrObject
 
-  if (typeof resolvers === 'object') {
-    for (const [key, value] of Object.entries(resolvers)) {
-      map.set(key, value)
+      map.set(name, {
+        name,
+        enable: true,
+        options: undefined,
+        resolver: requireResolver(name, sourceFile),
+      })
+    } else if (typeof nameOrRecordOrObject === 'object') {
+      if (nameOrRecordOrObject.name && nameOrRecordOrObject.resolver) {
+        const object = nameOrRecordOrObject as ResolverObject
+
+        const { name, enable = true, options, resolver } = object
+        map.set(name, { name, enable, options, resolver })
+      } else {
+        const record = nameOrRecordOrObject as ResolverRecord
+
+        for (const [name, enableOrOptions] of Object.entries(record)) {
+          if (typeof enableOrOptions === 'boolean') {
+            map.set(name, {
+              name,
+              enable: enableOrOptions,
+              options: undefined,
+              resolver: requireResolver(name, sourceFile),
+            })
+          } else {
+            map.set(name, {
+              name,
+              enable: true,
+              options: enableOrOptions,
+              resolver: requireResolver(name, sourceFile),
+            })
+          }
+        }
+      }
+    } else {
+      const err = new Error('invalid resolver config')
+      err.name = ERROR_NAME
+      throw err
     }
-    return map
   }
 
-  const err = new Error('invalid resolver config')
-  err.name = ERROR_NAME
-  throw err
+  return [...map.values()]
 }
 
 function getBaseDir(sourceFile: string): string {
