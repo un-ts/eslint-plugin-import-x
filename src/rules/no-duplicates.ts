@@ -463,12 +463,16 @@ export = createRule<[Options?], MessageId>({
         moduleMaps.set(parent, map)
       }
 
-      if (!preferInline && n.importKind === 'type') {
-        return n.specifiers.length > 0 &&
-          n.specifiers[0].type === 'ImportDefaultSpecifier'
-          ? map.defaultTypesImported
-          : map.namedTypesImported
+      if (n.importKind === 'type') {
+        if (n.specifiers.length > 0 && n.specifiers[0].type === 'ImportDefaultSpecifier') {
+          return map.defaultTypesImported;
+        }
+
+        if (!preferInline) {
+          return map.namedTypesImported;
+        }
       }
+
       if (
         !preferInline &&
         n.specifiers.some(
