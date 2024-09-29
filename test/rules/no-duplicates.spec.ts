@@ -692,6 +692,11 @@ describe('TypeScript', () => {
       ...parserConfig,
       options: [{ 'prefer-inline': true }],
     }),
+    test({
+      code: "import type A from 'foo';import { B } from 'foo';",
+      ...parserConfig,
+      options: [{ 'prefer-inline': true }],
+    }),
   ]
 
   const invalid = [
