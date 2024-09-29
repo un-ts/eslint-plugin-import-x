@@ -1,11 +1,14 @@
-import type { TSESTree } from '@typescript-eslint/utils'
+import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils'
 
 import type { RuleContext } from '../types'
 
 export const importDeclaration = (
   context: RuleContext,
-  node: TSESTree.Node,
+  node: TSESTree.ImportDefaultSpecifier,
 ) => {
+  if (node.parent && node.parent.type === AST_NODE_TYPES.ImportDeclaration) {
+    return node.parent
+  }
   const ancestors = context.sourceCode.getAncestors(node)
   return ancestors[ancestors.length - 1] as TSESTree.ImportDeclaration
 }
