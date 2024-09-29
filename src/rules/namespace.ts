@@ -151,7 +151,10 @@ export = createRule<[Options], MessageId>({
 
       // same as above, but does not add names to local map
       ExportNamespaceSpecifier(namespace) {
-        const declaration = importDeclaration(context, namespace as TSESTree.ImportDefaultSpecifier)
+        const declaration = importDeclaration(
+          context,
+          namespace as TSESTree.ImportDefaultSpecifier,
+        )
 
         const imports = ExportMap.get(declaration.source.value, context)
         if (imports == null) {
