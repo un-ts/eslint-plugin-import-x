@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.3.1
+
+### Patch Changes
+
+- [#162](https://github.com/un-ts/eslint-plugin-import-x/pull/162) [`38d0081`](https://github.com/un-ts/eslint-plugin-import-x/commit/38d0081a20adb877c77f8a873e7fd4194b86ecc1) Thanks [@AaronMoat](https://github.com/AaronMoat)! - Fix issue where `no-duplicates` rule with `prefer-inline` incorrectly marks default type and named type imports as duplicates
+
 ## 4.3.0
 
 ### Minor Changes
