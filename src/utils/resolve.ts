@@ -153,10 +153,6 @@ function fullResolve(
     return { found: true, path: cachedPath }
   }
 
-  function cache(resolvedPath: string | null) {
-    fileExistsCache.set(cacheKey, resolvedPath)
-  }
-
   function withResolver(resolver: Resolver, config: unknown) {
     if (resolver.interfaceVersion === 2) {
       return resolver.resolve(modulePath, sourceFile, config)
@@ -195,7 +191,7 @@ function fullResolve(
     }
 
     // else, counts
-    cache(resolved.path as string | null)
+    fileExistsCache.set(cacheKey, resolved.path as string | null)
     return resolved
   }
 
