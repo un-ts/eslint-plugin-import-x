@@ -464,12 +464,15 @@ export = createRule<[Options?], MessageId>({
       }
 
       if (n.importKind === 'type') {
-        if (n.specifiers.length > 0 && n.specifiers[0].type === 'ImportDefaultSpecifier') {
-          return map.defaultTypesImported;
+        if (
+          n.specifiers.length > 0 &&
+          n.specifiers[0].type === 'ImportDefaultSpecifier'
+        ) {
+          return map.defaultTypesImported
         }
 
         if (!preferInline) {
-          return map.namedTypesImported;
+          return map.namedTypesImported
         }
       }
 
