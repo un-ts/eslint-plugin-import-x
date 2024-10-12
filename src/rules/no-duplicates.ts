@@ -444,6 +444,7 @@ export = createRule<[Options?], MessageId>({
         imported: Map<string, TSESTree.ImportDeclaration[]>
         nsImported: Map<string, TSESTree.ImportDeclaration[]>
         defaultTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+        namespaceTypesImported: Map<string, TSESTree.ImportDeclaration[]>
         namedTypesImported: Map<string, TSESTree.ImportDeclaration[]>
       }
     >()
@@ -458,6 +459,7 @@ export = createRule<[Options?], MessageId>({
           imported: new Map(),
           nsImported: new Map(),
           defaultTypesImported: new Map(),
+          namespaceTypesImported: new Map(),
           namedTypesImported: new Map(),
         }
         moduleMaps.set(parent, map)
@@ -469,6 +471,12 @@ export = createRule<[Options?], MessageId>({
           n.specifiers[0].type === 'ImportDefaultSpecifier'
         ) {
           return map.defaultTypesImported
+        }
+        if (
+          n.specifiers.length > 0 &&
+          n.specifiers[0].type === 'ImportNamespaceSpecifier'
+        ) {
+          return map.namespaceTypesImported
         }
 
         if (!preferInline) {
