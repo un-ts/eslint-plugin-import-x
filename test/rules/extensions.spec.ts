@@ -5,6 +5,15 @@ import { test, testFilePath } from '../utils'
 import rule from 'eslint-plugin-import-x/rules/extensions'
 
 const ruleTester = new TSESLintRuleTester()
+const ruleTesterWithTypeScriptImports = new TSESLintRuleTester({
+  settings: {
+    'import/resolver': {
+      typescript: {
+        alwaysTryTypes: true,
+      },
+    },
+  },
+})
 
 ruleTester.run('extensions', rule, {
   valid: [
@@ -693,6 +702,58 @@ describe('TypeScript', () => {
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
+      }),
+      test({
+        code: 'import type T from "./typescript-declare";',
+        errors: ['Missing file extension for "./typescript-declare"'],
+        options: [
+          'always',
+          {
+            ts: 'never',
+            tsx: 'never',
+            js: 'never',
+            jsx: 'never',
+            checkTypeImports: true,
+          },
+        ],
+      }),
+      test({
+        code: 'export type { MyType } from "./typescript-declare";',
+        errors: ['Missing file extension for "./typescript-declare"'],
+        options: [
+          'always',
+          {
+            ts: 'never',
+            tsx: 'never',
+            js: 'never',
+            jsx: 'never',
+            checkTypeImports: true,
+          },
+        ],
+      }),
+    ],
+  })
+  ruleTesterWithTypeScriptImports.run('extensions', rule, {
+    valid: [
+      test({
+        code: 'import type { MyType } from "./typescript-declare.ts";',
+        options: ['always', { checkTypeImports: true }],
+      }),
+      test({
+        code: 'export type { MyType } from "./typescript-declare.ts";',
+        options: ['always', { checkTypeImports: true }],
+      }),
+    ],
+    invalid: [
+      test({
+        code: 'import type { MyType } from "./typescript-declare";',
+        errors: ['Missing file extension for "./typescript-declare"'],
+        options: ['always', { checkTypeImports: true }],
+      }),
+      test({
+        code: 'export type { MyType } from "./typescript-declare";',
+        errors: ['Missing file extension for "./typescript-declare"'],
+        options: ['always', { checkTypeImports: true }],
       }),
     ],
   })
