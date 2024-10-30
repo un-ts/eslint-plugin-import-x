@@ -17,7 +17,7 @@ ruleTester.run('no-named-export', rule, {
         parserOptions: {
           sourceType: 'script',
         },
-      }
+      },
     }),
     test({
       code: 'export default function bar() {};',

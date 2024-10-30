@@ -14,7 +14,7 @@ ruleTester.run('no-default-export', rule, {
         parserOptions: {
           sourceType: 'script',
         },
-      }
+      },
     }),
     test({
       code: 'module.exports = function foo() {}',

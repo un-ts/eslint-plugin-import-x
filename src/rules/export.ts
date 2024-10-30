@@ -1,4 +1,5 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils'
+import { AST_NODE_TYPES } from '@typescript-eslint/utils'
+import type { TSESTree } from '@typescript-eslint/utils'
 
 import {
   ExportMap,
@@ -6,7 +7,6 @@ import {
   createRule,
   getValue,
 } from '../utils'
-import type { type } from 'node:os';
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:
@@ -40,12 +40,15 @@ const tsTypePrefix = 'type:'
  * ```
  */
 function removeTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
-  nodes.forEach((node) => {
-    const declType = node.type === AST_NODE_TYPES.ExportDefaultDeclaration ? node.declaration.type : node.parent?.type;
+  for (const node of nodes) {
+    const declType =
+      node.type === AST_NODE_TYPES.ExportDefaultDeclaration
+        ? node.declaration.type
+        : node.parent?.type
     if (declType === AST_NODE_TYPES.TSDeclareFunction) {
-      nodes.delete(node);
+      nodes.delete(node)
     }
-  });
+  }
 }
 
 /**
@@ -266,7 +269,7 @@ export = createRule<[], MessageId>({
               continue
             }
 
-            removeTypescriptFunctionOverloads(nodes);
+            removeTypescriptFunctionOverloads(nodes)
 
             if (nodes.size <= 1) {
               continue

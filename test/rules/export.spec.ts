@@ -64,8 +64,8 @@ ruleTester.run('export', rule, {
       export default function foo(param: string, param1?: number): boolean {
         return param && param1;
       }
-    `
-    }
+    `,
+    },
   ],
 
   invalid: [
@@ -175,11 +175,8 @@ ruleTester.run('export', rule, {
         export default function a() {}
         export { x as default };
       `,
-      errors: [
-        'Multiple default exports.',
-        'Multiple default exports.',
-      ],
-    })
+      errors: ['Multiple default exports.', 'Multiple default exports.'],
+    }),
   ],
 })
 

@@ -34,9 +34,11 @@ describe('ExportMap', () => {
     const mockContext = {
       ...fakeContext,
       parserPath: 'not-real',
-    };
-    expect(ExportMap.get('./named-exports', mockContext)).toBeDefined();
-    expect(ExportMap.get('./named-exports', mockContext)).not.toBe(ExportMap.get('./named-exports', mockContext));
+    }
+    expect(ExportMap.get('./named-exports', mockContext)).toBeDefined()
+    expect(ExportMap.get('./named-exports', mockContext)).not.toBe(
+      ExportMap.get('./named-exports', mockContext),
+    )
   })
 
   it('does not return a cached copy after modification', done => {

@@ -29,7 +29,7 @@ function withoutProjectParserOptions(
 const log = debug('eslint-plugin-import-x:parse')
 
 function keysFromParser(
-  parserPath: string | TSESLint.Parser.ParserModule,
+  _parserPath: string | TSESLint.Parser.ParserModule,
   parserInstance: TSESLint.Parser.ParserModule,
   parsedResult?: TSESLint.Parser.ParseResult,
 ) {
@@ -40,7 +40,11 @@ function keysFromParser(
 
   // The espree parser doesn't have the `parseForESLint` function, so we don't ended up with a
   // `parsedResult` here, but it does expose the visitor keys on the parser instance that we can use.
-  if (parserInstance && 'VisitorKeys' in parserInstance && parserInstance.VisitorKeys) {
+  if (
+    parserInstance &&
+    'VisitorKeys' in parserInstance &&
+    parserInstance.VisitorKeys
+  ) {
     return parserInstance.VisitorKeys as TSESLint.SourceCode.VisitorKeys
   }
   return null
