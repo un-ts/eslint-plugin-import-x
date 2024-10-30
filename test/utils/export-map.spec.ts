@@ -30,6 +30,17 @@ describe('ExportMap', () => {
     )
   })
 
+  it('does not return a cached copy if the parse does not yield a visitor keys', function () {
+    const mockContext = {
+      ...fakeContext,
+      parserPath: 'not-real',
+    }
+    expect(ExportMap.get('./named-exports', mockContext)).toBeDefined()
+    expect(ExportMap.get('./named-exports', mockContext)).not.toBe(
+      ExportMap.get('./named-exports', mockContext),
+    )
+  })
+
   it('does not return a cached copy after modification', done => {
     const firstAccess = ExportMap.get('./mutator', fakeContext)
     expect(firstAccess).toBeDefined()

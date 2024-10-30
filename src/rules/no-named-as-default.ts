@@ -49,6 +49,17 @@ export = createRule<[], MessageId>({
           return
         }
 
+        if (!exportMapOfImported.hasDefault) {
+          // The rule is triggered for default imports/exports, so if the imported module has no default
+          // this means we're dealing with incorrect source code anyway
+          return
+        }
+
+        if (!exportMapOfImported.has(nameValue)) {
+          // The name used locally for the default import was not even used in the imported module.
+          return
+        }
+
         if (
           exportMapOfImported.exports.has('default') &&
           exportMapOfImported.exports.has(nameValue)
