@@ -1,5 +1,29 @@
 # eslint-plugin-import-x
 
+## 4.4.0
+
+### Minor Changes
+
+- [#169](https://github.com/un-ts/eslint-plugin-import-x/pull/169) [`9c58269`](https://github.com/un-ts/eslint-plugin-import-x/commit/9c582692a1f4c5ed9cb38a6fc7405dd17eb98bdb) Thanks [@teidesu](https://github.com/teidesu)! - Add new rule option `checkTypedImports` for `extensions`, backports https://github.com/import-js/eslint-plugin-import/pull/2817
+
+### Patch Changes
+
+- [#171](https://github.com/un-ts/eslint-plugin-import-x/pull/171) [`9715220`](https://github.com/un-ts/eslint-plugin-import-x/commit/9715220615e9f10d372ac7ad2d2c83b32b44a9eb) Thanks [@SukkaW](https://github.com/SukkaW)! - Perf: avoid regexp during parser choosing
+
+- [#171](https://github.com/un-ts/eslint-plugin-import-x/pull/171) [`9715220`](https://github.com/un-ts/eslint-plugin-import-x/commit/9715220615e9f10d372ac7ad2d2c83b32b44a9eb) Thanks [@SukkaW](https://github.com/SukkaW)! - Add extra guard for rule `no-named-as-default`. A few guards are borrowed from https://github.com/import-js/eslint-plugin-import/pull/3032, but we don't sync the rest of changes from upstream since we have already implemented a way more performant check.
+
+- [#171](https://github.com/un-ts/eslint-plugin-import-x/pull/171) [`9715220`](https://github.com/un-ts/eslint-plugin-import-x/commit/9715220615e9f10d372ac7ad2d2c83b32b44a9eb) Thanks [@SukkaW](https://github.com/SukkaW)! - More test cases for `no-named-export` and `no-defualt-export` rule specifically with non-module `sourceType`
+
+- [#171](https://github.com/un-ts/eslint-plugin-import-x/pull/171) [`9715220`](https://github.com/un-ts/eslint-plugin-import-x/commit/9715220615e9f10d372ac7ad2d2c83b32b44a9eb) Thanks [@SukkaW](https://github.com/SukkaW)! - Fix `export` when there is only one `TSDeclareFunction` (https://github.com/import-js/eslint-plugin-import/pull/3065)
+
+- [#171](https://github.com/un-ts/eslint-plugin-import-x/pull/171) [`9715220`](https://github.com/un-ts/eslint-plugin-import-x/commit/9715220615e9f10d372ac7ad2d2c83b32b44a9eb) Thanks [@SukkaW](https://github.com/SukkaW)! - Prevent `ExportMap`'s cache is being tainted by incompatible parser (e.g. old `babel-eslint`). The cache is now skipped w/ incompatible parsers, which might introduce performance impacts only for those who are using incompatible parsers. (https://github.com/import-js/eslint-plugin-import/pull/3062)
+
+- [#171](https://github.com/un-ts/eslint-plugin-import-x/pull/171) [`9715220`](https://github.com/un-ts/eslint-plugin-import-x/commit/9715220615e9f10d372ac7ad2d2c83b32b44a9eb) Thanks [@SukkaW](https://github.com/SukkaW)! - Docs: fix a few typos here and there
+
+- [#168](https://github.com/un-ts/eslint-plugin-import-x/pull/168) [`5de039c`](https://github.com/un-ts/eslint-plugin-import-x/commit/5de039c5ef7415c529445abcfbcca0494487a7a8) Thanks [@hyoban](https://github.com/hyoban)! - Fixes https://github.com/un-ts/eslint-plugin-import-x/issues/167, the `no-duplicates` rule now allows co-existing inline type imports and namespace imports.
+
+- [#171](https://github.com/un-ts/eslint-plugin-import-x/pull/171) [`9715220`](https://github.com/un-ts/eslint-plugin-import-x/commit/9715220615e9f10d372ac7ad2d2c83b32b44a9eb) Thanks [@SukkaW](https://github.com/SukkaW)! - Properly fix espree parser w/ ESLint Flat Config
+
 ## 4.3.1
 
 ### Patch Changes
