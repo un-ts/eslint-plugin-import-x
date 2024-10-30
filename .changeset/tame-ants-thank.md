@@ -2,4 +2,4 @@
 "eslint-plugin-import-x": patch
 ---
 
-support namespace type import
+Fixes https://github.com/un-ts/eslint-plugin-import-x/issues/167, the `no-duplicates` rule now allows co-existing inline type imports and namespace imports.
