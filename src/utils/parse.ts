@@ -37,7 +37,7 @@ function keysFromParser(
   if (parsedResult && parsedResult.visitorKeys) {
     return parsedResult.visitorKeys
   }
-  if (typeof parserPath === 'string' && /.*espree.*/.test(parserPath)) {
+  if (typeof parserPath === 'string' && parserPath.includes('espree')) {
     // @ts-expect-error - no type yet
     return parserInstance.VisitorKeys as TSESLint.SourceCode.VisitorKeys
   }
