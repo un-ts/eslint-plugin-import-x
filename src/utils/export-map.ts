@@ -128,7 +128,11 @@ export class ExportMap {
 
     exportMap.mtime = stats().mtime.valueOf()
 
-    exportCache.set(cacheKey, exportMap)
+    // If the visitor keys were not populated, then we shouldn't save anything to the cache,
+    // since the parse results may not be reliable.
+    if (exportMap.visitorKeys) {
+      exportCache.set(cacheKey, exportMap);
+    }
 
     return exportMap
   }
@@ -149,7 +153,7 @@ export class ExportMap {
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
     try {
-      ;({ ast, visitorKeys } = parse(filepath, content, context))
+      ; ({ ast, visitorKeys } = parse(filepath, content, context))
     } catch (error) {
       m.errors.push(error as ParseError)
       return m // can't continue
@@ -528,17 +532,17 @@ export class ExportMap {
         const exportedName =
           n.type === 'TSNamespaceExportDeclaration'
             ? (
-                n.id ||
-                // @ts-expect-error - legacy parser type
-                n.name
-              ).name
+              n.id ||
+              // @ts-expect-error - legacy parser type
+              n.name
+            ).name
             : ('expression' in n &&
-                n.expression &&
-                (('name' in n.expression && n.expression.name) ||
-                  ('id' in n.expression &&
-                    n.expression.id &&
-                    n.expression.id.name))) ||
-              null
+              n.expression &&
+              (('name' in n.expression && n.expression.name) ||
+                ('id' in n.expression &&
+                  n.expression.id &&
+                  n.expression.id.name))) ||
+            null
 
         const getRoot = (
           node: TSESTree.TSQualifiedName,
@@ -557,7 +561,7 @@ export class ExportMap {
               ('name' in node.id
                 ? node.id.name === exportedName
                 : 'left' in node.id &&
-                  getRoot(node.id).name === exportedName)) ||
+                getRoot(node.id).name === exportedName)) ||
               ('declarations' in node &&
                 node.declarations.find(
                   d => 'name' in d.id && d.id.name === exportedName,
@@ -726,7 +730,7 @@ export class ExportMap {
 
   declare doc: Annotation | undefined
 
-  constructor(public path: string) {}
+  constructor(public path: string) { }
 
   get hasDefault() {
     return this.get('default') != null
