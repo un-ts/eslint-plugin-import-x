@@ -632,6 +632,10 @@ describe('TypeScript', () => {
       ...parserConfig,
     }),
     test({
+      code: "import type { x } from './foo'; import type * as y from './foo'",
+      ...parserConfig,
+    }),
+    test({
       code: "import type x from './foo'; import type y from './bar'",
       ...parserConfig,
     }),
