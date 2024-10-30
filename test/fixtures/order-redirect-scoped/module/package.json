@@ -1,5 +1,5 @@
 {
-  "name": "order-redirect-module",
+  "name": "order-redirect-module-scoped",
   "private": true,
   "main": "../other-module/file.js"
 }

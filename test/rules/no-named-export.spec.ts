@@ -9,6 +9,17 @@ const ruleTester = new TSESLintRuleTester()
 ruleTester.run('no-named-export', rule, {
   valid: [
     test({
+      code: 'module.export.foo = function () {}',
+    }),
+    test({
+      code: 'module.exports = function foo() {}',
+      languageOptions: {
+        parserOptions: {
+          sourceType: 'script',
+        },
+      }
+    }),
+    test({
       code: 'export default function bar() {};',
     }),
     test({
