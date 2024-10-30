@@ -11,8 +11,8 @@ const error = (message: string) => ({ message })
 
 const test = <T extends ValidTestCase>(def: T) =>
   _test({
-    ...def,
     filename: testFilePath('./cycles/depth-zero.js'),
+    ...def,
   })
 
 ruleTester.run('no-cycle', rule, {
