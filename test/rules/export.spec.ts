@@ -58,6 +58,14 @@ ruleTester.run('export', rule, {
         }
       `,
     },
+    {
+      code: `
+      export default function foo(param: string): boolean;
+      export default function foo(param: string, param1?: number): boolean {
+        return param && param1;
+      }
+    `
+    }
   ],
 
   invalid: [
@@ -160,6 +168,18 @@ ruleTester.run('export', rule, {
         },
       },
     }),
+
+    test({
+      code: `
+        export default function a(): void;
+        export default function a() {}
+        export { x as default };
+      `,
+      errors: [
+        'Multiple default exports.',
+        'Multiple default exports.',
+      ],
+    })
   ],
 })
 
@@ -510,7 +530,7 @@ describe('TypeScript', () => {
       }),
       test({
         code: `
-            export function Foo();
+            export function Foo() { };
             export class Foo { }
             export namespace Foo { }
           `,
@@ -529,7 +549,7 @@ describe('TypeScript', () => {
       test({
         code: `
             export const Foo = 'bar';
-            export function Foo();
+            export function Foo() { };
             export namespace Foo { }
           `,
         errors: [
