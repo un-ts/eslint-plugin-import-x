@@ -27,6 +27,9 @@ const properties = {
     ignorePackages: {
       type: 'boolean' as const,
     },
+    checkTypeImports: {
+      type: 'boolean' as const,
+    },
   },
 }
 
@@ -38,6 +41,7 @@ type NormalizedOptions = {
   defaultConfig?: DefaultConfig
   pattern?: Record<FileExtension, DefaultConfig>
   ignorePackages?: boolean
+  checkTypeImports?: boolean
 }
 
 type Options = DefaultConfig | NormalizedOptions
@@ -47,6 +51,7 @@ function buildProperties(context: RuleContext<MessageId, Options[]>) {
     defaultConfig: 'never',
     pattern: {},
     ignorePackages: false,
+    checkTypeImports: false,
   }
 
   for (const obj of context.options) {
@@ -57,7 +62,11 @@ function buildProperties(context: RuleContext<MessageId, Options[]>) {
     }
 
     // If this is not the new structure, transfer all props to result.pattern
-    if (obj.pattern === undefined && obj.ignorePackages === undefined) {
+    if (
+      obj.pattern === undefined &&
+      obj.ignorePackages === undefined &&
+      obj.checkTypeImports === undefined
+    ) {
       Object.assign(result.pattern, obj)
       continue
     }
@@ -70,6 +79,10 @@ function buildProperties(context: RuleContext<MessageId, Options[]>) {
     // If ignorePackages is provided, transfer it to result
     if (obj.ignorePackages !== undefined) {
       result.ignorePackages = obj.ignorePackages
+    }
+
+    if (obj.checkTypeImports !== undefined) {
+      result.checkTypeImports = obj.checkTypeImports
     }
   }
 
@@ -213,8 +226,9 @@ export = createRule<Options[], MessageId>({
         if (!extension || !importPath.endsWith(`.${extension}`)) {
           // ignore type-only imports and exports
           if (
-            ('importKind' in node && node.importKind === 'type') ||
-            ('exportKind' in node && node.exportKind === 'type')
+            !props.checkTypeImports &&
+            (('importKind' in node && node.importKind === 'type') ||
+              ('exportKind' in node && node.exportKind === 'type'))
           ) {
             return
           }
