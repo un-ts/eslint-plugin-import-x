@@ -341,10 +341,10 @@ function testConfig(config: string[] | boolean | undefined, filename: string) {
 
 type Options = {
   packageDir?: string | string[]
-  devDependencies?: boolean
-  optionalDependencies?: boolean
-  peerDependencies?: boolean
-  bundledDependencies?: boolean
+  devDependencies?: boolean | string[]
+  optionalDependencies?: boolean | string[]
+  peerDependencies?: boolean | string[]
+  bundledDependencies?: boolean | string[]
   includeInternal?: boolean
   includeTypes?: boolean
   whitelist?: string[]
