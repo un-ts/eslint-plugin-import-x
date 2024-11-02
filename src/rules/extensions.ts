@@ -10,20 +10,22 @@ import {
   resolve,
 } from '../utils'
 
-const enumValues = {
+const modifierValues = ['always', 'ignorePackages', 'never'] as const
+
+const modifierSchema = {
   type: 'string' as const,
-  enum: ['always', 'ignorePackages', 'never'],
+  enum: [...modifierValues],
 }
 
-const patternProperties = {
+const modifierByFileExtensionSchema = {
   type: 'object' as const,
-  patternProperties: { '.*': enumValues },
+  patternProperties: { '.*': modifierSchema },
 }
 
 const properties = {
   type: 'object' as const,
   properties: {
-    pattern: patternProperties,
+    pattern: modifierByFileExtensionSchema,
     ignorePackages: {
       type: 'boolean' as const,
     },
@@ -33,20 +35,33 @@ const properties = {
   },
 }
 
-type DefaultConfig = (typeof enumValues)['enum'][number]
+type Modifier = (typeof modifierValues)[number]
 
-type MessageId = 'missing' | 'unexpected'
+type ModifierByFileExtension = Partial<Record<string, Modifier>>
+
+type OptionsItemWithPatternProperty = {
+  ignorePackages?: boolean
+  checkTypeImports?: boolean
+  pattern: ModifierByFileExtension
+}
+
+type Options =
+  | []
+  | [Modifier]
+  | [Modifier, OptionsItemWithPatternProperty]
+  | [Modifier, ModifierByFileExtension]
+  | [ModifierByFileExtension]
 
 type NormalizedOptions = {
-  defaultConfig?: DefaultConfig
-  pattern?: Record<FileExtension, DefaultConfig>
+  defaultConfig?: Modifier
+  pattern?: Record<string, Modifier>
   ignorePackages?: boolean
   checkTypeImports?: boolean
 }
 
-type Options = DefaultConfig | NormalizedOptions
+type MessageId = 'missing' | 'unexpected'
 
-function buildProperties(context: RuleContext<MessageId, Options[]>) {
+function buildProperties(context: RuleContext<MessageId, Options>) {
   const result: Required<NormalizedOptions> = {
     defaultConfig: 'never',
     pattern: {},
@@ -61,9 +76,13 @@ function buildProperties(context: RuleContext<MessageId, Options[]>) {
       continue
     }
 
+    if (typeof obj !== 'object' || !obj) {
+      continue
+    }
+
     // If this is not the new structure, transfer all props to result.pattern
     if (
-      obj.pattern === undefined &&
+      (!('pattern' in obj) || obj.pattern === undefined) &&
       obj.ignorePackages === undefined &&
       obj.checkTypeImports === undefined
     ) {
@@ -72,16 +91,16 @@ function buildProperties(context: RuleContext<MessageId, Options[]>) {
     }
 
     // If pattern is provided, transfer all props
-    if (obj.pattern !== undefined) {
+    if ('pattern' in obj && obj.pattern !== undefined) {
       Object.assign(result.pattern, obj.pattern)
     }
 
     // If ignorePackages is provided, transfer it to result
-    if (obj.ignorePackages !== undefined) {
+    if (typeof obj.ignorePackages === 'boolean') {
       result.ignorePackages = obj.ignorePackages
     }
 
-    if (obj.checkTypeImports !== undefined) {
+    if (typeof obj.checkTypeImports === 'boolean') {
       result.checkTypeImports = obj.checkTypeImports
     }
   }
@@ -109,7 +128,7 @@ function isExternalRootModule(file: string) {
   return false
 }
 
-export = createRule<Options[], MessageId>({
+export = createRule<Options, MessageId>({
   name: 'extensions',
   meta: {
     type: 'suggestion',
@@ -122,12 +141,12 @@ export = createRule<Options[], MessageId>({
       anyOf: [
         {
           type: 'array',
-          items: [enumValues],
+          items: [modifierSchema],
           additionalItems: false,
         },
         {
           type: 'array',
-          items: [enumValues, properties],
+          items: [modifierSchema, properties],
           additionalItems: false,
         },
         {
@@ -137,12 +156,12 @@ export = createRule<Options[], MessageId>({
         },
         {
           type: 'array',
-          items: [patternProperties],
+          items: [modifierSchema, modifierByFileExtensionSchema],
           additionalItems: false,
         },
         {
           type: 'array',
-          items: [enumValues, patternProperties],
+          items: [modifierByFileExtensionSchema],
           additionalItems: false,
         },
       ],
