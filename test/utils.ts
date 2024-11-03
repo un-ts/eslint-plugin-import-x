@@ -5,6 +5,7 @@ import type {
   InvalidTestCase as TSESLintInvalidTestCase,
 } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
+import type { RuleModule } from '@typescript-eslint/utils/ts-eslint'
 import type { RuleTester } from 'eslint'
 import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
@@ -94,6 +95,45 @@ export function test<T extends ValidTestCase>(
         ...t.languageOptions?.parserOptions,
       },
     },
+  }
+}
+
+type GetRuleType<TRule> =
+  TRule extends RuleModule<infer MessageIds, infer Options>
+    ? {
+        messageIds: MessageIds
+        options: Options
+      }
+    : never
+
+export function createRuleTestCaseFunction<
+  TRule extends RuleModule<string, unknown[]>,
+  TData extends GetRuleType<TRule> = GetRuleType<TRule>,
+  TTestCase extends
+    | TSESLintValidTestCase<TData['options']>
+    | TSESLintInvalidTestCase<TData['messageIds'], TData['options']> =
+    | TSESLintValidTestCase<TData['options']>
+    | TSESLintInvalidTestCase<TData['messageIds'], TData['options']>,
+>(): <
+  TReturn = TTestCase extends { errors: InvalidTestCaseError[] | number }
+    ? TSESLintInvalidTestCase<TData['messageIds'], TData['options']>
+    : TSESLintValidTestCase<TData['options']>,
+>(
+  t: TTestCase,
+) => TReturn {
+  return t => {
+    return {
+      filename: TEST_FILENAME,
+      ...t,
+      languageOptions: {
+        ...t.languageOptions,
+        parserOptions: {
+          sourceType: 'module',
+          ecmaVersion: 9,
+          ...t.languageOptions?.parserOptions,
+        },
+      },
+    } as never
   }
 }
 
