@@ -1,5 +1,13 @@
 # eslint-plugin-import-x
 
+## 4.4.1
+
+### Patch Changes
+
+- [#175](https://github.com/un-ts/eslint-plugin-import-x/pull/175) [`acebd98`](https://github.com/un-ts/eslint-plugin-import-x/commit/acebd98893c78a1454445d868d91568d923297ac) Thanks [@marcalexiei](https://github.com/marcalexiei)! - fix(extensions): correct `Options` type
+
+- [#174](https://github.com/un-ts/eslint-plugin-import-x/pull/174) [`e01dce0`](https://github.com/un-ts/eslint-plugin-import-x/commit/e01dce016565128d8a78e9cf92ef29aed4c4bb1c) Thanks [@marcalexiei](https://github.com/marcalexiei)! - fix(no-extraneous-dependencies): correct some `Options` type properties
+
 ## 4.4.0
 
 ### Minor Changes
