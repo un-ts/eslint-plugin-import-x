@@ -70,6 +70,24 @@ export function testVersion<T extends ValidTestCase>(
   return eslintVersionSatisfies(specifier) ? [test(t())] : []
 }
 
+/** @warning DO NOT EXPORT THIS. use {@link createRuleTestCaseFunction} or {@link test} instead */
+function createRuleTestCase<TTestCase extends TSESLintValidTestCase<unknown[]>>(
+  t: TTestCase,
+): TTestCase {
+  return {
+    filename: TEST_FILENAME,
+    ...t,
+    languageOptions: {
+      ...t.languageOptions,
+      parserOptions: {
+        sourceType: 'module',
+        ecmaVersion: 9,
+        ...t.languageOptions?.parserOptions,
+      },
+    },
+  }
+}
+
 export type InvalidTestCaseError =
   | string
   | InvalidTestCase['errors'][number]
@@ -83,19 +101,8 @@ export function test<T extends ValidTestCase>(
 ): T extends { errors: InvalidTestCaseError[] | number }
   ? InvalidTestCase
   : ValidTestCase {
-  // @ts-expect-error -- simplify testing
-  return {
-    filename: TEST_FILENAME,
-    ...t,
-    languageOptions: {
-      ...t.languageOptions,
-      parserOptions: {
-        sourceType: 'module',
-        ecmaVersion: 9,
-        ...t.languageOptions?.parserOptions,
-      },
-    },
-  }
+  // @ts-expect-error simplify testing
+  return createRuleTestCase(t)
 }
 
 type GetRuleType<TRule> =
@@ -121,20 +128,8 @@ export function createRuleTestCaseFunction<
 >(
   t: TTestCase,
 ) => TReturn {
-  return t => {
-    return {
-      filename: TEST_FILENAME,
-      ...t,
-      languageOptions: {
-        ...t.languageOptions,
-        parserOptions: {
-          sourceType: 'module',
-          ecmaVersion: 9,
-          ...t.languageOptions?.parserOptions,
-        },
-      },
-    } as never
-  }
+  // @ts-expect-error simplify testing
+  return createRuleTestCase
 }
 
 export function testContext(settings?: PluginSettings) {
