@@ -166,6 +166,25 @@ ruleTester.run('no-default-export', rule, {
       ],
     }),
     test({
+      code: 'function foo() { return \'foo\'; }\nexport default foo;',
+      filename: 'foo.ts',
+      errors: [
+        {
+          type: 'ExportDefaultDeclaration',
+          messageId: 'preferNamed'
+        },
+      ],
+      languageOptions: {
+        parserOptions: {
+          ecmaversion: 'latest',
+          sourceType: 'module',
+        }
+      },
+      settings: {
+        'import-x/resolver': { typescript: true },
+      },
+    }),
+    test({
       code: 'export default from "foo.js"',
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [

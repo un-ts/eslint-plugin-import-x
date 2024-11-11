@@ -1,4 +1,5 @@
 import { createRule } from '../utils'
+import sourceType from '../utils/source-type'
 
 export = createRule({
   name: 'no-default-export',
@@ -18,7 +19,7 @@ export = createRule({
   defaultOptions: [],
   create(context) {
     // ignore non-modules
-    if (context.parserOptions.sourceType !== 'module') {
+    if (sourceType(context) !== 'module') {
       return {}
     }
 
