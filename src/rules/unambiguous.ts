@@ -3,6 +3,7 @@
  */
 
 import { createRule, isUnambiguousModule } from '../utils'
+import sourceType from '../utils/source-type'
 
 export = createRule({
   name: 'unambiguous',
@@ -21,7 +22,7 @@ export = createRule({
   defaultOptions: [],
   create(context) {
     // ignore non-modules
-    if (context.parserOptions.sourceType !== 'module') {
+    if (sourceType(context) !== 'module') {
       return {}
     }
 
