@@ -166,19 +166,19 @@ ruleTester.run('no-default-export', rule, {
       ],
     }),
     test({
-      code: 'function foo() { return \'foo\'; }\nexport default foo;',
+      code: "function foo() { return 'foo'; }\nexport default foo;",
       filename: 'foo.ts',
       errors: [
         {
           type: 'ExportDefaultDeclaration',
-          messageId: 'preferNamed'
+          messageId: 'preferNamed',
         },
       ],
       languageOptions: {
         parserOptions: {
           ecmaversion: 'latest',
           sourceType: 'module',
-        }
+        },
       },
       settings: {
         'import-x/resolver': { typescript: true },
