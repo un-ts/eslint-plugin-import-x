@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.4.2
+
+### Patch Changes
+
+- [#181](https://github.com/un-ts/eslint-plugin-import-x/pull/181) [`cc4ee65`](https://github.com/un-ts/eslint-plugin-import-x/commit/cc4ee650cf98d3d945fc4140483d02e51dcfd47d) Thanks [@SukkaW](https://github.com/SukkaW)! - Fix #144, read proper `sourceType` for both eslint flat config and legacy eslintrc config.
+
 ## 4.4.1
 
 ### Patch Changes
