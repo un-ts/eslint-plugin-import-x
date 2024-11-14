@@ -6,8 +6,8 @@ import {
   createRuleTestCaseFunction,
   SYNTAX_VALID_CASES,
   parsers,
-  RunTests,
 } from '../utils'
+import type { RunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/default'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'

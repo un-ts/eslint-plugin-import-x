@@ -2,10 +2,13 @@ import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester
 import { TSESTree } from '@typescript-eslint/utils'
 
 import { SYNTAX_VALID_CASES, parsers } from '../utils'
+import type { GetRuleModuleOptions } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/dynamic-import-chunkname'
 
 const ruleTester = new TSESLintRuleTester()
+
+type RuleOptions = GetRuleModuleOptions<typeof rule>
 
 const pickyCommentFormat = '[a-zA-Z-_/.]+'
 
@@ -13,27 +16,27 @@ const options = [
   {
     importFunctions: ['dynamicImport'],
   },
-] as const
+] as const satisfies RuleOptions
 
 const pickyCommentOptions = [
   {
     importFunctions: ['dynamicImport'],
     webpackChunknameFormat: pickyCommentFormat,
   },
-] as const
+] as const satisfies RuleOptions
 
 const allowEmptyOptions = [
   {
     importFunctions: ['dynamicImport'],
     allowEmpty: true,
   },
-] as const
+] as const satisfies RuleOptions
 
 const multipleImportFunctionOptions = [
   {
     importFunctions: ['dynamicImport', 'definitelyNotStaticImport'],
   },
-] as const
+] as const satisfies RuleOptions
 
 const babelParser = require(parsers.BABEL)
 

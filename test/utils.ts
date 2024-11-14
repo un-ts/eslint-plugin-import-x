@@ -92,13 +92,16 @@ export function test<T extends ValidTestCase>(
   return createRuleTestCase(t)
 }
 
-export type GetRuleModuleTypes<TRule> =
+type GetRuleModuleTypes<TRule> =
   TRule extends RuleModule<infer MessageIds, infer Options>
     ? {
         messageIds: MessageIds
         options: Options
       }
     : never
+
+export type GetRuleModuleOptions<TRule> =
+  TRule extends RuleModule<infer _, infer Options> ? Options : never
 
 /**
  * Type helper to build {@link TSESLintRuleTester.run} test parameters
@@ -182,68 +185,69 @@ export function testContext(settings?: PluginSettings) {
  * to be added as valid cases just to ensure no nullable fields are going
  * to crash at runtime
  */
-export const SYNTAX_VALID_CASES: TSESLintRunTests<string, unknown[]>['valid'] = [
-  'for (let { foo, bar } of baz) {}',
-  'for (let [ foo, bar ] of baz) {}',
+export const SYNTAX_VALID_CASES: TSESLintRunTests<string, unknown[]>['valid'] =
+  [
+    'for (let { foo, bar } of baz) {}',
+    'for (let [ foo, bar ] of baz) {}',
 
-  'const { x, y } = bar',
-  test({
-    code: 'const { x, y, ...z } = bar',
-    languageOptions: { parser: require(parsers.BABEL) },
-  }),
+    'const { x, y } = bar',
+    createRuleTestCase({
+      code: 'const { x, y, ...z } = bar',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
 
-  // all the exports
-  'let x; export { x }',
-  'let x; export { x as y }',
+    // all the exports
+    'let x; export { x }',
+    'let x; export { x as y }',
 
-  // not sure about these since they reference a file
-  // 'export { x } from "./y.js"'}),
-  // 'export * as y from "./y.js"', languageOptions: { parser: require(parsers.BABEL) } }),
+    // not sure about these since they reference a file
+    // 'export { x } from "./y.js"'}),
+    // 'export * as y from "./y.js"', languageOptions: { parser: require(parsers.BABEL) } }),
 
-  'export const x = null',
-  'export var x = null',
-  'export let x = null',
+    'export const x = null',
+    'export var x = null',
+    'export let x = null',
 
-  'export default x',
-  'export default class x {}',
+    'export default x',
+    'export default class x {}',
 
-  // issue #267: parser opt-in extension list
-  test({
-    code: 'import json from "./data.json"',
-    settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
-  }),
+    // issue #267: parser opt-in extension list
+    createRuleTestCase({
+      code: 'import json from "./data.json"',
+      settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
+    }),
 
-  // JSON
-  test({
-    code: 'import foo from "./foobar.json";',
-    settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
-  }),
-  test({
-    code: 'import foo from "./foobar";',
-    settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
-  }),
+    // JSON
+    createRuleTestCase({
+      code: 'import foo from "./foobar.json";',
+      settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
+    }),
+    createRuleTestCase({
+      code: 'import foo from "./foobar";',
+      settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
+    }),
 
-  // issue #370: deep commonjs import
-  test({
-    code: 'import { foo } from "./issue-370-commonjs-namespace/bar"',
-    settings: { 'import-x/ignore': ['foo'] },
-  }),
+    // issue #370: deep commonjs import
+    createRuleTestCase({
+      code: 'import { foo } from "./issue-370-commonjs-namespace/bar"',
+      settings: { 'import-x/ignore': ['foo'] },
+    }),
 
-  // issue #348: deep commonjs re-export
-  test({
-    code: 'export * from "./issue-370-commonjs-namespace/bar"',
-    settings: { 'import-x/ignore': ['foo'] },
-  }),
+    // issue #348: deep commonjs re-export
+    createRuleTestCase({
+      code: 'export * from "./issue-370-commonjs-namespace/bar"',
+      settings: { 'import-x/ignore': ['foo'] },
+    }),
 
-  test({
-    code: 'import * as a from "./commonjs-namespace/a"; a.b',
-  }),
+    createRuleTestCase({
+      code: 'import * as a from "./commonjs-namespace/a"; a.b',
+    }),
 
-  // ignore invalid extensions
-  test({
-    code: 'import { foo } from "./ignore.invalid.extension"',
-  }),
-]
+    // ignore invalid extensions
+    createRuleTestCase({
+      code: 'import { foo } from "./ignore.invalid.extension"',
+    }),
+  ]
 
 const testCompiled = process.env.TEST_COMPILED === '1'
 
