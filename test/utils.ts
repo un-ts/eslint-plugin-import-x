@@ -3,6 +3,7 @@ import path from 'node:path'
 import type {
   ValidTestCase as TSESLintValidTestCase,
   InvalidTestCase as TSESLintInvalidTestCase,
+  RunTests as TSESLintRunTests,
 } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { RuleModule } from '@typescript-eslint/utils/ts-eslint'
@@ -91,13 +92,40 @@ export function test<T extends ValidTestCase>(
   return createRuleTestCase(t)
 }
 
-type GetRuleModuleTypes<TRule> =
+export type GetRuleModuleTypes<TRule> =
   TRule extends RuleModule<infer MessageIds, infer Options>
     ? {
         messageIds: MessageIds
         options: Options
       }
     : never
+
+/**
+ * Type helper to build {@link TSESLintRuleTester.run} test parameters
+ * from a given {@link RuleModule}
+ *
+ * @example
+ * ```ts
+ * const COMMON_TESTS: RunTests<typeof rule> = {
+ *   valid: [
+ *     {
+ *       code: "import Foo from 'Foo';",
+ *       options: [],
+ *     },
+ *   ],
+ *   invalid: [
+ *     {
+ *       code: "import Foo from 'Foo';",
+ *       options: ['prefer-top-level'],
+ *       errors: []
+ *     },
+ *   ]
+ * ```
+ */
+export type RunTests<
+  TRule extends RuleModule<string, readonly unknown[]>,
+  TRuleType extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
+> = TSESLintRunTests<TRuleType['messageIds'], TRuleType['options']>
 
 /**
  * Create a function that can be used to create both valid and invalid test case
