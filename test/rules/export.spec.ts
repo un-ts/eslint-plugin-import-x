@@ -1,10 +1,17 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath, SYNTAX_VALID_CASES, parsers } from '../utils'
+import {
+  testFilePath,
+  SYNTAX_VALID_CASES,
+  parsers,
+  createRuleTestCaseFunction,
+} from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/export'
 
 const ruleTester = new TSESLintRuleTester()
+
+const test = createRuleTestCaseFunction<typeof rule>()
 
 ruleTester.run('export', rule, {
   valid: [
@@ -104,8 +111,8 @@ ruleTester.run('export', rule, {
     test({
       code: 'let foo; export { foo }; export * from "./export-all"',
       errors: [
-        "Multiple exports of name 'foo'.",
-        "Multiple exports of name 'foo'.",
+        { messageId: 'multiNamed', data: { name: 'foo' } },
+        { messageId: 'multiNamed', data: { name: 'foo' } },
       ],
     }),
     // test({
@@ -125,9 +132,9 @@ ruleTester.run('export', rule, {
       languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         {
+          // @ts-expect-error parse error here so can'use rule types
           message:
             "Parse errors in imported module './malformed.js': 'return' outside of function (1:1)",
-          type: 'Literal',
         },
       ],
     }),
@@ -152,14 +159,14 @@ ruleTester.run('export', rule, {
     // #328: "export * from" does not export a default
     test({
       code: 'export * from "./default-export"',
-      errors: [`No named exports found in module './default-export'.`],
+      errors: [{ messageId: 'noNamed', data: { module: './default-export' } }],
     }),
 
     test({
       code: 'let foo; export { foo as "foo" }; export * from "./export-all"',
       errors: [
-        "Multiple exports of name 'foo'.",
-        "Multiple exports of name 'foo'.",
+        { messageId: 'multiNamed', data: { name: 'foo' } },
+        { messageId: 'multiNamed', data: { name: 'foo' } },
       ],
       languageOptions: {
         parser: require(parsers.ESPREE),
@@ -175,7 +182,7 @@ ruleTester.run('export', rule, {
         export default function a() {}
         export { x as default };
       `,
-      errors: ['Multiple default exports.', 'Multiple default exports.'],
+      errors: [{ messageId: 'multiDefault' }, { messageId: 'multiDefault' }],
     }),
   ],
 })
@@ -367,11 +374,13 @@ describe('TypeScript', () => {
         `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -389,11 +398,13 @@ describe('TypeScript', () => {
         `,
         errors: [
           {
-            message: `Multiple exports of name 'a'.`,
+            messageId: 'multiNamed',
+            data: { name: 'a' },
             line: 4,
           },
           {
-            message: `Multiple exports of name 'a'.`,
+            messageId: 'multiNamed',
+            data: { name: 'a' },
             line: 5,
           },
         ],
@@ -409,11 +420,11 @@ describe('TypeScript', () => {
         `,
         errors: [
           {
-            message: 'Multiple default exports.',
+            messageId: 'multiDefault',
             line: 4,
           },
           {
-            message: 'Multiple default exports.',
+            messageId: 'multiDefault',
             line: 5,
           },
         ],
@@ -434,19 +445,23 @@ describe('TypeScript', () => {
         `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 4,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 5,
           },
           {
-            message: `Multiple exports of name 'Bar'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Bar' },
             line: 8,
           },
           {
-            message: `Multiple exports of name 'Bar'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Bar' },
             line: 9,
           },
         ],
@@ -461,11 +476,13 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -479,11 +496,13 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -497,11 +516,13 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -515,11 +536,13 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -533,11 +556,13 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -551,11 +576,13 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -568,11 +595,13 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -593,11 +622,11 @@ describe('TypeScript', () => {
         `,
         errors: [
           {
-            message: 'Multiple default exports.',
+            messageId: 'multiDefault',
             line: 7,
           },
           {
-            message: 'Multiple default exports.',
+            messageId: 'multiDefault',
             line: 9,
           },
         ],
