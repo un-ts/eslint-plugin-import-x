@@ -45,9 +45,15 @@ type OptionsItemWithPatternProperty = {
   pattern: ModifierByFileExtension
 }
 
+type OptionsItemWithoutPatternProperty = {
+  ignorePackages?: boolean
+  checkTypeImports?: boolean
+}
+
 type Options =
   | []
   | [Modifier]
+  | [Modifier, OptionsItemWithoutPatternProperty]
   | [Modifier, OptionsItemWithPatternProperty]
   | [Modifier, ModifierByFileExtension]
   | [ModifierByFileExtension]
@@ -59,7 +65,7 @@ type NormalizedOptions = {
   checkTypeImports?: boolean
 }
 
-type MessageId = 'missing' | 'unexpected'
+type MessageId = 'missing' | 'missingKnown' | 'unexpected'
 
 function buildProperties(context: RuleContext<MessageId, Options>) {
   const result: Required<NormalizedOptions> = {
@@ -167,7 +173,9 @@ export = createRule<Options, MessageId>({
       ],
     },
     messages: {
-      missing: 'Missing file extension {{extension}}for "{{importPath}}"',
+      missing: 'Missing file extension for "{{importPath}}"',
+      missingKnown:
+        'Missing file extension "{{extension}}" for "{{importPath}}"',
       unexpected:
         'Unexpected use of file extension "{{extension}}" for "{{importPath}}"',
     },
@@ -259,9 +267,9 @@ export = createRule<Options, MessageId>({
           if (extensionRequired && !extensionForbidden) {
             context.report({
               node: source,
-              messageId: 'missing',
+              messageId: extension ? 'missingKnown' : 'missing',
               data: {
-                extension: extension ? `"${extension}" ` : '',
+                extension,
                 importPath: importPathWithQueryString,
               },
             })
