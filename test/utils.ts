@@ -5,8 +5,8 @@ import type {
   InvalidTestCase as TSESLintInvalidTestCase,
 } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
+import type { RuleModule } from '@typescript-eslint/utils/ts-eslint'
 import type { RuleTester } from 'eslint'
-import eslintPkg from 'eslint/package.json'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
@@ -45,10 +45,6 @@ export function getNonDefaultParsers() {
 
 export const TEST_FILENAME = testFilePath()
 
-export function eslintVersionSatisfies(specifier: string) {
-  return semver.satisfies(eslintPkg.version, specifier)
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
 export type ValidTestCase = TSESLintValidTestCase<any> & {
   errors?: readonly InvalidTestCaseError[] | number
@@ -56,33 +52,13 @@ export type ValidTestCase = TSESLintValidTestCase<any> & {
   parserOptions?: never
 }
 
-export type InvalidTestCase = // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
+type InvalidTestCase = // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
   TSESLintInvalidTestCase<any, any>
 
-export function testVersion<T extends ValidTestCase>(
-  specifier: string,
-  t: () => T,
-): T extends { errors: readonly InvalidTestCaseError[] }
-  ? InvalidTestCase[]
-  : ValidTestCase[] {
-  // @ts-expect-error -- simplify testing
-  return eslintVersionSatisfies(specifier) ? [test(t())] : []
-}
-
-export type InvalidTestCaseError =
-  | string
-  | InvalidTestCase['errors'][number]
-  | (RuleTester.TestCaseError & {
-      type?: `${TSESTree.AST_NODE_TYPES}`
-    })
-
-// eslint-disable-next-line eslint-plugin/require-meta-docs-description, eslint-plugin/require-meta-type, eslint-plugin/prefer-message-ids, eslint-plugin/prefer-object-rule, eslint-plugin/require-meta-schema
-export function test<T extends ValidTestCase>(
-  t: T,
-): T extends { errors: InvalidTestCaseError[] | number }
-  ? InvalidTestCase
-  : ValidTestCase {
-  // @ts-expect-error -- simplify testing
+/** @warning DO NOT EXPORT THIS. use {@link createRuleTestCaseFunction} or {@link test} instead */
+function createRuleTestCase<TTestCase extends TSESLintValidTestCase<unknown[]>>(
+  t: TTestCase,
+): TTestCase {
   return {
     filename: TEST_FILENAME,
     ...t,
@@ -95,6 +71,76 @@ export function test<T extends ValidTestCase>(
       },
     },
   }
+}
+
+export type InvalidTestCaseError =
+  | string
+  | InvalidTestCase['errors'][number]
+  | (RuleTester.TestCaseError & {
+      type?: `${TSESTree.AST_NODE_TYPES}`
+    })
+
+/** @deprecated use {@link createRuleTestCaseFunction} */
+// eslint-disable-next-line eslint-plugin/require-meta-docs-description, eslint-plugin/require-meta-type, eslint-plugin/prefer-message-ids, eslint-plugin/prefer-object-rule, eslint-plugin/require-meta-schema
+export function test<T extends ValidTestCase>(
+  t: T,
+): T extends { errors: InvalidTestCaseError[] | number }
+  ? InvalidTestCase
+  : ValidTestCase {
+  // @ts-expect-error simplify testing
+  return createRuleTestCase(t)
+}
+
+type GetRuleModuleTypes<TRule> =
+  TRule extends RuleModule<infer MessageIds, infer Options>
+    ? {
+        messageIds: MessageIds
+        options: Options
+      }
+    : never
+
+/**
+ * Create a function that can be used to create both valid and invalid test case
+ * to be provided to {@link TSESLintRuleTester}.
+ * This function accepts one type parameter that should extend a {@link RuleModule}
+ * to be able to provide a function with typed `MessageIds` and `Options` properties
+ *
+ * @example
+ * ```ts
+ * import { createRuleTestCaseFunction } from '../utils'
+ *
+ * const test = createRuleTestCaseFunction<typeof rule>()
+ *
+ * const ruleTester = new TSESLintRuleTester()
+ *
+ * ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
+ *  valid: [
+ *    test({
+ *      code: '...',
+ *    }),
+ *  ]
+ * })
+ * ```
+ *
+ * If the `TRule` parameter is omitted default types are used.
+ */
+export function createRuleTestCaseFunction<
+  TRule extends RuleModule<string, unknown[]>,
+  TData extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
+  TTestCase extends
+    | TSESLintValidTestCase<TData['options']>
+    | TSESLintInvalidTestCase<TData['messageIds'], TData['options']> =
+    | TSESLintValidTestCase<TData['options']>
+    | TSESLintInvalidTestCase<TData['messageIds'], TData['options']>,
+>(): <
+  TReturn = TTestCase extends { errors: InvalidTestCaseError[] | number }
+    ? TSESLintInvalidTestCase<TData['messageIds'], TData['options']>
+    : TSESLintValidTestCase<TData['options']>,
+>(
+  t: TTestCase,
+) => TReturn {
+  // @ts-expect-error simplify testing
+  return createRuleTestCase
 }
 
 export function testContext(settings?: PluginSettings) {
@@ -171,6 +217,6 @@ export const SYNTAX_CASES = [
   }),
 ]
 
-export const testCompiled = process.env.TEST_COMPILED === '1'
+const testCompiled = process.env.TEST_COMPILED === '1'
 
 export const srcDir = testCompiled ? 'lib' : 'src'

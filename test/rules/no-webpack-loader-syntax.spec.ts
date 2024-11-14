@@ -1,12 +1,12 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test } from '../utils'
+import { createRuleTestCaseFunction } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-webpack-loader-syntax'
 
-const ruleTester = new TSESLintRuleTester()
+const test = createRuleTestCaseFunction<typeof rule>()
 
-const message = 'Do not use import syntax to configure webpack loaders.'
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-webpack-loader-syntax', rule, {
   valid: [
@@ -25,53 +25,57 @@ ruleTester.run('no-webpack-loader-syntax', rule, {
   invalid: [
     test({
       code: 'import _ from "babel!lodash"',
-      errors: [{ message: `Unexpected '!' in 'babel!lodash'. ${message}` }],
+      errors: [{ messageId: 'unexpected', data: { name: 'babel!lodash' } }],
     }),
     test({
       code: 'import find from "-babel-loader!lodash.find"',
       errors: [
         {
-          message: `Unexpected '!' in '-babel-loader!lodash.find'. ${message}`,
+          messageId: 'unexpected',
+          data: { name: '-babel-loader!lodash.find' },
         },
       ],
     }),
     test({
       code: 'import foo from "style!css!./foo.css"',
       errors: [
-        { message: `Unexpected '!' in 'style!css!./foo.css'. ${message}` },
+        { messageId: 'unexpected', data: { name: 'style!css!./foo.css' } },
       ],
     }),
     test({
       code: 'import data from "json!@scope/my-package/data.json"',
       errors: [
         {
-          message: `Unexpected '!' in 'json!@scope/my-package/data.json'. ${message}`,
+          messageId: 'unexpected',
+          data: { name: 'json!@scope/my-package/data.json' },
         },
       ],
     }),
     test({
       code: 'var _ = require("babel!lodash")',
-      errors: [{ message: `Unexpected '!' in 'babel!lodash'. ${message}` }],
+      errors: [{ messageId: 'unexpected', data: { name: 'babel!lodash' } }],
     }),
     test({
       code: 'var find = require("-babel-loader!lodash.find")',
       errors: [
         {
-          message: `Unexpected '!' in '-babel-loader!lodash.find'. ${message}`,
+          messageId: 'unexpected',
+          data: { name: '-babel-loader!lodash.find' },
         },
       ],
     }),
     test({
       code: 'var foo = require("style!css!./foo.css")',
       errors: [
-        { message: `Unexpected '!' in 'style!css!./foo.css'. ${message}` },
+        { messageId: 'unexpected', data: { name: 'style!css!./foo.css' } },
       ],
     }),
     test({
       code: 'var data = require("json!@scope/my-package/data.json")',
       errors: [
         {
-          message: `Unexpected '!' in 'json!@scope/my-package/data.json'. ${message}`,
+          messageId: 'unexpected',
+          data: { name: 'json!@scope/my-package/data.json' },
         },
       ],
     }),

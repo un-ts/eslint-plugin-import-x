@@ -1,8 +1,10 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers, test } from '../utils'
+import { parsers, createRuleTestCaseFunction } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-useless-path-segments'
+
+const test = createRuleTestCaseFunction<typeof rule>()
 
 const ruleTester = new TSESLintRuleTester()
 
@@ -74,7 +76,13 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./../fixtures/malformed.js", should be "../fixtures/malformed.js"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './../fixtures/malformed.js',
+              proposedPath: '../fixtures/malformed.js',
+            },
+          },
         ],
       }),
       test({
@@ -83,7 +91,13 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./../fixtures/malformed", should be "../fixtures/malformed"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './../fixtures/malformed',
+              proposedPath: '../fixtures/malformed',
+            },
+          },
         ],
       }),
       test({
@@ -92,7 +106,13 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.BABEL) },
         errors: [
-          'Useless path segments for "../fixtures/malformed.js", should be "./malformed.js"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '../fixtures/malformed.js',
+              proposedPath: './malformed.js',
+            },
+          },
         ],
       }),
       test({
@@ -101,7 +121,13 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "../fixtures/malformed", should be "./malformed"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '../fixtures/malformed',
+              proposedPath: './malformed',
+            },
+          },
         ],
       }),
       test({
@@ -110,26 +136,47 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./test-module/", should be "./test-module"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './test-module/',
+              proposedPath: './test-module',
+            },
+          },
         ],
       }),
       test({
         code: 'require("./")',
         output: 'require(".")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "./", should be "."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './', proposedPath: '.' },
+          },
+        ],
       }),
       test({
         code: 'require("../")',
         output: 'require("..")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "../", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../', proposedPath: '..' },
+          },
+        ],
       }),
       test({
         code: 'require("./deep//a")',
         output: 'require("./deep/a")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "./deep//a", should be "./deep/a"'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './deep//a', proposedPath: './deep/a' },
+          },
+        ],
       }),
 
       // CommonJS modules + noUselessIndex
@@ -138,21 +185,32 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         output: 'require("./bar/")',
         options: [{ commonjs: true, noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./bar/index.js", should be "./bar/"',
+          {
+            messageId: 'useless',
+            data: { importPath: './bar/index.js', proposedPath: './bar/' },
+          },
         ], // ./bar.js exists
       }),
       test({
         code: 'require("./bar/index")',
         output: 'require("./bar/")',
         options: [{ commonjs: true, noUselessIndex: true }],
-        errors: ['Useless path segments for "./bar/index", should be "./bar/"'], // ./bar.js exists
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './bar/index', proposedPath: './bar/' },
+          },
+        ], // ./bar.js exists
       }),
       test({
         code: 'require("./importPath/")',
         output: 'require("./importPath")',
         options: [{ commonjs: true, noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: { importPath: './importPath/', proposedPath: './importPath' },
+          },
         ], // ./importPath.js does not exist
       }),
       test({
@@ -160,7 +218,13 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         output: 'require("./importPath")',
         options: [{ commonjs: true, noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/index.js", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './importPath/index.js',
+              proposedPath: './importPath',
+            },
+          },
         ], // ./importPath.js does not exist
       }),
       test({
@@ -168,26 +232,47 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         output: 'require("./importType")',
         options: [{ commonjs: true, noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importType/index", should be "./importType"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './importType/index',
+              proposedPath: './importType',
+            },
+          },
         ], // ./importPath.js does not exist
       }),
       test({
         code: 'require("./index")',
         output: 'require(".")',
         options: [{ commonjs: true, noUselessIndex: true }],
-        errors: ['Useless path segments for "./index", should be "."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './index', proposedPath: '.' },
+          },
+        ],
       }),
       test({
         code: 'require("../index")',
         output: 'require("..")',
         options: [{ commonjs: true, noUselessIndex: true }],
-        errors: ['Useless path segments for "../index", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../index', proposedPath: '..' },
+          },
+        ],
       }),
       test({
         code: 'require("../index.js")',
         output: 'require("..")',
         options: [{ commonjs: true, noUselessIndex: true }],
-        errors: ['Useless path segments for "../index.js", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../index.js', proposedPath: '..' },
+          },
+        ],
       }),
 
       // ES modules
@@ -199,7 +284,13 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         ],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./../fixtures/malformed.js", should be "../fixtures/malformed.js"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './../fixtures/malformed.js',
+              proposedPath: '../fixtures/malformed.js',
+            },
+          },
         ],
       }),
       test({
@@ -207,7 +298,13 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         output: ['import "../fixtures/malformed"', 'import "./malformed"'],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./../fixtures/malformed", should be "../fixtures/malformed"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './../fixtures/malformed',
+              proposedPath: '../fixtures/malformed',
+            },
+          },
         ],
       }),
       test({
@@ -215,7 +312,13 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         output: 'import "./malformed.js"',
         languageOptions: { parser: require(parsers.BABEL) },
         errors: [
-          'Useless path segments for "../fixtures/malformed.js", should be "./malformed.js"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '../fixtures/malformed.js',
+              proposedPath: './malformed.js',
+            },
+          },
         ],
       }),
       test({
@@ -223,30 +326,57 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         output: 'import "./malformed"',
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "../fixtures/malformed", should be "./malformed"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '../fixtures/malformed',
+              proposedPath: './malformed',
+            },
+          },
         ],
       }),
       test({
         code: 'import "./test-module/"',
         output: 'import "./test-module"',
         errors: [
-          'Useless path segments for "./test-module/", should be "./test-module"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './test-module/',
+              proposedPath: './test-module',
+            },
+          },
         ],
       }),
       test({
         code: 'import "./"',
         output: 'import "."',
-        errors: ['Useless path segments for "./", should be "."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './', proposedPath: '.' },
+          },
+        ],
       }),
       test({
         code: 'import "../"',
         output: 'import ".."',
-        errors: ['Useless path segments for "../", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../', proposedPath: '..' },
+          },
+        ],
       }),
       test({
         code: 'import "./deep//a"',
         output: 'import "./deep/a"',
-        errors: ['Useless path segments for "./deep//a", should be "./deep/a"'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './deep//a', proposedPath: './deep/a' },
+          },
+        ],
       }),
 
       // ES modules + noUselessIndex
@@ -255,21 +385,32 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         output: 'import "./bar/"',
         options: [{ noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./bar/index.js", should be "./bar/"',
+          {
+            messageId: 'useless',
+            data: { importPath: './bar/index.js', proposedPath: './bar/' },
+          },
         ], // ./bar.js exists
       }),
       test({
         code: 'import "./bar/index"',
         output: 'import "./bar/"',
         options: [{ noUselessIndex: true }],
-        errors: ['Useless path segments for "./bar/index", should be "./bar/"'], // ./bar.js exists
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './bar/index', proposedPath: './bar/' },
+          },
+        ], // ./bar.js exists
       }),
       test({
         code: 'import "./importPath/"',
         output: 'import "./importPath"',
         options: [{ noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: { importPath: './importPath/', proposedPath: './importPath' },
+          },
         ], // ./importPath.js does not exist
       }),
       test({
@@ -277,7 +418,13 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         output: 'import "./importPath"',
         options: [{ noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/index.js", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './importPath/index.js',
+              proposedPath: './importPath',
+            },
+          },
         ], // ./importPath.js does not exist
       }),
       test({
@@ -285,44 +432,80 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         output: 'import "./importPath"',
         options: [{ noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/index", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './importPath/index',
+              proposedPath: './importPath',
+            },
+          },
         ], // ./importPath.js does not exist
       }),
       test({
         code: 'import "./index"',
         output: 'import "."',
         options: [{ noUselessIndex: true }],
-        errors: ['Useless path segments for "./index", should be "."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './index', proposedPath: '.' },
+          },
+        ],
       }),
       test({
         code: 'import "../index"',
         output: 'import ".."',
         options: [{ noUselessIndex: true }],
-        errors: ['Useless path segments for "../index", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../index', proposedPath: '..' },
+          },
+        ],
       }),
       test({
         code: 'import "../index.js"',
         output: 'import ".."',
         options: [{ noUselessIndex: true }],
-        errors: ['Useless path segments for "../index.js", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../index.js', proposedPath: '..' },
+          },
+        ],
       }),
       test({
         code: 'import("./")',
         output: 'import(".")',
-        errors: ['Useless path segments for "./", should be "."'],
         languageOptions: { parser: require(parsers.BABEL) },
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './', proposedPath: '.' },
+          },
+        ],
       }),
       test({
         code: 'import("../")',
         output: 'import("..")',
-        errors: ['Useless path segments for "../", should be ".."'],
         languageOptions: { parser: require(parsers.BABEL) },
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../', proposedPath: '..' },
+          },
+        ],
       }),
       test({
         code: 'import("./deep//a")',
         output: 'import("./deep/a")',
-        errors: ['Useless path segments for "./deep//a", should be "./deep/a"'],
         languageOptions: { parser: require(parsers.BABEL) },
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './deep//a', proposedPath: './deep/a' },
+          },
+        ],
       }),
     ],
   })
