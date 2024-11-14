@@ -182,7 +182,7 @@ export function testContext(settings?: PluginSettings) {
  * to be added as valid cases just to ensure no nullable fields are going
  * to crash at runtime
  */
-export const SYNTAX_CASES = [
+export const SYNTAX_VALID_CASES: TSESLintRunTests<string, unknown[]>['valid'] = [
   'for (let { foo, bar } of baz) {}',
   'for (let [ foo, bar ] of baz) {}',
 

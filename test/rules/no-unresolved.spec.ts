@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, SYNTAX_CASES, parsers, testFilePath } from '../utils'
+import { test, SYNTAX_VALID_CASES, parsers, testFilePath } from '../utils'
 import type { ValidTestCase } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-unresolved'
@@ -512,7 +512,7 @@ ruleTester.run('no-unresolved electron', rule, {
 })
 
 ruleTester.run('no-unresolved syntax verification', rule, {
-  valid: SYNTAX_CASES,
+  valid: SYNTAX_VALID_CASES,
   invalid: [],
 })
 

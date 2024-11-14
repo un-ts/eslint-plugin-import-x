@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, SYNTAX_CASES, parsers } from '../utils'
+import { test, SYNTAX_VALID_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-deprecated'
 
@@ -43,7 +43,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { deepDep } from './deep-deprecated'; function x(deepDep) { console.log(deepDep.MY_TERRIBLE_ACTION) }",
     }),
 
-    ...SYNTAX_CASES,
+    ...SYNTAX_VALID_CASES,
   ],
   invalid: [
     // reports on parse errors even without specifiers

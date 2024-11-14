@@ -3,7 +3,7 @@ import path from 'node:path'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_CASES, testFilePath, parsers } from '../utils'
+import { test, SYNTAX_VALID_CASES, testFilePath, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/named'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
@@ -195,7 +195,7 @@ ruleTester.run('named', rule, {
       options: [{ commonjs: true }],
     }),
 
-    ...SYNTAX_CASES,
+    ...SYNTAX_VALID_CASES,
 
     test({
       code: `import { ExtfieldModel, Extfield2Model } from './models';`,

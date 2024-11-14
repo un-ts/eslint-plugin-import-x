@@ -2,12 +2,19 @@ import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, SYNTAX_CASES, parsers } from '../utils'
+import {
+  createRuleTestCaseFunction,
+  SYNTAX_VALID_CASES,
+  parsers,
+  RunTests,
+} from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/default'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
 const ruleTester = new TSESLintRuleTester()
+
+const test = createRuleTestCaseFunction<typeof rule>()
 
 ruleTester.run('default', rule, {
   valid: [
@@ -123,7 +130,7 @@ ruleTester.run('default', rule, {
       },
     }),
 
-    ...SYNTAX_CASES,
+    ...(SYNTAX_VALID_CASES as RunTests<typeof rule>['valid']),
   ],
 
   invalid: [
@@ -138,9 +145,10 @@ ruleTester.run('default', rule, {
       code: 'import baz from "./named-exports";',
       errors: [
         {
-          message:
-            'No default export found in imported module "./named-exports".',
-          type: 'ImportDefaultSpecifier',
+          messageId: 'noDefaultExport',
+          data: {
+            module: './named-exports',
+          },
         },
       ],
     }),
@@ -149,31 +157,64 @@ ruleTester.run('default', rule, {
     test({
       code: 'export baz from "./named-exports"',
       languageOptions: { parser: require(parsers.BABEL) },
-      errors: ['No default export found in imported module "./named-exports".'],
+      errors: [
+        {
+          messageId: 'noDefaultExport',
+          data: {
+            module: './named-exports',
+          },
+        },
+      ],
     }),
     test({
       code: 'export baz, { bar } from "./named-exports"',
       languageOptions: { parser: require(parsers.BABEL) },
-      errors: ['No default export found in imported module "./named-exports".'],
+      errors: [
+        {
+          messageId: 'noDefaultExport',
+          data: {
+            module: './named-exports',
+          },
+        },
+      ],
     }),
     test({
       code: 'export baz, * as names from "./named-exports"',
       languageOptions: { parser: require(parsers.BABEL) },
-      errors: ['No default export found in imported module "./named-exports".'],
+      errors: [
+        {
+          messageId: 'noDefaultExport',
+          data: {
+            module: './named-exports',
+          },
+        },
+      ],
     }),
     // exports default from a module with no default
     test({
       code: 'import twofer from "./broken-trampoline"',
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [
-        'No default export found in imported module "./broken-trampoline".',
+        {
+          messageId: 'noDefaultExport',
+          data: {
+            module: './broken-trampoline',
+          },
+        },
       ],
     }),
 
     // #328: * exports do not include default
     test({
       code: 'import barDefault from "./re-export"',
-      errors: ['No default export found in imported module "./re-export".'],
+      errors: [
+        {
+          messageId: 'noDefaultExport',
+          data: {
+            module: './re-export',
+          },
+        },
+      ],
     }),
   ],
 })
@@ -190,7 +231,12 @@ if (!CASE_SENSITIVE_FS) {
       test({
         code: 'import bar from "./Named-Exports"',
         errors: [
-          'No default export found in imported module "./Named-Exports".',
+          {
+            messageId: 'noDefaultExport',
+            data: {
+              module: './Named-Exports',
+            },
+          },
         ],
       }),
     ],
@@ -321,7 +367,14 @@ describe('TypeScript', () => {
           'import-x/parsers': { [parsers.TS]: ['.ts'] },
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
-        errors: ['No default export found in imported module "./typescript".'],
+        errors: [
+          {
+            messageId: 'noDefaultExport',
+            data: {
+              module: './typescript',
+            },
+          },
+        ],
       }),
       test({
         code: `import React from "./typescript-export-assign-default-namespace"`,
@@ -331,7 +384,12 @@ describe('TypeScript', () => {
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
         errors: [
-          'No default export found in imported module "./typescript-export-assign-default-namespace".',
+          {
+            messageId: 'noDefaultExport',
+            data: {
+              module: './typescript-export-assign-default-namespace',
+            },
+          },
         ],
       }),
       test({
@@ -342,7 +400,12 @@ describe('TypeScript', () => {
           'import-x/resolver': { 'eslint-import-resolver-typescript': true },
         },
         errors: [
-          'No default export found in imported module "./typescript-export-as-default-namespace".',
+          {
+            messageId: 'noDefaultExport',
+            data: {
+              module: './typescript-export-as-default-namespace',
+            },
+          },
         ],
       }),
       test({
@@ -362,8 +425,10 @@ describe('TypeScript', () => {
         },
         errors: [
           {
-            message:
-              'No default export found in imported module "./typescript-export-as-default-namespace".',
+            messageId: 'noDefaultExport',
+            data: {
+              module: './typescript-export-as-default-namespace',
+            },
             line: 1,
             column: 8,
             endLine: 1,

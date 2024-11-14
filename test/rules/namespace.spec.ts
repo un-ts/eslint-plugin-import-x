@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, SYNTAX_CASES, testFilePath, parsers } from '../utils'
+import { test, SYNTAX_VALID_CASES, testFilePath, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/namespace'
 
@@ -226,7 +226,7 @@ const valid = [
     },
   }),
 
-  ...SYNTAX_CASES,
+  ...SYNTAX_VALID_CASES,
 
   test({
     code: `

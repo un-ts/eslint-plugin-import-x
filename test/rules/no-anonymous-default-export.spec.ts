@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, SYNTAX_CASES, parsers } from '../utils'
+import { test, SYNTAX_VALID_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-anonymous-default-export'
 
@@ -62,7 +62,7 @@ ruleTester.run('no-anonymous-default-export', rule, {
     // Allow call expressions by default for backwards compatibility
     test({ code: 'export default foo(bar)' }),
 
-    ...SYNTAX_CASES,
+    ...SYNTAX_VALID_CASES,
   ],
 
   invalid: [

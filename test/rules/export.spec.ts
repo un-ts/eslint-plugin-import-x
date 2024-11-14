@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath, SYNTAX_CASES, parsers } from '../utils'
+import { test, testFilePath, SYNTAX_VALID_CASES, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/export'
 
@@ -27,7 +27,7 @@ ruleTester.run('export', rule, {
     // #328: "export * from" does not export a default
     test({ code: 'export default foo; export * from "./bar"' }),
 
-    ...SYNTAX_CASES,
+    ...SYNTAX_VALID_CASES,
 
     test({
       code: `
