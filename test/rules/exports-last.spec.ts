@@ -1,17 +1,24 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { test } from '../utils'
+import { createRuleTestCaseFunction } from '../utils'
+import type { GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/exports-last'
 
 const ruleTester = new TSESLintRuleTester()
 
-const error = (type: `${TSESTree.AST_NODE_TYPES}`) =>
-  ({
+const test = createRuleTestCaseFunction<typeof rule>()
+
+function createInvalidCaseError(
+  type: `${TSESTree.AST_NODE_TYPES}`,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
     messageId: 'end',
-    type,
-  }) as const
+    type: type as TSESTree.AST_NODE_TYPES,
+  }
+}
 
 ruleTester.run('exports-last', rule, {
   valid: [
@@ -88,7 +95,7 @@ ruleTester.run('exports-last', rule, {
         export default 'bar'
         const bar = true
       `,
-      errors: [error('ExportDefaultDeclaration')],
+      errors: [createInvalidCaseError('ExportDefaultDeclaration')],
     }),
     // Named export before variable declaration
     test({
@@ -96,7 +103,7 @@ ruleTester.run('exports-last', rule, {
         export const foo = 'bar'
         const bar = true
       `,
-      errors: [error('ExportNamedDeclaration')],
+      errors: [createInvalidCaseError('ExportNamedDeclaration')],
     }),
     // Export all before variable declaration
     test({
@@ -104,9 +111,9 @@ ruleTester.run('exports-last', rule, {
         export * from './foo'
         const bar = true
       `,
-      errors: [error('ExportAllDeclaration')],
+      errors: [createInvalidCaseError('ExportAllDeclaration')],
     }),
-    // Many exports arround variable declaration
+    // Many exports around variable declaration
     test({
       code: `
         export default 'such foo many bar'
@@ -118,8 +125,8 @@ ruleTester.run('exports-last', rule, {
         export const how = 'many'
       `,
       errors: [
-        error('ExportDefaultDeclaration'),
-        error('ExportNamedDeclaration'),
+        createInvalidCaseError('ExportDefaultDeclaration'),
+        createInvalidCaseError('ExportNamedDeclaration'),
       ],
     }),
   ],

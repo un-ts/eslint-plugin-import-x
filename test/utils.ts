@@ -100,6 +100,9 @@ type GetRuleModuleTypes<TRule> =
       }
     : never
 
+export type GetRuleModuleMessageIds<TRule> =
+  TRule extends RuleModule<infer MessageIds, infer _> ? MessageIds : never
+
 export type GetRuleModuleOptions<TRule> =
   TRule extends RuleModule<infer _, infer Options> ? Options : never
 
