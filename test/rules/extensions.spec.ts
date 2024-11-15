@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath } from '../utils'
+import { createRuleTestCaseFunction, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/extensions'
 
@@ -14,6 +14,8 @@ const ruleTesterWithTypeScriptImports = new TSESLintRuleTester({
     },
   },
 })
+
+const test = createRuleTestCaseFunction<typeof rule>()
 
 ruleTester.run('extensions', rule, {
   valid: [
@@ -165,7 +167,8 @@ ruleTester.run('extensions', rule, {
       code: 'import a from "a/index.js"',
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "a/index.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: 'a/index.js' },
           line: 1,
           column: 15,
         },
@@ -176,7 +179,8 @@ ruleTester.run('extensions', rule, {
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension "js" for "./file.with.dot"',
+          messageId: 'missingKnown',
+          data: { extension: 'js', importPath: './file.with.dot' },
           line: 1,
           column: 17,
         },
@@ -191,12 +195,14 @@ ruleTester.run('extensions', rule, {
       settings: { 'import-x/resolve': { extensions: ['.js', '.json'] } },
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "a/index.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: 'a/index.js' },
           line: 1,
           column: 15,
         },
         {
-          message: 'Missing file extension "json" for "./package"',
+          messageId: 'missingKnown',
+          data: { extension: 'json', importPath: './package' },
           line: 2,
           column: 27,
         },
@@ -214,7 +220,8 @@ ruleTester.run('extensions', rule, {
       },
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./bar.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './bar.js' },
           line: 1,
           column: 17,
         },
@@ -232,7 +239,8 @@ ruleTester.run('extensions', rule, {
       },
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./bar.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './bar.js' },
           line: 1,
           column: 17,
         },
@@ -250,7 +258,8 @@ ruleTester.run('extensions', rule, {
       },
       errors: [
         {
-          message: 'Unexpected use of file extension "jsx" for "./bar.jsx"',
+          messageId: 'unexpected',
+          data: { extension: 'jsx', importPath: './bar.jsx' },
           line: 1,
           column: 23,
         },
@@ -260,8 +269,8 @@ ruleTester.run('extensions', rule, {
       code: 'import "./bar.coffee"',
       errors: [
         {
-          message:
-            'Unexpected use of file extension "coffee" for "./bar.coffee"',
+          messageId: 'unexpected',
+          data: { extension: 'coffee', importPath: './bar.coffee' },
           line: 1,
           column: 8,
         },
@@ -282,7 +291,8 @@ ruleTester.run('extensions', rule, {
       },
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./bar.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './bar.js' },
           line: 1,
           column: 19,
         },
@@ -294,12 +304,14 @@ ruleTester.run('extensions', rule, {
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension "js" for "."',
+          messageId: 'missingKnown',
+          data: { extension: 'js', importPath: '.' },
           line: 1,
           column: 19,
         },
         {
-          message: 'Missing file extension "js" for ".."',
+          messageId: 'missingKnown',
+          data: { extension: 'js', importPath: '..' },
           line: 2,
           column: 20,
         },
@@ -318,7 +330,8 @@ ruleTester.run('extensions', rule, {
       },
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./bar.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './bar.js' },
           line: 1,
           column: 19,
         },
@@ -331,7 +344,8 @@ ruleTester.run('extensions', rule, {
       options: ['never'],
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./fake-file.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './fake-file.js' },
           line: 1,
           column: 19,
         },
@@ -342,7 +356,8 @@ ruleTester.run('extensions', rule, {
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension for "non-package/test"',
+          messageId: 'missing',
+          data: { importPath: 'non-package/test' },
           line: 1,
           column: 19,
         },
@@ -354,7 +369,8 @@ ruleTester.run('extensions', rule, {
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension for "@name/pkg/test"',
+          messageId: 'missing',
+          data: { importPath: '@name/pkg/test' },
           line: 1,
           column: 19,
         },
@@ -366,8 +382,8 @@ ruleTester.run('extensions', rule, {
       options: ['never'],
       errors: [
         {
-          message:
-            'Unexpected use of file extension "js" for "@name/pkg/test.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: '@name/pkg/test.js' },
           line: 1,
           column: 19,
         },
@@ -387,12 +403,14 @@ ruleTester.run('extensions', rule, {
       options: ['always', { ignorePackages: true }],
       errors: [
         {
-          message: 'Missing file extension for "./Component"',
+          messageId: 'missing',
+          data: { importPath: './Component' },
           line: 4,
           column: 31,
         },
         {
-          message: 'Missing file extension for "@/configs/chart"',
+          messageId: 'missing',
+          data: { importPath: '@/configs/chart' },
           line: 7,
           column: 27,
         },
@@ -412,12 +430,14 @@ ruleTester.run('extensions', rule, {
       options: ['ignorePackages'],
       errors: [
         {
-          message: 'Missing file extension for "./Component"',
+          messageId: 'missing',
+          data: { importPath: './Component' },
           line: 4,
           column: 31,
         },
         {
-          message: 'Missing file extension for "@/configs/chart"',
+          messageId: 'missing',
+          data: { importPath: '@/configs/chart' },
           line: 7,
           column: 27,
         },
@@ -433,13 +453,15 @@ ruleTester.run('extensions', rule, {
       `,
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./foo.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './foo.js' },
+
           line: 2,
           column: 25,
         },
         {
-          message:
-            'Unexpected use of file extension "jsx" for "./Component.jsx"',
+          messageId: 'unexpected',
+          data: { extension: 'jsx', importPath: './Component.jsx' },
           line: 4,
           column: 31,
         },
@@ -455,8 +477,8 @@ ruleTester.run('extensions', rule, {
       `,
       errors: [
         {
-          message:
-            'Unexpected use of file extension "jsx" for "./Component.jsx"',
+          messageId: 'unexpected',
+          data: { extension: 'jsx', importPath: './Component.jsx' },
           line: 4,
           column: 31,
         },
@@ -472,7 +494,8 @@ ruleTester.run('extensions', rule, {
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension for "./foo"',
+          messageId: 'missing',
+          data: { importPath: './foo' },
           line: 1,
           column: 21,
         },
@@ -485,7 +508,8 @@ ruleTester.run('extensions', rule, {
       options: ['never'],
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./foo.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './foo.js' },
           line: 1,
           column: 21,
         },
@@ -498,8 +522,8 @@ ruleTester.run('extensions', rule, {
       options: ['never'],
       errors: [
         {
-          message:
-            'Unexpected use of file extension "js" for "./foo.js?a=True"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './foo.js?a=True' },
           line: 1,
           column: 27,
         },
@@ -510,19 +534,22 @@ ruleTester.run('extensions', rule, {
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension for "./foo?a=True.ext"',
+          messageId: 'missing',
+          data: { importPath: './foo?a=True.ext' },
           line: 1,
           column: 30,
         },
       ],
     }),
+
     // require (#1230)
     test({
       code: ['const { foo } = require("./foo")', 'export { foo }'].join('\n'),
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension for "./foo"',
+          messageId: 'missing',
+          data: { importPath: './foo' },
           line: 1,
           column: 25,
         },
@@ -535,7 +562,8 @@ ruleTester.run('extensions', rule, {
       options: ['never'],
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./foo.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './foo.js' },
           line: 1,
           column: 25,
         },
@@ -548,7 +576,8 @@ ruleTester.run('extensions', rule, {
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension for "./foo"',
+          messageId: 'missing',
+          data: { importPath: './foo' },
           line: 1,
           column: 21,
         },
@@ -562,11 +591,13 @@ ruleTester.run('extensions', rule, {
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension for "@/ImNotAScopedModule"',
+          messageId: 'missing',
+          data: { importPath: '@/ImNotAScopedModule' },
           line: 2,
         },
         {
-          message: 'Missing file extension for "@/configs/chart"',
+          messageId: 'missing',
+          data: { importPath: '@/configs/chart' },
           line: 3,
         },
       ],
@@ -576,7 +607,8 @@ ruleTester.run('extensions', rule, {
       options: ['never'],
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./foo.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './foo.js' },
           line: 1,
           column: 21,
         },
@@ -589,7 +621,8 @@ ruleTester.run('extensions', rule, {
       options: ['always'],
       errors: [
         {
-          message: 'Missing file extension for "./foo"',
+          messageId: 'missing',
+          data: { importPath: './foo' },
           line: 1,
           column: 15,
         },
@@ -600,7 +633,9 @@ ruleTester.run('extensions', rule, {
       options: ['never'],
       errors: [
         {
-          message: 'Unexpected use of file extension "js" for "./foo.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: './foo.js' },
+
           line: 1,
           column: 15,
         },
@@ -611,8 +646,9 @@ ruleTester.run('extensions', rule, {
       options: ['never'],
       errors: [
         {
-          message:
-            'Unexpected use of file extension "js" for "@/ImNotAScopedModule.js"',
+          messageId: 'unexpected',
+          data: { extension: 'js', importPath: '@/ImNotAScopedModule.js' },
+
           line: 1,
         },
       ],
@@ -634,8 +670,11 @@ ruleTester.run('extensions', rule, {
       },
       errors: [
         {
-          message:
-            'Unexpected use of file extension "js" for "@test-scope/some-module/index.js"',
+          messageId: 'unexpected',
+          data: {
+            extension: 'js',
+            importPath: '@test-scope/some-module/index.js',
+          },
           line: 3,
         },
       ],
@@ -648,7 +687,8 @@ ruleTester.run('extensions', rule, {
       options: ['ignorePackages'],
       errors: [
         {
-          message: 'Missing file extension for "."',
+          messageId: 'missing',
+          data: { importPath: '.' },
           line: 1,
         },
       ],
@@ -660,7 +700,8 @@ ruleTester.run('extensions', rule, {
       options: ['ignorePackages'],
       errors: [
         {
-          message: 'Missing file extension for ".."',
+          messageId: 'missing',
+          data: { importPath: '..' },
           line: 1,
         },
       ],
@@ -689,7 +730,12 @@ describe('TypeScript', () => {
     invalid: [
       test({
         code: 'import T from "./typescript-declare";',
-        errors: ['Missing file extension for "./typescript-declare"'],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './typescript-declare' },
+          },
+        ],
         options: [
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
@@ -697,7 +743,12 @@ describe('TypeScript', () => {
       }),
       test({
         code: 'export { MyType } from "./typescript-declare";',
-        errors: ['Missing file extension for "./typescript-declare"'],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './typescript-declare' },
+          },
+        ],
         options: [
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
@@ -705,34 +756,49 @@ describe('TypeScript', () => {
       }),
       test({
         code: 'import type T from "./typescript-declare";',
-        errors: ['Missing file extension for "./typescript-declare"'],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './typescript-declare' },
+          },
+        ],
         options: [
           'always',
           {
-            ts: 'never',
-            tsx: 'never',
-            js: 'never',
-            jsx: 'never',
+            pattern: {
+              ts: 'never',
+              tsx: 'never',
+              js: 'never',
+              jsx: 'never',
+            },
             checkTypeImports: true,
           },
         ],
       }),
       test({
         code: 'export type { MyType } from "./typescript-declare";',
-        errors: ['Missing file extension for "./typescript-declare"'],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './typescript-declare' },
+          },
+        ],
         options: [
           'always',
           {
-            ts: 'never',
-            tsx: 'never',
-            js: 'never',
-            jsx: 'never',
+            pattern: {
+              ts: 'never',
+              tsx: 'never',
+              js: 'never',
+              jsx: 'never',
+            },
             checkTypeImports: true,
           },
         ],
       }),
     ],
   })
+
   ruleTesterWithTypeScriptImports.run('extensions', rule, {
     valid: [
       test({
@@ -747,12 +813,22 @@ describe('TypeScript', () => {
     invalid: [
       test({
         code: 'import type { MyType } from "./typescript-declare";',
-        errors: ['Missing file extension for "./typescript-declare"'],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './typescript-declare' },
+          },
+        ],
         options: ['always', { checkTypeImports: true }],
       }),
       test({
         code: 'export type { MyType } from "./typescript-declare";',
-        errors: ['Missing file extension for "./typescript-declare"'],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './typescript-declare' },
+          },
+        ],
         options: ['always', { checkTypeImports: true }],
       }),
     ],
