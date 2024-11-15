@@ -1,21 +1,46 @@
 import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_VALID_CASES, testFilePath, parsers } from '../utils'
+import {
+  createRuleTestCaseFunction,
+  SYNTAX_VALID_CASES,
+  testFilePath,
+  parsers,
+} from '../utils'
+import type { RunTests, GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/named'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
 const ruleTester = new TSESLintRuleTester()
 
-function error(
+const test = createRuleTestCaseFunction<typeof rule>()
+
+function createNotFoundError(
   name: string,
   module: string,
   type: `${TSESTree.AST_NODE_TYPES}` = 'Identifier',
-) {
-  return { message: `${name} not found in '${module}'`, type }
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId: 'notFound',
+    data: { name, path: module },
+    type: type as TSESTree.AST_NODE_TYPES,
+  }
+}
+
+function createNotFoundDeepError(
+  name: string,
+  deepPath: string,
+  type: `${TSESTree.AST_NODE_TYPES}` = 'Identifier',
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId: 'notFoundDeep',
+    data: { name, deepPath },
+    type: type as TSESTree.AST_NODE_TYPES,
+  }
 }
 
 ruleTester.run('named', rule, {
@@ -181,12 +206,12 @@ ruleTester.run('named', rule, {
 
     test({
       code: 'const { baz } = require("./bar")',
-      errors: [error('baz', './bar')],
+      errors: [createNotFoundError('baz', './bar')],
     }),
 
     test({
       code: 'const { baz } = require("./bar")',
-      errors: [error('baz', './bar')],
+      errors: [createNotFoundError('baz', './bar')],
       options: [{ commonjs: false }],
     }),
 
@@ -238,93 +263,101 @@ ruleTester.run('named', rule, {
   invalid: [
     test({
       code: 'import { somethingElse } from "./test-module"',
-      errors: [error('somethingElse', './test-module')],
+      errors: [createNotFoundError('somethingElse', './test-module')],
     }),
 
     test({
       code: 'import { baz } from "./bar"',
-      errors: [error('baz', './bar')],
+      errors: [createNotFoundError('baz', './bar')],
     }),
 
     // test multiple
     test({
       code: 'import { baz, bop } from "./bar"',
-      errors: [error('baz', './bar'), error('bop', './bar')],
+      errors: [
+        createNotFoundError('baz', './bar'),
+        createNotFoundError('bop', './bar'),
+      ],
     }),
 
     test({
       code: 'import {a, b, c} from "./named-exports"',
-      errors: [error('c', './named-exports')],
+      errors: [createNotFoundError('c', './named-exports')],
     }),
 
     test({
       code: 'import { a } from "./default-export"',
-      errors: [error('a', './default-export')],
+      errors: [createNotFoundError('a', './default-export')],
     }),
 
     test({
       code: 'import { ActionTypess } from "./qc"',
-      errors: [error('ActionTypess', './qc')],
+      errors: [createNotFoundError('ActionTypess', './qc')],
     }),
 
     test({
       code: 'import {a, b, c, d, e} from "./re-export"',
-      errors: [error('e', './re-export')],
+      errors: [createNotFoundError('e', './re-export')],
     }),
 
     test({
       code: 'import { a } from "./re-export-names"',
-      errors: [error('a', './re-export-names')],
+      errors: [createNotFoundError('a', './re-export-names')],
     }),
 
     // export tests
     test({
       code: 'export { bar } from "./bar"',
-      errors: ["bar not found in './bar'"],
+      errors: [createNotFoundError('bar', './bar')],
     }),
 
     // es7
     test({
       code: 'export bar2, { bar } from "./bar"',
       languageOptions: { parser: require(parsers.BABEL) },
-      errors: ["bar not found in './bar'"],
+      errors: [createNotFoundError('bar', './bar')],
     }),
     test({
       code: 'import { foo, bar, baz } from "./named-trampoline"',
       languageOptions: { parser: require(parsers.BABEL) },
-      errors: ["baz not found in './named-trampoline'"],
+      errors: [createNotFoundError('baz', './named-trampoline')],
     }),
     test({
       code: 'import { baz } from "./broken-trampoline"',
       languageOptions: { parser: require(parsers.BABEL) },
-      errors: ['baz not found via broken-trampoline.js -> named-exports.js'],
+      errors: [
+        createNotFoundDeepError(
+          'baz',
+          'broken-trampoline.js -> named-exports.js',
+        ),
+      ],
     }),
 
     test({
       code: 'const { baz } = require("./bar")',
-      errors: [error('baz', './bar')],
+      errors: [createNotFoundError('baz', './bar')],
       options: [{ commonjs: true }],
     }),
 
     test({
       code: 'let { baz } = require("./bar")',
-      errors: [error('baz', './bar')],
+      errors: [createNotFoundError('baz', './bar')],
       options: [{ commonjs: true }],
     }),
 
     test({
       code: 'const { baz: bar, bop } = require("./bar"), { a } = require("./re-export-names")',
       errors: [
-        error('baz', './bar'),
-        error('bop', './bar'),
-        error('a', './re-export-names'),
+        createNotFoundError('baz', './bar'),
+        createNotFoundError('bop', './bar'),
+        createNotFoundError('a', './re-export-names'),
       ],
       options: [{ commonjs: true }],
     }),
 
     test({
       code: 'const { default: defExport } = require("./named-exports")',
-      errors: [error('default', './named-exports')],
+      errors: [createNotFoundError('default', './named-exports')],
       options: [{ commonjs: true }],
     }),
 
@@ -341,42 +374,44 @@ ruleTester.run('named', rule, {
     test({
       code: 'import  { type MyOpaqueType, MyMissingClass } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
-      errors: ["MyMissingClass not found in './flowtypes'"],
+      errors: [createNotFoundError('MyMissingClass', './flowtypes')],
     }),
 
     // jsnext
     test({
       code: '/*jsnext*/ import { createSnorlax } from "redux"',
       settings: { 'import-x/ignore': [] },
-      errors: ["createSnorlax not found in 'redux'"],
+      errors: [createNotFoundError('createSnorlax', 'redux')],
     }),
     // should work without ignore
     test({
       code: '/*jsnext*/ import { createSnorlax } from "redux"',
-      errors: ["createSnorlax not found in 'redux'"],
+      errors: [createNotFoundError('createSnorlax', 'redux')],
     }),
 
     // ignore is ignored if exports are found
     test({
       code: 'import { baz } from "es6-module"',
-      errors: ["baz not found in 'es6-module'"],
+      errors: [createNotFoundError('baz', 'es6-module')],
     }),
 
     // issue #251
     test({
       code: 'import { foo, bar, bap } from "./re-export-default"',
-      errors: ["bap not found in './re-export-default'"],
+      errors: [createNotFoundError('bap', './re-export-default')],
     }),
 
     // #328: * exports do not include default
     test({
       code: 'import { default as barDefault } from "./re-export"',
-      errors: [`default not found in './re-export'`],
+      errors: [createNotFoundError('default', './re-export')],
     }),
 
     test({
       code: 'import { "somethingElse" as somethingElse } from "./test-module"',
-      errors: [error('somethingElse', './test-module', 'Literal')],
+      errors: [
+        createNotFoundError('somethingElse', './test-module', 'Literal'),
+      ],
       languageOptions: {
         parser: require(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
@@ -385,8 +420,8 @@ ruleTester.run('named', rule, {
     test({
       code: 'import { "baz" as baz, "bop" as bop } from "./bar"',
       errors: [
-        error('baz', './bar', 'Literal'),
-        error('bop', './bar', 'Literal'),
+        createNotFoundError('baz', './bar', 'Literal'),
+        createNotFoundError('bop', './bar', 'Literal'),
       ],
       languageOptions: {
         parser: require(parsers.ESPREE),
@@ -395,7 +430,7 @@ ruleTester.run('named', rule, {
     }),
     test({
       code: 'import { "default" as barDefault } from "./re-export"',
-      errors: [`default not found in './re-export'`],
+      errors: [createNotFoundError('default', './re-export', 'Literal')],
       languageOptions: {
         parser: require(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
@@ -416,7 +451,7 @@ if (!CASE_SENSITIVE_FS) {
       invalid: [
         test({
           code: 'import { foo } from "./Named-Exports"',
-          errors: [`foo not found in './Named-Exports'`],
+          errors: [createNotFoundError('foo', './Named-Exports')],
         }),
       ],
     })
@@ -434,7 +469,7 @@ describe('export *', () => {
     invalid: [
       test({
         code: 'import { bar } from "./export-all"',
-        errors: [`bar not found in './export-all'`],
+        errors: [createNotFoundError('bar', './export-all')],
       }),
     ],
   })
@@ -446,7 +481,7 @@ describe('TypeScript', () => {
     'import-x/resolver': { 'eslint-import-resolver-typescript': true },
   }
 
-  let valid = [
+  let valid: RunTests<typeof rule>['valid'] = [
     test({
       code: `import x from './typescript-export-assign-object'`,
       languageOptions: {
@@ -461,7 +496,7 @@ describe('TypeScript', () => {
     }),
   ]
 
-  const invalid = [
+  let invalid: RunTests<typeof rule>['invalid'] = [
     // TODO: uncomment this test
     // test({
     //   code: `import {a} from './export-star-3/b';`,
@@ -484,10 +519,7 @@ describe('TypeScript', () => {
       },
       settings,
       errors: [
-        {
-          message: `NotExported not found in './typescript-export-assign-object'`,
-          type: 'Identifier',
-        },
+        createNotFoundError('NotExported', './typescript-export-assign-object'),
       ],
     }),
     test({
@@ -503,10 +535,7 @@ describe('TypeScript', () => {
       },
       settings,
       errors: [
-        {
-          message: `FooBar not found in './typescript-export-assign-object'`,
-          type: 'Identifier',
-        },
+        createNotFoundError('FooBar', './typescript-export-assign-object'),
       ],
     }),
   ]
@@ -562,30 +591,21 @@ describe('TypeScript', () => {
       }),
     ]
 
-    invalid.push(
+    invalid = [
+      ...invalid,
       test({
         code: `import { MissingType } from "./${source}"`,
 
         settings,
-        errors: [
-          {
-            message: `MissingType not found in './${source}'`,
-            type: 'Identifier',
-          },
-        ],
+        errors: [createNotFoundError('MissingType', `./${source}`)],
       }),
       test({
         code: `import { NotExported } from "./${source}"`,
 
         settings,
-        errors: [
-          {
-            message: `NotExported not found in './${source}'`,
-            type: 'Identifier',
-          },
-        ],
+        errors: [createNotFoundError('NotExported', `./${source}`)],
       }),
-    )
+    ]
   }
 
   ruleTester.run(`named`, rule, {
