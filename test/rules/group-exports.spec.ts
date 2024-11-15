@@ -1,15 +1,8 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers, test } from '../utils'
+import { createRuleTestCaseFunction, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/group-exports'
-
-const errors = {
-  named:
-    'Multiple named export declarations; consolidate all named exports into a single export declaration',
-  commonjs:
-    'Multiple CommonJS exports; consolidate all exports into a single assignment to `module.exports`',
-}
 
 const ruleTester = new TSESLintRuleTester({
   languageOptions: {
@@ -24,6 +17,8 @@ const ruleTester = new TSESLintRuleTester({
     },
   },
 })
+
+const test = createRuleTestCaseFunction<typeof rule>()
 
 ruleTester.run('group-exports', rule, {
   valid: [
@@ -190,14 +185,20 @@ ruleTester.run('group-exports', rule, {
         export const test = true
         export const another = true
       `,
-      errors: [errors.named, errors.named],
+      errors: [
+        { messageId: 'ExportNamedDeclaration' },
+        { messageId: 'ExportNamedDeclaration' },
+      ],
     }),
     test({
       code: `
         export { method1 } from './module-1'
         export { method2 } from './module-1'
       `,
-      errors: [errors.named, errors.named],
+      errors: [
+        { messageId: 'ExportNamedDeclaration' },
+        { messageId: 'ExportNamedDeclaration' },
+      ],
     }),
     test({
       code: `
@@ -205,49 +206,71 @@ ruleTester.run('group-exports', rule, {
         module.exports.test = true
         module.exports.another = true
       `,
-      errors: [errors.commonjs, errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
         module.exports = {}
         module.exports.test = true
       `,
-      errors: [errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
         module.exports = { test: true }
         module.exports.another = true
       `,
-      errors: [errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
         module.exports.test = true
         module.exports.another = true
       `,
-      errors: [errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
         exports.test = true
         module.exports.another = true
       `,
-      errors: [errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
         module.exports = () => {}
         module.exports.attached = true
       `,
-      errors: [errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
         module.exports = function test() {}
         module.exports.attached = true
       `,
-      errors: [errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
@@ -255,14 +278,21 @@ ruleTester.run('group-exports', rule, {
         exports.test = true
         exports.another = true
       `,
-      errors: [errors.commonjs, errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
         module.exports = "non-object"
         module.exports.attached = true
       `,
-      errors: [errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
@@ -270,7 +300,11 @@ ruleTester.run('group-exports', rule, {
         module.exports.attached = true
         module.exports.another = true
       `,
-      errors: [errors.commonjs, errors.commonjs, errors.commonjs],
+      errors: [
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+        { messageId: 'AssignmentExpression' },
+      ],
     }),
     test({
       code: `
@@ -285,14 +319,20 @@ ruleTester.run('group-exports', rule, {
         export type { secondType };
         export { first };
       `,
-      errors: [errors.named, errors.named],
+      errors: [
+        { messageId: 'ExportNamedDeclaration' },
+        { messageId: 'ExportNamedDeclaration' },
+      ],
     }),
     test({
       code: `
         export type { type1 } from './module-1'
         export type { type2 } from './module-1'
       `,
-      errors: [errors.named, errors.named],
+      errors: [
+        { messageId: 'ExportNamedDeclaration' },
+        { messageId: 'ExportNamedDeclaration' },
+      ],
     }),
   ],
 })
