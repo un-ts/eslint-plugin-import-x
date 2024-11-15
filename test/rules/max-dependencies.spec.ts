@@ -1,10 +1,12 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, parsers } from '../utils'
+import { parsers, createRuleTestCaseFunction } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/max-dependencies'
 
 const ruleTester = new TSESLintRuleTester()
+
+const test = createRuleTestCaseFunction<typeof rule>()
 
 ruleTester.run('max-dependencies', rule, {
   valid: [
@@ -38,7 +40,7 @@ ruleTester.run('max-dependencies', rule, {
           max: 1,
         },
       ],
-      errors: ['Maximum number of dependencies (1) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 1 } }],
     }),
 
     test({
@@ -48,7 +50,7 @@ ruleTester.run('max-dependencies', rule, {
           max: 2,
         },
       ],
-      errors: ['Maximum number of dependencies (2) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 2 } }],
     }),
 
     test({
@@ -58,7 +60,7 @@ ruleTester.run('max-dependencies', rule, {
           max: 2,
         },
       ],
-      errors: ['Maximum number of dependencies (2) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 2 } }],
     }),
 
     test({
@@ -68,7 +70,7 @@ ruleTester.run('max-dependencies', rule, {
           max: 2,
         },
       ],
-      errors: ['Maximum number of dependencies (2) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 2 } }],
     }),
 
     test({
@@ -79,7 +81,7 @@ ruleTester.run('max-dependencies', rule, {
           max: 1,
         },
       ],
-      errors: ['Maximum number of dependencies (1) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 1 } }],
     }),
 
     test({
@@ -91,7 +93,7 @@ ruleTester.run('max-dependencies', rule, {
           ignoreTypeImports: false,
         },
       ],
-      errors: ['Maximum number of dependencies (2) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 2 } }],
     }),
   ],
 })
@@ -119,7 +121,7 @@ describe('TypeScript', () => {
             max: 1,
           },
         ],
-        errors: ['Maximum number of dependencies (1) exceeded.'],
+        errors: [{ messageId: 'max', data: { max: 1 } }],
       }),
 
       test({
@@ -131,7 +133,7 @@ describe('TypeScript', () => {
             ignoreTypeImports: false,
           },
         ],
-        errors: ['Maximum number of dependencies (2) exceeded.'],
+        errors: [{ messageId: 'max', data: { max: 2 } }],
       }),
     ],
   })
