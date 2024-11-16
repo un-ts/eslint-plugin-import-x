@@ -2,4 +2,4 @@
 "eslint-plugin-import-x": patch
 ---
 
-fix(first): add missing value in options type
+fix(first): improves the type declaration of the rule `first`'s option
