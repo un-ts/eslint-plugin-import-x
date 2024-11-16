@@ -1,10 +1,27 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { test, SYNTAX_VALID_CASES, parsers } from '../utils'
+import {
+  SYNTAX_VALID_CASES,
+  parsers,
+  createRuleTestCaseFunction,
+} from '../utils'
+import type { GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-anonymous-default-export'
 
 const ruleTester = new TSESLintRuleTester()
+
+const test = createRuleTestCaseFunction<typeof rule>()
+
+function createAssignError(
+  type: string,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId: 'assign',
+    data: { type },
+  }
+}
 
 ruleTester.run('no-anonymous-default-export', rule, {
   valid: [
@@ -68,96 +85,51 @@ ruleTester.run('no-anonymous-default-export', rule, {
   invalid: [
     test({
       code: 'export default []',
-      errors: [
-        {
-          message:
-            'Assign array to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('array')],
     }),
     test({
       code: 'export default () => {}',
-      errors: [
-        {
-          message:
-            'Assign arrow function to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('arrow function')],
     }),
     test({
       code: 'export default class {}',
-      errors: [{ message: 'Unexpected default export of anonymous class' }],
+      errors: [{ messageId: 'anonymous', data: { type: 'class' } }],
     }),
     test({
       code: 'export default function() {}',
-      errors: [{ message: 'Unexpected default export of anonymous function' }],
+      errors: [{ messageId: 'anonymous', data: { type: 'function' } }],
     }),
     test({
       code: 'export default 123',
-      errors: [
-        {
-          message:
-            'Assign literal to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('literal')],
     }),
     test({
       code: "export default 'foo'",
-      errors: [
-        {
-          message:
-            'Assign literal to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('literal')],
     }),
     test({
       code: 'export default `foo`',
-      errors: [
-        {
-          message:
-            'Assign literal to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('literal')],
     }),
     test({
       code: 'export default {}',
-      errors: [
-        {
-          message:
-            'Assign object to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('object')],
     }),
     test({
       code: 'export default foo(bar)',
       options: [{ allowCallExpression: false }],
-      errors: [
-        {
-          message:
-            'Assign call result to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('call result')],
     }),
     test({
       code: 'export default new Foo()',
-      errors: [
-        {
-          message:
-            'Assign instance to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('instance')],
     }),
 
     // Test failure with non-covering exception
     test({
       code: 'export default 123',
       options: [{ allowObject: true }],
-      errors: [
-        {
-          message:
-            'Assign literal to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('literal')],
     }),
   ],
 })
