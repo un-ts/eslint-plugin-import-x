@@ -1,20 +1,24 @@
 import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { parsers, test } from '../utils'
+import { createRuleTestCaseFunction, parsers } from '../utils'
+import type { GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-absolute-path'
 
 const ruleTester = new TSESLintRuleTester()
 
-const error = {
+const test = createRuleTestCaseFunction<typeof rule>()
+
+const ABSOLUTE_ERROR: TSESLintTestCaseError<
+  GetRuleModuleMessageIds<typeof rule>
+> = {
   messageId: 'absolute',
 }
 
-function absolutePath(testPath: string) {
-  return path.join(__dirname, testPath)
-}
+const absolutePath = (testPath: string) => path.join(__dirname, testPath)
 
 ruleTester.run('no-absolute-path', rule, {
   valid: [
@@ -64,57 +68,57 @@ ruleTester.run('no-absolute-path', rule, {
     test({
       code: `import f from "${absolutePath('/foo')}"`,
       filename: absolutePath('/foo/bar/index.js'),
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'import f from ".."',
     }),
     test({
       code: `import f from "${absolutePath('/foo/bar/baz.js')}"`,
       filename: absolutePath('/foo/bar/index.js'),
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'import f from "./baz.js"',
     }),
     test({
       code: `import f from "${absolutePath('/foo/path')}"`,
       filename: absolutePath('/foo/bar/index.js'),
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'import f from "../path"',
     }),
     test({
       code: `import f from "${absolutePath('/some/path')}"`,
       filename: absolutePath('/foo/bar/index.js'),
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'import f from "../../some/path"',
     }),
     test({
       code: `import f from "${absolutePath('/some/path')}"`,
       filename: absolutePath('/foo/bar/index.js'),
       options: [{ amd: true }],
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'import f from "../../some/path"',
     }),
     test({
       code: `var f = require("${absolutePath('/foo')}")`,
       filename: absolutePath('/foo/bar/index.js'),
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'var f = require("..")',
     }),
     test({
       code: `var f = require("${absolutePath('/foo/path')}")`,
       filename: absolutePath('/foo/bar/index.js'),
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'var f = require("../path")',
     }),
     test({
       code: `var f = require("${absolutePath('/some/path')}")`,
       filename: absolutePath('/foo/bar/index.js'),
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'var f = require("../../some/path")',
     }),
     test({
       code: `var f = require("${absolutePath('/some/path')}")`,
       filename: absolutePath('/foo/bar/index.js'),
       options: [{ amd: true }],
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'var f = require("../../some/path")',
     }),
     // validate amd
@@ -122,7 +126,7 @@ ruleTester.run('no-absolute-path', rule, {
       code: `require(["${absolutePath('/some/path')}"], function (f) { /* ... */ })`,
       filename: absolutePath('/foo/bar/index.js'),
       options: [{ amd: true }],
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'require(["../../some/path"], function (f) { /* ... */ })',
     }),
     test({
@@ -130,7 +134,7 @@ ruleTester.run('no-absolute-path', rule, {
       filename: absolutePath('/foo/bar/index.js'),
       languageOptions: { parser: require(parsers.ESPREE) },
       options: [{ amd: true }],
-      errors: [error],
+      errors: [ABSOLUTE_ERROR],
       output: 'define(["../../some/path"], function (f) { /* ... */ })',
     }),
   ],
