@@ -1,6 +1,14 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import type { TSESTree } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_VALID_CASES, testFilePath, parsers } from '../utils'
+import {
+  createRuleTestCaseFunction,
+  SYNTAX_VALID_CASES,
+  testFilePath,
+  parsers,
+} from '../utils'
+import type { GetRuleModuleMessageIds, RunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/namespace'
 
@@ -10,13 +18,31 @@ const ruleTester = new TSESLintRuleTester({
   },
 })
 
-function error(name: string, namespace: string) {
+const test = createRuleTestCaseFunction<typeof rule>()
+
+function createNotFoundInNamespaceError(
+  name: string,
+  namespace: string,
+  type?: `${TSESTree.AST_NODE_TYPES}`,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
   return {
-    message: `'${name}' not found in imported namespace '${namespace}'.`,
+    messageId: 'notFoundInNamespace',
+    data: { name, namepath: namespace },
+    type: type as TSESTree.AST_NODE_TYPES,
   }
 }
 
-const valid = [
+function createNotFoundInNamespaceDeepError(
+  name: string,
+  namespace: string,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId: 'notFoundInNamespaceDeep',
+    data: { name, namepath: namespace },
+  }
+}
+
+let valid: RunTests<typeof rule>['valid'] = [
   test({
     code: 'import "./malformed.js"',
     languageOptions: { parser: require(parsers.ESPREE) },
@@ -226,7 +252,7 @@ const valid = [
     },
   }),
 
-  ...SYNTAX_VALID_CASES,
+  ...(SYNTAX_VALID_CASES as RunTests<typeof rule>['valid']),
 
   test({
     code: `
@@ -294,68 +320,46 @@ const valid = [
   }),
 ]
 
-const invalid = [
+let invalid: RunTests<typeof rule>['invalid'] = [
   test({
     code: "import * as names from './named-exports'; console.log(names.c)",
-    errors: [error('c', 'names')],
+    errors: [createNotFoundInNamespaceError('c', 'names')],
   }),
 
   test({
     code: "import * as names from './named-exports'; console.log(names['a']);",
-    errors: [
-      "Unable to validate computed reference to imported namespace 'names'.",
-    ],
+    errors: [{ messageId: 'computedReference', data: { namespace: 'names' } }],
   }),
 
   // assignment warning (from no-reassign)
   test({
     code: "import * as foo from './bar'; foo.foo = 'y';",
-    errors: [{ message: "Assignment to member of namespace 'foo'." }],
+    errors: [{ messageId: 'namespaceMember', data: { namespace: 'foo' } }],
   }),
   test({
     code: "import * as foo from './bar'; foo.x = 'y';",
     errors: [
-      "Assignment to member of namespace 'foo'.",
-      "'x' not found in imported namespace 'foo'.",
+      { messageId: 'namespaceMember', data: { namespace: 'foo' } },
+      createNotFoundInNamespaceError('x', 'foo'),
     ],
   }),
 
   // invalid destructuring
   test({
     code: 'import * as names from "./named-exports"; const { c } = names',
-    errors: [
-      {
-        type: 'Property',
-        message: "'c' not found in imported namespace 'names'.",
-      },
-    ],
+    errors: [createNotFoundInNamespaceError('c', 'names', 'Property')],
   }),
   test({
     code: 'import * as names from "./named-exports"; function b() { const { c } = names }',
-    errors: [
-      {
-        type: 'Property',
-        message: "'c' not found in imported namespace 'names'.",
-      },
-    ],
+    errors: [createNotFoundInNamespaceError('c', 'names', 'Property')],
   }),
   test({
     code: 'import * as names from "./named-exports"; const { c: d } = names',
-    errors: [
-      {
-        type: 'Property',
-        message: "'c' not found in imported namespace 'names'.",
-      },
-    ],
+    errors: [createNotFoundInNamespaceError('c', 'names', 'Property')],
   }),
   test({
     code: 'import * as names from "./named-exports"; const { c: { d } } = names',
-    errors: [
-      {
-        type: 'Property',
-        message: "'c' not found in imported namespace 'names'.",
-      },
-    ],
+    errors: [createNotFoundInNamespaceError('c', 'names', 'Property')],
   }),
 
   /////////
@@ -365,7 +369,7 @@ const invalid = [
   test({
     code: 'import * as Endpoints from "./issue-195/Endpoints"; console.log(Endpoints.Foo)',
     languageOptions: { parser: require(parsers.BABEL) },
-    errors: ["'Foo' not found in imported namespace 'Endpoints'."],
+    errors: [createNotFoundInNamespaceError('Foo', 'Endpoints')],
   }),
 
   // parse errors
@@ -376,38 +380,39 @@ const invalid = [
     },
     errors: [
       {
+        // @ts-expect-error testing parsing error
         message:
           "Parse errors in imported module './malformed.js': 'return' outside of function (1:1)",
-        type: 'Literal',
+        type: 'Literal' as TSESTree.AST_NODE_TYPES,
       },
     ],
   }),
 
   test({
     code: "import b from './deep/default'; console.log(b.e)",
-    errors: ["'e' not found in imported namespace 'b'."],
+    errors: [createNotFoundInNamespaceError('e', 'b')],
   }),
 
   // respect hoisting
   test({
     code: `console.log(names.c); import * as names from './named-exports';`,
-    errors: [error('c', 'names')],
+    errors: [createNotFoundInNamespaceError('c', 'names')],
   }),
   test({
     code: `function x() { console.log(names.c) } import * as names from './named-exports';`,
-    errors: [error('c', 'names')],
+    errors: [createNotFoundInNamespaceError('c', 'names')],
   }),
 
   // #328: * exports do not include default
   test({
     code: 'import * as ree from "./re-export"; console.log(ree.default)',
-    errors: [`'default' not found in imported namespace 'ree'.`],
+    errors: [createNotFoundInNamespaceError('default', 'ree')],
   }),
 
   // JSX
   test({
     code: 'import * as Names from "./named-exports"; const Foo = <Names.e/>',
-    errors: [error('e', 'Names')],
+    errors: [createNotFoundInNamespaceError('e', 'Names')],
     languageOptions: {
       parserOptions: {
         ecmaFeatures: {
@@ -419,7 +424,7 @@ const invalid = [
 
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.e)`,
-    errors: ["'e' not found in imported namespace 'b'."],
+    errors: [createNotFoundInNamespaceError('e', 'b')],
     languageOptions: {
       parser: require(parsers.ESPREE),
       parserOptions: { ecmaVersion: 2022 },
@@ -427,7 +432,7 @@ const invalid = [
   }),
   test({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.e)`,
-    errors: ["'e' not found in deeply imported namespace 'b.c'."],
+    errors: [createNotFoundInNamespaceDeepError('e', 'b.c')],
     languageOptions: {
       parser: require(parsers.ESPREE),
       parserOptions: { ecmaVersion: 2022 },
@@ -440,7 +445,8 @@ const invalid = [
 //////////////////////
 for (const [folder, parser] of [['deep'], ['deep-es7', parsers.BABEL]]) {
   // close over params
-  valid.push(
+  valid = [
+    ...valid,
     test({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.d.e)`,
@@ -466,40 +472,41 @@ for (const [folder, parser] of [['deep'], ['deep-es7', parsers.BABEL]]) {
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.default)`,
     }),
-  )
+  ]
 
-  invalid.push(
+  invalid = [
+    ...invalid,
     test({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.e)`,
-      errors: ["'e' not found in deeply imported namespace 'a.b'."],
+      errors: [createNotFoundInNamespaceDeepError('e', 'a.b')],
     }),
     test({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.e)`,
-      errors: ["'e' not found in imported namespace 'b'."],
+      errors: [createNotFoundInNamespaceError('e', 'b')],
     }),
     test({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.e)`,
-      errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
+      errors: [createNotFoundInNamespaceDeepError('e', 'a.b.c')],
     }),
     test({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.c.e)`,
-      errors: ["'e' not found in deeply imported namespace 'b.c'."],
+      errors: [createNotFoundInNamespaceDeepError('e', 'b.c')],
     }),
     test({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{ e }} = a`,
-      errors: ["'e' not found in deeply imported namespace 'a.b'."],
+      errors: [createNotFoundInNamespaceDeepError('e', 'a.b')],
     }),
     test({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{c:{ e }}} = a`,
-      errors: ["'e' not found in deeply imported namespace 'a.b.c'."],
+      errors: [createNotFoundInNamespaceDeepError('e', 'a.b.c')],
     }),
-  )
+  ]
 }
 
 ruleTester.run('namespace', rule, { valid, invalid })

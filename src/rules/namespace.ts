@@ -15,6 +15,7 @@ type MessageId =
   | 'namespaceMember'
   | 'topLevelNames'
   | 'notFoundInNamespace'
+  | 'notFoundInNamespaceDeep'
 
 type Options = {
   allowComputed?: boolean
@@ -86,15 +87,16 @@ function makeMessage(
   namepath: string[],
   node: TSESTree.Node = last,
 ) {
+  const messageId =
+    namepath.length > 1 ? 'notFoundInNamespaceDeep' : 'notFoundInNamespace'
   return {
     node,
-    messageId: 'notFoundInNamespace' as const,
+    messageId,
     data: {
       name: last.name,
-      depth: namepath.length > 1 ? 'deeply ' : '',
       namepath: namepath.join('.'),
     },
-  }
+  } as const
 }
 
 export = createRule<[Options], MessageId>({
@@ -127,7 +129,9 @@ export = createRule<[Options], MessageId>({
       namespaceMember: "Assignment to member of namespace '{{namespace}}'.",
       topLevelNames: 'Only destructure top-level names.',
       notFoundInNamespace:
-        "'{{name}}' not found in {{depth}}imported namespace '{{namepath}}'.",
+        "'{{name}}' not found in imported namespace '{{namepath}}'.",
+      notFoundInNamespaceDeep:
+        "'{{name}}' not found in deeply imported namespace '{{namepath}}'.",
     },
   },
   defaultOptions: [
