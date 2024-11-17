@@ -5,7 +5,7 @@ import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import {
-  createRuleTestCaseFunction,
+  createRuleTestCaseFunctions,
   SYNTAX_VALID_CASES,
   testFilePath,
   parsers,
@@ -17,7 +17,7 @@ import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
 const ruleTester = new TSESLintRuleTester()
 
-const test = createRuleTestCaseFunction<typeof rule>()
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function createNotFoundError(
   name: string,
@@ -45,184 +45,182 @@ function createNotFoundDeepError(
 
 ruleTester.run('named', rule, {
   valid: [
-    test({
+    tValid({
       code: 'import "./malformed.js"',
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
 
-    test({ code: 'import { foo } from "./bar"' }),
-    test({ code: 'import { foo } from "./empty-module"' }),
-    test({ code: 'import bar from "./bar.js"' }),
-    test({ code: 'import bar, { foo } from "./bar.js"' }),
-    test({ code: 'import {a, b, d} from "./named-exports"' }),
-    test({ code: 'import {ExportedClass} from "./named-exports"' }),
-    test({ code: 'import { destructingAssign } from "./named-exports"' }),
-    test({
+    tValid({ code: 'import { foo } from "./bar"' }),
+    tValid({ code: 'import { foo } from "./empty-module"' }),
+    tValid({ code: 'import bar from "./bar.js"' }),
+    tValid({ code: 'import bar, { foo } from "./bar.js"' }),
+    tValid({ code: 'import {a, b, d} from "./named-exports"' }),
+    tValid({ code: 'import {ExportedClass} from "./named-exports"' }),
+    tValid({ code: 'import { destructingAssign } from "./named-exports"' }),
+    tValid({
       code: 'import { destructingRenamedAssign } from "./named-exports"',
     }),
-    test({ code: 'import { ActionTypes } from "./qc"' }),
-    test({ code: 'import {a, b, c, d} from "./re-export"' }),
-    test({ code: 'import {a, b, c} from "./re-export-common-star"' }),
-    test({ code: 'import {RuleTester} from "./re-export-node_modules"' }),
+    tValid({ code: 'import { ActionTypes } from "./qc"' }),
+    tValid({ code: 'import {a, b, c, d} from "./re-export"' }),
+    tValid({ code: 'import {a, b, c} from "./re-export-common-star"' }),
+    tValid({ code: 'import {RuleTester} from "./re-export-node_modules"' }),
 
-    test({
+    tValid({
       code: 'import { jsxFoo } from "./jsx/AnotherComponent"',
       settings: { 'import-x/resolve': { extensions: ['.js', '.jsx'] } },
     }),
 
-    test({ code: 'import { foo, bar } from "./re-export-names"' }),
+    tValid({ code: 'import { foo, bar } from "./re-export-names"' }),
 
-    test({
+    tValid({
       code: 'import { foo, bar } from "./common"',
       settings: { 'import-x/ignore': ['common'] },
     }),
 
     // ignore core modules by default
-    test({ code: 'import { foo } from "crypto"' }),
-    test({ code: 'import { zoob } from "a"' }),
+    tValid({ code: 'import { foo } from "crypto"' }),
+    tValid({ code: 'import { zoob } from "a"' }),
 
-    test({ code: 'import { someThing } from "./test-module"' }),
+    tValid({ code: 'import { someThing } from "./test-module"' }),
 
     // export tests
-    test({ code: 'export { foo } from "./bar"' }),
-    test({ code: 'export { foo as bar } from "./bar"' }),
-    test({ code: 'export { foo } from "./does-not-exist"' }),
+    tValid({ code: 'export { foo } from "./bar"' }),
+    tValid({ code: 'export { foo as bar } from "./bar"' }),
+    tValid({ code: 'export { foo } from "./does-not-exist"' }),
 
     // es7
-    test({
+    tValid({
       code: 'export bar, { foo } from "./bar"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import { foo, bar } from "./named-trampoline"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // regression tests
-    test({ code: 'let foo; export { foo as bar }' }),
+    tValid({ code: 'let foo; export { foo as bar }' }),
 
     // destructured exports
-    test({ code: 'import { destructuredProp } from "./named-exports"' }),
-    test({ code: 'import { arrayKeyProp } from "./named-exports"' }),
-    test({ code: 'import { deepProp } from "./named-exports"' }),
-    test({ code: 'import { deepSparseElement } from "./named-exports"' }),
+    tValid({ code: 'import { destructuredProp } from "./named-exports"' }),
+    tValid({ code: 'import { arrayKeyProp } from "./named-exports"' }),
+    tValid({ code: 'import { deepProp } from "./named-exports"' }),
+    tValid({ code: 'import { deepSparseElement } from "./named-exports"' }),
 
     // should ignore imported/exported flow types, even if they don’t exist
-    test({
+    tValid({
       code: 'import type { MissingType } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import typeof { MissingType } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import type { MyOpaqueType } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import typeof { MyOpaqueType } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import { type MyOpaqueType, MyClass } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import { typeof MyOpaqueType, MyClass } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import typeof MissingType from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import typeof * as MissingType from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'export type { MissingType } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'export type { MyOpaqueType } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // jsnext
-    test({
+    tValid({
       code: '/*jsnext*/ import { createStore } from "redux"',
       settings: { 'import-x/ignore': [] },
     }),
     // should work without ignore
-    test({
+    tValid({
       code: '/*jsnext*/ import { createStore } from "redux"',
     }),
 
     // ignore is ignored if exports are found
-    test({ code: 'import { foo } from "es6-module"' }),
+    tValid({ code: 'import { foo } from "es6-module"' }),
 
     // issue #210: shameless self-reference
-    test({ code: 'import { me, soGreat } from "./narcissist"' }),
+    tValid({ code: 'import { me, soGreat } from "./narcissist"' }),
 
     // issue #251: re-export default as named
-    test({ code: 'import { foo, bar, baz } from "./re-export-default"' }),
-    test({
+    tValid({ code: 'import { foo, bar, baz } from "./re-export-default"' }),
+    tValid({
       code: 'import { common } from "./re-export-default"',
       settings: { 'import-x/ignore': ['common'] },
     }),
 
     // ignore CJS by default. always ignore ignore list
-    test({
+    tValid({
       code: 'import {a, b, d} from "./common"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import { baz } from "./bar"',
       settings: { 'import-x/ignore': ['bar'] },
     }),
-    test({
+    tValid({
       code: 'import { common } from "./re-export-default"',
     }),
 
     // destructured requires with commonjs option
-    test({
+    tValid({
       code: 'const { destructuredProp } = require("./named-exports")',
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: 'let { arrayKeyProp } = require("./named-exports")',
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: 'const { deepProp } = require("./named-exports")',
       options: [{ commonjs: true }],
     }),
 
-    test({
+    tValid({
       code: 'const { foo, bar } = require("./re-export-names")',
       options: [{ commonjs: true }],
     }),
 
-    test({
+    tValid({
       code: 'const { baz } = require("./bar")',
-      errors: [createNotFoundError('baz', './bar')],
     }),
 
-    test({
+    tValid({
       code: 'const { baz } = require("./bar")',
-      errors: [createNotFoundError('baz', './bar')],
       options: [{ commonjs: false }],
     }),
 
-    test({
+    tValid({
       code: 'const { default: defExport } = require("./bar")',
       options: [{ commonjs: true }],
     }),
 
     ...SYNTAX_VALID_CASES,
 
-    test({
+    tValid({
       code: `import { ExtfieldModel, Extfield2Model } from './models';`,
       filename: testFilePath('./export-star/downstream.js'),
       languageOptions: {
@@ -233,25 +231,25 @@ ruleTester.run('named', rule, {
       },
     }),
 
-    test({
+    tValid({
       code: 'const { something } = require("./dynamic-import-in-commonjs")',
       languageOptions: { parserOptions: { ecmaVersion: 2021 } },
       options: [{ commonjs: true }],
     }),
 
-    test({
+    tValid({
       code: 'import { something } from "./dynamic-import-in-commonjs"',
       languageOptions: { parserOptions: { ecmaVersion: 2021 } },
     }),
 
-    test({
+    tValid({
       code: 'import { "foo" as foo } from "./bar"',
       languageOptions: {
         parser: require(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
       },
     }),
-    test({
+    tValid({
       code: 'import { "foo" as foo } from "./empty-module"',
       languageOptions: {
         parser: require(parsers.ESPREE),
@@ -261,18 +259,18 @@ ruleTester.run('named', rule, {
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'import { somethingElse } from "./test-module"',
       errors: [createNotFoundError('somethingElse', './test-module')],
     }),
 
-    test({
+    tInvalid({
       code: 'import { baz } from "./bar"',
       errors: [createNotFoundError('baz', './bar')],
     }),
 
     // test multiple
-    test({
+    tInvalid({
       code: 'import { baz, bop } from "./bar"',
       errors: [
         createNotFoundError('baz', './bar'),
@@ -280,49 +278,49 @@ ruleTester.run('named', rule, {
       ],
     }),
 
-    test({
+    tInvalid({
       code: 'import {a, b, c} from "./named-exports"',
       errors: [createNotFoundError('c', './named-exports')],
     }),
 
-    test({
+    tInvalid({
       code: 'import { a } from "./default-export"',
       errors: [createNotFoundError('a', './default-export')],
     }),
 
-    test({
+    tInvalid({
       code: 'import { ActionTypess } from "./qc"',
       errors: [createNotFoundError('ActionTypess', './qc')],
     }),
 
-    test({
+    tInvalid({
       code: 'import {a, b, c, d, e} from "./re-export"',
       errors: [createNotFoundError('e', './re-export')],
     }),
 
-    test({
+    tInvalid({
       code: 'import { a } from "./re-export-names"',
       errors: [createNotFoundError('a', './re-export-names')],
     }),
 
     // export tests
-    test({
+    tInvalid({
       code: 'export { bar } from "./bar"',
       errors: [createNotFoundError('bar', './bar')],
     }),
 
     // es7
-    test({
+    tInvalid({
       code: 'export bar2, { bar } from "./bar"',
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [createNotFoundError('bar', './bar')],
     }),
-    test({
+    tInvalid({
       code: 'import { foo, bar, baz } from "./named-trampoline"',
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [createNotFoundError('baz', './named-trampoline')],
     }),
-    test({
+    tInvalid({
       code: 'import { baz } from "./broken-trampoline"',
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [
@@ -333,19 +331,19 @@ ruleTester.run('named', rule, {
       ],
     }),
 
-    test({
+    tInvalid({
       code: 'const { baz } = require("./bar")',
       errors: [createNotFoundError('baz', './bar')],
       options: [{ commonjs: true }],
     }),
 
-    test({
+    tInvalid({
       code: 'let { baz } = require("./bar")',
       errors: [createNotFoundError('baz', './bar')],
       options: [{ commonjs: true }],
     }),
 
-    test({
+    tInvalid({
       code: 'const { baz: bar, bop } = require("./bar"), { a } = require("./re-export-names")',
       errors: [
         createNotFoundError('baz', './bar'),
@@ -355,14 +353,14 @@ ruleTester.run('named', rule, {
       options: [{ commonjs: true }],
     }),
 
-    test({
+    tInvalid({
       code: 'const { default: defExport } = require("./named-exports")',
       errors: [createNotFoundError('default', './named-exports')],
       options: [{ commonjs: true }],
     }),
 
     // parse errors
-    // test({
+    // tInvalid({
     //   code: "import { a } from './test.coffee';",
     //   settings: { 'import-x/extensions': ['.js', '.coffee'] },
     //   errors: [{
@@ -371,43 +369,43 @@ ruleTester.run('named', rule, {
     //   }],
     // }),
 
-    test({
+    tInvalid({
       code: 'import  { type MyOpaqueType, MyMissingClass } from "./flowtypes"',
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [createNotFoundError('MyMissingClass', './flowtypes')],
     }),
 
     // jsnext
-    test({
+    tInvalid({
       code: '/*jsnext*/ import { createSnorlax } from "redux"',
       settings: { 'import-x/ignore': [] },
       errors: [createNotFoundError('createSnorlax', 'redux')],
     }),
     // should work without ignore
-    test({
+    tInvalid({
       code: '/*jsnext*/ import { createSnorlax } from "redux"',
       errors: [createNotFoundError('createSnorlax', 'redux')],
     }),
 
     // ignore is ignored if exports are found
-    test({
+    tInvalid({
       code: 'import { baz } from "es6-module"',
       errors: [createNotFoundError('baz', 'es6-module')],
     }),
 
     // issue #251
-    test({
+    tInvalid({
       code: 'import { foo, bar, bap } from "./re-export-default"',
       errors: [createNotFoundError('bap', './re-export-default')],
     }),
 
     // #328: * exports do not include default
-    test({
+    tInvalid({
       code: 'import { default as barDefault } from "./re-export"',
       errors: [createNotFoundError('default', './re-export')],
     }),
 
-    test({
+    tInvalid({
       code: 'import { "somethingElse" as somethingElse } from "./test-module"',
       errors: [
         createNotFoundError('somethingElse', './test-module', 'Literal'),
@@ -417,7 +415,7 @@ ruleTester.run('named', rule, {
         parserOptions: { ecmaVersion: 2022 },
       },
     }),
-    test({
+    tInvalid({
       code: 'import { "baz" as baz, "bop" as bop } from "./bar"',
       errors: [
         createNotFoundError('baz', './bar', 'Literal'),
@@ -428,7 +426,7 @@ ruleTester.run('named', rule, {
         parserOptions: { ecmaVersion: 2022 },
       },
     }),
-    test({
+    tInvalid({
       code: 'import { "default" as barDefault } from "./re-export"',
       errors: [createNotFoundError('default', './re-export', 'Literal')],
       languageOptions: {
@@ -444,12 +442,12 @@ if (!CASE_SENSITIVE_FS) {
   describe('path case-insensitivity', () => {
     ruleTester.run('named', rule, {
       valid: [
-        test({
+        tValid({
           code: 'import { b } from "./Named-Exports"',
         }),
       ],
       invalid: [
-        test({
+        tInvalid({
           code: 'import { foo } from "./Named-Exports"',
           errors: [createNotFoundError('foo', './Named-Exports')],
         }),
@@ -462,12 +460,12 @@ if (!CASE_SENSITIVE_FS) {
 describe('export *', () => {
   ruleTester.run('named', rule, {
     valid: [
-      test({
+      tValid({
         code: 'import { foo } from "./export-all"',
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: 'import { bar } from "./export-all"',
         errors: [createNotFoundError('bar', './export-all')],
       }),
@@ -482,7 +480,7 @@ describe('TypeScript', () => {
   }
 
   let valid: RunTests<typeof rule>['valid'] = [
-    test({
+    tValid({
       code: `import x from './typescript-export-assign-object'`,
       languageOptions: {
         parserOptions: {
@@ -498,7 +496,7 @@ describe('TypeScript', () => {
 
   let invalid: RunTests<typeof rule>['invalid'] = [
     // TODO: uncomment this test
-    // test({
+    // tInvalid({
     //   code: `import {a} from './export-star-3/b';`,
     //   filename: testFilePath('./export-star-3/a.js'),
     //   parser,
@@ -507,7 +505,7 @@ describe('TypeScript', () => {
     //     { message: 'a not found in ./export-star-3/b' },
     //   ],
     // }),
-    test({
+    tInvalid({
       code: `import { NotExported } from './typescript-export-assign-object'`,
       languageOptions: {
         parserOptions: {
@@ -522,7 +520,7 @@ describe('TypeScript', () => {
         createNotFoundError('NotExported', './typescript-export-assign-object'),
       ],
     }),
-    test({
+    tInvalid({
       // `export =` syntax creates a default export only
       code: `import { FooBar } from './typescript-export-assign-object'`,
       languageOptions: {
@@ -548,32 +546,32 @@ describe('TypeScript', () => {
   ]) {
     valid = [
       ...valid,
-      test({
+      tValid({
         code: `import { MyType } from "./${source}"`,
 
         settings,
       }),
-      test({
+      tValid({
         code: `import { Foo } from "./${source}"`,
 
         settings,
       }),
-      test({
+      tValid({
         code: `import { Bar } from "./${source}"`,
 
         settings,
       }),
-      test({
+      tValid({
         code: `import { getFoo } from "./${source}"`,
 
         settings,
       }),
-      test({
+      tValid({
         code: `import { MyEnum } from "./${source}"`,
 
         settings,
       }),
-      test({
+      tValid({
         code: `
             import { MyModule } from "./${source}"
             MyModule.ModuleFunction()
@@ -581,7 +579,7 @@ describe('TypeScript', () => {
 
         settings,
       }),
-      test({
+      tValid({
         code: `
             import { MyNamespace } from "./${source}"
             MyNamespace.NSModule.NSModuleFunction()
@@ -593,13 +591,13 @@ describe('TypeScript', () => {
 
     invalid = [
       ...invalid,
-      test({
+      tInvalid({
         code: `import { MissingType } from "./${source}"`,
 
         settings,
         errors: [createNotFoundError('MissingType', `./${source}`)],
       }),
-      test({
+      tInvalid({
         code: `import { NotExported } from "./${source}"`,
 
         settings,

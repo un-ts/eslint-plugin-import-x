@@ -1,59 +1,59 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import { TSESTree } from '@typescript-eslint/utils'
 
-import { parsers, createRuleTestCaseFunction } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils'
 import type { RunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/consistent-type-specifier-style'
 
-const test = createRuleTestCaseFunction<typeof rule>()
+const { tValid } = createRuleTestCaseFunctions<typeof rule>()
 
 const COMMON_TESTS: RunTests<typeof rule> = {
   valid: [
     //
     // prefer-top-level
     //
-    test({
+    tValid({
       code: "import Foo from 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import type Foo from 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import { Foo } from 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import { Foo as Bar } from 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import * as Foo from 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import {} from 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import type {} from 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import type { Foo } from 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import type { Foo as Bar } from 'Foo';",
       options: ['prefer-top-level'],
     }),
-    test({
+    tValid({
       code: "import type { Foo, Bar, Baz, Bam } from 'Foo';",
       options: ['prefer-top-level'],
     }),
@@ -61,47 +61,47 @@ const COMMON_TESTS: RunTests<typeof rule> = {
     //
     // prefer-inline
     //
-    test({
+    tValid({
       code: "import Foo from 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import type Foo from 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import { Foo } from 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import { Foo as Bar } from 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import * as Foo from 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import {} from 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import type {} from 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import { type Foo } from 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import { type Foo as Bar } from 'Foo';",
       options: ['prefer-inline'],
     }),
-    test({
+    tValid({
       code: "import { type Foo, type Bar, Baz, Bam } from 'Foo';",
       options: ['prefer-inline'],
     }),
@@ -256,7 +256,7 @@ const TS_ONLY: RunTests<typeof rule> = {
     //
     // always valid
     //
-    test({ code: "import type * as Foo from 'Foo';" }),
+    tValid({ code: "import type * as Foo from 'Foo';" }),
   ],
   invalid: [],
 }

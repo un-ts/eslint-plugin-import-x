@@ -2,31 +2,31 @@ import fs from 'node:fs'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunction, parsers, testFilePath } from '../utils'
+import { createRuleTestCaseFunctions, parsers, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/first'
 
 const ruleTester = new TSESLintRuleTester()
 
-const test = createRuleTestCaseFunction<typeof rule>()
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 ruleTester.run('first', rule, {
   valid: [
-    test({
+    tValid({
       code: "import { x } from './foo'; import { y } from './bar';\
             export { x, y }",
     }),
-    test({ code: "import { x } from 'foo'; import { y } from './bar'" }),
-    test({ code: "import { x } from './foo'; import { y } from 'bar'" }),
-    test({
+    tValid({ code: "import { x } from 'foo'; import { y } from './bar'" }),
+    tValid({ code: "import { x } from './foo'; import { y } from 'bar'" }),
+    tValid({
       code: "import { x } from './foo'; import { y } from 'bar'",
       options: ['disable-absolute-first'],
     }),
-    test({
+    tValid({
       code: "'use directive';\
             import { x } from 'foo';",
     }),
-    test({
+    tValid({
       name: '...component.html (issue #2210)',
       code: fs.readFileSync(testFilePath('component.html'), 'utf8'),
       languageOptions: {
@@ -35,7 +35,7 @@ ruleTester.run('first', rule, {
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: "import { x } from './foo';\
               export { x };\
               import { y } from './bar';",
@@ -45,7 +45,7 @@ ruleTester.run('first', rule, {
               import { y } from './bar';\
               export { x };",
     }),
-    test({
+    tInvalid({
       code: "import { x } from './foo';\
               export { x };\
               import { y } from './bar';\
@@ -57,12 +57,12 @@ ruleTester.run('first', rule, {
               import { z } from './baz';\
               export { x };",
     }),
-    test({
+    tInvalid({
       code: "import { x } from './foo'; import { y } from 'bar'",
       options: ['absolute-first'],
       errors: [{ messageId: 'absolute' }],
     }),
-    test({
+    tInvalid({
       code: "import { x } from 'foo';\
               'use directive';\
               import { y } from 'bar';",
@@ -72,7 +72,7 @@ ruleTester.run('first', rule, {
               import { y } from 'bar';\
               'use directive';",
     }),
-    test({
+    tInvalid({
       code: "var a = 1;\
               import { y } from './bar';\
               if (true) { x() };\
@@ -101,7 +101,7 @@ ruleTester.run('first', rule, {
               if (true) { x() };",
       ],
     }),
-    test({
+    tInvalid({
       code: "if (true) { console.log(1) }import a from 'b'",
       errors: [{ messageId: 'order' }],
       output: "import a from 'b'\nif (true) { console.log(1) }",
@@ -119,7 +119,7 @@ describe('TypeScript', () => {
 
   ruleTester.run('order', rule, {
     valid: [
-      test({
+      tValid({
         code: `
           import y = require('bar');
           import { x } from 'foo';
@@ -129,7 +129,7 @@ describe('TypeScript', () => {
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: `
           import { x } from './foo';
           import y = require('bar');

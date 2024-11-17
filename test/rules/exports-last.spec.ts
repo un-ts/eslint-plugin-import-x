@@ -2,14 +2,14 @@ import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRuleTestCaseFunction } from '../utils'
+import { createRuleTestCaseFunctions } from '../utils'
 import type { GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/exports-last'
 
 const ruleTester = new TSESLintRuleTester()
 
-const test = createRuleTestCaseFunction<typeof rule>()
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function createInvalidCaseError(
   type: `${TSESTree.AST_NODE_TYPES}`,
@@ -23,36 +23,36 @@ function createInvalidCaseError(
 ruleTester.run('exports-last', rule, {
   valid: [
     // Empty file
-    test({
+    tValid({
       code: '// comment',
     }),
-    test({
+    tValid({
       // No exports
       code: `
         const foo = 'bar'
         const bar = 'baz'
       `,
     }),
-    test({
+    tValid({
       code: `
         const foo = 'bar'
         export {foo}
       `,
     }),
-    test({
+    tValid({
       code: `
         const foo = 'bar'
         export default foo
       `,
     }),
     // Only exports
-    test({
+    tValid({
       code: `
         export default foo
         export const bar = true
       `,
     }),
-    test({
+    tValid({
       code: `
         const foo = 'bar'
         export default foo
@@ -60,7 +60,7 @@ ruleTester.run('exports-last', rule, {
       `,
     }),
     // Multiline export
-    test({
+    tValid({
       code: `
         const foo = 'bar'
         export default function bar () {
@@ -70,7 +70,7 @@ ruleTester.run('exports-last', rule, {
       `,
     }),
     // Many exports
-    test({
+    tValid({
       code: `
         const foo = 'bar'
         export default foo
@@ -82,7 +82,7 @@ ruleTester.run('exports-last', rule, {
       `,
     }),
     // Export all
-    test({
+    tValid({
       code: `
         export * from './foo'
       `,
@@ -90,7 +90,7 @@ ruleTester.run('exports-last', rule, {
   ],
   invalid: [
     // Default export before variable declaration
-    test({
+    tInvalid({
       code: `
         export default 'bar'
         const bar = true
@@ -98,7 +98,7 @@ ruleTester.run('exports-last', rule, {
       errors: [createInvalidCaseError('ExportDefaultDeclaration')],
     }),
     // Named export before variable declaration
-    test({
+    tInvalid({
       code: `
         export const foo = 'bar'
         const bar = true
@@ -106,7 +106,7 @@ ruleTester.run('exports-last', rule, {
       errors: [createInvalidCaseError('ExportNamedDeclaration')],
     }),
     // Export all before variable declaration
-    test({
+    tInvalid({
       code: `
         export * from './foo'
         const bar = true
@@ -114,7 +114,7 @@ ruleTester.run('exports-last', rule, {
       errors: [createInvalidCaseError('ExportAllDeclaration')],
     }),
     // Many exports around variable declaration
-    test({
+    tInvalid({
       code: `
         export default 'such foo many bar'
         export const so = 'many'

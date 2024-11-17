@@ -81,7 +81,7 @@ export type InvalidTestCaseError =
       type?: `${TSESTree.AST_NODE_TYPES}`
     })
 
-/** @deprecated use {@link createRuleTestCaseFunction} */
+/** @deprecated use {@link createRuleTestCaseFunctions} */
 // eslint-disable-next-line eslint-plugin/require-meta-docs-description, eslint-plugin/require-meta-type, eslint-plugin/prefer-message-ids, eslint-plugin/prefer-object-rule, eslint-plugin/require-meta-schema
 export function test<T extends ValidTestCase>(
   t: T,
@@ -134,22 +134,27 @@ export type RunTests<
 > = TSESLintRunTests<TRuleType['messageIds'], TRuleType['options']>
 
 /**
- * Create a function that can be used to create both valid and invalid test case
+ * Create two functions that can be used to create both valid and invalid test case
  * to be provided to {@link TSESLintRuleTester}.
  * This function accepts one type parameter that should extend a {@link RuleModule}
- * to be able to provide a function with typed `MessageIds` and `Options` properties
+ * to be able to provide the result with typed `MessageIds` and `Options` properties
  *
  * @example
  * ```ts
  * import { createRuleTestCaseFunction } from '../utils'
  *
- * const test = createRuleTestCaseFunction<typeof rule>()
- *
  * const ruleTester = new TSESLintRuleTester()
+ *
+ * const { tValid, tInvalid } = createRuleTestCaseFunction<typeof rule>()
  *
  * ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
  *  valid: [
- *    test({
+ *    tValid({
+ *      code: '...',
+ *    }),
+ *  ],
+ *  invalid: [
+ *    tInvalid({
  *      code: '...',
  *    }),
  *  ]
@@ -158,23 +163,16 @@ export type RunTests<
  *
  * If the `TRule` parameter is omitted default types are used.
  */
-export function createRuleTestCaseFunction<
+export function createRuleTestCaseFunctions<
   TRule extends RuleModule<string, unknown[]>,
   TData extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
-  TTestCase extends
-    | TSESLintValidTestCase<TData['options']>
-    | TSESLintInvalidTestCase<TData['messageIds'], TData['options']> =
-    | TSESLintValidTestCase<TData['options']>
-    | TSESLintInvalidTestCase<TData['messageIds'], TData['options']>,
->(): <
-  TReturn = TTestCase extends { errors: InvalidTestCaseError[] | number }
-    ? TSESLintInvalidTestCase<TData['messageIds'], TData['options']>
-    : TSESLintValidTestCase<TData['options']>,
->(
-  t: TTestCase,
-) => TReturn {
-  // @ts-expect-error simplify testing
-  return createRuleTestCase
+  Valid = TSESLintValidTestCase<TData['options']>,
+  Invalid = TSESLintInvalidTestCase<TData['messageIds'], TData['options']>,
+>(): { tValid: (t: Valid) => Valid; tInvalid: (t: Invalid) => Invalid } {
+  return {
+    tValid: createRuleTestCase as never,
+    tInvalid: createRuleTestCase as never,
+  }
 }
 
 export function testContext(settings?: PluginSettings) {

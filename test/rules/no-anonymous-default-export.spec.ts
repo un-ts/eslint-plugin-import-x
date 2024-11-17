@@ -4,15 +4,15 @@ import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/
 import {
   SYNTAX_VALID_CASES,
   parsers,
-  createRuleTestCaseFunction,
+  createRuleTestCaseFunctions,
 } from '../utils'
-import type { GetRuleModuleMessageIds } from '../utils'
+import type { GetRuleModuleMessageIds, RunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-anonymous-default-export'
 
 const ruleTester = new TSESLintRuleTester()
 
-const test = createRuleTestCaseFunction<typeof rule>()
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function createAssignError(
   type: string,
@@ -26,49 +26,49 @@ function createAssignError(
 ruleTester.run('no-anonymous-default-export', rule, {
   valid: [
     // Exports with identifiers are valid
-    test({ code: 'const foo = 123\nexport default foo' }),
-    test({ code: 'export default function foo() {}' }),
-    test({ code: 'export default class MyClass {}' }),
+    tValid({ code: 'const foo = 123\nexport default foo' }),
+    tValid({ code: 'export default function foo() {}' }),
+    tValid({ code: 'export default class MyClass {}' }),
 
     // Allow each forbidden type with appropriate option
-    test({ code: 'export default []', options: [{ allowArray: true }] }),
-    test({
+    tValid({ code: 'export default []', options: [{ allowArray: true }] }),
+    tValid({
       code: 'export default () => {}',
       options: [{ allowArrowFunction: true }],
     }),
-    test({
+    tValid({
       code: 'export default class {}',
       options: [{ allowAnonymousClass: true }],
     }),
-    test({
+    tValid({
       code: 'export default function() {}',
       options: [{ allowAnonymousFunction: true }],
     }),
-    test({ code: 'export default 123', options: [{ allowLiteral: true }] }),
-    test({ code: "export default 'foo'", options: [{ allowLiteral: true }] }),
-    test({ code: 'export default `foo`', options: [{ allowLiteral: true }] }),
-    test({ code: 'export default {}', options: [{ allowObject: true }] }),
-    test({
+    tValid({ code: 'export default 123', options: [{ allowLiteral: true }] }),
+    tValid({ code: "export default 'foo'", options: [{ allowLiteral: true }] }),
+    tValid({ code: 'export default `foo`', options: [{ allowLiteral: true }] }),
+    tValid({ code: 'export default {}', options: [{ allowObject: true }] }),
+    tValid({
       code: 'export default foo(bar)',
       options: [{ allowCallExpression: true }],
     }),
-    test({ code: 'export default new Foo()', options: [{ allowNew: true }] }),
+    tValid({ code: 'export default new Foo()', options: [{ allowNew: true }] }),
 
     // Allow forbidden types with multiple options
-    test({
+    tValid({
       code: 'export default 123',
       options: [{ allowLiteral: true, allowObject: true }],
     }),
-    test({
+    tValid({
       code: 'export default {}',
       options: [{ allowLiteral: true, allowObject: true }],
     }),
 
     // Sanity check unrelated export syntaxes
-    test({ code: "export * from 'foo'" }),
-    test({ code: 'const foo = 123\nexport { foo }' }),
-    test({ code: 'const foo = 123\nexport { foo as default }' }),
-    test({
+    tValid({ code: "export * from 'foo'" }),
+    tValid({ code: 'const foo = 123\nexport { foo }' }),
+    tValid({ code: 'const foo = 123\nexport { foo as default }' }),
+    tValid({
       code: 'const foo = 123\nexport { foo as "default" }',
       languageOptions: {
         parser: require(parsers.ESPREE),
@@ -77,56 +77,56 @@ ruleTester.run('no-anonymous-default-export', rule, {
     }),
 
     // Allow call expressions by default for backwards compatibility
-    test({ code: 'export default foo(bar)' }),
+    tValid({ code: 'export default foo(bar)' }),
 
-    ...SYNTAX_VALID_CASES,
+    ...(SYNTAX_VALID_CASES as RunTests<typeof rule>['valid']),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'export default []',
       errors: [createAssignError('array')],
     }),
-    test({
+    tInvalid({
       code: 'export default () => {}',
       errors: [createAssignError('arrow function')],
     }),
-    test({
+    tInvalid({
       code: 'export default class {}',
       errors: [{ messageId: 'anonymous', data: { type: 'class' } }],
     }),
-    test({
+    tInvalid({
       code: 'export default function() {}',
       errors: [{ messageId: 'anonymous', data: { type: 'function' } }],
     }),
-    test({
+    tInvalid({
       code: 'export default 123',
       errors: [createAssignError('literal')],
     }),
-    test({
+    tInvalid({
       code: "export default 'foo'",
       errors: [createAssignError('literal')],
     }),
-    test({
+    tInvalid({
       code: 'export default `foo`',
       errors: [createAssignError('literal')],
     }),
-    test({
+    tInvalid({
       code: 'export default {}',
       errors: [createAssignError('object')],
     }),
-    test({
+    tInvalid({
       code: 'export default foo(bar)',
       options: [{ allowCallExpression: false }],
       errors: [createAssignError('call result')],
     }),
-    test({
+    tInvalid({
       code: 'export default new Foo()',
       errors: [createAssignError('instance')],
     }),
 
     // Test failure with non-covering exception
-    test({
+    tInvalid({
       code: 'export default 123',
       options: [{ allowObject: true }],
       errors: [createAssignError('literal')],

@@ -3,7 +3,7 @@ import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import {
-  createRuleTestCaseFunction,
+  createRuleTestCaseFunctions,
   SYNTAX_VALID_CASES,
   testFilePath,
   parsers,
@@ -18,7 +18,7 @@ const ruleTester = new TSESLintRuleTester({
   },
 })
 
-const test = createRuleTestCaseFunction<typeof rule>()
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function createNotFoundInNamespaceError(
   name: string,
@@ -43,23 +43,23 @@ function createNotFoundInNamespaceDeepError(
 }
 
 let valid: RunTests<typeof rule>['valid'] = [
-  test({
+  tValid({
     code: 'import "./malformed.js"',
     languageOptions: { parser: require(parsers.ESPREE) },
   }),
 
-  test({ code: "import * as foo from './empty-folder';" }),
-  test({
+  tValid({ code: "import * as foo from './empty-folder';" }),
+  tValid({
     code: 'import * as names from "./named-exports"; console.log((names.b).c); ',
   }),
 
-  test({
+  tValid({
     code: 'import * as names from "./named-exports"; console.log(names.a);',
   }),
-  test({
+  tValid({
     code: 'import * as names from "./re-export-names"; console.log(names.foo);',
   }),
-  test({
+  tValid({
     code: "import * as elements from './jsx';",
     languageOptions: {
       parserOptions: {
@@ -70,7 +70,7 @@ let valid: RunTests<typeof rule>['valid'] = [
     },
   }),
   // import re-exported jsx files, where jsx file exports a string
-  test({
+  tValid({
     code: `
       import * as foo from "./jsx/re-export.js";
       console.log(foo.jsxFoo);
@@ -80,7 +80,7 @@ let valid: RunTests<typeof rule>['valid'] = [
     },
   }),
   // import re-exported jsx files, where jsx files export functions that return html tags
-  test({
+  tValid({
     code: `
       import * as foo from "./jsx/bar/index.js";
       console.log(foo.Baz1);
@@ -100,16 +100,16 @@ let valid: RunTests<typeof rule>['valid'] = [
     },
   }),
 
-  test({ code: "import * as foo from './common';" }),
+  tValid({ code: "import * as foo from './common';" }),
 
   // destructuring namespaces
-  test({
+  tValid({
     code: 'import * as names from "./named-exports"; const { a } = names',
   }),
-  test({
+  tValid({
     code: 'import * as names from "./named-exports"; const { d: c } = names',
   }),
-  test({
+  tValid({
     code: `
       import * as names from "./named-exports";
       const { c } = foo,
@@ -118,71 +118,71 @@ let valid: RunTests<typeof rule>['valid'] = [
       `,
   }),
   // deep destructuring only cares about top level
-  test({
+  tValid({
     code: 'import * as names from "./named-exports"; const { ExportedClass: { length } } = names',
   }),
 
   // detect scope redefinition
-  test({
+  tValid({
     code: 'import * as names from "./named-exports"; function b(names) { const { c } = names }',
   }),
-  test({
+  tValid({
     code: 'import * as names from "./named-exports"; function b() { let names = null; const { c } = names }',
   }),
-  test({
+  tValid({
     code: 'import * as names from "./named-exports"; const x = function names() { const { c } = names }',
   }),
 
   /////////
   // es7 //
   /////////
-  test({
+  tValid({
     code: 'export * as names from "./named-exports"',
     languageOptions: { parser: require(parsers.BABEL) },
   }),
-  test({
+  tValid({
     code: 'export defport, * as names from "./named-exports"',
     languageOptions: { parser: require(parsers.BABEL) },
   }),
   // non-existent is handled by no-unresolved
-  test({
+  tValid({
     code: 'export * as names from "./does-not-exist"',
     languageOptions: { parser: require(parsers.BABEL) },
   }),
 
-  test({
+  tValid({
     code: 'import * as Endpoints from "./issue-195/Endpoints"; console.log(Endpoints.Users)',
     languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // respect hoisting
-  test({
+  tValid({
     code: 'function x() { console.log((names.b).c); } import * as names from "./named-exports"; ',
   }),
 
   // names.default is valid export
-  test({ code: "import * as names from './default-export';" }),
-  test({
+  tValid({ code: "import * as names from './default-export';" }),
+  tValid({
     code: "import * as names from './default-export'; console.log(names.default)",
     languageOptions: { parser: require(parsers.ESPREE) },
   }),
-  test({
+  tValid({
     code: 'export * as names from "./default-export"',
     languageOptions: { parser: require(parsers.BABEL) },
   }),
-  test({
+  tValid({
     code: 'export defport, * as names from "./default-export"',
     languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // #456: optionally ignore computed references
-  test({
+  tValid({
     code: `import * as names from './named-exports'; console.log(names['a']);`,
     options: [{ allowComputed: true }],
   }),
 
   // #656: should handle object-rest properties
-  test({
+  tValid({
     code: `import * as names from './named-exports'; const {a, b, ...rest} = names;`,
     languageOptions: {
       parserOptions: {
@@ -190,18 +190,18 @@ let valid: RunTests<typeof rule>['valid'] = [
       },
     },
   }),
-  test({
+  tValid({
     code: `import * as names from './named-exports'; const {a, b, ...rest} = names;`,
     languageOptions: { parser: require(parsers.BABEL) },
   }),
 
   // #1144: should handle re-export CommonJS as namespace
-  test({
+  tValid({
     code: `import * as ns from './re-export-common'; const {foo} = ns;`,
   }),
 
   // JSX
-  test({
+  tValid({
     code: 'import * as Names from "./named-exports"; const Foo = <Names.a/>',
     languageOptions: {
       parserOptions: {
@@ -213,7 +213,7 @@ let valid: RunTests<typeof rule>['valid'] = [
   }),
 
   // Typescript
-  test({
+  tValid({
     code: `
       import * as foo from "./typescript-declare-nested"
       foo.bar.MyFunction()
@@ -225,7 +225,7 @@ let valid: RunTests<typeof rule>['valid'] = [
     },
   }),
 
-  test({
+  tValid({
     code: `import { foobar } from "./typescript-declare-interface"`,
 
     settings: {
@@ -234,7 +234,7 @@ let valid: RunTests<typeof rule>['valid'] = [
     },
   }),
 
-  test({
+  tValid({
     code: 'export * from "typescript/lib/typescript.d"',
 
     settings: {
@@ -243,7 +243,7 @@ let valid: RunTests<typeof rule>['valid'] = [
     },
   }),
 
-  test({
+  tValid({
     code: 'export = function name() {}',
 
     settings: {
@@ -254,7 +254,7 @@ let valid: RunTests<typeof rule>['valid'] = [
 
   ...(SYNTAX_VALID_CASES as RunTests<typeof rule>['valid']),
 
-  test({
+  tValid({
     code: `
     import * as color from './color';
     export const getBackgroundFromColor = (color) => color.bg;
@@ -262,7 +262,7 @@ let valid: RunTests<typeof rule>['valid'] = [
     `,
   }),
 
-  test({
+  tValid({
     code: `
     import * as middle from './middle';
 
@@ -276,42 +276,42 @@ let valid: RunTests<typeof rule>['valid'] = [
     },
   }),
 
-  test({
+  tValid({
     code: "import * as names from './default-export-string';",
     languageOptions: {
       parser: require(parsers.BABEL),
       parserOptions: { ecmaVersion: 2022 },
     },
   }),
-  test({
+  tValid({
     code: "import * as names from './default-export-string'; console.log(names.default)",
     languageOptions: {
       parser: require(parsers.BABEL),
       parserOptions: { ecmaVersion: 2022 },
     },
   }),
-  test({
+  tValid({
     code: "import * as names from './default-export-namespace-string';",
     languageOptions: {
       parser: require(parsers.ESPREE),
       parserOptions: { ecmaVersion: 2022 },
     },
   }),
-  test({
+  tValid({
     code: "import * as names from './default-export-namespace-string'; console.log(names.default)",
     languageOptions: {
       parser: require(parsers.ESPREE),
       parserOptions: { ecmaVersion: 2022 },
     },
   }),
-  test({
+  tValid({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.d.e)`,
     languageOptions: {
       parser: require(parsers.ESPREE),
       parserOptions: { ecmaVersion: 2022 },
     },
   }),
-  test({
+  tValid({
     code: `import { "b" as b } from "./deep/a"; var {c:{d:{e}}} = b`,
     languageOptions: {
       parser: require(parsers.ESPREE),
@@ -321,22 +321,22 @@ let valid: RunTests<typeof rule>['valid'] = [
 ]
 
 let invalid: RunTests<typeof rule>['invalid'] = [
-  test({
+  tInvalid({
     code: "import * as names from './named-exports'; console.log(names.c)",
     errors: [createNotFoundInNamespaceError('c', 'names')],
   }),
 
-  test({
+  tInvalid({
     code: "import * as names from './named-exports'; console.log(names['a']);",
     errors: [{ messageId: 'computedReference', data: { namespace: 'names' } }],
   }),
 
   // assignment warning (from no-reassign)
-  test({
+  tInvalid({
     code: "import * as foo from './bar'; foo.foo = 'y';",
     errors: [{ messageId: 'namespaceMember', data: { namespace: 'foo' } }],
   }),
-  test({
+  tInvalid({
     code: "import * as foo from './bar'; foo.x = 'y';",
     errors: [
       { messageId: 'namespaceMember', data: { namespace: 'foo' } },
@@ -345,19 +345,19 @@ let invalid: RunTests<typeof rule>['invalid'] = [
   }),
 
   // invalid destructuring
-  test({
+  tInvalid({
     code: 'import * as names from "./named-exports"; const { c } = names',
     errors: [createNotFoundInNamespaceError('c', 'names', 'Property')],
   }),
-  test({
+  tInvalid({
     code: 'import * as names from "./named-exports"; function b() { const { c } = names }',
     errors: [createNotFoundInNamespaceError('c', 'names', 'Property')],
   }),
-  test({
+  tInvalid({
     code: 'import * as names from "./named-exports"; const { c: d } = names',
     errors: [createNotFoundInNamespaceError('c', 'names', 'Property')],
   }),
-  test({
+  tInvalid({
     code: 'import * as names from "./named-exports"; const { c: { d } } = names',
     errors: [createNotFoundInNamespaceError('c', 'names', 'Property')],
   }),
@@ -366,14 +366,14 @@ let invalid: RunTests<typeof rule>['invalid'] = [
   // es7 //
   /////////
 
-  test({
+  tInvalid({
     code: 'import * as Endpoints from "./issue-195/Endpoints"; console.log(Endpoints.Foo)',
     languageOptions: { parser: require(parsers.BABEL) },
     errors: [createNotFoundInNamespaceError('Foo', 'Endpoints')],
   }),
 
   // parse errors
-  test({
+  tInvalid({
     code: "import * as namespace from './malformed.js';",
     languageOptions: {
       parser: require(parsers.ESPREE),
@@ -388,29 +388,29 @@ let invalid: RunTests<typeof rule>['invalid'] = [
     ],
   }),
 
-  test({
+  tInvalid({
     code: "import b from './deep/default'; console.log(b.e)",
     errors: [createNotFoundInNamespaceError('e', 'b')],
   }),
 
   // respect hoisting
-  test({
+  tInvalid({
     code: `console.log(names.c); import * as names from './named-exports';`,
     errors: [createNotFoundInNamespaceError('c', 'names')],
   }),
-  test({
+  tInvalid({
     code: `function x() { console.log(names.c) } import * as names from './named-exports';`,
     errors: [createNotFoundInNamespaceError('c', 'names')],
   }),
 
   // #328: * exports do not include default
-  test({
+  tInvalid({
     code: 'import * as ree from "./re-export"; console.log(ree.default)',
     errors: [createNotFoundInNamespaceError('default', 'ree')],
   }),
 
   // JSX
-  test({
+  tInvalid({
     code: 'import * as Names from "./named-exports"; const Foo = <Names.e/>',
     errors: [createNotFoundInNamespaceError('e', 'Names')],
     languageOptions: {
@@ -422,7 +422,7 @@ let invalid: RunTests<typeof rule>['invalid'] = [
     },
   }),
 
-  test({
+  tInvalid({
     code: `import { "b" as b } from "./deep/a"; console.log(b.e)`,
     errors: [createNotFoundInNamespaceError('e', 'b')],
     languageOptions: {
@@ -430,7 +430,7 @@ let invalid: RunTests<typeof rule>['invalid'] = [
       parserOptions: { ecmaVersion: 2022 },
     },
   }),
-  test({
+  tInvalid({
     code: `import { "b" as b } from "./deep/a"; console.log(b.c.e)`,
     errors: [createNotFoundInNamespaceDeepError('e', 'b.c')],
     languageOptions: {
@@ -447,28 +447,28 @@ for (const [folder, parser] of [['deep'], ['deep-es7', parsers.BABEL]]) {
   // close over params
   valid = [
     ...valid,
-    test({
+    tValid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.d.e)`,
     }),
-    test({
+    tValid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.c.d.e)`,
     }),
-    test({
+    tValid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.d.e.f)`,
     }),
-    test({
+    tValid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{c:{d:{e}}}} = a`,
     }),
-    test({
+    tValid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; var {c:{d:{e}}} = b`,
     }),
     // deep namespaces should include explicitly exported defaults
-    test({
+    tValid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.default)`,
     }),
@@ -476,32 +476,32 @@ for (const [folder, parser] of [['deep'], ['deep-es7', parsers.BABEL]]) {
 
   invalid = [
     ...invalid,
-    test({
+    tInvalid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.e)`,
       errors: [createNotFoundInNamespaceDeepError('e', 'a.b')],
     }),
-    test({
+    tInvalid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.e)`,
       errors: [createNotFoundInNamespaceError('e', 'b')],
     }),
-    test({
+    tInvalid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; console.log(a.b.c.e)`,
       errors: [createNotFoundInNamespaceDeepError('e', 'a.b.c')],
     }),
-    test({
+    tInvalid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import { b } from "./${folder}/a"; console.log(b.c.e)`,
       errors: [createNotFoundInNamespaceDeepError('e', 'b.c')],
     }),
-    test({
+    tInvalid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{ e }} = a`,
       errors: [createNotFoundInNamespaceDeepError('e', 'a.b')],
     }),
-    test({
+    tInvalid({
       languageOptions: { ...(parser && { parser: require(parser) }) },
       code: `import * as a from "./${folder}/a"; var {b:{c:{ e }}} = a`,
       errors: [createNotFoundInNamespaceDeepError('e', 'a.b.c')],

@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunction, parsers } from '../utils'
+import { createRuleTestCaseFunctions, parsers } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/group-exports'
 
@@ -18,18 +18,18 @@ const ruleTester = new TSESLintRuleTester({
   },
 })
 
-const test = createRuleTestCaseFunction<typeof rule>()
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 ruleTester.run('group-exports', rule, {
   valid: [
-    test({ code: 'export const test = true' }),
-    test({
+    tValid({ code: 'export const test = true' }),
+    tValid({
       code: `
       export default {}
       export const test = true
     `,
     }),
-    test({
+    tValid({
       code: `
       const first = true
       const second = true
@@ -39,87 +39,87 @@ ruleTester.run('group-exports', rule, {
       }
     `,
     }),
-    test({
+    tValid({
       code: `
       export default {}
       /* test */
       export const test = true
     `,
     }),
-    test({
+    tValid({
       code: `
       export default {}
       // test
       export const test = true
     `,
     }),
-    test({
+    tValid({
       code: `
       export const test = true
       /* test */
       export default {}
     `,
     }),
-    test({
+    tValid({
       code: `
       export const test = true
       // test
       export default {}
     `,
     }),
-    test({
+    tValid({
       code: `
       export { default as module1 } from './module-1'
       export { default as module2 } from './module-2'
     `,
     }),
-    test({ code: 'module.exports = {} ' }),
-    test({
+    tValid({ code: 'module.exports = {} ' }),
+    tValid({
       code: `
       module.exports = { test: true,
         another: false }
     `,
     }),
-    test({ code: 'exports.test = true' }),
+    tValid({ code: 'exports.test = true' }),
 
-    test({
+    tValid({
       code: `
       module.exports = {}
       const test = module.exports
     `,
     }),
-    test({
+    tValid({
       code: `
       exports.test = true
       const test = exports.test
     `,
     }),
-    test({
+    tValid({
       code: `
       module.exports = {}
       module.exports.too.deep = true
     `,
     }),
-    test({
+    tValid({
       code: `
       module.exports.deep.first = true
       module.exports.deep.second = true
     `,
     }),
-    test({
+    tValid({
       code: `
       module.exports = {}
       exports.too.deep = true
     `,
     }),
-    test({
+    tValid({
       code: `
       export default {}
       const test = true
       export { test }
     `,
     }),
-    test({
+    tValid({
       code: `
       const test = true
       export { test }
@@ -127,31 +127,31 @@ ruleTester.run('group-exports', rule, {
       export default {}
     `,
     }),
-    test({
+    tValid({
       code: `
       module.something.else = true
       module.something.different = true
     `,
     }),
-    test({
+    tValid({
       code: `
       module.exports.test = true
       module.something.different = true
     `,
     }),
-    test({
+    tValid({
       code: `
       exports.test = true
       module.something.different = true
     `,
     }),
-    test({
+    tValid({
       code: `
       unrelated = 'assignment'
       module.exports.test = true
     `,
     }),
-    test({
+    tValid({
       code: `
       type firstType = {
         propType: string
@@ -161,7 +161,7 @@ ruleTester.run('group-exports', rule, {
       export { first };
     `,
     }),
-    test({
+    tValid({
       code: `
       type firstType = {
         propType: string
@@ -172,7 +172,7 @@ ruleTester.run('group-exports', rule, {
       export type { firstType, secondType };
     `,
     }),
-    test({
+    tValid({
       code: `
       export type { type1A, type1B } from './module-1'
       export { method1 } from './module-1'
@@ -180,7 +180,7 @@ ruleTester.run('group-exports', rule, {
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `
         export const test = true
         export const another = true
@@ -190,7 +190,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'ExportNamedDeclaration' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         export { method1 } from './module-1'
         export { method2 } from './module-1'
@@ -200,7 +200,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'ExportNamedDeclaration' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         module.exports = {}
         module.exports.test = true
@@ -212,7 +212,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         module.exports = {}
         module.exports.test = true
@@ -222,7 +222,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         module.exports = { test: true }
         module.exports.another = true
@@ -232,7 +232,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         module.exports.test = true
         module.exports.another = true
@@ -242,7 +242,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         exports.test = true
         module.exports.another = true
@@ -252,7 +252,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         module.exports = () => {}
         module.exports.attached = true
@@ -262,9 +262,9 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
-        module.exports = function test() {}
+        module.exports = function tInvalid() {}
         module.exports.attached = true
       `,
       errors: [
@@ -272,7 +272,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         module.exports = () => {}
         exports.test = true
@@ -284,7 +284,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         module.exports = "non-object"
         module.exports.attached = true
@@ -294,7 +294,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         module.exports = "non-object"
         module.exports.attached = true
@@ -306,7 +306,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'AssignmentExpression' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         type firstType = {
           propType: string
@@ -324,7 +324,7 @@ ruleTester.run('group-exports', rule, {
         { messageId: 'ExportNamedDeclaration' },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         export type { type1 } from './module-1'
         export type { type2 } from './module-1'
