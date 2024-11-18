@@ -1,45 +1,65 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import type { TSESTree } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_VALID_CASES, parsers } from '../utils'
+import {
+  createRuleTestCaseFunctions,
+  SYNTAX_VALID_CASES,
+  parsers,
+} from '../utils'
+import type { GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-deprecated'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createDeprecatedDescError(
+  description: string,
+  type?: `${TSESTree.AST_NODE_TYPES}`,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId: 'deprecatedDesc',
+    data: { description },
+    type: type as TSESTree.AST_NODE_TYPES,
+  }
+}
+
 ruleTester.run('no-deprecated', rule, {
   valid: [
-    test({ code: "import { x } from './fake' " }),
-    test({ code: "import bar from './bar'" }),
+    tValid({ code: "import { x } from './fake' " }),
+    tValid({ code: "import bar from './bar'" }),
 
-    test({ code: "import { fine } from './deprecated'" }),
-    test({ code: "import { _undocumented } from './deprecated'" }),
+    tValid({ code: "import { fine } from './deprecated'" }),
+    tValid({ code: "import { _undocumented } from './deprecated'" }),
 
-    test({
+    tValid({
       code: "import { fn } from './deprecated'",
       settings: { 'import-x/docstyle': ['tomdoc'] },
     }),
 
-    test({
+    tValid({
       code: "import { fine } from './tomdoc-deprecated'",
       settings: { 'import-x/docstyle': ['tomdoc'] },
     }),
-    test({
+    tValid({
       code: "import { _undocumented } from './tomdoc-deprecated'",
       settings: { 'import-x/docstyle': ['tomdoc'] },
     }),
 
     // naked namespace is fine
-    test({ code: "import * as depd from './deprecated'" }),
-    test({
+    tValid({ code: "import * as depd from './deprecated'" }),
+    tValid({
       code: "import * as depd from './deprecated'; console.log(depd.fine())",
     }),
-    test({ code: "import { deepDep } from './deep-deprecated'" }),
-    test({
+    tValid({ code: "import { deepDep } from './deep-deprecated'" }),
+    tValid({
       code: "import { deepDep } from './deep-deprecated'; console.log(deepDep.fine())",
     }),
 
     // redefined
-    test({
+    tValid({
       code: "import { deepDep } from './deep-deprecated'; function x(deepDep) { console.log(deepDep.MY_TERRIBLE_ACTION) }",
     }),
 
@@ -47,172 +67,200 @@ ruleTester.run('no-deprecated', rule, {
   ],
   invalid: [
     // reports on parse errors even without specifiers
-    test({ code: "import './malformed.js'", errors: 1 }),
+    tInvalid({
+      code: "import './malformed.js'",
+      // @ts-expect-error parsing error
+      errors: 1,
+    }),
 
-    test({
+    tInvalid({
+      code: "import { _deprecatedNoDescription } from './deprecated'",
+      errors: [{ messageId: 'deprecated' }],
+    }),
+
+    tInvalid({
       code: "import { fn } from './deprecated'",
-      errors: ["Deprecated: please use 'x' instead."],
+      errors: [createDeprecatedDescError("please use 'x' instead.")],
     }),
 
-    test({
+    tInvalid({
       code: "import TerribleClass from './deprecated'",
-      errors: ['Deprecated: this is awful, use NotAsBadClass.'],
+      errors: [createDeprecatedDescError('this is awful, use NotAsBadClass.')],
     }),
 
-    test({
+    tInvalid({
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'",
-      errors: ['Deprecated: please stop sending/handling this action type.'],
+      errors: [
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+        ),
+      ],
     }),
 
-    test({
+    tInvalid({
       code: "import { fn } from './deprecated'",
       settings: { 'import-x/docstyle': ['jsdoc', 'tomdoc'] },
-      errors: ["Deprecated: please use 'x' instead."],
+      errors: [createDeprecatedDescError("please use 'x' instead.")],
     }),
 
-    test({
+    tInvalid({
       code: "import { fn } from './tomdoc-deprecated'",
       settings: { 'import-x/docstyle': ['tomdoc'] },
-      errors: ['Deprecated: This function is terrible.'],
+      errors: [createDeprecatedDescError('This function is terrible.')],
     }),
 
-    test({
+    tInvalid({
       code: "import TerribleClass from './tomdoc-deprecated'",
       settings: { 'import-x/docstyle': ['tomdoc'] },
-      errors: ['Deprecated: this is awful, use NotAsBadClass.'],
+      errors: [createDeprecatedDescError('this is awful, use NotAsBadClass.')],
     }),
 
-    test({
+    tInvalid({
       code: "import { MY_TERRIBLE_ACTION } from './tomdoc-deprecated'",
       settings: { 'import-x/docstyle': ['tomdoc'] },
-      errors: ['Deprecated: Please stop sending/handling this action type.'],
+      errors: [
+        createDeprecatedDescError(
+          'Please stop sending/handling this action type.',
+        ),
+      ],
     }),
 
     // ignore redeclares
-    test({
+    tInvalid({
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; function shadow(MY_TERRIBLE_ACTION) { console.log(MY_TERRIBLE_ACTION); }",
-      errors: ['Deprecated: please stop sending/handling this action type.'],
+      errors: [
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+        ),
+      ],
     }),
 
     // ignore non-deprecateds
-    test({
+    tInvalid({
       code: "import { MY_TERRIBLE_ACTION, fine } from './deprecated'; console.log(fine)",
-      errors: ['Deprecated: please stop sending/handling this action type.'],
+      errors: [
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+        ),
+      ],
     }),
 
     // reflag on subsequent usages
-    test({
+    tInvalid({
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; console.log(MY_TERRIBLE_ACTION)",
       errors: [
-        {
-          type: 'ImportSpecifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
-        {
-          type: 'Identifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'ImportSpecifier',
+        ),
+
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'Identifier',
+        ),
       ],
     }),
 
     // don't flag other members
-    test({
+    tInvalid({
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; console.log(someOther.MY_TERRIBLE_ACTION)",
       errors: [
-        {
-          type: 'ImportSpecifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'ImportSpecifier',
+        ),
       ],
     }),
 
     // flag it even with members
-    test({
+    tInvalid({
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; console.log(MY_TERRIBLE_ACTION.whatever())",
       errors: [
-        {
-          type: 'ImportSpecifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
-        {
-          type: 'Identifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'ImportSpecifier',
+        ),
+
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'Identifier',
+        ),
       ],
     }),
 
     // works for function calls too
-    test({
+    tInvalid({
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; console.log(MY_TERRIBLE_ACTION(this, is, the, worst))",
       errors: [
-        {
-          type: 'ImportSpecifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
-        {
-          type: 'Identifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'ImportSpecifier',
+        ),
+
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'Identifier',
+        ),
       ],
     }),
 
     // deprecated full module
-    test({
+    tInvalid({
       code: "import Thing from './deprecated-file'",
       errors: [
-        {
-          type: 'ImportDeclaration',
-          message: 'Deprecated: this module is the worst.',
-        },
+        createDeprecatedDescError(
+          'this module is the worst.',
+          'ImportDeclaration',
+        ),
       ],
     }),
 
     // don't flag as part of other member expressions
-    test({
+    tInvalid({
       code: "import Thing from './deprecated-file'; console.log(other.Thing)",
       errors: [
-        {
-          type: 'ImportDeclaration',
-          message: 'Deprecated: this module is the worst.',
-        },
+        createDeprecatedDescError(
+          'this module is the worst.',
+          'ImportDeclaration',
+        ),
       ],
     }),
 
     // namespace following
-    test({
+    tInvalid({
       code: "import * as depd from './deprecated'; console.log(depd.MY_TERRIBLE_ACTION)",
       errors: [
-        {
-          type: 'Identifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'Identifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: "import * as deep from './deep-deprecated'; console.log(deep.deepDep.MY_TERRIBLE_ACTION)",
       errors: [
-        {
-          type: 'Identifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'Identifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: "import { deepDep } from './deep-deprecated'; console.log(deepDep.MY_TERRIBLE_ACTION)",
       errors: [
-        {
-          type: 'Identifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'Identifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: "import { deepDep } from './deep-deprecated'; function x(deepNDep) { console.log(deepDep.MY_TERRIBLE_ACTION) }",
       errors: [
-        {
-          type: 'Identifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'Identifier',
+        ),
       ],
     }),
   ],
@@ -220,23 +268,23 @@ ruleTester.run('no-deprecated', rule, {
 
 ruleTester.run('no-deprecated: hoisting', rule, {
   valid: [
-    test({
+    tValid({
       code: "function x(deepDep) { console.log(deepDep.MY_TERRIBLE_ACTION) } import { deepDep } from './deep-deprecated'",
     }),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: "console.log(MY_TERRIBLE_ACTION); import { MY_TERRIBLE_ACTION } from './deprecated'",
       errors: [
-        {
-          type: 'Identifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
-        {
-          type: 'ImportSpecifier',
-          message: 'Deprecated: please stop sending/handling this action type.',
-        },
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'Identifier',
+        ),
+        createDeprecatedDescError(
+          'please stop sending/handling this action type.',
+          'ImportSpecifier',
+        ),
       ],
     }),
   ],
@@ -252,17 +300,17 @@ describe('TypeScript', () => {
 
   ruleTester.run('no-deprecated', rule, {
     valid: [
-      test({
+      tValid({
         code: "import * as hasDeprecated from './ts-deprecated.ts'",
         ...parserConfig,
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: "import { foo } from './ts-deprecated.ts'; console.log(foo())",
         errors: [
-          { type: 'ImportSpecifier', message: "Deprecated: don't use this!" },
-          { type: 'Identifier', message: "Deprecated: don't use this!" },
+          createDeprecatedDescError("don't use this!", 'ImportSpecifier'),
+          createDeprecatedDescError("don't use this!", 'Identifier'),
         ],
         ...parserConfig,
       }),
