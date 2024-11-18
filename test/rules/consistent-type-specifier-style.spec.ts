@@ -2,13 +2,13 @@ import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester
 import { TSESTree } from '@typescript-eslint/utils'
 
 import { parsers, createRuleTestCaseFunctions } from '../utils'
-import type { RunTests } from '../utils'
+import type { RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/consistent-type-specifier-style'
 
 const { tValid } = createRuleTestCaseFunctions<typeof rule>()
 
-const COMMON_TESTS: RunTests<typeof rule> = {
+const COMMON_TESTS: RuleRunTests<typeof rule> = {
   valid: [
     //
     // prefer-top-level
@@ -251,7 +251,7 @@ import {
   ],
 } as const
 
-const TS_ONLY: RunTests<typeof rule> = {
+const TS_ONLY: RuleRunTests<typeof rule> = {
   valid: [
     //
     // always valid
@@ -261,7 +261,7 @@ const TS_ONLY: RunTests<typeof rule> = {
   invalid: [],
 }
 
-const FLOW_ONLY: RunTests<typeof rule> = {
+const FLOW_ONLY: RuleRunTests<typeof rule> = {
   valid: [
     //
     // prefer-top-level

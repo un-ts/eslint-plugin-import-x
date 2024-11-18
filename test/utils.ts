@@ -128,7 +128,7 @@ export type GetRuleModuleOptions<TRule> =
  *   ]
  * ```
  */
-export type RunTests<
+export type RuleRunTests<
   TRule extends RuleModule<string, readonly unknown[]>,
   TRuleType extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
 > = TSESLintRunTests<TRuleType['messageIds'], TRuleType['options']>

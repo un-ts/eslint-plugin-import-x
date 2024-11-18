@@ -8,7 +8,7 @@ import {
   testFilePath,
   parsers,
 } from '../utils'
-import type { GetRuleModuleMessageIds, RunTests } from '../utils'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/namespace'
 
@@ -42,7 +42,7 @@ function createNotFoundInNamespaceDeepError(
   }
 }
 
-let valid: RunTests<typeof rule>['valid'] = [
+let valid: RuleRunTests<typeof rule>['valid'] = [
   tValid({
     code: 'import "./malformed.js"',
     languageOptions: { parser: require(parsers.ESPREE) },
@@ -252,7 +252,7 @@ let valid: RunTests<typeof rule>['valid'] = [
     },
   }),
 
-  ...(SYNTAX_VALID_CASES as RunTests<typeof rule>['valid']),
+  ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
 
   tValid({
     code: `
@@ -320,7 +320,7 @@ let valid: RunTests<typeof rule>['valid'] = [
   }),
 ]
 
-let invalid: RunTests<typeof rule>['invalid'] = [
+let invalid: RuleRunTests<typeof rule>['invalid'] = [
   tInvalid({
     code: "import * as names from './named-exports'; console.log(names.c)",
     errors: [createNotFoundInNamespaceError('c', 'names')],

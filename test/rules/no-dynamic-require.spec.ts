@@ -1,38 +1,34 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers, test } from '../utils'
-import type { ValidTestCase } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-dynamic-require'
 
 const ruleTester = new TSESLintRuleTester()
 
-const error = {
-  messageId: 'require',
-} as const
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
-const dynamicImportError = {
-  messageId: 'import',
-} as const
+const REQUIRE_ERROR = { messageId: 'require' } as const
+const DYNAMIC_IMPORT_ERROR = { messageId: 'import' } as const
 
 ruleTester.run('no-dynamic-require', rule, {
   valid: [
-    test({ code: 'import _ from "lodash"' }),
-    test({ code: 'require("foo")' }),
-    test({ code: 'require(`foo`)' }),
-    test({ code: 'require("./foo")' }),
-    test({ code: 'require("@scope/foo")' }),
-    test({ code: 'require()' }),
-    test({ code: 'require("./foo", "bar" + "okay")' }),
-    test({ code: 'var foo = require("foo")' }),
-    test({ code: 'var foo = require(`foo`)' }),
-    test({ code: 'var foo = require("./foo")' }),
-    test({ code: 'var foo = require("@scope/foo")' }),
+    tValid({ code: 'import _ from "lodash"' }),
+    tValid({ code: 'require("foo")' }),
+    tValid({ code: 'require(`foo`)' }),
+    tValid({ code: 'require("./foo")' }),
+    tValid({ code: 'require("@scope/foo")' }),
+    tValid({ code: 'require()' }),
+    tValid({ code: 'require("./foo", "bar" + "okay")' }),
+    tValid({ code: 'var foo = require("foo")' }),
+    tValid({ code: 'var foo = require(`foo`)' }),
+    tValid({ code: 'var foo = require("./foo")' }),
+    tValid({ code: 'var foo = require("@scope/foo")' }),
 
     //dynamic import
     ...[parsers.ESPREE, parsers.BABEL].flatMap($parser => {
-      const _test = <T extends ValidTestCase>(testObj: T) =>
-        $parser === parsers.ESPREE ? testObj : test(testObj)
+      const _test: typeof tValid = testObj =>
+        $parser === parsers.ESPREE ? testObj : tValid(testObj)
 
       const parser = require($parser)
 
@@ -119,7 +115,6 @@ ruleTester.run('no-dynamic-require', rule, {
         }),
         _test({
           code: 'import("../" + name)',
-          errors: [dynamicImportError],
           languageOptions: {
             parser,
             parserOptions: {
@@ -129,7 +124,6 @@ ruleTester.run('no-dynamic-require', rule, {
         }),
         _test({
           code: 'import(`../${name}`)',
-          errors: [dynamicImportError],
           languageOptions: {
             parser,
             parserOptions: {
@@ -141,39 +135,39 @@ ruleTester.run('no-dynamic-require', rule, {
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: 'require("../" + name)',
-      errors: [error],
+      errors: [REQUIRE_ERROR],
     }),
-    test({
+    tInvalid({
       code: 'require(`../${name}`)',
-      errors: [error],
+      errors: [REQUIRE_ERROR],
     }),
-    test({
+    tInvalid({
       code: 'require(name)',
-      errors: [error],
+      errors: [REQUIRE_ERROR],
     }),
-    test({
+    tInvalid({
       code: 'require(name())',
-      errors: [error],
+      errors: [REQUIRE_ERROR],
     }),
-    test({
+    tInvalid({
       code: 'require(name + "foo", "bar")',
-      errors: [error],
+      errors: [REQUIRE_ERROR],
       options: [{ esmodule: true }],
     }),
 
     // dynamic import
     ...[parsers.ESPREE, parsers.BABEL].flatMap($parser => {
-      const _test = <T extends ValidTestCase>(testObj: T) =>
-        $parser === parsers.ESPREE ? testObj : test(testObj)
+      const _test: typeof tInvalid = testObj =>
+        $parser === parsers.ESPREE ? testObj : tInvalid(testObj)
 
       const parser = require($parser)
 
       return [
         _test({
           code: 'import("../" + name)',
-          errors: [dynamicImportError],
+          errors: [DYNAMIC_IMPORT_ERROR],
           options: [{ esmodule: true }],
           languageOptions: {
             parser,
@@ -184,7 +178,7 @@ ruleTester.run('no-dynamic-require', rule, {
         }),
         _test({
           code: 'import(`../${name}`)',
-          errors: [dynamicImportError],
+          errors: [DYNAMIC_IMPORT_ERROR],
           options: [{ esmodule: true }],
           languageOptions: {
             parser,
@@ -195,7 +189,7 @@ ruleTester.run('no-dynamic-require', rule, {
         }),
         _test({
           code: 'import(name)',
-          errors: [dynamicImportError],
+          errors: [DYNAMIC_IMPORT_ERROR],
           options: [{ esmodule: true }],
           languageOptions: {
             parser,
@@ -206,7 +200,7 @@ ruleTester.run('no-dynamic-require', rule, {
         }),
         _test({
           code: 'import(name())',
-          errors: [dynamicImportError],
+          errors: [DYNAMIC_IMPORT_ERROR],
           options: [{ esmodule: true }],
           languageOptions: {
             parser,
@@ -217,13 +211,13 @@ ruleTester.run('no-dynamic-require', rule, {
         }),
       ]
     }),
-    test({
+    tInvalid({
       code: 'require(`foo${x}`)',
-      errors: [error],
+      errors: [REQUIRE_ERROR],
     }),
-    test({
+    tInvalid({
       code: 'var foo = require(`foo${x}`)',
-      errors: [error],
+      errors: [REQUIRE_ERROR],
     }),
   ],
 })

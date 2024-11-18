@@ -10,7 +10,7 @@ import {
   testFilePath,
   parsers,
 } from '../utils'
-import type { RunTests, GetRuleModuleMessageIds } from '../utils'
+import type { RuleRunTests, GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/named'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
@@ -479,7 +479,7 @@ describe('TypeScript', () => {
     'import-x/resolver': { 'eslint-import-resolver-typescript': true },
   }
 
-  let valid: RunTests<typeof rule>['valid'] = [
+  let valid: RuleRunTests<typeof rule>['valid'] = [
     tValid({
       code: `import x from './typescript-export-assign-object'`,
       languageOptions: {
@@ -494,7 +494,7 @@ describe('TypeScript', () => {
     }),
   ]
 
-  let invalid: RunTests<typeof rule>['invalid'] = [
+  let invalid: RuleRunTests<typeof rule>['invalid'] = [
     // TODO: uncomment this test
     // tInvalid({
     //   code: `import {a} from './export-star-3/b';`,

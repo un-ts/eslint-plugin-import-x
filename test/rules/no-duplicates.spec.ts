@@ -9,7 +9,7 @@ import {
   tsVersionSatisfies,
   typescriptEslintParserSatisfies,
 } from '../utils'
-import type { GetRuleModuleMessageIds, RunTests } from '../utils'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils'
 
 import jsxConfig from 'eslint-plugin-import-x/config/react'
 import rule from 'eslint-plugin-import-x/rules/no-duplicates'
@@ -543,7 +543,7 @@ describe('TypeScript', () => {
     },
   }
 
-  const valid: RunTests<typeof rule>['valid'] = [
+  const valid: RuleRunTests<typeof rule>['valid'] = [
     // #1667: ignore duplicate if is a typescript type import
     tValid({
       code: "import type { x } from './foo'; import y from './foo'",
@@ -621,7 +621,7 @@ describe('TypeScript', () => {
     }),
   ]
 
-  const invalid: RunTests<typeof rule>['invalid'] = [
+  const invalid: RuleRunTests<typeof rule>['invalid'] = [
     tInvalid({
       code: "import type x from './foo'; import type y from './foo'",
       ...parserConfig,

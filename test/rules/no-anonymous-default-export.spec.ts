@@ -6,7 +6,7 @@ import {
   parsers,
   createRuleTestCaseFunctions,
 } from '../utils'
-import type { GetRuleModuleMessageIds, RunTests } from '../utils'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-anonymous-default-export'
 
@@ -79,7 +79,7 @@ ruleTester.run('no-anonymous-default-export', rule, {
     // Allow call expressions by default for backwards compatibility
     tValid({ code: 'export default foo(bar)' }),
 
-    ...(SYNTAX_VALID_CASES as RunTests<typeof rule>['valid']),
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [

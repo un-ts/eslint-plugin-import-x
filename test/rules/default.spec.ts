@@ -7,7 +7,7 @@ import {
   SYNTAX_VALID_CASES,
   parsers,
 } from '../utils'
-import type { RunTests } from '../utils'
+import type { RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/default'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
@@ -124,7 +124,7 @@ ruleTester.run('default', rule, {
       },
     }),
 
-    ...(SYNTAX_VALID_CASES as RunTests<typeof rule>['valid']),
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [
