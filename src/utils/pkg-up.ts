@@ -7,7 +7,6 @@ function findUp(filename: string | string[], cwd?: string): string | null {
 
   const filenames = [filename].flat()
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const file = filenames.find(el => fs.existsSync(path.resolve(dir, el)))
 

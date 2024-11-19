@@ -3,6 +3,7 @@
  */
 module.exports = {
   root: true,
+  reportUnusedDisableDirectives: true,
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
