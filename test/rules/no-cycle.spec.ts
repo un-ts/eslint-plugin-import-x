@@ -8,20 +8,9 @@ import rule from 'eslint-plugin-import-x/rules/no-cycle'
 
 const ruleTester = new TSESLintRuleTester()
 
-const { tValid: _tValid, tInvalid: _tInvalid } =
-  createRuleTestCaseFunctions<typeof rule>()
-
-const tValid = (testCase =>
-  _tValid({
-    filename: testFilePath('./cycles/depth-zero.js'),
-    ...testCase,
-  })) as typeof _tValid
-
-const tInvalid = (testCase =>
-  _tInvalid({
-    filename: testFilePath('./cycles/depth-zero.js'),
-    ...testCase,
-  })) as typeof _tInvalid
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>({
+  filename: testFilePath('./cycles/depth-zero.js'),
+})
 
 const createCycleSourceError = (
   source: string,

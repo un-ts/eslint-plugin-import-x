@@ -8,22 +8,10 @@ import rule from 'eslint-plugin-import-x/rules/no-relative-parent-imports'
 
 const ruleTester = new TSESLintRuleTester()
 
-const { tValid: _tValid, tInvalid: _tInvalid } =
-  createRuleTestCaseFunctions<typeof rule>()
-
-const tValid = (testCase =>
-  _tValid({
-    ...testCase,
-    filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
-    languageOptions: { parser: require(parsers.BABEL) },
-  })) as typeof _tValid
-
-const tInvalid = (testCase =>
-  _tInvalid({
-    ...testCase,
-    filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
-    languageOptions: { parser: require(parsers.BABEL) },
-  })) as typeof _tInvalid
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>({
+  filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
+  languageOptions: { parser: require(parsers.BABEL) },
+})
 
 function createNoAllowedError(
   filename: string,

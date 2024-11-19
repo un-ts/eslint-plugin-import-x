@@ -160,6 +160,10 @@ export type RuleRunTests<
  * })
  * ```
  *
+ * @param defaultOptions If you have a specific set of options
+ *                       that need to be passed to each test case you
+ *                       can supply them directly to this function.
+ *
  * If the `TRule` parameter is omitted default types are used.
  */
 export function createRuleTestCaseFunctions<
@@ -167,10 +171,15 @@ export function createRuleTestCaseFunctions<
   TData extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
   Valid = TSESLintValidTestCase<TData['options']>,
   Invalid = TSESLintInvalidTestCase<TData['messageIds'], TData['options']>,
->(): { tValid: (t: Valid) => Valid; tInvalid: (t: Invalid) => Invalid } {
+>(
+  defaultOptions: Pick<
+    TSESLintValidTestCase<TData['options']>,
+    'filename' | 'languageOptions' | 'settings'
+  > = {},
+): { tValid: (t: Valid) => Valid; tInvalid: (t: Invalid) => Invalid } {
   return {
-    tValid: createRuleTestCase as never,
-    tInvalid: createRuleTestCase as never,
+    tValid: t => createRuleTestCase({ ...defaultOptions, ...t } as never),
+    tInvalid: t => createRuleTestCase({ ...defaultOptions, ...t } as never),
   }
 }
 
