@@ -82,7 +82,6 @@ export type InvalidTestCaseError =
     })
 
 /** @deprecated use {@link createRuleTestCaseFunctions} */
-// eslint-disable-next-line eslint-plugin/require-meta-docs-description, eslint-plugin/require-meta-type, eslint-plugin/prefer-message-ids, eslint-plugin/prefer-object-rule, eslint-plugin/require-meta-schema
 export function test<T extends ValidTestCase>(
   t: T,
 ): T extends { errors: InvalidTestCaseError[] | number }
