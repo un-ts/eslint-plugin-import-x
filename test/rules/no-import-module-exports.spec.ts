@@ -1,8 +1,9 @@
 import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { test } from '../utils'
+import { createRuleTestCaseFunctions } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-import-module-exports'
 
@@ -12,44 +13,46 @@ const ruleTester = new TSESLintRuleTester({
   },
 })
 
-const error = {
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+const NOT_ALLOWED_ERROR = {
   messageId: 'notAllowed',
-  type: 'ImportDeclaration',
+  type: AST_NODE_TYPES.ImportDeclaration,
 } as const
 
 ruleTester.run('no-import-module-exports', rule, {
   valid: [
-    test({
+    tValid({
       code: `
         const thing = require('thing')
         module.exports = thing
       `,
     }),
-    test({
+    tValid({
       code: `
         import thing from 'otherthing'
         console.log(thing.module.exports)
       `,
     }),
-    test({
+    tValid({
       code: `
         import thing from 'other-thing'
         export default thing
       `,
     }),
-    test({
+    tValid({
       code: `
         const thing = require('thing')
         exports.foo = bar
       `,
     }),
-    test({
+    tValid({
       code: `
         import { module } from 'qunit'
         module.skip('A test', function () {})
       `,
     }),
-    test({
+    tValid({
       code: `
         import foo from 'path';
         module.exports = foo;
@@ -58,7 +61,7 @@ ruleTester.run('no-import-module-exports', rule, {
       // See test/fixtures/package.json
       filename: path.resolve('test/fixtures/index.js'),
     }),
-    test({
+    tValid({
       code: `
         import foo from 'path';
         module.exports = foo;
@@ -69,7 +72,7 @@ ruleTester.run('no-import-module-exports', rule, {
       ),
       options: [{ exceptions: ['**/*/other/entry-point.js'] }],
     }),
-    test({
+    tValid({
       code: `
         import * as process from 'process';
         console.log(process.env);
@@ -79,7 +82,7 @@ ruleTester.run('no-import-module-exports', rule, {
         'test/fixtures/missing-entrypoint/cli.js',
       ),
     }),
-    test({
+    tValid({
       code: `
         import fs from 'fs/promises';
 
@@ -133,43 +136,43 @@ ruleTester.run('no-import-module-exports', rule, {
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `
         import { stuff } from 'starwars'
         module.exports = thing
       `,
-      errors: [error],
+      errors: [NOT_ALLOWED_ERROR],
     }),
-    test({
+    tInvalid({
       code: `
         import thing from 'starwars'
         const baz = module.exports = thing
         console.log(baz)
       `,
-      errors: [error],
+      errors: [NOT_ALLOWED_ERROR],
     }),
-    test({
+    tInvalid({
       code: `
         import * as allThings from 'starwars'
         exports.bar = thing
       `,
-      errors: [error],
+      errors: [NOT_ALLOWED_ERROR],
     }),
-    test({
+    tInvalid({
       code: `
         import thing from 'other-thing'
         exports.foo = bar
       `,
-      errors: [error],
+      errors: [NOT_ALLOWED_ERROR],
     }),
-    test({
+    tInvalid({
       code: `
         import foo from 'path';
         module.exports = foo;
       `,
       filename: path.resolve('test/fixtures/some/other/entry-point.js'),
       options: [{ exceptions: ['**/*/other/file.js'] }],
-      errors: [error],
+      errors: [NOT_ALLOWED_ERROR],
     }),
   ],
 })
