@@ -5,10 +5,12 @@ export default function sourceType(context: RuleContext) {
     if ('sourceType' in context.languageOptions) {
       return context.languageOptions.sourceType
     }
-    if ('parserOptions' in context.languageOptions && context.languageOptions.parserOptions) {
-      if ('sourceType' in context.languageOptions.parserOptions) {
-        return context.languageOptions.parserOptions.sourceType
-      }
+    if (
+      'parserOptions' in context.languageOptions &&
+      context.languageOptions.parserOptions &&
+      'sourceType' in context.languageOptions.parserOptions
+    ) {
+      return context.languageOptions.parserOptions.sourceType
     }
     return context.languageOptions.sourceType
   }
