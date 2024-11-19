@@ -7,13 +7,15 @@ import {
   dependencies as deps,
   devDependencies as devDeps,
 } from '../fixtures/package.json'
-import { parsers, test, testFilePath } from '../utils'
+import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils'
 
 import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-extraneous-dependencies'
 
 const ruleTester = new TSESLintRuleTester()
 const typescriptRuleTester = new TSESLintRuleTester(typescriptConfig)
+
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 const packageDirWithSyntaxError = testFilePath('with-syntax-error')
 
@@ -53,28 +55,28 @@ const emptyPackageDir = testFilePath('empty-folder')
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
     ...[...Object.keys(deps), ...Object.keys(devDeps)].flatMap(pkg => [
-      test({ code: `import "${pkg}"` }),
-      test({ code: `import foo, { bar } from "${pkg}"` }),
-      test({ code: `require("${pkg}")` }),
-      test({ code: `var foo = require("${pkg}")` }),
-      test({ code: `export { foo } from "${pkg}"` }),
-      test({ code: `export * from "${pkg}"` }),
+      tValid({ code: `import "${pkg}"` }),
+      tValid({ code: `import foo, { bar } from "${pkg}"` }),
+      tValid({ code: `require("${pkg}")` }),
+      tValid({ code: `var foo = require("${pkg}")` }),
+      tValid({ code: `export { foo } from "${pkg}"` }),
+      tValid({ code: `export * from "${pkg}"` }),
     ]),
-    test({ code: 'import "eslint/lib/api"' }),
-    test({ code: 'import "fs"' }),
-    test({ code: 'import "./foo"' }),
+    tValid({ code: 'import "eslint/lib/api"' }),
+    tValid({ code: 'import "fs"' }),
+    tValid({ code: 'import "./foo"' }),
 
-    test({
+    tValid({
       code: 'import "electron"',
       settings: { 'import-x/core-modules': ['electron'] },
     }),
-    test({
+    tValid({
       code: 'import "eslint"',
       options: [{ peerDependencies: true }],
     }),
 
     // 'project' type
-    test({
+    tValid({
       code: 'import "importType"',
       settings: {
         'import-x/resolver': {
@@ -82,32 +84,32 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         },
       },
     }),
-    test({
+    tValid({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.spec.js'] }],
       filename: 'foo.spec.js',
     }),
-    test({
+    tValid({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.spec.js'] }],
       filename: path.resolve('foo.spec.js'),
     }),
-    test({
+    tValid({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
       filename: path.resolve('foo.spec.js'),
     }),
-    test({ code: 'require(6)' }),
-    test({
+    tValid({ code: 'require(6)' }),
+    tValid({
       code: 'import "doctrine"',
       options: [{ packageDir: path.join(__dirname, '../../') }],
     }),
-    test({
+    tValid({
       code: 'import type MyType from "myflowtyped";',
       options: [{ packageDir: packageDirWithFlowTyped }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: `
         // @flow
         import typeof TypeScriptModule from 'typescript';
@@ -115,88 +117,88 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       options: [{ packageDir: packageDirWithFlowTyped }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import react from "react";',
       options: [{ packageDir: packageDirMonoRepoWithNested }],
     }),
-    test({
+    tValid({
       code: 'import leftpad from "left-pad";',
       options: [
         { packageDir: [packageDirMonoRepoWithNested, packageDirMonoRepoRoot] },
       ],
     }),
-    test({
+    tValid({
       code: 'import leftpad from "left-pad";',
       options: [{ packageDir: packageDirMonoRepoRoot }],
     }),
-    test({
+    tValid({
       code: 'import leftpad from "left-pad";',
       options: [{ packageDir: [emptyPackageDir, packageDirMonoRepoRoot] }],
     }),
-    test({
+    tValid({
       code: 'import leftpad from "left-pad";',
       options: [{ packageDir: [packageDirMonoRepoRoot, emptyPackageDir] }],
     }),
-    test({
+    tValid({
       code: 'import react from "react";',
       options: [
         { packageDir: [packageDirMonoRepoRoot, packageDirMonoRepoWithNested] },
       ],
     }),
-    test({
+    tValid({
       code: 'import leftpad from "left-pad";',
       options: [
         { packageDir: [packageDirMonoRepoRoot, packageDirMonoRepoWithNested] },
       ],
     }),
-    test({
+    tValid({
       code: 'import rightpad from "right-pad";',
       options: [
         { packageDir: [packageDirMonoRepoRoot, packageDirMonoRepoWithNested] },
       ],
     }),
-    test({ code: 'import foo from "@generated/foo"' }),
-    test({
+    tValid({ code: 'import foo from "@generated/foo"' }),
+    tValid({
       code: 'import foo from "@generated/foo"',
       options: [{ packageDir: packageDirBundleDeps }],
     }),
-    test({
+    tValid({
       code: 'import foo from "@generated/foo"',
       options: [{ packageDir: packageDirBundledDepsAsObject }],
     }),
-    test({
+    tValid({
       code: 'import foo from "@generated/foo"',
       options: [{ packageDir: packageDirBundledDepsRaceCondition }],
     }),
-    test({ code: 'export function getToken() {}' }),
-    test({ code: 'export class Component extends React.Component {}' }),
-    test({ code: 'export function Component() {}' }),
-    test({ code: 'export const Component = () => {}' }),
+    tValid({ code: 'export function getToken() {}' }),
+    tValid({ code: 'export class Component extends React.Component {}' }),
+    tValid({ code: 'export function Component() {}' }),
+    tValid({ code: 'export const Component = () => {}' }),
 
-    test({
+    tValid({
       code: 'import "not-a-dependency"',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
       options: [{ packageDir: packageDirMonoRepoRoot }],
       settings: { 'import-x/core-modules': ['not-a-dependency'] },
     }),
-    test({
+    tValid({
       code: 'import "@generated/bar/module"',
       settings: { 'import-x/core-modules': ['@generated/bar'] },
     }),
-    test({
+    tValid({
       code: 'import "@generated/bar/and/sub/path"',
       settings: { 'import-x/core-modules': ['@generated/bar'] },
     }),
     // check if "rxjs" dependency declaration fix the "rxjs/operators subpackage
-    test({
+    tValid({
       code: 'import "rxjs/operators"',
     }),
 
-    test({
+    tValid({
       code: 'import "esm-package/esm-module";',
     }),
 
-    test({
+    tValid({
       code: `
         import "alias/esm-package/esm-module";
         import 'expose-loader?exposes[]=$&exposes[]=jQuery!jquery';
@@ -204,7 +206,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       settings: { 'import-x/resolver': 'webpack' },
     }),
 
-    test({
+    tValid({
       code: 'import "@custom-internal-alias/api/service";',
       settings: {
         'import-x/resolver': {
@@ -221,7 +223,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       },
     }),
 
-    test({
+    tValid({
       code: 'import "not-a-dependency"',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
       options: [
@@ -230,289 +232,200 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: 'import "not-a-dependency"',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
       options: [{ packageDir: packageDirMonoRepoRoot }],
       errors: [
-        {
-          message:
-            "'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it",
-        },
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "not-a-dependency"',
       filename: path.join(packageDirMonoRepoWithNested, 'foo.js'),
       options: [{ packageDir: packageDirMonoRepoRoot }],
       errors: [
-        {
-          message:
-            "'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it",
-        },
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "not-a-dependency"',
       options: [{ packageDir: packageDirMonoRepoRoot }],
       errors: [
-        {
-          message:
-            "'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it",
-        },
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "not-a-dependency"',
       errors: [
-        {
-          message:
-            "'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it",
-        },
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'var donthaveit = require("@org/not-a-dependency")',
       errors: [
         {
-          message:
-            "'@org/not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S @org/not-a-dependency' to add it",
+          messageId: 'missing',
+          data: { packageName: '@org/not-a-dependency' },
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'var donthaveit = require("@org/not-a-dependency/foo")',
       errors: [
         {
-          message:
-            "'@org/not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S @org/not-a-dependency' to add it",
+          messageId: 'missing',
+          data: { packageName: '@org/not-a-dependency' },
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "eslint"',
       options: [{ devDependencies: false, peerDependencies: false }],
-      errors: [
-        {
-          message:
-            "'eslint' should be listed in the project's dependencies, not devDependencies.",
-        },
-      ],
+      errors: [{ messageId: 'devDep', data: { packageName: 'eslint' } }],
     }),
-    test({
+    tInvalid({
       code: 'import "lodash"',
       options: [{ optionalDependencies: false }],
-      errors: [
-        {
-          message:
-            "'lodash' should be listed in the project's dependencies, not optionalDependencies.",
-        },
-      ],
+      errors: [{ messageId: 'optDep', data: { packageName: 'lodash' } }],
     }),
-    test({
+    tInvalid({
       code: 'var foo = require("not-a-dependency")',
       errors: [
-        {
-          message:
-            "'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it",
-        },
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'var glob = require("glob")',
       options: [{ devDependencies: false }],
-      errors: [
-        {
-          message:
-            "'glob' should be listed in the project's dependencies, not devDependencies.",
-        },
-      ],
+      errors: [{ messageId: 'devDep', data: { packageName: 'glob' } }],
     }),
-    test({
+    tInvalid({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js'] }],
       filename: 'foo.tes.js',
-      errors: [
-        {
-          message:
-            "'jest' should be listed in the project's dependencies, not devDependencies.",
-        },
-      ],
+      errors: [{ messageId: 'devDep', data: { packageName: 'jest' } }],
     }),
-    test({
+    tInvalid({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js'] }],
       filename: path.resolve('foo.tes.js'),
-      errors: [
-        {
-          message:
-            "'jest' should be listed in the project's dependencies, not devDependencies.",
-        },
-      ],
+      errors: [{ messageId: 'devDep', data: { packageName: 'jest' } }],
     }),
-    test({
+    tInvalid({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
       filename: 'foo.tes.js',
-      errors: [
-        {
-          message:
-            "'jest' should be listed in the project's dependencies, not devDependencies.",
-        },
-      ],
+      errors: [{ messageId: 'devDep', data: { packageName: 'jest' } }],
     }),
-    test({
+    tInvalid({
       code: 'import jest from "jest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
       filename: path.resolve('foo.tes.js'),
-      errors: [
-        {
-          message:
-            "'jest' should be listed in the project's dependencies, not devDependencies.",
-        },
-      ],
+      errors: [{ messageId: 'devDep', data: { packageName: 'jest' } }],
     }),
-    test({
+    tInvalid({
       code: 'var eslint = require("lodash")',
       options: [{ optionalDependencies: false }],
-      errors: [
-        {
-          message:
-            "'lodash' should be listed in the project's dependencies, not optionalDependencies.",
-        },
-      ],
+      errors: [{ messageId: 'optDep', data: { packageName: 'lodash' } }],
     }),
-    test({
+    tInvalid({
       code: 'import "not-a-dependency"',
       options: [{ packageDir: path.join(__dirname, '../../') }],
       errors: [
-        {
-          message:
-            "'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it",
-        },
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "bar"',
       options: [{ packageDir: path.join(__dirname, './doesn-exist/') }],
-      errors: [
-        {
-          message: 'The package.json file could not be found.',
-        },
-      ],
+      errors: [{ messageId: 'pkgNotFound' }],
     }),
-    test({
+    tInvalid({
       code: 'import foo from "foo"',
       options: [{ packageDir: packageDirWithSyntaxError }],
       errors: [
         {
-          message: `The package.json file could not be parsed: ${packageFileWithSyntaxErrorMessage}`,
+          messageId: 'pkgUnparsable',
+          data: { error: packageFileWithSyntaxErrorMessage },
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import leftpad from "left-pad";',
       filename: path.join(packageDirMonoRepoWithNested, 'foo.js'),
       options: [{ packageDir: packageDirMonoRepoWithNested }],
-      errors: [
-        {
-          message:
-            "'left-pad' should be listed in the project's dependencies. Run 'npm i -S left-pad' to add it",
-        },
-      ],
+      errors: [{ messageId: 'missing', data: { packageName: 'left-pad' } }],
     }),
-    test({
+    tInvalid({
       code: 'import react from "react";',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
-      errors: [
-        {
-          message:
-            "'react' should be listed in the project's dependencies. Run 'npm i -S react' to add it",
-        },
-      ],
+      errors: [{ messageId: 'missing', data: { packageName: 'react' } }],
     }),
-    test({
+    tInvalid({
       code: 'import react from "react";',
       filename: path.join(packageDirMonoRepoWithNested, 'foo.js'),
       options: [{ packageDir: packageDirMonoRepoRoot }],
-      errors: [
-        {
-          message:
-            "'react' should be listed in the project's dependencies. Run 'npm i -S react' to add it",
-        },
-      ],
+      errors: [{ messageId: 'missing', data: { packageName: 'react' } }],
     }),
-    test({
+    tInvalid({
       code: 'import "react";',
       filename: path.join(packageDirWithEmpty, 'index.js'),
       options: [{ packageDir: packageDirWithEmpty }],
-      errors: [
-        {
-          message:
-            "'react' should be listed in the project's dependencies. Run 'npm i -S react' to add it",
-        },
-      ],
+      errors: [{ messageId: 'missing', data: { packageName: 'react' } }],
     }),
-    test({
+    tInvalid({
       code: 'import bar from "@generated/bar"',
       errors: [
-        "'@generated/bar' should be listed in the project's dependencies. Run 'npm i -S @generated/bar' to add it",
+        { messageId: 'missing', data: { packageName: '@generated/bar' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import foo from "@generated/foo"',
       options: [{ bundledDependencies: false }],
       errors: [
-        "'@generated/foo' should be listed in the project's dependencies. Run 'npm i -S @generated/foo' to add it",
+        { messageId: 'missing', data: { packageName: '@generated/foo' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import bar from "@generated/bar"',
       options: [{ packageDir: packageDirBundledDepsRaceCondition }],
       errors: [
-        "'@generated/bar' should be listed in the project's dependencies. Run 'npm i -S @generated/bar' to add it",
+        { messageId: 'missing', data: { packageName: '@generated/bar' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export { foo } from "not-a-dependency";',
       errors: [
-        {
-          message:
-            "'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it",
-        },
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export * from "not-a-dependency";',
       errors: [
-        {
-          message:
-            "'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it",
-        },
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import jest from "alias/jest";',
       settings: { 'import-x/resolver': 'webpack' },
       errors: [
-        {
-          // missing dependency is jest not alias
-          message:
-            "'jest' should be listed in the project's dependencies. Run 'npm i -S jest' to add it",
-        },
+        // missing dependency is jest not alias
+        { messageId: 'missing', data: { packageName: 'jest' } },
       ],
     }),
 
-    test({
+    tInvalid({
       code: 'import "esm-package-not-in-pkg-json/esm-module";',
       errors: [
         {
-          message: `'esm-package-not-in-pkg-json' should be listed in the project's dependencies. Run 'npm i -S esm-package-not-in-pkg-json' to add it`,
+          messageId: 'missing',
+          data: { packageName: 'esm-package-not-in-pkg-json' },
         },
       ],
     }),
 
-    test({
+    tInvalid({
       code: 'import "not-a-dependency"',
       settings: {
         'import-x/resolver': {
@@ -522,10 +435,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       },
       options: [{ includeInternal: true }],
       errors: [
-        {
-          message:
-            "'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it",
-        },
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
   ],
@@ -541,7 +451,7 @@ describe('TypeScript', () => {
 
   ruleTester.run('no-extraneous-dependencies', rule, {
     valid: [
-      test({
+      tValid({
         code: 'import type T from "a";',
         options: [
           {
@@ -552,7 +462,7 @@ describe('TypeScript', () => {
         ...parserConfig,
       }),
 
-      test({
+      tValid({
         code: 'import type { T } from "a"; export type { T };',
         options: [
           {
@@ -563,7 +473,7 @@ describe('TypeScript', () => {
         ...parserConfig,
       }),
 
-      test({
+      tValid({
         code: 'export type { T } from "a";',
         options: [
           {
@@ -575,7 +485,7 @@ describe('TypeScript', () => {
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: 'import T from "a";',
         options: [
           {
@@ -583,16 +493,11 @@ describe('TypeScript', () => {
             devDependencies: false,
           },
         ],
-        errors: [
-          {
-            message:
-              "'a' should be listed in the project's dependencies, not devDependencies.",
-          },
-        ],
+        errors: [{ messageId: 'devDep', data: { packageName: 'a' } }],
         ...parserConfig,
       }),
 
-      test({
+      tInvalid({
         code: 'import type T from "a";',
         options: [
           {
@@ -601,12 +506,7 @@ describe('TypeScript', () => {
             includeTypes: true,
           },
         ],
-        errors: [
-          {
-            message:
-              "'a' should be listed in the project's dependencies, not devDependencies.",
-          },
-        ],
+        errors: [{ messageId: 'devDep', data: { packageName: 'a' } }],
         ...parserConfig,
       }),
     ],
@@ -618,68 +518,60 @@ typescriptRuleTester.run(
   rule,
   {
     valid: [
-      test({
+      tValid({
         code: 'import type MyType from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
         languageOptions: { parser: require(parsers.BABEL) },
       }),
-      test({
+      tValid({
         code: 'import type { MyType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
         languageOptions: { parser: require(parsers.BABEL) },
       }),
-      test({
+      tValid({
         code: 'import { type MyType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
         languageOptions: { parser: require(parsers.BABEL) },
       }),
-      test({
+      tValid({
         code: 'import { type MyType, type OtherType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
         languageOptions: { parser: require(parsers.BABEL) },
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: 'import type { MyType } from "not-a-dependency";',
         options: [{ includeTypes: true }],
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
         languageOptions: { parser: require(parsers.BABEL) },
         errors: [
-          {
-            message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
-          },
+          { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
         ],
       }),
-      test({
+      tInvalid({
         code: `import type { Foo } from 'not-a-dependency';`,
         options: [{ includeTypes: true }],
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
         languageOptions: { parser: require(parsers.BABEL) },
         errors: [
-          {
-            message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
-          },
+          { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
         ],
       }),
-      test({
+      tInvalid({
         code: 'import Foo, { type MyType } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
         languageOptions: { parser: require(parsers.BABEL) },
         errors: [
-          {
-            message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
-          },
+          { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
         ],
       }),
-      test({
+      tInvalid({
         code: 'import { type MyType, Foo } from "not-a-dependency";',
         filename: testFilePath('./no-unused-modules/typescript/file-ts-a.ts'),
         languageOptions: { parser: require(parsers.BABEL) },
         errors: [
-          {
-            message: `'not-a-dependency' should be listed in the project's dependencies. Run 'npm i -S not-a-dependency' to add it`,
-          },
+          { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
         ],
       }),
     ],
