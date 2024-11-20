@@ -1,4 +1,4 @@
-import { createRule } from '../utils'
+import { createRule, getValue } from '../utils'
 import sourceType from '../utils/source-type'
 
 export = createRule({
@@ -32,9 +32,7 @@ export = createRule({
         }
 
         const someNamed = node.specifiers.some(
-          specifier =>
-            (specifier.exported.name ||
-              ('value' in specifier.exported && specifier.exported.value)) !==
+          specifier => getValue(specifier.exported) !==
             'default',
         )
         if (someNamed) {

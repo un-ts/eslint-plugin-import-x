@@ -8,7 +8,7 @@ import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule, ExportMap } from '../utils'
+import { createRule, ExportMap, getValue } from '../utils'
 import type { ModuleOptions } from '../utils'
 
 type Options = ModuleOptions & {
@@ -86,7 +86,7 @@ export = createRule<[Options?], MessageId>({
           return
         }
         case 'ExportSpecifier': {
-          return targetNode.local.name
+          return getValue(targetNode.local)
         }
         case 'FunctionDeclaration': {
           return targetNode.id?.name
@@ -171,7 +171,7 @@ export = createRule<[Options?], MessageId>({
         return
       }
 
-      if (node.imported.name !== 'default') {
+      if (getValue(node.imported) !== 'default') {
         return
       }
 
@@ -322,7 +322,7 @@ function getDefaultExportNode(
     }
     case 'ExportNamedDeclaration': {
       return defaultExportNode.specifiers.find(
-        specifier => specifier.exported.name === 'default',
+        specifier => getValue(specifier.exported) === 'default',
       )
     }
     default: {

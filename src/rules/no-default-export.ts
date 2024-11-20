@@ -1,4 +1,4 @@
-import { createRule } from '../utils'
+import { createRule, getValue } from '../utils'
 import sourceType from '../utils/source-type'
 
 export = createRule({
@@ -37,11 +37,7 @@ export = createRule({
 
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers.filter(
-          specifier =>
-            (specifier.exported.name ||
-              ('value' in specifier.exported && specifier.exported.value)) ===
-            'default',
-        )) {
+          specifier => getValue(specifier.exported) === 'default')) {
           const { loc } = sourceCode.getFirstTokens(node)[1] || {}
           // @ts-expect-error - experimental parser type
           if (specifier.type === 'ExportDefaultSpecifier') {
@@ -55,7 +51,7 @@ export = createRule({
               node,
               messageId: 'noAliasDefault',
               data: {
-                local: specifier.local.name,
+                local: getValue(specifier.local),
               },
               loc,
             })
