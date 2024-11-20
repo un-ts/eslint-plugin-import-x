@@ -313,21 +313,23 @@ describe('importType(name)', () => {
   it('`isExternalModule` works with windows directory separator', () => {
     const context = testContext()
     expect(
-      isExternalModule('foo', 'E:\\path\\to\\node_modules\\foo', context),
+      isExternalModule('foo', String.raw`E:\path\to\node_modules\foo`, context),
     ).toBe(true)
     expect(
       isExternalModule(
         '@foo/bar',
-        'E:\\path\\to\\node_modules\\@foo\\bar',
+        String.raw`E:\path\to\node_modules\@foo\bar`,
         context,
       ),
     ).toBe(true)
     expect(
       isExternalModule(
         'foo',
-        'E:\\path\\to\\node_modules\\foo',
+        String.raw`E:\path\to\node_modules\foo`,
         testContext({
-          'import-x/external-module-folders': ['E:\\path\\to\\node_modules'],
+          'import-x/external-module-folders': [
+            String.raw`E:\path\to\node_modules`,
+          ],
         }),
       ),
     ).toBe(true)

@@ -73,7 +73,7 @@ export = createRule<[Options?], MessageId>({
     const {
       importFunctions = [],
       allowEmpty = false,
-      webpackChunknameFormat = '([0-9a-zA-Z-_/.]|\\[(request|index)\\])+',
+      webpackChunknameFormat = String.raw`([0-9a-zA-Z-_/.]|\[(request|index)\])+`,
     } = context.options[0] || {}
 
     const paddedCommentRegex = /^ (\S[\S\s]+\S) $/

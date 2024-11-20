@@ -149,7 +149,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
     invalid: [
       tInvalid({
         code: 'import reallyfake from "./reallyfake/module"',
-        settings: { 'import-x/ignore': ['^\\./fake/'] },
+        settings: { 'import-x/ignore': [String.raw`^\./fake/`] },
         errors: [createError('unresolved', './reallyfake/module')],
       }),
 

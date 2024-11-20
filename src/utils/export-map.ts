@@ -241,7 +241,10 @@ export class ExportMap {
       }
     }
 
-    function addNamespace(object: object, identifier: TSESTree.Identifier | TSESTree.StringLiteral) {
+    function addNamespace(
+      object: object,
+      identifier: TSESTree.Identifier | TSESTree.StringLiteral,
+    ) {
       const nsfn = getNamespace(getValue(identifier))
       if (nsfn) {
         Object.defineProperty(object, 'namespace', { get: nsfn })

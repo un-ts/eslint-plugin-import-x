@@ -37,7 +37,8 @@ export = createRule({
 
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers.filter(
-          specifier => getValue(specifier.exported) === 'default')) {
+          specifier => getValue(specifier.exported) === 'default',
+        )) {
           const { loc } = sourceCode.getFirstTokens(node)[1] || {}
           // @ts-expect-error - experimental parser type
           if (specifier.type === 'ExportDefaultSpecifier') {

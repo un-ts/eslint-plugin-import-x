@@ -32,8 +32,7 @@ export = createRule({
         }
 
         const someNamed = node.specifiers.some(
-          specifier => getValue(specifier.exported) !==
-            'default',
+          specifier => getValue(specifier.exported) !== 'default',
         )
         if (someNamed) {
           context.report({ node, messageId: 'noAllowed' })

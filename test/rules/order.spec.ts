@@ -2384,7 +2384,7 @@ ruleTester.run('order', rule, {
         },
       ],
       settings: {
-        'import-x/internal-regex': '^(a|b|c|d|e|f|g|h|i|j|k)(\\/|$)',
+        'import-x/internal-regex': String.raw`^(a|b|c|d|e|f|g|h|i|j|k)(\/|$)`,
       },
       errors: Array.from({ length: 11 }, () => ({
         messageId: 'oneLineBetweenGroups',
