@@ -111,15 +111,8 @@ export function parse(
   parserOptions = withoutProjectParserOptions(parserOptions)
 
   // If this is a flat config, we need to add ecmaVersion and sourceType (if present) from languageOptions
-  if (
-    parserOptions.ecmaVersion == null &&
-    context.languageOptions?.ecmaVersion
-  ) {
-    parserOptions.ecmaVersion = context.languageOptions.ecmaVersion
-  }
-  if (parserOptions.sourceType == null && context.languageOptions?.sourceType) {
-    parserOptions.sourceType = context.languageOptions.sourceType
-  }
+  parserOptions.ecmaVersion ??= context.languageOptions?.ecmaVersion
+  parserOptions.sourceType ??= context.languageOptions?.sourceType
 
   // require the parser relative to the main module (i.e., ESLint)
   const parser =
