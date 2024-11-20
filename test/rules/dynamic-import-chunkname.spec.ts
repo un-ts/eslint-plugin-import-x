@@ -2,7 +2,7 @@ import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 import { SYNTAX_VALID_CASES, parsers } from '../utils'
-import type { GetRuleModuleOptions } from '../utils'
+import type { GetRuleModuleOptions, RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/dynamic-import-chunkname'
 
@@ -428,7 +428,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       options,
       languageOptions: { parser: babelParser },
     },
-    ...SYNTAX_VALID_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [

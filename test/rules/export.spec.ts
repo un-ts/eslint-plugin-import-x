@@ -6,6 +6,7 @@ import {
   parsers,
   createRuleTestCaseFunctions,
 } from '../utils'
+import type { RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/export'
 
@@ -34,7 +35,7 @@ ruleTester.run('export', rule, {
     // #328: "export * from" does not export a default
     tValid({ code: 'export default foo; export * from "./bar"' }),
 
-    ...SYNTAX_VALID_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
 
     tValid({
       code: `

@@ -6,6 +6,7 @@ import {
   SYNTAX_VALID_CASES,
   parsers,
 } from '../utils'
+import type { RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-default'
 
@@ -28,7 +29,7 @@ ruleTester.run('no-named-default', rule, {
       languageOptions: { parser: require(parsers.BABEL) },
     }),
 
-    ...SYNTAX_VALID_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [

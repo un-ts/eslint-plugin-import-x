@@ -218,7 +218,7 @@ ruleTester.run('named', rule, {
       options: [{ commonjs: true }],
     }),
 
-    ...SYNTAX_VALID_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
 
     tValid({
       code: `import { ExtfieldModel, Extfield2Model } from './models';`,

@@ -7,7 +7,7 @@ import {
   SYNTAX_VALID_CASES,
   parsers,
 } from '../utils'
-import type { GetRuleModuleMessageIds } from '../utils'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
@@ -99,7 +99,7 @@ ruleTester.run('no-named-as-default', rule, {
       },
     }),
 
-    ...SYNTAX_VALID_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [

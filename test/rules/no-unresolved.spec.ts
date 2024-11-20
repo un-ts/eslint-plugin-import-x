@@ -10,7 +10,7 @@ import {
   parsers,
   testFilePath,
 } from '../utils'
-import type { GetRuleModuleMessageIds } from '../utils'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-unresolved'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
@@ -470,7 +470,7 @@ ruleTester.run('no-unresolved electron', rule, {
 })
 
 ruleTester.run('no-unresolved syntax verification', rule, {
-  valid: SYNTAX_VALID_CASES,
+  valid: SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid'],
   invalid: [],
 })
 

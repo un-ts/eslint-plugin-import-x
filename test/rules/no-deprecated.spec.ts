@@ -7,7 +7,7 @@ import {
   SYNTAX_VALID_CASES,
   parsers,
 } from '../utils'
-import type { GetRuleModuleMessageIds } from '../utils'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-deprecated'
 
@@ -63,7 +63,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { deepDep } from './deep-deprecated'; function x(deepDep) { console.log(deepDep.MY_TERRIBLE_ACTION) }",
     }),
 
-    ...SYNTAX_VALID_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
   invalid: [
     // reports on parse errors even without specifiers
