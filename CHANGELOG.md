@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.4.3
+
+### Patch Changes
+
+- [#187](https://github.com/un-ts/eslint-plugin-import-x/pull/187) [`a428f82`](https://github.com/un-ts/eslint-plugin-import-x/commit/a428f82b0663399ca66ac678e6a43a1e6187af2e) Thanks [@SukkaW](https://github.com/SukkaW)! - Attach `ecmaVersion` and `sourceType` to `parserOptions` during parse
+
 ## 4.4.2
 
 ### Patch Changes
