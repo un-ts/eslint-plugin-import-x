@@ -241,7 +241,7 @@ export class ExportMap {
       }
     }
 
-    function addNamespace(object: object, identifier: TSESTree.Identifier) {
+    function addNamespace(object: object, identifier: TSESTree.Identifier | TSESTree.StringLiteral) {
       const nsfn = getNamespace(getValue(identifier))
       if (nsfn) {
         Object.defineProperty(object, 'namespace', { get: nsfn })
@@ -308,7 +308,7 @@ export class ExportMap {
         // else falls through
         default: {
           if ('local' in s) {
-            local = s.local.name
+            local = getValue(s.local)
           } else {
             throw new Error('Unknown export specifier type')
           }
@@ -318,7 +318,7 @@ export class ExportMap {
 
       if ('exported' in s) {
         // todo: JSDoc
-        m.reexports.set(s.exported.name, {
+        m.reexports.set(getValue(s.exported), {
           local,
           getImport: () => resolveImport(nsource),
         })

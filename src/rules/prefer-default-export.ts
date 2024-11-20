@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule, getValue } from '../utils'
 
 type Options = {
   target?: 'single' | 'any'
@@ -70,8 +70,7 @@ export = createRule<[Options?], MessageId>({
 
       ExportSpecifier(node) {
         if (
-          (node.exported.name ||
-            ('value' in node.exported && node.exported.value)) === 'default'
+          getValue(node.exported) === 'default'
         ) {
           hasDefaultExport = true
         } else {

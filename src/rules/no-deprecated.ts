@@ -2,7 +2,7 @@ import type { TSESTree } from '@typescript-eslint/utils'
 import type { Tag } from 'doctrine'
 
 import type { ModuleNamespace } from '../utils'
-import { ExportMap, createRule, declaredScope } from '../utils'
+import { ExportMap, createRule, declaredScope, getValue } from '../utils'
 
 function message(deprecation: Tag) {
   return {
@@ -93,7 +93,7 @@ export = createRule({
               }
 
               case 'ImportSpecifier': {
-                imported = im.imported.name
+                imported = getValue(im.imported)
                 local = im.local.name
                 break
               }
