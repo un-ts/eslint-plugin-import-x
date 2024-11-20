@@ -1,6 +1,6 @@
 import { RuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
-import type { TSESTree } from '@typescript-eslint/utils'
+import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 import { parsers, createRuleTestCaseFunctions } from '../utils'
 import type { GetRuleModuleMessageIds } from '../utils'
@@ -19,13 +19,9 @@ function createRenameDefaultError(
     importName: string
     suggestion: string
   },
-  type: `${TSESTree.AST_NODE_TYPES}`,
+  type: `${AST_NODE_TYPES}`,
 ): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
-  return {
-    messageId: 'renameDefault',
-    data,
-    type: type as TSESTree.AST_NODE_TYPES,
-  }
+  return { messageId: 'renameDefault', data, type: type as AST_NODE_TYPES }
 }
 
 // IMPORT

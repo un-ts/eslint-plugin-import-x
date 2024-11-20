@@ -1,5 +1,5 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
-import { TSESTree } from '@typescript-eslint/utils'
+import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 import { parsers, createRuleTestCaseFunctions } from '../utils'
 import type { RuleRunTests } from '../utils'
@@ -120,7 +120,7 @@ const COMMON_TESTS: RuleRunTests<typeof rule> = {
           data: {
             kind: 'type',
           },
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
+          type: AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -129,10 +129,7 @@ const COMMON_TESTS: RuleRunTests<typeof rule> = {
       output: "import type {Foo as Bar} from 'Foo';",
       options: ['prefer-top-level'],
       errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
-        },
+        { messageId: 'topLevel', type: AST_NODE_TYPES.ImportDeclaration },
       ],
     },
     {
@@ -140,55 +137,32 @@ const COMMON_TESTS: RuleRunTests<typeof rule> = {
       output: "import type {Foo, Bar} from 'Foo';",
       options: ['prefer-top-level'],
       errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
-        },
+        { messageId: 'topLevel', type: AST_NODE_TYPES.ImportDeclaration },
       ],
     },
     {
       code: "import { Foo, type Bar } from 'Foo';",
       output: "import { Foo  } from 'Foo';\nimport type {Bar} from 'Foo';",
       options: ['prefer-top-level'],
-      errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
-        },
-      ],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
     },
     {
       code: "import { type Foo, Bar } from 'Foo';",
       output: "import {  Bar } from 'Foo';\nimport type {Foo} from 'Foo';",
       options: ['prefer-top-level'],
-      errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
-        },
-      ],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
     },
     {
       code: "import Foo, { type Bar } from 'Foo';",
       output: "import Foo from 'Foo';\nimport type {Bar} from 'Foo';",
       options: ['prefer-top-level'],
-      errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
-        },
-      ],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
     },
     {
       code: "import Foo, { type Bar, Baz } from 'Foo';",
       output: "import Foo, {  Baz } from 'Foo';\nimport type {Bar} from 'Foo';",
       options: ['prefer-top-level'],
-      errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
-        },
-      ],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
     },
     // https://github.com/import-js/eslint-plugin-import-x/issues/2753
     {
@@ -212,12 +186,7 @@ import {
   Component5,
 } from "package-2";`,
       options: ['prefer-top-level'],
-      errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
-        },
-      ],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
     },
 
     //
@@ -233,7 +202,7 @@ import {
           data: {
             kind: 'type',
           },
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
+          type: AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -241,12 +210,7 @@ import {
       code: "import type { Foo, Bar, Baz } from 'Foo';",
       output: "import  { type Foo, type Bar, type Baz } from 'Foo';",
       options: ['prefer-inline'],
-      errors: [
-        {
-          messageId: 'inline',
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
-        },
-      ],
+      errors: [{ messageId: 'inline', type: AST_NODE_TYPES.ImportDeclaration }],
     },
   ],
 } as const
@@ -309,7 +273,7 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
           data: {
             kind: 'typeof',
           },
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
+          type: AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -318,10 +282,7 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
       output: "import typeof {Foo as Bar} from 'Foo';",
       options: ['prefer-top-level'],
       errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
-        },
+        { messageId: 'topLevel', type: AST_NODE_TYPES.ImportDeclaration },
       ],
     },
     {
@@ -334,7 +295,7 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
           data: {
             kind: 'type/typeof',
           },
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
+          type: AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -343,33 +304,20 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
       output: "import typeof {Foo, Bar} from 'Foo';",
       options: ['prefer-top-level'],
       errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
-        },
+        { messageId: 'topLevel', type: AST_NODE_TYPES.ImportDeclaration },
       ],
     },
     {
       code: "import { Foo, typeof Bar } from 'Foo';",
       output: "import { Foo  } from 'Foo';\nimport typeof {Bar} from 'Foo';",
       options: ['prefer-top-level'],
-      errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
-        },
-      ],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
     },
     {
       code: "import { typeof Foo, Bar } from 'Foo';",
       output: "import {  Bar } from 'Foo';\nimport typeof {Foo} from 'Foo';",
       options: ['prefer-top-level'],
-      errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
-        },
-      ],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
     },
     {
       code: "import { Foo, type Bar, typeof Baz } from 'Foo';",
@@ -382,14 +330,14 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
           data: {
             kind: 'type',
           },
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
+          type: AST_NODE_TYPES.ImportSpecifier,
         },
         {
           messageId: 'topLevel',
           data: {
             kind: 'typeof',
           },
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
+          type: AST_NODE_TYPES.ImportSpecifier,
         },
       ],
     },
@@ -397,24 +345,14 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
       code: "import Foo, { typeof Bar } from 'Foo';",
       output: "import Foo from 'Foo';\nimport typeof {Bar} from 'Foo';",
       options: ['prefer-top-level'],
-      errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
-        },
-      ],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
     },
     {
       code: "import Foo, { typeof Bar, Baz } from 'Foo';",
       output:
         "import Foo, {  Baz } from 'Foo';\nimport typeof {Bar} from 'Foo';",
       options: ['prefer-top-level'],
-      errors: [
-        {
-          messageId: 'topLevel',
-          type: TSESTree.AST_NODE_TYPES.ImportSpecifier,
-        },
-      ],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
     },
 
     //
@@ -430,7 +368,7 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
           data: {
             kind: 'typeof',
           },
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
+          type: AST_NODE_TYPES.ImportDeclaration,
         },
       ],
     },
@@ -438,12 +376,7 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
       code: "import typeof { Foo, Bar, Baz } from 'Foo';",
       output: "import  { typeof Foo, typeof Bar, typeof Baz } from 'Foo';",
       options: ['prefer-inline'],
-      errors: [
-        {
-          messageId: 'inline',
-          type: TSESTree.AST_NODE_TYPES.ImportDeclaration,
-        },
-      ],
+      errors: [{ messageId: 'inline', type: AST_NODE_TYPES.ImportDeclaration }],
     },
   ],
 } as const

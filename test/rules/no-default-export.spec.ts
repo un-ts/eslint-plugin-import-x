@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
-import type { TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils'
+import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 import { parsers, createRuleTestCaseFunctions } from '../utils'
 import type { GetRuleModuleMessageIds } from '../utils'
@@ -13,12 +13,12 @@ const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function createNoAliasDefaultError(
   local: string,
-  type?: `${TSESTree.AST_NODE_TYPES}`,
+  type?: `${AST_NODE_TYPES}`,
 ): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
   return {
     messageId: 'noAliasDefault',
     data: { local },
-    type: type as TSESTree.AST_NODE_TYPES,
+    type: type as AST_NODE_TYPES,
   }
 }
 

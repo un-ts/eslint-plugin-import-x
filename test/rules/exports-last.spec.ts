@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
-import type { TSESTree } from '@typescript-eslint/utils'
+import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 import { createRuleTestCaseFunctions } from '../utils'
 import type { GetRuleModuleMessageIds } from '../utils'
@@ -12,12 +12,9 @@ const ruleTester = new TSESLintRuleTester()
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function createInvalidCaseError(
-  type: `${TSESTree.AST_NODE_TYPES}`,
+  type: `${AST_NODE_TYPES}`,
 ): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
-  return {
-    messageId: 'end',
-    type: type as TSESTree.AST_NODE_TYPES,
-  }
+  return { messageId: 'end', type: type as AST_NODE_TYPES }
 }
 
 ruleTester.run('exports-last', rule, {

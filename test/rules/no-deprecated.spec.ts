@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
-import type { TSESTree } from '@typescript-eslint/utils'
+import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 import {
   createRuleTestCaseFunctions,
@@ -17,12 +17,12 @@ const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function createDeprecatedDescError(
   description: string,
-  type?: `${TSESTree.AST_NODE_TYPES}`,
+  type?: `${AST_NODE_TYPES}`,
 ): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
   return {
     messageId: 'deprecatedDesc',
     data: { description },
-    type: type as TSESTree.AST_NODE_TYPES,
+    type: type as AST_NODE_TYPES,
   }
 }
 

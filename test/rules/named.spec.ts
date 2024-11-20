@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
-import type { TSESTree } from '@typescript-eslint/utils'
+import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
 import {
   createRuleTestCaseFunctions,
@@ -22,24 +22,24 @@ const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 function createNotFoundError(
   name: string,
   module: string,
-  type: `${TSESTree.AST_NODE_TYPES}` = 'Identifier',
+  type: `${AST_NODE_TYPES}` = 'Identifier',
 ): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
   return {
     messageId: 'notFound',
     data: { name, path: module },
-    type: type as TSESTree.AST_NODE_TYPES,
+    type: type as AST_NODE_TYPES,
   }
 }
 
 function createNotFoundDeepError(
   name: string,
   deepPath: string,
-  type: `${TSESTree.AST_NODE_TYPES}` = 'Identifier',
+  type: `${AST_NODE_TYPES}` = 'Identifier',
 ): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
   return {
     messageId: 'notFoundDeep',
     data: { name, deepPath },
-    type: type as TSESTree.AST_NODE_TYPES,
+    type: type as AST_NODE_TYPES,
   }
 }
 
