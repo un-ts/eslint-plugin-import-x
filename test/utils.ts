@@ -5,9 +5,7 @@ import type {
   InvalidTestCase as TSESLintInvalidTestCase,
   RunTests as TSESLintRunTests,
 } from '@typescript-eslint/rule-tester'
-import type { TSESTree } from '@typescript-eslint/utils'
 import type { RuleModule } from '@typescript-eslint/utils/ts-eslint'
-import type { RuleTester } from 'eslint'
 import semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
@@ -46,17 +44,7 @@ export function getNonDefaultParsers() {
 
 export const TEST_FILENAME = testFilePath()
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
-export type ValidTestCase = TSESLintValidTestCase<any> & {
-  errors?: readonly InvalidTestCaseError[] | number
-  parser?: never
-  parserOptions?: never
-}
-
-type InvalidTestCase = // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
-  TSESLintInvalidTestCase<any, any>
-
-/** @warning DO NOT EXPORT THIS. use {@link createRuleTestCaseFunction} or {@link test} instead */
+/** @warning DO NOT EXPORT THIS. Use {@link createRuleTestCaseFunctions} instead */
 function createRuleTestCase<TTestCase extends TSESLintValidTestCase<unknown[]>>(
   t: TTestCase,
 ): TTestCase {
@@ -72,23 +60,6 @@ function createRuleTestCase<TTestCase extends TSESLintValidTestCase<unknown[]>>(
       },
     },
   }
-}
-
-export type InvalidTestCaseError =
-  | string
-  | InvalidTestCase['errors'][number]
-  | (RuleTester.TestCaseError & {
-      type?: `${TSESTree.AST_NODE_TYPES}`
-    })
-
-/** @deprecated use {@link createRuleTestCaseFunctions} */
-export function test<T extends ValidTestCase>(
-  t: T,
-): T extends { errors: InvalidTestCaseError[] | number }
-  ? InvalidTestCase
-  : ValidTestCase {
-  // @ts-expect-error simplify testing
-  return createRuleTestCase(t)
 }
 
 type GetRuleModuleTypes<TRule> =
@@ -258,6 +229,4 @@ export const SYNTAX_VALID_CASES: TSESLintRunTests<string, unknown[]>['valid'] =
     }),
   ]
 
-const testCompiled = process.env.TEST_COMPILED === '1'
-
-export const srcDir = testCompiled ? 'lib' : 'src'
+export const srcDir = process.env.TEST_COMPILED === '1' ? 'lib' : 'src'
