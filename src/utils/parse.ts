@@ -79,8 +79,7 @@ export function parse(
 
   // ESLint in "flat" mode only sets context.languageOptions.parserOptions
   let parserOptions =
-    ('languageOptions' in context && context.languageOptions?.parserOptions) ||
-    context.parserOptions
+    context.languageOptions?.parserOptions || context.parserOptions
 
   const parserOrPath = getParser(path, context)
 
@@ -110,6 +109,17 @@ export function parse(
   // only parse one file in isolate mode, which is much, much faster.
   // https://github.com/import-js/eslint-plugin-import/issues/1408#issuecomment-509298962
   parserOptions = withoutProjectParserOptions(parserOptions)
+
+  // If this is a flat config, we need to add ecmaVersion and sourceType (if present) from languageOptions
+  if (
+    parserOptions.ecmaVersion == null &&
+    context.languageOptions?.ecmaVersion
+  ) {
+    parserOptions.ecmaVersion = context.languageOptions.ecmaVersion
+  }
+  if (parserOptions.sourceType == null && context.languageOptions?.sourceType) {
+    parserOptions.sourceType = context.languageOptions.sourceType
+  }
 
   // require the parser relative to the main module (i.e., ESLint)
   const parser =
