@@ -1,8 +1,13 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
-import eslintPkg from 'eslint/package.json'
-import semver from 'semver'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { test, parsers, getNonDefaultParsers, testFilePath } from '../utils'
+import {
+  createRuleTestCaseFunctions,
+  parsers,
+  getNonDefaultParsers,
+  testFilePath,
+} from '../utils'
+import type { GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/order'
 
@@ -22,10 +27,25 @@ const flowRuleTester = new TSESLintRuleTester({
   },
 })
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createOrderError(
+  data: [string, 'before' | 'after', string],
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  const [secondImport, order, firstImport] = data
+  return { messageId: 'order', data: { secondImport, order, firstImport } }
+}
+
+function createGenericError(
+  error: string,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return { messageId: 'error', data: { error } }
+}
+
 ruleTester.run('order', rule, {
   valid: [
     // Default order using require
-    test({
+    tValid({
       code: `
         var fs = require('fs');
         var async = require('async');
@@ -37,7 +57,7 @@ ruleTester.run('order', rule, {
         var index = require('./');`,
     }),
     // Default order using import
-    test({
+    tValid({
       code: `
         import fs from 'fs';
         import async, {foo1} from 'async';
@@ -48,7 +68,7 @@ ruleTester.run('order', rule, {
         import index from './';`,
     }),
     // Multiple module of the same rank next to each other
-    test({
+    tValid({
       code: `
         var fs = require('fs');
         var fs = require('fs');
@@ -57,7 +77,7 @@ ruleTester.run('order', rule, {
         var async = require('async');`,
     }),
     // Overriding order to be the reverse of the default order
-    test({
+    tValid({
       code: `
         var index = require('./');
         var sibling = require('./foo');
@@ -72,7 +92,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Ignore dynamic requires
-    test({
+    tValid({
       code: `
         var path = require('path');
         var _ = require('lodash');
@@ -80,14 +100,14 @@ ruleTester.run('order', rule, {
         var fs = require('f' + 's');`,
     }),
     // Ignore non-require call expressions
-    test({
+    tValid({
       code: `
         var path = require('path');
         var result = add(1, 2);
         var _ = require('lodash');`,
     }),
     // Ignore requires that are not at the top-level #1
-    test({
+    tValid({
       code: `
         var index = require('./');
         function foo() {
@@ -99,7 +119,7 @@ ruleTester.run('order', rule, {
         }`,
     }),
     // Ignore requires that are not at the top-level #2
-    test({
+    tValid({
       code: `
         const foo = [
           require('./foo'),
@@ -107,11 +127,11 @@ ruleTester.run('order', rule, {
         ]`,
     }),
     // Ignore requires in template literal (#1936)
-    test({
+    tValid({
       code: "const foo = `${require('./a')} ${require('fs')}`",
     }),
     // Ignore unknown/invalid cases
-    test({
+    tValid({
       code: `
         var unknown1 = require('/unknown1');
         var fs = require('fs');
@@ -131,7 +151,7 @@ ruleTester.run('order', rule, {
     `,
     }),
     // Ignoring unassigned values by default (require)
-    test({
+    tValid({
       code: `
         require('./foo');
         require('fs');
@@ -139,7 +159,7 @@ ruleTester.run('order', rule, {
     `,
     }),
     // Ignoring unassigned values by default (import)
-    test({
+    tValid({
       code: `
         import './foo';
         import 'fs';
@@ -147,7 +167,7 @@ ruleTester.run('order', rule, {
     `,
     }),
     // No imports
-    test({
+    tValid({
       code: `
         function add(a, b) {
           return a + b;
@@ -156,7 +176,7 @@ ruleTester.run('order', rule, {
     `,
     }),
     // Grouping import types
-    test({
+    tValid({
       code: `
         var fs = require('fs');
         var index = require('./');
@@ -177,7 +197,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Omitted types should implicitly be considered as the last type
-    test({
+    tValid({
       code: `
         var index = require('./');
         var path = require('path');
@@ -193,7 +213,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Mixing require and import should have import up top
-    test({
+    tValid({
       code: `
         import async, {foo1} from 'async';
         import relParent2, {foo2} from '../foo/bar';
@@ -205,7 +225,7 @@ ruleTester.run('order', rule, {
       `,
     }),
     // Export equals expressions should be on top alongside with ordinary import-statements.
-    test({
+    tValid({
       code: `
         import async, {foo1} from 'async';
         import relParent2, {foo2} from '../foo/bar';
@@ -218,13 +238,13 @@ ruleTester.run('order', rule, {
       `,
     }),
 
-    test({
+    tValid({
       code: `
         export import CreateSomething = _CreateSomething;
       `,
     }),
     // Adding unknown import types (e.g. using a resolver alias via babel) to the groups.
-    test({
+    tValid({
       code: `
         import fs from 'fs';
         import { Input } from '-/components/Input';
@@ -245,7 +265,7 @@ ruleTester.run('order', rule, {
     }),
     // Using unknown import types (e.g. using a resolver alias via babel) with
     // an alternative custom group list.
-    test({
+    tValid({
       code: `
         import { Input } from '-/components/Input';
         import { Button } from '-/components/Button';
@@ -266,7 +286,7 @@ ruleTester.run('order', rule, {
     }),
     // Using unknown import types (e.g. using a resolver alias via babel)
     // Option: newlines-between: 'always'
-    test({
+    tValid({
       code: `
         import fs from 'fs';
 
@@ -296,7 +316,7 @@ ruleTester.run('order', rule, {
     }),
 
     // Using pathGroups to customize ordering, position 'after'
-    test({
+    tValid({
       code: `
         import fs from 'fs';
         import _ from 'lodash';
@@ -313,7 +333,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // pathGroup without position means "equal" with group
-    test({
+    tValid({
       code: `
         import fs from 'fs';
         import { Input } from '~/components/Input';
@@ -331,7 +351,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Using pathGroups to customize ordering, position 'before'
-    test({
+    tValid({
       code: `
         import fs from 'fs';
 
@@ -353,7 +373,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Using pathGroups to customize ordering, with patternOptions
-    test({
+    tValid({
       code: `
         import fs from 'fs';
 
@@ -381,7 +401,7 @@ ruleTester.run('order', rule, {
     }),
     // Using pathGroups to customize ordering for imports that are recognized as 'external'
     // by setting pathGroupsExcludedImportTypes without 'external'
-    test({
+    tValid({
       code: `
         import fs from 'fs';
 
@@ -404,7 +424,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Using pathGroups (a test case for https://github.com/import-js/eslint-plugin-import-x/pull/1724)
-    test({
+    tValid({
       code: `
         import fs from 'fs';
         import external from 'external';
@@ -427,7 +447,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Monorepo setup, using Webpack resolver, workspace folder name in external-module-folders
-    test({
+    tValid({
       code: `
         import _ from 'lodash';
         import m from '@test-scope/some-module';
@@ -448,7 +468,7 @@ ruleTester.run('order', rule, {
       },
     }),
     // Monorepo setup, using Node resolver (doesn't resolve symlinks)
-    test({
+    tValid({
       code: `
         import _ from 'lodash';
         import m from '@test-scope/some-module';
@@ -469,7 +489,7 @@ ruleTester.run('order', rule, {
       },
     }),
     // Option: newlines-between: 'always'
-    test({
+    tValid({
       code: `
         var fs = require('fs');
         var index = require('./');
@@ -492,7 +512,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option: newlines-between: 'never'
-    test({
+    tValid({
       code: `
         var fs = require('fs');
         var index = require('./');
@@ -510,7 +530,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option: newlines-between: 'ignore'
-    test({
+    tValid({
       code: `
       var fs = require('fs');
 
@@ -532,7 +552,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // 'ignore' should be the default value for `newlines-between`
-    test({
+    tValid({
       code: `
       var fs = require('fs');
 
@@ -554,7 +574,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option newlines-between: 'always' with multiline imports #1
-    test({
+    tValid({
       code: `
         import path from 'path';
 
@@ -570,7 +590,7 @@ ruleTester.run('order', rule, {
       options: [{ 'newlines-between': 'always' }],
     }),
     // Option newlines-between: 'always' with multiline imports #2
-    test({
+    tValid({
       code: `
         import path from 'path';
         import net
@@ -581,7 +601,7 @@ ruleTester.run('order', rule, {
       options: [{ 'newlines-between': 'always' }],
     }),
     // Option newlines-between: 'always' with multiline imports #3
-    test({
+    tValid({
       code: `
         import foo
           from '../../../../this/will/be/very/long/path/and/therefore/this/import-x/has/to/be/in/two/lines';
@@ -592,7 +612,7 @@ ruleTester.run('order', rule, {
       options: [{ 'newlines-between': 'always' }],
     }),
     // Option newlines-between: 'always' with not assigned import #1
-    test({
+    tValid({
       code: `
         import path from 'path';
 
@@ -604,7 +624,7 @@ ruleTester.run('order', rule, {
       options: [{ 'newlines-between': 'always' }],
     }),
     // Option newlines-between: 'never' with not assigned import #2
-    test({
+    tValid({
       code: `
         import path from 'path';
         import 'loud-rejection';
@@ -614,7 +634,7 @@ ruleTester.run('order', rule, {
       options: [{ 'newlines-between': 'never' }],
     }),
     // Option newlines-between: 'always' with not assigned require #1
-    test({
+    tValid({
       code: `
         var path = require('path');
 
@@ -626,7 +646,7 @@ ruleTester.run('order', rule, {
       options: [{ 'newlines-between': 'always' }],
     }),
     // Option newlines-between: 'never' with not assigned require #2
-    test({
+    tValid({
       code: `
         var path = require('path');
         require('loud-rejection');
@@ -636,7 +656,7 @@ ruleTester.run('order', rule, {
       options: [{ 'newlines-between': 'never' }],
     }),
     // Option newlines-between: 'never' should ignore nested require statement's #1
-    test({
+    tValid({
       code: `
         var some = require('asdas');
         var config = {
@@ -653,7 +673,7 @@ ruleTester.run('order', rule, {
       options: [{ 'newlines-between': 'never' }],
     }),
     // Option newlines-between: 'always' should ignore nested require statement's #2
-    test({
+    tValid({
       code: `
         var some = require('asdas');
         var config = {
@@ -669,7 +689,7 @@ ruleTester.run('order', rule, {
       options: [{ 'newlines-between': 'always' }],
     }),
     // Option: newlines-between: 'always-and-inside-groups'
-    test({
+    tValid({
       code: `
         var fs = require('fs');
         var path = require('path');
@@ -695,7 +715,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option alphabetize: {order: 'ignore'}
-    test({
+    tValid({
       code: `
         import a from 'foo';
         import b from 'bar';
@@ -710,7 +730,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option alphabetize: {order: 'asc'}
-    test({
+    tValid({
       code: `
         import c from 'Bar';
         import b from 'bar';
@@ -726,7 +746,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option alphabetize: {order: 'desc'}
-    test({
+    tValid({
       code: `
         import a from 'foo';
         import b from 'bar';
@@ -742,7 +762,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option alphabetize: {order: 'asc'} and move nested import entries closer to the main import entry
-    test({
+    tValid({
       code: `
         import a from "foo";
         import c from "foo/bar";
@@ -752,7 +772,7 @@ ruleTester.run('order', rule, {
       options: [{ alphabetize: { order: 'asc' } }],
     }),
     // Option alphabetize: {order: 'asc'} and move nested import entries closer to the main import entry
-    test({
+    tValid({
       code: `
         import a from "foo";
         import c from "foo/foobar/bar";
@@ -762,7 +782,7 @@ ruleTester.run('order', rule, {
       options: [{ alphabetize: { order: 'asc' } }],
     }),
     // Option alphabetize: {order: 'desc'} and move nested import entries closer to the main import entry
-    test({
+    tValid({
       code: `
         import b from "foo-bar";
         import d from "foo/barfoo";
@@ -772,7 +792,7 @@ ruleTester.run('order', rule, {
       options: [{ alphabetize: { order: 'desc' } }],
     }),
     // Option alphabetize: {order: 'desc'} and move nested import entries closer to the main import entry with file names having non-alphanumeric characters.
-    test({
+    tValid({
       code: `
         import b from "foo-bar";
         import c from "foo,bar";
@@ -785,7 +805,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option alphabetize with newlines-between: {order: 'asc', newlines-between: 'always'}
-    test({
+    tValid({
       code: `
         import b from 'Bar';
         import c from 'bar';
@@ -802,7 +822,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Alphabetize with require
-    test({
+    tValid({
       code: `
         import { hello } from './hello';
         import { int } from './int';
@@ -818,7 +838,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Order of imports with similar names
-    test({
+    tValid({
       code: `
         import React from 'react';
         import { BrowserRouter } from 'react-router-dom';
@@ -831,7 +851,7 @@ ruleTester.run('order', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: `
         import { UserInputError } from 'apollo-server-express';
 
@@ -856,7 +876,7 @@ ruleTester.run('order', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: `
         import { ReactElement, ReactNode } from 'react';
 
@@ -887,7 +907,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Order of the `import ... = require(...)` syntax
-    test({
+    tValid({
       code: `
         import blah = require('./blah');
         import { hello } from './hello';`,
@@ -901,7 +921,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Order of object-imports
-    test({
+    tValid({
       code: `
         import blah = require('./blah');
         import log = console.log;`,
@@ -915,7 +935,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Object-imports should not be forced to be alphabetized
-    test({
+    tValid({
       code: `
         import debug = console.debug;
         import log = console.log;`,
@@ -928,7 +948,7 @@ ruleTester.run('order', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: `
         import log = console.log;
         import debug = console.debug;`,
@@ -941,7 +961,7 @@ ruleTester.run('order', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: `
         import { a } from "./a";
         export namespace SomeNamespace {
@@ -957,7 +977,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Using `@/*` to alias internal modules
-    test({
+    tValid({
       code: `
         import fs from 'fs';
 
@@ -1002,7 +1022,7 @@ ruleTester.run('order', rule, {
       },
     }),
     // Option pathGroup[].distinctGroup: 'true' does not prevent 'position' properties from affecting the visible grouping
-    test({
+    tValid({
       code: `
         import A from 'a';
 
@@ -1031,7 +1051,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option pathGroup[].distinctGroup: 'false' should prevent 'position' properties from affecting the visible grouping
-    test({
+    tValid({
       code: `
         import A from 'a';
         import C from 'c';
@@ -1058,7 +1078,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option pathGroup[].distinctGroup: 'false' should prevent 'position' properties from affecting the visible grouping 2
-    test({
+    tValid({
       code: `
         import A from 'a';
 
@@ -1085,7 +1105,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // Option pathGroup[].distinctGroup: 'false' should prevent 'position' properties from affecting the visible grouping 3
-    test({
+    tValid({
       code: `
         import A from "baz";
         import B from "Bar";
@@ -1157,7 +1177,7 @@ ruleTester.run('order', rule, {
       ],
     }),
     // orderImportKind option that is not used
-    test({
+    tValid({
       code: `
         import B from './B';
         import b from './b';
@@ -1175,7 +1195,7 @@ ruleTester.run('order', rule, {
   ],
   invalid: [
     // builtin before external module (require)
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var fs = require('fs');
@@ -1185,14 +1205,12 @@ ruleTester.run('order', rule, {
         var async = require('async');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // fix order with spaces on the end of line
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var fs = require('fs');${' '}
@@ -1202,14 +1220,12 @@ ruleTester.run('order', rule, {
         var async = require('async');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // fix order with comment on the end of line
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var fs = require('fs'); /* comment */
@@ -1219,14 +1235,12 @@ ruleTester.run('order', rule, {
         var async = require('async');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // fix order with comments at the end and start of line
-    test({
+    tInvalid({
       code: `
         /* comment1 */  var async = require('async'); /* comment2 */
         /* comment3 */  var fs = require('fs'); /* comment4 */
@@ -1236,13 +1250,11 @@ ruleTester.run('order', rule, {
         /* comment1 */  var async = require('async'); /* comment2 */
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // fix order with few comments at the end and start of line
-    test({
+    tInvalid({
       code: `
         /* comment0 */  /* comment1 */  var async = require('async'); /* comment2 */
         /* comment3 */  var fs = require('fs'); /* comment4 */
@@ -1252,13 +1264,11 @@ ruleTester.run('order', rule, {
         /* comment0 */  /* comment1 */  var async = require('async'); /* comment2 */
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // fix order with windows end of lines
-    test({
+    tInvalid({
       code:
         `/* comment0 */  /* comment1 */  var async = require('async'); /* comment2 */` +
         `\r\n` +
@@ -1270,13 +1280,11 @@ ruleTester.run('order', rule, {
         `/* comment0 */  /* comment1 */  var async = require('async'); /* comment2 */` +
         `\r\n`,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // fix order with multilines comments at the end and start of line
-    test({
+    tInvalid({
       code: `
         /* multiline1
           comment1 */  var async = require('async'); /* multiline2
@@ -1294,13 +1302,11 @@ ruleTester.run('order', rule, {
           comment3 */
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // fix destructured commonjs import
-    test({
+    tInvalid({
       code: `
         var {b} = require('async');
         var {a} = require('fs');
@@ -1310,13 +1316,11 @@ ruleTester.run('order', rule, {
         var {b} = require('async');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // fix order of multiline import
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var fs =
@@ -1328,13 +1332,11 @@ ruleTester.run('order', rule, {
         var async = require('async');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // fix order at the end of file
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var fs = require('fs');`,
@@ -1343,14 +1345,12 @@ ruleTester.run('order', rule, {
         var fs = require('fs');
         var async = require('async');` + '\n',
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // builtin before external module (import)
-    test({
+    tInvalid({
       code: `
         import async from 'async';
         import fs from 'fs';
@@ -1360,13 +1360,11 @@ ruleTester.run('order', rule, {
         import async from 'async';
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // builtin before external module (mixed import and require)
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         import fs from 'fs';
@@ -1376,13 +1374,11 @@ ruleTester.run('order', rule, {
         var async = require('async');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // external before parent
-    test({
+    tInvalid({
       code: `
         var parent = require('../parent');
         var async = require('async');
@@ -1392,13 +1388,11 @@ ruleTester.run('order', rule, {
         var parent = require('../parent');
       `,
       errors: [
-        {
-          message: '`async` import should occur before import of `../parent`',
-        },
+        createOrderError(['`async` import', 'before', 'import of `../parent`']),
       ],
     }),
     // parent before sibling
-    test({
+    tInvalid({
       code: `
         var sibling = require('./sibling');
         var parent = require('../parent');
@@ -1408,14 +1402,15 @@ ruleTester.run('order', rule, {
         var sibling = require('./sibling');
       `,
       errors: [
-        {
-          message:
-            '`../parent` import should occur before import of `./sibling`',
-        },
+        createOrderError([
+          '`../parent` import',
+          'before',
+          'import of `./sibling`',
+        ]),
       ],
     }),
     // sibling before index
-    test({
+    tInvalid({
       code: `
         var index = require('./');
         var sibling = require('./sibling');
@@ -1425,13 +1420,11 @@ ruleTester.run('order', rule, {
         var index = require('./');
       `,
       errors: [
-        {
-          message: '`./sibling` import should occur before import of `./`',
-        },
+        createOrderError(['`./sibling` import', 'before', 'import of `./`']),
       ],
     }),
     // Multiple errors
-    test({
+    tInvalid({
       code: `
     var sibling = require('./sibling');
     var async = require('async');
@@ -1450,16 +1443,12 @@ ruleTester.run('order', rule, {
   `,
       ],
       errors: [
-        {
-          message: '`async` import should occur before import of `./sibling`',
-        },
-        {
-          message: '`fs` import should occur before import of `./sibling`',
-        },
+        createOrderError(['`async` import', 'before', 'import of `./sibling`']),
+        createOrderError(['`fs` import', 'before', 'import of `./sibling`']),
       ],
     }),
     // Uses 'after' wording if it creates less errors
-    test({
+    tInvalid({
       code: `
         var index = require('./');
         var fs = require('fs');
@@ -1476,14 +1465,10 @@ ruleTester.run('order', rule, {
         var bar = require('bar');
         var index = require('./');
       `,
-      errors: [
-        {
-          message: '`./` import should occur after import of `bar`',
-        },
-      ],
+      errors: [createOrderError(['`./` import', 'after', 'import of `bar`'])],
     }),
     // Overriding order to be the reverse of the default order
-    test({
+    tInvalid({
       code: `
         var fs = require('fs');
         var index = require('./');
@@ -1495,38 +1480,30 @@ ruleTester.run('order', rule, {
       options: [
         { groups: ['index', 'sibling', 'parent', 'external', 'builtin'] },
       ],
-      errors: [
-        {
-          message: '`./` import should occur before import of `fs`',
-        },
-      ],
+      errors: [createOrderError(['`./` import', 'before', 'import of `fs`'])],
     }),
     // member expression of require
-    test({
+    tInvalid({
       code: `
         var foo = require('./foo').bar;
         var fs = require('fs');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `./foo`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `./foo`']),
       ],
     }),
     // nested member expression of require
-    test({
+    tInvalid({
       code: `
         var foo = require('./foo').bar.bar.bar;
         var fs = require('fs');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `./foo`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `./foo`']),
       ],
     }),
     // fix near nested member expression of require with newlines
-    test({
+    tInvalid({
       code: `
         var foo = require('./foo').bar
           .bar
@@ -1534,13 +1511,11 @@ ruleTester.run('order', rule, {
         var fs = require('fs');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `./foo`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `./foo`']),
       ],
     }),
     // fix nested member expression of require with newlines
-    test({
+    tInvalid({
       code: `
         var foo = require('./foo');
         var fs = require('fs').bar
@@ -1548,13 +1523,11 @@ ruleTester.run('order', rule, {
           .bar;
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `./foo`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `./foo`']),
       ],
     }),
     // Grouping import types
-    test({
+    tInvalid({
       code: `
         var fs = require('fs');
         var index = require('./');
@@ -1576,13 +1549,11 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          message: '`path` import should occur before import of `./foo`',
-        },
+        createOrderError(['`path` import', 'before', 'import of `./foo`']),
       ],
     }),
     // Omitted types should implicitly be considered as the last type
-    test({
+    tInvalid({
       code: `
         var path = require('path');
         var async = require('async');
@@ -1601,59 +1572,58 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          message: '`async` import should occur before import of `path`',
-        },
+        createOrderError(['`async` import', 'before', 'import of `path`']),
       ],
     }),
     // Setting the order for an unknown type
     // should make the rule trigger an error and do nothing else
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var index = require('./');
       `,
       options: [
+        // @ts-expect-error testing incorrect options
         { groups: ['index', ['sibling', 'parent', 'UNKNOWN', 'internal']] },
       ],
       errors: [
-        {
-          message:
-            'Incorrect configuration of the rule: Unknown type `"UNKNOWN"`',
-        },
+        createGenericError(
+          'Incorrect configuration of the rule: Unknown type `"UNKNOWN"`',
+        ),
       ],
     }),
     // Type in an array can't be another array, too much nesting
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var index = require('./');
       `,
       options: [
+        // @ts-expect-error testing incorrect options
         { groups: ['index', ['sibling', 'parent', ['builtin'], 'internal']] },
       ],
       errors: [
-        {
-          message:
-            'Incorrect configuration of the rule: Unknown type `["builtin"]`',
-        },
+        createGenericError(
+          'Incorrect configuration of the rule: Unknown type `["builtin"]`',
+        ),
       ],
     }),
     // No numbers
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var index = require('./');
       `,
+      // @ts-expect-error testing incorrect options
       options: [{ groups: ['index', ['sibling', 'parent', 2, 'internal']] }],
       errors: [
-        {
-          message: 'Incorrect configuration of the rule: Unknown type `2`',
-        },
+        createGenericError(
+          'Incorrect configuration of the rule: Unknown type `2`',
+        ),
       ],
     }),
     // Duplicate
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var index = require('./');
@@ -1662,14 +1632,13 @@ ruleTester.run('order', rule, {
         { groups: ['index', ['sibling', 'parent', 'parent', 'internal']] },
       ],
       errors: [
-        {
-          message:
-            'Incorrect configuration of the rule: `parent` is duplicated',
-        },
+        createGenericError(
+          'Incorrect configuration of the rule: `parent` is duplicated',
+        ),
       ],
     }),
     // Mixing require and import should have import up top
-    test({
+    tInvalid({
       code: `
         import async, {foo1} from 'async';
         import relParent2, {foo2} from '../foo/bar';
@@ -1689,12 +1658,10 @@ ruleTester.run('order', rule, {
         var index = require('./');
       `,
       errors: [
-        {
-          message: '`./foo` import should occur before import of `fs`',
-        },
+        createOrderError(['`./foo` import', 'before', 'import of `fs`']),
       ],
     }),
-    test({
+    tInvalid({
       code: `
         var fs = require('fs');
         import async, {foo1} from 'async';
@@ -1706,13 +1673,11 @@ ruleTester.run('order', rule, {
         var fs = require('fs');
       `,
       errors: [
-        {
-          message: '`fs` import should occur after import of `../foo/bar`',
-        },
+        createOrderError(['`fs` import', 'after', 'import of `../foo/bar`']),
       ],
     }),
     // Order of the `import ... = require(...)` syntax
-    test({
+    tInvalid({
       code: `
         var fs = require('fs');
         import async, {foo1} from 'async';
@@ -1723,14 +1688,11 @@ ruleTester.run('order', rule, {
         import bar = require("../foo/bar");
         var fs = require('fs');
       `,
-
       errors: [
-        {
-          message: '`fs` import should occur after import of `../foo/bar`',
-        },
+        createOrderError(['`fs` import', 'after', 'import of `../foo/bar`']),
       ],
     }),
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var fs = require('fs');
@@ -1739,15 +1701,12 @@ ruleTester.run('order', rule, {
         var fs = require('fs');
         var async = require('async');
       `,
-
-      errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
-      ],
       languageOptions: { parser: require(parsers.ESPREE) },
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
     }),
-    test({
+    tInvalid({
       code: `
         import sync = require('sync');
         import async, {foo1} from 'async';
@@ -1766,28 +1725,25 @@ ruleTester.run('order', rule, {
           alphabetize: { order: 'asc' },
         },
       ],
-
       errors: [
-        {
-          message: '`async` import should occur before import of `sync`',
-        },
+        createOrderError(['`async` import', 'before', 'import of `sync`']),
       ],
     }),
     // Order of object-imports
-    test({
+    tInvalid({
       code: `
         import log = console.log;
         import blah = require('./blah');`,
-
       errors: [
-        {
-          message:
-            '`./blah` import should occur before import of `console.log`',
-        },
+        createOrderError([
+          '`./blah` import',
+          'before',
+          'import of `console.log`',
+        ]),
       ],
     }),
     // Default order using import with custom import alias
-    test({
+    tInvalid({
       code: `
         import { Button } from '-/components/Button';
         import { add } from './helper';
@@ -1812,14 +1768,17 @@ ruleTester.run('order', rule, {
       ],
       errors: [
         {
+          ...createOrderError([
+            '`fs` import',
+            'before',
+            'import of `-/components/Button`',
+          ]),
           line: 4,
-          message:
-            '`fs` import should occur before import of `-/components/Button`',
         },
       ],
     }),
     // Default order using import with custom import alias
-    test({
+    tInvalid({
       code: `
         import fs from 'fs';
         import { Button } from '-/components/Button';
@@ -1848,20 +1807,12 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          line: 2,
-          message:
-            'There should be at least one empty line between import groups',
-        },
-        {
-          line: 4,
-          message:
-            'There should be at least one empty line between import groups',
-        },
+        { messageId: 'oneLineBetweenGroups', line: 2 },
+        { messageId: 'oneLineBetweenGroups', line: 4 },
       ],
     }),
     // Option newlines-between: 'never' - should report unnecessary line between groups
-    test({
+    tInvalid({
       code: `
         var fs = require('fs');
         var index = require('./');
@@ -1889,18 +1840,12 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          line: 4,
-          message: 'There should be no empty line between import groups',
-        },
-        {
-          line: 6,
-          message: 'There should be no empty line between import groups',
-        },
+        { messageId: 'noLineBetweenGroups', line: 4 },
+        { messageId: 'noLineBetweenGroups', line: 6 },
       ],
     }),
     // Fix newlines-between with comments after
-    test({
+    tInvalid({
       code: `
         var fs = require('fs'); /* comment */
 
@@ -1916,15 +1861,10 @@ ruleTester.run('order', rule, {
           'newlines-between': 'never',
         },
       ],
-      errors: [
-        {
-          line: 2,
-          message: 'There should be no empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'noLineBetweenGroups', line: 2 }],
     }),
     // Cannot fix newlines-between with multiline comment after
-    test({
+    tInvalid({
       code: `
         var fs = require('fs'); /* multiline
         comment */
@@ -1937,15 +1877,10 @@ ruleTester.run('order', rule, {
           'newlines-between': 'never',
         },
       ],
-      errors: [
-        {
-          line: 2,
-          message: 'There should be no empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'noLineBetweenGroups', line: 2 }],
     }),
     // Option newlines-between: 'always' - should report lack of newline between groups
-    test({
+    tInvalid({
       code: `
         var fs = require('fs');
         var index = require('./');
@@ -1973,20 +1908,12 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          line: 4,
-          message:
-            'There should be at least one empty line between import groups',
-        },
-        {
-          line: 5,
-          message:
-            'There should be at least one empty line between import groups',
-        },
+        { messageId: 'oneLineBetweenGroups', line: 4 },
+        { messageId: 'oneLineBetweenGroups', line: 5 },
       ],
     }),
     // Option newlines-between: 'always' should report unnecessary empty lines space between import groups
-    test({
+    tInvalid({
       code: `
         var fs = require('fs');
 
@@ -2015,19 +1942,13 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          line: 2,
-          message: 'There should be no empty line within import group',
-        },
-        {
-          line: 7,
-          message: 'There should be no empty line within import group',
-        },
+        { messageId: 'noLineWithinGroup', line: 2 },
+        { messageId: 'noLineWithinGroup', line: 7 },
       ],
     }),
     // Option newlines-between: 'never' with unassigned imports and warnOnUnassignedImports disabled
     // newline is preserved to match existing behavior
-    test({
+    tInvalid({
       code: `
         import path from 'path';
         import 'loud-rejection';
@@ -2038,15 +1959,10 @@ ruleTester.run('order', rule, {
       options: [
         { 'newlines-between': 'never', warnOnUnassignedImports: false },
       ],
-      errors: [
-        {
-          line: 2,
-          message: 'There should be no empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'noLineBetweenGroups', line: 2 }],
     }),
     // Option newlines-between: 'never' with unassigned imports and warnOnUnassignedImports enabled
-    test({
+    tInvalid({
       code: `
         import path from 'path';
         import 'loud-rejection';
@@ -2061,15 +1977,10 @@ ruleTester.run('order', rule, {
         import _ from 'lodash';
       `,
       options: [{ 'newlines-between': 'never', warnOnUnassignedImports: true }],
-      errors: [
-        {
-          line: 3,
-          message: 'There should be no empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'noLineBetweenGroups', line: 3 }],
     }),
     // Option newlines-between: 'never' cannot fix if there are other statements between imports
-    test({
+    tInvalid({
       code: `
         import path from 'path';
         export const abc = 123;
@@ -2078,15 +1989,10 @@ ruleTester.run('order', rule, {
         import _ from 'lodash';
       `,
       options: [{ 'newlines-between': 'never' }],
-      errors: [
-        {
-          line: 2,
-          message: 'There should be no empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'noLineBetweenGroups', line: 2 }],
     }),
     // Option newlines-between: 'always' should report missing empty lines when using not assigned imports
-    test({
+    tInvalid({
       code: `
         import path from 'path';
         import 'loud-rejection';
@@ -2101,16 +2007,10 @@ ruleTester.run('order', rule, {
         import _ from 'lodash';
       `,
       options: [{ 'newlines-between': 'always' }],
-      errors: [
-        {
-          line: 2,
-          message:
-            'There should be at least one empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'oneLineBetweenGroups', line: 2 }],
     }),
     // fix missing empty lines with single line comment after
-    test({
+    tInvalid({
       code: `
         import path from 'path'; // comment
         import _ from 'lodash';
@@ -2121,16 +2021,10 @@ ruleTester.run('order', rule, {
         import _ from 'lodash';
       `,
       options: [{ 'newlines-between': 'always' }],
-      errors: [
-        {
-          line: 2,
-          message:
-            'There should be at least one empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'oneLineBetweenGroups', line: 2 }],
     }),
     // fix missing empty lines with few line block comment after
-    test({
+    tInvalid({
       code: `
         import path from 'path'; /* comment */ /* comment */
         import _ from 'lodash';
@@ -2141,16 +2035,10 @@ ruleTester.run('order', rule, {
         import _ from 'lodash';
       `,
       options: [{ 'newlines-between': 'always' }],
-      errors: [
-        {
-          line: 2,
-          message:
-            'There should be at least one empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'oneLineBetweenGroups', line: 2 }],
     }),
     // fix missing empty lines with single line block comment after
-    test({
+    tInvalid({
       code: `
         import path from 'path'; /* 1
         2 */
@@ -2172,16 +2060,10 @@ ruleTester.run('order', rule, {
       `,
       ],
       options: [{ 'newlines-between': 'always' }],
-      errors: [
-        {
-          line: 2,
-          message:
-            'There should be at least one empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'oneLineBetweenGroups', line: 2 }],
     }),
     // reorder fix cannot cross function call on moving below #1
-    test({
+    tInvalid({
       code: `
         const local = require('./local');
 
@@ -2193,14 +2075,12 @@ ruleTester.run('order', rule, {
         fn_call();
       `,
       errors: [
-        {
-          message: '`./local` import should occur after import of `global2`',
-        },
+        createOrderError(['`./local` import', 'after', 'import of `global2`']),
       ],
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // reorder fix cannot cross function call on moving below #2
-    test({
+    tInvalid({
       code: `
         const local = require('./local');
         fn_call();
@@ -2210,14 +2090,12 @@ ruleTester.run('order', rule, {
         fn_call();
       `,
       errors: [
-        {
-          message: '`./local` import should occur after import of `global2`',
-        },
+        createOrderError(['`./local` import', 'after', 'import of `global2`']),
       ],
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // reorder fix cannot cross function call on moving below #3
-    test({
+    tInvalid({
       code: `
         const local1 = require('./local1');
         const local2 = require('./local2');
@@ -2232,14 +2110,14 @@ ruleTester.run('order', rule, {
         fn_call();
       `,
       errors: [
-        '`./local1` import should occur after import of `global5`',
-        '`./local2` import should occur after import of `global5`',
-        '`./local3` import should occur after import of `global5`',
-        '`./local4` import should occur after import of `global5`',
+        createOrderError(['`./local1` import', 'after', 'import of `global5`']),
+        createOrderError(['`./local2` import', 'after', 'import of `global5`']),
+        createOrderError(['`./local3` import', 'after', 'import of `global5`']),
+        createOrderError(['`./local4` import', 'after', 'import of `global5`']),
       ],
     }),
     // reorder fix cannot cross function call on moving below
-    test({
+    tInvalid({
       code: `
         const local = require('./local');
         const global1 = require('global1');
@@ -2250,15 +2128,13 @@ ruleTester.run('order', rule, {
         fn_call();
       `,
       errors: [
-        {
-          message: '`./local` import should occur after import of `global3`',
-        },
+        createOrderError(['`./local` import', 'after', 'import of `global3`']),
       ],
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // reorder fix cannot cross function call on moving below
     // fix imports that not crosses function call only
-    test({
+    tInvalid({
       code: `
         const local1 = require('./local1');
         const global1 = require('global1');
@@ -2282,12 +2158,12 @@ ruleTester.run('order', rule, {
         fn_call();
       `,
       errors: [
-        '`./local1` import should occur after import of `global4`',
-        '`./local2` import should occur after import of `global4`',
+        createOrderError(['`./local1` import', 'after', 'import of `global4`']),
+        createOrderError(['`./local2` import', 'after', 'import of `global4`']),
       ],
     }),
     // pathGroup with position 'after'
-    test({
+    tInvalid({
       code: `
         import fs from 'fs';
         import _ from 'lodash';
@@ -2308,14 +2184,15 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          message:
-            '`~/components/Input` import should occur before import of `./helper`',
-        },
+        createOrderError([
+          '`~/components/Input` import',
+          'before',
+          'import of `./helper`',
+        ]),
       ],
     }),
     // pathGroup without position
-    test({
+    tInvalid({
       code: `
         import fs from 'fs';
         import _ from 'lodash';
@@ -2336,13 +2213,11 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          message: '`./helper` import should occur after import of `async`',
-        },
+        createOrderError(['`./helper` import', 'after', 'import of `async`']),
       ],
     }),
     // pathGroup with position 'before'
-    test({
+    tInvalid({
       code: `
         import fs from 'fs';
         import _ from 'lodash';
@@ -2363,14 +2238,15 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          message:
-            '`~/components/Input` import should occur before import of `lodash`',
-        },
+        createOrderError([
+          '`~/components/Input` import',
+          'before',
+          'import of `lodash`',
+        ]),
       ],
     }),
     // multiple pathGroup with different positions for same group, fix for 'after'
-    test({
+    tInvalid({
       code: `
         import fs from 'fs';
         import { Import } from '$/components/Import';
@@ -2400,15 +2276,16 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          message:
-            '`-/components/Export` import should occur before import of `$/components/Import`',
-        },
+        createOrderError([
+          '`-/components/Export` import',
+          'before',
+          'import of `$/components/Import`',
+        ]),
       ],
     }),
 
     // multiple pathGroup with different positions for same group, fix for 'before'
-    test({
+    tInvalid({
       code: `
         import fs from 'fs';
         import { Export } from '-/components/Export';
@@ -2438,15 +2315,16 @@ ruleTester.run('order', rule, {
         },
       ],
       errors: [
-        {
-          message:
-            '`~/components/Output` import should occur before import of `#/components/Input`',
-        },
+        createOrderError([
+          '`~/components/Output` import',
+          'before',
+          'import of `#/components/Input`',
+        ]),
       ],
     }),
 
     // pathGroups overflowing to previous/next groups
-    test({
+    tInvalid({
       code: `
         import path from 'path';
         import { namespace } from '@namespace';
@@ -2508,14 +2386,13 @@ ruleTester.run('order', rule, {
       settings: {
         'import-x/internal-regex': '^(a|b|c|d|e|f|g|h|i|j|k)(\\/|$)',
       },
-      errors: Array.from(
-        { length: 11 },
-        () => 'There should be at least one empty line between import groups',
-      ),
+      errors: Array.from({ length: 11 }, () => ({
+        messageId: 'oneLineBetweenGroups',
+      })),
     }),
 
     // rankings that overflow to double-digit ranks
-    test({
+    tInvalid({
       code: `
         import external from 'external';
         import a from '@namespace/a';
@@ -2554,31 +2431,30 @@ ruleTester.run('order', rule, {
             { pattern: '@namespace', group: 'external', position: 'after' },
             { pattern: '@namespace/**', group: 'external', position: 'after' },
           ],
+          // @ts-expect-error testing options
           pathGroupsExcludedImportTypes: ['@namespace'],
         },
       ],
       errors: [
-        'There should be at least one empty line between import groups',
-        'There should be at least one empty line between import groups',
-        'There should be at least one empty line between import groups',
+        { messageId: 'oneLineBetweenGroups' },
+        { messageId: 'oneLineBetweenGroups' },
+        { messageId: 'oneLineBetweenGroups' },
       ],
     }),
 
     // reorder fix cannot cross non import or require
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         fn_call();
         var fs = require('fs');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // reorder fix cannot cross function call on moving below (from #1252)
-    test({
+    tInvalid({
       code: `
         const env = require('./config');
 
@@ -2590,116 +2466,98 @@ ruleTester.run('order', rule, {
         http.createServer(express());
       `,
       errors: [
-        {
-          message: '`./config` import should occur after import of `express`',
-        },
+        createOrderError(['`./config` import', 'after', 'import of `express`']),
       ],
     }),
     // reorder cannot cross non plain requires
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var a = require('./value.js')(a);
         var fs = require('fs');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // reorder fixes cannot be applied to non plain requires #1
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         var fs = require('fs')(a);
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // reorder fixes cannot be applied to non plain requires #2
-    test({
+    tInvalid({
       code: `
         var async = require('async')(a);
         var fs = require('fs');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // cannot require in case of not assignment require
-    test({
+    tInvalid({
       code: `
         var async = require('async');
         require('./aa');
         var fs = require('fs');
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
     // reorder cannot cross function call (import statement)
-    test({
+    tInvalid({
       code: `
         import async from 'async';
         fn_call();
         import fs from 'fs';
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // reorder cannot cross variable assignment (import statement)
-    test({
+    tInvalid({
       code: `
         import async from 'async';
         var a = 1;
         import fs from 'fs';
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // reorder cannot cross non plain requires (import statement)
-    test({
+    tInvalid({
       code: `
         import async from 'async';
         var a = require('./value.js')(a);
         import fs from 'fs';
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // cannot reorder in case of not assignment import
-    test({
+    tInvalid({
       code: `
         import async from 'async';
         import './aa';
         import fs from 'fs';
       `,
       errors: [
-        {
-          message: '`fs` import should occur before import of `async`',
-        },
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
     // Option alphabetize: {order: 'asc'}
-    test({
+    tInvalid({
       code: `
         import b from 'bar';
         import c from 'Bar';
@@ -2720,14 +2578,10 @@ ruleTester.run('order', rule, {
           alphabetize: { order: 'asc' },
         },
       ],
-      errors: [
-        {
-          message: '`Bar` import should occur before import of `bar`',
-        },
-      ],
+      errors: [createOrderError(['`Bar` import', 'before', 'import of `bar`'])],
     }),
     // Option alphabetize: {order: 'desc'}
-    test({
+    tInvalid({
       code: `
         import a from 'foo';
         import c from 'Bar';
@@ -2748,14 +2602,10 @@ ruleTester.run('order', rule, {
           alphabetize: { order: 'desc' },
         },
       ],
-      errors: [
-        {
-          message: '`bar` import should occur before import of `Bar`',
-        },
-      ],
+      errors: [createOrderError(['`bar` import', 'before', 'import of `Bar`'])],
     }),
     // Option alphabetize: {order: 'asc'} and move nested import entries closer to the main import entry
-    test({
+    tInvalid({
       code: `
         import a from "foo";
         import b from "foo-bar";
@@ -2774,13 +2624,15 @@ ruleTester.run('order', rule, {
         import b from "foo-bar";
       `,
       errors: [
-        {
-          message: '`foo-bar` import should occur after import of `foo/barfoo`',
-        },
+        createOrderError([
+          '`foo-bar` import',
+          'after',
+          'import of `foo/barfoo`',
+        ]),
       ],
     }),
     // Option alphabetize {order: 'asc': caseInsensitive: true}
-    test({
+    tInvalid({
       code: `
         import b from 'foo';
         import a from 'Bar';
@@ -2799,14 +2651,10 @@ ruleTester.run('order', rule, {
           alphabetize: { order: 'asc', caseInsensitive: true },
         },
       ],
-      errors: [
-        {
-          message: '`Bar` import should occur before import of `foo`',
-        },
-      ],
+      errors: [createOrderError(['`Bar` import', 'before', 'import of `foo`'])],
     }),
     // Option alphabetize {order: 'desc': caseInsensitive: true}
-    test({
+    tInvalid({
       code: `
         import a from 'Bar';
         import b from 'foo';
@@ -2825,14 +2673,10 @@ ruleTester.run('order', rule, {
           alphabetize: { order: 'desc', caseInsensitive: true },
         },
       ],
-      errors: [
-        {
-          message: '`foo` import should occur before import of `Bar`',
-        },
-      ],
+      errors: [createOrderError(['`foo` import', 'before', 'import of `Bar`'])],
     }),
     // Option alphabetize {order: 'asc'} and require with member expression
-    test({
+    tInvalid({
       code: `
         const b = require('./b').get();
         const a = require('./a');
@@ -2846,14 +2690,10 @@ ruleTester.run('order', rule, {
           alphabetize: { order: 'asc' },
         },
       ],
-      errors: [
-        {
-          message: '`./a` import should occur before import of `./b`',
-        },
-      ],
+      errors: [createOrderError(['`./a` import', 'before', 'import of `./b`'])],
     }),
     // Alphabetize with parent paths
-    test({
+    tInvalid({
       code: `
         import a from '../a';
         import p from '..';
@@ -2868,14 +2708,10 @@ ruleTester.run('order', rule, {
           alphabetize: { order: 'asc' },
         },
       ],
-      errors: [
-        {
-          message: '`..` import should occur before import of `../a`',
-        },
-      ],
+      errors: [createOrderError(['`..` import', 'before', 'import of `../a`'])],
     }),
     // Option pathGroup[].distinctGroup: 'false' should error when newlines are incorrect 2
-    test({
+    tInvalid({
       code: `
         import A from 'a';
         import C from './c';
@@ -2892,15 +2728,10 @@ ruleTester.run('order', rule, {
           pathGroupsExcludedImportTypes: [],
         },
       ],
-      errors: [
-        {
-          message:
-            'There should be at least one empty line between import groups',
-        },
-      ],
+      errors: [{ messageId: 'oneLineBetweenGroups' }],
     }),
     // Option pathGroup[].distinctGroup: 'false' should error when newlines are incorrect 2
-    test({
+    tInvalid({
       code: `
         import A from 'a';
 
@@ -2929,14 +2760,10 @@ ruleTester.run('order', rule, {
           ],
         },
       ],
-      errors: [
-        {
-          message: 'There should be no empty line within import group',
-        },
-      ],
+      errors: [{ messageId: 'noLineWithinGroup' }],
     }),
     // Alphabetize with require
-    test({
+    tInvalid({
       code: `
           const { cello } = require('./cello');
           import { int } from './int';
@@ -2958,12 +2785,8 @@ ruleTester.run('order', rule, {
         `,
       ],
       errors: [
-        {
-          message: '`./int` import should occur before import of `./cello`',
-        },
-        {
-          message: '`./hello` import should occur before import of `./cello`',
-        },
+        createOrderError(['`./int` import', 'before', 'import of `./cello`']),
+        createOrderError(['`./hello` import', 'before', 'import of `./cello`']),
       ],
     }),
   ],
@@ -2986,7 +2809,7 @@ describe('TypeScript', () => {
         // #1667: typescript type import support
 
         // Option alphabetize: {order: 'asc'}
-        test({
+        tValid({
           code: `
               import c from 'Bar';
               import type { C } from 'Bar';
@@ -3005,7 +2828,7 @@ describe('TypeScript', () => {
           ],
         }),
         // Option alphabetize: {order: 'desc'}
-        test({
+        tValid({
           code: `
               import a from 'foo';
               import type { A } from 'foo';
@@ -3024,7 +2847,7 @@ describe('TypeScript', () => {
           ],
         }),
         // Option alphabetize: {order: 'asc'} with type group
-        test({
+        tValid({
           code: `
               import c from 'Bar';
               import b from 'bar';
@@ -3044,7 +2867,7 @@ describe('TypeScript', () => {
           ],
         }),
         // Option alphabetize: {order: 'asc'} with type group & path group
-        test({
+        tValid({
           // only: true,
           code: `
               import c from 'Bar';
@@ -3074,7 +2897,7 @@ describe('TypeScript', () => {
           ],
         }),
         // Option alphabetize: {order: 'asc'} with path group
-        test({
+        tValid({
           // only: true,
           code: `
               import c from 'Bar';
@@ -3103,7 +2926,7 @@ describe('TypeScript', () => {
           ],
         }),
         // Option alphabetize: {order: 'desc'} with type group
-        test({
+        tValid({
           code: `
               import a from 'foo';
               import b from 'bar';
@@ -3122,7 +2945,7 @@ describe('TypeScript', () => {
             },
           ],
         }),
-        test({
+        tValid({
           code: `
               import { Partner } from '@models/partner/partner';
               import { PartnerId } from '@models/partner/partner-id';
@@ -3134,7 +2957,7 @@ describe('TypeScript', () => {
             },
           ],
         }),
-        test({
+        tValid({
           code: `
               import { serialize, parse, mapFieldErrors } from '@vtaits/form-schema';
               import type { GetFieldSchema } from '@vtaits/form-schema';
@@ -3151,7 +2974,7 @@ describe('TypeScript', () => {
           ],
         }),
         // Imports inside module declaration
-        test({
+        tValid({
           code: `
               import type { CopyOptions } from 'fs';
               import type { ParsedPath } from 'path';
@@ -3168,7 +2991,7 @@ describe('TypeScript', () => {
             },
           ],
         }),
-        test({
+        tValid({
           code: `
               import { useLazyQuery, useQuery } from "@apollo/client";
               import { useEffect } from "react";
@@ -3200,7 +3023,7 @@ describe('TypeScript', () => {
             },
           ],
         }),
-        test({
+        tValid({
           code: `
           import express from 'express';
           import log4js from 'log4js';
@@ -3227,7 +3050,7 @@ describe('TypeScript', () => {
       ],
       invalid: [
         // Option alphabetize: {order: 'asc'}
-        test({
+        tInvalid({
           code: `
               import b from 'bar';
               import c from 'Bar';
@@ -3254,15 +3077,11 @@ describe('TypeScript', () => {
             },
           ],
           errors: [
-            {
-              message: semver.satisfies(eslintPkg.version, '< 3')
-                ? '`bar` import should occur after type import of `Bar`'
-                : /(`bar` import should occur after type import of `Bar`)|(`Bar` type import should occur before import of `bar`)/,
-            },
+            createOrderError(['`bar` import', 'after', 'type import of `Bar`']),
           ],
         }),
         // Option alphabetize: {order: 'desc'}
-        test({
+        tInvalid({
           code: `
               import a from 'foo';
               import type { A } from 'foo';
@@ -3289,15 +3108,11 @@ describe('TypeScript', () => {
             },
           ],
           errors: [
-            {
-              message: semver.satisfies(eslintPkg.version, '< 3')
-                ? '`bar` import should occur before import of `Bar`'
-                : /(`bar` import should occur before import of `Bar`)|(`Bar` import should occur after import of `bar`)/,
-            },
+            createOrderError(['`bar` import', 'before', 'import of `Bar`']),
           ],
         }),
         // Option alphabetize: {order: 'asc'} with type group
-        test({
+        tInvalid({
           code: `
               import b from 'bar';
               import c from 'Bar';
@@ -3325,29 +3140,17 @@ describe('TypeScript', () => {
               alphabetize: { order: 'asc' },
             },
           ],
-          errors: semver.satisfies(eslintPkg.version, '< 3')
-            ? [
-                {
-                  message: '`Bar` import should occur before import of `bar`',
-                },
-                {
-                  message:
-                    '`Bar` type import should occur before type import of `foo`',
-                },
-              ]
-            : [
-                {
-                  message:
-                    /(`Bar` import should occur before import of `bar`)|(`bar` import should occur after import of `Bar`)/,
-                },
-                {
-                  message:
-                    /(`Bar` type import should occur before type import of `foo`)|(`foo` type import should occur after type import of `Bar`)/,
-                },
-              ],
+          errors: [
+            createOrderError(['`Bar` import', 'before', 'import of `bar`']),
+            createOrderError([
+              '`Bar` type import',
+              'before',
+              'type import of `foo`',
+            ]),
+          ],
         }),
         // Option alphabetize: {order: 'desc'} with type group
-        test({
+        tInvalid({
           code: `
               import a from 'foo';
               import c from 'Bar';
@@ -3375,29 +3178,17 @@ describe('TypeScript', () => {
               alphabetize: { order: 'desc' },
             },
           ],
-          errors: semver.satisfies(eslintPkg.version, '< 3')
-            ? [
-                {
-                  message: '`bar` import should occur before import of `Bar`',
-                },
-                {
-                  message:
-                    '`foo` type import should occur before type import of `Bar`',
-                },
-              ]
-            : [
-                {
-                  message:
-                    /(`bar` import should occur before import of `Bar`)|(`Bar` import should occur after import of `bar`)/,
-                },
-                {
-                  message:
-                    /(`foo` type import should occur before type import of `Bar`)|(`Bar` type import should occur after import of type `foo`)/,
-                },
-              ],
+          errors: [
+            createOrderError(['`bar` import', 'before', 'import of `Bar`']),
+            createOrderError([
+              '`foo` type import',
+              'before',
+              'type import of `Bar`',
+            ]),
+          ],
         }),
         // warns for out of order unassigned imports (warnOnUnassignedImports enabled)
-        test({
+        tInvalid({
           code: `
               import './local1';
               import global from 'global1';
@@ -3405,19 +3196,21 @@ describe('TypeScript', () => {
               import 'global2';
             `,
           errors: [
-            {
-              message:
-                '`global1` import should occur before import of `./local1`',
-            },
-            {
-              message:
-                '`global2` import should occur before import of `./local1`',
-            },
+            createOrderError([
+              '`global1` import',
+              'before',
+              'import of `./local1`',
+            ]),
+            createOrderError([
+              '`global2` import',
+              'before',
+              'import of `./local1`',
+            ]),
           ],
           options: [{ warnOnUnassignedImports: true }],
         }),
         // fix cannot move below unassigned import (warnOnUnassignedImports enabled)
-        test({
+        tInvalid({
           code: `
               import local from './local';
 
@@ -3427,15 +3220,16 @@ describe('TypeScript', () => {
               import global3 from 'global3';
             `,
           errors: [
-            {
-              message:
-                '`./local` import should occur after import of `global3`',
-            },
+            createOrderError([
+              '`./local` import',
+              'after',
+              'import of `global3`',
+            ]),
           ],
           options: [{ warnOnUnassignedImports: true }],
         }),
         // Imports inside module declaration
-        test({
+        tInvalid({
           code: `
               import type { ParsedPath } from 'path';
               import type { CopyOptions } from 'fs';
@@ -3455,14 +3249,16 @@ describe('TypeScript', () => {
               }
             `,
           errors: [
-            {
-              message:
-                '`fs` type import should occur before type import of `path`',
-            },
-            {
-              message:
-                '`fs` type import should occur before type import of `path`',
-            },
+            createOrderError([
+              '`fs` type import',
+              'before',
+              'type import of `path`',
+            ]),
+            createOrderError([
+              '`fs` type import',
+              'before',
+              'type import of `path`',
+            ]),
           ],
           ...parserConfig,
           options: [
@@ -3472,7 +3268,7 @@ describe('TypeScript', () => {
           ],
         }),
 
-        test({
+        tInvalid({
           code: `
           import express from 'express';
           import log4js from 'log4js';
@@ -3500,10 +3296,11 @@ describe('TypeScript', () => {
             },
           ],
           errors: [
-            {
-              message:
-                '`node:child_process` import should occur before import of `express`',
-            },
+            createOrderError([
+              '`node:child_process` import',
+              'before',
+              'import of `express`',
+            ]),
             // { message: '`node:fs/promises` import should occur before import of `express`' },
           ],
         }),
@@ -3514,7 +3311,7 @@ describe('TypeScript', () => {
 
 flowRuleTester.run('order', rule, {
   valid: [
-    test({
+    tValid({
       options: [
         {
           alphabetize: { order: 'asc', orderImportKind: 'asc' },
@@ -3528,7 +3325,7 @@ flowRuleTester.run('order', rule, {
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       options: [
         {
           alphabetize: { order: 'asc', orderImportKind: 'asc' },
@@ -3545,13 +3342,14 @@ flowRuleTester.run('order', rule, {
         import {bar} from 'common';
       `,
       errors: [
-        {
-          message:
-            '`common` typeof import should occur before import of `common`',
-        },
+        createOrderError([
+          '`common` typeof import',
+          'before',
+          'import of `common`',
+        ]),
       ],
     }),
-    test({
+    tInvalid({
       options: [
         {
           alphabetize: { order: 'asc', orderImportKind: 'desc' },
@@ -3568,13 +3366,14 @@ flowRuleTester.run('order', rule, {
         import type {Bar} from 'common';
       `,
       errors: [
-        {
-          message:
-            '`common` type import should occur after typeof import of `common`',
-        },
+        createOrderError([
+          '`common` type import',
+          'after',
+          'typeof import of `common`',
+        ]),
       ],
     }),
-    test({
+    tInvalid({
       options: [
         {
           alphabetize: { order: 'asc', orderImportKind: 'asc' },
@@ -3593,13 +3392,14 @@ flowRuleTester.run('order', rule, {
         import {baz} from './local-sub';
       `,
       errors: [
-        {
-          message:
-            '`./local/sub` typeof import should occur before import of `./local/sub`',
-        },
+        createOrderError([
+          '`./local/sub` typeof import',
+          'before',
+          'import of `./local/sub`',
+        ]),
       ],
     }),
-    test({
+    tInvalid({
       code: `
         import { cfg } from 'path/path/path/src/Cfg';
         import { l10n } from 'path/src/l10n';
@@ -3609,18 +3409,8 @@ flowRuleTester.run('order', rule, {
         import { controller } from '../../../../path/path/path/controller';
         import { component } from '../../../../path/path/path/component';
       `,
-      output: semver.satisfies(eslintPkg.version, '< 3')
-        ? `
-        import { cfg } from 'path/path/path/src/Cfg';
-        import { tip } from 'path/path/tip';
-        import { l10n } from 'path/src/l10n';
-        import { helpers } from 'path/path/path/helpers';
-
-        import { component } from '../../../../path/path/path/component';
-        import { controller } from '../../../../path/path/path/controller';
-      `
-        : [
-            `
+      output: [
+        `
         import { helpers } from 'path/path/path/helpers';
         import { cfg } from 'path/path/path/src/Cfg';
         import { l10n } from 'path/src/l10n';
@@ -3629,7 +3419,7 @@ flowRuleTester.run('order', rule, {
         import { component } from '../../../../path/path/path/component';
         import { controller } from '../../../../path/path/path/controller';
       `,
-            `
+        `
         import { helpers } from 'path/path/path/helpers';
         import { cfg } from 'path/path/path/src/Cfg';
         import { tip } from 'path/path/tip';
@@ -3638,7 +3428,8 @@ flowRuleTester.run('order', rule, {
         import { component } from '../../../../path/path/path/component';
         import { controller } from '../../../../path/path/path/controller';
       `,
-          ],
+      ],
+      languageOptions: { parser: require(parsers.ESPREE) },
       options: [
         {
           groups: [
@@ -3666,6 +3457,7 @@ flowRuleTester.run('order', rule, {
               },
             },
           ],
+          // @ts-expect-error testing options
           pathGroupsExcludedImportTypes: ['react'],
           alphabetize: {
             order: 'asc',
@@ -3675,25 +3467,33 @@ flowRuleTester.run('order', rule, {
       ],
       errors: [
         {
-          message:
-            '`path/path/path/helpers` import should occur before import of `path/path/path/src/Cfg`',
+          ...createOrderError([
+            '`path/path/path/helpers` import',
+            'before',
+            'import of `path/path/path/src/Cfg`',
+          ]),
           line: 4,
           column: 9,
         },
         {
-          message:
-            '`path/path/tip` import should occur before import of `path/src/l10n`',
+          ...createOrderError([
+            '`path/path/tip` import',
+            'before',
+            'import of `path/src/l10n`',
+          ]),
           line: 5,
           column: 9,
         },
         {
-          message:
-            '`../../../../path/path/path/component` import should occur before import of `../../../../path/path/path/controller`',
+          ...createOrderError([
+            '`../../../../path/path/path/component` import',
+            'before',
+            'import of `../../../../path/path/path/controller`',
+          ]),
           line: 8,
           column: 9,
         },
       ],
-      languageOptions: { parser: require(parsers.ESPREE) },
     }),
   ],
 })
