@@ -24,7 +24,7 @@ jobs:
         eslint:
           - '8.56'
           - '8'
-          - '9.14'
+          - '9'
 
         include:
           - executeLint: true
