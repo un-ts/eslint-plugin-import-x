@@ -21,17 +21,15 @@ function getEntryPoint(context: RuleContext) {
 
 function findScope(context: RuleContext, identifier: string) {
   const { scopeManager } = context.sourceCode
-  return (
-    scopeManager?.scopes
-      // eslint-disable-next-line unicorn/prefer-spread
-      .slice()
-      .reverse()
-      .find(scope =>
-        scope.variables.some(variable =>
-          variable.identifiers.some(node => node.name === identifier),
-        ),
-      )
-  )
+  return scopeManager?.scopes
+
+    .slice()
+    .reverse()
+    .find(scope =>
+      scope.variables.some(variable =>
+        variable.identifiers.some(node => node.name === identifier),
+      ),
+    )
 }
 
 function findDefinition(objectScope: TSESLint.Scope.Scope, identifier: string) {

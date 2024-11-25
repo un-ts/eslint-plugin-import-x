@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunction, testFilePath } from '../utils'
+import { createRuleTestCaseFunctions, testFilePath } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/extensions'
 
@@ -15,29 +15,29 @@ const ruleTesterWithTypeScriptImports = new TSESLintRuleTester({
   },
 })
 
-const test = createRuleTestCaseFunction<typeof rule>()
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 ruleTester.run('extensions', rule, {
   valid: [
-    test({ code: 'import a from "@/a"' }),
-    test({ code: 'import a from "a"' }),
-    test({ code: 'import dot from "./file.with.dot"' }),
-    test({
+    tValid({ code: 'import a from "@/a"' }),
+    tValid({ code: 'import a from "a"' }),
+    tValid({ code: 'import dot from "./file.with.dot"' }),
+    tValid({
       code: 'import a from "a/index.js"',
       options: ['always'],
     }),
-    test({
+    tValid({
       code: 'import dot from "./file.with.dot.js"',
       options: ['always'],
     }),
-    test({
+    tValid({
       code: [
         'import a from "a"',
         'import packageConfig from "./package.json"',
       ].join('\n'),
       options: [{ json: 'always', js: 'never' }],
     }),
-    test({
+    tValid({
       code: [
         'import lib from "./bar"',
         'import component from "./bar.jsx"',
@@ -49,7 +49,7 @@ ruleTester.run('extensions', rule, {
       },
     }),
 
-    test({
+    tValid({
       code: [
         'import bar from "./bar"',
         'import barjson from "./bar.json"',
@@ -61,7 +61,7 @@ ruleTester.run('extensions', rule, {
       },
     }),
 
-    test({
+    tValid({
       code: ['import bar from "./bar.js"', 'import pack from "./package"'].join(
         '\n',
       ),
@@ -70,13 +70,13 @@ ruleTester.run('extensions', rule, {
     }),
 
     // unresolved (#271/#295)
-    test({ code: 'import path from "path"' }),
-    test({ code: 'import path from "path"', options: ['never'] }),
-    test({ code: 'import path from "path"', options: ['always'] }),
-    test({ code: 'import thing from "./fake-file.js"', options: ['always'] }),
-    test({ code: 'import thing from "non-package"', options: ['never'] }),
+    tValid({ code: 'import path from "path"' }),
+    tValid({ code: 'import path from "path"', options: ['never'] }),
+    tValid({ code: 'import path from "path"', options: ['always'] }),
+    tValid({ code: 'import thing from "./fake-file.js"', options: ['always'] }),
+    tValid({ code: 'import thing from "non-package"', options: ['never'] }),
 
-    test({
+    tValid({
       code: `
         import foo from './foo.js'
         import bar from './bar.json'
@@ -86,7 +86,7 @@ ruleTester.run('extensions', rule, {
       options: ['ignorePackages'],
     }),
 
-    test({
+    tValid({
       code: `
         import foo from './foo.js'
         import bar from './bar.json'
@@ -96,7 +96,7 @@ ruleTester.run('extensions', rule, {
       options: ['always', { ignorePackages: true }],
     }),
 
-    test({
+    tValid({
       code: `
         import foo from './foo'
         import bar from './bar'
@@ -106,7 +106,7 @@ ruleTester.run('extensions', rule, {
       options: ['never', { ignorePackages: true }],
     }),
 
-    test({
+    tValid({
       code: 'import exceljs from "exceljs"',
       options: ['always', { js: 'never', jsx: 'never' }],
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
@@ -119,13 +119,13 @@ ruleTester.run('extensions', rule, {
     }),
 
     // export (#964)
-    test({
+    tValid({
       code: ['export { foo } from "./foo.js"', 'let bar; export { bar }'].join(
         '\n',
       ),
       options: ['always'],
     }),
-    test({
+    tValid({
       code: ['export { foo } from "./foo"', 'let bar; export { bar }'].join(
         '\n',
       ),
@@ -133,7 +133,7 @@ ruleTester.run('extensions', rule, {
     }),
 
     // Root packages should be ignored and they are names not files
-    test({
+    tValid({
       code: [
         'import lib from "pkg.js"',
         'import lib2 from "pgk/package"',
@@ -143,16 +143,16 @@ ruleTester.run('extensions', rule, {
     }),
 
     // Query strings.
-    test({
+    tValid({
       code: 'import bare from "./foo?a=True.ext"',
       options: ['never'],
     }),
-    test({
+    tValid({
       code: 'import bare from "./foo.js?a=True"',
       options: ['always'],
     }),
 
-    test({
+    tValid({
       code: [
         'import lib from "pkg"',
         'import lib2 from "pgk/package.js"',
@@ -163,7 +163,7 @@ ruleTester.run('extensions', rule, {
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'import a from "a/index.js"',
       errors: [
         {
@@ -174,7 +174,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import dot from "./file.with.dot"',
       options: ['always'],
       errors: [
@@ -186,7 +186,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: [
         'import a from "a/index.js"',
         'import packageConfig from "./package"',
@@ -208,7 +208,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: [
         'import lib from "./bar.js"',
         'import component from "./bar.jsx"',
@@ -227,7 +227,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: [
         'import lib from "./bar.js"',
         'import component from "./bar.jsx"',
@@ -247,7 +247,7 @@ ruleTester.run('extensions', rule, {
       ],
     }),
     // extension resolve order (#583/#965)
-    test({
+    tInvalid({
       code: [
         'import component from "./bar.jsx"',
         'import data from "./bar.json"',
@@ -265,7 +265,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "./bar.coffee"',
       errors: [
         {
@@ -279,7 +279,7 @@ ruleTester.run('extensions', rule, {
       settings: { 'import-x/resolve': { extensions: ['.coffee', '.js'] } },
     }),
 
-    test({
+    tInvalid({
       code: [
         'import barjs from "./bar.js"',
         'import barjson from "./bar.json"',
@@ -299,7 +299,7 @@ ruleTester.run('extensions', rule, {
       ],
     }),
 
-    test({
+    tInvalid({
       code: ['import barjs from "."', 'import barjs2 from ".."'].join('\n'),
       options: ['always'],
       errors: [
@@ -318,7 +318,7 @@ ruleTester.run('extensions', rule, {
       ],
     }),
 
-    test({
+    tInvalid({
       code: [
         'import barjs from "./bar.js"',
         'import barjson from "./bar.json"',
@@ -339,7 +339,7 @@ ruleTester.run('extensions', rule, {
     }),
 
     // unresolved (#271/#295)
-    test({
+    tInvalid({
       code: 'import thing from "./fake-file.js"',
       options: ['never'],
       errors: [
@@ -351,7 +351,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import thing from "non-package/test"',
       options: ['always'],
       errors: [
@@ -364,7 +364,7 @@ ruleTester.run('extensions', rule, {
       ],
     }),
 
-    test({
+    tInvalid({
       code: 'import thing from "@name/pkg/test"',
       options: ['always'],
       errors: [
@@ -377,7 +377,7 @@ ruleTester.run('extensions', rule, {
       ],
     }),
 
-    test({
+    tInvalid({
       code: 'import thing from "@name/pkg/test.js"',
       options: ['never'],
       errors: [
@@ -390,7 +390,7 @@ ruleTester.run('extensions', rule, {
       ],
     }),
 
-    test({
+    tInvalid({
       code: `
         import foo from './foo.js'
         import bar from './bar.json'
@@ -417,7 +417,7 @@ ruleTester.run('extensions', rule, {
       ],
     }),
 
-    test({
+    tInvalid({
       code: `
         import foo from './foo.js'
         import bar from './bar.json'
@@ -444,7 +444,7 @@ ruleTester.run('extensions', rule, {
       ],
     }),
 
-    test({
+    tInvalid({
       code: `
         import foo from './foo.js'
         import bar from './bar.json'
@@ -469,7 +469,7 @@ ruleTester.run('extensions', rule, {
       options: ['never', { ignorePackages: true }],
     }),
 
-    test({
+    tInvalid({
       code: `
         import foo from './foo.js'
         import bar from './bar.json'
@@ -487,7 +487,7 @@ ruleTester.run('extensions', rule, {
     }),
 
     // export (#964)
-    test({
+    tInvalid({
       code: ['export { foo } from "./foo"', 'let bar; export { bar }'].join(
         '\n',
       ),
@@ -501,7 +501,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: ['export { foo } from "./foo.js"', 'let bar; export { bar }'].join(
         '\n',
       ),
@@ -517,7 +517,7 @@ ruleTester.run('extensions', rule, {
     }),
 
     // Query strings.
-    test({
+    tInvalid({
       code: 'import withExtension from "./foo.js?a=True"',
       options: ['never'],
       errors: [
@@ -529,7 +529,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import withoutExtension from "./foo?a=True.ext"',
       options: ['always'],
       errors: [
@@ -543,7 +543,7 @@ ruleTester.run('extensions', rule, {
     }),
 
     // require (#1230)
-    test({
+    tInvalid({
       code: ['const { foo } = require("./foo")', 'export { foo }'].join('\n'),
       options: ['always'],
       errors: [
@@ -555,7 +555,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: ['const { foo } = require("./foo.js")', 'export { foo }'].join(
         '\n',
       ),
@@ -571,7 +571,7 @@ ruleTester.run('extensions', rule, {
     }),
 
     // export { } from
-    test({
+    tInvalid({
       code: 'export { foo } from "./foo"',
       options: ['always'],
       errors: [
@@ -583,7 +583,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         import foo from "@/ImNotAScopedModule";
         import chart from '@/configs/chart';
@@ -602,7 +602,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export { foo } from "./foo.js"',
       options: ['never'],
       errors: [
@@ -616,7 +616,7 @@ ruleTester.run('extensions', rule, {
     }),
 
     // export * from
-    test({
+    tInvalid({
       code: 'export * from "./foo"',
       options: ['always'],
       errors: [
@@ -628,7 +628,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export * from "./foo.js"',
       options: ['never'],
       errors: [
@@ -641,7 +641,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import foo from "@/ImNotAScopedModule.js"',
       options: ['never'],
       errors: [
@@ -653,7 +653,7 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         import _ from 'lodash';
         import m from '@test-scope/some-module/index.js';
@@ -681,7 +681,7 @@ ruleTester.run('extensions', rule, {
     }),
 
     // TODO: properly ignore packages resolved via relative imports
-    test({
+    tInvalid({
       code: ['import * as test from "."'].join('\n'),
       filename: testFilePath('./internal-modules/test.js'),
       options: ['ignorePackages'],
@@ -694,7 +694,7 @@ ruleTester.run('extensions', rule, {
       ],
     }),
     // TODO: properly ignore packages resolved via relative imports
-    test({
+    tInvalid({
       code: ['import * as test from ".."'].join('\n'),
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       options: ['ignorePackages'],
@@ -712,14 +712,14 @@ ruleTester.run('extensions', rule, {
 describe('TypeScript', () => {
   ruleTester.run(`typescript - extensions ignore type-only`, rule, {
     valid: [
-      test({
+      tValid({
         code: 'import type T from "./typescript-declare";',
         options: [
           'always',
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
       }),
-      test({
+      tValid({
         code: 'export type { MyType } from "./typescript-declare";',
         options: [
           'always',
@@ -728,7 +728,7 @@ describe('TypeScript', () => {
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: 'import T from "./typescript-declare";',
         errors: [
           {
@@ -741,7 +741,7 @@ describe('TypeScript', () => {
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
       }),
-      test({
+      tInvalid({
         code: 'export { MyType } from "./typescript-declare";',
         errors: [
           {
@@ -754,7 +754,7 @@ describe('TypeScript', () => {
           { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' },
         ],
       }),
-      test({
+      tInvalid({
         code: 'import type T from "./typescript-declare";',
         errors: [
           {
@@ -775,7 +775,7 @@ describe('TypeScript', () => {
           },
         ],
       }),
-      test({
+      tInvalid({
         code: 'export type { MyType } from "./typescript-declare";',
         errors: [
           {
@@ -801,17 +801,17 @@ describe('TypeScript', () => {
 
   ruleTesterWithTypeScriptImports.run('extensions', rule, {
     valid: [
-      test({
+      tValid({
         code: 'import type { MyType } from "./typescript-declare.ts";',
         options: ['always', { checkTypeImports: true }],
       }),
-      test({
+      tValid({
         code: 'export type { MyType } from "./typescript-declare.ts";',
         options: ['always', { checkTypeImports: true }],
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: 'import type { MyType } from "./typescript-declare";',
         errors: [
           {
@@ -821,7 +821,7 @@ describe('TypeScript', () => {
         ],
         options: ['always', { checkTypeImports: true }],
       }),
-      test({
+      tInvalid({
         code: 'export type { MyType } from "./typescript-declare";',
         errors: [
           {

@@ -391,7 +391,7 @@ const fileIsInPkg = (file: string) => {
 type Options = {
   src?: string[]
   ignoreExports?: string[]
-  missingExports?: string[]
+  missingExports?: true
   unusedExports?: boolean
   ignoreUnusedTypeExports?: boolean
 }

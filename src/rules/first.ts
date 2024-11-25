@@ -20,9 +20,11 @@ function isPossibleDirective(node: TSESTree.ProgramStatement) {
   )
 }
 
+type Options = 'absolute-first' | 'disable-absolute-first'
+
 type MessageId = 'absolute' | 'order'
 
-export = createRule<['absolute-first'?], MessageId>({
+export = createRule<[Options?], MessageId>({
   name: 'first',
   meta: {
     type: 'suggestion',

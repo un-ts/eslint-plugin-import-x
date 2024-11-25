@@ -1,35 +1,43 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath, SYNTAX_CASES, parsers } from '../utils'
+import {
+  testFilePath,
+  SYNTAX_VALID_CASES,
+  parsers,
+  createRuleTestCaseFunctions,
+} from '../utils'
+import type { RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/export'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
 ruleTester.run('export', rule, {
   valid: [
-    test({
+    tValid({
       code: 'import "./malformed.js"',
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
 
     // default
-    test({ code: 'var foo = "foo"; export default foo;' }),
-    test({ code: 'export var foo = "foo"; export var bar = "bar";' }),
-    test({ code: 'export var foo = "foo", bar = "bar";' }),
-    test({ code: 'export var { foo, bar } = object;' }),
-    test({ code: 'export var [ foo, bar ] = array;' }),
-    test({ code: 'let foo; export { foo, foo as bar }' }),
-    test({ code: 'let bar; export { bar }; export * from "./export-all"' }),
-    test({ code: 'export * from "./export-all"' }),
-    test({ code: 'export * from "./does-not-exist"' }),
+    tValid({ code: 'var foo = "foo"; export default foo;' }),
+    tValid({ code: 'export var foo = "foo"; export var bar = "bar";' }),
+    tValid({ code: 'export var foo = "foo", bar = "bar";' }),
+    tValid({ code: 'export var { foo, bar } = object;' }),
+    tValid({ code: 'export var [ foo, bar ] = array;' }),
+    tValid({ code: 'let foo; export { foo, foo as bar }' }),
+    tValid({ code: 'let bar; export { bar }; export * from "./export-all"' }),
+    tValid({ code: 'export * from "./export-all"' }),
+    tValid({ code: 'export * from "./does-not-exist"' }),
 
     // #328: "export * from" does not export a default
-    test({ code: 'export default foo; export * from "./bar"' }),
+    tValid({ code: 'export default foo; export * from "./bar"' }),
 
-    ...SYNTAX_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
 
-    test({
+    tValid({
       code: `
         import * as A from './named-export-collision/a';
         import * as B from './named-export-collision/b';
@@ -37,7 +45,7 @@ ruleTester.run('export', rule, {
         export { A, B };
       `,
     }),
-    test({
+    tValid({
       code: `
         export * as A from './named-export-collision/a';
         export * as B from './named-export-collision/b';
@@ -70,45 +78,45 @@ ruleTester.run('export', rule, {
 
   invalid: [
     // multiple defaults
-    // test({
+    // tInvalid({
     //   code: 'export default foo; export default bar',
     //   errors: ['Multiple default exports.', 'Multiple default exports.'],
     // }),
-    // test({
+    // tInvalid({
     //   code: 'export default function foo() {}; ' +
     //              'export default function bar() {}',
     //   errors: ['Multiple default exports.', 'Multiple default exports.'],
     // }),
 
-    // test({
+    // tInvalid({
     //   code: 'export function foo() {}; ' +
     //              'export { bar as foo }',
     //   errors: ['Parsing error: Duplicate export \'foo\''],
     // }),
-    // test({
+    // tInvalid({
     //   code: 'export {foo}; export {foo};',
     //   errors: ['Parsing error: Duplicate export \'foo\''],
     // }),
-    // test({
+    // tInvalid({
     //   code: 'export {foo}; export {bar as foo};',
     //   errors: ['Parsing error: Duplicate export \'foo\''],
     // }),
-    // test({
+    // tInvalid({
     //   code: 'export var foo = "foo"; export var foo = "bar";',
     //   errors: ['Parsing error: Duplicate export \'foo\''],
     // }),
-    // test({
+    // tInvalid({
     //   code: 'export var foo = "foo", foo = "bar";',
     //   errors: ['Parsing error: Duplicate export \'foo\''],
     // }),
-    test({
+    tInvalid({
       code: 'let foo; export { foo }; export * from "./export-all"',
       errors: [
-        "Multiple exports of name 'foo'.",
-        "Multiple exports of name 'foo'.",
+        { messageId: 'multiNamed', data: { name: 'foo' } },
+        { messageId: 'multiNamed', data: { name: 'foo' } },
       ],
     }),
-    // test({
+    // tInvalid({
     //   code: 'export * from "./default-export"',
     //   errors: [
     //     {
@@ -120,46 +128,46 @@ ruleTester.run('export', rule, {
 
     // note: Espree bump to Acorn 4+ changed this test's error message.
     //       `npm up` first if it's failing.
-    test({
+    tInvalid({
       code: 'export * from "./malformed.js"',
       languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         {
+          // @ts-expect-error parse error here so can'use rule types
           message:
             "Parse errors in imported module './malformed.js': 'return' outside of function (1:1)",
-          type: 'Literal',
         },
       ],
     }),
 
-    // test({
+    // tInvalid({
     //   code: 'export var { foo, bar } = object; export var foo = "bar"',
     //   errors: ['Parsing error: Duplicate export \'foo\''],
     // }),
-    // test({
+    // tInvalid({
     //   code: 'export var { bar: { foo } } = object; export var foo = "bar"',
     //   errors: ['Parsing error: Duplicate export \'foo\''],
     // }),
-    // test({
+    // tInvalid({
     //   code: 'export var [ foo, bar ] = array; export var bar = "baz"',
     //   errors: ['Parsing error: Duplicate export \'bar\''],
     // }),
-    // test({
+    // tInvalid({
     //   code: 'export var [ foo, /*sparse*/, { bar } ] = array; export var bar = "baz"',
     //   errors: ['Parsing error: Duplicate export \'bar\''],
     // }),
 
     // #328: "export * from" does not export a default
-    test({
+    tInvalid({
       code: 'export * from "./default-export"',
-      errors: [`No named exports found in module './default-export'.`],
+      errors: [{ messageId: 'noNamed', data: { module: './default-export' } }],
     }),
 
-    test({
+    tInvalid({
       code: 'let foo; export { foo as "foo" }; export * from "./export-all"',
       errors: [
-        "Multiple exports of name 'foo'.",
-        "Multiple exports of name 'foo'.",
+        { messageId: 'multiNamed', data: { name: 'foo' } },
+        { messageId: 'multiNamed', data: { name: 'foo' } },
       ],
       languageOptions: {
         parser: require(parsers.ESPREE),
@@ -169,13 +177,13 @@ ruleTester.run('export', rule, {
       },
     }),
 
-    test({
+    tInvalid({
       code: `
         export default function a(): void;
         export default function a() {}
         export { x as default };
       `,
-      errors: ['Multiple default exports.', 'Multiple default exports.'],
+      errors: [{ messageId: 'multiDefault' }, { messageId: 'multiDefault' }],
     }),
   ],
 })
@@ -191,14 +199,14 @@ describe('TypeScript', () => {
   ruleTester.run('export', rule, {
     valid: [
       // type/value name clash
-      test({
+      tValid({
         code: `
           export const Foo = 1;
           export type Foo = number;
         `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: `
           export const Foo = 1;
           export interface Foo {}
@@ -206,7 +214,7 @@ describe('TypeScript', () => {
         ...parserConfig,
       }),
 
-      test({
+      tValid({
         code: `
           export function fff(a: string);
           export function fff(a: number);
@@ -214,7 +222,7 @@ describe('TypeScript', () => {
         ...parserConfig,
       }),
 
-      test({
+      tValid({
         code: `
           export function fff(a: string);
           export function fff(a: number);
@@ -224,7 +232,7 @@ describe('TypeScript', () => {
       }),
 
       // namespace
-      test({
+      tValid({
         code: `
           export const Bar = 1;
           export namespace Foo {
@@ -233,7 +241,7 @@ describe('TypeScript', () => {
         `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: `
           export type Bar = string;
           export namespace Foo {
@@ -242,7 +250,7 @@ describe('TypeScript', () => {
         `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: `
           export const Bar = 1;
           export type Bar = string;
@@ -253,7 +261,7 @@ describe('TypeScript', () => {
         `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: `
           export namespace Foo {
             export const Foo = 1;
@@ -268,7 +276,7 @@ describe('TypeScript', () => {
         ...parserConfig,
       }),
 
-      test({
+      tValid({
         code: `
             export class Foo { }
             export namespace Foo { }
@@ -278,21 +286,21 @@ describe('TypeScript', () => {
           `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: `
             export function Foo();
             export namespace Foo { }
           `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: `
             export function Foo(a: string);
             export namespace Foo { }
           `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: `
             export function Foo(a: string);
             export function Foo(a: number);
@@ -300,20 +308,20 @@ describe('TypeScript', () => {
           `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: `
             export enum Foo { }
             export namespace Foo { }
           `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: 'export * from "./file1.ts"',
         filename: testFilePath('typescript-d-ts/file-2.ts'),
         ...parserConfig,
       }),
 
-      test({
+      tValid({
         code: `
             export * as A from './named-export-collision/a';
             export * as B from './named-export-collision/b';
@@ -321,7 +329,7 @@ describe('TypeScript', () => {
       }),
 
       // Exports in ambient modules
-      test({
+      tValid({
         code: `
           declare module "a" {
             const Foo = 1;
@@ -334,7 +342,7 @@ describe('TypeScript', () => {
         `,
         ...parserConfig,
       }),
-      test({
+      tValid({
         code: `
           declare module "a" {
             const Foo = 1;
@@ -346,7 +354,7 @@ describe('TypeScript', () => {
         ...parserConfig,
       }),
 
-      test({
+      tValid({
         ...parserConfig,
         code: `
           export * from './module';
@@ -360,18 +368,20 @@ describe('TypeScript', () => {
     ],
     invalid: [
       // type/value name clash
-      test({
+      tInvalid({
         code: `
           export type Foo = string;
           export type Foo = number;
         `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -379,7 +389,7 @@ describe('TypeScript', () => {
       }),
 
       // namespace
-      test({
+      tInvalid({
         code: `
           export const a = 1
           export namespace Foo {
@@ -389,17 +399,19 @@ describe('TypeScript', () => {
         `,
         errors: [
           {
-            message: `Multiple exports of name 'a'.`,
+            messageId: 'multiNamed',
+            data: { name: 'a' },
             line: 4,
           },
           {
-            message: `Multiple exports of name 'a'.`,
+            messageId: 'multiNamed',
+            data: { name: 'a' },
             line: 5,
           },
         ],
         ...parserConfig,
       }),
-      test({
+      tInvalid({
         code: `
           declare module 'foo' {
             const Foo = 1;
@@ -409,17 +421,17 @@ describe('TypeScript', () => {
         `,
         errors: [
           {
-            message: 'Multiple default exports.',
+            messageId: 'multiDefault',
             line: 4,
           },
           {
-            message: 'Multiple default exports.',
+            messageId: 'multiDefault',
             line: 5,
           },
         ],
         ...parserConfig,
       }),
-      test({
+      tInvalid({
         code: `
           export namespace Foo {
             export namespace Bar {
@@ -434,26 +446,30 @@ describe('TypeScript', () => {
         `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 4,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 5,
           },
           {
-            message: `Multiple exports of name 'Bar'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Bar' },
             line: 8,
           },
           {
-            message: `Multiple exports of name 'Bar'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Bar' },
             line: 9,
           },
         ],
         ...parserConfig,
       }),
 
-      test({
+      tInvalid({
         code: `
             export class Foo { }
             export class Foo { }
@@ -461,17 +477,19 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
         ...parserConfig,
       }),
-      test({
+      tInvalid({
         code: `
             export enum Foo { }
             export enum Foo { }
@@ -479,17 +497,19 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
         ...parserConfig,
       }),
-      test({
+      tInvalid({
         code: `
             export enum Foo { }
             export class Foo { }
@@ -497,17 +517,19 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
         ...parserConfig,
       }),
-      test({
+      tInvalid({
         code: `
             export const Foo = 'bar';
             export class Foo { }
@@ -515,17 +537,19 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
         ...parserConfig,
       }),
-      test({
+      tInvalid({
         code: `
             export function Foo() { };
             export class Foo { }
@@ -533,17 +557,19 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
         ...parserConfig,
       }),
-      test({
+      tInvalid({
         code: `
             export const Foo = 'bar';
             export function Foo() { };
@@ -551,28 +577,32 @@ describe('TypeScript', () => {
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
         ...parserConfig,
       }),
-      test({
+      tInvalid({
         code: `
             export const Foo = 'bar';
             export namespace Foo { }
           `,
         errors: [
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 2,
           },
           {
-            message: `Multiple exports of name 'Foo'.`,
+            messageId: 'multiNamed',
+            data: { name: 'Foo' },
             line: 3,
           },
         ],
@@ -580,7 +610,7 @@ describe('TypeScript', () => {
       }),
 
       // Exports in ambient modules
-      test({
+      tInvalid({
         code: `
           declare module "a" {
             const Foo = 1;
@@ -593,11 +623,11 @@ describe('TypeScript', () => {
         `,
         errors: [
           {
-            message: 'Multiple default exports.',
+            messageId: 'multiDefault',
             line: 7,
           },
           {
-            message: 'Multiple default exports.',
+            messageId: 'multiDefault',
             line: 9,
           },
         ],

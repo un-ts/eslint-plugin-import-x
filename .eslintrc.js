@@ -3,6 +3,7 @@
  */
 module.exports = {
   root: true,
+  reportUnusedDisableDirectives: true,
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
@@ -33,7 +34,7 @@ module.exports = {
     'eslint-plugin/report-message-format': 'error',
     'eslint-plugin/require-meta-docs-description': [
       'error',
-      { pattern: '^(Enforce|Ensure|Prefer|Forbid).+\\.$' },
+      { pattern: String.raw`^(Enforce|Ensure|Prefer|Forbid).+\.$` },
     ],
     'eslint-plugin/require-meta-schema': 'error',
     'eslint-plugin/require-meta-type': 'error',

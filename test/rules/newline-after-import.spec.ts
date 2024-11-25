@@ -1,12 +1,16 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
 import { parsers } from '../utils'
+import type { GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/newline-after-import'
 
 const ruleTester = new TSESLintRuleTester()
 
-const getImportError = (count: number) => ({
+const createImportError = (
+  count: number,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> => ({
   messageId: 'newline' as const,
   data: {
     count,
@@ -15,9 +19,11 @@ const getImportError = (count: number) => ({
   },
 })
 
-const IMPORT_ERROR = getImportError(1)
+const IMPORT_ERROR = createImportError(1)
 
-const getRequireError = (count: number) => ({
+const createRequireError = (
+  count: number,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> => ({
   messageId: 'newline' as const,
   data: {
     count,
@@ -26,7 +32,7 @@ const getRequireError = (count: number) => ({
   },
 })
 
-const REQUIRE_ERROR = getRequireError(1)
+const REQUIRE_ERROR = createRequireError(1)
 
 ruleTester.run('newline-after-import', rule, {
   valid: [
@@ -601,7 +607,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -860,7 +866,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -875,7 +881,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -890,7 +896,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -905,7 +911,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -920,7 +926,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -935,7 +941,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -950,7 +956,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -965,7 +971,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -980,7 +986,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getImportError(2),
+          ...createImportError(2),
         },
       ],
       languageOptions: {
@@ -1031,7 +1037,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getRequireError(2),
+          ...createRequireError(2),
         },
       ],
       languageOptions: { parserOptions: { ecmaVersion: 2015 } },
@@ -1044,7 +1050,7 @@ ruleTester.run('newline-after-import', rule, {
         {
           line: 1,
           column: 1,
-          ...getRequireError(2),
+          ...createRequireError(2),
         },
       ],
       languageOptions: { parserOptions: { ecmaVersion: 2015 } },

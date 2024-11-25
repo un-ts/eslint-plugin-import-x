@@ -69,9 +69,7 @@ export = createRule<[Options?], MessageId>({
       },
 
       ExportSpecifier(node) {
-        if (
-          getValue(node.exported) === 'default'
-        ) {
+        if (getValue(node.exported) === 'default') {
           hasDefaultExport = true
         } else {
           specifierExportCount++

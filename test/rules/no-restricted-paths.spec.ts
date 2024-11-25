@@ -1,14 +1,25 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { parsers, test, testFilePath } from '../utils'
+import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils'
+import type { GetRuleModuleMessageIds } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-restricted-paths'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createZoneError(
+  importPath: string,
+  extra: string = '',
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return { messageId: 'zone', data: { importPath, extra } }
+}
+
 ruleTester.run('no-restricted-paths', rule, {
   valid: [
-    test({
+    tValid({
       code: 'import a from "../client/a.js"',
       filename: testFilePath('./restricted-paths/server/b.js'),
       options: [
@@ -22,7 +33,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import a from "../client/a.js"',
       filename: testFilePath('./restricted-paths/server/b.js'),
       options: [
@@ -36,7 +47,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import a from "../client/a.js"',
       filename: testFilePath('./restricted-paths/client/b.js'),
       options: [
@@ -50,7 +61,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'const a = require("../client/a.js")',
       filename: testFilePath('./restricted-paths/server/b.js'),
       options: [
@@ -64,7 +75,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import b from "../server/b.js"',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -78,7 +89,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import a from "./a.js"',
       filename: testFilePath('./restricted-paths/server/one/a.js'),
       options: [
@@ -93,7 +104,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import a from "../two/a.js"',
       filename: testFilePath('./restricted-paths/server/one/a.js'),
       options: [
@@ -108,7 +119,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import a from "../one/a.js"',
       filename: testFilePath('./restricted-paths/server/two-new/a.js'),
       options: [
@@ -123,7 +134,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import A from "../two/a.js"',
       filename: testFilePath('./restricted-paths/server/one/a.js'),
       options: [
@@ -141,7 +152,7 @@ ruleTester.run('no-restricted-paths', rule, {
 
     // support of arrays for from and target
     // array with single element
-    test({
+    tValid({
       code: 'import a from "../client/a.js"',
       filename: testFilePath('./restricted-paths/server/b.js'),
       options: [
@@ -155,7 +166,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import a from "../client/a.js"',
       filename: testFilePath('./restricted-paths/server/b.js'),
       options: [
@@ -170,7 +181,7 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
     }),
     // array with multiple elements
-    test({
+    tValid({
       code: 'import a from "../one/a.js"',
       filename: testFilePath('./restricted-paths/server/two-new/a.js'),
       options: [
@@ -187,7 +198,7 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import a from "../one/a.js"',
       filename: testFilePath('./restricted-paths/server/two-new/a.js'),
       options: [
@@ -206,7 +217,7 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
     }),
     // array with multiple glob patterns in from
-    test({
+    tValid({
       code: 'import a from "../client/a.js"',
       filename: testFilePath('./restricted-paths/client/b.js'),
       options: [
@@ -224,7 +235,7 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
     }),
     // array with mix of glob and non glob patterns in target
-    test({
+    tValid({
       code: 'import a from "../client/a.js"',
       filename: testFilePath('./restricted-paths/client/b.js'),
       options: [
@@ -243,8 +254,8 @@ ruleTester.run('no-restricted-paths', rule, {
     }),
 
     // irrelevant function calls
-    test({ code: 'notrequire("../server/b.js")' }),
-    test({
+    tValid({ code: 'notrequire("../server/b.js")' }),
+    tValid({
       code: 'notrequire("../server/b.js")',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -260,15 +271,15 @@ ruleTester.run('no-restricted-paths', rule, {
     }),
 
     // no config
-    test({ code: 'require("../server/b.js")' }),
-    test({ code: 'import b from "../server/b.js"' }),
+    tValid({ code: 'require("../server/b.js")' }),
+    tValid({ code: 'import b from "../server/b.js"' }),
 
     // builtin (ignore)
-    test({ code: 'require("os")' }),
+    tValid({ code: 'require("os")' }),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'import b from "../server/b.js"; // 1',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -283,14 +294,13 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/b.js" imported in restricted zone.',
+          ...createZoneError('../server/b.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "../server/b.js"; // 2',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -305,8 +315,7 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/b.js" imported in restricted zone.',
+          ...createZoneError('../server/b.js'),
           line: 1,
           column: 15,
         },
@@ -316,7 +325,7 @@ ruleTester.run('no-restricted-paths', rule, {
     ...(process.platform === 'win32'
       ? []
       : [
-          test({
+          tInvalid({
             code: 'import b from "../server/b.js";',
             filename: testFilePath('./restricted-paths/client/a.js'),
             options: [
@@ -331,15 +340,14 @@ ruleTester.run('no-restricted-paths', rule, {
             ],
             errors: [
               {
-                message:
-                  'Unexpected path "../server/b.js" imported in restricted zone.',
+                ...createZoneError('../server/b.js'),
                 line: 1,
                 column: 15,
               },
             ],
           }),
         ]),
-    test({
+    tInvalid({
       code: 'import b from "../server/b.js"; // 2 ter',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -354,14 +362,13 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/b.js" imported in restricted zone.',
+          ...createZoneError('../server/b.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import a from "../client/a"\nimport c from "./c"',
       filename: testFilePath('./restricted-paths/server/b.js'),
       options: [
@@ -380,18 +387,18 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message: 'Unexpected path "../client/a" imported in restricted zone.',
+          ...createZoneError('../client/a'),
           line: 1,
           column: 15,
         },
         {
-          message: 'Unexpected path "./c" imported in restricted zone.',
+          ...createZoneError('./c'),
           line: 2,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "../server/b.js"; // 3',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -407,14 +414,13 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/b.js" imported in restricted zone.',
+          ...createZoneError('../server/b.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'const b = require("../server/b.js")',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -429,14 +435,13 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/b.js" imported in restricted zone.',
+          ...createZoneError('../server/b.js'),
           line: 1,
           column: 19,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "../two/a.js"',
       filename: testFilePath('./restricted-paths/server/one/a.js'),
       options: [
@@ -452,13 +457,13 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message: 'Unexpected path "../two/a.js" imported in restricted zone.',
+          ...createZoneError('../two/a.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "../two/a.js"',
       filename: testFilePath('./restricted-paths/server/one/a.js'),
       options: [
@@ -475,14 +480,13 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../two/a.js" imported in restricted zone. Custom message',
+          ...createZoneError('../two/a.js', ' Custom message'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "../two/a.js"',
       filename: testFilePath('./restricted-paths/server/one/a.js'),
       options: [
@@ -496,16 +500,9 @@ ruleTester.run('no-restricted-paths', rule, {
           ],
         },
       ],
-      errors: [
-        {
-          message:
-            'Restricted path exceptions must be descendants of the configured `from` path for that zone.',
-          line: 1,
-          column: 15,
-        },
-      ],
+      errors: [{ messageId: 'path', line: 1, column: 15 }],
     }),
-    test({
+    tInvalid({
       code: 'import A from "../two/a.js"',
       filename: testFilePath('./restricted-paths/server/one/a.js'),
       options: [
@@ -520,13 +517,13 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message: 'Unexpected path "../two/a.js" imported in restricted zone.',
+          ...createZoneError('../two/a.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import A from "../two/a.js"',
       filename: testFilePath('./restricted-paths/server/one/a.js'),
       options: [
@@ -540,19 +537,12 @@ ruleTester.run('no-restricted-paths', rule, {
           ],
         },
       ],
-      errors: [
-        {
-          message:
-            'Restricted path exceptions must be glob patterns when `from` contains glob patterns',
-          line: 1,
-          column: 15,
-        },
-      ],
+      errors: [{ messageId: 'glob', line: 1, column: 15 }],
     }),
 
     // support of arrays for from and target
     // array with single element
-    test({
+    tInvalid({
       code: 'import b from "../server/b.js"; // 4',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -567,14 +557,13 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/b.js" imported in restricted zone.',
+          ...createZoneError('../server/b.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "../server/b.js"; // 5',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -589,15 +578,14 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/b.js" imported in restricted zone.',
+          ...createZoneError('../server/b.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
     // array with multiple elements
-    test({
+    tInvalid({
       code: 'import b from "../server/b.js"; // 6',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -615,14 +603,13 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/b.js" imported in restricted zone.',
+          ...createZoneError('../server/b.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "../server/one/b.js"\nimport a from "../server/two/a.js"',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -640,21 +627,19 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/one/b.js" imported in restricted zone.',
+          ...createZoneError('../server/one/b.js'),
           line: 1,
           column: 15,
         },
         {
-          message:
-            'Unexpected path "../server/two/a.js" imported in restricted zone.',
+          ...createZoneError('../server/two/a.js'),
           line: 2,
           column: 15,
         },
       ],
     }),
     // array with multiple glob patterns in from
-    test({
+    tInvalid({
       code: 'import b from "../server/one/b.js"\nimport a from "../server/two/a.js"',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -672,21 +657,19 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/one/b.js" imported in restricted zone.',
+          ...createZoneError('../server/one/b.js'),
           line: 1,
           column: 15,
         },
         {
-          message:
-            'Unexpected path "../server/two/a.js" imported in restricted zone.',
+          ...createZoneError('../server/two/a.js'),
           line: 2,
           column: 15,
         },
       ],
     }),
     // array with mix of glob and non glob patterns in target
-    test({
+    tInvalid({
       code: 'import b from "../server/b.js"; // 7',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -704,15 +687,14 @@ ruleTester.run('no-restricted-paths', rule, {
       ],
       errors: [
         {
-          message:
-            'Unexpected path "../server/b.js" imported in restricted zone.',
+          ...createZoneError('../server/b.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
     // configuration format
-    test({
+    tInvalid({
       code: 'import A from "../two/a.js"',
       filename: testFilePath('./restricted-paths/server/one/a.js'),
       options: [
@@ -726,16 +708,9 @@ ruleTester.run('no-restricted-paths', rule, {
           ],
         },
       ],
-      errors: [
-        {
-          message:
-            'Restricted path exceptions must be glob patterns when `from` contains glob patterns',
-          line: 1,
-          column: 15,
-        },
-      ],
+      errors: [{ messageId: 'glob', line: 1, column: 15 }],
     }),
-    test({
+    tInvalid({
       code: 'import b from "../server/one/b.js"',
       filename: testFilePath('./restricted-paths/client/a.js'),
       options: [
@@ -751,14 +726,7 @@ ruleTester.run('no-restricted-paths', rule, {
           ],
         },
       ],
-      errors: [
-        {
-          message:
-            'Restricted path `from` must contain either only glob patterns or none',
-          line: 1,
-          column: 15,
-        },
-      ],
+      errors: [{ messageId: 'mixedGlob', line: 1, column: 15 }],
     }),
   ],
 })
@@ -770,9 +738,10 @@ describe('Typescript', () => {
   }
   ruleTester.run('no-restricted-paths', rule, {
     valid: [
-      test({
+      tValid({
         code: 'import type a from "../client/a.ts"',
         filename: testFilePath('./restricted-paths/server/b.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -783,10 +752,8 @@ describe('Typescript', () => {
             ],
           },
         ],
-
-        settings,
       }),
-      test({
+      tValid({
         code: 'import type a from "../client/a.ts"',
         filename: testFilePath('./restricted-paths/server/b.ts'),
         options: [
@@ -802,9 +769,10 @@ describe('Typescript', () => {
 
         settings,
       }),
-      test({
+      tValid({
         code: 'import type a from "../client/a.ts"',
         filename: testFilePath('./restricted-paths/client/b.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -815,10 +783,8 @@ describe('Typescript', () => {
             ],
           },
         ],
-
-        settings,
       }),
-      test({
+      tValid({
         code: 'import type b from "../server/b.ts"',
         filename: testFilePath('./restricted-paths/client/a.ts'),
         options: [
@@ -834,9 +800,10 @@ describe('Typescript', () => {
 
         settings,
       }),
-      test({
+      tValid({
         code: 'import type a from "./a.ts"',
         filename: testFilePath('./restricted-paths/server/one/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -848,12 +815,11 @@ describe('Typescript', () => {
             ],
           },
         ],
-
-        settings,
       }),
-      test({
+      tValid({
         code: 'import type a from "../two/a.ts"',
         filename: testFilePath('./restricted-paths/server/one/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -865,12 +831,11 @@ describe('Typescript', () => {
             ],
           },
         ],
-
-        settings,
       }),
-      test({
+      tValid({
         code: 'import type a from "../one/a.ts"',
         filename: testFilePath('./restricted-paths/server/two-new/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -882,12 +847,11 @@ describe('Typescript', () => {
             ],
           },
         ],
-
-        settings,
       }),
-      test({
+      tValid({
         code: 'import type A from "../two/a.ts"',
         filename: testFilePath('./restricted-paths/server/one/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -899,21 +863,22 @@ describe('Typescript', () => {
             ],
           },
         ],
-
-        settings,
       }),
       // no config
-      test({ code: 'import type b from "../server/b.js"', settings }),
-      test({
+      tValid({
+        code: 'import type b from "../server/b.js"',
+        settings,
+      }),
+      tValid({
         code: 'import type * as b from "../server/b.js"',
-
         settings,
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: 'import type b from "../server/b"',
         filename: testFilePath('./restricted-paths/client/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -926,18 +891,16 @@ describe('Typescript', () => {
         ],
         errors: [
           {
-            message:
-              'Unexpected path "../server/b" imported in restricted zone.',
+            ...createZoneError('../server/b'),
             line: 1,
             column: 20,
           },
         ],
-
-        settings,
       }),
-      test({
+      tInvalid({
         code: 'import type b from "../server/b"',
         filename: testFilePath('./restricted-paths/client/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -950,18 +913,16 @@ describe('Typescript', () => {
         ],
         errors: [
           {
-            message:
-              'Unexpected path "../server/b" imported in restricted zone.',
+            ...createZoneError('../server/b'),
             line: 1,
             column: 20,
           },
         ],
-
-        settings,
       }),
-      test({
+      tInvalid({
         code: 'import type a from "../client/a"\nimport type c from "./c.ts"',
         filename: testFilePath('./restricted-paths/server/b.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -977,23 +938,21 @@ describe('Typescript', () => {
         ],
         errors: [
           {
-            message:
-              'Unexpected path "../client/a" imported in restricted zone.',
+            ...createZoneError('../client/a'),
             line: 1,
             column: 20,
           },
           {
-            message: 'Unexpected path "./c.ts" imported in restricted zone.',
+            ...createZoneError('./c.ts'),
             line: 2,
             column: 20,
           },
         ],
-
-        settings,
       }),
-      test({
+      tInvalid({
         code: 'import type b from "../server/b"',
         filename: testFilePath('./restricted-paths/client/a'),
+        settings,
         options: [
           {
             zones: [{ target: './client', from: './server' }],
@@ -1002,18 +961,16 @@ describe('Typescript', () => {
         ],
         errors: [
           {
-            message:
-              'Unexpected path "../server/b" imported in restricted zone.',
+            ...createZoneError('../server/b'),
             line: 1,
             column: 20,
           },
         ],
-
-        settings,
       }),
-      test({
+      tInvalid({
         code: 'import type b from "../two/a"',
         filename: testFilePath('./restricted-paths/server/one/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -1027,17 +984,16 @@ describe('Typescript', () => {
         ],
         errors: [
           {
-            message: 'Unexpected path "../two/a" imported in restricted zone.',
+            ...createZoneError('../two/a'),
             line: 1,
             column: 20,
           },
         ],
-
-        settings,
       }),
-      test({
+      tInvalid({
         code: 'import type b from "../two/a"',
         filename: testFilePath('./restricted-paths/server/one/a'),
+        settings,
         options: [
           {
             zones: [
@@ -1052,18 +1008,16 @@ describe('Typescript', () => {
         ],
         errors: [
           {
-            message:
-              'Unexpected path "../two/a" imported in restricted zone. Custom message',
+            ...createZoneError('../two/a', ' Custom message'),
             line: 1,
             column: 20,
           },
         ],
-
-        settings,
       }),
-      test({
+      tInvalid({
         code: 'import type b from "../two/a"',
         filename: testFilePath('./restricted-paths/server/one/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -1075,20 +1029,12 @@ describe('Typescript', () => {
             ],
           },
         ],
-        errors: [
-          {
-            message:
-              'Restricted path exceptions must be descendants of the configured `from` path for that zone.',
-            line: 1,
-            column: 20,
-          },
-        ],
-
-        settings,
+        errors: [{ messageId: 'path', line: 1, column: 20 }],
       }),
-      test({
+      tInvalid({
         code: 'import type A from "../two/a"',
         filename: testFilePath('./restricted-paths/server/one/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -1101,17 +1047,17 @@ describe('Typescript', () => {
         ],
         errors: [
           {
-            message: 'Unexpected path "../two/a" imported in restricted zone.',
+            ...createZoneError('../two/a'),
             line: 1,
             column: 20,
           },
         ],
-
-        settings,
       }),
-      test({
+      tInvalid({
         code: 'import type A from "../two/a"',
+
         filename: testFilePath('./restricted-paths/server/one/a.ts'),
+        settings,
         options: [
           {
             zones: [
@@ -1123,16 +1069,7 @@ describe('Typescript', () => {
             ],
           },
         ],
-        errors: [
-          {
-            message:
-              'Restricted path exceptions must be glob patterns when `from` contains glob patterns',
-            line: 1,
-            column: 20,
-          },
-        ],
-
-        settings,
+        errors: [{ messageId: 'glob', line: 1, column: 20 }],
       }),
     ],
   })

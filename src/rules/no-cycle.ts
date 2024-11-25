@@ -15,10 +15,10 @@ import {
 type Options = {
   allowUnsafeDynamicCyclicDependency?: boolean
   ignoreExternal?: boolean
-  maxDepth?: number
+  maxDepth?: number | '∞'
 } & ModuleOptions
 
-type MessageId = 'cycle'
+type MessageId = 'cycle' | 'cycleSource'
 
 type Traverser = {
   mget(): ExportMap | null
@@ -65,7 +65,8 @@ export = createRule<[Options?], MessageId>({
       }),
     ],
     messages: {
-      cycle: 'Dependency cycle {{source}}',
+      cycle: 'Dependency cycle detected',
+      cycleSource: 'Dependency cycle via "{{source}}"',
     },
   },
   defaultOptions: [],
@@ -187,16 +188,20 @@ export = createRule<[Options?], MessageId>({
         while (untraversed.length > 0) {
           const next = untraversed.shift()! // bfs!
           if (detectCycle(next)) {
-            context.report({
-              node: importer,
-              messageId: 'cycle',
-              data: {
-                source:
-                  next.route.length > 0
-                    ? `via ${routeString(next.route)}`
-                    : 'detected.',
-              },
-            })
+            if (next.route.length > 0) {
+              context.report({
+                node: importer,
+                messageId: 'cycleSource',
+                data: {
+                  source: routeString(next.route),
+                },
+              })
+            } else {
+              context.report({
+                node: importer,
+                messageId: 'cycle',
+              })
+            }
             return
           }
         }

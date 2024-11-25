@@ -1,11 +1,14 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
-import { TSESTree } from '@typescript-eslint/utils'
+import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { SYNTAX_CASES, parsers } from '../utils'
+import { SYNTAX_VALID_CASES, parsers } from '../utils'
+import type { GetRuleModuleOptions, RuleRunTests } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/dynamic-import-chunkname'
 
 const ruleTester = new TSESLintRuleTester()
+
+type RuleOptions = GetRuleModuleOptions<typeof rule>
 
 const pickyCommentFormat = '[a-zA-Z-_/.]+'
 
@@ -13,27 +16,27 @@ const options = [
   {
     importFunctions: ['dynamicImport'],
   },
-] as const
+] as const satisfies RuleOptions
 
 const pickyCommentOptions = [
   {
     importFunctions: ['dynamicImport'],
     webpackChunknameFormat: pickyCommentFormat,
   },
-] as const
+] as const satisfies RuleOptions
 
 const allowEmptyOptions = [
   {
     importFunctions: ['dynamicImport'],
     allowEmpty: true,
   },
-] as const
+] as const satisfies RuleOptions
 
 const multipleImportFunctionOptions = [
   {
     importFunctions: ['dynamicImport', 'definitelyNotStaticImport'],
   },
-] as const
+] as const satisfies RuleOptions
 
 const babelParser = require(parsers.BABEL)
 
@@ -425,7 +428,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       options,
       languageOptions: { parser: babelParser },
     },
-    ...SYNTAX_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [
@@ -438,10 +441,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'blockComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'blockComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -450,10 +450,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'leadingComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'leadingComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -465,10 +462,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -480,10 +474,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -495,10 +486,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -510,10 +498,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -525,10 +510,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -540,10 +522,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'chunknameFormat',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'chunknameFormat', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -555,10 +534,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'chunknameFormat',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'chunknameFormat', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -570,10 +546,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'chunknameFormat',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'chunknameFormat', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -585,10 +558,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'paddedSpaces',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'paddedSpaces', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -600,10 +570,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -615,10 +582,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -630,10 +594,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -646,10 +607,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -661,10 +619,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -678,7 +633,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       errors: [
         {
           ...pickyChunkNameFormatError,
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
+          type: AST_NODE_TYPES.ImportExpression,
         },
       ],
     },
@@ -691,10 +646,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -706,10 +658,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -721,10 +670,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -736,10 +682,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -751,10 +694,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -766,10 +706,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -781,10 +718,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -796,10 +730,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -811,10 +742,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -826,10 +754,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -841,10 +766,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       languageOptions: { parser: babelParser },
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.ImportExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.ImportExpression },
       ],
     },
     {
@@ -855,10 +777,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       options: multipleImportFunctionOptions,
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.CallExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.CallExpression },
       ],
     },
     {
@@ -869,10 +788,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       options: multipleImportFunctionOptions,
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.CallExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.CallExpression },
       ],
     },
     {
@@ -883,10 +799,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       options,
       output: null,
       errors: [
-        {
-          messageId: 'blockComment',
-          type: TSESTree.AST_NODE_TYPES.CallExpression,
-        },
+        { messageId: 'blockComment', type: AST_NODE_TYPES.CallExpression },
       ],
     },
     {
@@ -894,10 +807,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       options,
       output: null,
       errors: [
-        {
-          messageId: 'leadingComment',
-          type: TSESTree.AST_NODE_TYPES.CallExpression,
-        },
+        { messageId: 'leadingComment', type: AST_NODE_TYPES.CallExpression },
       ],
     },
     {
@@ -908,10 +818,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       options,
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.CallExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.CallExpression },
       ],
     },
     {
@@ -922,10 +829,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       options,
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.CallExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.CallExpression },
       ],
     },
     {
@@ -936,10 +840,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       options,
       output: null,
       errors: [
-        {
-          messageId: 'webpackComment',
-          type: TSESTree.AST_NODE_TYPES.CallExpression,
-        },
+        { messageId: 'webpackComment', type: AST_NODE_TYPES.CallExpression },
       ],
     },
     {
@@ -952,7 +853,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
       errors: [
         {
           ...pickyChunkNameFormatError,
-          type: TSESTree.AST_NODE_TYPES.CallExpression,
+          type: AST_NODE_TYPES.CallExpression,
         },
       ],
     },
@@ -960,7 +861,7 @@ ruleTester.run('dynamic-import-chunkname', rule, {
 })
 
 describe('TypeScript', () => {
-  const nodeType = TSESTree.AST_NODE_TYPES.ImportExpression
+  const nodeType = AST_NODE_TYPES.ImportExpression
 
   ruleTester.run('dynamic-import-chunkname', rule, {
     valid: [

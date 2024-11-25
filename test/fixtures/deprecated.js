@@ -50,3 +50,8 @@ export function fine() {
 export function _undocumented() {
   return 'sneaky!'
 }
+
+/** @deprecated */
+export function _deprecatedNoDescription() {
+  return '_deprecatedNoDescription'
+}

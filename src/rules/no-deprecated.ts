@@ -5,14 +5,14 @@ import type { ModuleNamespace } from '../utils'
 import { ExportMap, createRule, declaredScope, getValue } from '../utils'
 
 function message(deprecation: Tag) {
-  return {
-    messageId: 'deprecated',
-    data: {
-      description: deprecation.description
-        ? `: ${deprecation.description}`
-        : '.',
-    },
-  } as const
+  if (deprecation.description) {
+    return {
+      messageId: 'deprecatedDesc',
+      data: { description: deprecation.description },
+    } as const
+  }
+
+  return { messageId: 'deprecated' } as const
 }
 
 function getDeprecation(metadata?: ModuleNamespace | null) {
@@ -34,7 +34,8 @@ export = createRule({
     },
     schema: [],
     messages: {
-      deprecated: 'Deprecated{{description}}',
+      deprecatedDesc: 'Deprecated: {{description}}',
+      deprecated: 'Deprecated: consider to find an alternative.',
     },
   },
   defaultOptions: [],

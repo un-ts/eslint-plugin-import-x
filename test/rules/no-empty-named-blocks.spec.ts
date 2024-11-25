@@ -1,19 +1,22 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { Parser as TSESLintParser } from '@typescript-eslint/utils/ts-eslint'
 
-import { parsers, test } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils'
 
 import rule from 'eslint-plugin-import-x/rules/no-empty-named-blocks'
 
 const ruleTester = new TSESLintRuleTester()
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function generateSuggestionsTestCases(cases: string[], parser?: any) {
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function generateSuggestionsTestCases(
+  cases: string[],
+  parser?: TSESLintParser.LooseParserModule,
+): Array<ReturnType<typeof tInvalid>> {
   return cases.map(code =>
-    test({
+    tInvalid({
       code,
-      languageOptions: {
-        ...(parser && { parser }),
-      },
+      languageOptions: { parser },
       errors: [
         {
           messageId: 'emptyNamed',
@@ -35,38 +38,38 @@ function generateSuggestionsTestCases(cases: string[], parser?: any) {
 
 ruleTester.run('no-empty-named-blocks', rule, {
   valid: [
-    test({ code: `import 'mod';` }),
-    test({ code: `import Default from 'mod';` }),
-    test({ code: `import { Named } from 'mod';` }),
-    test({ code: `import Default, { Named } from 'mod';` }),
-    test({ code: `import * as Namespace from 'mod';` }),
+    tValid({ code: `import 'mod';` }),
+    tValid({ code: `import Default from 'mod';` }),
+    tValid({ code: `import { Named } from 'mod';` }),
+    tValid({ code: `import Default, { Named } from 'mod';` }),
+    tValid({ code: `import * as Namespace from 'mod';` }),
 
     // Typescript
-    test({ code: `import type Default from 'mod';` }),
-    test({
+    tValid({ code: `import type Default from 'mod';` }),
+    tValid({
       code: `import type { Named } from 'mod';`,
     }),
-    test({
+    tValid({
       code: `import type Default, { Named } from 'mod';`,
     }),
-    test({
+    tValid({
       code: `import type * as Namespace from 'mod';`,
     }),
 
     // Flow
-    test({
+    tValid({
       code: `import typeof Default from 'mod'; // babel old`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: `import typeof { Named } from 'mod'; // babel old`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: `import typeof Default, { Named } from 'mod'; // babel old`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: `
         module.exports = {
           rules: {
@@ -75,7 +78,7 @@ ruleTester.run('no-empty-named-blocks', rule, {
         };
       `,
     }),
-    test({
+    tValid({
       code: `
         import { DESCRIPTORS, NODE } from '../helpers/constants';
         // ...
@@ -86,10 +89,10 @@ ruleTester.run('no-empty-named-blocks', rule, {
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `import Default, {} from 'mod';`,
       output: `import Default from 'mod';`,
-      errors: ['Unexpected empty named import block'],
+      errors: [{ messageId: 'emptyNamed' }],
     }),
     ...generateSuggestionsTestCases([
       `import {} from 'mod';`,
@@ -105,11 +108,11 @@ ruleTester.run('no-empty-named-blocks', rule, {
       `import type{}from 'mod';`,
       `import type {}from'mod';`,
     ]),
-    test({
+    tInvalid({
       code: `import type Default, {} from 'mod';`,
       output: `import type Default from 'mod';`,
 
-      errors: ['Unexpected empty named import block'],
+      errors: [{ messageId: 'emptyNamed' }],
     }),
 
     // Flow
@@ -122,11 +125,11 @@ ruleTester.run('no-empty-named-blocks', rule, {
       ],
       require(parsers.BABEL),
     ),
-    test({
+    tInvalid({
       code: `import typeof Default, {} from 'mod';`,
       output: `import typeof Default from 'mod';`,
       languageOptions: { parser: require(parsers.BABEL) },
-      errors: ['Unexpected empty named import block'],
+      errors: [{ messageId: 'emptyNamed' }],
     }),
   ],
 })

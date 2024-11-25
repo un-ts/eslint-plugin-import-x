@@ -381,7 +381,7 @@ function hasCommentInsideNonSpecifiers(
   // `node` (only inside). If there's a `{...}` part, look for comments before
   // the `{`, but not before the `}` (hence the `+1`s).
   const someTokens =
-    openBraceIndex >= 0 && closeBraceIndex >= 0
+    openBraceIndex !== -1 && closeBraceIndex !== -1
       ? [
           ...tokens.slice(1, openBraceIndex + 1),
           ...tokens.slice(closeBraceIndex + 1),
