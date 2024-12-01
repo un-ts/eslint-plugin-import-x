@@ -1,9 +1,30 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { ResolveOptions } from 'enhanced-resolve'
 import type { MinimatchOptions } from 'minimatch'
-import type { KebabCase, LiteralUnion } from 'type-fest'
+import type { KebabCase } from 'type-fest'
 
 import type { ImportType as ImportType_, PluginName } from './utils'
+import type { LegacyImportResolver, LegacyResolver } from './utils/legacy-resolver-settings'
+
+export type {
+  LegacyResolverName,
+  LegacyResolverName as ResolverName,
+
+  LegacyImportResolver,
+  LegacyImportResolver as ImportResolver,
+
+  LegacyResolverResolve,
+  LegacyResolverResolve as ResolverResolve,
+
+  LegacyResolverResolveImport,
+  LegacyResolverResolveImport as ResolverResolveImport,
+
+  LegacyResolverRecord,
+  LegacyResolverRecord as ResolverRecord,
+
+  LegacyResolverObject,
+  LegacyResolverObject as ResolverObject,
+} from './utils/legacy-resolver-settings'
 
 export type ImportType = ImportType_ | 'object' | 'type'
 
@@ -42,63 +63,9 @@ export type ResultFound = {
   path: string | null
 }
 
+export type Resolver = LegacyResolver
+
 export type ResolvedResult = ResultNotFound | ResultFound
-
-export type ResolverResolve<T = unknown> = (
-  modulePath: string,
-  sourceFile: string,
-  config: T,
-) => ResolvedResult
-
-export type ResolverResolveImport<T = unknown> = (
-  modulePath: string,
-  sourceFile: string,
-  config: T,
-) => string | undefined
-
-export type Resolver<T = unknown, U = T> = {
-  interfaceVersion?: 1 | 2
-  resolve: ResolverResolve<T>
-  resolveImport: ResolverResolveImport<U>
-}
-
-export type ResolverName = LiteralUnion<
-  'node' | 'typescript' | 'webpack',
-  string
->
-
-export type ResolverRecord = {
-  node?: boolean | NodeResolverOptions
-  typescript?: boolean | TsResolverOptions
-  webpack?: WebpackResolverOptions
-  [resolve: string]: unknown
-}
-
-export type ResolverObject = {
-  // node, typescript, webpack...
-  name: ResolverName
-
-  // Enabled by default
-  enable?: boolean
-
-  // Options passed to the resolver
-  options?:
-    | NodeResolverOptions
-    | TsResolverOptions
-    | WebpackResolverOptions
-    | unknown
-
-  // Any object satisfied Resolver type
-  resolver: Resolver
-}
-
-export type ImportResolver =
-  | ResolverName
-  | ResolverRecord
-  | ResolverObject
-  | ResolverName[]
-  | ResolverRecord[]
-  | ResolverObject[]
 
 export type ImportSettings = {
   cache?: {
@@ -112,7 +79,7 @@ export type ImportSettings = {
   internalRegex?: string
   parsers?: Record<string, readonly FileExtension[]>
   resolve?: NodeResolverOptions
-  resolver?: ImportResolver
+  resolver?: LegacyImportResolver
 }
 
 export type WithPluginName<T extends string | object> = T extends string

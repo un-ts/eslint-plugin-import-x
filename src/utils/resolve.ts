@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import stableHash from 'stable-hash'
@@ -9,13 +8,11 @@ import type {
   PluginSettings,
   RuleContext,
   Resolver,
-  ImportResolver,
-  ResolverRecord,
-  ResolverObject,
+  ResolvedResult,
 } from '../types'
 
 import { ModuleCache } from './module-cache'
-import { pkgDir } from './pkg-dir'
+import { normalizeConfigResolvers } from './legacy-resolver-settings'
 
 export const CASE_SENSITIVE_FS = !fs.existsSync(
   path.resolve(
@@ -24,34 +21,10 @@ export const CASE_SENSITIVE_FS = !fs.existsSync(
   ),
 )
 
-const ERROR_NAME = 'EslintPluginImportResolveError'
+export const IMPORT_RESOLVE_ERROR_NAME = 'EslintPluginImportResolveError'
 
-const fileExistsCache = new ModuleCache()
+export const fileExistsCache = new ModuleCache()
 
-function tryRequire<T>(
-  target: string,
-  sourceFile?: string | null,
-): undefined | T {
-  let resolved
-  try {
-    // Check if the target exists
-    if (sourceFile == null) {
-      resolved = require.resolve(target)
-    } else {
-      try {
-        resolved = createRequire(path.resolve(sourceFile)).resolve(target)
-      } catch {
-        resolved = require.resolve(target)
-      }
-    }
-  } catch {
-    // If the target does not exist then just return undefined
-    return undefined
-  }
-
-  // If the target exists then return the loaded module
-  return require(resolved)
-}
 
 // https://stackoverflow.com/a/27382838
 export function fileExistsWithCaseSync(
@@ -125,7 +98,7 @@ function fullResolve(
     return { found: true, path: cachedPath }
   }
 
-  function withResolver(resolver: Resolver, config: unknown) {
+  function withResolver(resolver: Resolver, config: unknown): ResolvedResult {
     if (resolver.interfaceVersion === 2) {
       return resolver.resolve(modulePath, sourceFile, config)
     }
@@ -183,100 +156,6 @@ export function relative(
   return fullResolve(modulePath, sourceFile, settings).path
 }
 
-function normalizeConfigResolvers(
-  resolvers: ImportResolver,
-  sourceFile: string,
-) {
-  const resolverArray = Array.isArray(resolvers) ? resolvers : [resolvers]
-  const map = new Map<string, Required<ResolverObject>>()
-
-  for (const nameOrRecordOrObject of resolverArray) {
-    if (typeof nameOrRecordOrObject === 'string') {
-      const name = nameOrRecordOrObject
-
-      map.set(name, {
-        name,
-        enable: true,
-        options: undefined,
-        resolver: requireResolver(name, sourceFile),
-      })
-    } else if (typeof nameOrRecordOrObject === 'object') {
-      if (nameOrRecordOrObject.name && nameOrRecordOrObject.resolver) {
-        const object = nameOrRecordOrObject as ResolverObject
-
-        const { name, enable = true, options, resolver } = object
-        map.set(name, { name, enable, options, resolver })
-      } else {
-        const record = nameOrRecordOrObject as ResolverRecord
-
-        for (const [name, enableOrOptions] of Object.entries(record)) {
-          if (typeof enableOrOptions === 'boolean') {
-            map.set(name, {
-              name,
-              enable: enableOrOptions,
-              options: undefined,
-              resolver: requireResolver(name, sourceFile),
-            })
-          } else {
-            map.set(name, {
-              name,
-              enable: true,
-              options: enableOrOptions,
-              resolver: requireResolver(name, sourceFile),
-            })
-          }
-        }
-      }
-    } else {
-      const err = new Error('invalid resolver config')
-      err.name = ERROR_NAME
-      throw err
-    }
-  }
-
-  return [...map.values()]
-}
-
-function getBaseDir(sourceFile: string): string {
-  return pkgDir(sourceFile) || process.cwd()
-}
-
-function requireResolver(name: string, sourceFile: string) {
-  // Try to resolve package with conventional name
-  const resolver =
-    tryRequire(`eslint-import-resolver-${name}`, sourceFile) ||
-    tryRequire(name, sourceFile) ||
-    tryRequire(path.resolve(getBaseDir(sourceFile), name))
-
-  if (!resolver) {
-    const err = new Error(`unable to load resolver "${name}".`)
-    err.name = ERROR_NAME
-    throw err
-  }
-  if (!isResolverValid(resolver)) {
-    const err = new Error(`${name} with invalid interface loaded as resolver`)
-    err.name = ERROR_NAME
-    throw err
-  }
-
-  return resolver
-}
-
-function isResolverValid(resolver: object): resolver is Resolver {
-  if ('interfaceVersion' in resolver && resolver.interfaceVersion === 2) {
-    return (
-      'resolve' in resolver &&
-      !!resolver.resolve &&
-      typeof resolver.resolve === 'function'
-    )
-  }
-  return (
-    'resolveImport' in resolver &&
-    !!resolver.resolveImport &&
-    typeof resolver.resolveImport === 'function'
-  )
-}
-
 const erroredContexts = new Set<RuleContext>()
 
 /**
@@ -294,7 +173,7 @@ export function resolve(p: string, context: RuleContext) {
       // The `err.stack` string starts with `err.name` followed by colon and `err.message`.
       // We're filtering out the default `err.name` because it adds little value to the message.
       let errMessage = error.message
-      if (error.name !== ERROR_NAME && error.stack) {
+      if (error.name !== IMPORT_RESOLVE_ERROR_NAME && error.stack) {
         errMessage = error.stack.replace(/^Error: /, '')
       }
       context.report({
@@ -309,3 +188,5 @@ export function resolve(p: string, context: RuleContext) {
     }
   }
 }
+
+
