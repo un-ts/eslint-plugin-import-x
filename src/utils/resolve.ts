@@ -8,11 +8,12 @@ import type {
   PluginSettings,
   RuleContext,
   Resolver,
+  LegacyResolver,
   ResolvedResult,
 } from '../types'
 
 import { ModuleCache } from './module-cache'
-import { normalizeConfigResolvers } from './legacy-resolver-settings'
+import { normalizeConfigResolvers, resolveWithLegacyResolver } from './legacy-resolver-settings'
 
 export const CASE_SENSITIVE_FS = !fs.existsSync(
   path.resolve(
@@ -98,49 +99,38 @@ function fullResolve(
     return { found: true, path: cachedPath }
   }
 
-  function withResolver(resolver: Resolver, config: unknown): ResolvedResult {
-    if (resolver.interfaceVersion === 2) {
-      return resolver.resolve(modulePath, sourceFile, config)
-    }
+  if (Object.prototype.hasOwnProperty.call(settings, 'import-x/resolver-next') && settings['import-x/resolver-next']) {
+    const configResolvers = settings['import-x/resolver-next']
 
-    try {
-      const resolved = resolver.resolveImport(modulePath, sourceFile, config)
-      if (resolved === undefined) {
-        return {
-          found: false,
-        }
+    for (const resolver of configResolvers) {
+      const resolved = resolver.resolve(modulePath, sourceFile)
+      if (!resolved.found) {
+        continue
       }
-      return {
-        found: true,
-        path: resolved,
+
+      // else, counts
+      fileExistsCache.set(cacheKey, resolved.path as string | null)
+      return resolved
+    }
+  } else {
+    const configResolvers = settings['import-x/resolver'] || {
+      node: settings['import-x/resolve'],
+    } // backward compatibility
+
+    for (const { enable, options, resolver } of normalizeConfigResolvers(configResolvers, sourceFile)) {
+      if (!enable) {
+        continue
       }
-    } catch {
-      return {
-        found: false,
+
+      const resolved = resolveWithLegacyResolver(resolver, options, modulePath, sourceFile)
+      if (!resolved.found) {
+        continue
       }
+
+      // else, counts
+      fileExistsCache.set(cacheKey, resolved.path as string | null)
+      return resolved
     }
-  }
-
-  const configResolvers = settings['import-x/resolver'] || {
-    node: settings['import-x/resolve'],
-  } // backward compatibility
-
-  const resolvers = normalizeConfigResolvers(configResolvers, sourceFile)
-
-  for (const { enable, options, resolver } of resolvers) {
-    if (!enable) {
-      continue
-    }
-
-    const resolved = withResolver(resolver, options)
-
-    if (!resolved.found) {
-      continue
-    }
-
-    // else, counts
-    fileExistsCache.set(cacheKey, resolved.path as string | null)
-    return resolved
   }
 
   // failed

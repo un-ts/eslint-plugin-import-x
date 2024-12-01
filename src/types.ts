@@ -7,6 +7,8 @@ import type { ImportType as ImportType_, PluginName } from './utils'
 import type { LegacyImportResolver, LegacyResolver } from './utils/legacy-resolver-settings'
 
 export type {
+  LegacyResolver,
+
   LegacyResolverName,
   LegacyResolverName as ResolverName,
 
@@ -47,6 +49,20 @@ export type TsResolverOptions = {
   extensions?: string[]
 } & Omit<ResolveOptions, 'fileSystem' | 'useSyncFileSystemCalls'>
 
+// TODO: remove prefix New in the next major version
+export type NewResolverResolve = (
+  modulePath: string,
+  sourceFile: string,
+) => ResolvedResult
+
+// TODO: remove prefix New in the next major version
+export type NewResolver = {
+  interfaceVersion: 3,
+  /** optional name for the resolver, this is used in logs/debug output */
+  name?: string,
+  resolve: NewResolverResolve,
+}
+
 export type FileExtension = `.${string}`
 
 export type DocStyle = 'jsdoc' | 'tomdoc'
@@ -63,7 +79,7 @@ export type ResultFound = {
   path: string | null
 }
 
-export type Resolver = LegacyResolver
+export type Resolver = LegacyResolver | NewResolver
 
 export type ResolvedResult = ResultNotFound | ResultFound
 
@@ -80,6 +96,7 @@ export type ImportSettings = {
   parsers?: Record<string, readonly FileExtension[]>
   resolve?: NodeResolverOptions
   resolver?: LegacyImportResolver
+  'resolver-next'?: NewResolver[]
 }
 
 export type WithPluginName<T extends string | object> = T extends string

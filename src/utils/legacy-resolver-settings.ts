@@ -64,6 +64,29 @@ export type LegacyImportResolver =
   | LegacyResolverRecord[]
   | LegacyResolverObject[];
 
+export function resolveWithLegacyResolver(resolver: LegacyResolver, config: unknown, modulePath: string, sourceFile: string): ResolvedResult {
+  if (resolver.interfaceVersion === 2) {
+    return resolver.resolve(modulePath, sourceFile, config)
+  }
+
+  try {
+    const resolved = resolver.resolveImport(modulePath, sourceFile, config)
+    if (resolved === undefined) {
+      return {
+        found: false,
+      }
+    }
+    return {
+      found: true,
+      path: resolved,
+    }
+  } catch {
+    return {
+      found: false,
+    }
+  }
+}
+
 export function normalizeConfigResolvers(
   resolvers: LegacyImportResolver,
   sourceFile: string,
