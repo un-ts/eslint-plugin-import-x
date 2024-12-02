@@ -5,6 +5,7 @@ import stableHash from 'stable-hash'
 
 import type {
   ImportSettings,
+  LegacyResolver,
   NewResolver,
   PluginSettings,
   RuleContext,
@@ -74,7 +75,8 @@ function isNamedResolver(resolver: unknown): resolver is { name: string } {
     typeof resolver === 'object' &&
     resolver &&
     'name' in resolver &&
-    typeof resolver.name === 'string'
+    typeof resolver.name === 'string' &&
+    resolver.name
   )
 }
 
@@ -231,5 +233,28 @@ export function resolve(p: string, context: RuleContext) {
       })
       erroredContexts.add(context)
     }
+  }
+}
+
+export function importXResolverCompat(resolver: LegacyResolver | NewResolver, resolverOptions: unknown = {}): NewResolver {
+  // Somehow the resolver is already using v3 interface
+  if (isValidNewResolver(resolver)) {
+    return resolver
+  }
+
+  return {
+    // deliberately not providing the name, because we can't get the name from legacy resolvers
+    // By omitting the name, the log will use identifiable name like `settings['import-x/resolver-next'][0]`
+    // name: 'import-x-resolver-compat',
+    interfaceVersion: 3,
+    resolve: (modulePath, sourceFile) => {
+      const resolved = resolveWithLegacyResolver(
+        resolver,
+        resolverOptions,
+        modulePath,
+        sourceFile,
+      )
+      return resolved
+    },
   }
 }

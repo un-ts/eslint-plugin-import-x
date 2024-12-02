@@ -71,6 +71,7 @@ import type {
   PluginFlatBaseConfig,
   PluginFlatConfig,
 } from './types'
+import { importXResolverCompat } from './utils'
 
 const rules = {
   'no-unresolved': noUnresolved,
@@ -181,4 +182,5 @@ export = {
   configs,
   flatConfigs,
   rules,
+  importXResolverCompat
 }
