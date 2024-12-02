@@ -6,14 +6,14 @@ import type { TSESLint } from '@typescript-eslint/utils'
 
 import { testContext, testFilePath } from '../utils'
 
+import eslintPluginImportX from 'eslint-plugin-import-x'
 import {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
-  resolve
+  resolve,
 } from 'eslint-plugin-import-x/utils'
 
-import eslintPluginImportX from 'eslint-plugin-import-x'
-const { importXResolverCompat } = eslintPluginImportX;
+const { importXResolverCompat } = eslintPluginImportX
 
 describe('resolve', () => {
   it('throws on bad parameters', () => {

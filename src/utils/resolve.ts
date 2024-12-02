@@ -146,7 +146,9 @@ function fullResolve(
         : `settings['import-x/resolver-next'][${i}]`
 
       if (!isValidNewResolver(resolver)) {
-        const err = new TypeError(`${resolverName} is not a valid import resolver for eslint-plugin-import-x!`)
+        const err = new TypeError(
+          `${resolverName} is not a valid import resolver for eslint-plugin-import-x!`,
+        )
         err.name = IMPORT_RESOLVE_ERROR_NAME
         throw err
       }
@@ -236,7 +238,10 @@ export function resolve(p: string, context: RuleContext) {
   }
 }
 
-export function importXResolverCompat(resolver: LegacyResolver | NewResolver, resolverOptions: unknown = {}): NewResolver {
+export function importXResolverCompat(
+  resolver: LegacyResolver | NewResolver,
+  resolverOptions: unknown = {},
+): NewResolver {
   // Somehow the resolver is already using v3 interface
   if (isValidNewResolver(resolver)) {
     return resolver

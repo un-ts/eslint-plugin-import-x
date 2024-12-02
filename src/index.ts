@@ -182,5 +182,5 @@ export = {
   configs,
   flatConfigs,
   rules,
-  importXResolverCompat
+  importXResolverCompat,
 }
