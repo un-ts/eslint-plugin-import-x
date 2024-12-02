@@ -5,15 +5,16 @@ import stableHash from 'stable-hash'
 
 import type {
   ImportSettings,
+  NewResolver,
   PluginSettings,
   RuleContext,
-  Resolver,
-  LegacyResolver,
-  ResolvedResult,
 } from '../types'
 
+import {
+  normalizeConfigResolvers,
+  resolveWithLegacyResolver,
+} from './legacy-resolver-settings'
 import { ModuleCache } from './module-cache'
-import { normalizeConfigResolvers, resolveWithLegacyResolver } from './legacy-resolver-settings'
 
 export const CASE_SENSITIVE_FS = !fs.existsSync(
   path.resolve(
@@ -25,7 +26,6 @@ export const CASE_SENSITIVE_FS = !fs.existsSync(
 export const IMPORT_RESOLVE_ERROR_NAME = 'EslintPluginImportResolveError'
 
 export const fileExistsCache = new ModuleCache()
-
 
 // https://stackoverflow.com/a/27382838
 export function fileExistsWithCaseSync(
@@ -69,6 +69,38 @@ export function fileExistsWithCaseSync(
 let prevSettings: PluginSettings | null = null
 let memoizedHash: string
 
+function isNamedResolver(resolver: unknown): resolver is { name: string } {
+  return !!(
+    typeof resolver === 'object' &&
+    resolver &&
+    'name' in resolver &&
+    typeof resolver.name === 'string'
+  )
+}
+
+function isValidNewResolver(resolver: unknown): resolver is NewResolver {
+  if (typeof resolver !== 'object' || resolver == null) {
+    return false
+  }
+
+  if (!('resolve' in resolver) || !('interfaceVersion' in resolver)) {
+    return false
+  }
+
+  if (
+    typeof resolver.interfaceVersion !== 'number' ||
+    resolver.interfaceVersion !== 3
+  ) {
+    return false
+  }
+
+  if (typeof resolver.resolve !== 'function') {
+    return false
+  }
+
+  return true
+}
+
 function fullResolve(
   modulePath: string,
   sourceFile: string,
@@ -99,10 +131,24 @@ function fullResolve(
     return { found: true, path: cachedPath }
   }
 
-  if (Object.prototype.hasOwnProperty.call(settings, 'import-x/resolver-next') && settings['import-x/resolver-next']) {
+  if (
+    Object.prototype.hasOwnProperty.call(settings, 'import-x/resolver-next') &&
+    settings['import-x/resolver-next']
+  ) {
     const configResolvers = settings['import-x/resolver-next']
 
-    for (const resolver of configResolvers) {
+    for (let i = 0, len = configResolvers.length; i < len; i++) {
+      const resolver = configResolvers[i]
+      const resolverName = isNamedResolver(resolver)
+        ? resolver.name
+        : `settings['import-x/resolver-next'][${i}]`
+
+      if (!isValidNewResolver(resolver)) {
+        const err = new TypeError(`${resolverName} is not a valid import resolver for eslint-plugin-import-x!`)
+        err.name = IMPORT_RESOLVE_ERROR_NAME
+        throw err
+      }
+
       const resolved = resolver.resolve(modulePath, sourceFile)
       if (!resolved.found) {
         continue
@@ -113,16 +159,25 @@ function fullResolve(
       return resolved
     }
   } else {
-    const configResolvers = settings['import-x/resolver'] || {
-      node: settings['import-x/resolve'],
-    } // backward compatibility
+    const configResolvers = settings['import-x/resolver-legacy'] ||
+      settings['import-x/resolver'] || {
+        node: settings['import-x/resolve'],
+      } // backward compatibility
 
-    for (const { enable, options, resolver } of normalizeConfigResolvers(configResolvers, sourceFile)) {
+    for (const { enable, options, resolver } of normalizeConfigResolvers(
+      configResolvers,
+      sourceFile,
+    )) {
       if (!enable) {
         continue
       }
 
-      const resolved = resolveWithLegacyResolver(resolver, options, modulePath, sourceFile)
+      const resolved = resolveWithLegacyResolver(
+        resolver,
+        options,
+        modulePath,
+        sourceFile,
+      )
       if (!resolved.found) {
         continue
       }
@@ -178,5 +233,3 @@ export function resolve(p: string, context: RuleContext) {
     }
   }
 }
-
-

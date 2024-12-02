@@ -104,6 +104,42 @@ describe('resolve', () => {
     expect(testContextReports.length).toBe(0)
   })
 
+  it('resolves via a custom resolver with interface version 3', () => {
+    const context = testContext({
+      'import-x/resolver-next': [
+        require('../fixtures/foo-bar-resolver-v3').foobarResolver,
+      ],
+    })
+    const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
+    context.report = reportInfo => {
+      testContextReports.push(reportInfo)
+    }
+
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
+
+    testContextReports.length = 0
+    expect(
+      resolve('../fixtures/exception', {
+        ...context,
+        physicalFilename: testFilePath('exception.js'),
+      }),
+    ).toBeUndefined()
+    expect(testContextReports[0]).toBeInstanceOf(Object)
+    expect(
+      'message' in testContextReports[0] && testContextReports[0].message,
+    ).toMatch('Resolve error: foo-bar-resolver-v3 resolve test exception')
+    expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
+
+    testContextReports.length = 0
+    expect(
+      resolve('../fixtures/not-found', {
+        ...context,
+        physicalFilename: testFilePath('not-found.js'),
+      }),
+    ).toBeUndefined()
+    expect(testContextReports.length).toBe(0)
+  })
+
   it('reports invalid import-x/resolver config', () => {
     const context = testContext({
       // @ts-expect-error - testing
@@ -179,165 +215,199 @@ describe('resolve', () => {
     expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
   })
 
-  // context.getPhysicalFilename() is available in ESLint 7.28+
-  ;(semver.satisfies(eslintPkg.version, '>= 7.28') ? describe : describe.skip)(
-    'getPhysicalFilename()',
-    () => {
-      it('resolves via a custom resolver with interface version 1', () => {
-        const context = testContext({
-          'import-x/resolver': './foo-bar-resolver-v1',
-        })
-
-        expect(resolve('../fixtures/foo', context)).toBe(
-          testFilePath('./bar.jsx'),
-        )
-
-        expect(
-          resolve('../fixtures/exception', {
-            ...context,
-            physicalFilename: testFilePath('exception.js'),
-          }),
-        ).toBeUndefined()
-
-        expect(
-          resolve('../fixtures/not-found', {
-            ...context,
-            physicalFilename: testFilePath('not-found.js'),
-          }),
-        ).toBeUndefined()
+  describe('getPhysicalFilename()', () => {
+    it('resolves via a custom resolver with interface version 1', () => {
+      const context = testContext({
+        'import-x/resolver': './foo-bar-resolver-v1',
       })
 
-      it('resolves via a custom resolver with interface version 1 assumed if not specified', () => {
-        const context = testContext({
-          'import-x/resolver': './foo-bar-resolver-no-version',
-        })
+      expect(resolve('../fixtures/foo', context)).toBe(
+        testFilePath('./bar.jsx'),
+      )
 
-        expect(resolve('../fixtures/foo', context)).toBe(
-          testFilePath('./bar.jsx'),
-        )
+      expect(
+        resolve('../fixtures/exception', {
+          ...context,
+          physicalFilename: testFilePath('exception.js'),
+        }),
+      ).toBeUndefined()
 
-        expect(
-          resolve('../fixtures/exception', {
-            ...context,
-            physicalFilename: testFilePath('exception.js'),
-          }),
-        ).toBeUndefined()
+      expect(
+        resolve('../fixtures/not-found', {
+          ...context,
+          physicalFilename: testFilePath('not-found.js'),
+        }),
+      ).toBeUndefined()
+    })
 
-        expect(
-          resolve('../fixtures/not-found', {
-            ...context,
-            physicalFilename: testFilePath('not-found.js'),
-          }),
-        ).toBeUndefined()
+    it('resolves via a custom resolver with interface version 1 assumed if not specified', () => {
+      const context = testContext({
+        'import-x/resolver': './foo-bar-resolver-no-version',
       })
 
-      it('resolves via a custom resolver with interface version 2', () => {
-        const context = testContext({
-          'import-x/resolver': './foo-bar-resolver-v2',
-        })
-        const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
-        context.report = reportInfo => {
-          testContextReports.push(reportInfo)
-        }
+      expect(resolve('../fixtures/foo', context)).toBe(
+        testFilePath('./bar.jsx'),
+      )
 
-        expect(resolve('../fixtures/foo', context)).toBe(
-          testFilePath('./bar.jsx'),
-        )
+      expect(
+        resolve('../fixtures/exception', {
+          ...context,
+          physicalFilename: testFilePath('exception.js'),
+        }),
+      ).toBeUndefined()
 
-        testContextReports.length = 0
-        expect(
-          resolve('../fixtures/exception', {
-            ...context,
-            physicalFilename: testFilePath('exception.js'),
-          }),
-        ).toBeUndefined()
-        expect(testContextReports[0]).toBeInstanceOf(Object)
-        expect(
-          'message' in testContextReports[0] && testContextReports[0].message,
-        ).toMatch('Resolve error: foo-bar-resolver-v2 resolve test exception')
-        expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
+      expect(
+        resolve('../fixtures/not-found', {
+          ...context,
+          physicalFilename: testFilePath('not-found.js'),
+        }),
+      ).toBeUndefined()
+    })
 
-        testContextReports.length = 0
-        expect(
-          resolve('../fixtures/not-found', {
-            ...context,
-            physicalFilename: testFilePath('not-found.js'),
-          }),
-        ).toBeUndefined()
-        expect(testContextReports.length).toBe(0)
+    it('resolves via a custom resolver with interface version 2', () => {
+      const context = testContext({
+        'import-x/resolver': './foo-bar-resolver-v2',
+      })
+      const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
+      context.report = reportInfo => {
+        testContextReports.push(reportInfo)
+      }
+
+      expect(resolve('../fixtures/foo', context)).toBe(
+        testFilePath('./bar.jsx'),
+      )
+
+      testContextReports.length = 0
+      expect(
+        resolve('../fixtures/exception', {
+          ...context,
+          physicalFilename: testFilePath('exception.js'),
+        }),
+      ).toBeUndefined()
+      expect(testContextReports[0]).toBeInstanceOf(Object)
+      expect(
+        'message' in testContextReports[0] && testContextReports[0].message,
+      ).toMatch('Resolve error: foo-bar-resolver-v2 resolve test exception')
+      expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
+
+      testContextReports.length = 0
+      expect(
+        resolve('../fixtures/not-found', {
+          ...context,
+          physicalFilename: testFilePath('not-found.js'),
+        }),
+      ).toBeUndefined()
+      expect(testContextReports.length).toBe(0)
+    })
+
+    it('resolves via a custom resolver with interface version 3', () => {
+      const context = testContext({
+        'import-x/resolver-next': [
+          require('../fixtures/foo-bar-resolver-v3').foobarResolver,
+        ],
+      })
+      const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
+      context.report = reportInfo => {
+        testContextReports.push(reportInfo)
+      }
+
+      expect(resolve('../fixtures/foo', context)).toBe(
+        testFilePath('./bar.jsx'),
+      )
+
+      testContextReports.length = 0
+      expect(
+        resolve('../fixtures/exception', {
+          ...context,
+          physicalFilename: testFilePath('exception.js'),
+        }),
+      ).toBeUndefined()
+      expect(testContextReports[0]).toBeInstanceOf(Object)
+      expect(
+        'message' in testContextReports[0] && testContextReports[0].message,
+      ).toMatch('Resolve error: foo-bar-resolver-v3 resolve test exception')
+      expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
+
+      testContextReports.length = 0
+      expect(
+        resolve('../fixtures/not-found', {
+          ...context,
+          physicalFilename: testFilePath('not-found.js'),
+        }),
+      ).toBeUndefined()
+      expect(testContextReports.length).toBe(0)
+    })
+
+    it('reports invalid import-x/resolver config', () => {
+      const context = testContext({
+        // @ts-expect-error - testing
+        'import-x/resolver': 123.456,
+      })
+      const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
+      context.report = reportInfo => {
+        testContextReports.push(reportInfo)
+      }
+
+      testContextReports.length = 0
+      expect(resolve('../fixtures/foo', context)).toBeUndefined()
+      expect(testContextReports[0]).toBeInstanceOf(Object)
+      expect(
+        'message' in testContextReports[0] && testContextReports[0].message,
+      ).toMatch('Resolve error: invalid resolver config')
+      expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
+    })
+
+    it('reports loaded resolver with invalid interface', () => {
+      const resolverName = './foo-bar-resolver-invalid'
+      const context = testContext({
+        'import-x/resolver': resolverName,
+      })
+      const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
+      context.report = reportInfo => {
+        testContextReports.push(reportInfo)
+      }
+      expect(resolve('../fixtures/foo', context)).toBeUndefined()
+      expect(testContextReports[0]).toBeInstanceOf(Object)
+      expect(
+        'message' in testContextReports[0] && testContextReports[0].message,
+      ).toMatch(
+        `Resolve error: ${resolverName} with invalid interface loaded as resolver`,
+      )
+      expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
+    })
+
+    it('respects import-x/resolve extensions', () => {
+      const context = testContext({
+        'import-x/resolve': { extensions: ['.jsx'] },
       })
 
-      it('reports invalid import-x/resolver config', () => {
-        const context = testContext({
-          // @ts-expect-error - testing
-          'import-x/resolver': 123.456,
-        })
-        const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
-        context.report = reportInfo => {
-          testContextReports.push(reportInfo)
-        }
+      expect(resolve('./jsx/MyCoolComponent', context)).toBe(
+        testFilePath('./jsx/MyCoolComponent.jsx'),
+      )
+    })
 
-        testContextReports.length = 0
-        expect(resolve('../fixtures/foo', context)).toBeUndefined()
-        expect(testContextReports[0]).toBeInstanceOf(Object)
-        expect(
-          'message' in testContextReports[0] && testContextReports[0].message,
-        ).toMatch('Resolve error: invalid resolver config')
-        expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
+    it('reports load exception in a user resolver', () => {
+      const context = testContext({
+        'import-x/resolver': './load-error-resolver',
       })
+      const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
+      context.report = reportInfo => {
+        testContextReports.push(reportInfo)
+      }
 
-      it('reports loaded resolver with invalid interface', () => {
-        const resolverName = './foo-bar-resolver-invalid'
-        const context = testContext({
-          'import-x/resolver': resolverName,
-        })
-        const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
-        context.report = reportInfo => {
-          testContextReports.push(reportInfo)
-        }
-        expect(resolve('../fixtures/foo', context)).toBeUndefined()
-        expect(testContextReports[0]).toBeInstanceOf(Object)
-        expect(
-          'message' in testContextReports[0] && testContextReports[0].message,
-        ).toMatch(
-          `Resolve error: ${resolverName} with invalid interface loaded as resolver`,
-        )
-        expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
-      })
-
-      it('respects import-x/resolve extensions', () => {
-        const context = testContext({
-          'import-x/resolve': { extensions: ['.jsx'] },
-        })
-
-        expect(resolve('./jsx/MyCoolComponent', context)).toBe(
-          testFilePath('./jsx/MyCoolComponent.jsx'),
-        )
-      })
-
-      it('reports load exception in a user resolver', () => {
-        const context = testContext({
-          'import-x/resolver': './load-error-resolver',
-        })
-        const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
-        context.report = reportInfo => {
-          testContextReports.push(reportInfo)
-        }
-
-        expect(
-          resolve('../fixtures/exception', {
-            ...context,
-            physicalFilename: testFilePath('exception.js'),
-          }),
-        ).toBeUndefined()
-        expect(testContextReports[0]).toBeInstanceOf(Object)
-        expect(
-          'message' in testContextReports[0] && testContextReports[0].message,
-        ).toMatch('Resolve error: SyntaxError: TEST SYNTAX ERROR')
-        expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
-      })
-    },
-  )
+      expect(
+        resolve('../fixtures/exception', {
+          ...context,
+          physicalFilename: testFilePath('exception.js'),
+        }),
+      ).toBeUndefined()
+      expect(testContextReports[0]).toBeInstanceOf(Object)
+      expect(
+        'message' in testContextReports[0] && testContextReports[0].message,
+      ).toMatch('Resolve error: SyntaxError: TEST SYNTAX ERROR')
+      expect(testContextReports[0].loc).toEqual({ line: 1, column: 0 })
+    })
+  })
 
   const caseDescribe = CASE_SENSITIVE_FS ? describe.skip : describe
 
@@ -563,10 +633,7 @@ describe('resolve', () => {
       ).toBe(testFilePath('./bar.jsx'))
     })
 
-    // context.getPhysicalFilename() is available in ESLint 7.28+
-    ;(semver.satisfies(eslintPkg.version, '>= 7.28')
-      ? describe
-      : describe.skip)('getPhysicalFilename()', () => {
+    describe('getPhysicalFilename()', () => {
       it('as resolver package name(s)', () => {
         expect(
           resolve(

@@ -1,12 +1,19 @@
 // Although the new import resolver settings is still `import-x/resolver-next`, but it won't stop us from calling existing ones legacy~
 
-import type { LiteralUnion } from "type-fest"
-
 import { createRequire } from 'node:module'
-import type { NodeResolverOptions, ResolvedResult, TsResolverOptions, WebpackResolverOptions } from "../types"
-import path from "path"
-import { IMPORT_RESOLVE_ERROR_NAME } from "./resolve"
+import path from 'node:path'
+
+import type { LiteralUnion } from 'type-fest'
+
+import type {
+  NodeResolverOptions,
+  ResolvedResult,
+  TsResolverOptions,
+  WebpackResolverOptions,
+} from '../types'
+
 import { pkgDir } from './pkg-dir'
+import { IMPORT_RESOLVE_ERROR_NAME } from './resolve'
 
 export type LegacyResolverName = LiteralUnion<
   'node' | 'typescript' | 'webpack',
@@ -40,10 +47,10 @@ export type LegacyResolverObject = {
 
   // Options passed to the resolver
   options?:
-  | NodeResolverOptions
-  | TsResolverOptions
-  | WebpackResolverOptions
-  | unknown
+    | NodeResolverOptions
+    | TsResolverOptions
+    | WebpackResolverOptions
+    | unknown
 
   // Any object satisfied Resolver type
   resolver: LegacyResolver
@@ -62,9 +69,14 @@ export type LegacyImportResolver =
   | LegacyResolverObject
   | LegacyResolverName[]
   | LegacyResolverRecord[]
-  | LegacyResolverObject[];
+  | LegacyResolverObject[]
 
-export function resolveWithLegacyResolver(resolver: LegacyResolver, config: unknown, modulePath: string, sourceFile: string): ResolvedResult {
+export function resolveWithLegacyResolver(
+  resolver: LegacyResolver,
+  config: unknown,
+  modulePath: string,
+  sourceFile: string,
+): ResolvedResult {
   if (resolver.interfaceVersion === 2) {
     return resolver.resolve(modulePath, sourceFile, config)
   }
@@ -201,7 +213,6 @@ function tryRequire<T>(
   // If the target exists then return the loaded module
   return require(resolved)
 }
-
 
 function getBaseDir(sourceFile: string): string {
   return pkgDir(sourceFile) || process.cwd()

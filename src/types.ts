@@ -4,26 +4,29 @@ import type { MinimatchOptions } from 'minimatch'
 import type { KebabCase } from 'type-fest'
 
 import type { ImportType as ImportType_, PluginName } from './utils'
-import type { LegacyImportResolver, LegacyResolver } from './utils/legacy-resolver-settings'
+import type {
+  LegacyImportResolver,
+  LegacyResolver,
+} from './utils/legacy-resolver-settings'
 
 export type {
   LegacyResolver,
-
+  // ResolverName
   LegacyResolverName,
   LegacyResolverName as ResolverName,
-
+  // ImportResolver
   LegacyImportResolver,
   LegacyImportResolver as ImportResolver,
-
+  // ResolverResolve
   LegacyResolverResolve,
   LegacyResolverResolve as ResolverResolve,
-
+  // ResolverResolveImport
   LegacyResolverResolveImport,
   LegacyResolverResolveImport as ResolverResolveImport,
-
+  // ResolverRecord
   LegacyResolverRecord,
   LegacyResolverRecord as ResolverRecord,
-
+  // ResolverObject
   LegacyResolverObject,
   LegacyResolverObject as ResolverObject,
 } from './utils/legacy-resolver-settings'
@@ -57,10 +60,10 @@ export type NewResolverResolve = (
 
 // TODO: remove prefix New in the next major version
 export type NewResolver = {
-  interfaceVersion: 3,
+  interfaceVersion: 3
   /** optional name for the resolver, this is used in logs/debug output */
-  name?: string,
-  resolve: NewResolverResolve,
+  name?: string
+  resolve: NewResolverResolve
 }
 
 export type FileExtension = `.${string}`
@@ -96,6 +99,7 @@ export type ImportSettings = {
   parsers?: Record<string, readonly FileExtension[]>
   resolve?: NodeResolverOptions
   resolver?: LegacyImportResolver
+  'resolver-legacy'?: LegacyImportResolver
   'resolver-next'?: NewResolver[]
 }
 
