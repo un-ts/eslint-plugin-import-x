@@ -3,16 +3,17 @@ import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
 import type { TSESLint } from '@typescript-eslint/utils'
-import eslintPkg from 'eslint/package.json'
-import semver from 'semver'
 
 import { testContext, testFilePath } from '../utils'
 
 import {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
-  resolve,
+  resolve
 } from 'eslint-plugin-import-x/utils'
+
+import eslintPluginImportX from 'eslint-plugin-import-x'
+const { importXResolverCompat } = eslintPluginImportX;
 
 describe('resolve', () => {
   it('throws on bad parameters', () => {
@@ -138,6 +139,22 @@ describe('resolve', () => {
       }),
     ).toBeUndefined()
     expect(testContextReports.length).toBe(0)
+  })
+
+  it('importXResolverCompat()', () => {
+    let context = testContext({
+      'import-x/resolver-next': [
+        importXResolverCompat(require('../fixtures/foo-bar-resolver-v2')),
+      ],
+    })
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
+
+    context = testContext({
+      'import-x/resolver-next': [
+        importXResolverCompat(require('../fixtures/foo-bar-resolver-v1')),
+      ],
+    })
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
   })
 
   it('reports invalid import-x/resolver config', () => {
