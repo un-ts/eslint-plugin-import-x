@@ -1,20 +1,35 @@
-The PR implements the new resolver design proposed in https://github.com/un-ts/eslint-plugin-import-x/issues/40#issuecomment-2381444266
+---
+"eslint-plugin-import-x": minor
+---
 
-----
+The PR implements the new resolver design proposed in https://github.com/un-ts/eslint-plugin-import-x/issues/40#issuecomment-2381444266
 
 ### For `eslint-plugin-import-x` users
 
-Like the ESLint flat config allows you to use any js objects (e.g. import and require) as ESLint plugins, the new `eslint-plugin-import-x` resolver settings allow you to use any js objects as custom resolvers through the new setting `import-x/resolver-next`:
+Like the ESLint flat config allows you to use js objects (e.g. import and require) as ESLint plugins, the new `eslint-plugin-import-x` resolver settings allow you to use js objects as custom resolvers through the new setting `import-x/resolver-next`:
 
 ```js
 // eslint.config.js
 import { createTsResolver } from '#custom-resolver';
 const { createOxcResolver } = require('path/to/a/custom/resolver');
 
-const nodeResolverObject = {
+const resolverInstance = new ResolverFactory({});
+const customResolverObject = {
   interfaceVersion: 3,
   name: 'my-custom-eslint-import-resolver',
   resolve(modPath, sourcePath) {
+    const path = resolverInstance.resolve(modPath, sourcePath);
+    if (path) {
+      return {
+        found: true,
+        path
+      };
+    }
+
+    return {
+      found: false,
+      path: null
+    }
   };
 };
 
@@ -22,7 +37,7 @@ module.exports = {
   settings: {
     // multiple resolvers
     'import-x/resolver-next': [
-      nodeResolverObject,
+      customResolverObject,
       createTsResolver(enhancedResolverOptions),
       createOxcResolver(oxcOptions),
     ],
@@ -34,22 +49,11 @@ module.exports = {
 
 The new `import-x/resolver-next` no longer accepts strings as the resolver, thus will not be compatible with the ESLint legacy config (a.k.a. `.eslintrc`). Those who are still using the ESLint legacy config should stick with `import-x/resolver`.
 
-In the next major version of `eslint-plugin-import-x` (v5), we will rename the currently existing `import-x/resolver` to `import-x/resolver-legacy` (which still allows the existing ESLint legacy config users to use their existing resolver settings), and `import-x/resolver-next` will become the new `import-x/resolver`. When ESLint v9 (the last ESLint version with ESLint legacy config support) reaches EOL in the future, we will remove `import-x/resolver-legacy`.
+In the next major version of `eslint-plugin-import-x` (v5), we will rename the currently existing `import-x/resolver` to `import-x/resolver-legacy` (which allows the existing ESLint legacy config users to use their existing resolver settings), and `import-x/resolver-next` will become the new `import-x/resolver`. When ESLint v9 (the last ESLint version with ESLint legacy config support) reaches EOL in the future, we will remove `import-x/resolver-legacy`.
 
 We have also made a few breaking changes to the new resolver API design, so you can't use existing custom resolvers directly with `import-x/resolver-next`:
 
 ```js
-// An example of the current `import-x/resolver` settings
-module.exports = {
-  settings: {
-    'import-x/resolver': {
-      node: nodeResolverOpt
-      webpack: webpackResolverOpt,
-      'custom-resolver': customResolverOpt
-    }
-  }
-}
-
 // When migrating to `import-x/resolver-next`, you CAN'T use legacy versions of resolvers directly:
 module.exports = {
   settings: {
@@ -78,7 +82,7 @@ module.exports = {
     'import-x/resolver-next': [
        importXResolverCompat(require('eslint-import-resolver-node'), nodeResolveOptions),
        importXResolverCompat(require('eslint-import-resolver-webpack'), webpackResolveOptions),
-       importXResolverCompat(require('some-custom-resolver'), {})
+       importXResolverCompat(require('some-custom-resolver'), { option1: true, option2: '' })
     ];
   }
 }
