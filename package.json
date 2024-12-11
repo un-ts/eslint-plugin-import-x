@@ -48,6 +48,7 @@
     "eslint": "^8.57.0 || ^9.0.0"
   },
   "dependencies": {
+    "@types/doctrine": "^0.0.9",
     "@typescript-eslint/scope-manager": "^8.1.0",
     "@typescript-eslint/utils": "^8.1.0",
     "debug": "^4.3.4",
@@ -82,7 +83,6 @@
     "@test-scope/some-module": "link:./test/fixtures/symlinked-module",
     "@total-typescript/ts-reset": "^0.5.1",
     "@types/debug": "^4.1.12",
-    "@types/doctrine": "^0.0.9",
     "@types/eslint": "^9.6.1",
     "@types/eslint8.56": "npm:@types/eslint@^8.56.11",
     "@types/eslint9": "npm:@types/eslint@^9.6.1",
