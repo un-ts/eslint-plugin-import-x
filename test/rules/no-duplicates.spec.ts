@@ -818,6 +818,25 @@ describe('TypeScript', () => {
               },
             ],
           }),
+          tInvalid({
+            code: "import type { AType as BType } from './foo'; import { CValue } from './foo'",
+            ...parserConfig,
+            options: [{ 'prefer-inline': true }],
+            output: `import { type AType as BType , CValue } from './foo'; `,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 37,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 69,
+              },
+            ],
+          }),
+
         ]),
   ]
 
