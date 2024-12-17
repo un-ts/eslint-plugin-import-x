@@ -152,7 +152,7 @@ function getFix(
           sourceCode.text
             .slice(openBrace.range[1], closeBrace.range[0])
             .split(',')
-            .map(x => x.split(' as ')[0].trim())
+            .map(x => x.split(' as ')[0].trim()),
         )
 
     const [specifiersText] = specifiers.reduce(

@@ -836,7 +836,6 @@ describe('TypeScript', () => {
               },
             ],
           }),
-
         ]),
   ]
 
