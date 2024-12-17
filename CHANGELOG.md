@@ -1,5 +1,13 @@
 # eslint-plugin-import-x
 
+## 4.5.1
+
+### Patch Changes
+
+- [#198](https://github.com/un-ts/eslint-plugin-import-x/pull/198) [`ac6d2e1`](https://github.com/un-ts/eslint-plugin-import-x/commit/ac6d2e1b39e2a0d01b981b98b58aad0eb7939c70) Thanks [@voxpelli](https://github.com/voxpelli)! - Fix [#197](https://github.com/un-ts/eslint-plugin-import-x/issues/197) with missing types
+
+- [#204](https://github.com/un-ts/eslint-plugin-import-x/pull/204) [`32e9b55`](https://github.com/un-ts/eslint-plugin-import-x/commit/32e9b55aea0c8198c5e7f5cbbdb0bfbd3f71ff08) Thanks [@privatenumber](https://github.com/privatenumber)! - fix type-import and value-import merging when import-as is used
+
 ## 4.5.0
 
 ### Minor Changes
