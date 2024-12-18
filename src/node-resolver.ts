@@ -1,14 +1,16 @@
-import type { NewResolver } from "./types";
-
-import { fileURLToPath, pathToFileURL } from "url";
-import fs from "fs";
-import { createRequire } from "module";
-
-import type { ErrnoException, moduleResolve as $moduleResolve } from '@dual-bundle/import-meta-resolve' with { "resolution-mode": "import" };
-const importMetaResolveExports = require('@dual-bundle/import-meta-resolve');
-const moduleResolve = importMetaResolveExports.moduleResolve as typeof $moduleResolve;
+import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve';
+import fs from 'node:fs';
+import type { NewResolver } from './types';
+import { isBuiltin } from 'node:module';
+import { dirname } from 'node:path';
 
 interface NodeResolverOptions {
+  /**
+   * The allowed extensions the resolver will attempt to find when resolving a module
+   * @type {string[] | undefined}
+   * @default ['.mjs', '.cjs', '.js', '.json', '.node']
+   */
+  extensions?: string[];
   /**
    * The import conditions the resolver will used when reading the exports map from "package.json"
    * @type {Set<string> | undefined}
@@ -23,72 +25,45 @@ interface NodeResolverOptions {
   preserveSymlinks?: boolean;
 }
 
-const assertErrNoException = (error: unknown): error is ErrnoException => {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    typeof error.code === 'string'
-  );
-}
-
 export function createNodeResolver({
+  extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
   conditions = new Set(['default', 'module', 'import', 'require']),
   preserveSymlinks = false,
 }: NodeResolverOptions = {}): NewResolver {
+  const resolver = ResolverFactory.createResolver({
+    fileSystem: new CachedInputFileSystem(fs, 4 * 1000),
+    extensions,
+    conditionNames: Array.from(conditions),
+    symlinks: !preserveSymlinks,
+    useSyncFileSystemCalls: true
+  });
+
+  // shared context across all resolve calls
+
   return {
     interfaceVersion: 3,
     name: 'eslint-plugin-import-x built-in node resolver',
     resolve: (modulePath, sourceFile) => {
-      try {
-        const found = moduleResolve(
-          modulePath,
-          pathToFileURL(sourceFile),
-          conditions,
-          preserveSymlinks
-        );
+      if (isBuiltin(modulePath)) {
+        return { found: true, path: null };
+      }
 
-        if (found.protocol === 'file:') {
-          if (fs.existsSync(found)) {
-            return {
-              found: true,
-              path: fileURLToPath(found),
-            };
-          }
-        } else if (found.protocol === 'node:' || found.protocol === 'data:') {
-          return {
-            found: true,
-            path: null
-          }
+      if (modulePath.startsWith('data:')) {
+        return { found: true, path: null };
+      }
+
+      try {
+        const path = resolver.resolveSync(
+          {},
+          dirname(sourceFile),
+          modulePath
+        );
+        if (path) {
+          return { found: true, path };
         }
-        return {
-          found: false
-        }
-      } catch (error) {
-        if (assertErrNoException(error)) {
-          if (error.code === 'ERR_MODULE_NOT_FOUND') {
-            return {
-              found: false,
-            }
-          }
-          if (error.code === 'ERR_UNSUPPORTED_DIR_IMPORT') {
-            const $require = createRequire(sourceFile);
-            try {
-              const resolved = $require.resolve(modulePath);
-              return {
-                found: true,
-                path: resolved,
-              }
-            } catch {
-              return {
-                found: false,
-              }
-            }
-          }
-        }
-        return {
-          found: false,
-        }
+        return { found: false };
+      } catch {
+        return { found: false };
       }
     }
   }

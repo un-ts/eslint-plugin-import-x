@@ -48,7 +48,6 @@
     "eslint": "^8.57.0 || ^9.0.0"
   },
   "dependencies": {
-    "@dual-bundle/import-meta-resolve": "^4.1.0",
     "@types/doctrine": "^0.0.9",
     "@typescript-eslint/scope-manager": "^8.1.0",
     "@typescript-eslint/utils": "^8.1.0",
@@ -97,7 +96,7 @@
     "@typescript-eslint/rule-tester": "^8.15.0",
     "@unts/patch-package": "^8.0.0",
     "cross-env": "^7.0.3",
-    "enhanced-resolve": "^5.16.0",
+    "enhanced-resolve": "^5.17.1",
     "escope": "^4.0.0",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
