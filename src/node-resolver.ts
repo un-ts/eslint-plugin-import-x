@@ -1,10 +1,12 @@
-import { fileURLToPath, pathToFileURL } from "url";
 import type { NewResolver } from "./types";
 
-import type { ErrnoException } from '@dual-bundle/import-meta-resolve' with { "resolution-mode": "import" };
+import { fileURLToPath, pathToFileURL } from "url";
+import fs from "fs";
+import { createRequire } from "module";
 
-const importMetaResolveExports: typeof import('@dual-bundle/import-meta-resolve', { with: { "resolution-mode": "import" } }) = require('@dual-bundle/import-meta-resolve');
-const { moduleResolve } = importMetaResolveExports;
+import type { ErrnoException, moduleResolve as $moduleResolve } from '@dual-bundle/import-meta-resolve' with { "resolution-mode": "import" };
+const importMetaResolveExports = require('@dual-bundle/import-meta-resolve');
+const moduleResolve = importMetaResolveExports.moduleResolve as typeof $moduleResolve;
 
 interface NodeResolverOptions {
   /**
@@ -45,17 +47,48 @@ export function createNodeResolver({
           conditions,
           preserveSymlinks
         );
-        return {
-          found: true,
-          path: fileURLToPath(found),
-        };
-      } catch (error) {
-        if (assertErrNoException(error) && error.code === 'ERR_MODULE_NOT_FOUND') {
+
+        if (found.protocol === 'file:') {
+          if (fs.existsSync(found)) {
+            return {
+              found: true,
+              path: fileURLToPath(found),
+            };
+          }
+        } else if (found.protocol === 'node:' || found.protocol === 'data:') {
           return {
-            found: false,
+            found: true,
+            path: null
           }
         }
-        throw error;
+        return {
+          found: false
+        }
+      } catch (error) {
+        if (assertErrNoException(error)) {
+          if (error.code === 'ERR_MODULE_NOT_FOUND') {
+            return {
+              found: false,
+            }
+          }
+          if (error.code === 'ERR_UNSUPPORTED_DIR_IMPORT') {
+            const $require = createRequire(sourceFile);
+            try {
+              const resolved = $require.resolve(modulePath);
+              return {
+                found: true,
+                path: resolved,
+              }
+            } catch {
+              return {
+                found: false,
+              }
+            }
+          }
+        }
+        return {
+          found: false,
+        }
       }
     }
   }
