@@ -48,6 +48,7 @@
     "eslint": "^8.57.0 || ^9.0.0"
   },
   "dependencies": {
+    "@dual-bundle/import-meta-resolve": "^4.1.0",
     "@types/doctrine": "^0.0.9",
     "@typescript-eslint/scope-manager": "^8.1.0",
     "@typescript-eslint/utils": "^8.1.0",

@@ -72,6 +72,7 @@ import type {
   PluginFlatConfig,
 } from './types'
 import { importXResolverCompat } from './utils'
+import { createNodeResolver } from './node-resolver'
 
 const rules = {
   'no-unresolved': noUnresolved,
@@ -183,4 +184,5 @@ export = {
   flatConfigs,
   rules,
   importXResolverCompat,
+  createNodeResolver
 }

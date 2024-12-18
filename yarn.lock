@@ -1375,6 +1375,11 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
+"@dual-bundle/import-meta-resolve@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@dual-bundle/import-meta-resolve/-/import-meta-resolve-4.1.0.tgz#519c1549b0e147759e7825701ecffd25e5819f7b"
+  integrity sha512-+nxncfwHM5SgAtrVzgpzJOI1ol0PkumhVo469KCf9lUi21IGcY90G98VuHm9VRrUypmAzawAHO9bs6hqeADaVg==
+
 "@emnapi/core@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@emnapi/core/-/core-1.1.0.tgz#6b552ea3d2b303965c52661c05976d3072ccb6a3"
