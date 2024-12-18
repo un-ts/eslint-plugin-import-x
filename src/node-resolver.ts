@@ -9,11 +9,13 @@ const { moduleResolve } = importMetaResolveExports;
 interface NodeResolverOptions {
   /**
    * The import conditions the resolver will used when reading the exports map from "package.json"
+   * @type {Set<string> | undefined}
    * @default new Set(['default', 'module', 'import', 'require'])
    */
   conditions?: Set<string>;
   /**
    * keep symlinks instead of resolving them
+   * @type {boolean | undefined}
    * @default false
    */
   preserveSymlinks?: boolean;
