@@ -70,7 +70,7 @@ ruleTester.run('no-duplicates', rule, {
   invalid: [
     tInvalid({
       code: "import { x } from './foo'; import { y } from './foo'",
-      output: "import { x , y } from './foo'; ",
+      output: "import { x, y  } from './foo'; ",
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
@@ -87,7 +87,7 @@ ruleTester.run('no-duplicates', rule, {
     // ensure resolved path results in warnings
     tInvalid({
       code: "import { x } from './bar'; import { y } from 'bar';",
-      output: "import { x , y } from './bar'; ",
+      output: "import { x, y  } from './bar'; ",
       settings: {
         'import-x/resolve': {
           paths: [path.resolve('test/fixtures')],
@@ -133,7 +133,7 @@ ruleTester.run('no-duplicates', rule, {
 
     tInvalid({
       code: "import type { x } from './foo'; import type { y } from './foo'",
-      output: "import type { x , y } from './foo'; ",
+      output: "import type { x, y  } from './foo'; ",
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
@@ -146,7 +146,7 @@ ruleTester.run('no-duplicates', rule, {
 
     tInvalid({
       code: "import { x, /* x */ } from './foo'; import {//y\ny//y2\n} from './foo'",
-      output: "import { x, /* x */ //y\ny//y2\n} from './foo'; ",
+      output: "import { x,//y\ny//y2\n /* x */ } from './foo'; ",
       languageOptions: { parser: require(parsers.ESPREE) },
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
@@ -195,7 +195,7 @@ ruleTester.run('no-duplicates', rule, {
 
     tInvalid({
       code: "import { } from './foo'; import {x} from './foo'",
-      output: "import { x} from './foo'; ",
+      output: "import {x } from './foo'; ",
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
@@ -419,7 +419,7 @@ import {x,y} from './foo'
     // #2027 long import list generate empty lines
     tInvalid({
       code: "import { Foo } from './foo';\nimport { Bar } from './foo';\nexport const value = {}",
-      output: "import { Foo , Bar } from './foo';\nexport const value = {}",
+      output: "import { Foo, Bar  } from './foo';\nexport const value = {}",
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
@@ -452,8 +452,8 @@ export default TestComponent;
 import {
   DEFAULT_FILTER_KEYS,
   BULK_DISABLED,
-
   BULK_ACTIONS_ENABLED
+
 } from '../constants';
 import React from 'react';
 
@@ -493,9 +493,9 @@ export default TestComponent;
                 ${''}
         import {
           A2,
-        ${''}
           B2,
-          C2} from 'bar';
+          C2
+        } from 'bar';
                 ${''}
       `,
       errors: [
@@ -822,7 +822,7 @@ describe('TypeScript', () => {
             code: "import type { AType as BType } from './foo'; import { CValue } from './foo'",
             ...parserConfig,
             options: [{ 'prefer-inline': true }],
-            output: `import { type AType as BType , CValue } from './foo'; `,
+            output: `import { type AType as BType, CValue  } from './foo'; `,
             errors: [
               {
                 ...createDuplicatedError('./foo'),
@@ -833,6 +833,37 @@ describe('TypeScript', () => {
                 ...createDuplicatedError('./foo'),
                 line: 1,
                 column: 69,
+              },
+            ],
+          }),
+          tInvalid({
+            code: `
+            import {
+              a
+            } from './foo';
+            import type {
+              b,
+              c,
+            } from './foo';`,
+            ...parserConfig,
+            options: [{ 'prefer-inline': true }],
+            output: `
+            import {
+              a,
+              type b,
+              type c
+            } from './foo';
+            `,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 4,
+                column: 20,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 8,
+                column: 20,
               },
             ],
           }),

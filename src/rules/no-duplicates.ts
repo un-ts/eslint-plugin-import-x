@@ -172,13 +172,15 @@ function getFix(
           specifier.identifiers.reduce(
             ([text, set], cur) => {
               const trimmed = cur.trim() // Trim whitespace before/after to compare to our set of existing identifiers
-              const curWithType =
-                trimmed.length > 0 && preferInline && isTypeSpecifier
-                  ? `type ${cur}`
-                  : cur
-              if (existingIdentifiers.has(trimmed)) {
+              if (trimmed.length === 0 || existingIdentifiers.has(trimmed)) {
                 return [text, set]
               }
+
+              const curWithType =
+                preferInline && isTypeSpecifier
+                  ? cur.replace(/^(\s*)/, '$1type ')
+                  : cur
+
               return [
                 text.length > 0 ? `${text},${curWithType}` : curWithType,
                 set.add(trimmed),
@@ -267,8 +269,9 @@ function getFix(
         )
       }
     } else if (openBrace != null && closeBrace != null && !shouldAddDefault()) {
+      const tokenBefore = sourceCode.getTokenBefore(closeBrace)!
       // `import {...} './foo'` → `import {..., ...} from './foo'`
-      fixes.push(fixer.insertTextBefore(closeBrace, specifiersText))
+      fixes.push(fixer.insertTextAfter(tokenBefore, specifiersText))
     }
 
     // Remove imports whose specifiers have been moved into the first import.
