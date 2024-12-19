@@ -13,6 +13,7 @@ import {
   pkgUp,
   importType,
   getFilePackageName,
+  globResolve,
 } from '../utils'
 
 type PackageDeps = ReturnType<typeof extractDepFields>
@@ -335,7 +336,7 @@ function testConfig(config: string[] | boolean | undefined, filename: string) {
   }
   // Array of globs.
   return config.some(
-    c => minimatch(filename, c) || minimatch(filename, path.resolve(c)),
+    c => minimatch(filename, c) || minimatch(filename, globResolve(c)),
   )
 }
 

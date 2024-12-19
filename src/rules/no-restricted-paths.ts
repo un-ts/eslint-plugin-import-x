@@ -5,7 +5,13 @@ import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
 
 import type { Arrayable } from '../types'
-import { importType, createRule, moduleVisitor, resolve } from '../utils'
+import {
+  importType,
+  createRule,
+  moduleVisitor,
+  resolve,
+  globResolve,
+} from '../utils'
 
 const containsPath = (filepath: string, target: string) => {
   const relative = path.relative(target, filepath)
@@ -120,7 +126,7 @@ export = createRule<[Options?], MessageId>({
     const matchingZones = restrictedPaths.filter(zone =>
       [zone.target]
         .flat()
-        .map(target => path.resolve(basePath, target))
+        .map(target => globResolve(basePath, target))
         .some(targetPath => isMatchingTargetPath(filename, targetPath)),
     )
 
@@ -265,12 +271,16 @@ export = createRule<[Options?], MessageId>({
       const isGlobPattern = areGlobPatterns.every(Boolean)
 
       return allZoneFrom.map(singleZoneFrom => {
-        const absoluteFrom = path.resolve(basePath, singleZoneFrom)
-
         if (isGlobPattern) {
-          return computeGlobPatternPathValidator(absoluteFrom, zoneExcept)
+          return computeGlobPatternPathValidator(
+            globResolve(basePath, singleZoneFrom),
+            zoneExcept,
+          )
         }
-        return computeAbsolutePathValidator(absoluteFrom, zoneExcept)
+        return computeAbsolutePathValidator(
+          path.resolve(basePath, singleZoneFrom),
+          zoneExcept,
+        )
       })
     }
 
