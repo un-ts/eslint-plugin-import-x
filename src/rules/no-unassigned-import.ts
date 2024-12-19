@@ -15,13 +15,14 @@ function testIsAllow(
 
   const filePath =
     // a node module
-    source[0] !== '.' && source[0] !== '/'
+    source[0] !== '.' && source[0] !== path.sep
       ? source
       : path.resolve(path.dirname(filename), source) // get source absolute path
 
   return globs.some(
     glob =>
-      minimatch(filePath, glob) || minimatch(filePath, path.resolve(glob)),
+      minimatch(filePath, glob) ||
+      minimatch(filePath, path.resolve(glob).replaceAll(path.sep, '/')),
   )
 }
 
