@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.6.1
+
+### Patch Changes
+
+- [#211](https://github.com/un-ts/eslint-plugin-import-x/pull/211) [`be9c3e8`](https://github.com/un-ts/eslint-plugin-import-x/commit/be9c3e8c31426a50ac13f77ec8b797780f004e72) Thanks [@mrginglymus](https://github.com/mrginglymus)! - Fix enhanced-resolve dependency
+
 ## 4.6.0
 
 ### Minor Changes
