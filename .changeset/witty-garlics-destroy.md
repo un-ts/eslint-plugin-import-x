@@ -2,9 +2,9 @@
 "eslint-plugin-import-x": minor
 ---
 
-When `eslint-plugin-import-x` was forked from `eslint-plugin-import`, we copied over the default resolver (which is `eslint-import-resolver-node`) as well. However, this resolver doesn't supports `exports` in the `package.json` file, and the current maintainer of the `eslint-import-resolver-node` (@ljharb) simply refuses implementing this feature and he even locked the issue (https://github.com/import-js/eslint-plugin-import/issues/1810).
+When `eslint-plugin-import-x` was forked from `eslint-plugin-import`, we copied over the default resolver (which is `eslint-import-resolver-node`) as well. However, this resolver doesn't supports `exports` in the `package.json` file, and the current maintainer of the `eslint-import-resolver-node` (@ljharb) doesn't have the time implementing this feature and he locked the issue (https://github.com/import-js/eslint-plugin-import/issues/1810).
 
-So we decided to implement our own resolver that "just works". The new resolver is built upon the [`@dual-bundle/import-meta-resolve`](https://www.npmjs.com/package/@dual-bundle/import-meta-resolve) that implements the full Node.js [Resolver Algorithm](https://nodejs.org/dist/v14.21.3/docs/api/esm.html#esm_resolver_algorithm). The resolver is shipped with the `eslint-plugin-import-x` package.
+So we decided to implement our own resolver that "just works". The new resolver is built upon the [`enhanced-resolve`](https://www.npmjs.com/package/enhanced-resolve) that implements the full Node.js [Resolver Algorithm](https://nodejs.org/dist/v14.21.3/docs/api/esm.html#esm_resolver_algorithm). The resolver is shipped with the `eslint-plugin-import-x` package.
 
 We do not plan to implement reading `baseUrl` and `paths` from the `tsconfig.json` file in this resolver. If you need this feature, please checkout [eslint-import-resolver-typescript](https://www.npmjs.com/package/eslint-import-resolver-typescript), [eslint-import-resolver-oxc](https://www.npmjs.com/package/eslint-import-resolver-oxc), [eslint-import-resolver-next](https://www.npmjs.com/package/eslint-import-resolver-next), or other similar resolvers.
 
@@ -21,17 +21,24 @@ module.exports = {
   },
   settings: {
     'import-x/resolver-next': [
+      // This is the new resolver we are introducing
       createNodeResolver({
         /**
-         * Optional, the import conditions the resolver will used when reading the exports map from "package.json"
-         * @default new Set(['default', 'module', 'import', 'require'])
+         * The allowed extensions the resolver will attempt to find when resolving a module
+         * By default it uses a relaxed extension list to search for both ESM and CJS modules
+         * You can customize this list to fit your needs
+         *
+         * @default ['.mjs', '.cjs', '.js', '.json', '.node']
          */
-        conditions: new Set(['default', 'module', 'import', 'require']),
+        extensions?: string[];
         /**
-         * Optional, keep symlinks instead of resolving them
-         * @default false
+         * Optional, the import conditions the resolver will used when reading the exports map from "package.json"
+         * By default it uses a relaxed condition list to search for both ESM and CJS modules
+         * You can customize this list to fit your needs
+         *
+         * @default ['default', 'module', 'import', 'require']
          */
-        preserveSymlinks: false
+        conditions: ['default', 'module', 'import', 'require'],
       }),
       // you can add more resolvers down below
       require('eslint-import-resolver-typescript').createTypeScriptImportResolver(

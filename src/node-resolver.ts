@@ -1,10 +1,10 @@
-import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve';
+import { ResolverFactory, CachedInputFileSystem, type ResolveOptions } from 'enhanced-resolve';
 import fs from 'node:fs';
 import type { NewResolver } from './types';
 import { isBuiltin } from 'node:module';
 import { dirname } from 'node:path';
 
-interface NodeResolverOptions {
+interface NodeResolverOptions extends Omit<ResolveOptions, 'useSyncFileSystemCalls'> {
   /**
    * The allowed extensions the resolver will attempt to find when resolving a module
    * @type {string[] | undefined}
@@ -13,29 +13,27 @@ interface NodeResolverOptions {
   extensions?: string[];
   /**
    * The import conditions the resolver will used when reading the exports map from "package.json"
-   * @type {Set<string> | undefined}
-   * @default new Set(['default', 'module', 'import', 'require'])
+   * @type {string[] | undefined}
+   * @default ['default', 'module', 'import', 'require']
    */
-  conditions?: Set<string>;
-  /**
-   * keep symlinks instead of resolving them
-   * @type {boolean | undefined}
-   * @default false
-   */
-  preserveSymlinks?: boolean;
+  conditionNames?: string[];
 }
 
 export function createNodeResolver({
   extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
-  conditions = new Set(['default', 'module', 'import', 'require']),
-  preserveSymlinks = false,
-}: NodeResolverOptions = {}): NewResolver {
+  conditionNames = ['default', 'module', 'import', 'require'],
+  mainFields = ['main'],
+  exportsFields = ['exports'],
+  mainFiles = ['index'],
+  fileSystem = new CachedInputFileSystem(fs, 4 * 1000),
+  ...restOptions
+}: Partial<NodeResolverOptions> = {}): NewResolver {
   const resolver = ResolverFactory.createResolver({
-    fileSystem: new CachedInputFileSystem(fs, 4 * 1000),
     extensions,
-    conditionNames: Array.from(conditions),
-    symlinks: !preserveSymlinks,
-    useSyncFileSystemCalls: true
+    fileSystem,
+    conditionNames,
+    useSyncFileSystemCalls: true,
+    ...restOptions,
   });
 
   // shared context across all resolve calls
