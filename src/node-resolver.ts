@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
-import { dirname } from 'node:path'
+import path from 'node:path'
 
 import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve'
 import type { ResolveOptions } from 'enhanced-resolve'
@@ -25,9 +25,9 @@ type NodeResolverOptions = {
 export function createNodeResolver({
   extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
   conditionNames = ['default', 'module', 'import', 'require'],
-  mainFields = ['main'],
-  exportsFields = ['exports'],
-  mainFiles = ['index'],
+  mainFields: _mainFields = ['main'],
+  exportsFields: _exportsFields = ['exports'],
+  mainFiles: _mainFiles = ['index'],
   fileSystem = new CachedInputFileSystem(fs, 4 * 1000),
   ...restOptions
 }: Partial<NodeResolverOptions> = {}): NewResolver {
@@ -54,9 +54,13 @@ export function createNodeResolver({
       }
 
       try {
-        const path = resolver.resolveSync({}, dirname(sourceFile), modulePath)
-        if (path) {
-          return { found: true, path }
+        const resolved = resolver.resolveSync(
+          {},
+          path.dirname(sourceFile),
+          modulePath,
+        )
+        if (resolved) {
+          return { found: true, path: resolved }
         }
         return { found: false }
       } catch {
