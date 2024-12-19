@@ -5,7 +5,13 @@ import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
 
 import type { Arrayable } from '../types'
-import { importType, createRule, moduleVisitor, resolve } from '../utils'
+import {
+  importType,
+  createRule,
+  moduleVisitor,
+  resolve,
+  globResolve,
+} from '../utils'
 
 const containsPath = (filepath: string, target: string) => {
   const relative = path.relative(target, filepath)
@@ -14,7 +20,7 @@ const containsPath = (filepath: string, target: string) => {
 
 function isMatchingTargetPath(filename: string, targetPath: string) {
   if (isGlob(targetPath)) {
-    const mm = new Minimatch(targetPath.replaceAll(path.sep, '/'))
+    const mm = new Minimatch(targetPath)
     return mm.match(filename)
   }
 
@@ -120,7 +126,7 @@ export = createRule<[Options?], MessageId>({
     const matchingZones = restrictedPaths.filter(zone =>
       [zone.target]
         .flat()
-        .map(target => path.resolve(basePath, target))
+        .map(target => globResolve(basePath, target))
         .some(targetPath => isMatchingTargetPath(filename, targetPath)),
     )
 
@@ -171,15 +177,13 @@ export = createRule<[Options?], MessageId>({
     ) {
       let isPathException: ((absoluteImportPath: string) => boolean) | undefined
 
-      const mm = new Minimatch(absoluteFrom.replaceAll(path.sep, '/'))
+      const mm = new Minimatch(absoluteFrom)
       const isPathRestricted = (absoluteImportPath: string) =>
         mm.match(absoluteImportPath)
       const hasValidExceptions = zoneExcept.every(it => isGlob(it))
 
       if (hasValidExceptions) {
-        const exceptionsMm = zoneExcept.map(
-          except => new Minimatch(except.replaceAll(path.sep, '/')),
-        )
+        const exceptionsMm = zoneExcept.map(except => new Minimatch(except))
         isPathException = (absoluteImportPath: string) =>
           exceptionsMm.some(mm => mm.match(absoluteImportPath))
       }
@@ -267,12 +271,16 @@ export = createRule<[Options?], MessageId>({
       const isGlobPattern = areGlobPatterns.every(Boolean)
 
       return allZoneFrom.map(singleZoneFrom => {
-        const absoluteFrom = path.resolve(basePath, singleZoneFrom)
-
         if (isGlobPattern) {
-          return computeGlobPatternPathValidator(absoluteFrom, zoneExcept)
+          return computeGlobPatternPathValidator(
+            globResolve(basePath, singleZoneFrom),
+            zoneExcept,
+          )
         }
-        return computeAbsolutePathValidator(absoluteFrom, zoneExcept)
+        return computeAbsolutePathValidator(
+          path.resolve(basePath, singleZoneFrom),
+          zoneExcept,
+        )
       })
     }
 

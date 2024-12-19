@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { minimatch } from 'minimatch'
 
-import { isStaticRequire, createRule } from '../utils'
+import { isStaticRequire, createRule, globResolve } from '../utils'
 
 function testIsAllow(
   globs: string[] | undefined,
@@ -20,9 +20,7 @@ function testIsAllow(
       : path.resolve(path.dirname(filename), source) // get source absolute path
 
   return globs.some(
-    glob =>
-      minimatch(filePath, glob) ||
-      minimatch(filePath, path.resolve(glob).replaceAll(path.sep, '/')),
+    glob => minimatch(filePath, glob) || minimatch(filePath, globResolve(glob)),
   )
 }
 
