@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
@@ -17,8 +15,6 @@ const ABSOLUTE_ERROR: TSESLintTestCaseError<
 > = {
   messageId: 'absolute',
 }
-
-const absolutePath = (testPath: string) => path.join(__dirname, testPath)
 
 ruleTester.run('no-absolute-path', rule, {
   valid: [
@@ -66,72 +62,72 @@ ruleTester.run('no-absolute-path', rule, {
   ],
   invalid: [
     tInvalid({
-      code: `import f from "${absolutePath('/foo')}"`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `import f from "/foo"`,
+      filename: '/foo/bar/index.js',
       errors: [ABSOLUTE_ERROR],
       output: 'import f from ".."',
     }),
     tInvalid({
-      code: `import f from "${absolutePath('/foo/bar/baz.js')}"`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `import f from "/foo/bar/baz.js"`,
+      filename: '/foo/bar/index.js',
       errors: [ABSOLUTE_ERROR],
       output: 'import f from "./baz.js"',
     }),
     tInvalid({
-      code: `import f from "${absolutePath('/foo/path')}"`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `import f from "/foo/path"`,
+      filename: '/foo/bar/index.js',
       errors: [ABSOLUTE_ERROR],
       output: 'import f from "../path"',
     }),
     tInvalid({
-      code: `import f from "${absolutePath('/some/path')}"`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `import f from "/some/path"`,
+      filename: '/foo/bar/index.js',
       errors: [ABSOLUTE_ERROR],
       output: 'import f from "../../some/path"',
     }),
     tInvalid({
-      code: `import f from "${absolutePath('/some/path')}"`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `import f from "/some/path"`,
+      filename: '/foo/bar/index.js',
       options: [{ amd: true }],
       errors: [ABSOLUTE_ERROR],
       output: 'import f from "../../some/path"',
     }),
     tInvalid({
-      code: `var f = require("${absolutePath('/foo')}")`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `var f = require("/foo")`,
+      filename: '/foo/bar/index.js',
       errors: [ABSOLUTE_ERROR],
       output: 'var f = require("..")',
     }),
     tInvalid({
-      code: `var f = require("${absolutePath('/foo/path')}")`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `var f = require("/foo/path")`,
+      filename: '/foo/bar/index.js',
       errors: [ABSOLUTE_ERROR],
       output: 'var f = require("../path")',
     }),
     tInvalid({
-      code: `var f = require("${absolutePath('/some/path')}")`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `var f = require("/some/path")`,
+      filename: '/foo/bar/index.js',
       errors: [ABSOLUTE_ERROR],
       output: 'var f = require("../../some/path")',
     }),
     tInvalid({
-      code: `var f = require("${absolutePath('/some/path')}")`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `var f = require("/some/path")`,
+      filename: '/foo/bar/index.js',
       options: [{ amd: true }],
       errors: [ABSOLUTE_ERROR],
       output: 'var f = require("../../some/path")',
     }),
     // validate amd
     tInvalid({
-      code: `require(["${absolutePath('/some/path')}"], function (f) { /* ... */ })`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `require(["/some/path"], function (f) { /* ... */ })`,
+      filename: '/foo/bar/index.js',
       options: [{ amd: true }],
       errors: [ABSOLUTE_ERROR],
       output: 'require(["../../some/path"], function (f) { /* ... */ })',
     }),
     tInvalid({
-      code: `define(["${absolutePath('/some/path')}"], function (f) { /* ... */ })`,
-      filename: absolutePath('/foo/bar/index.js'),
+      code: `define(["/some/path"], function (f) { /* ... */ })`,
+      filename: '/foo/bar/index.js',
       languageOptions: { parser: require(parsers.ESPREE) },
       options: [{ amd: true }],
       errors: [ABSOLUTE_ERROR],
