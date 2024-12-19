@@ -57,6 +57,7 @@
     "get-tsconfig": "^4.7.3",
     "is-glob": "^4.0.3",
     "minimatch": "^9.0.3",
+    "enhanced-resolve": "^5.17.1",
     "semver": "^7.6.3",
     "stable-hash": "^0.0.4",
     "tslib": "^2.6.3"
@@ -96,7 +97,6 @@
     "@typescript-eslint/rule-tester": "^8.15.0",
     "@unts/patch-package": "^8.0.0",
     "cross-env": "^7.0.3",
-    "enhanced-resolve": "^5.17.1",
     "escope": "^4.0.0",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
