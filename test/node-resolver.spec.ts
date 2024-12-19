@@ -1,18 +1,22 @@
 import path from 'node:path'
 import { cwd } from 'node:process'
-import { createNodeResolver } from '../src/node-resolver';
+
+import { createNodeResolver } from '../src/node-resolver'
 
 const resolver = createNodeResolver()
 
 function expectResolve(source: string, expected: boolean | string) {
   it(`${source} => ${expected}`, () => {
     try {
-      console.log({ source, expected, requireResolve: require.resolve(source, { paths: [__dirname] }) })
-
+      console.log({
+        source,
+        expected,
+        requireResolve: require.resolve(source, { paths: [__dirname] }),
+      })
     } catch {
       console.log({ source, expected, requireResolve: null })
     }
-    const result = resolver.resolve(source, __filename);
+    const result = resolver.resolve(source, __filename)
     console.log({ source, expected, result })
 
     if (typeof expected === 'string') {

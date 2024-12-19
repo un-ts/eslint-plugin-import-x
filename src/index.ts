@@ -19,6 +19,7 @@ import stage0 from './config/stage-0'
 import typescript from './config/typescript'
 import warnings from './config/warnings'
 // rules
+import { createNodeResolver } from './node-resolver'
 import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
 import default_ from './rules/default'
 import dynamicImportChunkname from './rules/dynamic-import-chunkname'
@@ -72,7 +73,6 @@ import type {
   PluginFlatConfig,
 } from './types'
 import { importXResolverCompat } from './utils'
-import { createNodeResolver } from './node-resolver'
 
 const rules = {
   'no-unresolved': noUnresolved,
@@ -184,5 +184,5 @@ export = {
   flatConfigs,
   rules,
   importXResolverCompat,
-  createNodeResolver
+  createNodeResolver,
 }
