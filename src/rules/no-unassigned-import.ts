@@ -22,7 +22,7 @@ function testIsAllow(
   return globs.some(
     glob =>
       minimatch(filePath, glob) ||
-      minimatch(filePath, path.resolve(glob).replaceAll(path.sep, '/')),
+      minimatch(filePath, path.resolve(glob), { windowsPathsNoEscape: true }),
   )
 }
 

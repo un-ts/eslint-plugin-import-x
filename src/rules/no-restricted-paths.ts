@@ -14,7 +14,7 @@ const containsPath = (filepath: string, target: string) => {
 
 function isMatchingTargetPath(filename: string, targetPath: string) {
   if (isGlob(targetPath)) {
-    const mm = new Minimatch(targetPath.replaceAll(path.sep, '/'))
+    const mm = new Minimatch(targetPath, { windowsPathsNoEscape: true })
     return mm.match(filename)
   }
 
@@ -171,14 +171,14 @@ export = createRule<[Options?], MessageId>({
     ) {
       let isPathException: ((absoluteImportPath: string) => boolean) | undefined
 
-      const mm = new Minimatch(absoluteFrom.replaceAll(path.sep, '/'))
+      const mm = new Minimatch(absoluteFrom, { windowsPathsNoEscape: true })
       const isPathRestricted = (absoluteImportPath: string) =>
         mm.match(absoluteImportPath)
       const hasValidExceptions = zoneExcept.every(it => isGlob(it))
 
       if (hasValidExceptions) {
         const exceptionsMm = zoneExcept.map(
-          except => new Minimatch(except.replaceAll(path.sep, '/')),
+          except => new Minimatch(except, { windowsPathsNoEscape: true }),
         )
         isPathException = (absoluteImportPath: string) =>
           exceptionsMm.some(mm => mm.match(absoluteImportPath))

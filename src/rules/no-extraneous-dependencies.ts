@@ -337,7 +337,7 @@ function testConfig(config: string[] | boolean | undefined, filename: string) {
   return config.some(
     c =>
       minimatch(filename, c) ||
-      minimatch(filename, path.resolve(c).replaceAll(path.sep, '/')),
+      minimatch(filename, path.resolve(c), { windowsPathsNoEscape: true }),
   )
 }
 
