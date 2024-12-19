@@ -335,7 +335,9 @@ function testConfig(config: string[] | boolean | undefined, filename: string) {
   }
   // Array of globs.
   return config.some(
-    c => minimatch(filename, c) || minimatch(filename, path.resolve(c)),
+    c =>
+      minimatch(filename, c) ||
+      minimatch(filename, path.resolve(c).replaceAll(path.sep, '/')),
   )
 }
 
