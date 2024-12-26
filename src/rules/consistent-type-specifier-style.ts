@@ -61,8 +61,8 @@ export = createRule<[Options?], MessageId>({
     schema: [
       {
         type: 'string',
-        enum: ['prefer-inline', 'prefer-top-level'],
-        default: 'prefer-inline',
+        enum: ['prefer-top-level', 'prefer-inline'],
+        default: 'prefer-top-level',
       },
     ],
     messages: {
