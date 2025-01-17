@@ -51,6 +51,13 @@ settings:
   import-x/docstyle: ['jsdoc', 'tomdoc']
 ```
 
+## When Not To Use It
+
+TypeScript supports [multiple function signatures](https://www.typescriptlang.org/docs/handbook/2/functions.html#function-overloads)
+where only some of signatures can be deprecated. This rule does not support this
+configuration. Consider using [`@typescript-eslint/no-deprecated`](https://typescript-eslint.io/rules/no-deprecated/)
+instead.
+
 ## Worklist
 
 - [x] report explicit imports on the import node
