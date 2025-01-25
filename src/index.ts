@@ -173,10 +173,10 @@ const flatConfigs = {
   'stage-0': createFlatConfig(stage0Flat, 'stage-0'),
 
   // useful stuff for folks using various environments
-  react: reactFlat,
-  'react-native': reactNativeFlat,
-  electron: electronFlat,
-  typescript: typescriptFlat,
+  react: createFlatConfig(reactFlat, 'react'),
+  'react-native': createFlatConfig(reactNativeFlat, 'react-native'),
+  electron: createFlatConfig(electronFlat, 'electron'),
+  typescript: createFlatConfig(typescriptFlat, 'typescript'),
 } satisfies Record<string, PluginFlatConfig>
 
 export = {
