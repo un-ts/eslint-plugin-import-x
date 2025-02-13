@@ -567,6 +567,23 @@ describe('TypeScript', () => {
     }),
     tValid({
       code: `
+        import {
+          type bar,
+          buzz,
+        } from 'foo';
+        import type {bizz} from 'foo';
+        `,
+      ...parserConfig,
+    }),
+    tValid({
+      code: `
+import {AValue, type x, BValue} from './foo';
+import {type y} from './foo'
+        `,
+      ...parserConfig,
+    }),
+    tValid({
+      code: `
         import type {} from './module';
         import {} from './module2';
       `,
@@ -779,23 +796,6 @@ describe('TypeScript', () => {
                 ...createDuplicatedError('./foo'),
                 line: 1,
                 column: 52,
-              },
-            ],
-          }),
-          tInvalid({
-            code: "import {AValue, type x, BValue} from './foo'; import {type y} from './foo'",
-            ...parserConfig,
-            output: `import {AValue, type x, BValue,type y} from './foo'; `,
-            errors: [
-              {
-                ...createDuplicatedError('./foo'),
-                line: 1,
-                column: 38,
-              },
-              {
-                ...createDuplicatedError('./foo'),
-                line: 1,
-                column: 68,
               },
             ],
           }),

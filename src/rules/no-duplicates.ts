@@ -489,7 +489,8 @@ export = createRule<[Options?], MessageId>({
 
       if (
         !preferInline &&
-        n.specifiers.some(
+        n.specifiers.length > 0 &&
+        n.specifiers.every(
           spec => 'importKind' in spec && spec.importKind === 'type',
         )
       ) {
