@@ -1,40 +1,45 @@
-import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
 
-import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve'
-import type { ResolveOptions } from 'enhanced-resolve'
+import { ResolverFactory } from 'oxc-resolver'
+import type { NapiResolveOptions as ResolveOptions } from 'oxc-resolver'
 
 import type { NewResolver } from './types'
 
-type NodeResolverOptions = {
+export type NodeResolverOptions = {
   /**
-   * The allowed extensions the resolver will attempt to find when resolving a module
-   * @type {string[] | undefined}
+   * Attempt to resolve these extensions in order.
+   * If multiple files share the same name but have different extensions,
+   * will resolve the one with the extension listed first in the array and skip the rest.
+   *
    * @default ['.mjs', '.cjs', '.js', '.json', '.node']
    */
   extensions?: string[]
   /**
-   * The import conditions the resolver will used when reading the exports map from "package.json"
-   * @type {string[] | undefined}
-   * @default ['default', 'module', 'import', 'require']
+   * Condition names for exports field which defines entry points of a package.
+   * The key order in the exports field is significant. During condition matching, earlier entries have higher priority and take precedence over later entries.
+   *
+   * @default ['import', 'require', 'default']
    */
   conditionNames?: string[]
-} & Omit<ResolveOptions, 'useSyncFileSystemCalls'>
+  /**
+   * A list of main fields in description files
+   *
+   * @default ['module', 'main']
+   */
+  mainFields?: string[]
+} & ResolveOptions
 
 export function createNodeResolver({
   extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
   conditionNames = ['import', 'require', 'default'],
   mainFields = ['module', 'main'],
-  fileSystem = new CachedInputFileSystem(fs, 4 * 1000),
   ...restOptions
-}: Partial<NodeResolverOptions> = {}): NewResolver {
-  const resolver = ResolverFactory.createResolver({
+}: NodeResolverOptions = {}): NewResolver {
+  const resolver = new ResolverFactory({
     extensions,
-    fileSystem,
     conditionNames,
     mainFields,
-    useSyncFileSystemCalls: true,
     ...restOptions,
   })
 
@@ -43,7 +48,7 @@ export function createNodeResolver({
   return {
     interfaceVersion: 3,
     name: 'eslint-plugin-import-x built-in node resolver',
-    resolve: (modulePath, sourceFile) => {
+    resolve(modulePath, sourceFile) {
       if (isBuiltin(modulePath)) {
         return { found: true, path: null }
       }
@@ -53,13 +58,9 @@ export function createNodeResolver({
       }
 
       try {
-        const resolved = resolver.resolveSync(
-          {},
-          path.dirname(sourceFile),
-          modulePath,
-        )
-        if (resolved) {
-          return { found: true, path: resolved }
+        const resolved = resolver.sync(path.dirname(sourceFile), modulePath)
+        if (resolved.path) {
+          return { found: true, path: resolved.path }
         }
         return { found: false }
       } catch {

@@ -106,7 +106,7 @@ describe('importType(name)', () => {
     // `@` for internal modules is a common alias and is different from scoped names.
     // Scoped names are prepended with `@` (e.g. `@scoped/some-file.js`) whereas `@`
     // as an alias by itelf is the full root name (e.g. `@/some-file.js`).
-    const alias = { '@': testFilePath('internal-modules') }
+    const alias = { '@': [testFilePath('internal-modules')] }
     const webpackConfig = { resolve: { alias } }
     const pathContext = testContext({
       'import-x/resolver': { webpack: { config: webpackConfig } },
