@@ -13,6 +13,7 @@ export default {
     '^eslint-plugin-import-x/package.json$': `<rootDir>/package.json`,
     '^eslint-plugin-import-x/(.+)$': `<rootDir>/${srcDir}/$1`,
   },
+  snapshotSerializers: ['<rootDir>/test/jest.serializer.ts'],
   testMatch: ['<rootDir>/test/**/*.spec.ts'],
   transform: {
     '^.+\\.(t|j)sx?$': ['@swc-node/jest', {} satisfies SwcOptions],

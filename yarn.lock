@@ -1375,6 +1375,11 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
+"@dual-bundle/import-meta-resolve@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.npmmirror.com/@dual-bundle/import-meta-resolve/-/import-meta-resolve-4.1.0.tgz#519c1549b0e147759e7825701ecffd25e5819f7b"
+  integrity sha512-+nxncfwHM5SgAtrVzgpzJOI1ol0PkumhVo469KCf9lUi21IGcY90G98VuHm9VRrUypmAzawAHO9bs6hqeADaVg==
+
 "@emnapi/core@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@emnapi/core/-/core-1.1.0.tgz#6b552ea3d2b303965c52661c05976d3072ccb6a3"
@@ -3417,14 +3422,6 @@ enhanced-resolve@^5.12.0:
   version "5.16.0"
   resolved "https://registry.yarnpkg.com/enhanced-resolve/-/enhanced-resolve-5.16.0.tgz#65ec88778083056cb32487faa9aef82ed0864787"
   integrity sha512-O+QWCviPNSSLAD9Ucn8Awv+poAkqn3T1XY5/N7kR7rQO9yfSGWkYZDwpJ+iKF7B8rxaQKWngSqACpgzeapSyoA==
-  dependencies:
-    graceful-fs "^4.2.4"
-    tapable "^2.2.0"
-
-enhanced-resolve@^5.17.1:
-  version "5.17.1"
-  resolved "https://registry.yarnpkg.com/enhanced-resolve/-/enhanced-resolve-5.17.1.tgz#67bfbbcc2f81d511be77d686a90267ef7f898a15"
-  integrity sha512-LMHl3dXhTcfv8gM4kEzIUeTQ+7fpdA0l2tUf34BddXPkz2A5xJ5L/Pchd5BL6rdccM9QGvu0sWZzK1Z1t4wwyg==
   dependencies:
     graceful-fs "^4.2.4"
     tapable "^2.2.0"
@@ -5812,6 +5809,11 @@ path-scurry@^1.10.1:
   dependencies:
     lru-cache "^9.1.1 || ^10.0.0"
     minipass "^5.0.0 || ^6.0.2 || ^7.0.0"
+
+path-serializer@^0.3.4:
+  version "0.3.4"
+  resolved "https://registry.npmmirror.com/path-serializer/-/path-serializer-0.3.4.tgz#d7bd46f3509b5d998a2a18fc083f67e0a337900f"
+  integrity sha512-bqNF6KKbFn2hrTgybBTqAqjKOneLvpFmvYx43ppm8IcmfgYLh4aMmR35+GnnKYdd0l6gtBlaok+aRR0PSwtGaQ==
 
 path-type@^4.0.0:
   version "4.0.0"

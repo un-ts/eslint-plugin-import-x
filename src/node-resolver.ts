@@ -1,50 +1,59 @@
 import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
-import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve'
-import type { ResolveOptions } from 'enhanced-resolve'
+// @ts-expect-error -- upstream cjs types are incorrect
+import { resolve } from '@dual-bundle/import-meta-resolve'
 
 import type { NewResolver } from './types'
 
-type NodeResolverOptions = {
-  /**
-   * The allowed extensions the resolver will attempt to find when resolving a module
-   * @type {string[] | undefined}
-   * @default ['.mjs', '.cjs', '.js', '.json', '.node']
-   */
-  extensions?: string[]
-  /**
-   * The import conditions the resolver will used when reading the exports map from "package.json"
-   * @type {string[] | undefined}
-   * @default ['default', 'module', 'import', 'require']
-   */
-  conditionNames?: string[]
-} & Omit<ResolveOptions, 'useSyncFileSystemCalls'>
+const pathSuffixes = [
+  '',
+  '.js',
+  '.json',
+  `${path.sep}index.js`,
+  `${path.sep}index.json`,
+]
 
-export function createNodeResolver({
-  extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
-  conditionNames = ['default', 'module', 'import', 'require'],
-  mainFields: _mainFields = ['main'],
-  exportsFields: _exportsFields = ['exports'],
-  mainFiles: _mainFiles = ['index'],
-  fileSystem = new CachedInputFileSystem(fs, 4 * 1000),
-  ...restOptions
-}: Partial<NodeResolverOptions> = {}): NewResolver {
-  const resolver = ResolverFactory.createResolver({
-    extensions,
-    fileSystem,
-    conditionNames,
-    useSyncFileSystemCalls: true,
-    ...restOptions,
-  })
+const specifierSuffixes = ['', '.js', '.json', '/index.js', '/index.json']
 
-  // shared context across all resolve calls
+function existsFile(filename: string) {
+  return fs.statSync(filename, { throwIfNoEntry: false })?.isFile() ?? false
+}
 
+function resolveSilent(specifier: string, basepath: string) {
+  if (path.isAbsolute(specifier)) {
+    for (const suffix of pathSuffixes) {
+      const filename = specifier + suffix
+
+      if (existsFile(filename)) {
+        return filename
+      }
+    }
+
+    return
+  }
+
+  const base = pathToFileURL(basepath).toString()
+
+  for (const suffix of specifierSuffixes) {
+    try {
+      const resolved = fileURLToPath(resolve(specifier + suffix, base))
+      if (existsFile(resolved)) {
+        return resolved
+      }
+    } catch {
+      //
+    }
+  }
+}
+
+export function createNodeResolver(): NewResolver {
   return {
     interfaceVersion: 3,
     name: 'eslint-plugin-import-x built-in node resolver',
-    resolve: (modulePath, sourceFile) => {
+    resolve(modulePath, sourceFile) {
       if (isBuiltin(modulePath)) {
         return { found: true, path: null }
       }
@@ -54,16 +63,13 @@ export function createNodeResolver({
       }
 
       try {
-        const resolved = resolver.resolveSync(
-          {},
-          path.dirname(sourceFile),
-          modulePath,
-        )
+        const resolved = resolveSilent(modulePath, sourceFile)
         if (resolved) {
           return { found: true, path: resolved }
         }
         return { found: false }
-      } catch {
+      } catch (error) {
+        console.error(error)
         return { found: false }
       }
     },

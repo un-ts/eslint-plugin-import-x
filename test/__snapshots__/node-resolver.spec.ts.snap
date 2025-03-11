@@ -1,0 +1,207 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`builtin node:path => true: require.resolve 1`] = `
+{
+  "expected": true,
+  "requireResolve": "node:path",
+  "source": "node:path",
+}
+`;
+
+exports[`builtin node:path => true: resolver 1`] = `
+{
+  "expected": true,
+  "result": {
+    "found": true,
+    "path": null,
+  },
+  "source": "node:path",
+}
+`;
+
+exports[`builtin path => true: require.resolve 1`] = `
+{
+  "expected": true,
+  "requireResolve": "path",
+  "source": "path",
+}
+`;
+
+exports[`builtin path => true: resolver 1`] = `
+{
+  "expected": true,
+  "result": {
+    "found": true,
+    "path": null,
+  },
+  "source": "path",
+}
+`;
+
+exports[`modules @sukka/does-not-exists => false: require.resolve 1`] = `
+{
+  "expected": false,
+  "requireResolve": undefined,
+  "source": "@sukka/does-not-exists",
+}
+`;
+
+exports[`modules @sukka/does-not-exists => false: resolver 1`] = `
+{
+  "expected": false,
+  "result": {
+    "found": false,
+  },
+  "source": "@sukka/does-not-exists",
+}
+`;
+
+exports[`modules jest => true: require.resolve 1`] = `
+{
+  "expected": true,
+  "requireResolve": "<ROOT>/node_modules/jest/build/index.js",
+  "source": "jest",
+}
+`;
+
+exports[`modules jest => true: resolver 1`] = `
+{
+  "expected": true,
+  "result": {
+    "found": true,
+    "path": "<ROOT>/node_modules/jest/build/index.js",
+  },
+  "source": "jest",
+}
+`;
+
+exports[`relative ../.github/dependabot.yml => false: require.resolve 1`] = `
+{
+  "expected": false,
+  "requireResolve": undefined,
+  "source": "../.github/dependabot.yml",
+}
+`;
+
+exports[`relative ../.github/dependabot.yml => false: resolver 1`] = `
+{
+  "expected": false,
+  "result": {
+    "found": false,
+  },
+  "source": "../.github/dependabot.yml",
+}
+`;
+
+exports[`relative ../babel.config.js => babel.config.js: require.resolve 1`] = `
+{
+  "expected": "babel.config.js",
+  "requireResolve": "<ROOT>/babel.config.js",
+  "source": "../babel.config.js",
+}
+`;
+
+exports[`relative ../babel.config.js => babel.config.js: resolver 1`] = `
+{
+  "expected": "babel.config.js",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/babel.config.js",
+  },
+  "source": "../babel.config.js",
+}
+`;
+
+exports[`relative ../inexistent.js => false: require.resolve 1`] = `
+{
+  "expected": false,
+  "requireResolve": undefined,
+  "source": "../inexistent.js",
+}
+`;
+
+exports[`relative ../inexistent.js => false: resolver 1`] = `
+{
+  "expected": false,
+  "result": {
+    "found": false,
+  },
+  "source": "../inexistent.js",
+}
+`;
+
+exports[`relative ../package.json => package.json: require.resolve 1`] = `
+{
+  "expected": "package.json",
+  "requireResolve": "<ROOT>/package.json",
+  "source": "../package.json",
+}
+`;
+
+exports[`relative ../package.json => package.json: resolver 1`] = `
+{
+  "expected": "package.json",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/package.json",
+  },
+  "source": "../package.json",
+}
+`;
+
+exports[`relative ../test => test/index.js: require.resolve 1`] = `
+{
+  "expected": "test/index.js",
+  "requireResolve": "<ROOT>/test/index.js",
+  "source": "../test",
+}
+`;
+
+exports[`relative ../test => test/index.js: resolver 1`] = `
+{
+  "expected": "test/index.js",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/test/index.js",
+  },
+  "source": "../test",
+}
+`;
+
+exports[`relative ../test/ => test/index.js: require.resolve 1`] = `
+{
+  "expected": "test/index.js",
+  "requireResolve": "<ROOT>/test/index.js",
+  "source": "../test/",
+}
+`;
+
+exports[`relative ../test/ => test/index.js: resolver 1`] = `
+{
+  "expected": "test/index.js",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/test/index.js",
+  },
+  "source": "../test/",
+}
+`;
+
+exports[`relative ../test/index.js => test/index.js: require.resolve 1`] = `
+{
+  "expected": "test/index.js",
+  "requireResolve": "<ROOT>/test/index.js",
+  "source": "../test/index.js",
+}
+`;
+
+exports[`relative ../test/index.js => test/index.js: resolver 1`] = `
+{
+  "expected": "test/index.js",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/test/index.js",
+  },
+  "source": "../test/index.js",
+}
+`;
