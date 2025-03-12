@@ -146,7 +146,7 @@ export function parse(
     if (!ast || typeof ast !== 'object') {
       console.warn(
         // Can only be invalid for custom parser per imports/parser
-        `\`parseForESLint\` from parser \`${typeof parserOrPath === 'string' ? parserOrPath : '`context.languageOptions.parser`'}\` is invalid and will just be ignored`,
+        `\`parseForESLint\` from parser \`${typeof parserOrPath === 'string' ? parserOrPath : 'context.languageOptions.parser'}\` is invalid and will just be ignored`,
         { content, parserMeta: parser.meta },
       )
     } else {
