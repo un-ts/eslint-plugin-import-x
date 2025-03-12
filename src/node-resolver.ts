@@ -24,7 +24,7 @@ type NodeResolverOptions = {
 
 export function createNodeResolver({
   extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
-  conditionNames = ['default', 'module', 'import', 'require'],
+  conditionNames = ['import', 'require', 'default'],
   mainFields: _mainFields = ['main'],
   exportsFields: _exportsFields = ['exports'],
   mainFiles: _mainFiles = ['index'],
