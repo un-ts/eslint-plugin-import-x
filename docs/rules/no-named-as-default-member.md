@@ -17,8 +17,6 @@ Furthermore, [in Babel 5 this is actually how things worked][blog]. This was
 fixed in Babel 6. Before upgrading an existing codebase to Babel 6, it can be
 useful to run this lint rule.
 
-[blog]: https://kentcdodds.com/blog/misunderstanding-es6-modules-upgrading-babel-tears-and-a-solution
-
 ## Rule Details
 
 Given:
@@ -50,3 +48,5 @@ const bar = foo.bar
 import foo from './foo.js'
 const { bar } = foo
 ```
+
+[blog]: https://kentcdodds.com/blog/misunderstanding-es6-modules-upgrading-babel-tears-and-a-solution

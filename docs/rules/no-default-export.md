@@ -4,8 +4,6 @@
 
 Prohibit default exports. Mostly an inverse of [`prefer-default-export`].
 
-[`prefer-default-export`]: ./prefer-default-export.md
-
 ## Rule Details
 
 The following patterns are considered warnings:
@@ -63,3 +61,5 @@ export * from './other-module'
 ## When Not To Use It
 
 If you don't care if default imports are used, or if you prefer default imports over named imports.
+
+[`prefer-default-export`]: ./prefer-default-export.md
