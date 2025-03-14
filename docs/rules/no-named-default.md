@@ -8,8 +8,6 @@ Rationale: the syntax exists to import default exports expressively, let's use i
 
 Note that type imports, as used by [Flow], are always ignored.
 
-[Flow]: https://flow.org/
-
 ## Rule Details
 
 Given:
@@ -34,3 +32,5 @@ import foo, { bar } from './foo.js'
 import { default as foo } from './foo.js'
 import { default as foo, bar } from './foo.js'
 ```
+
+[Flow]: https://flow.org/

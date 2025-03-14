@@ -22,7 +22,7 @@ By providing an object you can configure each extension separately.
 }]
 ```
 
-For example `{ "js": "always", "json": "never" }` would always enforce the use of the `.js` extension but never allow the use of the `.json` extension.
+For example `{ "js": "always", "json": "never" }` would always enforce the use of the `.js` extension but never allow the use of the `.json` extension.
 
 By providing both a string and an object, the string will set the default setting for all extensions, and the object can be used to set granular overrides for specific extensions.
 
@@ -66,8 +66,8 @@ For example, given the following folder structure:
 
 ```pt
 ├── foo
-│   ├── bar.js
-│   ├── bar.json
+│   ├── bar.js
+│   ├── bar.json
 ```
 
 and this import statement:

@@ -102,7 +102,7 @@ This rule supports the following options:
 
 ### `groups: [array]`
 
-How groups are defined, and the order to respect. `groups` must be an array of `string` or [`string`]. The only allowed `string`s are:
+How groups are defined, and the order to respect. `groups` must be an array of `string` or `string[]`. The only allowed `string`s are:
 `"builtin"`, `"external"`, `"internal"`, `"unknown"`, `"parent"`, `"sibling"`, `"index"`, `"object"`, `"type"`.
 The enforced order is the same as the order of each element in a group. Omitted types are implicitly grouped together as the last element. Example:
 
@@ -224,6 +224,8 @@ Example:
 
 [Import Type](https://github.com/un-ts/eslint-plugin-import-x/blob/ea7c13eb9b18357432e484b25dfa4451eca69c5b/src/utils/import-type.ts#L145) is resolved as a fixed string in predefined set, it can't be a `patterns` (e.g., `react`, `react-router-dom`, etc).
 
+<!-- lint disable maximum-heading-length -->
+
 ### `newlines-between: [ignore|always|always-and-inside-groups|never]`
 
 Enforces or forbids new lines between import groups:
@@ -294,6 +296,8 @@ import path from 'path'
 import index from './'
 import sibling from './foo'
 ```
+
+<!-- lint disable maximum-heading-length -->
 
 ### `alphabetize: {order: asc|desc|ignore, orderImportKind: asc|desc|ignore, caseInsensitive: true|false}`
 

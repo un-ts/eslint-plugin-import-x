@@ -10,6 +10,7 @@ module.exports = {
     'plugin:eslint-plugin/recommended',
     'plugin:import-x/recommended',
     'plugin:json/recommended-legacy',
+    'plugin:mdx/recommended',
     'plugin:n/recommended',
     'plugin:unicorn/recommended',
     'plugin:yml/standard',
@@ -45,6 +46,13 @@ module.exports = {
     'n/no-missing-import': 'off',
     'n/no-missing-require': 'off',
     'n/no-unsupported-features/es-syntax': 'off',
+    'unicorn/filename-case': [
+      'error',
+      {
+        case: 'kebabCase',
+        ignore: [String.raw`^(CONTRIBUTING|README)\.md$`],
+      },
+    ],
     'unicorn/no-array-callback-reference': 'off',
     'unicorn/no-array-reduce': 'off',
     'unicorn/no-null': 'off',
@@ -118,7 +126,14 @@ module.exports = {
     {
       files: 'global.d.ts',
       rules: {
-        'import-x/no-extraneous-dependencies': 0,
+        'import-x/no-extraneous-dependencies': 'off',
+      },
+    },
+    {
+      files: 'README.md',
+      rules: {
+        // https://github.com/bmish/eslint-doc-generator/issues/655
+        'no-irregular-whitespace': 'off',
       },
     },
   ],

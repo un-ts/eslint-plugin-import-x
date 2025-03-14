@@ -47,7 +47,7 @@ Ignores `type` imports. Type imports are a feature released in TypeScript 3.8, y
 
 Given `{"max": 2, "ignoreTypeImports": true}`:
 
-<!-- markdownlint-disable-next-line MD024 -- duplicate header -->
+<!-- lint disable no-duplicate-headings-in-section -->
 
 ### Fail
 
@@ -57,7 +57,7 @@ import b from './b'
 import c from './c'
 ```
 
-<!-- markdownlint-disable-next-line MD024 -- duplicate header -->
+<!-- lint disable no-duplicate-headings-in-section -->
 
 ### Pass
 

@@ -1,0 +1,19 @@
+{
+  "plugins": [
+    "@1stg/preset",
+    [
+      "lint-no-shortcut-reference-link",
+      false
+    ],
+    [
+      "lint-no-undefined-references",
+      {
+        "allow": [
+          "!NOTE",
+          "!TIP",
+          "!WARNING"
+        ]
+      }
+    ]
+  ]
+}

@@ -103,7 +103,7 @@ If you want to allow dynamic imports without a webpackChunkName, you can set `al
 
 Given `{ "allowEmpty": true }`:
 
-<!-- markdownlint-disable-next-line MD024 -- duplicate header -->
+<!-- lint disable no-duplicate-headings-in-section -->
 
 ### valid
 
@@ -118,7 +118,7 @@ import(
 )
 ```
 
-<!-- markdownlint-disable-next-line MD024 -- duplicate header -->
+<!-- lint disable no-duplicate-headings-in-section -->
 
 ### invalid
 

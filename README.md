@@ -160,9 +160,6 @@ settings:
     node: true
 ```
 
-[`@typescript-eslint/parser`]: https://github.com/typescript-eslint/typescript-eslint/tree/HEAD/packages/parser
-[`eslint-import-resolver-typescript`]: https://github.com/import-js/eslint-import-resolver-typescript
-
 ## Configuration (new: `eslint.config.js`)
 
 From [`v8.21.0`](https://github.com/eslint/eslint/releases/tag/v8.21.0), ESLint announced a new config system.
@@ -337,11 +334,6 @@ the process's current working directory if no `package.json` is found.
 
 If you are interesting in writing a resolver, see the [spec](./resolvers/README.md) for more details.
 
-[`resolve`]: https://www.npmjs.com/package/resolve
-[`externals`]: https://webpack.github.io/docs/library-and-externals.html
-[Node]: https://www.npmjs.com/package/eslint-import-resolver-node
-[webpack]: https://www.npmjs.com/package/eslint-import-resolver-webpack
-
 ## Settings
 
 You may set the following settings in your `.eslintrc`:
@@ -505,14 +497,11 @@ settings:
     lifetime: 5 # 30 is the default
 ```
 
-[`eslint_d`]: https://www.npmjs.com/package/eslint_d
-[`eslint-loader`]: https://www.npmjs.com/package/eslint-loader
-
 ### `import-x/internal-regex`
 
 A regex for packages should be treated as internal. Useful when you are utilizing a monorepo setup or developing a set of packages that depend on each other.
 
-By default, any package referenced from [`import-x/external-module-folders`](#importexternal-module-folders) will be considered as "external", including packages in a monorepo like yarn workspace or lerna environment. If you want to mark these packages as "internal" this will be useful.
+By default, any package referenced from [`import-x/external-module-folders`](#import-xexternal-module-folders) will be considered as "external", including packages in a monorepo like yarn workspace or lerna environment. If you want to mark these packages as "internal" this will be useful.
 
 For example, if your packages in a monorepo are all in `@scope`, you can configure `import-x/internal-regex` like this
 
@@ -593,3 +582,12 @@ In Package Settings / SublimeLinter / User Settings:
 
 I believe this defaults to `3`, so you may not need to alter it depending on your
 project folder max depth.
+
+[`@typescript-eslint/parser`]: https://github.com/typescript-eslint/typescript-eslint/tree/HEAD/packages/parser
+[`eslint-import-resolver-typescript`]: https://github.com/import-js/eslint-import-resolver-typescript
+[`resolve`]: https://www.npmjs.com/package/resolve
+[`externals`]: https://webpack.github.io/docs/library-and-externals.html
+[Node]: https://www.npmjs.com/package/eslint-import-resolver-node
+[webpack]: https://www.npmjs.com/package/eslint-import-resolver-webpack
+[`eslint_d`]: https://www.npmjs.com/package/eslint_d
+[`eslint-loader`]: https://www.npmjs.com/package/eslint-loader
