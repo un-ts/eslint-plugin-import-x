@@ -3,7 +3,7 @@
  */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { minimatch } from 'minimatch'
+import { isMatch } from 'micromatch'
 
 import { createRule } from '../utils'
 
@@ -48,13 +48,8 @@ export = createRule<[Options?], MessageId>({
     return {
       ImportNamespaceSpecifier(node) {
         if (
-          ignoreGlobs?.find(glob =>
-            minimatch(
-              (node.parent as TSESTree.ImportDeclaration).source.value,
-              glob,
-              { matchBase: true },
-            ),
-          )
+          ignoreGlobs &&
+          isMatch(node.parent.source.value, ignoreGlobs, { matchBase: true })
         ) {
           return
         }

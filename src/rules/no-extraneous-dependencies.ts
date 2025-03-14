@@ -2,7 +2,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import { minimatch } from 'minimatch'
 import type { PackageJson } from 'type-fest'
 
 import type { RuleContext } from '../types'
@@ -13,6 +12,7 @@ import {
   pkgUp,
   importType,
   getFilePackageName,
+  isFileMatch,
 } from '../utils'
 
 type PackageDeps = ReturnType<typeof extractDepFields>
@@ -329,16 +329,11 @@ function reportIfMissing(
 }
 
 function testConfig(config: string[] | boolean | undefined, filename: string) {
-  // Simplest configuration first, either a boolean or nothing.
-  if (typeof config === 'boolean' || config === undefined) {
-    return config
-  }
-  // Array of globs.
-  return config.some(
-    c =>
-      minimatch(filename, c) ||
-      minimatch(filename, path.resolve(c), { windowsPathsNoEscape: true }),
-  )
+  return Array.isArray(config)
+    ? // Array of globs.
+      isFileMatch(filename, config)
+    : // Simplest configuration first, either a boolean or nothing.
+      config
 }
 
 type Options = {
