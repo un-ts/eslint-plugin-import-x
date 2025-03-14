@@ -1,1 +1,1 @@
-export default fn = function myFn() {};
+export default fn = function myFn() {}

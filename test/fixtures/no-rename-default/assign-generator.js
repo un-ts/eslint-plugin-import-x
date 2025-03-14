@@ -1,1 +1,1 @@
-export default generator = function* () {};
+export default generator = function* () {}

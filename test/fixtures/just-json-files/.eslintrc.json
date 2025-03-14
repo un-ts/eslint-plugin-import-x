@@ -16,7 +16,7 @@
   "overrides": [
     {
       "files": "*.json",
-      "extends": "plugin:json/recommended"
+      "extends": "plugin:json/recommended-legacy"
     }
   ]
 }

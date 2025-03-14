@@ -1,4 +1,4 @@
-import foo from '../default-const-foo';
-import withLogger from './hoc-with-logger';
+import foo from '../default-const-foo'
+import withLogger from './hoc-with-logger'
 
-export default withLogger(foo);
+export default withLogger(foo)

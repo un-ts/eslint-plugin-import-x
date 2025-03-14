@@ -1,1 +1,1 @@
-export default fn = function () {};
+export default fn = function () {}

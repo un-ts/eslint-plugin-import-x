@@ -42,41 +42,32 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Setup Node.js ${{ matrix.node }} with cache
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: yarn
-        env:
-          # https://github.com/actions/setup-node/issues/531#issuecomment-1819151412
-          SKIP_YARN_COREPACK_CHECK: 1
 
       - name: Install ESLint ${{ matrix.eslint }}
         run: |
-          yarn add -D --ignore-engines eslint@${{ matrix.eslint }}
+          yarn add -D eslint@${{ matrix.eslint }}
 
       - name: Install Dependencies
-        run: yarn --ignore-engines
-        env:
-          SKIP_YARN_COREPACK_CHECK: 1
+        run: yarn --immutable
 
       - name: Build and Test
         run: |
           yarn test-compiled
           yarn test
-        env:
-          SKIP_YARN_COREPACK_CHECK: 1
 
       - name: Lint
         run: yarn lint
+        if: ${{ matrix.executeLint }}
         env:
           EFF_NO_LINK_RULES: true
           PARSER_NO_WATCH: true
-          SKIP_YARN_COREPACK_CHECK: 1
-        if: ${{ matrix.executeLint }}
 
       - name: Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

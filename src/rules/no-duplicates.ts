@@ -395,6 +395,14 @@ function hasCommentInsideNonSpecifiers(
   )
 }
 
+type ModuleMap = {
+  imported: Map<string, TSESTree.ImportDeclaration[]>
+  nsImported: Map<string, TSESTree.ImportDeclaration[]>
+  defaultTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+  namespaceTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+  namedTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+}
+
 export = createRule<[Options?], MessageId>({
   name: 'no-duplicates',
   meta: {
@@ -441,20 +449,11 @@ export = createRule<[Options?], MessageId>({
         }
       : defaultResolver
 
-    const moduleMaps = new Map<
-      TSESTree.Node,
-      {
-        imported: Map<string, TSESTree.ImportDeclaration[]>
-        nsImported: Map<string, TSESTree.ImportDeclaration[]>
-        defaultTypesImported: Map<string, TSESTree.ImportDeclaration[]>
-        namespaceTypesImported: Map<string, TSESTree.ImportDeclaration[]>
-        namedTypesImported: Map<string, TSESTree.ImportDeclaration[]>
-      }
-    >()
+    const moduleMaps = new Map<TSESTree.Node, ModuleMap>()
 
     function getImportMap(n: TSESTree.ImportDeclaration) {
       const parent = n.parent!
-      let map
+      let map: ModuleMap
       if (moduleMaps.has(parent)) {
         map = moduleMaps.get(parent)!
       } else {

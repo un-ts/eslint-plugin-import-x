@@ -1,3 +1,4 @@
+.yarn
 test/fixtures/just-json-files/invalid.json
 test/fixtures/malformed.js
 test/fixtures/with-syntax-error/package.json

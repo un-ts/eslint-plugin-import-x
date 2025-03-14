@@ -40,8 +40,8 @@ export = createRule({
   },
   defaultOptions: [],
   create(context) {
-    const deprecated = new Map()
-    const namespaces = new Map()
+    const deprecated = new Map<string, Tag>()
+    const namespaces = new Map<string, ExportMap | null>()
 
     return {
       Program({ body }) {
@@ -154,7 +154,7 @@ export = createRule({
         }
         context.report({
           node,
-          ...message(deprecated.get(node.name)),
+          ...message(deprecated.get(node.name)!),
         })
       },
 

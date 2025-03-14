@@ -1,3 +1,3 @@
-declare const foo: {};
+declare const foo: {}
 
-export default foo;
+export default foo

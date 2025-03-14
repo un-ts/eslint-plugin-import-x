@@ -7,9 +7,9 @@ import type { Annotation } from 'doctrine'
 import doctrine from 'doctrine'
 import type { AST } from 'eslint'
 import { SourceCode } from 'eslint'
-import type { TsConfigJsonResolved } from 'get-tsconfig'
+import type { TsConfigJsonResolved, TsConfigResult } from 'get-tsconfig'
 import { getTsconfig } from 'get-tsconfig'
-import stableHash from 'stable-hash'
+import { stableHash } from 'stable-hash'
 
 import type {
   ChildContext,
@@ -32,7 +32,7 @@ const log = debug('eslint-plugin-import-x:ExportMap')
 
 const exportCache = new Map<string, ExportMap | null>()
 
-const tsconfigCache = new Map<string, TsConfigJsonResolved | null>()
+const tsconfigCache = new Map<string, TsConfigJsonResolved | null | undefined>()
 
 export type DocStyleParsers = Record<
   DocStyle,
@@ -410,13 +410,13 @@ export class ExportMap {
       let tsconfigRootDir = parserOptions.tsconfigRootDir
       const project = parserOptions.project
       const cacheKey = stableHash({ tsconfigRootDir, project })
-      let tsConfig: TsConfigJsonResolved | null
+      let tsConfig: TsConfigJsonResolved | null | undefined
 
       if (tsconfigCache.has(cacheKey)) {
         tsConfig = tsconfigCache.get(cacheKey)!
       } else {
         tsconfigRootDir = tsconfigRootDir || process.cwd()
-        let tsconfigResult
+        let tsconfigResult: TsConfigResult | null | undefined
         if (project) {
           const projects = Array.isArray(project) ? project : [project]
           for (const project of projects) {
@@ -432,7 +432,7 @@ export class ExportMap {
         } else {
           tsconfigResult = getTsconfig(tsconfigRootDir)
         }
-        tsConfig = (tsconfigResult && tsconfigResult.config) || null
+        tsConfig = tsconfigResult?.config
         tsconfigCache.set(cacheKey, tsConfig)
       }
 
@@ -729,7 +729,7 @@ export class ExportMap {
 
   declare visitorKeys: TSESLint.SourceCode.VisitorKeys | null
 
-  private declare mtime: number
+  declare private mtime: number
 
   declare doc: Annotation | undefined
 

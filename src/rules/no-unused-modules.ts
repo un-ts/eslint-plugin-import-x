@@ -6,6 +6,7 @@
 import path from 'node:path'
 
 import { TSESTree } from '@typescript-eslint/utils'
+import type { TSESLint } from '@typescript-eslint/utils'
 import { FileEnumerator } from 'eslint/use-at-your-own-risk'
 
 import type { FileExtension, RuleContext } from '../types'
@@ -118,7 +119,7 @@ const importList = new Map<string, Map<string, Set<string>>>()
  */
 const exportList = new Map<string, Map<string, { whereUsed: Set<string> }>>()
 
-const visitorKeyMap = new Map()
+const visitorKeyMap = new Map<string, TSESLint.SourceCode.VisitorKeys | null>()
 
 const ignoredFiles = new Set()
 const filesOutsideSrc = new Set()
@@ -707,8 +708,8 @@ export = createRule<Options[], MessageId>({
       const oldDefaultImports = new Set<string>()
       const newDefaultImports = new Set<string>()
 
-      const oldImports = new Map()
-      const newImports = new Map()
+      const oldImports = new Map<string, string>()
+      const newImports = new Map<string, string>()
       for (const [key, value] of oldImportPaths.entries()) {
         if (value.has(AST_NODE_TYPES.ExportAllDeclaration)) {
           oldExportAll.add(key)
@@ -770,7 +771,7 @@ export = createRule<Options[], MessageId>({
             if (name === DEFAULT) {
               newDefaultImports.add(resolvedPath!)
             } else {
-              newImports.set(name, resolvedPath)
+              newImports.set(name, resolvedPath!)
             }
           }
         }

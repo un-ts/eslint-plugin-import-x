@@ -1,3 +1,3 @@
 function bar() {}
 
-export default bar;
+export default bar
