@@ -6,7 +6,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 jobs:
   ci:
@@ -30,6 +30,7 @@ jobs:
           - executeLint: true
             node: 20
             os: ubuntu-latest
+      fail-fast: false
 
     runs-on: ${{ matrix.os }}
     steps:
