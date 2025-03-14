@@ -1,5 +1,21 @@
 # eslint-plugin-import-x
 
+## 4.7.0
+
+### Minor Changes
+
+- [#237](https://github.com/un-ts/eslint-plugin-import-x/pull/237) [`53b316c`](https://github.com/un-ts/eslint-plugin-import-x/commit/53b316cb0901e328f1b6529a05012dc67a17df46) Thanks [@JounQin](https://github.com/JounQin)! - feat: migrate `enhanced-resolve` to `oxc-resolver`
+
+- [#214](https://github.com/un-ts/eslint-plugin-import-x/pull/214) [`091d2da`](https://github.com/un-ts/eslint-plugin-import-x/commit/091d2da9ee668e90ac7ee9aeb08437bc96871296) Thanks [@mrginglymus](https://github.com/mrginglymus)! - Improve windows support
+
+### Patch Changes
+
+- [#238](https://github.com/un-ts/eslint-plugin-import-x/pull/238) [`c8a388d`](https://github.com/un-ts/eslint-plugin-import-x/commit/c8a388dc4a0f801d697e6279043cfe6f81e512d5) Thanks [@JounQin](https://github.com/JounQin)! - fix: change default `conditions` and `mainFields`
+
+  `default` should be last matched, `module` should be in `mainFields`.
+
+  Reference https://github.com/isaacs/resolve-import/blob/03daf0a9649d183bea40975a7777ae72955f44b8/src/resolve-conditional-value.ts#L15
+
 ## 4.6.1
 
 ### Patch Changes
