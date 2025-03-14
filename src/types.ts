@@ -1,6 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import type { ResolveOptions } from 'enhanced-resolve'
 import type { MinimatchOptions } from 'minimatch'
+import type { NapiResolveOptions as ResolveOptions } from 'oxc-resolver'
 import type { KebabCase } from 'type-fest'
 
 import type { ImportType as ImportType_, PluginName } from './utils'
@@ -40,7 +40,7 @@ export type NodeResolverOptions = {
 }
 
 export type WebpackResolverOptions = {
-  config?: string | { resolve: Omit<ResolveOptions, 'fileSystem'> }
+  config?: string | { resolve: ResolveOptions }
   'config-index'?: number
   env?: Record<string, unknown>
   argv?: Record<string, unknown>
@@ -50,7 +50,7 @@ export type TsResolverOptions = {
   alwaysTryTypes?: boolean
   project?: string[] | string
   extensions?: string[]
-} & Omit<ResolveOptions, 'fileSystem' | 'useSyncFileSystemCalls'>
+} & ResolveOptions
 
 // TODO: remove prefix New in the next major version
 export type NewResolverResolve = (

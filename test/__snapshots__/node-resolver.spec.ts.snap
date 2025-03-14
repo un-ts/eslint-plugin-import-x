@@ -1,0 +1,207 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`builtin node:path => true 1`] = `
+{
+  "expected": true,
+  "requireResolve": "node:path",
+  "source": "node:path",
+}
+`;
+
+exports[`builtin node:path => true 2`] = `
+{
+  "expected": true,
+  "result": {
+    "found": true,
+    "path": null,
+  },
+  "source": "node:path",
+}
+`;
+
+exports[`builtin path => true 1`] = `
+{
+  "expected": true,
+  "requireResolve": "path",
+  "source": "path",
+}
+`;
+
+exports[`builtin path => true 2`] = `
+{
+  "expected": true,
+  "result": {
+    "found": true,
+    "path": null,
+  },
+  "source": "path",
+}
+`;
+
+exports[`modules @sukka/does-not-exists => false 1`] = `
+{
+  "expected": false,
+  "requireResolve": undefined,
+  "source": "@sukka/does-not-exists",
+}
+`;
+
+exports[`modules @sukka/does-not-exists => false 2`] = `
+{
+  "expected": false,
+  "result": {
+    "found": false,
+  },
+  "source": "@sukka/does-not-exists",
+}
+`;
+
+exports[`modules jest => true 1`] = `
+{
+  "expected": true,
+  "requireResolve": "<ROOT>/node_modules/jest/build/index.js",
+  "source": "jest",
+}
+`;
+
+exports[`modules jest => true 2`] = `
+{
+  "expected": true,
+  "result": {
+    "found": true,
+    "path": "<ROOT>/node_modules/jest/build/index.js",
+  },
+  "source": "jest",
+}
+`;
+
+exports[`relative ../.github/dependabot.yml => false 1`] = `
+{
+  "expected": false,
+  "requireResolve": undefined,
+  "source": "../.github/dependabot.yml",
+}
+`;
+
+exports[`relative ../.github/dependabot.yml => false 2`] = `
+{
+  "expected": false,
+  "result": {
+    "found": false,
+  },
+  "source": "../.github/dependabot.yml",
+}
+`;
+
+exports[`relative ../babel.config.js => babel.config.js 1`] = `
+{
+  "expected": "babel.config.js",
+  "requireResolve": "<ROOT>/babel.config.js",
+  "source": "../babel.config.js",
+}
+`;
+
+exports[`relative ../babel.config.js => babel.config.js 2`] = `
+{
+  "expected": "babel.config.js",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/babel.config.js",
+  },
+  "source": "../babel.config.js",
+}
+`;
+
+exports[`relative ../inexistent.js => false 1`] = `
+{
+  "expected": false,
+  "requireResolve": undefined,
+  "source": "../inexistent.js",
+}
+`;
+
+exports[`relative ../inexistent.js => false 2`] = `
+{
+  "expected": false,
+  "result": {
+    "found": false,
+  },
+  "source": "../inexistent.js",
+}
+`;
+
+exports[`relative ../package.json => package.json 1`] = `
+{
+  "expected": "package.json",
+  "requireResolve": "<ROOT>/package.json",
+  "source": "../package.json",
+}
+`;
+
+exports[`relative ../package.json => package.json 2`] = `
+{
+  "expected": "package.json",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/package.json",
+  },
+  "source": "../package.json",
+}
+`;
+
+exports[`relative ../test => test/index.js 1`] = `
+{
+  "expected": "test/index.js",
+  "requireResolve": "<ROOT>/test/index.js",
+  "source": "../test",
+}
+`;
+
+exports[`relative ../test => test/index.js 2`] = `
+{
+  "expected": "test/index.js",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/test/index.js",
+  },
+  "source": "../test",
+}
+`;
+
+exports[`relative ../test/ => test/index.js 1`] = `
+{
+  "expected": "test/index.js",
+  "requireResolve": "<ROOT>/test/index.js",
+  "source": "../test/",
+}
+`;
+
+exports[`relative ../test/ => test/index.js 2`] = `
+{
+  "expected": "test/index.js",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/test/index.js",
+  },
+  "source": "../test/",
+}
+`;
+
+exports[`relative ../test/index.js => test/index.js 1`] = `
+{
+  "expected": "test/index.js",
+  "requireResolve": "<ROOT>/test/index.js",
+  "source": "../test/index.js",
+}
+`;
+
+exports[`relative ../test/index.js => test/index.js 2`] = `
+{
+  "expected": "test/index.js",
+  "result": {
+    "found": true,
+    "path": "<ROOT>/test/index.js",
+  },
+  "source": "../test/index.js",
+}
+`;
