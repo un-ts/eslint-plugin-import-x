@@ -1,8 +1,6 @@
 import path from 'node:path'
 
-import { minimatch } from 'minimatch'
-
-import { isStaticRequire, createRule } from '../utils'
+import { isStaticRequire, createRule, isFileMatch } from '../utils'
 
 function testIsAllow(
   globs: string[] | undefined,
@@ -15,15 +13,11 @@ function testIsAllow(
 
   const filePath =
     // a node module
-    source[0] !== '.' && source[0] !== path.sep
+    source[0] !== '.' && source[0] !== '/'
       ? source
-      : path.resolve(path.dirname(filename), source) // get source absolute path
+      : path.resolve(filename, '..', source) // get source absolute path
 
-  return globs.some(
-    glob =>
-      minimatch(filePath, glob) ||
-      minimatch(filePath, path.resolve(glob), { windowsPathsNoEscape: true }),
-  )
+  return isFileMatch(filePath, globs)
 }
 
 type Options = {

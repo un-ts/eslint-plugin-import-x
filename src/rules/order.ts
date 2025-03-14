@@ -1,6 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { minimatch } from 'minimatch'
-import type { MinimatchOptions } from 'minimatch'
+import { isMatch } from 'micromatch'
+import type { Options as MicromatchOptions } from 'micromatch'
 
 import type {
   AlphabetizeOptions,
@@ -502,7 +502,7 @@ type Ranks = {
   groups: Record<string, number>
   pathGroups: Array<{
     pattern: string
-    patternOptions?: MinimatchOptions
+    patternOptions?: MicromatchOptions
     group: string
     position?: number
   }>
@@ -519,7 +519,7 @@ function computePathRank(
 ) {
   for (let i = 0, l = pathGroups.length; i < l; i++) {
     const { pattern, patternOptions, group, position = 1 } = pathGroups[i]
-    if (minimatch(path, pattern, patternOptions || { nocomment: true })) {
+    if (isMatch(path, pattern, patternOptions)) {
       return ranks[group] + position / maxPosition
     }
   }

@@ -3403,6 +3403,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/braces@npm:*":
+  version: 3.0.5
+  resolution: "@types/braces@npm:3.0.5"
+  checksum: 10c0/fff17426731376b452abf747e862f0116b80ccc68a2c8e6b56aff240048c26c983d61c456c6792dffe9df407d80c1a504bea21e8c1a56afaed1f311dfe75bc68
+  languageName: node
+  linkType: hard
+
 "@types/cacheable-request@npm:^6.0.1":
   version: 6.0.3
   resolution: "@types/cacheable-request@npm:6.0.3"
@@ -3531,13 +3538,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/is-glob@npm:^4.0.4":
-  version: 4.0.4
-  resolution: "@types/is-glob@npm:4.0.4"
-  checksum: 10c0/8c0cdf3482522c7e63f425c60ef86271776f41c8e37cf70df833de9f1936b7ddb99cf8ccda5c44761fa40d053dc0cf441e475659cf6d869c98a21e497f9919b1
-  languageName: node
-  linkType: hard
-
 "@types/istanbul-lib-coverage@npm:*, @types/istanbul-lib-coverage@npm:^2.0.0, @types/istanbul-lib-coverage@npm:^2.0.1":
   version: 2.0.6
   resolution: "@types/istanbul-lib-coverage@npm:2.0.6"
@@ -3604,6 +3604,15 @@ __metadata:
   dependencies:
     "@types/unist": "npm:*"
   checksum: 10c0/84f403dbe582ee508fd9c7643ac781ad8597fcbfc9ccb8d4715a2c92e4545e5772cbd0dbdf18eda65789386d81b009967fdef01b24faf6640f817287f54d9c82
+  languageName: node
+  linkType: hard
+
+"@types/micromatch@npm:^4.0.9":
+  version: 4.0.9
+  resolution: "@types/micromatch@npm:4.0.9"
+  dependencies:
+    "@types/braces": "npm:*"
+  checksum: 10c0/b13d7594b4320f20729f20156c51e957d79deb15083f98a736689cd0d3e4ba83b5d125959f6edf65270a6b6db90db9cebef8168d88e1c4eedc9a18aecc0234a3
   languageName: node
   linkType: hard
 
@@ -5408,16 +5417,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"escope@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "escope@npm:4.0.0"
-  dependencies:
-    esrecurse: "npm:^4.1.0"
-    estraverse: "npm:^4.1.1"
-  checksum: 10c0/0b6876b2c175aab2dfb385d083207797751e8105cdaff679d5c8bfeaa46c4b5e396d33e71603b4642b764a958e19ff7de30a0a7271f921a220738c968cada578
-  languageName: node
-  linkType: hard
-
 "eslint-compat-utils@npm:^0.5.1":
   version: 0.5.1
   resolution: "eslint-compat-utils@npm:0.5.1"
@@ -5626,10 +5625,10 @@ __metadata:
     "@types/doctrine": "npm:^0.0.9"
     "@types/eslint": "npm:^9.6.1"
     "@types/eslint8.56": "npm:@types/eslint@~8.56.0"
-    "@types/is-glob": "npm:^4.0.4"
     "@types/jest": "npm:^29.5.14"
     "@types/json-schema": "npm:^7.0.15"
     "@types/klaw-sync": "npm:^6.0.5"
+    "@types/micromatch": "npm:^4.0.9"
     "@types/node": "npm:^20.17.24"
     "@types/pnpapi": "npm:^0.0.5"
     "@typescript-eslint/eslint-plugin": "npm:^8.26.1"
@@ -5641,7 +5640,6 @@ __metadata:
     cross-env: "npm:^7.0.3"
     debug: "npm:^4.4.0"
     doctrine: "npm:^3.0.0"
-    escope: "npm:^4.0.0"
     eslint: "npm:^9.22.0"
     eslint-config-prettier: "npm:^10.1.1"
     eslint-doc-generator: "npm:^2.1.1"
@@ -5662,10 +5660,10 @@ __metadata:
     eslint9: "npm:eslint@^9.22.0"
     get-tsconfig: "npm:^4.10.0"
     hermes-eslint: "npm:^0.26.0"
-    is-glob: "npm:^4.0.3"
     jest: "npm:^29.7.0"
     klaw-sync: "npm:^6.0.0"
     lint-staged: "npm:^15.5.0"
+    micromatch: "npm:^4.0.8"
     minimatch: "npm:^10.0.1"
     npm-run-all2: "npm:^7.0.2"
     path-serializer: "npm:^0.3.4"
@@ -6004,7 +6002,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esrecurse@npm:^4.1.0, esrecurse@npm:^4.3.0":
+"esrecurse@npm:^4.3.0":
   version: 4.3.0
   resolution: "esrecurse@npm:4.3.0"
   dependencies:
