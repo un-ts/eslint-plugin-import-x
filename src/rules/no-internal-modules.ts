@@ -1,8 +1,8 @@
-import { makeRe } from 'minimatch'
+import { makeRe } from 'micromatch'
 
 import { importType, createRule, moduleVisitor, resolve } from '../utils'
 
-// minimatch patterns are expected to use / path separators, like import
+// picomatch patterns are expected to use / path separators, like import
 // statements, so normalize paths to use the same
 function normalizeSep(somePath: string) {
   return somePath.split('\\').join('/')

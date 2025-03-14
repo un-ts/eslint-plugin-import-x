@@ -1,7 +1,7 @@
 import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { minimatch } from 'minimatch'
+import { isMatch } from 'micromatch'
 
 import type { RuleContext } from '../types'
 import { createRule, pkgUp } from '../utils'
@@ -106,15 +106,13 @@ export = createRule<[Options?], MessageId>({
         const isImportBinding = variableDefinition?.type === 'ImportBinding'
         const hasCJSExportReference =
           hasKeywords && (!objectScope || objectScope.type === 'module')
-        const isException = !!options.exceptions?.some(glob =>
-          minimatch(filename, glob),
-        )
 
         if (
           isIdentifier &&
           hasCJSExportReference &&
           !isEntryPoint &&
-          !isException &&
+          // only run `isMatch` when necessary
+          !(options.exceptions && isMatch(filename, options.exceptions)) &&
           !isImportBinding
         ) {
           for (const importDeclaration of importDeclarations) {
