@@ -24,10 +24,8 @@ type NodeResolverOptions = {
 
 export function createNodeResolver({
   extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
-  conditionNames = ['default', 'module', 'import', 'require'],
-  mainFields: _mainFields = ['main'],
-  exportsFields: _exportsFields = ['exports'],
-  mainFiles: _mainFiles = ['index'],
+  conditionNames = ['import', 'require', 'default'],
+  mainFields = ['module', 'main'],
   fileSystem = new CachedInputFileSystem(fs, 4 * 1000),
   ...restOptions
 }: Partial<NodeResolverOptions> = {}): NewResolver {
@@ -35,6 +33,7 @@ export function createNodeResolver({
     extensions,
     fileSystem,
     conditionNames,
+    mainFields,
     useSyncFileSystemCalls: true,
     ...restOptions,
   })

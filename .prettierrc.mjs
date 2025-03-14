@@ -10,5 +10,11 @@ export default {
         parser: 'babel-flow',
       },
     },
+    {
+      files: ['**/.changeset/*.md'],
+      options: {
+        singleQuote: false,
+      },
+    },
   ],
 }
