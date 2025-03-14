@@ -38,3 +38,9 @@ lib/
 # macOS
 .DS_Store
 .*cache
+
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks

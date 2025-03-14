@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { createNodeResolver } from '../src/node-resolver'
+import { createNodeResolver } from 'eslint-plugin-import-x/node-resolver'
 
 const resolver = createNodeResolver()
 

@@ -16,9 +16,6 @@ jobs:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Setup Node.js LTS
         uses: actions/setup-node@v4
         with:
@@ -30,14 +27,10 @@ jobs:
 
       - name: Install Dependencies
         run: yarn --immutable
-        env:
-          SKIP_YARN_COREPACK_CHECK: 1
 
       # required for linting before commit
       - name: Build
         run: yarn build
-        env:
-          SKIP_YARN_COREPACK_CHECK: 1
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
@@ -49,4 +42,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          SKIP_YARN_COREPACK_CHECK: 1

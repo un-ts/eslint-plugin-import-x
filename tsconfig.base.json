@@ -6,7 +6,8 @@
       "eslint-plugin-import-x": ["./src"],
       "eslint-plugin-import-x/package.json": ["./package.json"],
       "eslint-plugin-import-x/*": ["./src/*"]
-    }
+    },
+    "verbatimModuleSyntax": false
   },
   "exclude": ["test/fixtures"]
 }

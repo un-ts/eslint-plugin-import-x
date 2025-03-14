@@ -1,3 +1,3 @@
-const foo = function bar() {};
+const foo = function bar() {}
 
-export default foo;
+export default foo

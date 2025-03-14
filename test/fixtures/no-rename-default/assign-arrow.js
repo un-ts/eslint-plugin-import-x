@@ -1,1 +1,1 @@
-export default arrow = () => {};
+export default arrow = () => {}

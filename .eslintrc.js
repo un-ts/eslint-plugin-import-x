@@ -9,8 +9,11 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:eslint-plugin/recommended',
     'plugin:import-x/recommended',
+    'plugin:json/recommended-legacy',
     'plugin:n/recommended',
     'plugin:unicorn/recommended',
+    'plugin:yml/standard',
+    'plugin:yml/prettier',
     'plugin:prettier/recommended',
   ],
   env: {

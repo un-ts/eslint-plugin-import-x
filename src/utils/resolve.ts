@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import stableHash from 'stable-hash'
+import { stableHash } from 'stable-hash'
 
 import type {
   ImportSettings,
