@@ -132,5 +132,8 @@
     "typescript": "^5.8.2",
     "yarn-berry-deduplicate": "^6.1.1",
     "zod": "^3.24.2"
+  },
+  "resolutions": {
+    "prettier": "^3.5.3"
   }
 }

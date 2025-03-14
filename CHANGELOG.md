@@ -167,24 +167,24 @@
 
   ```ts
   export interface NewResolver {
-    interfaceVersion: 3;
-    name?: string; // This will be included in the debug log
-    resolve: (modulePath: string, sourceFile: string) => ResolvedResult;
+    interfaceVersion: 3
+    name?: string // This will be included in the debug log
+    resolve: (modulePath: string, sourceFile: string) => ResolvedResult
   }
 
   // The `ResultNotFound` (returned when not resolved) is the same, no changes
   export interface ResultNotFound {
-    found: false;
-    path?: undefined;
+    found: false
+    path?: undefined
   }
 
   // The `ResultFound` (returned resolve result) is also the same, no changes
   export interface ResultFound {
-    found: true;
-    path: string | null;
+    found: true
+    path: string | null
   }
 
-  export type ResolvedResult = ResultNotFound | ResultFound;
+  export type ResolvedResult = ResultNotFound | ResultFound
   ```
 
   You will be able to import `NewResolver` from `eslint-plugin-import-x/types`.
@@ -231,33 +231,33 @@
     resolve(mod, source) {
       // every time the `resolve` function is called, a new instance is created
       // This is very slow
-      const resolverInstance = ResolverFactory.createResolver({});
-      const found = resolverInstance.resolve(mod, {});
+      const resolverInstance = ResolverFactory.createResolver({})
+      const found = resolverInstance.resolve(mod, {})
     },
-  };
+  }
   ```
 
   With the factory function pattern, you can create a resolver instance beforehand:
 
   ```js
-  exports.createCustomResolver = (options) => {
+  exports.createCustomResolver = options => {
     // `enhance-resolve` allows you to create a reusable instance:
-    const resolverInstance = ResolverFactory.createResolver({});
-    const resolverInstance = enhanceResolve.create({});
+    const resolverInstance = ResolverFactory.createResolver({})
+    const resolverInstance = enhanceResolve.create({})
 
     // `oxc-resolver` also allows you to create a reusable instance:
-    const resolverInstance = new ResolverFactory({});
+    const resolverInstance = new ResolverFactory({})
 
     return {
-      name: "custom-resolver",
+      name: 'custom-resolver',
       interfaceVersion: 3,
       resolve(mod, source) {
         // the same re-usable instance is shared across `resolve` invocations.
         // more performant
-        const found = resolverInstance.resolve(mod, {});
+        const found = resolverInstance.resolve(mod, {})
       },
-    };
-  };
+    }
+  }
   ```
 
 ### Patch Changes
@@ -359,12 +359,12 @@
 - [#122](https://github.com/un-ts/eslint-plugin-import-x/pull/122) [`cd52e86`](https://github.com/un-ts/eslint-plugin-import-x/commit/cd52e86f44754b4dd0c1aae1e9fd5e952e90938f) Thanks [@michaelfaith](https://github.com/michaelfaith)! - Add ESLint flat configuration presets. You can access them with:
 
   ```ts
-  import eslintPluginImportX from "eslint-plugin-import-x";
+  import eslintPluginImportX from 'eslint-plugin-import-x'
 
-  eslintPluginImportX.flatConfigs.recommended;
-  eslintPluginImportX.flatConfigs.react;
-  eslintPluginImportX.flatConfigs.typescript;
-  eslintPluginImportX.flatConfigs.electron;
+  eslintPluginImportX.flatConfigs.recommended
+  eslintPluginImportX.flatConfigs.react
+  eslintPluginImportX.flatConfigs.typescript
+  eslintPluginImportX.flatConfigs.electron
   ```
 
 - [#132](https://github.com/un-ts/eslint-plugin-import-x/pull/132) [`9948c78`](https://github.com/un-ts/eslint-plugin-import-x/commit/9948c7894758dd461f6d75b89c6425fee304789a) Thanks [@SukkaW](https://github.com/SukkaW)! - Added `no-rename-default` that forbid importing a default export by a different name. Originally created by @whitneyit, ported by @SukkaW
