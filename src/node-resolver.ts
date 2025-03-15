@@ -1,8 +1,8 @@
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
 
-import { ResolverFactory } from 'oxc-resolver'
-import type { NapiResolveOptions as ResolveOptions } from 'oxc-resolver'
+import { ResolverFactory } from 'rspack-resolver'
+import type { NapiResolveOptions as ResolveOptions } from 'rspack-resolver'
 
 import type { NewResolver } from './types'
 
