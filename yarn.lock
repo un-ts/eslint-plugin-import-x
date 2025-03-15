@@ -4687,6 +4687,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"clean-pkg-json@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "clean-pkg-json@npm:1.2.1"
+  bin:
+    clean-pkg-json: dist/index.js
+  checksum: 10c0/57af16fd730ff4797c27ae178813202b356d9958d03c2ed381ef3a7e4129bc6571074386f338c178fb9686e21a992263e116ce2e2bfb4d6ab5824f5abac84297
+  languageName: node
+  linkType: hard
+
 "clean-regexp@npm:^1.0.0":
   version: 1.0.0
   resolution: "clean-regexp@npm:1.0.0"
@@ -5620,6 +5629,7 @@ __metadata:
     "@typescript-eslint/rule-tester": "npm:^8.26.1"
     "@typescript-eslint/utils": "npm:^8.26.1"
     "@unts/patch-package": "npm:^8.1.1"
+    clean-pkg-json: "npm:^1.2.1"
     cross-env: "npm:^7.0.3"
     debug: "npm:^4.4.0"
     doctrine: "npm:^3.0.0"
@@ -5658,6 +5668,7 @@ __metadata:
     semver: "npm:^7.7.1"
     simple-git-hooks: "npm:^2.11.1"
     stable-hash: "npm:^0.0.5"
+    tinyexec: "npm:^0.3.2"
     ts-node: "npm:^10.9.2"
     tslib: "npm:^2.8.1"
     type-fest: "npm:^4.37.0"
@@ -12024,7 +12035,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyexec@npm:^0.3.0":
+"tinyexec@npm:^0.3.0, tinyexec@npm:^0.3.2":
   version: 0.3.2
   resolution: "tinyexec@npm:0.3.2"
   checksum: 10c0/3efbf791a911be0bf0821eab37a3445c2ba07acc1522b1fa84ae1e55f10425076f1290f680286345ed919549ad67527d07281f1c19d584df3b74326909eb1f90
