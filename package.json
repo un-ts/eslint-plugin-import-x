@@ -95,6 +95,7 @@
     "@types/json-schema": "^7.0.15",
     "@types/klaw-sync": "^6.0.5",
     "@types/node": "^20.17.24",
+    "@types/pnpapi": "^0.0.5",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
     "@typescript-eslint/rule-tester": "^8.26.1",

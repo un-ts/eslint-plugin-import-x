@@ -1,4 +1,4 @@
-import { isBuiltin } from 'node:module'
+import module from 'node:module'
 import path from 'node:path'
 
 import { ResolverFactory } from 'rspack-resolver'
@@ -49,11 +49,17 @@ export function createNodeResolver({
     interfaceVersion: 3,
     name: 'eslint-plugin-import-x built-in node resolver',
     resolve(modulePath, sourceFile) {
-      if (
-        isBuiltin(modulePath) ||
-        (process.versions.pnp && modulePath === 'pnpapi')
-      ) {
+      if (module.isBuiltin(modulePath)) {
         return { found: true, path: null }
+      }
+
+      if (process.versions.pnp && modulePath === 'pnpapi') {
+        return {
+          found: true,
+          path: module
+            .findPnpApi(sourceFile)
+            .resolveToUnqualified(modulePath, null),
+        }
       }
 
       if (modulePath.startsWith('data:')) {

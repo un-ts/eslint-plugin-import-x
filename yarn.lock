@@ -3646,6 +3646,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/pnpapi@npm:^0.0.5":
+  version: 0.0.5
+  resolution: "@types/pnpapi@npm:0.0.5"
+  checksum: 10c0/2ade69b20d0ad5d16e6f709b1a40a8c43034ae5e8ca3b979a7fc7c26fbf0cc75791b7e8539f84e98c0e910b9c31d805fb420840e73482c6ed7bba9760ee938be
+  languageName: node
+  linkType: hard
+
 "@types/responselike@npm:^1.0.0":
   version: 1.0.3
   resolution: "@types/responselike@npm:1.0.3"
@@ -5624,6 +5631,7 @@ __metadata:
     "@types/json-schema": "npm:^7.0.15"
     "@types/klaw-sync": "npm:^6.0.5"
     "@types/node": "npm:^20.17.24"
+    "@types/pnpapi": "npm:^0.0.5"
     "@typescript-eslint/eslint-plugin": "npm:^8.26.1"
     "@typescript-eslint/parser": "npm:^8.26.1"
     "@typescript-eslint/rule-tester": "npm:^8.26.1"
