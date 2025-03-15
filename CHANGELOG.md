@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.7.2
+
+### Patch Changes
+
+- [#245](https://github.com/un-ts/eslint-plugin-import-x/pull/245) [`437db59`](https://github.com/un-ts/eslint-plugin-import-x/commit/437db59267c1cfb54147e340fe607a58509624e7) Thanks [@JounQin](https://github.com/JounQin)! - fix: align `pnpapi` resolved path with `enhanced-resolve`
+
 ## 4.7.1
 
 ### Patch Changes
