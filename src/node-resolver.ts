@@ -1,8 +1,8 @@
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
 
-import { ResolverFactory } from 'oxc-resolver'
-import type { NapiResolveOptions as ResolveOptions } from 'oxc-resolver'
+import { ResolverFactory } from 'rspack-resolver'
+import type { NapiResolveOptions as ResolveOptions } from 'rspack-resolver'
 
 import type { NewResolver } from './types'
 
@@ -49,7 +49,10 @@ export function createNodeResolver({
     interfaceVersion: 3,
     name: 'eslint-plugin-import-x built-in node resolver',
     resolve(modulePath, sourceFile) {
-      if (isBuiltin(modulePath)) {
+      if (
+        isBuiltin(modulePath) ||
+        (process.versions.pnp && modulePath === 'pnpapi')
+      ) {
         return { found: true, path: null }
       }
 

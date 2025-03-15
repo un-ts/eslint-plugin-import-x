@@ -6,6 +6,7 @@ test/fixtures/malformed.js
 test/fixtures/with-syntax-error
 test/fixtures/just-json-files/invalid.json
 test/fixtures/typescript-d-ts/
+test/fixtures/yarn-pnp/
 # we want to ignore "test/fixtures" here, but unfortunately doing so would
 # interfere with unit test and fail it for some reason.
 # test/fixtures

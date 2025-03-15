@@ -1,0 +1,17 @@
+{
+  "name": "yarn-pnp",
+  "type": "module",
+  "packageManager": "yarn@4.7.0",
+  "exports": {
+    ".": "./index.js",
+    "./add": "./add.js?custom"
+  },
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "epix-oxc": "link:.",
+    "eslint": "^9.22.0",
+    "eslint-plugin-import-x": "link:../../.."
+  }
+}

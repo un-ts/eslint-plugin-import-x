@@ -16,6 +16,6 @@ export default {
   snapshotSerializers: ['<rootDir>/test/jest.serializer.ts'],
   testMatch: ['<rootDir>/test/**/*.spec.ts'],
   transform: {
-    '^.+\\.(t|j)sx?$': ['@swc-node/jest', {} satisfies SwcOptions],
+    '^.+\\.tsx?$': ['@swc-node/jest', {} satisfies SwcOptions],
   },
 } satisfies Config
