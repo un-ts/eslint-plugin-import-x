@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.7.1
+
+### Patch Changes
+
+- [#243](https://github.com/un-ts/eslint-plugin-import-x/pull/243) [`5bc8976`](https://github.com/un-ts/eslint-plugin-import-x/commit/5bc8976d55ea1626251f84cbbcd91ac59021da19) Thanks [@JounQin](https://github.com/JounQin)! - fix: use [`rspack-resolver`](https://github.com/unrs/rspack-resolver) fork for pnp support
+
 ## 4.7.0
 
 ### Minor Changes
