@@ -1,11 +1,17 @@
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import isGlob from 'is-glob'
-import { Minimatch } from 'minimatch'
 
 import type { Arrayable } from '../types'
-import { importType, createRule, moduleVisitor, resolve } from '../utils'
+import {
+  importType,
+  createRule,
+  moduleVisitor,
+  resolve,
+  isDynamicPattern,
+  fileMatcher,
+  isMatch,
+} from '../utils'
 
 const containsPath = (filepath: string, target: string) => {
   const relative = path.relative(target, filepath)
@@ -13,9 +19,8 @@ const containsPath = (filepath: string, target: string) => {
 }
 
 function isMatchingTargetPath(filename: string, targetPath: string) {
-  if (isGlob(targetPath)) {
-    const mm = new Minimatch(targetPath, { windowsPathsNoEscape: true })
-    return mm.match(filename)
+  if (isDynamicPattern(targetPath)) {
+    return isMatch(filename, targetPath)
   }
 
   return containsPath(filename, targetPath)
@@ -171,17 +176,13 @@ export = createRule<[Options?], MessageId>({
     ) {
       let isPathException: ((absoluteImportPath: string) => boolean) | undefined
 
-      const mm = new Minimatch(absoluteFrom, { windowsPathsNoEscape: true })
-      const isPathRestricted = (absoluteImportPath: string) =>
-        mm.match(absoluteImportPath)
-      const hasValidExceptions = zoneExcept.every(it => isGlob(it))
+      const isPathRestricted = fileMatcher(absoluteFrom)
+      const hasValidExceptions = zoneExcept.every(it => isDynamicPattern(it))
 
       if (hasValidExceptions) {
-        const exceptionsMm = zoneExcept.map(
-          except => new Minimatch(except, { windowsPathsNoEscape: true }),
-        )
+        const exceptionsMm = zoneExcept.map(except => fileMatcher(except))
         isPathException = (absoluteImportPath: string) =>
-          exceptionsMm.some(mm => mm.match(absoluteImportPath))
+          exceptionsMm.some(mm => mm(absoluteImportPath))
       }
 
       const reportInvalidException = reportInvalidExceptionGlob
@@ -258,7 +259,7 @@ export = createRule<[Options?], MessageId>({
       zoneExcept: string[] = [],
     ) => {
       const allZoneFrom = [zoneFrom].flat()
-      const areGlobPatterns = allZoneFrom.map(it => isGlob(it))
+      const areGlobPatterns = allZoneFrom.map(it => isDynamicPattern(it))
 
       if (areBothGlobPatternAndAbsolutePath(areGlobPatterns)) {
         return [computeMixedGlobAndAbsolutePathValidator()]

@@ -1,8 +1,12 @@
-import { makeRe } from 'minimatch'
+import {
+  importType,
+  createRule,
+  moduleVisitor,
+  resolve,
+  matcher,
+} from '../utils'
 
-import { importType, createRule, moduleVisitor, resolve } from '../utils'
-
-// minimatch patterns are expected to use / path separators, like import
+// picomatch patterns are expected to use / path separators, like import
 // statements, so normalize paths to use the same
 function normalizeSep(somePath: string) {
   return somePath.split('\\').join('/')
@@ -80,21 +84,21 @@ export = createRule<[Options?], MessageId>({
   defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
-    const allowRegexps = (options.allow || [])
-      .map(p => makeRe(p))
+    const allowMatches = (options.allow || [])
+      .map(p => matcher(p))
       .filter(Boolean)
-    const forbidRegexps = (options.forbid || [])
-      .map(p => makeRe(p))
+    const forbidMatches = (options.forbid || [])
+      .map(p => matcher(p))
       .filter(Boolean)
 
     // test if reaching to this destination is allowed
     function reachingAllowed(importPath: string) {
-      return allowRegexps.some(re => re.test(importPath))
+      return allowMatches.some(m => m(importPath))
     }
 
     // test if reaching to this destination is forbidden
     function reachingForbidden(importPath: string) {
-      return forbidRegexps.some(re => re.test(importPath))
+      return forbidMatches.some(m => m(importPath))
     }
 
     function isAllowViolation(importPath: string) {

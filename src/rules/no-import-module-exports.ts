@@ -1,10 +1,9 @@
 import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { minimatch } from 'minimatch'
 
 import type { RuleContext } from '../types'
-import { createRule, pkgUp } from '../utils'
+import { createRule, matcher, pkgUp } from '../utils'
 
 function getEntryPoint(context: RuleContext) {
   const pkgPath = pkgUp({
@@ -79,6 +78,8 @@ export = createRule<[Options?], MessageId>({
 
     let alreadyReported = false
 
+    const isMatch = matcher(options.exceptions)
+
     return {
       ImportDeclaration(node) {
         importDeclarations.push(node)
@@ -106,15 +107,12 @@ export = createRule<[Options?], MessageId>({
         const isImportBinding = variableDefinition?.type === 'ImportBinding'
         const hasCJSExportReference =
           hasKeywords && (!objectScope || objectScope.type === 'module')
-        const isException = !!options.exceptions?.some(glob =>
-          minimatch(filename, glob),
-        )
 
         if (
           isIdentifier &&
           hasCJSExportReference &&
           !isEntryPoint &&
-          !isException &&
+          !isMatch(filename) &&
           !isImportBinding
         ) {
           for (const importDeclaration of importDeclarations) {

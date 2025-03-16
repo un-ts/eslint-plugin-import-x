@@ -53,12 +53,17 @@ export function createNodeResolver({
         return { found: true, path: null }
       }
 
+      /**
+       * {@link https://github.com/webpack/enhanced-resolve/blob/38e9fd9acb79643a70e7bcd0d85dabc600ea321f/lib/PnpPlugin.js#L81-L83}
+       */
       if (process.versions.pnp && modulePath === 'pnpapi') {
         return {
           found: true,
           path: module
             .findPnpApi(sourceFile)
-            .resolveToUnqualified(modulePath, null),
+            .resolveToUnqualified(modulePath, sourceFile, {
+              considerBuiltins: false,
+            }),
         }
       }
 
