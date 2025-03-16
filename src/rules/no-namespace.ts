@@ -3,9 +3,8 @@
  */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { isMatch } from 'micromatch'
 
-import { createRule } from '../utils'
+import { createRule, isMatch } from '../utils'
 
 type MessageId = 'noNamespace'
 

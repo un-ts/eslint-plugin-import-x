@@ -1,7 +1,6 @@
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
-import { isMatch } from 'micromatch'
 
 import type { Arrayable } from '../types'
 import {
@@ -11,6 +10,7 @@ import {
   resolve,
   isDynamicPattern,
   fileMatcher,
+  isMatch,
 } from '../utils'
 
 const containsPath = (filepath: string, target: string) => {

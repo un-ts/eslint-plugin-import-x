@@ -5664,7 +5664,6 @@ __metadata:
     klaw-sync: "npm:^6.0.0"
     lint-staged: "npm:^15.5.0"
     micromatch: "npm:^4.0.8"
-    minimatch: "npm:^10.0.1"
     npm-run-all2: "npm:^7.0.2"
     path-serializer: "npm:^0.3.4"
     prettier: "npm:^3.5.3"
@@ -9111,7 +9110,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:10.0.1, minimatch@npm:^10.0.0, minimatch@npm:^10.0.1":
+"minimatch@npm:10.0.1, minimatch@npm:^10.0.0":
   version: 10.0.1
   resolution: "minimatch@npm:10.0.1"
   dependencies:

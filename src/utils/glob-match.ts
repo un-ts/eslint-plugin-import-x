@@ -1,4 +1,6 @@
-import { isMatch, matcher, scan } from 'micromatch'
+import path from 'node:path'
+
+import { isMatch as isMatch_, scan } from 'micromatch'
 import type { Options } from 'micromatch'
 
 /**
@@ -24,18 +26,40 @@ export function isDynamicPattern(
   return state.isGlob || state.negated
 }
 
-const BACKSLASHES = /\\/g
+const normalizeBackslashes = (str: string) => str.replaceAll('\\', '/')
 
-const normalizeBackslashes = (str: string) => str.replaceAll(BACKSLASHES, '/')
+const defaultFormat = (path: string) => path.replace(/^\.\//, '')
 
-export const isFileMatch = (filename: string, globs: string[]) =>
-  isMatch(filename, globs) ||
-  isMatch(normalizeBackslashes(filename), globs.map(normalizeBackslashes))
-
-export const fileMatcher = (pattern: string, options?: Options) => {
-  const isMatch1 = matcher(pattern, options)
-  const isMatch2 = matcher(normalizeBackslashes(pattern), options)
-  return (filepath: string) => {
-    return isMatch1(filepath) || isMatch2(normalizeBackslashes(filepath))
+const isMatchBase = (path: string, pattern: string, options?: Options) => {
+  path = normalizeBackslashes(path)
+  pattern = normalizeBackslashes(pattern)
+  if (path.startsWith('./') && !/^(\.\/|\*{1,2})/.test(pattern)) {
+    return false
   }
+  return isMatch_(path, pattern, { format: defaultFormat, ...options })
 }
+
+export const isMatch = (
+  pathname: string,
+  patterns: string | string[],
+  options?: Options,
+) => {
+  patterns = Array.isArray(patterns) ? patterns : [patterns]
+  return patterns.some(p => isMatchBase(pathname, p, options))
+}
+
+export const isFileMatch = (
+  pathname: string,
+  patterns: string | string[],
+  options?: Options,
+) =>
+  isMatch(pathname, patterns, options) ||
+  isMatch(
+    pathname,
+    (Array.isArray(patterns) ? patterns : [patterns]).map(g => path.resolve(g)),
+    options,
+  )
+
+export const fileMatcher =
+  (patterns: string | string[], options?: Options) => (pathname: string) =>
+    isFileMatch(pathname, patterns, options)

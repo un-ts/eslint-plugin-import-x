@@ -1,10 +1,9 @@
 import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { isMatch } from 'micromatch'
 
 import type { RuleContext } from '../types'
-import { createRule, pkgUp } from '../utils'
+import { createRule, isMatch, pkgUp } from '../utils'
 
 function getEntryPoint(context: RuleContext) {
   const pkgPath = pkgUp({

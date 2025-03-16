@@ -1,5 +1,4 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import { isMatch } from 'micromatch'
 import type { Options as MicromatchOptions } from 'micromatch'
 
 import type {
@@ -9,7 +8,7 @@ import type {
   PathGroup,
   RuleContext,
 } from '../types'
-import { importType, isStaticRequire, createRule } from '../utils'
+import { importType, isStaticRequire, createRule, isMatch } from '../utils'
 
 type ImportEntryWithRank = {
   rank: number
