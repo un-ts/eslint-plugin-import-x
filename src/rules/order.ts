@@ -1,5 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import type { Options as MicromatchOptions } from 'micromatch'
+import type { PicomatchOptions } from 'picomatch'
 
 import type {
   AlphabetizeOptions,
@@ -501,7 +501,7 @@ type Ranks = {
   groups: Record<string, number>
   pathGroups: Array<{
     pattern: string
-    patternOptions?: MicromatchOptions
+    patternOptions?: PicomatchOptions
     group: string
     position?: number
   }>

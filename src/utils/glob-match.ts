@@ -1,7 +1,7 @@
 import path from 'node:path'
 
-import { isMatch as isMatch_, scan } from 'micromatch'
-import type { Options } from 'micromatch'
+import { isMatch as isMatch_, scan } from 'picomatch'
+import type { PicomatchOptions } from 'picomatch'
 
 /**
  * directly copied from {@link https://github.com/SuperchupuDev/tinyglobby/blob/020ae4a14ea93e1e906fca0ff1afae291591c3a0/src/utils.ts#L124C1-L143C2}
@@ -30,7 +30,11 @@ const normalizeBackslashes = (str: string) => str.replaceAll('\\', '/')
 
 const defaultFormat = (path: string) => path.replace(/^\.\//, '')
 
-const isMatchBase = (path: string, pattern: string, options?: Options) => {
+const isMatchBase = (
+  path: string,
+  pattern: string,
+  options?: PicomatchOptions,
+) => {
   path = normalizeBackslashes(path)
   pattern = normalizeBackslashes(pattern)
   if (path.startsWith('./') && !/^(\.\/|\*{1,2})/.test(pattern)) {
@@ -42,16 +46,21 @@ const isMatchBase = (path: string, pattern: string, options?: Options) => {
 export const isMatch = (
   pathname: string,
   patterns: string | string[],
-  options?: Options,
+  options?: PicomatchOptions,
 ) => {
   patterns = Array.isArray(patterns) ? patterns : [patterns]
   return patterns.some(p => isMatchBase(pathname, p, options))
 }
 
+export const matcher =
+  (patterns?: string | string[], options?: PicomatchOptions) =>
+  (pathname: string) =>
+    !!patterns && isMatch(pathname, patterns, options)
+
 export const isFileMatch = (
   pathname: string,
   patterns: string | string[],
-  options?: Options,
+  options?: PicomatchOptions,
 ) =>
   isMatch(pathname, patterns, options) ||
   isMatch(
@@ -61,5 +70,6 @@ export const isFileMatch = (
   )
 
 export const fileMatcher =
-  (patterns: string | string[], options?: Options) => (pathname: string) =>
+  (patterns: string | string[], options?: PicomatchOptions) =>
+  (pathname: string) =>
     isFileMatch(pathname, patterns, options)

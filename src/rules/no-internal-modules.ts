@@ -1,4 +1,4 @@
-import { makeRe } from 'micromatch'
+import { makeRe } from 'picomatch'
 
 import { importType, createRule, moduleVisitor, resolve } from '../utils'
 

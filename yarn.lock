@@ -3403,13 +3403,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/braces@npm:*":
-  version: 3.0.5
-  resolution: "@types/braces@npm:3.0.5"
-  checksum: 10c0/fff17426731376b452abf747e862f0116b80ccc68a2c8e6b56aff240048c26c983d61c456c6792dffe9df407d80c1a504bea21e8c1a56afaed1f311dfe75bc68
-  languageName: node
-  linkType: hard
-
 "@types/cacheable-request@npm:^6.0.1":
   version: 6.0.3
   resolution: "@types/cacheable-request@npm:6.0.3"
@@ -3607,15 +3600,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/micromatch@npm:^4.0.9":
-  version: 4.0.9
-  resolution: "@types/micromatch@npm:4.0.9"
-  dependencies:
-    "@types/braces": "npm:*"
-  checksum: 10c0/b13d7594b4320f20729f20156c51e957d79deb15083f98a736689cd0d3e4ba83b5d125959f6edf65270a6b6db90db9cebef8168d88e1c4eedc9a18aecc0234a3
-  languageName: node
-  linkType: hard
-
 "@types/ms@npm:*":
   version: 0.7.34
   resolution: "@types/ms@npm:0.7.34"
@@ -3652,6 +3636,13 @@ __metadata:
   version: 2.4.4
   resolution: "@types/normalize-package-data@npm:2.4.4"
   checksum: 10c0/aef7bb9b015883d6f4119c423dd28c4bdc17b0e8a0ccf112c78b4fe0e91fbc4af7c6204b04bba0e199a57d2f3fbbd5b4a14bf8739bf9d2a39b2a0aad545e0f86
+  languageName: node
+  linkType: hard
+
+"@types/picomatch@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "@types/picomatch@npm:3.0.2"
+  checksum: 10c0/f35d16fe10a6e13ead6499dd7d7d317e4fd78e48260398104e837e5ca83d393024bdc6f432cb644c0a69b0726a071fcc6eb09befbbcfafb3c3c5f71dbbfde487
   languageName: node
   linkType: hard
 
@@ -5628,8 +5619,8 @@ __metadata:
     "@types/jest": "npm:^29.5.14"
     "@types/json-schema": "npm:^7.0.15"
     "@types/klaw-sync": "npm:^6.0.5"
-    "@types/micromatch": "npm:^4.0.9"
     "@types/node": "npm:^20.17.24"
+    "@types/picomatch": "npm:^3.0.2"
     "@types/pnpapi": "npm:^0.0.5"
     "@typescript-eslint/eslint-plugin": "npm:^8.26.1"
     "@typescript-eslint/parser": "npm:^8.26.1"
@@ -5663,9 +5654,9 @@ __metadata:
     jest: "npm:^29.7.0"
     klaw-sync: "npm:^6.0.0"
     lint-staged: "npm:^15.5.0"
-    micromatch: "npm:^4.0.8"
     npm-run-all2: "npm:^7.0.2"
     path-serializer: "npm:^0.3.4"
+    picomatch: "npm:^4.0.2"
     prettier: "npm:^3.5.3"
     redux: "npm:^5.0.1"
     rimraf: "npm:^6.0.1"
