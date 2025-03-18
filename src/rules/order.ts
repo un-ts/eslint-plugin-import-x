@@ -1057,7 +1057,7 @@ function makeNewlinesBetweenReport(
           currentImport.rank !== previousImport.rank &&
           emptyLinesBetween === 0
         ) {
-          if (distinctGroup || (!distinctGroup && isStartOfDistinctGroup)) {
+          if (distinctGroup || isStartOfDistinctGroup) {
             alreadyReported = true
             context.report({
               node: previousImport.node,
