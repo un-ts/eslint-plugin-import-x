@@ -1192,6 +1192,159 @@ ruleTester.run('order', rule, {
         },
       ],
     }),
+    // named import order
+    tValid({
+      code: `
+        import { a, B as C, Z } from './Z';
+        const { D, n: c, Y } = require('./Z');
+        export { C, D };
+        export { A, B, C as default } from "./Z";
+        const { ["ignore require-statements with non-identifier imports"]: z, d } = require("./Z");
+        exports = { ["ignore exports statements with non-identifiers"]: Z, D };
+      `,
+      options: [
+        {
+          named: true,
+          alphabetize: { order: 'asc', caseInsensitive: true },
+        },
+      ],
+    }),
+    tValid({
+      code: `
+        const { b, A } = require('./Z');
+      `,
+      options: [
+        {
+          named: true,
+          alphabetize: { order: 'desc' },
+        },
+      ],
+    }),
+    tValid({
+      code: `
+        import { A, B } from "./Z";
+        export { Z, A } from "./Z";
+        export { N, P } from "./Z";
+        const { X, Y } = require("./Z");
+      `,
+      options: [
+        {
+          named: {
+            require: true,
+            import: true,
+            export: false,
+          },
+        },
+      ],
+    }),
+    tValid({
+      code: `
+        import { B, A } from "./Z";
+        const { D, C } = require("./Z");
+        export { B, A } from "./Z";
+      `,
+      options: [
+        {
+          named: {
+            require: false,
+            import: false,
+            export: false,
+          },
+        },
+      ],
+    }),
+    tValid({
+      code: `
+        import { B, A, R } from "foo";
+        const { D, O, G } = require("tunes");
+        export { B, A, Z } from "foo";
+      `,
+      options: [
+        {
+          named: { enabled: false },
+        },
+      ],
+    }),
+    tValid({
+      code: `
+        import { A as A, A as B, A as C } from "./Z";
+        const { a, a: b, a: c } = require("./Z");
+      `,
+      options: [
+        {
+          named: true,
+        },
+      ],
+    }),
+    tValid({
+      code: `
+        import { A, B, C } from "./Z";
+        exports = { A, B, C };
+        module.exports = { a: A, b: B, c: C };
+      `,
+      options: [
+        {
+          named: {
+            cjsExports: true,
+          },
+          alphabetize: { order: 'asc' },
+        },
+      ],
+    }),
+    tValid({
+      code: `
+        module.exports.A = { };
+        module.exports.A.B = { };
+        module.exports.B = { };
+        exports.C = { };
+      `,
+      options: [
+        {
+          named: {
+            cjsExports: true,
+          },
+          alphabetize: { order: 'asc' },
+        },
+      ],
+    }),
+    // ensure other assignments are untouched
+    tValid({
+      code: `
+        var exports = null;
+        var module = null;
+        exports = { };
+        module = { };
+        module.exports = { };
+        module.exports.U = { };
+        module.exports.N = { };
+        module.exports.C = { };
+        exports.L = { };
+        exports.E = { };
+      `,
+      options: [
+        {
+          named: {
+            cjsExports: true,
+          },
+          alphabetize: { order: 'asc' },
+        },
+      ],
+    }),
+    tValid({
+      code: `
+        exports["B"] = { };
+        exports["C"] = { };
+        exports["A"] = { };
+      `,
+      options: [
+        {
+          named: {
+            cjsExports: true,
+          },
+          alphabetize: { order: 'asc' },
+        },
+      ],
+    }),
   ],
   invalid: [
     // builtin before external module (require)
@@ -2789,11 +2942,211 @@ ruleTester.run('order', rule, {
         createOrderError(['`./hello` import', 'before', 'import of `./cello`']),
       ],
     }),
+    // named import order
+    tInvalid({
+      code: `
+        var { B, A: R } = require("./Z");
+        import { O as G, D } from "./Z";
+        import { K, L, J } from "./Z";
+        export { Z, X, Y } from "./Z";
+      `,
+      output: `
+        var { A: R, B } = require("./Z");
+        import { D, O as G } from "./Z";
+        import { J, K, L } from "./Z";
+        export { X, Y, Z } from "./Z";
+      `,
+      options: [
+        {
+          named: true,
+          alphabetize: { order: 'asc' },
+        },
+      ],
+      errors: [
+        createOrderError(['`A` import', 'before', 'import of `B`']),
+        createOrderError(['`D` import', 'before', 'import of `O`']),
+        createOrderError(['`J` import', 'before', 'import of `K`']),
+        createOrderError(['`Z` export', 'after', 'export of `Y`']),
+      ],
+    }),
+    tInvalid({
+      code: `
+        import { D, C } from "./Z";
+        var { B, A } = require("./Z");
+        export { B, A };
+      `,
+      output: `
+        import { C, D } from "./Z";
+        var { B, A } = require("./Z");
+        export { A, B };
+      `,
+      options: [
+        {
+          named: {
+            require: false,
+            import: true,
+            export: true,
+          },
+          alphabetize: { order: 'asc' },
+        },
+      ],
+      errors: [
+        createOrderError(['`C` import', 'before', 'import of `D`']),
+        createOrderError(['`A` export', 'before', 'export of `B`']),
+      ],
+    }),
+    tInvalid({
+      code: `
+        import { A as B, A as C, A } from "./Z";
+        export { A, A as D, A as B, A as C } from "./Z";
+        const { a: b, a: c, a } = require("./Z");
+      `,
+      output: `
+        import { A, A as B, A as C } from "./Z";
+        export { A, A as B, A as C, A as D } from "./Z";
+        const { a, a: b, a: c } = require("./Z");
+      `,
+      options: [
+        {
+          named: true,
+          alphabetize: { order: 'asc' },
+        },
+      ],
+      errors: [
+        createOrderError(['`A` import', 'before', 'import of `A as B`']),
+        createOrderError(['`A as D` export', 'after', 'export of `A as C`']),
+        createOrderError(['`a` import', 'before', 'import of `a as b`']),
+      ],
+    }),
+    tInvalid({
+      code: `
+        import { A, B, C } from "./Z";
+        exports = { B, C, A };
+        module.exports = { c: C, a: A, b: B };
+      `,
+      output: `
+        import { A, B, C } from "./Z";
+        exports = { A, B, C };
+        module.exports = { a: A, b: B, c: C };
+      `,
+      options: [
+        {
+          named: {
+            cjsExports: true,
+          },
+          alphabetize: { order: 'asc' },
+        },
+      ],
+      errors: [
+        createOrderError(['`A` export', 'before', 'export of `B`']),
+        createOrderError(['`c` export', 'after', 'export of `b`']),
+      ],
+    }),
+    tInvalid({
+      code: `
+        exports.B = { };
+        module.exports.A = { };
+        module.exports.C = { };
+      `,
+      output: `
+        module.exports.A = { };
+        exports.B = { };
+        module.exports.C = { };
+      `,
+      options: [
+        {
+          named: {
+            cjsExports: true,
+          },
+          alphabetize: { order: 'asc' },
+        },
+      ],
+      errors: [createOrderError(['`A` export', 'before', 'export of `B`'])],
+    }),
+    tInvalid({
+      code: `
+        exports.A.C = { };
+        module.exports.A.A = { };
+        exports.A.B = { };
+      `,
+      output: `
+        module.exports.A.A = { };
+        exports.A.B = { };
+        exports.A.C = { };
+      `,
+      options: [
+        {
+          named: {
+            cjsExports: true,
+          },
+          alphabetize: { order: 'asc' },
+        },
+      ],
+      errors: [createOrderError(['`A.C` export', 'after', 'export of `A.B`'])],
+    }),
+    // multi-line named specifiers & trailing commas
+    tInvalid({
+      code: `
+        const {
+          F: O,
+          O: B,
+          /* Hello World */
+          A: R
+        } = require("./Z");
+        import {
+          Y,
+          X,
+        } from "./Z";
+        export {
+          Z, A,
+          B
+        } from "./Z";
+        module.exports = {
+          a: A, o: O,
+          b: B
+        };
+      `,
+      output: `
+        const {
+          /* Hello World */
+          A: R,
+          F: O,
+          O: B
+        } = require("./Z");
+        import {
+          X,
+          Y,
+        } from "./Z";
+        export { A,
+          B,
+          Z
+        } from "./Z";
+        module.exports = {
+          a: A,
+          b: B, o: O
+        };
+      `,
+      options: [
+        {
+          named: {
+            enabled: true,
+          },
+          alphabetize: { order: 'asc' },
+        },
+      ],
+      errors: [
+        createOrderError(['`A` import', 'before', 'import of `F`']),
+        createOrderError(['`X` import', 'before', 'import of `Y`']),
+        createOrderError(['`Z` export', 'after', 'export of `B`']),
+        createOrderError(['`b` export', 'before', 'export of `o`']),
+      ],
+    }),
   ],
 })
 
 describe('TypeScript', () => {
   for (const parser of getNonDefaultParsers()) {
+    const supportsExportTypeSpecifiers = parser === parsers.TS
     const parserConfig = {
       languageOptions: {
         ...(parser === parsers.BABEL && { parser: require(parsers.BABEL) }),
@@ -3047,6 +3400,1411 @@ describe('TypeScript', () => {
             },
           ],
         }),
+        // Option sortTypesGroup: false (default)
+        tValid({
+          code: `
+            import c from 'Bar';
+            import a from 'foo';
+
+            import type { C } from 'dirA/Bar';
+            import b from 'dirA/bar';
+            import type { D } from 'dirA/bar';
+
+            import index from './';
+
+            import type { AA } from 'abc';
+            import type { A } from 'foo';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always',
+              pathGroupsExcludedImportTypes: [],
+            },
+          ],
+        }),
+        tValid({
+          code: `
+            import c from 'Bar';
+            import a from 'foo';
+
+            import type { C } from 'dirA/Bar';
+            import b from 'dirA/bar';
+            import type { D } from 'dirA/bar';
+
+            import index from './';
+
+            import type { AA } from 'abc';
+            import type { A } from 'foo';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: false,
+            },
+          ],
+        }),
+        // Option sortTypesGroup: true and 'type' in pathGroupsExcludedImportTypes
+        tValid({
+          code: `
+            import c from 'Bar';
+            import a from 'foo';
+
+            import b from 'dirA/bar';
+
+            import index from './';
+
+            import type { AA } from 'abc';
+            import type { C } from 'dirA/Bar';
+            import type { D } from 'dirA/bar';
+            import type { A } from 'foo';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always',
+              pathGroupsExcludedImportTypes: ['type'],
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        // Option sortTypesGroup: true and 'type' omitted from groups
+        tValid({
+          code: `
+            import c from 'Bar';
+            import type { AA } from 'abc';
+            import a from 'foo';
+            import type { A } from 'foo';
+
+            import type { C } from 'dirA/Bar';
+            import b from 'dirA/bar';
+            import type { D } from 'dirA/bar';
+
+            import index from './';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always',
+              pathGroupsExcludedImportTypes: [],
+              // Becomes a no-op without "type" in groups
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        tValid({
+          code: `
+            import c from 'Bar';
+            import type { AA } from 'abc';
+            import a from 'foo';
+            import type { A } from 'foo';
+
+            import type { C } from 'dirA/Bar';
+            import b from 'dirA/bar';
+            import type { D } from 'dirA/bar';
+
+            import index from './';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always',
+              pathGroupsExcludedImportTypes: [],
+            },
+          ],
+        }),
+        // Option sortTypesGroup: true and newlines-between-types defaults to the value of newlines-between
+        tValid({
+          code: `
+            import c from 'Bar';
+            import a from 'foo';
+
+            import b from 'dirA/bar';
+
+            import index from './';
+
+            import type { AA } from 'abc';
+            import type { A } from 'foo';
+
+            import type { C } from 'dirA/Bar';
+            import type { D } from 'dirA/bar';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        // Option: sortTypesGroup: true and newlines-between-types: 'always' (takes precedence over newlines-between between type-only and normal imports)
+        tValid({
+          code: `
+            import c from 'Bar';
+            import a from 'foo';
+            import b from 'dirA/bar';
+            import index from './';
+
+            import type { AA } from 'abc';
+            import type { A } from 'foo';
+
+            import type { C } from 'dirA/Bar';
+            import type { D } from 'dirA/bar';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'never',
+              'newlines-between-types': 'always',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        // Option: sortTypesGroup: true and newlines-between-types: 'never' (takes precedence over newlines-between between type-only and normal imports)
+        tValid({
+          code: `
+            import c from 'Bar';
+            import a from 'foo';
+
+            import b from 'dirA/bar';
+
+            import index from './';
+            import type { AA } from 'abc';
+            import type { A } from 'foo';
+            import type { C } from 'dirA/Bar';
+            import type { D } from 'dirA/bar';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always',
+              'newlines-between-types': 'never',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        // Option: sortTypesGroup: true and newlines-between-types: 'ignore'
+        tValid({
+          code: `
+            import c from 'Bar';
+            import a from 'foo';
+            import b from 'dirA/bar';
+            import index from './';
+            import type { AA } from 'abc';
+
+            import type { A } from 'foo';
+            import type { C } from 'dirA/Bar';
+            import type { D } from 'dirA/bar';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'never',
+              'newlines-between-types': 'ignore',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        // Option: sortTypesGroup: true and newlines-between-types: 'always-and-inside-groups'
+        tValid({
+          code: `
+            import c from 'Bar';
+            import a from 'foo';
+            import b from 'dirA/bar';
+            import index from './';
+
+            import type { AA } from 'abc';
+
+            import type { A } from 'foo';
+
+            import type { C } from 'dirA/Bar';
+
+            import type { D } from 'dirA/bar';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'never',
+              'newlines-between-types': 'always-and-inside-groups',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        // Option: sortTypesGroup: true puts type imports in the same order as regular imports (from issue #2441, PR #2615)
+        tValid({
+          code: `
+            import type A from "fs";
+            import type B from "path";
+            import type C from "../foo.js";
+            import type D from "./bar.js";
+            import type E from './';
+
+            import a from "fs";
+            import b from "path";
+            import c from "../foo.js";
+            import d from "./bar.js";
+            import e from "./";
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['type', 'builtin', 'parent', 'sibling', 'index'],
+              alphabetize: {
+                order: 'asc',
+                caseInsensitive: true,
+              },
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        // Options: sortTypesGroup + newlines-between-types example #1 from the documentation (pass)
+        tValid({
+          code: `
+            import type A from "fs";
+            import type B from "path";
+            import type C from "../foo.js";
+            import type D from "./bar.js";
+            import type E from './';
+
+            import a from "fs";
+            import b from "path";
+
+            import c from "../foo.js";
+
+            import d from "./bar.js";
+
+            import e from "./";
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['type', 'builtin', 'parent', 'sibling', 'index'],
+              sortTypesGroup: true,
+              'newlines-between': 'always',
+              'newlines-between-types': 'ignore',
+            },
+          ],
+        }),
+        // Options: sortTypesGroup + newlines-between-types example #2 from the documentation (pass)
+        tValid({
+          code: `
+            import type A from "fs";
+            import type B from "path";
+
+            import type C from "../foo.js";
+
+            import type D from "./bar.js";
+
+            import type E from './';
+
+            import a from "fs";
+            import b from "path";
+            import c from "../foo.js";
+            import d from "./bar.js";
+            import e from "./";
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['type', 'builtin', 'parent', 'sibling', 'index'],
+              sortTypesGroup: true,
+              'newlines-between': 'never',
+              'newlines-between-types': 'always',
+            },
+          ],
+        }),
+        // Ensure the rule doesn't choke and die on absolute paths trying to pass NaN around
+        tValid({
+          code: `
+            import fs from 'fs';
+
+            import '@scoped/package';
+            import type { B } from 'fs';
+
+            import type { A1 } from '/bad/bad/bad/bad';
+            import './a/b/c';
+            import type { A2 } from '/bad/bad/bad/bad';
+            import type { A3 } from '/bad/bad/bad/bad';
+            import type { D1 } from '/bad/bad/not/good';
+            import type { D2 } from '/bad/bad/not/good';
+            import type { D3 } from '/bad/bad/not/good';
+
+            import type { C } from '@something/else';
+
+            import type { E } from './index.js';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['builtin', 'type', 'unknown', 'external'],
+              sortTypesGroup: true,
+              'newlines-between': 'always',
+            },
+          ],
+        }),
+        // Ensure the rule doesn't choke and die when right-hand-side AssignmentExpression properties lack a "key" attribute (e.g. SpreadElement)
+        tValid({
+          code: `
+            // https://prettier.io/docs/en/options.html
+
+            module.exports = {
+                ...require('@xxxx/.prettierrc.js'),
+            };
+          `,
+          ...parserConfig,
+          options: [{ named: { enabled: true } }],
+        }),
+        // Option: sortTypesGroup: true and newlines-between-types: 'always-and-inside-groups' and consolidateIslands: 'inside-groups'
+        tValid({
+          code: `
+            import c from 'Bar';
+            import d from 'bar';
+
+            import {
+              aa,
+              bb,
+              cc,
+              dd,
+              ee,
+              ff,
+              gg
+            } from 'baz';
+
+            import {
+              hh,
+              ii,
+              jj,
+              kk,
+              ll,
+              mm,
+              nn
+            } from 'fizz';
+
+            import a from 'foo';
+
+            import b from 'dirA/bar';
+
+            import index from './';
+
+            import type { AA,
+              BB, CC } from 'abc';
+
+            import type { Z } from 'fizz';
+
+            import type {
+              A,
+              B
+            } from 'foo';
+
+            import type { C2 } from 'dirB/Bar';
+
+            import type {
+              D2,
+              X2,
+              Y2
+            } from 'dirB/bar';
+
+            import type { E2 } from 'dirB/baz';
+
+            import type { C3 } from 'dirC/Bar';
+
+            import type {
+              D3,
+              X3,
+              Y3
+            } from 'dirC/bar';
+
+            import type { E3 } from 'dirC/baz';
+            import type { F3 } from 'dirC/caz';
+
+            import type { C1 } from 'dirA/Bar';
+
+            import type {
+              D1,
+              X1,
+              Y1
+            } from 'dirA/bar';
+
+            import type { E1 } from 'dirA/baz';
+
+            import type { F } from './index.js';
+
+            import type { G } from './aaa.js';
+            import type { H } from './bbb';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                  position: 'after',
+                },
+                {
+                  pattern: 'dirB/**',
+                  group: 'internal',
+                  position: 'before',
+                },
+                {
+                  pattern: 'dirC/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always-and-inside-groups',
+              'newlines-between-types': 'always-and-inside-groups',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+              consolidateIslands: 'inside-groups',
+            },
+          ],
+        }),
+        // Option: sortTypesGroup: true and newlines-between-types: 'always-and-inside-groups' and consolidateIslands: 'never' (default)
+        tValid({
+          code: `
+            import c from 'Bar';
+            import d from 'bar';
+
+            import {
+              aa,
+              bb,
+              cc,
+              dd,
+              ee,
+              ff,
+              gg
+            } from 'baz';
+
+            import {
+              hh,
+              ii,
+              jj,
+              kk,
+              ll,
+              mm,
+              nn
+            } from 'fizz';
+
+            import a from 'foo';
+
+            import b from 'dirA/bar';
+
+            import index from './';
+
+            import type { AA,
+              BB, CC } from 'abc';
+
+            import type { Z } from 'fizz';
+
+            import type {
+              A,
+              B
+            } from 'foo';
+
+            import type { C2 } from 'dirB/Bar';
+
+            import type {
+              D2,
+              X2,
+              Y2
+            } from 'dirB/bar';
+
+            import type { E2 } from 'dirB/baz';
+
+            import type { C3 } from 'dirC/Bar';
+
+            import type {
+              D3,
+              X3,
+              Y3
+            } from 'dirC/bar';
+
+            import type { E3 } from 'dirC/baz';
+            import type { F3 } from 'dirC/caz';
+
+            import type { C1 } from 'dirA/Bar';
+
+            import type {
+              D1,
+              X1,
+              Y1
+            } from 'dirA/bar';
+
+            import type { E1 } from 'dirA/baz';
+
+            import type { F } from './index.js';
+
+            import type { G } from './aaa.js';
+            import type { H } from './bbb';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                  position: 'after',
+                },
+                {
+                  pattern: 'dirB/**',
+                  group: 'internal',
+                  position: 'before',
+                },
+                {
+                  pattern: 'dirC/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always-and-inside-groups',
+              'newlines-between-types': 'always-and-inside-groups',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+              consolidateIslands: 'never',
+            },
+          ],
+        }),
+        // Ensure consolidateIslands: 'inside-groups', newlines-between: 'always-and-inside-groups', and newlines-between-types: 'never' do not fight for dominance
+        tValid({
+          code: `
+            import makeVanillaYargs from 'yargs/yargs';
+
+            import { createDebugLogger } from 'multiverse+rejoinder';
+
+            import { globalDebuggerNamespace } from 'rootverse+bfe:src/constant.ts';
+            import { ErrorMessage, type KeyValueEntry } from 'rootverse+bfe:src/error.ts';
+
+            import {
+              $artificiallyInvoked,
+              $canonical,
+              $exists,
+              $genesis
+            } from 'rootverse+bfe:src/symbols.ts';
+
+            import type {
+              Entries,
+              LiteralUnion,
+              OmitIndexSignature,
+              Promisable,
+              StringKeyOf
+            } from 'type-fest';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: {
+                order: 'asc',
+                orderImportKind: 'asc',
+                caseInsensitive: true,
+              },
+              named: {
+                enabled: true,
+                types: 'types-last',
+              },
+              groups: [
+                'builtin',
+                'external',
+                'internal',
+                ['parent', 'sibling', 'index'],
+                ['object', 'type'],
+              ],
+              pathGroups: [
+                {
+                  pattern: 'multiverse{*,*/**}',
+                  group: 'external',
+                  position: 'after',
+                },
+                {
+                  pattern: 'rootverse{*,*/**}',
+                  group: 'external',
+                  position: 'after',
+                },
+                {
+                  pattern: 'universe{*,*/**}',
+                  group: 'external',
+                  position: 'after',
+                },
+              ],
+              distinctGroup: true,
+              pathGroupsExcludedImportTypes: ['builtin', 'object'],
+              'newlines-between': 'always-and-inside-groups',
+              'newlines-between-types': 'never',
+              sortTypesGroup: true,
+              consolidateIslands: 'inside-groups',
+            },
+          ],
+        }),
+        // Ensure consolidateIslands: 'inside-groups', newlines-between: 'never', and newlines-between-types: 'always-and-inside-groups' do not fight for dominance
+        tValid({
+          code: `
+            import makeVanillaYargs from 'yargs/yargs';
+            import { createDebugLogger } from 'multiverse+rejoinder';
+            import { globalDebuggerNamespace } from 'rootverse+bfe:src/constant.ts';
+            import { ErrorMessage, type KeyValueEntry } from 'rootverse+bfe:src/error.ts';
+            import { $artificiallyInvoked } from 'rootverse+bfe:src/symbols.ts';
+
+            import type {
+              Entries,
+              LiteralUnion,
+              OmitIndexSignature,
+              Promisable,
+              StringKeyOf
+            } from 'type-fest';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: {
+                order: 'asc',
+                orderImportKind: 'asc',
+                caseInsensitive: true,
+              },
+              named: {
+                enabled: true,
+                types: 'types-last',
+              },
+              groups: [
+                'builtin',
+                'external',
+                'internal',
+                ['parent', 'sibling', 'index'],
+                ['object', 'type'],
+              ],
+              pathGroups: [
+                {
+                  pattern: 'multiverse{*,*/**}',
+                  group: 'external',
+                  position: 'after',
+                },
+                {
+                  pattern: 'rootverse{*,*/**}',
+                  group: 'external',
+                  position: 'after',
+                },
+                {
+                  pattern: 'universe{*,*/**}',
+                  group: 'external',
+                  position: 'after',
+                },
+              ],
+              distinctGroup: true,
+              pathGroupsExcludedImportTypes: ['builtin', 'object'],
+              'newlines-between': 'never',
+              'newlines-between-types': 'always-and-inside-groups',
+              sortTypesGroup: true,
+              consolidateIslands: 'inside-groups',
+            },
+          ],
+        }),
+        tValid({
+          code: `
+            import c from 'Bar';
+            import d from 'bar';
+
+            import {
+              aa,
+              bb,
+              cc,
+              dd,
+              ee,
+              ff,
+              gg
+            } from 'baz';
+
+            import {
+              hh,
+              ii,
+              jj,
+              kk,
+              ll,
+              mm,
+              nn
+            } from 'fizz';
+
+            import a from 'foo';
+            import b from 'dirA/bar';
+            import index from './';
+
+            import type { AA,
+              BB, CC } from 'abc';
+
+            import type { Z } from 'fizz';
+
+            import type {
+              A,
+              B
+            } from 'foo';
+
+            import type { C2 } from 'dirB/Bar';
+
+            import type {
+              D2,
+              X2,
+              Y2
+            } from 'dirB/bar';
+
+            import type { E2 } from 'dirB/baz';
+
+            import type { C3 } from 'dirC/Bar';
+
+            import type {
+              D3,
+              X3,
+              Y3
+            } from 'dirC/bar';
+
+            import type { E3 } from 'dirC/baz';
+            import type { F3 } from 'dirC/caz';
+
+            import type { C1 } from 'dirA/Bar';
+
+            import type {
+              D1,
+              X1,
+              Y1
+            } from 'dirA/bar';
+
+            import type { E1 } from 'dirA/baz';
+
+            import type { F } from './index.js';
+
+            import type { G } from './aaa.js';
+            import type { H } from './bbb';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                  position: 'after',
+                },
+                {
+                  pattern: 'dirB/**',
+                  group: 'internal',
+                  position: 'before',
+                },
+                {
+                  pattern: 'dirC/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'never',
+              'newlines-between-types': 'always-and-inside-groups',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+              consolidateIslands: 'inside-groups',
+            },
+          ],
+        }),
+        tValid({
+          code: `
+            import assert from 'assert';
+            import { isNativeError } from 'util/types';
+
+            import { runNoRejectOnBadExit } from '@-xun/run';
+            import { TrialError } from 'named-app-errors';
+            import { resolve as resolverLibrary } from 'resolve.exports';
+
+            import { toAbsolutePath, type AbsolutePath } from 'rootverse+project-utils:src/fs.ts';
+
+            import type { PackageJson } from 'type-fest';
+            // Some comment about remembering to do something
+            import type { XPackageJson } from 'rootverse:src/assets/config/_package.json.ts';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: {
+                order: 'asc',
+                orderImportKind: 'asc',
+                caseInsensitive: true,
+              },
+              named: {
+                enabled: true,
+                types: 'types-last',
+              },
+              groups: [
+                'builtin',
+                'external',
+                'internal',
+                ['parent', 'sibling', 'index'],
+                ['object', 'type'],
+              ],
+              pathGroups: [
+                {
+                  pattern: 'rootverse{*,*/**}',
+                  group: 'external',
+                  position: 'after',
+                },
+              ],
+              distinctGroup: true,
+              pathGroupsExcludedImportTypes: ['builtin', 'object'],
+              'newlines-between': 'always-and-inside-groups',
+              'newlines-between-types': 'never',
+              sortTypesGroup: true,
+              consolidateIslands: 'inside-groups',
+            },
+          ],
+        }),
+
+        // Documentation passing example #1 for newlines-between
+        tValid({
+          code: `
+            import fs from 'fs';
+            import path from 'path';
+
+            import sibling from './foo';
+
+            import index from './';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              'newlines-between': 'always',
+            },
+          ],
+        }),
+        // Documentation passing example #2 for newlines-between
+        tValid({
+          code: `
+            import fs from 'fs';
+
+            import path from 'path';
+
+            import sibling from './foo';
+
+            import index from './';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              'newlines-between': 'always-and-inside-groups',
+            },
+          ],
+        }),
+        // Documentation passing example #3 for newlines-between
+        tValid({
+          code: `
+            import fs from 'fs';
+            import path from 'path';
+            import sibling from './foo';
+            import index from './';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              'newlines-between': 'never',
+            },
+          ],
+        }),
+        // Documentation passing example #1 for alphabetize
+        tValid({
+          code: `
+            import blist2 from 'blist';
+            import blist from 'BList';
+            import * as classnames from 'classnames';
+            import aTypes from 'prop-types';
+            import React, { PureComponent } from 'react';
+            import { compose, apply } from 'xcompose';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: {
+                order: 'asc',
+                caseInsensitive: true,
+              },
+            },
+          ],
+        }),
+        // (not an example, but we also test caseInsensitive: false for completeness)
+        tValid({
+          code: `
+            import blist from 'BList';
+            import blist2 from 'blist';
+            import * as classnames from 'classnames';
+            import aTypes from 'prop-types';
+            import React, { PureComponent } from 'react';
+            import { compose, apply } from 'xcompose';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: {
+                order: 'asc',
+                caseInsensitive: false,
+              },
+            },
+          ],
+        }),
+        // Documentation passing example #1 for named
+        tValid({
+          code: `
+            import { apply, compose } from 'xcompose';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              named: true,
+              alphabetize: {
+                order: 'asc',
+              },
+            },
+          ],
+        }),
+        // Documentation passing example #1 for warnOnUnassignedImports
+        tValid({
+          code: `
+            import fs from 'fs';
+            import path from 'path';
+            import './styles.css';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              warnOnUnassignedImports: true,
+            },
+          ],
+        }),
+        // Documentation passing example #1 for sortTypesGroup
+        tValid({
+          code: `
+            import type A from "fs";
+            import type B from "path";
+            import type C from "../foo.js";
+            import type D from "./bar.js";
+            import type E from './';
+
+            import a from "fs";
+            import b from "path";
+            import c from "../foo.js";
+            import d from "./bar.js";
+            import e from "./";
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['type', 'builtin', 'parent', 'sibling', 'index'],
+              alphabetize: { order: 'asc' },
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        // (not an example, but we also test the reverse for completeness)
+        tValid({
+          code: `
+            import a from "fs";
+            import b from "path";
+            import c from "../foo.js";
+            import d from "./bar.js";
+            import e from "./";
+
+            import type A from "fs";
+            import type B from "path";
+            import type C from "../foo.js";
+            import type D from "./bar.js";
+            import type E from './';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['builtin', 'parent', 'sibling', 'index', 'type'],
+              sortTypesGroup: true,
+            },
+          ],
+        }),
+        // (not an example, but we also test the reverse for completeness)
+        tValid({
+          code: `
+            import a from "fs";
+            import b from "path";
+
+            import c from "../foo.js";
+
+            import d from "./bar.js";
+
+            import e from "./";
+
+            import type A from "fs";
+            import type B from "path";
+            import type C from "../foo.js";
+            import type D from "./bar.js";
+            import type E from './';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['builtin', 'parent', 'sibling', 'index', 'type'],
+              sortTypesGroup: true,
+              'newlines-between': 'always',
+              'newlines-between-types': 'ignore',
+            },
+          ],
+        }),
+        // (not an example, but we also test the reverse for completeness)
+        tValid({
+          code: `
+            import a from "fs";
+            import b from "path";
+            import c from "../foo.js";
+            import d from "./bar.js";
+            import e from "./";
+
+            import type A from "fs";
+            import type B from "path";
+
+            import type C from "../foo.js";
+
+            import type D from "./bar.js";
+
+            import type E from './';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['builtin', 'parent', 'sibling', 'index', 'type'],
+              sortTypesGroup: true,
+              'newlines-between': 'never',
+              'newlines-between-types': 'always',
+            },
+          ],
+        }),
+        // Documentation passing example #1 for consolidateIslands
+        tValid({
+          code: `
+            var fs = require('fs');
+            var path = require('path');
+            var { util1, util2, util3 } = require('util');
+
+            var async = require('async');
+
+            var relParent1 = require('../foo');
+
+            var {
+              relParent21,
+              relParent22,
+              relParent23,
+              relParent24,
+            } = require('../');
+
+            var relParent3 = require('../bar');
+
+            var { sibling1,
+              sibling2, sibling3 } = require('./foo');
+
+            var sibling2 = require('./bar');
+            var sibling3 = require('./foobar');
+          `,
+          ...parserConfig,
+          options: [
+            {
+              'newlines-between': 'always-and-inside-groups',
+              consolidateIslands: 'inside-groups',
+            },
+          ],
+        }),
+        // Documentation passing example #2 for consolidateIslands
+        tValid({
+          code: `
+            import c from 'Bar';
+            import d from 'bar';
+
+            import {
+              aa,
+              bb,
+              cc,
+              dd,
+              ee,
+              ff,
+              gg
+            } from 'baz';
+
+            import {
+              hh,
+              ii,
+              jj,
+              kk,
+              ll,
+              mm,
+              nn
+            } from 'fizz';
+
+            import a from 'foo';
+
+            import b from 'dirA/bar';
+
+            import index from './';
+
+            import type { AA,
+              BB, CC } from 'abc';
+
+            import type { Z } from 'fizz';
+
+            import type {
+              A,
+              B
+            } from 'foo';
+
+            import type { C2 } from 'dirB/Bar';
+
+            import type {
+              D2,
+              X2,
+              Y2
+            } from 'dirB/bar';
+
+            import type { E2 } from 'dirB/baz';
+            import type { C3 } from 'dirC/Bar';
+
+            import type {
+              D3,
+              X3,
+              Y3
+            } from 'dirC/bar';
+
+            import type { E3 } from 'dirC/baz';
+            import type { F3 } from 'dirC/caz';
+            import type { C1 } from 'dirA/Bar';
+
+            import type {
+              D1,
+              X1,
+              Y1
+            } from 'dirA/bar';
+
+            import type { E1 } from 'dirA/baz';
+            import type { F } from './index.js';
+            import type { G } from './aaa.js';
+            import type { H } from './bbb';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['external', 'internal', 'index', 'type'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                  position: 'after',
+                },
+                {
+                  pattern: 'dirB/**',
+                  group: 'internal',
+                  position: 'before',
+                },
+                {
+                  pattern: 'dirC/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always-and-inside-groups',
+              'newlines-between-types': 'never',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+              consolidateIslands: 'inside-groups',
+            },
+          ],
+        }),
+        // (not an example, but we also test the reverse for completeness)
+        tValid({
+          code: `
+            import type { AA,
+              BB, CC } from 'abc';
+
+            import type { Z } from 'fizz';
+
+            import type {
+              A,
+              B
+            } from 'foo';
+
+            import type { C2 } from 'dirB/Bar';
+
+            import type {
+              D2,
+              X2,
+              Y2
+            } from 'dirB/bar';
+
+            import type { E2 } from 'dirB/baz';
+            import type { C3 } from 'dirC/Bar';
+
+            import type {
+              D3,
+              X3,
+              Y3
+            } from 'dirC/bar';
+
+            import type { E3 } from 'dirC/baz';
+            import type { F3 } from 'dirC/caz';
+            import type { C1 } from 'dirA/Bar';
+
+            import type {
+              D1,
+              X1,
+              Y1
+            } from 'dirA/bar';
+
+            import type { E1 } from 'dirA/baz';
+            import type { F } from './index.js';
+            import type { G } from './aaa.js';
+            import type { H } from './bbb';
+
+            import c from 'Bar';
+            import d from 'bar';
+
+            import {
+              aa,
+              bb,
+              cc,
+              dd,
+              ee,
+              ff,
+              gg
+            } from 'baz';
+
+            import {
+              hh,
+              ii,
+              jj,
+              kk,
+              ll,
+              mm,
+              nn
+            } from 'fizz';
+
+            import a from 'foo';
+
+            import b from 'dirA/bar';
+
+            import index from './';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              alphabetize: { order: 'asc' },
+              groups: ['type', 'external', 'internal', 'index'],
+              pathGroups: [
+                {
+                  pattern: 'dirA/**',
+                  group: 'internal',
+                  position: 'after',
+                },
+                {
+                  pattern: 'dirB/**',
+                  group: 'internal',
+                  position: 'before',
+                },
+                {
+                  pattern: 'dirC/**',
+                  group: 'internal',
+                },
+              ],
+              'newlines-between': 'always-and-inside-groups',
+              'newlines-between-types': 'never',
+              pathGroupsExcludedImportTypes: [],
+              sortTypesGroup: true,
+              consolidateIslands: 'inside-groups',
+            },
+          ],
+        }),
       ],
       invalid: [
         // Option alphabetize: {order: 'asc'}
@@ -3267,6 +5025,132 @@ describe('TypeScript', () => {
             },
           ],
         }),
+
+        // named import order
+        tInvalid({
+          code: `
+            import { type Z, A } from "./Z";
+            import type N, { E, D } from "./Z";
+            import type { L, G } from "./Z";
+          `,
+          output: `
+            import { A, type Z } from "./Z";
+            import type N, { D, E } from "./Z";
+            import type { G, L } from "./Z";
+          `,
+          ...parserConfig,
+          options: [
+            {
+              named: true,
+              alphabetize: { order: 'asc' },
+            },
+          ],
+          errors: [
+            createOrderError(['`A` import', 'before', 'type import of `Z`']),
+            createOrderError(['`D` import', 'before', 'import of `E`']),
+            createOrderError(['`G` import', 'before', 'import of `L`']),
+          ],
+        }),
+        tInvalid({
+          code: `
+            const { B, /* Hello World */ A } = require("./Z");
+            export { B, A } from "./Z";
+          `,
+          output: `
+            const { /* Hello World */ A, B } = require("./Z");
+            export { A, B } from "./Z";
+          `,
+          ...parserConfig,
+          options: [
+            {
+              named: true,
+              alphabetize: { order: 'asc' },
+            },
+          ],
+          errors: [
+            createOrderError(['`A` import', 'before', 'import of `B`']),
+            createOrderError(['`A` export', 'before', 'export of `B`']),
+          ],
+        }),
+
+        ...(supportsExportTypeSpecifiers
+          ? [
+              tInvalid({
+                code: `
+              export { type B, A };
+            `,
+                output: `
+              export { A, type B };
+            `,
+                ...parserConfig,
+                options: [
+                  {
+                    named: {
+                      enabled: true,
+                      types: 'mixed',
+                    },
+                    alphabetize: { order: 'asc' },
+                  },
+                ],
+                errors: [
+                  createOrderError([
+                    '`A` export',
+                    'before',
+                    'type export of `B`',
+                  ]),
+                ],
+              }),
+              tInvalid({
+                code: `
+              import { type B, A, default as C } from "./Z";
+            `,
+                output: `
+              import { A, default as C, type B } from "./Z";
+            `,
+                ...parserConfig,
+                options: [
+                  {
+                    named: {
+                      import: true,
+                      types: 'types-last',
+                    },
+                    alphabetize: { order: 'asc' },
+                  },
+                ],
+                errors: [
+                  createOrderError([
+                    '`B` type import',
+                    'after',
+                    'import of `default`',
+                  ]),
+                ],
+              }),
+              tInvalid({
+                code: `
+              export { A, type Z } from "./Z";
+            `,
+                output: `
+              export { type Z, A } from "./Z";
+            `,
+                ...parserConfig,
+                options: [
+                  {
+                    named: {
+                      enabled: true,
+                      types: 'types-first',
+                    },
+                  },
+                ],
+                errors: [
+                  createOrderError([
+                    '`Z` type export',
+                    'before',
+                    'export of `A`',
+                  ]),
+                ],
+              }),
+            ]
+          : []),
 
         tInvalid({
           code: `

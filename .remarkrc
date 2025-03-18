@@ -9,6 +9,8 @@
       "lint-no-undefined-references",
       {
         "allow": [
+          "!CAUTION",
+          "!IMPORTANT",
           "!NOTE",
           "!TIP",
           "!WARNING"
