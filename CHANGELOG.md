@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.8.1
+
+### Patch Changes
+
+- [#251](https://github.com/un-ts/eslint-plugin-import-x/pull/251) [`af5de32`](https://github.com/un-ts/eslint-plugin-import-x/commit/af5de32c59827ccc7d6c574f76b4ac873c665138) Thanks [@JounQin](https://github.com/JounQin)! - chore: bump `rspack-resolver` to v1.2.0
+
 ## 4.8.0
 
 ### Minor Changes
