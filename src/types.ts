@@ -171,8 +171,70 @@ export type PathGroup = {
   position?: 'before' | 'after'
 }
 
+export type ExportAndImportKind = 'value' | 'type'
+
+export type NewLinesOptions =
+  | 'always'
+  | 'always-and-inside-groups'
+  | 'ignore'
+  | 'never'
+
+export type NamedTypes = 'mixed' | 'types-first' | 'types-last'
+
+export type NamedOptions = {
+  enabled?: boolean
+  import?: boolean
+  export?: boolean
+  require?: boolean
+  cjsExports?: boolean
+  types?: NamedTypes
+}
+
 export type AlphabetizeOptions = {
   caseInsensitive: boolean
   order: 'ignore' | 'asc' | 'desc'
   orderImportKind: 'ignore' | 'asc' | 'desc'
+}
+
+export type ImportEntryType = 'import:object' | 'import' | 'require' | 'export'
+
+export type LiteralNodeValue =
+  | string
+  | number
+  | bigint
+  | boolean
+  | RegExp
+  | null
+
+export type ImportEntry = {
+  type: ImportEntryType
+  node: TSESTree.Node & {
+    importKind?: ExportAndImportKind
+    exportKind?: ExportAndImportKind
+  }
+  value: LiteralNodeValue
+  alias?: string
+  kind?: ExportAndImportKind
+  displayName?: LiteralNodeValue
+}
+
+export type ImportEntryWithRank = {
+  rank: number
+  isMultiline?: boolean
+} & ImportEntry
+
+export type RanksPathGroup = {
+  pattern: string
+  patternOptions?: PicomatchOptions
+  group: string
+  position?: number
+}
+
+export type RanksGroups = Record<string, number>
+
+export type Ranks = {
+  omittedTypes: string[]
+  groups: RanksGroups
+  pathGroups: RanksPathGroup[]
+  maxPosition: number
 }

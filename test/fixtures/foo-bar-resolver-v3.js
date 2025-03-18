@@ -4,7 +4,7 @@ exports.foobarResolver =
   /** @type {import('eslint-plugin-import-x/types').NewResolver} */ {
     name: 'resolver-foo-bar',
     interfaceVersion: 3,
-    resolve: function (modulePath, sourceFile) {
+    resolve(modulePath, sourceFile) {
       var sourceFileName = path.basename(sourceFile)
       if (sourceFileName === 'foo.js') {
         return { found: true, path: path.join(__dirname, 'bar.jsx') }

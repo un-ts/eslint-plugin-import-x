@@ -1,7 +1,7 @@
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
 
-import type { PluginSettings, RuleContext } from '../types'
+import type { LiteralNodeValue, PluginSettings, RuleContext } from '../types'
 
 import { getContextPackagePath } from './package-path'
 import { resolve } from './resolve'
@@ -20,7 +20,7 @@ function isInternalRegexMatch(name: string, settings: PluginSettings) {
   return internalScope && new RegExp(internalScope).test(name)
 }
 
-export function isAbsolute(name?: string | boolean | number | null) {
+export function isAbsolute(name?: LiteralNodeValue) {
   return typeof name === 'string' && path.isAbsolute(name)
 }
 
@@ -142,25 +142,31 @@ function isExternalLookingName(name: string) {
   return isModule(name) || isScoped(name)
 }
 
-function typeTest(name: string, context: RuleContext, path?: string | null) {
+function typeTest(
+  name: LiteralNodeValue,
+  context: RuleContext,
+  path?: string | null,
+) {
   const { settings } = context
-  if (isInternalRegexMatch(name, settings)) {
-    return 'internal'
-  }
-  if (isAbsolute(name)) {
-    return 'absolute'
-  }
-  if (isBuiltIn(name, settings, path)) {
-    return 'builtin'
-  }
-  if (isRelativeToParent(name)) {
-    return 'parent'
-  }
-  if (isIndex(name)) {
-    return 'index'
-  }
-  if (isRelativeToSibling(name)) {
-    return 'sibling'
+  if (typeof name === 'string') {
+    if (isInternalRegexMatch(name, settings)) {
+      return 'internal'
+    }
+    if (isAbsolute(name)) {
+      return 'absolute'
+    }
+    if (isBuiltIn(name, settings, path)) {
+      return 'builtin'
+    }
+    if (isRelativeToParent(name)) {
+      return 'parent'
+    }
+    if (isIndex(name)) {
+      return 'index'
+    }
+    if (isRelativeToSibling(name)) {
+      return 'sibling'
+    }
   }
   if (isExternalPath(path, context)) {
     return 'external'
@@ -168,14 +174,18 @@ function typeTest(name: string, context: RuleContext, path?: string | null) {
   if (isInternalPath(path, context)) {
     return 'internal'
   }
-  if (isExternalLookingName(name)) {
+  if (typeof name === 'string' && isExternalLookingName(name)) {
     return 'external'
   }
   return 'unknown'
 }
 
-export function importType(name: string, context: RuleContext) {
-  return typeTest(name, context, resolve(name, context))
+export function importType(name: LiteralNodeValue, context: RuleContext) {
+  return typeTest(
+    name,
+    context,
+    typeof name === 'string' ? resolve(name, context) : null,
+  )
 }
 
 export type ImportType = ReturnType<typeof importType>
