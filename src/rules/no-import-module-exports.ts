@@ -106,15 +106,12 @@ export = createRule<[Options?], MessageId>({
         const isImportBinding = variableDefinition?.type === 'ImportBinding'
         const hasCJSExportReference =
           hasKeywords && (!objectScope || objectScope.type === 'module')
-        const isException = !!options.exceptions?.some(glob =>
-          minimatch(filename, glob),
-        )
 
         if (
           isIdentifier &&
           hasCJSExportReference &&
           !isEntryPoint &&
-          !isException &&
+          !options.exceptions?.some(glob => minimatch(filename, glob)) &&
           !isImportBinding
         ) {
           for (const importDeclaration of importDeclarations) {
