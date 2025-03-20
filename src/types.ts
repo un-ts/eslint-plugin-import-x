@@ -1,5 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import type { PicomatchOptions } from 'picomatch'
+import type { MinimatchOptions } from 'minimatch'
 import type { NapiResolveOptions as ResolveOptions } from 'rspack-resolver'
 import type { KebabCase } from 'type-fest'
 
@@ -167,7 +167,7 @@ export type ExportNamespaceSpecifier = CustomESTreeNode<
 export type PathGroup = {
   pattern: string
   group: ImportType
-  patternOptions?: PicomatchOptions
+  patternOptions?: MinimatchOptions
   position?: 'before' | 'after'
 }
 
@@ -225,7 +225,7 @@ export type ImportEntryWithRank = {
 
 export type RanksPathGroup = {
   pattern: string
-  patternOptions?: PicomatchOptions
+  patternOptions?: MinimatchOptions
   group: string
   position?: number
 }

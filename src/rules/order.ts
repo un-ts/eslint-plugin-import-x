@@ -1,5 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
+import { minimatch } from 'minimatch'
 
 import type {
   AlphabetizeOptions,
@@ -16,13 +17,7 @@ import type {
   RanksPathGroup,
   RuleContext,
 } from '../types'
-import {
-  createRule,
-  getValue,
-  importType,
-  isMatch,
-  isStaticRequire,
-} from '../utils'
+import { getValue, importType, isStaticRequire, createRule } from '../utils'
 
 const log = debug('eslint-plugin-import-x:rules:order')
 
@@ -706,7 +701,7 @@ function computePathRank(
   maxPosition: number,
 ) {
   for (const { pattern, patternOptions, group, position = 1 } of pathGroups) {
-    if (isMatch(path, pattern, patternOptions)) {
+    if (minimatch(path, pattern, patternOptions || { nocomment: true })) {
       return ranks[group] + position / maxPosition
     }
   }

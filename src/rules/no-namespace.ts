@@ -3,8 +3,9 @@
  */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { minimatch } from 'minimatch'
 
-import { createRule, matcher } from '../utils'
+import { createRule } from '../utils'
 
 type MessageId = 'noNamespace'
 
@@ -44,11 +45,13 @@ export = createRule<[Options?], MessageId>({
     const firstOption = context.options[0] || {}
     const ignoreGlobs = firstOption.ignore
 
-    const isMatch = matcher(ignoreGlobs, { matchBase: true })
-
     return {
       ImportNamespaceSpecifier(node) {
-        if (isMatch(node.parent.source.value)) {
+        if (
+          ignoreGlobs?.find(glob =>
+            minimatch(node.parent.source.value, glob, { matchBase: true }),
+          )
+        ) {
           return
         }
 
