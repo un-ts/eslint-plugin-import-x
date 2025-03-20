@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.9.1
+
+### Patch Changes
+
+- [#256](https://github.com/un-ts/eslint-plugin-import-x/pull/256) [`e66575f`](https://github.com/un-ts/eslint-plugin-import-x/commit/e66575fac3935ec2727d36f015e80772b5adf513) Thanks [@JounQin](https://github.com/JounQin)! - refactor: revert `picomatch` back to `minimatch`
+
 ## 4.9.0
 
 ### Minor Changes
