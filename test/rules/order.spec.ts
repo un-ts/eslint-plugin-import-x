@@ -5379,5 +5379,41 @@ flowRuleTester.run('order', rule, {
         },
       ],
     }),
+    tInvalid({
+      code: `
+        import css from "./Medals.module.scss";
+        import commonCss from "../Collections.module.scss";
+      `,
+      options: [
+        {
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+          groups: ['index'],
+          pathGroups: [
+            {
+              pattern: '*.scss',
+              group: 'index',
+              patternOptions: {
+                matchBase: true,
+              },
+              position: 'after',
+            },
+          ],
+        },
+      ],
+      output: `
+        import commonCss from "../Collections.module.scss";
+        import css from "./Medals.module.scss";
+      `,
+      errors: [
+        createOrderError([
+          '`./Medals.module.scss` import',
+          'before',
+          'import of `./Medals.module.scss`',
+        ]),
+      ],
+    }),
   ],
 })
