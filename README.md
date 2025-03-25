@@ -308,7 +308,7 @@ export default {
       // enable: false, // optional, defaults to true
       // optional, options to pass to the resolver https://github.com/import-js/eslint-import-resolver-typescript#configuration
       options: {
-        bun: true, // optional, resolve Bun modules, defaults to false
+        bun: true, // optional, resolve Bun modules https://github.com/import-js/eslint-import-resolver-typescript#bun
       },
       resolver: tsResolver, // required, the resolver object
     },
@@ -327,7 +327,7 @@ module.exports = {
       // enable: false, // optional, defaults to true
       // optional, options to pass to the resolver https://github.com/import-js/eslint-import-resolver-typescript#configuration
       options: {
-        bun: true, // optional, resolve Bun modules, defaults to false
+        bun: true, // optional, resolve Bun modules https://github.com/import-js/eslint-import-resolver-typescript#bun
       },
       resolver: tsResolver, // required, the resolver object
     },
