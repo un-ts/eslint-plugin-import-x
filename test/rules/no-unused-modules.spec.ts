@@ -10,8 +10,8 @@ import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
 import { createRuleTestCaseFunctions, testFilePath, parsers } from '../utils'
 import type { GetRuleModuleOptions, GetRuleModuleMessageIds } from '../utils'
 
-import jsxConfig from 'eslint-plugin-import-x/config/react'
-import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
+import jsxConfig from 'eslint-plugin-import-x/config/flat/react'
+import typescriptConfig from 'eslint-plugin-import-x/config/flat/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-unused-modules'
 
 const ruleTester = new TSESLintRuleTester()
