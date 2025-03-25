@@ -114,8 +114,8 @@ export type PluginSettings = WithPluginName<ImportSettings>
 export type PluginConfig = {
   plugins?: [PluginName]
   settings?: PluginSettings
-  rules?: Record<`${PluginName}/${string}`, TSESLint.Linter.RuleEntry>
-} & TSESLint.Linter.ConfigType
+  rules?: Record<`${PluginName}/${string}`, TSESLint.ClassicConfig.RuleEntry>
+} & TSESLint.ClassicConfig.Config
 
 export type PluginFlatBaseConfig = {
   settings?: PluginSettings

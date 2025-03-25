@@ -11,11 +11,9 @@ export = {
   settings: {
     'import-x/extensions': ['.js', '.jsx'],
   },
-  languageOptions: {
-    parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
-      },
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true,
     },
   },
 } satisfies PluginConfig

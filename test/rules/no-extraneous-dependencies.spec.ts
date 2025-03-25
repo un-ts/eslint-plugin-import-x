@@ -9,7 +9,7 @@ import {
 } from '../fixtures/package.json'
 import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils'
 
-import typescriptConfig from 'eslint-plugin-import-x/config/typescript'
+import typescriptConfig from 'eslint-plugin-import-x/config/flat/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-extraneous-dependencies'
 
 const ruleTester = new TSESLintRuleTester()
