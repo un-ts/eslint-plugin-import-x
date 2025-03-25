@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.9.2
+
+### Patch Changes
+
+- [#259](https://github.com/un-ts/eslint-plugin-import-x/pull/259) [`baf7086`](https://github.com/un-ts/eslint-plugin-import-x/commit/baf70861889f43e775a372efabada2ec703f0dae) Thanks [@JounQin](https://github.com/JounQin)! - fix: `PluginConfig` should use classic config
+
 ## 4.9.1
 
 ### Patch Changes
