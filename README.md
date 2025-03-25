@@ -299,14 +299,17 @@ module.exports = {
 
 ```js
 // .eslintrc.mjs
-import tsResolver from 'eslint-import-resolver-typescript'
+import * as tsResolver from 'eslint-import-resolver-typescript'
 
 export default {
   settings: {
     'import-x/resolver': {
       name: 'tsResolver', // required, could be any string you like
       // enable: false, // optional, defaults to true
-      options: { someConfig: value }, // optional, options to pass to the resolver
+      // optional, options to pass to the resolver https://github.com/import-js/eslint-import-resolver-typescript#configuration
+      options: {
+        bun: true, // optional, resolve Bun modules https://github.com/import-js/eslint-import-resolver-typescript#bun
+      },
       resolver: tsResolver, // required, the resolver object
     },
   },
@@ -322,7 +325,10 @@ module.exports = {
     'import-x/resolver': {
       name: 'tsResolver', // required, could be any string you like
       // enable: false, // optional, defaults to true
-      options: { someConfig: value }, // optional, options to pass to the resolver
+      // optional, options to pass to the resolver https://github.com/import-js/eslint-import-resolver-typescript#configuration
+      options: {
+        bun: true, // optional, resolve Bun modules https://github.com/import-js/eslint-import-resolver-typescript#bun
+      },
       resolver: tsResolver, // required, the resolver object
     },
   },
