@@ -1,5 +1,16 @@
 # eslint-plugin-import-x
 
+## 4.9.3
+
+### Patch Changes
+
+- [#263](https://github.com/un-ts/eslint-plugin-import-x/pull/263) [`c0046a9`](https://github.com/un-ts/eslint-plugin-import-x/commit/c0046a9e85d6563920a5df4e8fbb3ecd977c47ab) Thanks [@JounQin](https://github.com/JounQin)! - chore: migrate to rebranding `unrs-resolver` with new targets supported:
+
+  - `i686-pc-windows-msvc`
+  - `armv7-unknown-linux-musleabihf`
+  - `powerpc64le-unknown-linux-gnu`
+  - `s390x-unknown-linux-gnu`
+
 ## 4.9.2
 
 ### Patch Changes
