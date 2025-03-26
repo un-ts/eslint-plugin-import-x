@@ -1,8 +1,8 @@
 import module from 'node:module'
 import path from 'node:path'
 
-import { ResolverFactory } from 'rspack-resolver'
-import type { NapiResolveOptions as ResolveOptions } from 'rspack-resolver'
+import { ResolverFactory } from 'unrs-resolver'
+import type { NapiResolveOptions as ResolveOptions } from 'unrs-resolver'
 
 import type { NewResolver } from './types'
 

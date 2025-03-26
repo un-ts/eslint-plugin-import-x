@@ -1,7 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { MinimatchOptions } from 'minimatch'
-import type { NapiResolveOptions as ResolveOptions } from 'rspack-resolver'
 import type { KebabCase } from 'type-fest'
+import type { NapiResolveOptions as ResolveOptions } from 'unrs-resolver'
 
 import type { ImportType as ImportType_, PluginName } from './utils'
 import type {
