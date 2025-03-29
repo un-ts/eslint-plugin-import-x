@@ -33,6 +33,7 @@
   "scripts": {
     "build": "tsc -p src",
     "clean": "rimraf lib",
+    "format": "prettier --write .",
     "lint": "run-p 'lint:*'",
     "lint:docs": "yarn update:eslint-docs --check",
     "lint:es": "eslint . --cache",
