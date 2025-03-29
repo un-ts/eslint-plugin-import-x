@@ -6,7 +6,7 @@
   "repository": "https://github.com/un-ts/eslint-plugin-import-x",
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "license": "MIT",
-  "packageManager": "yarn@4.7.0",
+  "packageManager": "yarn@4.8.0",
   "engines": {
     "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
   },
@@ -95,7 +95,7 @@
     "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.15",
     "@types/klaw-sync": "^6.0.5",
-    "@types/node": "^20.17.28",
+    "@types/node": "^22.0.0",
     "@types/pnpapi": "^0.0.5",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",

@@ -1,3 +1,7 @@
+const { version } = require('eslint/package.json')
+
+const nonLatestEslint = +version.split('.')[0] < 9
+
 /**
  * @type {import('eslint').Linter.Config}
  */
@@ -29,6 +33,8 @@ module.exports = {
   rules: {
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-require-imports': 'off',
+
+    'no-constant-condition': nonLatestEslint ? 'off' : 'error',
 
     'eslint-plugin/consistent-output': ['error', 'always'],
     'eslint-plugin/meta-property-ordering': 'error',
