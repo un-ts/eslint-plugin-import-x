@@ -1,8 +1,9 @@
 # eslint-plugin-import-x
 
-[![GitHub Actions](https://github.com/un-ts/eslint-plugin-import-x/workflows/CI/badge.svg)](https://github.com/un-ts/eslint-plugin-import-x/actions/workflows/ci.yml)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/un-ts/eslint-plugin-import-x/ci.yml?branch=master)](https://github.com/un-ts/eslint-plugin-import-x/actions/workflows/ci.yml?query=branch%3Amaster)
 [![Codecov](https://img.shields.io/codecov/c/github/un-ts/eslint-plugin-import-x.svg)](https://codecov.io/gh/un-ts/eslint-plugin-import-x)
 [![type-coverage](https://img.shields.io/badge/dynamic/json.svg?label=type-coverage&prefix=%E2%89%A5&suffix=%&query=$.typeCoverage.atLeast&uri=https%3A%2F%2Fraw.githubusercontent.com%2Fun-ts%2Fsynckit%2Fmain%2Fpackage.json)](https://github.com/plantain-00/type-coverage)
+[![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/un-ts/eslint-plugin-import-x)](https://coderabbit.ai)
 [![npm](https://img.shields.io/npm/v/eslint-plugin-import-x.svg)](https://www.npmjs.com/package/eslint-plugin-import-x)
 [![GitHub Release](https://img.shields.io/github/release/un-ts/eslint-plugin-import-x)](https://github.com/un-ts/eslint-plugin-import-x/releases)
 
@@ -16,6 +17,33 @@ This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, a
 [`eslint-plugin-i` is now `eslint-plugin-import-x`](https://github.com/un-ts/eslint-plugin-import-x/issues/24#issuecomment-1991605123)
 
 **IF YOU ARE USING THIS WITH SUBLIME**: see the [bottom section](#sublimelinter-eslint) for important info.
+
+## TOC <!-- omit in toc -->
+
+- [Rules](#rules)
+  - [Helpful warnings](#helpful-warnings)
+  - [Module systems](#module-systems)
+  - [Static analysis](#static-analysis)
+  - [Style guide](#style-guide)
+- [Installation](#installation)
+- [Configuration (legacy: `.eslintrc*`)](#configuration-legacy-eslintrc)
+  - [TypeScript](#typescript)
+- [Configuration (new: `eslint.config.js`)](#configuration-new-eslintconfigjs)
+- [Resolvers](#resolvers)
+- [Settings](#settings)
+  - [`import-x/extensions`](#import-xextensions)
+  - [`import-x/ignore`](#import-xignore)
+  - [`import-x/core-modules`](#import-xcore-modules)
+  - [`import-x/external-module-folders`](#import-xexternal-module-folders)
+  - [`import-x/parsers`](#import-xparsers)
+  - [`import-x/resolver`](#import-xresolver)
+  - [`import-x/cache`](#import-xcache)
+  - [`import-x/internal-regex`](#import-xinternal-regex)
+- [SublimeLinter-eslint](#sublimelinter-eslint)
+- [Sponsors](#sponsors)
+- [Backers](#backers)
+- [Changelog](#changelog)
+- [License](#license)
 
 ## Rules
 
