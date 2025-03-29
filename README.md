@@ -589,11 +589,36 @@ In Package Settings / SublimeLinter / User Settings:
 I believe this defaults to `3`, so you may not need to alter it depending on your
 project folder max depth.
 
+[![Sponsors](https://raw.githubusercontent.com/1stG/static/master/sponsors.svg)](https://github.com/sponsors/JounQin)
+
+## Sponsors
+
+| 1stG                                                                                                                   | RxTS                                                                                                                   | UnTS                                                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| [![1stG Open Collective sponsors](https://opencollective.com/1stG/organizations.svg)](https://opencollective.com/1stG) | [![RxTS Open Collective sponsors](https://opencollective.com/rxts/organizations.svg)](https://opencollective.com/rxts) | [![UnTS Open Collective sponsors](https://opencollective.com/unts/organizations.svg)](https://opencollective.com/unts) |
+
+## Backers
+
+| 1stG                                                                                                                | RxTS                                                                                                                | UnTS                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [![1stG Open Collective backers](https://opencollective.com/1stG/individuals.svg)](https://opencollective.com/1stG) | [![RxTS Open Collective backers](https://opencollective.com/rxts/individuals.svg)](https://opencollective.com/rxts) | [![UnTS Open Collective backers](https://opencollective.com/unts/individuals.svg)](https://opencollective.com/unts) |
+
+## Changelog
+
+Detailed changes for each release are documented in [CHANGELOG.md](./CHANGELOG.md).
+
+## License
+
+[MIT][] © [JounQin][]@[1stG.me][]
+
 [`@typescript-eslint/parser`]: https://github.com/typescript-eslint/typescript-eslint/tree/HEAD/packages/parser
 [`eslint-import-resolver-typescript`]: https://github.com/import-js/eslint-import-resolver-typescript
-[`resolve`]: https://www.npmjs.com/package/resolve
-[`externals`]: https://webpack.github.io/docs/library-and-externals.html
-[Node]: https://www.npmjs.com/package/eslint-import-resolver-node
-[webpack]: https://www.npmjs.com/package/eslint-import-resolver-webpack
 [`eslint_d`]: https://www.npmjs.com/package/eslint_d
 [`eslint-loader`]: https://www.npmjs.com/package/eslint-loader
+[`resolve`]: https://www.npmjs.com/package/resolve
+[`externals`]: https://webpack.github.io/docs/library-and-externals.html
+[1stg.me]: https://www.1stg.me
+[jounqin]: https://GitHub.com/JounQin
+[mit]: http://opensource.org/licenses/MIT
+[node]: https://www.npmjs.com/package/eslint-import-resolver-node
+[webpack]: https://www.npmjs.com/package/eslint-import-resolver-webpack
