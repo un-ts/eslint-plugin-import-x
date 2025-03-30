@@ -1,6 +1,8 @@
+import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TSESLint } from '@typescript-eslint/utils'
 
-import { parsers, createRuleTestCaseFunctions } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-dynamic-require'
 
@@ -30,7 +32,7 @@ ruleTester.run('no-dynamic-require', rule, {
       const _test: typeof tValid = testObj =>
         $parser === parsers.ESPREE ? testObj : tValid(testObj)
 
-      const parser = require($parser)
+      const parser = cjsRequire<TSESLint.Parser.LooseParserModule>($parser)
 
       return [
         _test({
@@ -162,7 +164,7 @@ ruleTester.run('no-dynamic-require', rule, {
       const _test: typeof tInvalid = testObj =>
         $parser === parsers.ESPREE ? testObj : tInvalid(testObj)
 
-      const parser = require($parser)
+      const parser = cjsRequire<TSESLint.Parser.LooseParserModule>($parser)
 
       return [
         _test({

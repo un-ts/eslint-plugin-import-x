@@ -2,12 +2,12 @@ import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { ExportMap, createRule } from '../utils'
-import type { ModuleOptions } from '../utils'
+import { ExportMap, createRule } from '../utils/index.js'
+import type { ModuleOptions } from '../utils/index.js'
 
-type MessageId = 'notFound' | 'notFoundDeep'
+export type MessageId = 'notFound' | 'notFoundDeep'
 
-export = createRule<[ModuleOptions?], MessageId>({
+export default createRule<[ModuleOptions?], MessageId>({
   name: 'named',
   meta: {
     type: 'problem',

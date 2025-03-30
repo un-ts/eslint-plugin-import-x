@@ -1,3 +1,4 @@
+import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
@@ -6,8 +7,8 @@ import {
   createRuleTestCaseFunctions,
   SYNTAX_VALID_CASES,
   parsers,
-} from '../utils'
-import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils'
+} from '../utils.js'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default-member'
 

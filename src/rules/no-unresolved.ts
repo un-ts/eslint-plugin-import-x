@@ -2,7 +2,7 @@
  * Ensures that an imported path exists, given resolution rules.
  */
 
-import type { ModuleOptions } from '../utils'
+import type { ModuleOptions } from '../utils/index.js'
 import {
   createRule,
   makeOptionsSchema,
@@ -11,16 +11,16 @@ import {
   fileExistsWithCaseSync,
   resolve,
   ModuleCache,
-} from '../utils'
+} from '../utils/index.js'
 
-type Options = ModuleOptions & {
+export type Options = ModuleOptions & {
   caseSensitive?: boolean
   caseSensitiveStrict?: boolean
 }
 
-type MessageId = 'unresolved' | 'casingMismatch'
+export type MessageId = 'unresolved' | 'casingMismatch'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-unresolved',
   meta: {
     type: 'problem',

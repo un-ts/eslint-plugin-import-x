@@ -5,7 +5,7 @@ import type { TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 import type { PackageJson } from 'type-fest'
 
-import type { RuleContext } from '../types'
+import type { RuleContext } from '../types.js'
 import {
   createRule,
   moduleVisitor,
@@ -13,9 +13,9 @@ import {
   pkgUp,
   importType,
   getFilePackageName,
-} from '../utils'
+} from '../utils/index.js'
 
-type PackageDeps = ReturnType<typeof extractDepFields>
+export type PackageDeps = ReturnType<typeof extractDepFields>
 
 const depFieldCache = new Map<string, PackageDeps>()
 
@@ -147,7 +147,7 @@ function getModuleOriginalName(name: string) {
   return first.startsWith('@') ? `${first}/${second}` : first
 }
 
-type DepDeclaration = {
+export interface DepDeclaration {
   isInDeps: boolean
   isInDevDeps: boolean
   isInOptDeps: boolean
@@ -200,7 +200,7 @@ function checkDependencyDeclaration(
   )
 }
 
-type DepsOptions = {
+export interface DepsOptions {
   allowDevDeps: boolean
   allowOptDeps: boolean
   allowPeerDeps: boolean
@@ -341,7 +341,7 @@ function testConfig(config: string[] | boolean | undefined, filename: string) {
   )
 }
 
-type Options = {
+export interface Options {
   packageDir?: string | string[]
   devDependencies?: boolean | string[]
   optionalDependencies?: boolean | string[]
@@ -352,14 +352,14 @@ type Options = {
   whitelist?: string[]
 }
 
-type MessageId =
+export type MessageId =
   | 'pkgNotFound'
   | 'pkgUnparsable'
   | 'devDep'
   | 'optDep'
   | 'missing'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-extraneous-dependencies',
   meta: {
     type: 'problem',

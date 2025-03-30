@@ -1,12 +1,12 @@
 import debug from 'debug'
 
-import type { ImportSettings, PluginSettings } from '../types'
+import type { ImportSettings, PluginSettings } from '../types.js'
 
 const log = debug('eslint-plugin-import-x:utils:ModuleCache')
 
 export type CacheKey = unknown
 
-export type CacheObject = {
+export interface CacheObject {
   result: unknown
   lastSeen: ReturnType<typeof process.hrtime>
 }

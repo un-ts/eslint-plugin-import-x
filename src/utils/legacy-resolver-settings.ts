@@ -3,6 +3,7 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
+import { cjsRequire } from '@pkgr/core'
 import type { LiteralUnion } from 'type-fest'
 
 import type {
@@ -10,10 +11,10 @@ import type {
   ResolvedResult,
   TsResolverOptions,
   WebpackResolverOptions,
-} from '../types'
+} from '../types.js'
 
-import { pkgDir } from './pkg-dir'
-import { IMPORT_RESOLVE_ERROR_NAME } from './resolve'
+import { pkgDir } from './pkg-dir.js'
+import { IMPORT_RESOLVE_ERROR_NAME } from './resolve.js'
 
 export type LegacyResolverName = LiteralUnion<
   'node' | 'typescript' | 'webpack',
@@ -32,13 +33,13 @@ export type LegacyResolverResolve<T = unknown> = (
   config: T,
 ) => ResolvedResult
 
-export type LegacyResolver<T = unknown, U = T> = {
+export interface LegacyResolver<T = unknown, U = T> {
   interfaceVersion?: 1 | 2
   resolve: LegacyResolverResolve<T>
   resolveImport: LegacyResolverResolveImport<U>
 }
 
-export type LegacyResolverObject = {
+export interface LegacyResolverObject {
   // node, typescript, webpack...
   name: LegacyResolverName
 
@@ -56,7 +57,7 @@ export type LegacyResolverObject = {
   resolver: LegacyResolver
 }
 
-export type LegacyResolverRecord = {
+export interface LegacyResolverRecord {
   node?: boolean | NodeResolverOptions
   typescript?: boolean | TsResolverOptions
   webpack?: WebpackResolverOptions
@@ -197,12 +198,12 @@ function tryRequire<T>(
   try {
     // Check if the target exists
     if (sourceFile == null) {
-      resolved = require.resolve(target)
+      resolved = cjsRequire.resolve(target)
     } else {
       try {
         resolved = createRequire(path.resolve(sourceFile)).resolve(target)
       } catch {
-        resolved = require.resolve(target)
+        resolved = cjsRequire.resolve(target)
       }
     }
   } catch {
@@ -211,7 +212,7 @@ function tryRequire<T>(
   }
 
   // If the target exists then return the loaded module
-  return require(resolved)
+  return cjsRequire(resolved)
 }
 
 function getBaseDir(sourceFile: string): string {

@@ -1,16 +1,19 @@
-import importPlugin from 'eslint-plugin-import-x'
+import importPlugin, {
+  configs,
+  createNodeResolver,
+} from 'eslint-plugin-import-x'
 
 export default [
   { ignores: ['.yarn', '.pnp.*'] },
   {
     settings: {
-      'import-x/resolver-next': [importPlugin.createNodeResolver()],
+      'import-x/resolver-next': [createNodeResolver()],
     },
     plugins: {
       'import-x': importPlugin,
     },
     rules: {
-      ...importPlugin.configs.recommended.rules,
+      ...configs.recommended.rules,
     },
   },
 ]

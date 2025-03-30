@@ -1,16 +1,24 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
+import type { CjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import {
-  dependencies as deps,
-  devDependencies as devDeps,
-} from '../fixtures/package.json'
-import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils'
+import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 
 import typescriptConfig from 'eslint-plugin-import-x/config/flat/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-extraneous-dependencies'
+
+const require: CjsRequire = createRequire(import.meta.url)
+
+const _dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const { dependencies: deps, devDependencies: devDeps } = require<{
+  dependencies: Record<string, string>
+  devDependencies: Record<string, string>
+}>('../fixtures/package.json')
 
 const ruleTester = new TSESLintRuleTester()
 const typescriptRuleTester = new TSESLintRuleTester(typescriptConfig)
@@ -80,7 +88,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       code: 'import "importType"',
       settings: {
         'import-x/resolver': {
-          node: { paths: [path.join(__dirname, '../fixtures')] },
+          node: { paths: [path.join(_dirname, '../fixtures')] },
         },
       },
     }),
@@ -102,7 +110,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     tValid({ code: 'require(6)' }),
     tValid({
       code: 'import "doctrine"',
-      options: [{ packageDir: path.join(__dirname, '../../') }],
+      options: [{ packageDir: path.join(_dirname, '../../') }],
     }),
     tValid({
       code: 'import type MyType from "myflowtyped";',
@@ -331,14 +339,14 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     }),
     tInvalid({
       code: 'import "not-a-dependency"',
-      options: [{ packageDir: path.join(__dirname, '../../') }],
+      options: [{ packageDir: path.join(_dirname, '../../') }],
       errors: [
         { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
     tInvalid({
       code: 'import "bar"',
-      options: [{ packageDir: path.join(__dirname, './doesn-exist/') }],
+      options: [{ packageDir: path.join(_dirname, './doesn-exist/') }],
       errors: [{ messageId: 'pkgNotFound' }],
     }),
     tInvalid({
@@ -429,7 +437,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       code: 'import "not-a-dependency"',
       settings: {
         'import-x/resolver': {
-          node: { paths: [path.join(__dirname, '../fixtures')] },
+          node: { paths: [path.join(_dirname, '../fixtures')] },
         },
         'import-x/internal-regex': '^not-a-dependency.*',
       },

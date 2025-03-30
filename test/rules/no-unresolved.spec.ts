@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
@@ -9,11 +10,13 @@ import {
   SYNTAX_VALID_CASES,
   parsers,
   testFilePath,
-} from '../utils'
-import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils'
+} from '../utils.js'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-unresolved'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
+
+const require = createRequire(import.meta.url)
 
 const ruleTester = new TSESLintRuleTester()
 

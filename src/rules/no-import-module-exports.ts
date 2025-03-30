@@ -1,20 +1,21 @@
 import path from 'node:path'
 
+import { cjsRequire } from '@pkgr/core'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
-import type { RuleContext } from '../types'
-import { createRule, pkgUp } from '../utils'
+import type { RuleContext } from '../types.js'
+import { createRule, pkgUp } from '../utils/index.js'
 
 function getEntryPoint(context: RuleContext) {
   const pkgPath = pkgUp({
     cwd: context.physicalFilename,
   })!
   try {
-    return require.resolve(path.dirname(pkgPath))
+    return cjsRequire.resolve(path.dirname(pkgPath))
   } catch {
     // Assume the package has no entrypoint (e.g. CLI packages)
-    // in which case require.resolve would throw.
+    // in which case `cjsRequire.resolve` would throw.
     return null
   }
 }
@@ -41,13 +42,13 @@ function findDefinition(objectScope: TSESLint.Scope.Scope, identifier: string) {
   )
 }
 
-type Options = {
+export interface Options {
   exceptions?: string[]
 }
 
-type MessageId = 'notAllowed'
+export type MessageId = 'notAllowed'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-import-module-exports',
   meta: {
     type: 'problem',

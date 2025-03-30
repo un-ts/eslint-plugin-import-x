@@ -1,6 +1,9 @@
-import type { RuleContext } from '../types'
+import type { TSESLint } from '@typescript-eslint/utils'
 
-export default function sourceType(context: RuleContext) {
+export function sourceType<
+  MessageIds extends string,
+  Options extends readonly unknown[],
+>(context: TSESLint.RuleContext<MessageIds, Options>) {
   if ('sourceType' in context.parserOptions) {
     return context.parserOptions.sourceType
   }

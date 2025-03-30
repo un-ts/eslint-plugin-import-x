@@ -93,22 +93,22 @@ exports[`relative ../.github/dependabot.yml => false 2`] = `
 }
 `;
 
-exports[`relative ../babel.config.js => babel.config.js 1`] = `
+exports[`relative ../babel.config.cjs => babel.config.cjs 1`] = `
 {
-  "expected": "babel.config.js",
-  "requireResolve": "<ROOT>/babel.config.js",
-  "source": "../babel.config.js",
+  "expected": "babel.config.cjs",
+  "requireResolve": "<ROOT>/babel.config.cjs",
+  "source": "../babel.config.cjs",
 }
 `;
 
-exports[`relative ../babel.config.js => babel.config.js 2`] = `
+exports[`relative ../babel.config.cjs => babel.config.cjs 2`] = `
 {
-  "expected": "babel.config.js",
+  "expected": "babel.config.cjs",
   "result": {
     "found": true,
-    "path": "<ROOT>/babel.config.js",
+    "path": "<ROOT>/babel.config.cjs",
   },
-  "source": "../babel.config.js",
+  "source": "../babel.config.cjs",
 }
 `;
 

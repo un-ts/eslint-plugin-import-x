@@ -7,9 +7,10 @@ import path from 'node:path'
 
 import { TSESTree } from '@typescript-eslint/utils'
 import type { TSESLint } from '@typescript-eslint/utils'
-import { FileEnumerator } from 'eslint/use-at-your-own-risk'
+// eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
+import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 
-import type { FileExtension, RuleContext } from '../types'
+import type { FileExtension, RuleContext } from '../types.js'
 import {
   ExportMap,
   recursivePatternCapture,
@@ -19,7 +20,10 @@ import {
   readPkgUp,
   visit,
   getValue,
-} from '../utils'
+} from '../utils/index.js'
+
+// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+const { FileEnumerator } = eslintUnsupportedApi
 
 function listFilesToProcess(src: string[], extensions: FileExtension[]) {
   const enumerator = new FileEnumerator({
@@ -389,7 +393,7 @@ const fileIsInPkg = (file: string) => {
   return false
 }
 
-type Options = {
+export interface Options {
   src?: string[]
   ignoreExports?: string[]
   missingExports?: true
@@ -399,7 +403,7 @@ type Options = {
 
 type MessageId = 'notFound' | 'unused'
 
-export = createRule<Options[], MessageId>({
+export default createRule<Options[], MessageId>({
   name: 'no-unused-modules',
   meta: {
     type: 'suggestion',

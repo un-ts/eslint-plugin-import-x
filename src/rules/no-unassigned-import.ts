@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { minimatch } from 'minimatch'
 
-import { isStaticRequire, createRule } from '../utils'
+import { isStaticRequire, createRule } from '../utils/index.js'
 
 function testIsAllow(
   globs: string[] | undefined,
@@ -26,13 +26,13 @@ function testIsAllow(
   )
 }
 
-type Options = {
+export interface Options {
   allow?: string[]
 }
 
 type MessageId = 'unassigned'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-unassigned-import',
   meta: {
     type: 'suggestion',

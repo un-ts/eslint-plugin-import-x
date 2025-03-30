@@ -1,8 +1,8 @@
-import { createRule, getValue } from '../utils'
+import { createRule, getValue } from '../utils/index.js'
 
 type MessageId = 'default'
 
-export = createRule<[], MessageId>({
+export default createRule<[], MessageId>({
   name: 'no-named-default',
   meta: {
     type: 'suggestion',

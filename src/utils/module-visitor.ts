@@ -1,6 +1,6 @@
 import type { JSONSchema, TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-type Visitor = (
+export type Visitor = (
   source: TSESTree.StringLiteral,
   importer:
     | TSESTree.ImportDeclaration
@@ -11,7 +11,7 @@ type Visitor = (
     | TSESTree.StringLiteral,
 ) => void
 
-export type ModuleOptions = {
+export interface ModuleOptions {
   amd?: boolean
   commonjs?: boolean
   esmodule?: boolean

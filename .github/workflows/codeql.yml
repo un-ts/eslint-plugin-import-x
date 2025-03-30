@@ -1,8 +1,8 @@
 name: CodeQL
 
 on:
-  push:
-  pull_request:
+  push: null
+  pull_request: null
   schedule:
     - cron: '41 19 * * 6'
 

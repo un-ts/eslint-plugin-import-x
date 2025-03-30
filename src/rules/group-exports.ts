@@ -1,8 +1,8 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
-type Literal = string | number | bigint | boolean | RegExp | null
+export type Literal = string | number | bigint | boolean | RegExp | null
 
 /**
  * Returns an array with names of the properties in the accessor chain for MemberExpression nodes
@@ -35,9 +35,9 @@ function accessorChain(node: TSESTree.MemberExpression) {
   return chain
 }
 
-type MessageId = 'ExportNamedDeclaration' | 'AssignmentExpression'
+export type MessageId = 'ExportNamedDeclaration' | 'AssignmentExpression'
 
-export = createRule<[], MessageId>({
+export default createRule<[], MessageId>({
   name: 'group-exports',
   meta: {
     type: 'suggestion',

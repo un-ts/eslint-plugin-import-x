@@ -1,3 +1,4 @@
+import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
@@ -5,8 +6,8 @@ import {
   SYNTAX_VALID_CASES,
   parsers,
   createRuleTestCaseFunctions,
-} from '../utils'
-import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils'
+} from '../utils.js'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-anonymous-default-export'
 
@@ -71,7 +72,7 @@ ruleTester.run('no-anonymous-default-export', rule, {
     tValid({
       code: 'const foo = 123\nexport { foo as "default" }',
       languageOptions: {
-        parser: require(parsers.ESPREE),
+        parser: cjsRequire(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
       },
     }),

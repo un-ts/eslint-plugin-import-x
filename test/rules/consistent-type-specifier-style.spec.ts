@@ -1,8 +1,9 @@
+import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { parsers, createRuleTestCaseFunctions } from '../utils'
-import type { RuleRunTests } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils.js'
+import type { RuleRunTests } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/consistent-type-specifier-style'
 
@@ -399,7 +400,7 @@ describe('TypeScript', () => {
 describe('Babel/Flow', () => {
   const ruleTester = new TSESLintRuleTester({
     languageOptions: {
-      parser: require(parsers.BABEL),
+      parser: cjsRequire(parsers.BABEL),
       parserOptions: {
         ecmaVersion: 6,
         sourceType: 'module',
@@ -421,7 +422,7 @@ describe('Babel/Flow', () => {
 describe('Hermes/Flow', () => {
   const ruleTester = new TSESLintRuleTester({
     languageOptions: {
-      parser: require(parsers.HERMES),
+      parser: cjsRequire(parsers.HERMES),
       parserOptions: {
         ecmaVersion: 6,
         sourceType: 'module',

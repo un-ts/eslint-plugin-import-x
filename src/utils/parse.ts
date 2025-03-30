@@ -9,9 +9,9 @@ import type {
   FileExtension,
   ParseError,
   RuleContext,
-} from '../types'
+} from '../types.js'
 
-import { moduleRequire } from './module-require'
+import { moduleRequire } from './module-require.js'
 
 // https://github.com/nuxt/eslint/issues/494
 function withoutProjectParserOptions(

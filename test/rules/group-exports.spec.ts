@@ -1,12 +1,13 @@
+import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunctions, parsers } from '../utils'
+import { createRuleTestCaseFunctions, parsers } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/group-exports'
 
 const ruleTester = new TSESLintRuleTester({
   languageOptions: {
-    parser: require(parsers.BABEL),
+    parser: cjsRequire(parsers.BABEL),
     parserOptions: {
       requireConfigFile: false,
       babelOptions: {

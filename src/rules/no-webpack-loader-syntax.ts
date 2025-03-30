@@ -1,6 +1,6 @@
-import { createRule, moduleVisitor } from '../utils'
+import { createRule, moduleVisitor } from '../utils/index.js'
 
-export = createRule({
+export default createRule({
   name: 'no-webpack-loader-syntax',
   meta: {
     type: 'problem',

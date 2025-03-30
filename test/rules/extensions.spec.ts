@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunctions, testFilePath } from '../utils'
+import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/extensions'
 

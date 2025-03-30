@@ -2,10 +2,9 @@
  * Report modules that could parse incorrectly as scripts.
  */
 
-import { createRule, isUnambiguousModule } from '../utils'
-import sourceType from '../utils/source-type'
+import { createRule, isUnambiguousModule, sourceType } from '../utils/index.js'
 
-export = createRule({
+export default createRule({
   name: 'unambiguous',
   meta: {
     type: 'suggestion',

@@ -1,7 +1,8 @@
 import Module from 'node:module'
 import path from 'node:path'
 
-// borrowed from @babel/eslint-parser
+import { cjsRequire } from '@pkgr/core'
+
 function createModule(filename: string) {
   const mod = new Module(filename)
   mod.filename = filename
@@ -13,21 +14,24 @@ function createModule(filename: string) {
 export function moduleRequire<T>(p: string): T {
   try {
     // attempt to get espree relative to eslint
-    const eslintPath = require.resolve('eslint')
+    const eslintPath = cjsRequire.resolve('eslint')
     const eslintModule = createModule(eslintPath)
-    // @ts-expect-error _resolveFilename is undocumented
-    return require(Module._resolveFilename(p, eslintModule))
+
+    return cjsRequire(
+      // @ts-expect-error _resolveFilename is undocumented
+      Module._resolveFilename(p, eslintModule),
+    )
   } catch {
     //
   }
 
   try {
     // try relative to entry point
-    return require.main!.require(p)
+    return cjsRequire.main!.require(p)
   } catch {
     //
   }
 
   // finally, try from here
-  return require(p)
+  return cjsRequire(p)
 }

@@ -3,7 +3,7 @@ import path from 'node:path'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { createRuleTestCaseFunctions } from '../utils'
+import { createRuleTestCaseFunctions } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-import-module-exports'
 

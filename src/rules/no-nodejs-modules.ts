@@ -1,12 +1,12 @@
-import { importType, createRule, moduleVisitor } from '../utils'
+import { importType, createRule, moduleVisitor } from '../utils/index.js'
 
-type Options = {
+export interface Options {
   allow?: string[]
 }
 
-type MessageId = 'builtin'
+export type MessageId = 'builtin'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-nodejs-modules',
   meta: {
     type: 'suggestion',

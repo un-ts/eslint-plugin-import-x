@@ -1,8 +1,9 @@
 import fs from 'node:fs'
 
+import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunctions, parsers, testFilePath } from '../utils'
+import { createRuleTestCaseFunctions, parsers, testFilePath } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/first'
 
@@ -30,7 +31,7 @@ ruleTester.run('first', rule, {
       name: '...component.html (issue #2210)',
       code: fs.readFileSync(testFilePath('component.html'), 'utf8'),
       languageOptions: {
-        parser: require('@angular-eslint/template-parser'),
+        parser: cjsRequire('@angular-eslint/template-parser'),
       },
     }),
   ],

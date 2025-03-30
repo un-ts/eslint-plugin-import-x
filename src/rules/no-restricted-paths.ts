@@ -4,8 +4,13 @@ import type { TSESTree } from '@typescript-eslint/utils'
 import isGlob from 'is-glob'
 import { Minimatch } from 'minimatch'
 
-import type { Arrayable } from '../types'
-import { importType, createRule, moduleVisitor, resolve } from '../utils'
+import type { Arrayable } from '../types.js'
+import {
+  importType,
+  createRule,
+  moduleVisitor,
+  resolve,
+} from '../utils/index.js'
 
 const containsPath = (filepath: string, target: string) => {
   const relative = path.relative(target, filepath)
@@ -27,7 +32,7 @@ function areBothGlobPatternAndAbsolutePath(areGlobPatterns: boolean[]) {
   )
 }
 
-type Options = {
+export interface Options {
   basePath?: string
   zones?: Array<{
     from: Arrayable<string>
@@ -37,16 +42,16 @@ type Options = {
   }>
 }
 
-type MessageId = 'path' | 'mixedGlob' | 'glob' | 'zone'
+export type MessageId = 'path' | 'mixedGlob' | 'glob' | 'zone'
 
-type Validator = {
+export interface Validator {
   isPathRestricted: (absoluteImportPath: string) => boolean
   hasValidExceptions: boolean
   isPathException?: (absoluteImportPath: string) => boolean
   reportInvalidException: (node: TSESTree.Node) => void
 }
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-restricted-paths',
   meta: {
     type: 'problem',

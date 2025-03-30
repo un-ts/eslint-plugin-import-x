@@ -1,19 +1,23 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
+import { jest } from '@jest/globals'
+import type { CjsRequire } from '@pkgr/core'
 import type { TSESLint } from '@typescript-eslint/utils'
 
-import { testContext, testFilePath } from '../utils'
+import { testContext, testFilePath } from '../utils.js'
 
-import eslintPluginImportX from 'eslint-plugin-import-x'
+import { importXResolverCompat } from 'eslint-plugin-import-x'
+import type { NewResolver } from 'eslint-plugin-import-x/types'
 import {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
   resolve,
 } from 'eslint-plugin-import-x/utils'
 
-const { importXResolverCompat } = eslintPluginImportX
+const require: CjsRequire = createRequire(import.meta.url)
 
 describe('resolve', () => {
   it('throws on bad parameters', () => {
@@ -108,7 +112,9 @@ describe('resolve', () => {
   it('resolves via a custom resolver with interface version 3', () => {
     const context = testContext({
       'import-x/resolver-next': [
-        require('../fixtures/foo-bar-resolver-v3').foobarResolver,
+        require<{
+          foobarResolver: NewResolver
+        }>('../fixtures/foo-bar-resolver-v3').foobarResolver,
       ],
     })
     const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []
@@ -320,7 +326,9 @@ describe('resolve', () => {
     it('resolves via a custom resolver with interface version 3', () => {
       const context = testContext({
         'import-x/resolver-next': [
-          require('../fixtures/foo-bar-resolver-v3').foobarResolver,
+          require<{
+            foobarResolver: NewResolver
+          }>('../fixtures/foo-bar-resolver-v3').foobarResolver,
         ],
       })
       const testContextReports: Array<TSESLint.ReportDescriptor<string>> = []

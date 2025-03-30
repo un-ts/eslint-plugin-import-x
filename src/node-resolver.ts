@@ -4,9 +4,9 @@ import path from 'node:path'
 import { ResolverFactory } from 'unrs-resolver'
 import type { NapiResolveOptions as ResolveOptions } from 'unrs-resolver'
 
-import type { NewResolver } from './types'
+import type { NewResolver } from './types.js'
 
-export type NodeResolverOptions = {
+export interface NodeResolverOptions extends ResolveOptions {
   /**
    * Attempt to resolve these extensions in order.
    * If multiple files share the same name but have different extensions,
@@ -28,7 +28,7 @@ export type NodeResolverOptions = {
    * @default ['module', 'main']
    */
   mainFields?: string[]
-} & ResolveOptions
+}
 
 export function createNodeResolver({
   extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],

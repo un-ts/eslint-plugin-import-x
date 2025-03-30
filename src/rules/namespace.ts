@@ -1,15 +1,14 @@
-import type { TSESTree } from '@typescript-eslint/utils'
+import type { TSESTree, TSESLint } from '@typescript-eslint/utils'
 
-import type { RuleContext } from '../types'
 import {
   importDeclaration,
   ExportMap,
   createRule,
   declaredScope,
   getValue,
-} from '../utils'
+} from '../utils/index.js'
 
-type MessageId =
+export type MessageId =
   | 'noNamesFound'
   | 'computedReference'
   | 'namespaceMember'
@@ -17,12 +16,12 @@ type MessageId =
   | 'notFoundInNamespace'
   | 'notFoundInNamespaceDeep'
 
-type Options = {
+export interface Options {
   allowComputed?: boolean
 }
 
 function processBodyStatement(
-  context: RuleContext<MessageId>,
+  context: TSESLint.RuleContext<MessageId, [Options]>,
   namespaces: Map<string, ExportMap | null>,
   declaration: TSESTree.ProgramStatement,
 ) {
@@ -99,7 +98,7 @@ function makeMessage(
   } as const
 }
 
-export = createRule<[Options], MessageId>({
+export default createRule<[Options], MessageId>({
   name: 'namespace',
   meta: {
     type: 'problem',

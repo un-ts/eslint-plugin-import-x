@@ -1,12 +1,13 @@
 import path from 'node:path'
 
+import { cjsRequire as require } from '@pkgr/core'
 import type {
   ValidTestCase as TSESLintValidTestCase,
   InvalidTestCase as TSESLintInvalidTestCase,
   RunTests as TSESLintRunTests,
 } from '@typescript-eslint/rule-tester'
 import type { RuleModule } from '@typescript-eslint/utils/ts-eslint'
-import semver from 'semver'
+import * as semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
 import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x/types'
@@ -27,7 +28,8 @@ export function tsVersionSatisfies(specifier: string) {
 
 export function typescriptEslintParserSatisfies(specifier: string) {
   return semver.satisfies(
-    require('@typescript-eslint/parser/package.json').version,
+    require<{ version: string }>('@typescript-eslint/parser/package.json')
+      .version,
     specifier,
   )
 }
@@ -229,4 +231,6 @@ export const SYNTAX_VALID_CASES: TSESLintRunTests<string, unknown[]>['valid'] =
     }),
   ]
 
-export const srcDir = process.env.TEST_COMPILED === '1' ? 'lib' : 'src'
+export const testCompiled = process.env.TEST_COMPILED === '1'
+
+export const srcDir = testCompiled ? 'lib' : 'src'

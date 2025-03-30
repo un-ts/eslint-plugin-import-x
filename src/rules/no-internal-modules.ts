@@ -1,6 +1,11 @@
 import { makeRe } from 'minimatch'
 
-import { importType, createRule, moduleVisitor, resolve } from '../utils'
+import {
+  importType,
+  createRule,
+  moduleVisitor,
+  resolve,
+} from '../utils/index.js'
 
 // minimatch patterns are expected to use / path separators, like import
 // statements, so normalize paths to use the same
@@ -28,14 +33,14 @@ const potentialViolationTypes = new Set([
   'internal',
 ])
 
-type Options = {
+export interface Options {
   allow?: string[]
   forbid?: string[]
 }
 
-type MessageId = 'noAllowed'
+export type MessageId = 'noAllowed'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-internal-modules',
   meta: {
     type: 'suggestion',
