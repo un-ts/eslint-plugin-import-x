@@ -111,7 +111,7 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
   return true
 }
 
-let nodeResolverInstanceForLegacyNodeResolverSettings: NewResolver
+let fallbackLegacyNodeResolver: NewResolver
 
 function fullResolve(
   modulePath: string,
@@ -179,7 +179,7 @@ function fullResolve(
   ) {
     const resolveSettings = settings['import-x/resolve']
 
-    nodeResolverInstanceForLegacyNodeResolverSettings ||= createNodeResolver({
+    fallbackLegacyNodeResolver ||= createNodeResolver({
       extensions: (resolveSettings.extensions ||
         settings['import-x/extensions']) as string[] | undefined,
       builtinModules: resolveSettings.includeCoreModules !== false,
@@ -187,10 +187,7 @@ function fullResolve(
       symlinks: resolveSettings.preserveSymlinks ?? true,
     })
 
-    const resolved = nodeResolverInstanceForLegacyNodeResolverSettings.resolve(
-      modulePath,
-      sourceFile,
-    )
+    const resolved = fallbackLegacyNodeResolver.resolve(modulePath, sourceFile)
     if (resolved.found) {
       fileExistsCache.set(cacheKey, resolved.path as string | null)
       return resolved
