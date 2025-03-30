@@ -36,8 +36,31 @@ export type ImportType = ImportType_ | 'object' | 'type'
 
 export interface NodeResolverOptions {
   extensions?: readonly string[]
-  moduleDirectory?: string[]
+  /** set to `false` to exclude node core modules (e.g.` fs`) from the search */
+  includeCoreModules?: boolean
+  /** directory (or directories) in which to recursively look for modules. Default "node_modules" */
+  moduleDirectory?: string
+  /** if true, doesn't resolve basedir to real path before resolving. This is the way Node resolves dependencies when executed with the --preserve-symlinks flag. Default to true */
+  preserveSymlinks?: boolean
+  /** Noop now, Previously a directory to begin resolving from */
+  basedir?: string
+  /** Noop now. Previously for require.paths array to, it is now noop */
   paths?: string[]
+
+  /** Noop now. Previously for how to read files asynchronously */
+  readFile?: never
+  /** Noop now. Previously a function to asynchronously test whether a file exists */
+  isFile?: never
+  /** Noop now. Previously a function to asynchronously whether a file exists and is a directory */
+  isDirectory?: never
+  /** Noop now. Previously a function to asynchronously resolve a potential symlink to its real path */
+  realpath?: never
+  /** Noop now. Previously a function to asynchronously read a package.json file */
+  readPackage?: never
+  /** Noop now. Previously a function to transform the parsed package.json contents before looking at the "main" field */
+  packageFilter?: never
+  /** Noop now. Previously a function to transform the resolved path before returning it */
+  pathFilter?: never
 }
 
 export interface WebpackResolverOptions {
@@ -98,7 +121,7 @@ export interface ImportSettings {
   ignore?: string[]
   internalRegex?: string
   parsers?: Record<string, readonly FileExtension[]>
-  resolve?: NodeResolverOptions
+  resolve?: LegacyNodeResolverOptions
   resolver?: LegacyImportResolver
   'resolver-legacy'?: LegacyImportResolver
   'resolver-next'?: NewResolver[]
