@@ -1,15 +1,15 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule, moduleVisitor } from '../utils'
+import { createRule, moduleVisitor } from '../utils/index.js'
 
-type Options = {
+export interface Options {
   ignoreTypeImports?: boolean
   max?: number
 }
 
-type MessageId = 'max'
+export type MessageId = 'max'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'max-dependencies',
   meta: {
     type: 'suggestion',

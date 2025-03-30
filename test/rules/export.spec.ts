@@ -1,3 +1,4 @@
+import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import {
@@ -5,8 +6,8 @@ import {
   SYNTAX_VALID_CASES,
   parsers,
   createRuleTestCaseFunctions,
-} from '../utils'
-import type { RuleRunTests } from '../utils'
+} from '../utils.js'
+import type { RuleRunTests } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/export'
 
@@ -18,7 +19,7 @@ ruleTester.run('export', rule, {
   valid: [
     tValid({
       code: 'import "./malformed.js"',
-      languageOptions: { parser: require(parsers.ESPREE) },
+      languageOptions: { parser: cjsRequire(parsers.ESPREE) },
     }),
 
     // default
@@ -130,7 +131,7 @@ ruleTester.run('export', rule, {
     //       `npm up` first if it's failing.
     tInvalid({
       code: 'export * from "./malformed.js"',
-      languageOptions: { parser: require(parsers.ESPREE) },
+      languageOptions: { parser: cjsRequire(parsers.ESPREE) },
       errors: [
         {
           // @ts-expect-error parse error here so can'use rule types
@@ -170,7 +171,7 @@ ruleTester.run('export', rule, {
         { messageId: 'multiNamed', data: { name: 'foo' } },
       ],
       languageOptions: {
-        parser: require(parsers.ESPREE),
+        parser: cjsRequire(parsers.ESPREE),
         parserOptions: {
           ecmaVersion: 2022,
         },

@@ -1,78 +1,77 @@
 import type { TSESLint } from '@typescript-eslint/utils'
 
-import { name, version } from '../package.json'
-
-import electron from './config/electron'
-import errors from './config/errors'
-import electronFlat from './config/flat/electron'
-import errorsFlat from './config/flat/errors'
-import reactFlat from './config/flat/react'
-import reactNativeFlat from './config/flat/react-native'
-import recommendedFlat from './config/flat/recommended'
-import stage0Flat from './config/flat/stage-0'
-import typescriptFlat from './config/flat/typescript'
-import warningsFlat from './config/flat/warnings'
-import react from './config/react'
-import reactNative from './config/react-native'
-import recommended from './config/recommended'
-import stage0 from './config/stage-0'
-import typescript from './config/typescript'
-import warnings from './config/warnings'
+import electron from './config/electron.js'
+import errors from './config/errors.js'
+import electronFlat from './config/flat/electron.js'
+import errorsFlat from './config/flat/errors.js'
+import reactNativeFlat from './config/flat/react-native.js'
+import reactFlat from './config/flat/react.js'
+import recommendedFlat from './config/flat/recommended.js'
+import stage0Flat from './config/flat/stage-0.js'
+import typescriptFlat from './config/flat/typescript.js'
+import warningsFlat from './config/flat/warnings.js'
+import reactNative from './config/react-native.js'
+import react from './config/react.js'
+import recommended from './config/recommended.js'
+import stage0 from './config/stage-0.js'
+import typescript from './config/typescript.js'
+import warnings from './config/warnings.js'
 // rules
-import { createNodeResolver } from './node-resolver'
-import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style'
-import default_ from './rules/default'
-import dynamicImportChunkname from './rules/dynamic-import-chunkname'
-import export_ from './rules/export'
-import exportsLast from './rules/exports-last'
-import extensions from './rules/extensions'
-import first from './rules/first'
-import groupExports from './rules/group-exports'
-import importsFirst from './rules/imports-first'
-import maxDependencies from './rules/max-dependencies'
-import named from './rules/named'
-import namespace from './rules/namespace'
-import newlineAfterImport from './rules/newline-after-import'
-import noAbsolutePath from './rules/no-absolute-path'
-import noAmd from './rules/no-amd'
-import noAnonymousDefaultExport from './rules/no-anonymous-default-export'
-import noCommonjs from './rules/no-commonjs'
-import noCycle from './rules/no-cycle'
-import noDefaultExport from './rules/no-default-export'
-import noDeprecated from './rules/no-deprecated'
-import noDuplicates from './rules/no-duplicates'
-import noDynamicRequire from './rules/no-dynamic-require'
-import noEmptyNamedBlocks from './rules/no-empty-named-blocks'
-import noExtraneousDependencies from './rules/no-extraneous-dependencies'
-import noImportModuleExports from './rules/no-import-module-exports'
-import noInternalModules from './rules/no-internal-modules'
-import noMutableExports from './rules/no-mutable-exports'
-import noNamedAsDefault from './rules/no-named-as-default'
-import noNamedAsDefaultMember from './rules/no-named-as-default-member'
-import noNamedDefault from './rules/no-named-default'
-import noNamedExport from './rules/no-named-export'
-import noNamespace from './rules/no-namespace'
-import noNodejsModules from './rules/no-nodejs-modules'
-import noRelativePackages from './rules/no-relative-packages'
-import noRelativeParentImports from './rules/no-relative-parent-imports'
-import noRenameDefault from './rules/no-rename-default'
-import noRestrictedPaths from './rules/no-restricted-paths'
-import noSelfImport from './rules/no-self-import'
-import noUnassignedImport from './rules/no-unassigned-import'
-import noUnresolved from './rules/no-unresolved'
-import noUnusedModules from './rules/no-unused-modules'
-import noUselessPathSegments from './rules/no-useless-path-segments'
-import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax'
-import order from './rules/order'
-import preferDefaultExport from './rules/prefer-default-export'
-import unambiguous from './rules/unambiguous'
+import { meta } from './meta.js'
+import { createNodeResolver } from './node-resolver.js'
+import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style.js'
+import default_ from './rules/default.js'
+import dynamicImportChunkname from './rules/dynamic-import-chunkname.js'
+import export_ from './rules/export.js'
+import exportsLast from './rules/exports-last.js'
+import extensions from './rules/extensions.js'
+import first from './rules/first.js'
+import groupExports from './rules/group-exports.js'
+import importsFirst from './rules/imports-first.js'
+import maxDependencies from './rules/max-dependencies.js'
+import named from './rules/named.js'
+import namespace from './rules/namespace.js'
+import newlineAfterImport from './rules/newline-after-import.js'
+import noAbsolutePath from './rules/no-absolute-path.js'
+import noAmd from './rules/no-amd.js'
+import noAnonymousDefaultExport from './rules/no-anonymous-default-export.js'
+import noCommonjs from './rules/no-commonjs.js'
+import noCycle from './rules/no-cycle.js'
+import noDefaultExport from './rules/no-default-export.js'
+import noDeprecated from './rules/no-deprecated.js'
+import noDuplicates from './rules/no-duplicates.js'
+import noDynamicRequire from './rules/no-dynamic-require.js'
+import noEmptyNamedBlocks from './rules/no-empty-named-blocks.js'
+import noExtraneousDependencies from './rules/no-extraneous-dependencies.js'
+import noImportModuleExports from './rules/no-import-module-exports.js'
+import noInternalModules from './rules/no-internal-modules.js'
+import noMutableExports from './rules/no-mutable-exports.js'
+import noNamedAsDefaultMember from './rules/no-named-as-default-member.js'
+import noNamedAsDefault from './rules/no-named-as-default.js'
+import noNamedDefault from './rules/no-named-default.js'
+import noNamedExport from './rules/no-named-export.js'
+import noNamespace from './rules/no-namespace.js'
+import noNodejsModules from './rules/no-nodejs-modules.js'
+import noRelativePackages from './rules/no-relative-packages.js'
+import noRelativeParentImports from './rules/no-relative-parent-imports.js'
+import noRenameDefault from './rules/no-rename-default.js'
+import noRestrictedPaths from './rules/no-restricted-paths.js'
+import noSelfImport from './rules/no-self-import.js'
+import noUnassignedImport from './rules/no-unassigned-import.js'
+import noUnresolved from './rules/no-unresolved.js'
+import noUnusedModules from './rules/no-unused-modules.js'
+import noUselessPathSegments from './rules/no-useless-path-segments.js'
+import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax.js'
+import order from './rules/order.js'
+import preferDefaultExport from './rules/prefer-default-export.js'
+import unambiguous from './rules/unambiguous.js'
 // configs
 import type {
   PluginConfig,
   PluginFlatBaseConfig,
   PluginFlatConfig,
-} from './types'
-import { importXResolverCompat } from './utils'
+} from './types.js'
+import { importXResolverCompat } from './utils/index.js'
 
 const rules = {
   'no-unresolved': noUnresolved,
@@ -149,7 +148,7 @@ const configs = {
 
 // Base Plugin Object
 const plugin = {
-  meta: { name, version },
+  meta,
   rules,
 }
 
@@ -179,7 +178,15 @@ const flatConfigs = {
   typescript: createFlatConfig(typescriptFlat, 'typescript'),
 } satisfies Record<string, PluginFlatConfig>
 
-export = {
+export default {
+  configs,
+  flatConfigs,
+  rules,
+  importXResolverCompat,
+  createNodeResolver,
+}
+
+export {
   configs,
   flatConfigs,
   rules,

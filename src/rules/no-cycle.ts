@@ -2,7 +2,7 @@
  * Ensures that no imported module imports the linted module.
  */
 
-import type { DeclarationMetadata, ModuleOptions } from '../utils'
+import type { DeclarationMetadata, ModuleOptions } from '../utils/index.js'
 import {
   ExportMap,
   isExternalModule,
@@ -10,24 +10,24 @@ import {
   moduleVisitor,
   makeOptionsSchema,
   resolve,
-} from '../utils'
+} from '../utils/index.js'
 
-type Options = {
+export type Options = {
   allowUnsafeDynamicCyclicDependency?: boolean
   ignoreExternal?: boolean
   maxDepth?: number | '∞'
 } & ModuleOptions
 
-type MessageId = 'cycle' | 'cycleSource'
+export type MessageId = 'cycle' | 'cycleSource'
 
-type Traverser = {
+export interface Traverser {
   mget(): ExportMap | null
   route: Array<DeclarationMetadata['source']>
 }
 
 const traversed = new Set<string>()
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-cycle',
   meta: {
     type: 'suggestion',

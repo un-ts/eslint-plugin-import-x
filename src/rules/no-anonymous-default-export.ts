@@ -4,7 +4,7 @@
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
 const { hasOwnProperty } = Object.prototype
 
@@ -110,7 +110,7 @@ const schemaProperties = Object.fromEntries(
   ]),
 )
 
-type Options = {
+export interface Options {
   allowArray?: boolean
   allowArrowFunction?: boolean
   allowCallExpression?: boolean
@@ -128,7 +128,7 @@ const defaults: Options = Object.fromEntries(
   ]),
 )
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-anonymous-default-export',
   meta: {
     type: 'suggestion',

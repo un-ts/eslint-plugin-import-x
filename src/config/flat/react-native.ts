@@ -1,4 +1,4 @@
-import type { PluginFlatBaseConfig } from '../../types'
+import type { PluginFlatBaseConfig } from '../../types.js'
 
 /**
  * adds platform extensions to Node resolver

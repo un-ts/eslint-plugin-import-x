@@ -8,16 +8,16 @@ import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule, ExportMap, getValue } from '../utils'
-import type { ModuleOptions } from '../utils'
+import { createRule, ExportMap, getValue } from '../utils/index.js'
+import type { ModuleOptions } from '../utils/index.js'
 
-type Options = ModuleOptions & {
+export type Options = ModuleOptions & {
   preventRenamingBindings?: boolean
 }
 
-type MessageId = 'renameDefault'
+export type MessageId = 'renameDefault'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-rename-default',
   meta: {
     type: 'suggestion',

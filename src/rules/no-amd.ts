@@ -2,11 +2,11 @@
  * Rule to prefer imports to AMD
  */
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
 type MessageId = 'amd'
 
-export = createRule<[], MessageId>({
+export default createRule<[], MessageId>({
   name: 'no-amd',
   meta: {
     type: 'suggestion',

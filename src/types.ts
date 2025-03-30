@@ -3,11 +3,12 @@ import type { MinimatchOptions } from 'minimatch'
 import type { KebabCase } from 'type-fest'
 import type { NapiResolveOptions as ResolveOptions } from 'unrs-resolver'
 
-import type { ImportType as ImportType_, PluginName } from './utils'
 import type {
+  ImportType as ImportType_,
   LegacyImportResolver,
   LegacyResolver,
-} from './utils/legacy-resolver-settings'
+  PluginName,
+} from './utils/index.js'
 
 export type {
   LegacyResolver,
@@ -29,17 +30,17 @@ export type {
   // ResolverObject
   LegacyResolverObject,
   LegacyResolverObject as ResolverObject,
-} from './utils/legacy-resolver-settings'
+} from './utils/index.js'
 
 export type ImportType = ImportType_ | 'object' | 'type'
 
-export type NodeResolverOptions = {
+export interface NodeResolverOptions {
   extensions?: readonly string[]
   moduleDirectory?: string[]
   paths?: string[]
 }
 
-export type WebpackResolverOptions = {
+export interface WebpackResolverOptions {
   config?: string | { resolve: ResolveOptions }
   'config-index'?: number
   env?: Record<string, unknown>
@@ -59,7 +60,7 @@ export type NewResolverResolve = (
 ) => ResolvedResult
 
 // TODO: remove prefix New in the next major version
-export type NewResolver = {
+export interface NewResolver {
   interfaceVersion: 3
   /** optional name for the resolver, this is used in logs/debug output */
   name?: string
@@ -72,12 +73,12 @@ export type DocStyle = 'jsdoc' | 'tomdoc'
 
 export type Arrayable<T> = T | readonly T[]
 
-export type ResultNotFound = {
+export interface ResultNotFound {
   found: false
   path?: undefined
 }
 
-export type ResultFound = {
+export interface ResultFound {
   found: true
   path: string | null
 }
@@ -86,7 +87,7 @@ export type Resolver = LegacyResolver | NewResolver
 
 export type ResolvedResult = ResultNotFound | ResultFound
 
-export type ImportSettings = {
+export interface ImportSettings {
   cache?: {
     lifetime?: number | '∞' | 'Infinity'
   }
@@ -135,7 +136,7 @@ export type RuleContext<
 }> &
   Omit<TSESLint.RuleContext<TMessageIds, TOptions>, 'settings'>
 
-export type ChildContext = {
+export interface ChildContext {
   cacheKey: string
   settings: PluginSettings
   parserPath?: string | null
@@ -164,7 +165,7 @@ export type ExportNamespaceSpecifier = CustomESTreeNode<
   { exported: TSESTree.Identifier }
 >
 
-export type PathGroup = {
+export interface PathGroup {
   pattern: string
   group: ImportType
   patternOptions?: MinimatchOptions
@@ -181,7 +182,7 @@ export type NewLinesOptions =
 
 export type NamedTypes = 'mixed' | 'types-first' | 'types-last'
 
-export type NamedOptions = {
+export interface NamedOptions {
   enabled?: boolean
   import?: boolean
   export?: boolean
@@ -190,7 +191,7 @@ export type NamedOptions = {
   types?: NamedTypes
 }
 
-export type AlphabetizeOptions = {
+export interface AlphabetizeOptions {
   caseInsensitive: boolean
   order: 'ignore' | 'asc' | 'desc'
   orderImportKind: 'ignore' | 'asc' | 'desc'
@@ -206,7 +207,7 @@ export type LiteralNodeValue =
   | RegExp
   | null
 
-export type ImportEntry = {
+export interface ImportEntry {
   type: ImportEntryType
   node: TSESTree.Node & {
     importKind?: ExportAndImportKind
@@ -223,7 +224,7 @@ export type ImportEntryWithRank = {
   isMultiline?: boolean
 } & ImportEntry
 
-export type RanksPathGroup = {
+export interface RanksPathGroup {
   pattern: string
   patternOptions?: MinimatchOptions
   group: string
@@ -232,7 +233,7 @@ export type RanksPathGroup = {
 
 export type RanksGroups = Record<string, number>
 
-export type Ranks = {
+export interface Ranks {
   omittedTypes: string[]
   groups: RanksGroups
   pathGroups: RanksPathGroup[]

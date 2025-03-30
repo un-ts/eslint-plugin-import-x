@@ -1,7 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import type { RuleContext } from '../types'
-import { createRule } from '../utils'
+import type { RuleContext } from '../types.js'
+import { createRule } from '../utils/index.js'
 
 function getImportValue(node: TSESTree.ProgramStatement) {
   return node.type === 'ImportDeclaration'
@@ -20,11 +20,11 @@ function isPossibleDirective(node: TSESTree.ProgramStatement) {
   )
 }
 
-type Options = 'absolute-first' | 'disable-absolute-first'
+export type Options = 'absolute-first' | 'disable-absolute-first'
 
-type MessageId = 'absolute' | 'order'
+export type MessageId = 'absolute' | 'order'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'first',
   meta: {
     type: 'suggestion',

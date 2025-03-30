@@ -2,7 +2,7 @@ import fs from 'node:fs'
 
 import type { PackageJson } from 'type-fest'
 
-import { pkgUp } from './pkg-up'
+import { pkgUp } from './pkg-up.js'
 
 function stripBOM(str: string) {
   return str.replace(/^\uFEFF/, '')

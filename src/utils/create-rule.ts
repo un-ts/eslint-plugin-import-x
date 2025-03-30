@@ -1,8 +1,8 @@
 import { ESLintUtils } from '@typescript-eslint/utils'
 
-import { docsUrl } from './docs-url'
+import { docsUrl } from './docs-url.js'
 
-type ImportXPluginDocs = {
+export interface ImportXPluginDocs {
   /**
    * The category the rule falls under
    */

@@ -1,4 +1,4 @@
-import type { PluginFlatConfig } from '../../types'
+import type { PluginFlatConfig } from '../../types.js'
 
 /**
  * unopinionated config. just the things that are necessarily runtime errors

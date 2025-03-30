@@ -4,7 +4,7 @@ import path from 'node:path'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 import type { Annotation } from 'doctrine'
-import doctrine from 'doctrine'
+import * as doctrine from 'doctrine'
 import type { AST } from 'eslint'
 import { SourceCode } from 'eslint'
 import type { TsConfigJsonResolved, TsConfigResult } from 'get-tsconfig'
@@ -18,15 +18,15 @@ import type {
   ExportNamespaceSpecifier,
   ParseError,
   RuleContext,
-} from '../types'
+} from '../types.js'
 
-import { getValue } from './get-value'
-import { hasValidExtension, ignore } from './ignore'
-import { lazy, defineLazyProperty } from './lazy-value'
-import { parse } from './parse'
-import { relative, resolve } from './resolve'
-import { isMaybeUnambiguousModule, isUnambiguousModule } from './unambiguous'
-import { visit } from './visit'
+import { getValue } from './get-value.js'
+import { hasValidExtension, ignore } from './ignore.js'
+import { lazy, defineLazyProperty } from './lazy-value.js'
+import { parse } from './parse.js'
+import { relative, resolve } from './resolve.js'
+import { isMaybeUnambiguousModule, isUnambiguousModule } from './unambiguous.js'
+import { visit } from './visit.js'
 
 const log = debug('eslint-plugin-import-x:ExportMap')
 
@@ -39,19 +39,19 @@ export type DocStyleParsers = Record<
   (comments: TSESTree.Comment[]) => Annotation | undefined
 >
 
-export type DeclarationMetadata = {
+export interface DeclarationMetadata {
   source: Pick<TSESTree.Literal, 'value' | 'loc'>
   importedSpecifiers?: Set<string>
   dynamic?: boolean
   isOnlyImportingTypes?: boolean
 }
 
-export type ModuleNamespace = {
+export interface ModuleNamespace {
   doc?: Annotation
   namespace?: ExportMap | null
 }
 
-export type ModuleImport = {
+export interface ModuleImport {
   getter: () => ExportMap | null
   declarations: Set<DeclarationMetadata>
 }
@@ -886,7 +886,8 @@ export class ExportMap {
     }
   }
 
-  forEach(
+  // FIXME: `forEach` will be transformed into `.entries()`, WTF?!
+  $forEach(
     callback: (
       value: ModuleNamespace | null | undefined,
       name: string,
@@ -912,8 +913,7 @@ export class ExportMap {
         return
       }
 
-      // eslint-disable-next-line unicorn/no-array-for-each
-      d.forEach((v, n) => {
+      d.$forEach((v, n) => {
         if (n !== 'default') {
           callback.call(thisArg, v, n, this)
         }

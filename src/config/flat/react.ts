@@ -1,4 +1,4 @@
-import type { PluginFlatBaseConfig } from '../../types'
+import type { PluginFlatBaseConfig } from '../../types.js'
 
 /**
  * Adds `.jsx` as an extension, and enables JSX parsing.

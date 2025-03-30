@@ -1,6 +1,7 @@
+import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers, createRuleTestCaseFunctions } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-useless-path-segments'
 

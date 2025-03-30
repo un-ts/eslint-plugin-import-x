@@ -1,13 +1,15 @@
+import { cjsRequire, cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import type { TSESLint } from '@typescript-eslint/utils'
 
 import {
   createRuleTestCaseFunctions,
   parsers,
   getNonDefaultParsers,
   testFilePath,
-} from '../utils'
-import type { GetRuleModuleMessageIds } from '../utils'
+} from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/order'
 
@@ -15,7 +17,7 @@ const ruleTester = new TSESLintRuleTester()
 
 const flowRuleTester = new TSESLintRuleTester({
   languageOptions: {
-    parser: require(parsers.BABEL),
+    parser: cjsRequire(parsers.BABEL),
     parserOptions: {
       requireConfigFile: false,
       babelOptions: {
@@ -3149,7 +3151,9 @@ describe('TypeScript', () => {
     const supportsExportTypeSpecifiers = parser === parsers.TS
     const parserConfig = {
       languageOptions: {
-        ...(parser === parsers.BABEL && { parser: require(parsers.BABEL) }),
+        ...(parser === parsers.BABEL && {
+          parser: require<TSESLint.Parser.LooseParserModule>(parsers.BABEL),
+        }),
       },
       settings: {
         'import-x/parsers': { [parsers.TS]: ['.ts'] },

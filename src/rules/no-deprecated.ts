@@ -1,8 +1,13 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { Tag } from 'doctrine'
 
-import type { ModuleNamespace } from '../utils'
-import { ExportMap, createRule, declaredScope, getValue } from '../utils'
+import type { ModuleNamespace } from '../utils/index.js'
+import {
+  ExportMap,
+  createRule,
+  declaredScope,
+  getValue,
+} from '../utils/index.js'
 
 function message(deprecation: Tag) {
   if (deprecation.description) {
@@ -23,7 +28,7 @@ function getDeprecation(metadata?: ModuleNamespace | null) {
   return metadata.doc.tags.find(t => t.title === 'deprecated')
 }
 
-export = createRule({
+export default createRule({
   name: 'no-deprecated',
   meta: {
     type: 'suggestion',

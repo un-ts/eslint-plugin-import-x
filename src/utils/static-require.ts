@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-// todo: merge with module visitor
+// TODO: merge with module visitor
 export function isStaticRequire(node: TSESTree.CallExpression) {
   return (
     node &&

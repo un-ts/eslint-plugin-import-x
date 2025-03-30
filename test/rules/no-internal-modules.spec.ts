@@ -1,8 +1,8 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunctions, testFilePath } from '../utils'
-import type { GetRuleModuleMessageIds } from '../utils'
+import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-internal-modules'
 

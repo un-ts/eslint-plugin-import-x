@@ -1,13 +1,15 @@
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
+import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import {
   createRuleTestCaseFunctions,
   SYNTAX_VALID_CASES,
   parsers,
-} from '../utils'
-import type { RuleRunTests } from '../utils'
+} from '../utils.js'
+import type { RuleRunTests } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/default'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
@@ -15,6 +17,11 @@ import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 const ruleTester = new TSESLintRuleTester()
 
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+const _dirname =
+  typeof __dirname === 'undefined'
+    ? path.dirname(fileURLToPath(import.meta.url))
+    : __dirname
 
 ruleTester.run('default', rule, {
   valid: [
@@ -288,7 +295,7 @@ describe('TypeScript', () => {
         languageOptions: {
           parserOptions: {
             tsconfigRootDir: path.resolve(
-              __dirname,
+              _dirname,
               '../fixtures/typescript-export-assign-default-namespace/',
             ),
           },
@@ -305,7 +312,7 @@ describe('TypeScript', () => {
         languageOptions: {
           parserOptions: {
             tsconfigRootDir: path.resolve(
-              __dirname,
+              _dirname,
               '../fixtures/typescript-export-as-default-namespace/',
             ),
           },
@@ -321,7 +328,7 @@ describe('TypeScript', () => {
         languageOptions: {
           parserOptions: {
             tsconfigRootDir: path.resolve(
-              __dirname,
+              _dirname,
               '../fixtures/typescript-export-react-test-renderer/',
             ),
           },
@@ -337,7 +344,7 @@ describe('TypeScript', () => {
         languageOptions: {
           parserOptions: {
             tsconfigRootDir: path.resolve(
-              __dirname,
+              _dirname,
               '../fixtures/typescript-extended-config/',
             ),
           },
@@ -412,7 +419,7 @@ describe('TypeScript', () => {
         languageOptions: {
           parserOptions: {
             tsconfigRootDir: path.resolve(
-              __dirname,
+              _dirname,
               '../fixtures/typescript-no-compiler-options/',
             ),
           },

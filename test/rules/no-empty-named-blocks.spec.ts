@@ -1,7 +1,8 @@
+import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { Parser as TSESLintParser } from '@typescript-eslint/utils/ts-eslint'
 
-import { parsers, createRuleTestCaseFunctions } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-empty-named-blocks'
 

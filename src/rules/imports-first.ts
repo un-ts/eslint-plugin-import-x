@@ -1,8 +1,8 @@
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
-import first from './first'
+import first from './first.js'
 
-export = createRule({
+export default createRule({
   ...first,
   name: 'imports-first',
   meta: {

@@ -4,11 +4,11 @@
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { importDeclaration, ExportMap, createRule } from '../utils'
+import { importDeclaration, ExportMap, createRule } from '../utils/index.js'
 
 type MessageId = 'member'
 
-export = createRule<[], MessageId>({
+export default createRule<[], MessageId>({
   name: 'no-named-as-default-member',
   meta: {
     type: 'suggestion',

@@ -1,4 +1,4 @@
-import type { PluginConfig } from '../types'
+import type { PluginConfig } from '../types.js'
 
 /**
  * This config:
@@ -19,7 +19,7 @@ const allExtensions = [
   '.mjs',
 ] as const
 
-export = {
+export default {
   settings: {
     'import-x/extensions': allExtensions,
     'import-x/external-module-folders': ['node_modules', 'node_modules/@types'],

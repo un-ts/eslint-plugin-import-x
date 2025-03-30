@@ -1,6 +1,6 @@
 import { isBuiltin } from 'node:module'
 
-import { FIXTURES_PATH, testContext, testFilePath } from '../utils'
+import { FIXTURES_PATH, testContext, testFilePath } from '../utils.js'
 
 import {
   importType,

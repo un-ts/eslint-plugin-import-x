@@ -22,9 +22,9 @@ jobs:
           - 20
           - 22
         eslint:
-          - '8.56'
-          - '8'
-          - '9'
+          - 8.56
+          - 8
+          - 9
 
         include:
           - executeLint: true
@@ -44,22 +44,20 @@ jobs:
           cache: yarn
 
       - name: Install ESLint ${{ matrix.eslint }}
+        if: ${{ matrix.eslint != 9 }}
         run: |
-          yarn add -D eslint@${{ matrix.eslint }}
+          yarn add -D eslint@${{ matrix.eslint }} eslint-plugin-unicorn@56
 
       - name: Install Dependencies
         run: yarn --immutable
 
       - name: Build and Test
-        run: |
-          yarn test-compiled
-          yarn test
+        run: yarn run-s test-compiled test
 
       - name: Lint
         run: yarn lint
         if: ${{ matrix.executeLint }}
         env:
-          EFF_NO_LINK_RULES: true
           PARSER_NO_WATCH: true
 
       - name: Codecov

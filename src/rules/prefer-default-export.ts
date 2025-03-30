@@ -1,14 +1,14 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule, getValue } from '../utils'
+import { createRule, getValue } from '../utils/index.js'
 
-type Options = {
+export interface Options {
   target?: 'single' | 'any'
 }
 
 type MessageId = 'single' | 'any'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'prefer-default-export',
   meta: {
     type: 'suggestion',

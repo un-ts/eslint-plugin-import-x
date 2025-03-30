@@ -1,6 +1,10 @@
+// ! This file is here for testing `no-unused-modules` rule for eslintrc
+
 const { version } = require('eslint/package.json')
 
-const nonLatestEslint = +version.split('.')[0] < 9
+const noEslintrc = +version.split('.')[0] > 8
+
+const testCompiled = process.env.TEST_COMPILED === '1'
 
 /**
  * @type {import('eslint').Linter.Config}
@@ -12,15 +16,15 @@ module.exports = {
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:eslint-plugin/recommended',
-    'plugin:import-x/recommended',
+    testCompiled && 'plugin:import-x/recommended',
     'plugin:json/recommended-legacy',
     'plugin:mdx/recommended',
     'plugin:n/recommended',
-    'plugin:unicorn/recommended',
+    !noEslintrc && 'plugin:unicorn/recommended',
     'plugin:yml/standard',
     'plugin:yml/prettier',
     'plugin:prettier/recommended',
-  ],
+  ].filter(Boolean),
   env: {
     node: true,
     es6: true,
@@ -34,7 +38,7 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'off',
     '@typescript-eslint/no-require-imports': 'off',
 
-    'no-constant-condition': nonLatestEslint ? 'off' : 'error',
+    'no-constant-condition': noEslintrc ? 'error' : 'off',
 
     'eslint-plugin/consistent-output': ['error', 'always'],
     'eslint-plugin/meta-property-ordering': 'error',
@@ -52,31 +56,36 @@ module.exports = {
     'n/no-missing-import': 'off',
     'n/no-missing-require': 'off',
     'n/no-unsupported-features/es-syntax': 'off',
-    'unicorn/filename-case': [
-      'error',
-      {
-        case: 'kebabCase',
-        ignore: [String.raw`^(CONTRIBUTING|README)\.md$`],
-      },
-    ],
+    ...(noEslintrc || {
+      'unicorn/filename-case': [
+        'error',
+        {
+          case: 'kebabCase',
+          ignore: [String.raw`^(CONTRIBUTING|README)\.md$`],
+        },
+      ],
+    }),
     'unicorn/no-array-callback-reference': 'off',
     'unicorn/no-array-reduce': 'off',
     'unicorn/no-null': 'off',
     'unicorn/prefer-module': 'off',
     'unicorn/prevent-abbreviations': 'off',
     'unicorn/prefer-at': 'off',
+    'unicorn/prefer-export-from': ['error', { ignoreUsedVariables: true }],
 
     // dog fooding
-    'import-x/no-extraneous-dependencies': [
-      'error',
-      {
-        devDependencies: ['test/**'],
-        optionalDependencies: false,
-        peerDependencies: true,
-        bundledDependencies: false,
-      },
-    ],
-    'import-x/unambiguous': 'off',
+    ...(testCompiled && {
+      'import-x/no-extraneous-dependencies': [
+        'error',
+        {
+          devDependencies: ['test/**'],
+          optionalDependencies: false,
+          peerDependencies: true,
+          bundledDependencies: false,
+        },
+      ],
+      'import-x/unambiguous': 'off',
+    }),
   },
 
   overrides: [
@@ -104,16 +113,18 @@ module.exports = {
             varsIgnorePattern: '^_',
           },
         ],
-        'import-x/consistent-type-specifier-style': 'error',
-        'import-x/order': [
-          'error',
-          {
-            alphabetize: {
-              order: 'asc',
+        ...(testCompiled && {
+          'import-x/consistent-type-specifier-style': 'error',
+          'import-x/order': [
+            'error',
+            {
+              alphabetize: {
+                order: 'asc',
+              },
+              'newlines-between': 'always',
             },
-            'newlines-between': 'always',
-          },
-        ],
+          ],
+        }),
       },
       settings: {
         'import-x/resolver': {

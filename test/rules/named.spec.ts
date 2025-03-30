@@ -1,5 +1,7 @@
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
+import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
@@ -9,11 +11,16 @@ import {
   SYNTAX_VALID_CASES,
   testFilePath,
   parsers,
-} from '../utils'
-import type { RuleRunTests, GetRuleModuleMessageIds } from '../utils'
+} from '../utils.js'
+import type { RuleRunTests, GetRuleModuleMessageIds } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/named'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
+
+const _dirname =
+  typeof __dirname === 'undefined'
+    ? path.dirname(fileURLToPath(import.meta.url))
+    : __dirname
 
 const ruleTester = new TSESLintRuleTester()
 
@@ -485,7 +492,7 @@ describe('TypeScript', () => {
       languageOptions: {
         parserOptions: {
           tsconfigRootDir: path.resolve(
-            __dirname,
+            _dirname,
             '../fixtures/typescript-export-assign-object/',
           ),
         },
@@ -510,7 +517,7 @@ describe('TypeScript', () => {
       languageOptions: {
         parserOptions: {
           tsconfigRootDir: path.resolve(
-            __dirname,
+            _dirname,
             '../fixtures/typescript-export-assign-object/',
           ),
         },
@@ -526,7 +533,7 @@ describe('TypeScript', () => {
       languageOptions: {
         parserOptions: {
           tsconfigRootDir: path.resolve(
-            __dirname,
+            _dirname,
             '../fixtures/typescript-export-assign-object/',
           ),
         },

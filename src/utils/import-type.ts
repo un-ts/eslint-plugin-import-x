@@ -1,10 +1,10 @@
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
 
-import type { LiteralNodeValue, PluginSettings, RuleContext } from '../types'
+import type { LiteralNodeValue, PluginSettings, RuleContext } from '../types.js'
 
-import { getContextPackagePath } from './package-path'
-import { resolve } from './resolve'
+import { getContextPackagePath } from './package-path.js'
+import { resolve } from './resolve.js'
 
 function baseModule(name: string) {
   if (isScoped(name)) {

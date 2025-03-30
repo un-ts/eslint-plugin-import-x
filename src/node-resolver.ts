@@ -4,7 +4,7 @@ import path from 'node:path'
 import { ResolverFactory } from 'unrs-resolver'
 import type { NapiResolveOptions as ResolveOptions } from 'unrs-resolver'
 
-import type { NewResolver } from './types'
+import type { NewResolver } from './types.js'
 
 export type NodeResolverOptions = {
   /**

@@ -1,8 +1,10 @@
+import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
+import type { TSESLint } from '@typescript-eslint/utils'
 
-import { SYNTAX_VALID_CASES, parsers } from '../utils'
-import type { GetRuleModuleOptions, RuleRunTests } from '../utils'
+import { SYNTAX_VALID_CASES, parsers } from '../utils.js'
+import type { GetRuleModuleOptions, RuleRunTests } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/dynamic-import-chunkname'
 
@@ -38,7 +40,7 @@ const multipleImportFunctionOptions = [
   },
 ] as const satisfies RuleOptions
 
-const babelParser = require(parsers.BABEL)
+const babelParser = cjsRequire<TSESLint.Parser.LooseParserModule>(parsers.BABEL)
 
 const pickyChunkNameFormatError = {
   messageId: 'chunknameFormat',

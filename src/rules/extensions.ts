@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import type { FileExtension, RuleContext } from '../types'
+import type { FileExtension, RuleContext } from '../types.js'
 import {
   isBuiltIn,
   isExternalModule,
@@ -8,7 +8,7 @@ import {
   createRule,
   moduleVisitor,
   resolve,
-} from '../utils'
+} from '../utils/index.js'
 
 const modifierValues = ['always', 'ignorePackages', 'never'] as const
 
@@ -39,18 +39,18 @@ type Modifier = (typeof modifierValues)[number]
 
 type ModifierByFileExtension = Partial<Record<string, Modifier>>
 
-type OptionsItemWithPatternProperty = {
+export interface OptionsItemWithPatternProperty {
   ignorePackages?: boolean
   checkTypeImports?: boolean
   pattern: ModifierByFileExtension
 }
 
-type OptionsItemWithoutPatternProperty = {
+export interface OptionsItemWithoutPatternProperty {
   ignorePackages?: boolean
   checkTypeImports?: boolean
 }
 
-type Options =
+export type Options =
   | []
   | [Modifier]
   | [Modifier, OptionsItemWithoutPatternProperty]
@@ -58,7 +58,7 @@ type Options =
   | [Modifier, ModifierByFileExtension]
   | [ModifierByFileExtension]
 
-type NormalizedOptions = {
+export interface NormalizedOptions {
   defaultConfig?: Modifier
   pattern?: Record<string, Modifier>
   ignorePackages?: boolean
@@ -134,7 +134,7 @@ function isExternalRootModule(file: string) {
   return false
 }
 
-export = createRule<Options, MessageId>({
+export default createRule<Options, MessageId>({
   name: 'extensions',
   meta: {
     type: 'suggestion',

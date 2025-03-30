@@ -4,8 +4,13 @@
 
 import path from 'node:path'
 
-import type { ModuleOptions } from '../utils'
-import { createRule, moduleVisitor, resolve, getFileExtensions } from '../utils'
+import type { ModuleOptions } from '../utils/index.js'
+import {
+  createRule,
+  moduleVisitor,
+  resolve,
+  getFileExtensions,
+} from '../utils/index.js'
 
 /**
  * convert a potentially relative path from node utils into a true
@@ -34,13 +39,13 @@ function countRelativeParents(pathSegments: string[]) {
   return pathSegments.filter(x => x === '..').length
 }
 
-type Options = ModuleOptions & {
+export type Options = ModuleOptions & {
   noUselessIndex?: boolean
 }
 
-type MessageId = 'useless'
+export type MessageId = 'useless'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-useless-path-segments',
   meta: {
     type: 'suggestion',

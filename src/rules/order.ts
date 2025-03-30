@@ -16,8 +16,13 @@ import type {
   RanksGroups,
   RanksPathGroup,
   RuleContext,
-} from '../types'
-import { getValue, importType, isStaticRequire, createRule } from '../utils'
+} from '../types.js'
+import {
+  getValue,
+  importType,
+  isStaticRequire,
+  createRule,
+} from '../utils/index.js'
 
 const log = debug('eslint-plugin-import-x:rules:order')
 
@@ -1132,7 +1137,7 @@ function getAlphabetizeConfig(options: Options): AlphabetizeOptions {
 // TODO, semver-major: Change the default of "distinctGroup" from true to false
 const defaultDistinctGroup = true
 
-type Options = {
+export interface Options {
   'newlines-between'?: NewLinesOptions
   'newlines-between-types'?: NewLinesOptions
   named?: boolean | NamedOptions
@@ -1156,7 +1161,7 @@ type MessageId =
   | 'oneLineBetweenThisMultiLineImport'
   | 'noLineBetweenSingleLineImport'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'order',
   meta: {
     type: 'suggestion',

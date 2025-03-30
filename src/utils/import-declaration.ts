@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import type { RuleContext } from '../types'
+import type { RuleContext } from '../types.js'
 
 export const importDeclaration = (
   context: RuleContext,

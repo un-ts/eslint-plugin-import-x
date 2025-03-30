@@ -1,7 +1,6 @@
-import { createRule, getValue } from '../utils'
-import sourceType from '../utils/source-type'
+import { createRule, getValue, sourceType } from '../utils/index.js'
 
-export = createRule({
+export default createRule({
   name: 'no-named-export',
   meta: {
     type: 'suggestion',

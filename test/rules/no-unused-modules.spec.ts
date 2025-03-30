@@ -1,14 +1,16 @@
 import fs from 'node:fs'
 
+import { jest } from '@jest/globals'
+import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { TSESLint } from '@typescript-eslint/utils'
-// @ts-expect-error -- in correct types
-import { FlatRuleTester as ESLint8_56_FlatRuleTester } from 'eslint8.56/use-at-your-own-risk'
+// eslint-disable-next-line import-x/default -- incorrect types
+import eslint8UnsupportedApi from 'eslint8.56/use-at-your-own-risk'
 import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
 
-import { createRuleTestCaseFunctions, testFilePath, parsers } from '../utils'
-import type { GetRuleModuleOptions, GetRuleModuleMessageIds } from '../utils'
+import { createRuleTestCaseFunctions, testFilePath, parsers } from '../utils.js'
+import type { GetRuleModuleOptions, GetRuleModuleMessageIds } from '../utils.js'
 
 import jsxConfig from 'eslint-plugin-import-x/config/flat/react'
 import typescriptConfig from 'eslint-plugin-import-x/config/flat/typescript'
@@ -1523,7 +1525,11 @@ describe('parser ignores prefixes like BOM and hashbang', () => {
 
 // [ESLint8_56_FlatRuleTester, ESLint9_FlatRuleTester]
 for (const [name, FlatRuleTester] of [
-  ['eslint 8.56 flat', ESLint8_56_FlatRuleTester],
+  [
+    'eslint 8.56 flat',
+    // @ts-expect-error -- incorrect types
+    eslint8UnsupportedApi.FlatRuleTester,
+  ],
   ['eslint 9 flat', ESLint9_FlatRuleTester],
 ] as const) {
   describe('supports ' + name, () => {

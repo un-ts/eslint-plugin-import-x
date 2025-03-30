@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunctions } from '../utils'
+import { createRuleTestCaseFunctions } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-webpack-loader-syntax'
 

@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { stableHash } from 'stable-hash'
 
@@ -9,18 +10,24 @@ import type {
   NewResolver,
   PluginSettings,
   RuleContext,
-} from '../types'
+} from '../types.js'
 
 import {
   normalizeConfigResolvers,
   resolveWithLegacyResolver,
-} from './legacy-resolver-settings'
-import { ModuleCache } from './module-cache'
+} from './legacy-resolver-settings.js'
+import { ModuleCache } from './module-cache.js'
+
+const _filename =
+  typeof __filename === 'undefined'
+    ? fileURLToPath(import.meta.url)
+    : __filename
+const _dirname = path.dirname(_filename)
 
 export const CASE_SENSITIVE_FS = !fs.existsSync(
   path.resolve(
-    __dirname,
-    path.basename(__filename).replace(/^resolve\./, 'reSOLVE.'),
+    _dirname,
+    path.basename(_filename).replace(/^resolve\./, 'reSOLVE.'),
   ),
 )
 

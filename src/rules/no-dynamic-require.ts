@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
 function isRequire(node: TSESTree.CallExpression) {
   return (
@@ -30,13 +30,13 @@ function isStaticValue(
   )
 }
 
-type Options = {
+export interface Options {
   esmodule?: boolean
 }
 
 type MessageId = 'import' | 'require'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-dynamic-require',
   meta: {
     type: 'suggestion',

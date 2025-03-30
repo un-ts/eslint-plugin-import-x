@@ -1,10 +1,10 @@
+import { cjsRequire } from '@pkgr/core'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import semver from 'semver'
+import * as semver from 'semver'
 import type { PackageJson } from 'type-fest'
 
-import type { RuleContext } from '../types'
-import { createRule, resolve } from '../utils'
-import { lazy } from '../utils/lazy-value'
+import type { RuleContext } from '../types.js'
+import { createRule, lazy, resolve } from '../utils/index.js'
 
 // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
 // pre-calculate if the TypeScript version is supported
@@ -12,8 +12,7 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
   let typescriptPkg: PackageJson | undefined
 
   try {
-    // eslint-disable-next-line import-x/no-extraneous-dependencies
-    typescriptPkg = require('typescript/package.json') as PackageJson
+    typescriptPkg = cjsRequire('typescript/package.json') as PackageJson
   } catch {
     //
   }
@@ -21,12 +20,12 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
   return !typescriptPkg || !semver.satisfies(typescriptPkg.version!, '>= 4.5')
 })
 
-type Options = {
+export interface Options {
   considerQueryString?: boolean
   'prefer-inline'?: boolean
 }
 
-type MessageId = 'duplicate'
+export type MessageId = 'duplicate'
 
 function checkImports(
   imported: Map<string, TSESTree.ImportDeclaration[]>,
@@ -395,7 +394,7 @@ function hasCommentInsideNonSpecifiers(
   )
 }
 
-type ModuleMap = {
+interface ModuleMap {
   imported: Map<string, TSESTree.ImportDeclaration[]>
   nsImported: Map<string, TSESTree.ImportDeclaration[]>
   defaultTypesImported: Map<string, TSESTree.ImportDeclaration[]>
@@ -403,7 +402,7 @@ type ModuleMap = {
   namedTypesImported: Map<string, TSESTree.ImportDeclaration[]>
 }
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-duplicates',
   meta: {
     type: 'problem',

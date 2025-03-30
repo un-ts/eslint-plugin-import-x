@@ -1,7 +1,7 @@
 {
   "name": "eslint-plugin-import-x",
   "version": "4.9.4",
-  "type": "commonjs",
+  "type": "module",
   "description": "Import with sanity.",
   "repository": "https://github.com/un-ts/eslint-plugin-import-x",
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
@@ -10,13 +10,32 @@
   "engines": {
     "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
   },
-  "main": "lib/index.js",
+  "main": "lib/index.cjs",
+  "module": "lib/index.js",
   "exports": {
-    ".": "./lib/index.js",
+    ".": {
+      "import": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "module-sync": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./lib/index.cjs"
+      }
+    },
+    "./config": "./lib/config/index.js",
+    "./rules": "./lib/rules/index.js",
+    "./utils": "./lib/utils/index.js",
     "./package.json": "./package.json",
-    "./*": "./lib/*"
+    "./*": "./lib/*.js"
   },
+  "types": "lib/index.d.ts",
   "files": [
+    "index.d.cts",
     "lib",
     "!lib/*.tsbuildinfo"
   ],
@@ -31,17 +50,19 @@
     "export"
   ],
   "scripts": {
-    "build": "tsc -p src",
+    "build": "run-p 'build:*'",
+    "build:r": "r -f cjs -e named",
+    "build:tsc": "tsc -p src",
     "clean": "rimraf lib",
     "format": "prettier --write .",
     "lint": "run-p 'lint:*'",
     "lint:docs": "yarn update:eslint-docs --check",
     "lint:es": "eslint . --cache",
-    "lint:tsc": "tsc -p tsconfig.base.json --noEmit",
+    "lint:tsc": "tsc -p tsconfig.lib.json --noEmit",
     "prepare": "patch-package && simple-git-hooks && yarn-berry-deduplicate || exit 0",
     "release": "clean-pkg-json && changeset publish",
-    "test": "jest",
-    "test-compiled": "yarn build && cross-env TEST_COMPILED=1 jest",
+    "test": "node --experimental-vm-modules --no-warnings=ESLintRCWarning node_modules/jest/bin/jest.js",
+    "test-compiled": "yarn build && TEST_COMPILED=1 yarn test",
     "update:eslint-docs": "eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️",
     "watch": "yarn test --watch"
   },
@@ -49,6 +70,7 @@
     "eslint": "^8.57.0 || ^9.0.0"
   },
   "dependencies": {
+    "@pkgr/core": "^0.2.0",
     "@types/doctrine": "^0.0.9",
     "@typescript-eslint/utils": "^8.28.0",
     "debug": "^4.4.0",
@@ -83,6 +105,8 @@
     "@changesets/cli": "^2.28.1",
     "@commitlint/cli": "^19.8.0",
     "@eslint/import-test-order-redirect-scoped": "link:./test/fixtures/order-redirect-scoped",
+    "@eslint/js": "^9.23.0",
+    "@pkgr/rollup": "^6.0.1",
     "@swc-node/jest": "^1.8.13",
     "@swc/core": "^1.11.13",
     "@swc/helpers": "^0.5.15",
@@ -95,14 +119,13 @@
     "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.15",
     "@types/klaw-sync": "^6.0.5",
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.13.14",
     "@types/pnpapi": "^0.0.5",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
     "@typescript-eslint/rule-tester": "^8.28.0",
     "@unts/patch-package": "^8.1.1",
     "clean-pkg-json": "^1.2.1",
-    "cross-env": "^7.0.3",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-doc-generator": "^2.1.2",
@@ -116,12 +139,13 @@
     "eslint-plugin-mdx": "^3.3.1",
     "eslint-plugin-n": "^17.17.0",
     "eslint-plugin-prettier": "^5.2.5",
-    "eslint-plugin-unicorn": "^56.0.1",
+    "eslint-plugin-unicorn": "^58.0.0",
     "eslint-plugin-yml": "^1.17.0",
     "eslint8.56": "npm:eslint@~8.56.0",
     "eslint9": "npm:eslint@^9.23.0",
+    "globals": "^16.0.0",
     "hermes-eslint": "^0.27.0",
-    "jest": "^29.7.0",
+    "jest": "^30.0.0-alpha.7",
     "klaw-sync": "^7.0.0",
     "lint-staged": "^15.5.0",
     "npm-run-all2": "^7.0.2",
@@ -130,14 +154,30 @@
     "redux": "^5.0.1",
     "rimraf": "^6.0.1",
     "simple-git-hooks": "^2.12.1",
-    "tinyexec": "^0.3.2",
+    "tinyexec": "^1.0.1",
     "ts-node": "^10.9.2",
     "type-fest": "^4.38.0",
     "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0",
     "yarn-berry-deduplicate": "^6.1.1",
     "zod": "^3.24.2"
   },
   "resolutions": {
     "prettier": "^3.5.3"
-  }
+  },
+  "eslintIgnore": [
+    ".yarn",
+    "lib",
+    "coverage",
+    "node_modules",
+    "test/fixtures/malformed.js",
+    "test/fixtures/with-syntax-error",
+    "test/fixtures/just-json-files/invalid.json",
+    "test/fixtures/typescript-d-ts/",
+    "test/fixtures/yarn-pnp/",
+    "# we want to ignore \"test/fixtures\" here, but unfortunately doing so would",
+    "# interfere with unit test and fail it for some reason.",
+    "# test/fixtures",
+    "CHANGELOG.md"
+  ]
 }

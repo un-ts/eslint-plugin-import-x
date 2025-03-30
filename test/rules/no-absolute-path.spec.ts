@@ -1,8 +1,9 @@
+import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunctions, parsers } from '../utils'
-import type { GetRuleModuleMessageIds } from '../utils'
+import { createRuleTestCaseFunctions, parsers } from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-absolute-path'
 

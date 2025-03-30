@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
 function getEmptyBlockRange(tokens: TSESTree.Token[], index: number) {
   const token = tokens[index]
@@ -21,7 +21,7 @@ function getEmptyBlockRange(tokens: TSESTree.Token[], index: number) {
   return [start, end] as const
 }
 
-export = createRule({
+export default createRule({
   name: 'no-empty-named-blocks',
   meta: {
     type: 'suggestion',

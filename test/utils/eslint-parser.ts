@@ -1,7 +1,0 @@
-export = {
-  parseForESLint() {
-    return {
-      ast: {},
-    }
-  },
-}

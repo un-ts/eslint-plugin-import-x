@@ -6,7 +6,7 @@ import {
   recursivePatternCapture,
   createRule,
   getValue,
-} from '../utils'
+} from '../utils/index.js'
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:
@@ -110,7 +110,7 @@ function shouldSkipTypescriptNamespace(
 
 type MessageId = 'noNamed' | 'multiDefault' | 'multiNamed'
 
-export = createRule<[], MessageId>({
+export default createRule<[], MessageId>({
   name: 'export',
   meta: {
     type: 'problem',
@@ -245,8 +245,7 @@ export = createRule<[], MessageId>({
 
         let any = false
 
-        // eslint-disable-next-line unicorn/no-array-for-each
-        remoteExports.forEach((_, name) => {
+        remoteExports.$forEach((_, name) => {
           if (name !== 'default') {
             any = true // poor man's filter
             addNamed(name, node, parent)

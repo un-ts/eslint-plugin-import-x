@@ -2,8 +2,8 @@ import { RuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { parsers, createRuleTestCaseFunctions } from '../utils'
-import type { GetRuleModuleMessageIds } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-rename-default'
 

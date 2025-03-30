@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import type { RuleContext } from '../types'
+import type { RuleContext } from '../types.js'
 
 export function declaredScope(
   context: RuleContext,

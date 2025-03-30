@@ -1,15 +1,117 @@
 import fs from 'node:fs'
 import { setTimeout } from 'node:timers/promises'
 
-import getTsconfig from 'get-tsconfig'
+import { jest } from '@jest/globals'
+import * as getTsconfig from 'get-tsconfig'
 
-import { TEST_FILENAME, testFilePath } from '../utils'
+import { TEST_FILENAME, testFilePath } from '../utils.js'
 
 import type { ChildContext, RuleContext } from 'eslint-plugin-import-x/types'
 import {
   ExportMap,
   isMaybeUnambiguousModule,
 } from 'eslint-plugin-import-x/utils'
+
+function jsdocTests(parseContext: ChildContext, lineEnding: string) {
+  describe('deprecated imports', () => {
+    const path = testFilePath('deprecated.js')
+    const contents = fs
+      .readFileSync(path, { encoding: 'utf8' })
+      .replaceAll(/\r?\n/g, lineEnding)
+
+    let imports: ExportMap
+
+    beforeAll(() => {
+      imports = ExportMap.parse(path, contents, parseContext)!
+
+      // sanity checks
+      expect(imports.errors).toHaveLength(0)
+    })
+
+    it('works with named imports.', () => {
+      expect(imports.has('fn')).toBe(true)
+
+      expect(imports.get('fn')).toHaveProperty(
+        'doc.tags[0].title',
+        'deprecated',
+      )
+      expect(imports.get('fn')).toHaveProperty(
+        'doc.tags[0].description',
+        "please use 'x' instead.",
+      )
+    })
+
+    it('works with default imports.', () => {
+      expect(imports.has('default')).toBe(true)
+      const importMeta = imports.get('default')
+
+      expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+      expect(importMeta).toHaveProperty(
+        'doc.tags[0].description',
+        'this is awful, use NotAsBadClass.',
+      )
+    })
+
+    it('works with variables.', () => {
+      expect(imports.has('MY_TERRIBLE_ACTION')).toBe(true)
+      const importMeta = imports.get('MY_TERRIBLE_ACTION')
+
+      expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+      expect(importMeta).toHaveProperty(
+        'doc.tags[0].description',
+        'please stop sending/handling this action type.',
+      )
+    })
+
+    describe('multi-line variables', () => {
+      it('works for the first one', () => {
+        expect(imports.has('CHAIN_A')).toBe(true)
+        const importMeta = imports.get('CHAIN_A')
+
+        expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+        expect(importMeta).toHaveProperty(
+          'doc.tags[0].description',
+          'this chain is awful',
+        )
+      })
+      it('works for the second one', () => {
+        expect(imports.has('CHAIN_B')).toBe(true)
+        const importMeta = imports.get('CHAIN_B')
+
+        expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+        expect(importMeta).toHaveProperty('doc.tags[0].description', 'so awful')
+      })
+      it('works for the third one, etc.', () => {
+        expect(imports.has('CHAIN_C')).toBe(true)
+        const importMeta = imports.get('CHAIN_C')
+
+        expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+        expect(importMeta).toHaveProperty(
+          'doc.tags[0].description',
+          'still terrible',
+        )
+      })
+    })
+  })
+
+  describe('full module', () => {
+    const path = testFilePath('deprecated-file.js')
+    const contents = fs.readFileSync(path, { encoding: 'utf8' })
+
+    let imports: ExportMap
+
+    beforeAll(() => {
+      imports = ExportMap.parse(path, contents, parseContext)!
+
+      // sanity checks
+      expect(imports.errors).toHaveLength(0)
+    })
+
+    it('has JSDoc metadata', () => {
+      expect(imports.doc).toBeDefined()
+    })
+  })
+}
 
 describe('ExportMap', () => {
   const fakeContext = {
@@ -100,110 +202,6 @@ describe('ExportMap', () => {
   })
 
   describe('deprecation metadata', () => {
-    function jsdocTests(parseContext: ChildContext, lineEnding: string) {
-      describe('deprecated imports', () => {
-        const path = testFilePath('deprecated.js')
-        const contents = fs
-          .readFileSync(path, { encoding: 'utf8' })
-          .replaceAll(/\r?\n/g, lineEnding)
-
-        let imports: ExportMap
-
-        beforeAll(() => {
-          imports = ExportMap.parse(path, contents, parseContext)!
-
-          // sanity checks
-          expect(imports.errors).toHaveLength(0)
-        })
-
-        it('works with named imports.', () => {
-          expect(imports.has('fn')).toBe(true)
-
-          expect(imports.get('fn')).toHaveProperty(
-            'doc.tags[0].title',
-            'deprecated',
-          )
-          expect(imports.get('fn')).toHaveProperty(
-            'doc.tags[0].description',
-            "please use 'x' instead.",
-          )
-        })
-
-        it('works with default imports.', () => {
-          expect(imports.has('default')).toBe(true)
-          const importMeta = imports.get('default')
-
-          expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
-          expect(importMeta).toHaveProperty(
-            'doc.tags[0].description',
-            'this is awful, use NotAsBadClass.',
-          )
-        })
-
-        it('works with variables.', () => {
-          expect(imports.has('MY_TERRIBLE_ACTION')).toBe(true)
-          const importMeta = imports.get('MY_TERRIBLE_ACTION')
-
-          expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
-          expect(importMeta).toHaveProperty(
-            'doc.tags[0].description',
-            'please stop sending/handling this action type.',
-          )
-        })
-
-        describe('multi-line variables', () => {
-          it('works for the first one', () => {
-            expect(imports.has('CHAIN_A')).toBe(true)
-            const importMeta = imports.get('CHAIN_A')
-
-            expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
-            expect(importMeta).toHaveProperty(
-              'doc.tags[0].description',
-              'this chain is awful',
-            )
-          })
-          it('works for the second one', () => {
-            expect(imports.has('CHAIN_B')).toBe(true)
-            const importMeta = imports.get('CHAIN_B')
-
-            expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
-            expect(importMeta).toHaveProperty(
-              'doc.tags[0].description',
-              'so awful',
-            )
-          })
-          it('works for the third one, etc.', () => {
-            expect(imports.has('CHAIN_C')).toBe(true)
-            const importMeta = imports.get('CHAIN_C')
-
-            expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
-            expect(importMeta).toHaveProperty(
-              'doc.tags[0].description',
-              'still terrible',
-            )
-          })
-        })
-      })
-
-      describe('full module', () => {
-        const path = testFilePath('deprecated-file.js')
-        const contents = fs.readFileSync(path, { encoding: 'utf8' })
-
-        let imports: ExportMap
-
-        beforeAll(() => {
-          imports = ExportMap.parse(path, contents, parseContext)!
-
-          // sanity checks
-          expect(imports.errors).toHaveLength(0)
-        })
-
-        it('has JSDoc metadata', () => {
-          expect(imports.doc).toBeDefined()
-        })
-      })
-    }
-
     describe('default parser', () => {
       jsdocTests(
         {
@@ -403,17 +401,14 @@ describe('ExportMap', () => {
 
       jest.setTimeout(20e3) // takes a long time :shrug:
 
-      const spied = jest.spyOn(getTsconfig, 'getTsconfig')
+      const spied = jest.fn()
 
-      let imports: ExportMap
+      jest.unstable_mockModule('get-tsconfig', () => ({
+        ...getTsconfig,
+        getTsconfig: spied,
+      }))
 
-      beforeAll(() => {
-        imports = ExportMap.get('./typescript.ts', context)!
-      })
-
-      beforeEach(() => {
-        spied.mockClear()
-      })
+      const imports = ExportMap.get('./typescript.ts', context)!
 
       afterAll(() => {
         spied.mockRestore()
@@ -447,18 +442,34 @@ describe('ExportMap', () => {
         expect(imports.has('Bar')).toBe(true)
       })
 
-      it('should cache tsconfig until tsconfigRootDir parser option changes', () => {
+      it('should cache tsconfig until tsconfigRootDir parser option changes', async () => {
+        jest.resetModules()
+
+        const { ExportMap: FreshNewExportMap } = await import(
+          'eslint-plugin-import-x/utils'
+        )
+
+        expect(FreshNewExportMap).not.toBe(ExportMap)
+
         const customContext = {
           ...context,
           parserOptions: {
             tsconfigRootDir: null,
           },
         } as unknown as ChildContext
-        expect(getTsconfig.getTsconfig).toHaveBeenCalledTimes(0)
-        ExportMap.parse('./baz.ts', 'export const baz = 5', customContext)
-        expect(getTsconfig.getTsconfig).toHaveBeenCalledTimes(1)
-        ExportMap.parse('./baz.ts', 'export const baz = 5', customContext)
-        expect(getTsconfig.getTsconfig).toHaveBeenCalledTimes(1)
+        expect(spied).toHaveBeenCalledTimes(0)
+        FreshNewExportMap.parse(
+          './baz.ts',
+          'export const baz = 5',
+          customContext,
+        )
+        expect(spied).toHaveBeenCalledTimes(1)
+        FreshNewExportMap.parse(
+          './baz.ts',
+          'export const baz = 5',
+          customContext,
+        )
+        expect(spied).toHaveBeenCalledTimes(1)
 
         const differentContext = {
           ...context,
@@ -467,8 +478,12 @@ describe('ExportMap', () => {
           },
         } as unknown as ChildContext
 
-        ExportMap.parse('./baz.ts', 'export const baz = 5', differentContext)
-        expect(getTsconfig.getTsconfig).toHaveBeenCalledTimes(2)
+        FreshNewExportMap.parse(
+          './baz.ts',
+          'export const baz = 5',
+          differentContext,
+        )
+        expect(spied).toHaveBeenCalledTimes(2)
       })
 
       it('should cache after parsing for an ambiguous module', () => {

@@ -1,10 +1,10 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
 type MessageId = 'noMutable'
 
-export = createRule<[], MessageId>({
+export default createRule<[], MessageId>({
   name: 'no-mutable-exports',
   meta: {
     type: 'suggestion',

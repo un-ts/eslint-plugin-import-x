@@ -3,15 +3,15 @@ import vm from 'node:vm'
 import type { TSESTree } from '@typescript-eslint/utils'
 import type { RuleFixer } from '@typescript-eslint/utils/ts-eslint'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
-type Options = {
+export interface Options {
   allowEmpty?: boolean
   importFunctions?: readonly string[]
   webpackChunknameFormat?: string
 }
 
-type MessageId =
+export type MessageId =
   | 'leadingComment'
   | 'blockComment'
   | 'paddedSpaces'
@@ -21,7 +21,7 @@ type MessageId =
   | 'webpackRemoveEagerMode'
   | 'webpackRemoveChunkName'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'dynamic-import-chunkname',
   meta: {
     type: 'suggestion',

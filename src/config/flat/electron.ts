@@ -1,4 +1,4 @@
-import type { PluginFlatConfig } from '../../types'
+import type { PluginFlatConfig } from '../../types.js'
 
 /**
  * Default settings for Electron applications.

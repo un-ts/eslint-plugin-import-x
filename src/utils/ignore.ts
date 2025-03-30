@@ -7,7 +7,7 @@ import type {
   FileExtension,
   PluginSettings,
   RuleContext,
-} from '../types'
+} from '../types.js'
 
 const log = debug('eslint-plugin-import-x:utils:ignore')
 

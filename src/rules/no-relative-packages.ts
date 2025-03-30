@@ -2,8 +2,7 @@ import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import type { RuleContext } from '../types'
-import type { ModuleOptions } from '../utils'
+import type { RuleContext } from '../types.js'
 import {
   importType,
   createRule,
@@ -11,7 +10,8 @@ import {
   makeOptionsSchema,
   resolve,
   readPkgUp,
-} from '../utils'
+} from '../utils/index.js'
+import type { ModuleOptions } from '../utils/index.js'
 
 function toPosixPath(filePath: string) {
   return filePath.replaceAll('\\', '/')
@@ -74,7 +74,7 @@ function checkImportForRelativePackage(
   }
 }
 
-export = createRule<[ModuleOptions?], MessageId>({
+export default createRule<[ModuleOptions?], MessageId>({
   name: 'no-relative-packages',
   meta: {
     type: 'suggestion',
