@@ -143,10 +143,7 @@ function fullResolve(
     return { found: true, path: cachedPath }
   }
 
-  if (
-    Object.prototype.hasOwnProperty.call(settings, 'import-x/resolver-next') &&
-    settings['import-x/resolver-next']
-  ) {
+  if (settings['import-x/resolver-next']) {
     const configResolvers = settings['import-x/resolver-next']
 
     for (let i = 0, len = configResolvers.length; i < len; i++) {
@@ -174,7 +171,6 @@ function fullResolve(
     }
   } else if (
     // backward compatibility for very old `import-x/resolve` options that is no longer supported
-    Object.prototype.hasOwnProperty.call(settings, 'import-x/resolve') &&
     settings['import-x/resolve']
   ) {
     const resolveSettings = settings['import-x/resolve']
