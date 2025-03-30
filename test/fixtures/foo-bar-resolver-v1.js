@@ -1,5 +1,11 @@
 var path = require('path')
 
+/**
+ * @param {string} modulePath
+ * @param {string} sourceFile
+ * @param {unknown} config
+ * @returns
+ */
 exports.resolveImport = function (modulePath, sourceFile, config) {
   var sourceFileName = path.basename(sourceFile)
   if (sourceFileName === 'foo.js') {

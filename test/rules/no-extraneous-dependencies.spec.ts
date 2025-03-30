@@ -93,17 +93,17 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       },
     }),
     tValid({
-      code: 'import jest from "jest"',
+      code: 'import vitest from "vitest"',
       options: [{ devDependencies: ['*.spec.js'] }],
       filename: 'foo.spec.js',
     }),
     tValid({
-      code: 'import jest from "jest"',
+      code: 'import vitest from "vitest"',
       options: [{ devDependencies: ['*.spec.js'] }],
       filename: path.resolve('foo.spec.js'),
     }),
     tValid({
-      code: 'import jest from "jest"',
+      code: 'import vitest from "vitest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
       filename: path.resolve('foo.spec.js'),
     }),
@@ -309,28 +309,28 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       errors: [{ messageId: 'devDep', data: { packageName: 'glob' } }],
     }),
     tInvalid({
-      code: 'import jest from "jest"',
+      code: 'import vitest from "vitest"',
       options: [{ devDependencies: ['*.test.js'] }],
       filename: 'foo.tes.js',
-      errors: [{ messageId: 'devDep', data: { packageName: 'jest' } }],
+      errors: [{ messageId: 'devDep', data: { packageName: 'vitest' } }],
     }),
     tInvalid({
-      code: 'import jest from "jest"',
+      code: 'import vitest from "vitest"',
       options: [{ devDependencies: ['*.test.js'] }],
       filename: path.resolve('foo.tes.js'),
-      errors: [{ messageId: 'devDep', data: { packageName: 'jest' } }],
+      errors: [{ messageId: 'devDep', data: { packageName: 'vitest' } }],
     }),
     tInvalid({
-      code: 'import jest from "jest"',
+      code: 'import vitest from "vitest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
       filename: 'foo.tes.js',
-      errors: [{ messageId: 'devDep', data: { packageName: 'jest' } }],
+      errors: [{ messageId: 'devDep', data: { packageName: 'vitest' } }],
     }),
     tInvalid({
-      code: 'import jest from "jest"',
+      code: 'import vitest from "vitest"',
       options: [{ devDependencies: ['*.test.js', '*.spec.js'] }],
       filename: path.resolve('foo.tes.js'),
-      errors: [{ messageId: 'devDep', data: { packageName: 'jest' } }],
+      errors: [{ messageId: 'devDep', data: { packageName: 'vitest' } }],
     }),
     tInvalid({
       code: 'var eslint = require("lodash")',
@@ -415,11 +415,11 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       ],
     }),
     tInvalid({
-      code: 'import jest from "alias/jest";',
+      code: 'import vitest from "alias/vitest";',
       settings: { 'import-x/resolver': 'webpack' },
       errors: [
-        // missing dependency is jest not alias
-        { messageId: 'missing', data: { packageName: 'jest' } },
+        // missing dependency is vitest not alias
+        { messageId: 'missing', data: { packageName: 'vitest' } },
       ],
     }),
 

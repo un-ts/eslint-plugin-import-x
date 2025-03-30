@@ -9,6 +9,7 @@ import json from 'eslint-plugin-json'
 import * as mdx from 'eslint-plugin-mdx'
 import n from 'eslint-plugin-n'
 import unicorn from 'eslint-plugin-unicorn'
+import vitest from 'eslint-plugin-vitest'
 import yml from 'eslint-plugin-yml'
 import prettier from 'eslint-plugin-prettier/recommended'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
@@ -109,6 +110,10 @@ export default config(
     },
   },
   {
+    files: ['test/**/*.spec.ts'],
+    extends: [vitest.configs.recommended],
+  },
+  {
     files: ['**/*.ts'],
     rules: {
       '@typescript-eslint/array-type': [
@@ -150,7 +155,7 @@ export default config(
       '**/*.d.ts',
       '**/.eslintrc.js',
       'eslint.config.js',
-      'jest.config.ts',
+      'vitest.config.ts',
     ],
     rules: {
       'import-x/no-extraneous-dependencies': 'off',

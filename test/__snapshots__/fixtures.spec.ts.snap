@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`yarn pnp should just work 1`] = `
+exports[`yarn pnp > should just work 1`] = `
 {
   "exitCode": 0,
   "stderr": "",

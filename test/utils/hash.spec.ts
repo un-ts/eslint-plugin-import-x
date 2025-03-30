@@ -1,3 +1,5 @@
+/* eslint-disable vitest/expect-expect */
+
 import type { Hash } from 'node:crypto'
 import { createHash } from 'node:crypto'
 

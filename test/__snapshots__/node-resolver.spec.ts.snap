@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`builtin node:path => true 1`] = `
+exports[`builtin > node:path => true 1`] = `
 {
   "expected": true,
   "requireResolve": "node:path",
@@ -8,7 +8,7 @@ exports[`builtin node:path => true 1`] = `
 }
 `;
 
-exports[`builtin node:path => true 2`] = `
+exports[`builtin > node:path => true 2`] = `
 {
   "expected": true,
   "result": {
@@ -19,7 +19,7 @@ exports[`builtin node:path => true 2`] = `
 }
 `;
 
-exports[`builtin path => true 1`] = `
+exports[`builtin > path => true 1`] = `
 {
   "expected": true,
   "requireResolve": "path",
@@ -27,7 +27,7 @@ exports[`builtin path => true 1`] = `
 }
 `;
 
-exports[`builtin path => true 2`] = `
+exports[`builtin > path => true 2`] = `
 {
   "expected": true,
   "result": {
@@ -38,7 +38,7 @@ exports[`builtin path => true 2`] = `
 }
 `;
 
-exports[`modules @sukka/does-not-exists => false 1`] = `
+exports[`modules > @sukka/does-not-exists => false 1`] = `
 {
   "expected": false,
   "requireResolve": undefined,
@@ -46,7 +46,7 @@ exports[`modules @sukka/does-not-exists => false 1`] = `
 }
 `;
 
-exports[`modules @sukka/does-not-exists => false 2`] = `
+exports[`modules > @sukka/does-not-exists => false 2`] = `
 {
   "expected": false,
   "result": {
@@ -56,26 +56,26 @@ exports[`modules @sukka/does-not-exists => false 2`] = `
 }
 `;
 
-exports[`modules jest => true 1`] = `
+exports[`modules > vitest => true 1`] = `
 {
   "expected": true,
-  "requireResolve": "<ROOT>/node_modules/jest/build/index.js",
-  "source": "jest",
+  "requireResolve": "<ROOT>/node_modules/vitest/index.cjs",
+  "source": "vitest",
 }
 `;
 
-exports[`modules jest => true 2`] = `
+exports[`modules > vitest => true 2`] = `
 {
   "expected": true,
   "result": {
     "found": true,
-    "path": "<ROOT>/node_modules/jest/build/index.js",
+    "path": "<ROOT>/node_modules/vitest/dist/index.js",
   },
-  "source": "jest",
+  "source": "vitest",
 }
 `;
 
-exports[`relative ../.github/dependabot.yml => false 1`] = `
+exports[`relative > ../.github/dependabot.yml => false 1`] = `
 {
   "expected": false,
   "requireResolve": undefined,
@@ -83,7 +83,7 @@ exports[`relative ../.github/dependabot.yml => false 1`] = `
 }
 `;
 
-exports[`relative ../.github/dependabot.yml => false 2`] = `
+exports[`relative > ../.github/dependabot.yml => false 2`] = `
 {
   "expected": false,
   "result": {
@@ -93,7 +93,7 @@ exports[`relative ../.github/dependabot.yml => false 2`] = `
 }
 `;
 
-exports[`relative ../babel.config.cjs => babel.config.cjs 1`] = `
+exports[`relative > ../babel.config.cjs => babel.config.cjs 1`] = `
 {
   "expected": "babel.config.cjs",
   "requireResolve": "<ROOT>/babel.config.cjs",
@@ -101,7 +101,7 @@ exports[`relative ../babel.config.cjs => babel.config.cjs 1`] = `
 }
 `;
 
-exports[`relative ../babel.config.cjs => babel.config.cjs 2`] = `
+exports[`relative > ../babel.config.cjs => babel.config.cjs 2`] = `
 {
   "expected": "babel.config.cjs",
   "result": {
@@ -112,7 +112,7 @@ exports[`relative ../babel.config.cjs => babel.config.cjs 2`] = `
 }
 `;
 
-exports[`relative ../inexistent.js => false 1`] = `
+exports[`relative > ../inexistent.js => false 1`] = `
 {
   "expected": false,
   "requireResolve": undefined,
@@ -120,7 +120,7 @@ exports[`relative ../inexistent.js => false 1`] = `
 }
 `;
 
-exports[`relative ../inexistent.js => false 2`] = `
+exports[`relative > ../inexistent.js => false 2`] = `
 {
   "expected": false,
   "result": {
@@ -130,7 +130,7 @@ exports[`relative ../inexistent.js => false 2`] = `
 }
 `;
 
-exports[`relative ../package.json => package.json 1`] = `
+exports[`relative > ../package.json => package.json 1`] = `
 {
   "expected": "package.json",
   "requireResolve": "<ROOT>/package.json",
@@ -138,7 +138,7 @@ exports[`relative ../package.json => package.json 1`] = `
 }
 `;
 
-exports[`relative ../package.json => package.json 2`] = `
+exports[`relative > ../package.json => package.json 2`] = `
 {
   "expected": "package.json",
   "result": {
@@ -149,7 +149,7 @@ exports[`relative ../package.json => package.json 2`] = `
 }
 `;
 
-exports[`relative ../test => test/index.js 1`] = `
+exports[`relative > ../test => test/index.js 1`] = `
 {
   "expected": "test/index.js",
   "requireResolve": "<ROOT>/test/index.js",
@@ -157,7 +157,7 @@ exports[`relative ../test => test/index.js 1`] = `
 }
 `;
 
-exports[`relative ../test => test/index.js 2`] = `
+exports[`relative > ../test => test/index.js 2`] = `
 {
   "expected": "test/index.js",
   "result": {
@@ -168,7 +168,7 @@ exports[`relative ../test => test/index.js 2`] = `
 }
 `;
 
-exports[`relative ../test/ => test/index.js 1`] = `
+exports[`relative > ../test/ => test/index.js 1`] = `
 {
   "expected": "test/index.js",
   "requireResolve": "<ROOT>/test/index.js",
@@ -176,7 +176,7 @@ exports[`relative ../test/ => test/index.js 1`] = `
 }
 `;
 
-exports[`relative ../test/ => test/index.js 2`] = `
+exports[`relative > ../test/ => test/index.js 2`] = `
 {
   "expected": "test/index.js",
   "result": {
@@ -187,7 +187,7 @@ exports[`relative ../test/ => test/index.js 2`] = `
 }
 `;
 
-exports[`relative ../test/index.js => test/index.js 1`] = `
+exports[`relative > ../test/index.js => test/index.js 1`] = `
 {
   "expected": "test/index.js",
   "requireResolve": "<ROOT>/test/index.js",
@@ -195,7 +195,7 @@ exports[`relative ../test/index.js => test/index.js 1`] = `
 }
 `;
 
-exports[`relative ../test/index.js => test/index.js 2`] = `
+exports[`relative > ../test/index.js => test/index.js 2`] = `
 {
   "expected": "test/index.js",
   "result": {

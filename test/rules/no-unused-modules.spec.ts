@@ -1,11 +1,10 @@
 import fs from 'node:fs'
 
-import { jest } from '@jest/globals'
 import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { TSESLint } from '@typescript-eslint/utils'
-// eslint-disable-next-line import-x/default -- incorrect types
+// eslint-disable-next-line import-x/default -- incorrect types, commonjs actually
 import eslint8UnsupportedApi from 'eslint8.56/use-at-your-own-risk'
 import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
 
@@ -283,7 +282,7 @@ ruleTester.run('no-unused-modules', rule, {
 })
 
 describe('dynamic imports', () => {
-  jest.setTimeout(10e3)
+  vi.setConfig({ testTimeout: 10_000 })
 
   // test for unused exports with `import()`
   ruleTester.run('no-unused-modules', rule, {
@@ -683,13 +682,12 @@ ruleTester.run('no-unused-modules', rule, {
 
 ruleTester.run('no-unused-modules', rule, {
   valid: [
-    /* TODO:
-    test({
-      options: unusedExportsOptions,
-      code: `export { default, m1 } from '${testFilePath('./no-unused-modules/file-m.js')}';`,
-      filename: testFilePath('./no-unused-modules/file-0.js')
-    }),
-    */
+    // TODO
+    // tValid({
+    //   options: unusedExportsOptions,
+    //   code: `export { default, m1 } from '${testFilePath('./no-unused-modules/file-m.js')}';`,
+    //   filename: testFilePath('./no-unused-modules/file-0.js')
+    // }),
   ],
   invalid: [
     tInvalid({
@@ -762,7 +760,7 @@ describe('renameDefault', () => {
   })
 })
 
-describe('test behavior for new file', () => {
+describe('test behavior for new file 0', () => {
   beforeAll(() => {
     fs.writeFileSync(testFilePath('./no-unused-modules/file-added-0.js'), '', {
       encoding: 'utf8',
@@ -878,7 +876,7 @@ describe('test behavior for new file', () => {
     ],
   })
 
-  describe('test behavior for new file', () => {
+  describe('test behavior for new file 1', () => {
     beforeAll(() => {
       fs.writeFileSync(
         testFilePath('./no-unused-modules/file-added-1.js'),
@@ -920,7 +918,7 @@ describe('test behavior for new file', () => {
   })
 })
 
-describe('test behavior for new file', () => {
+describe('test behavior for new file 2', () => {
   beforeAll(() => {
     fs.writeFileSync(testFilePath('./no-unused-modules/file-added-2.js'), '', {
       encoding: 'utf8',
@@ -951,7 +949,7 @@ describe('test behavior for new file', () => {
   })
 })
 
-describe('test behavior for new file', () => {
+describe('test behavior for new file 3', () => {
   beforeAll(() => {
     fs.writeFileSync(testFilePath('./no-unused-modules/file-added-3.js'), '', {
       encoding: 'utf8',
@@ -1009,7 +1007,7 @@ describe('test behavior for destructured exports', () => {
   })
 })
 
-describe('test behavior for new file', () => {
+describe('test behavior for new file 4', () => {
   beforeAll(() => {
     fs.writeFileSync(
       testFilePath('./no-unused-modules/file-added-4.js.js'),

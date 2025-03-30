@@ -1,10 +1,9 @@
 import fs from 'node:fs'
 import { setTimeout } from 'node:timers/promises'
 
-import { jest } from '@jest/globals'
 import * as getTsconfig from 'get-tsconfig'
 
-import { TEST_FILENAME, testFilePath } from '../utils.js'
+import { srcDir, TEST_FILENAME, testFilePath } from '../utils.js'
 
 import type { ChildContext, RuleContext } from 'eslint-plugin-import-x/types'
 import {
@@ -143,17 +142,14 @@ describe('ExportMap', () => {
     )
   })
 
-  it('does not return a cached copy after modification', done => {
+  it('does not return a cached copy after modification', () => {
     const firstAccess = ExportMap.get('./mutator', fakeContext)
     expect(firstAccess).toBeDefined()
 
     // mutate (update modified time)
     const newDate = new Date()
-    fs.utimes(testFilePath('mutator.js'), newDate, newDate, error => {
-      expect(error).toBeFalsy()
-      expect(ExportMap.get('./mutator', fakeContext)).not.toBe(firstAccess)
-      done()
-    })
+    fs.utimesSync(testFilePath('mutator.js'), newDate, newDate)
+    expect(ExportMap.get('./mutator', fakeContext)).not.toBe(firstAccess)
   })
 
   it('does not return a cached copy with different settings', () => {
@@ -309,15 +305,17 @@ describe('ExportMap', () => {
 
     let a: ExportMap | null
 
+    const cache2 = testFilePath(`deep/cache-2-${srcDir}.js`)
+
     beforeAll(async () => {
       try {
         // first version
         await fs.promises.writeFile(
-          testFilePath('deep/cache-2.js'),
+          cache2,
           await fs.promises.readFile(testFilePath('deep/cache-2a.js')),
         )
 
-        const path = testFilePath('deep/cache-1.js')
+        const path = testFilePath(`deep/cache-1-${srcDir}.js`)
         const contents = await fs.promises.readFile(path, { encoding: 'utf8' })
         a = ExportMap.parse(path, contents, espreeContext)!
         expect(a.errors).toHaveLength(0)
@@ -328,10 +326,10 @@ describe('ExportMap', () => {
         // wait ~1s, cache check is 1s resolution
         await setTimeout(1100)
       } finally {
-        await fs.promises.unlink(testFilePath('deep/cache-2.js'))
+        await fs.promises.unlink(cache2)
         // swap in a new file and touch it
         await fs.promises.writeFile(
-          testFilePath('deep/cache-2.js'),
+          cache2,
           await fs.promises.readFile(testFilePath('deep/cache-2b.js')),
         )
       }
@@ -341,7 +339,7 @@ describe('ExportMap', () => {
       expect(a!.get('b')!.namespace!.has('c')).toBe(false)
     })
 
-    afterAll(done => fs.unlink(testFilePath('deep/cache-2.js'), done))
+    afterAll(() => fs.unlinkSync(cache2))
   })
 
   describe('Map API', () => {
@@ -399,11 +397,11 @@ describe('ExportMap', () => {
         } as const,
       }
 
-      jest.setTimeout(20e3) // takes a long time :shrug:
+      vi.setConfig({ testTimeout: 20_000 }) // takes a long time :shrug:
 
-      const spied = jest.fn()
+      const spied = vi.fn()
 
-      jest.unstable_mockModule('get-tsconfig', () => ({
+      vi.doMock('get-tsconfig', () => ({
         ...getTsconfig,
         getTsconfig: spied,
       }))
@@ -443,7 +441,7 @@ describe('ExportMap', () => {
       })
 
       it('should cache tsconfig until tsconfigRootDir parser option changes', async () => {
-        jest.resetModules()
+        vi.resetModules()
 
         const { ExportMap: FreshNewExportMap } = await import(
           'eslint-plugin-import-x/utils'
@@ -488,7 +486,7 @@ describe('ExportMap', () => {
 
       it('should cache after parsing for an ambiguous module', () => {
         const source = './typescript-declare-module.ts'
-        const parseSpy = jest.spyOn(ExportMap, 'parse').mockClear()
+        const parseSpy = vi.spyOn(ExportMap, 'parse').mockClear()
 
         expect(ExportMap.get(source, context)).toBeNull()
 

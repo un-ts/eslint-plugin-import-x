@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
 
-import { jest } from '@jest/globals'
 import type { TSESLint } from '@typescript-eslint/utils'
 import { __importDefault } from 'tslib'
 
@@ -23,9 +22,9 @@ const require = createRequire(import.meta.url)
 describe('parse(content, { settings, ecmaFeatures })', () => {
   const filepath = testFilePath('jsx.js')
 
-  const parseStubParserPath = require.resolve('./parse-stub-parser')
+  const parseStubParserPath = require.resolve('./parse-stub-parser.cjs')
 
-  const eslintParserPath = require.resolve('./eslint-parser')
+  const eslintParserPath = require.resolve('./eslint-parser.cjs')
 
   const content = fs.readFileSync(filepath, 'utf8')
 
@@ -50,7 +49,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('passes expected parserOptions to custom parser', () => {
-    const parseSpy = jest.fn()
+    const parseSpy = vi.fn()
     const parserOptions = { ecmaFeatures: { jsx: true } }
     parseStubParser.setParse(parseSpy)
     parse(filepath, content, {
@@ -82,7 +81,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('passes with custom `parseForESLint` parser', async () => {
-    jest.resetModules()
+    vi.resetModules()
     const { parse: freshNewParse } = await import(
       'eslint-plugin-import-x/utils'
     )
@@ -92,11 +91,11 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
       await import('./eslint-parser.cjs'),
     ).default
 
-    const parseForESLintSpy = jest
+    const parseForESLintSpy = vi
       .fn<() => { ast: object }>()
       .mockImplementationOnce(() => ({ ast: {} }))
     setParseForESLint(parseForESLintSpy)
-    const parseSpy = jest.fn()
+    const parseSpy = vi.fn()
     setParse(parseSpy)
 
     freshNewParse(filepath, content, {
@@ -137,7 +136,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('takes the alternate parser specified in settings', async () => {
-    jest.resetModules()
+    vi.resetModules()
     const { parse: freshNewParse } = await import(
       'eslint-plugin-import-x/utils'
     )
@@ -145,7 +144,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     const { setParse } = __importDefault(
       await import('./parse-stub-parser.cjs'),
     ).default
-    const parseSpy = jest.fn()
+    const parseSpy = vi.fn()
     setParse(parseSpy)
     const parserOptions = { ecmaFeatures: { jsx: true } }
     expect(
@@ -229,7 +228,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     ).toThrow()
   })
 
-  it('throws on non-function languageOptions.parser.parse', () => {
+  it('throws on non-function languageOptions.parser.parseForESLint', () => {
     expect(
       parse.bind(null, filepath, content, {
         settings: {},
@@ -267,7 +266,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('uses parse from languageOptions.parser', () => {
-    const parseSpy = jest.fn()
+    const parseSpy = vi.fn()
     expect(
       parse.bind(
         null,
@@ -289,7 +288,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('uses parseForESLint from languageOptions.parser', () => {
-    const parseSpy = jest.fn(() => ({ ast: {} }))
+    const parseSpy = vi.fn(() => ({ ast: {} }))
     expect(
       parse.bind(
         null,
@@ -311,12 +310,12 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('prefers parsers specified in the settings over languageOptions.parser', async () => {
-    jest.resetModules()
+    vi.resetModules()
     const { parse: freshNewParse } = await import(
       'eslint-plugin-import-x/utils'
     )
     expect(freshNewParse).not.toBe(parse)
-    const parseSpy = jest.fn()
+    const parseSpy = vi.fn()
 
     const { setParse } = __importDefault(
       await import('./parse-stub-parser.cjs'),
@@ -347,7 +346,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('ignores parser options from language options set to null', () => {
-    const parseSpy = jest.fn()
+    const parseSpy = vi.fn()
     parseStubParser.setParse(parseSpy)
     expect(
       parse.bind(null, filepath, content, {
@@ -367,7 +366,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   })
 
   it('prefers languageOptions.parserOptions over parserOptions', () => {
-    const parseSpy = jest.fn()
+    const parseSpy = vi.fn()
     parseStubParser.setParse(parseSpy)
     expect(
       parse.bind(null, filepath, content, {

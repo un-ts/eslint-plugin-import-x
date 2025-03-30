@@ -3,11 +3,10 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
-import { jest } from '@jest/globals'
 import type { CjsRequire } from '@pkgr/core'
 import type { TSESLint } from '@typescript-eslint/utils'
 
-import { testContext, testFilePath } from '../utils.js'
+import { srcDir, testContext, testFilePath } from '../utils.js'
 
 import { importXResolverCompat } from 'eslint-plugin-import-x'
 import type { NewResolver } from 'eslint-plugin-import-x/types'
@@ -491,7 +490,7 @@ describe('resolve', () => {
         ] as const,
     )
 
-    const pairs = [['./CaseyKasem.js', './CASEYKASEM2.js']]
+    const pairs = [[`./CaseyKasem-${srcDir}.js`, `./CASEYKASEM2-${srcDir}.js`]]
 
     for (const [original, changed] of pairs) {
       describe(`${original} => ${changed}`, () => {
@@ -532,7 +531,7 @@ describe('resolve', () => {
 
         // special behavior for infinity
         describe('infinite cache', () => {
-          jest.setTimeout(1.5e3)
+          vi.setConfig({ testTimeout: 1500 })
 
           beforeAll(() => setTimeout(1100))
 
@@ -545,7 +544,7 @@ describe('resolve', () => {
         })
 
         describe('finite cache', () => {
-          jest.setTimeout(1.2e3)
+          vi.setConfig({ testTimeout: 1200 })
           beforeAll(() => setTimeout(1000))
           it('gets correct values after cache lifetime', () => {
             expect(resolve(original, context)).toBeFalsy()
