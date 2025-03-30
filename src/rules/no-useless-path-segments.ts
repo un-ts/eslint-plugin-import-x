@@ -39,7 +39,7 @@ function countRelativeParents(pathSegments: string[]) {
   return pathSegments.filter(x => x === '..').length
 }
 
-export type Options = ModuleOptions & {
+export interface Options extends ModuleOptions {
   noUselessIndex?: boolean
 }
 

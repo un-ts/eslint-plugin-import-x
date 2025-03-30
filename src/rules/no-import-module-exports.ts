@@ -15,7 +15,7 @@ function getEntryPoint(context: RuleContext) {
     return cjsRequire.resolve(path.dirname(pkgPath))
   } catch {
     // Assume the package has no entrypoint (e.g. CLI packages)
-    // in which case require.resolve would throw.
+    // in which case `cjsRequire.resolve` would throw.
     return null
   }
 }
@@ -46,7 +46,7 @@ export interface Options {
   exceptions?: string[]
 }
 
-type MessageId = 'notAllowed'
+export type MessageId = 'notAllowed'
 
 export default createRule<[Options?], MessageId>({
   name: 'no-import-module-exports',

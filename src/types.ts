@@ -47,11 +47,11 @@ export interface WebpackResolverOptions {
   argv?: Record<string, unknown>
 }
 
-export type TsResolverOptions = {
+export interface TsResolverOptions extends ResolveOptions {
   alwaysTryTypes?: boolean
   project?: string[] | string
   extensions?: string[]
-} & ResolveOptions
+}
 
 // TODO: remove prefix New in the next major version
 export type NewResolverResolve = (
@@ -112,29 +112,27 @@ export type WithPluginName<T extends string | object> = T extends string
 
 export type PluginSettings = WithPluginName<ImportSettings>
 
-export type PluginConfig = {
+export interface PluginConfig extends TSESLint.ClassicConfig.Config {
   plugins?: [PluginName]
   settings?: PluginSettings
   rules?: Record<`${PluginName}/${string}`, TSESLint.ClassicConfig.RuleEntry>
-} & TSESLint.ClassicConfig.Config
+}
 
-export type PluginFlatBaseConfig = {
+export interface PluginFlatBaseConfig extends TSESLint.FlatConfig.Config {
   settings?: PluginSettings
   rules?: Record<`${PluginName}/${string}`, TSESLint.FlatConfig.RuleEntry>
-} & TSESLint.FlatConfig.Config
+}
 
-export type PluginFlatConfig = PluginFlatBaseConfig & {
+export interface PluginFlatConfig extends PluginFlatBaseConfig {
   name?: `${PluginName}/${string}`
 }
 
-export type RuleContext<
+export interface RuleContext<
   TMessageIds extends string = string,
   TOptions extends readonly unknown[] = readonly unknown[],
-> = Readonly<{
-  languageOptions?: TSESLint.FlatConfig.LanguageOptions
+> extends Omit<TSESLint.RuleContext<TMessageIds, TOptions>, 'settings'> {
   settings: PluginSettings
-}> &
-  Omit<TSESLint.RuleContext<TMessageIds, TOptions>, 'settings'>
+}
 
 export interface ChildContext {
   cacheKey: string
@@ -146,24 +144,22 @@ export interface ChildContext {
   filename?: string
 }
 
-export type ParseError = {
+export interface ParseError extends Error {
   lineNumber: number
   column: number
-} & Error
+}
 
-export type CustomESTreeNode<
-  Type extends string,
-  T extends object = object,
-> = Omit<TSESTree.BaseNode, 'type'> & {
+export interface CustomESTreeNode<Type extends string>
+  extends Omit<TSESTree.BaseNode, 'type'> {
   type: Type
-} & T
+}
 
 export type ExportDefaultSpecifier = CustomESTreeNode<'ExportDefaultSpecifier'>
 
-export type ExportNamespaceSpecifier = CustomESTreeNode<
-  'ExportNamespaceSpecifier',
-  { exported: TSESTree.Identifier }
->
+export interface ExportNamespaceSpecifier
+  extends CustomESTreeNode<'ExportNamespaceSpecifier'> {
+  exported: TSESTree.Identifier
+}
 
 export interface PathGroup {
   pattern: string
@@ -219,10 +215,10 @@ export interface ImportEntry {
   displayName?: LiteralNodeValue
 }
 
-export type ImportEntryWithRank = {
+export interface ImportEntryWithRank extends ImportEntry {
   rank: number
   isMultiline?: boolean
-} & ImportEntry
+}
 
 export interface RanksPathGroup {
   pattern: string

@@ -7,7 +7,7 @@ import type { TSESTree } from '@typescript-eslint/utils'
 import type { RuleContext } from '../types.js'
 import { createRule, moduleVisitor, resolve } from '../utils/index.js'
 
-type MessageId = 'self'
+export type MessageId = 'self'
 
 function isImportingSelf(
   context: RuleContext<MessageId>,

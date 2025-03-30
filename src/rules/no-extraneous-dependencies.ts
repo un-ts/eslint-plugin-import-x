@@ -15,7 +15,7 @@ import {
   getFilePackageName,
 } from '../utils/index.js'
 
-type PackageDeps = ReturnType<typeof extractDepFields>
+export type PackageDeps = ReturnType<typeof extractDepFields>
 
 const depFieldCache = new Map<string, PackageDeps>()
 
@@ -147,7 +147,7 @@ function getModuleOriginalName(name: string) {
   return first.startsWith('@') ? `${first}/${second}` : first
 }
 
-interface DepDeclaration {
+export interface DepDeclaration {
   isInDeps: boolean
   isInDevDeps: boolean
   isInOptDeps: boolean
@@ -200,7 +200,7 @@ function checkDependencyDeclaration(
   )
 }
 
-interface DepsOptions {
+export interface DepsOptions {
   allowDevDeps: boolean
   allowOptDeps: boolean
   allowPeerDeps: boolean

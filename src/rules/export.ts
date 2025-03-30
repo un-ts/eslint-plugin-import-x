@@ -108,7 +108,7 @@ function shouldSkipTypescriptNamespace(
   )
 }
 
-type MessageId = 'noNamed' | 'multiDefault' | 'multiNamed'
+export type MessageId = 'noNamed' | 'multiDefault' | 'multiNamed'
 
 export default createRule<[], MessageId>({
   name: 'export',

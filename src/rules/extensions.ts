@@ -35,9 +35,9 @@ const properties = {
   },
 }
 
-type Modifier = (typeof modifierValues)[number]
+export type Modifier = (typeof modifierValues)[number]
 
-type ModifierByFileExtension = Partial<Record<string, Modifier>>
+export type ModifierByFileExtension = Partial<Record<string, Modifier>>
 
 export interface OptionsItemWithPatternProperty {
   ignorePackages?: boolean
@@ -65,7 +65,7 @@ export interface NormalizedOptions {
   checkTypeImports?: boolean
 }
 
-type MessageId = 'missing' | 'missingKnown' | 'unexpected'
+export type MessageId = 'missing' | 'missingKnown' | 'unexpected'
 
 function buildProperties(context: RuleContext<MessageId, Options>) {
   const result: Required<NormalizedOptions> = {

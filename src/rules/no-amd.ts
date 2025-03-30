@@ -4,7 +4,7 @@
 
 import { createRule } from '../utils/index.js'
 
-type MessageId = 'amd'
+export type MessageId = 'amd'
 
 export default createRule<[], MessageId>({
   name: 'no-amd',

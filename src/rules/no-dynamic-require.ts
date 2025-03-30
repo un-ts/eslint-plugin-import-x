@@ -4,9 +4,7 @@ import { createRule } from '../utils/index.js'
 
 function isRequire(node: TSESTree.CallExpression) {
   return (
-    node &&
-    node.callee &&
-    node.callee.type === 'Identifier' &&
+    node.callee?.type === 'Identifier' &&
     node.callee.name === 'require' &&
     node.arguments.length > 0
   )
@@ -14,8 +12,7 @@ function isRequire(node: TSESTree.CallExpression) {
 
 function isDynamicImport(node: TSESTree.CallExpression) {
   return (
-    node &&
-    node.callee &&
+    node?.callee &&
     // @ts-expect-error - legacy parser type
     node.callee.type === 'Import'
   )
@@ -34,7 +31,7 @@ export interface Options {
   esmodule?: boolean
 }
 
-type MessageId = 'import' | 'require'
+export type MessageId = 'import' | 'require'
 
 export default createRule<[Options?], MessageId>({
   name: 'no-dynamic-require',

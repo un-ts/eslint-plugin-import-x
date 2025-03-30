@@ -1,6 +1,6 @@
 import type { JSONSchema, TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-type Visitor = (
+export type Visitor = (
   source: TSESTree.StringLiteral,
   importer:
     | TSESTree.ImportDeclaration

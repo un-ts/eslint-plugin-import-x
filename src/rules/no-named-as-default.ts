@@ -2,7 +2,7 @@ import type { TSESTree } from '@typescript-eslint/utils'
 
 import { importDeclaration, ExportMap, createRule } from '../utils/index.js'
 
-type MessageId = 'default'
+export type MessageId = 'default'
 
 export default createRule<[], MessageId>({
   name: 'no-named-as-default',

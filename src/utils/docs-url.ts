@@ -1,4 +1,4 @@
-import { version } from '../meta.ts'
+import { version } from '../meta.js'
 
 const repoUrl = 'https://github.com/un-ts/eslint-plugin-import-x'
 

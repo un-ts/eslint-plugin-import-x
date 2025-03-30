@@ -4,7 +4,7 @@ import { cjsRequire } from '@pkgr/core'
 import { config, configs } from 'typescript-eslint'
 import js from '@eslint/js'
 import eslintPlugin from 'eslint-plugin-eslint-plugin'
-import importX from 'eslint-plugin-import-x'
+import { flatConfigs } from 'eslint-plugin-import-x'
 import json from 'eslint-plugin-json'
 import * as mdx from 'eslint-plugin-mdx'
 import n from 'eslint-plugin-n'
@@ -16,7 +16,7 @@ import globals from 'globals'
 
 const { version } = cjsRequire('eslint/package.json')
 
-const nonLatestEslint = +version.split('.')[0] < 9
+const noEslintrc = +version.split('.')[0] > 8
 
 export default config(
   {
@@ -31,8 +31,8 @@ export default config(
   },
   js.configs.recommended,
   configs.recommended,
-  importX.flatConfigs.recommended,
-  importX.flatConfigs.typescript,
+  flatConfigs.recommended,
+  flatConfigs.typescript,
   json.configs.recommended,
   mdx.configs.flat,
   mdx.configs.flatCodeBlocks,
@@ -62,7 +62,7 @@ export default config(
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-require-imports': 'off',
 
-      'no-constant-condition': nonLatestEslint ? 'off' : 'error',
+      'no-constant-condition': noEslintrc ? 'error' : 'off',
 
       'eslint-plugin/consistent-output': ['error', 'always'],
       'eslint-plugin/meta-property-ordering': 'error',
@@ -141,13 +141,6 @@ export default config(
           'newlines-between': 'always',
         },
       ],
-    },
-    settings: {
-      'import-x/resolver': {
-        typescript: {
-          project: 'tsconfig.base.json',
-        },
-      },
     },
   },
   {

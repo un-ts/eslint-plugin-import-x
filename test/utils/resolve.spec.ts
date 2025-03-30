@@ -9,7 +9,7 @@ import type { TSESLint } from '@typescript-eslint/utils'
 
 import { testContext, testFilePath } from '../utils.js'
 
-import eslintPluginImportX from 'eslint-plugin-import-x'
+import { importXResolverCompat } from 'eslint-plugin-import-x'
 import type { NewResolver } from 'eslint-plugin-import-x/types'
 import {
   CASE_SENSITIVE_FS,
@@ -18,8 +18,6 @@ import {
 } from 'eslint-plugin-import-x/utils'
 
 const require: CjsRequire = createRequire(import.meta.url)
-
-const { importXResolverCompat } = eslintPluginImportX
 
 describe('resolve', () => {
   it('throws on bad parameters', () => {

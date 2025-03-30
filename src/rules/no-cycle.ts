@@ -12,11 +12,11 @@ import {
   resolve,
 } from '../utils/index.js'
 
-export type Options = {
+export interface Options extends ModuleOptions {
   allowUnsafeDynamicCyclicDependency?: boolean
   ignoreExternal?: boolean
   maxDepth?: number | '∞'
-} & ModuleOptions
+}
 
 export type MessageId = 'cycle' | 'cycleSource'
 

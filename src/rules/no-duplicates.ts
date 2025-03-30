@@ -394,7 +394,7 @@ function hasCommentInsideNonSpecifiers(
   )
 }
 
-interface ModuleMap {
+export interface ModuleMap {
   imported: Map<string, TSESTree.ImportDeclaration[]>
   nsImported: Map<string, TSESTree.ImportDeclaration[]>
   defaultTypesImported: Map<string, TSESTree.ImportDeclaration[]>

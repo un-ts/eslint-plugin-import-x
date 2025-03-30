@@ -9,8 +9,5 @@ export function declaredScope(
 ) {
   const references = context.sourceCode.getScope(node).references
   const reference = references.find(x => x.identifier.name === name)
-  if (!reference || !reference.resolved) {
-    return
-  }
-  return reference.resolved.scope.type
+  return reference?.resolved?.scope.type
 }

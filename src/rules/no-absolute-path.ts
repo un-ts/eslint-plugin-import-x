@@ -8,7 +8,7 @@ import {
 } from '../utils/index.js'
 import type { ModuleOptions } from '../utils/index.js'
 
-type MessageId = 'absolute'
+export type MessageId = 'absolute'
 
 export default createRule<[ModuleOptions?], MessageId>({
   name: 'no-absolute-path',
