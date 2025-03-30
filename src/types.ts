@@ -34,7 +34,7 @@ export type {
 
 export type ImportType = ImportType_ | 'object' | 'type'
 
-export interface NodeResolverOptions {
+export interface LegacyNodeResolverOptions {
   extensions?: readonly string[]
   /** set to `false` to exclude node core modules (e.g.` fs`) from the search */
   includeCoreModules?: boolean

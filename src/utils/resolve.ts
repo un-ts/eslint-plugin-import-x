@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 import { stableHash } from 'stable-hash'
 
-import { createNodeResolver } from '../node-resolver'
+import { createNodeResolver } from '../node-resolver.js'
 import type {
   ImportSettings,
   LegacyResolver,
