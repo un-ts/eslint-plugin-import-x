@@ -111,7 +111,7 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
   return true
 }
 
-let nodeResolverInstanceForLegacyNodeResolverSettings: NewResolver | null = null
+let nodeResolverInstanceForLegacyNodeResolverSettings: NewResolver
 
 function fullResolve(
   modulePath: string,
@@ -177,12 +177,14 @@ function fullResolve(
     Object.prototype.hasOwnProperty.call(settings, 'import-x/resolve') &&
     settings['import-x/resolve']
   ) {
+    const resolveSettings = settings['import-x/resolve']
+
     nodeResolverInstanceForLegacyNodeResolverSettings ||= createNodeResolver({
-      extensions: (settings['import-x/resolve'].extensions ||
+      extensions: (resolveSettings.extensions ||
         settings['import-x/extensions']) as string[] | undefined,
-      builtinModules: settings['import-x/resolve'].includeCoreModules !== false,
-      modules: settings['import-x/resolve'].moduleDirectory,
-      symlinks: settings['import-x/resolve'].preserveSymlinks ?? true,
+      builtinModules: resolveSettings.includeCoreModules !== false,
+      modules: resolveSettings.moduleDirectory,
+      symlinks: resolveSettings.preserveSymlinks ?? true,
     })
 
     const resolved = nodeResolverInstanceForLegacyNodeResolverSettings.resolve(
