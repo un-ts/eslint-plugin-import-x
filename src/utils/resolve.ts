@@ -180,7 +180,7 @@ function fullResolve(
     nodeResolverInstanceForLegacyNodeResolverSettings ||= createNodeResolver({
       extensions: (settings['import-x/resolve'].extensions ||
         settings['import-x/extensions']) as string[] | undefined,
-      builtinModules: settings['import-x/resolve'].includeCoreModules,
+      builtinModules: settings['import-x/resolve'].includeCoreModules !== false,
       modules: settings['import-x/resolve'].moduleDirectory,
       symlinks: settings['import-x/resolve'].preserveSymlinks ?? true,
     })
