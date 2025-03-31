@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 4.10.0
+
+### Minor Changes
+
+- [#271](https://github.com/un-ts/eslint-plugin-import-x/pull/271) [`6cba8eb`](https://github.com/un-ts/eslint-plugin-import-x/commit/6cba8eb6e920cc5bd04c54577cde0c77d9424819) Thanks [@JounQin](https://github.com/JounQin)! - feat: migrate to ESM primary
+
+### Patch Changes
+
+- [#276](https://github.com/un-ts/eslint-plugin-import-x/pull/276) [`e52168e`](https://github.com/un-ts/eslint-plugin-import-x/commit/e52168e7d234fa9485055640f39dded6a1124256) Thanks [@jribbens](https://github.com/jribbens)! - fix: allow `minimatch` 9 or 10
+
 ## 4.9.4
 
 ### Patch Changes
