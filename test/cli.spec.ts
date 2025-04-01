@@ -5,18 +5,19 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
+// eslint-disable-next-line import-x/default -- incorrect types, commonjs actually
 import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 
 import importPlugin from 'eslint-plugin-import-x'
 
-// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types, commonjs actually
 const { LegacyESLint } = eslintUnsupportedApi
 
 describe('CLI regression tests', () => {
   const testDir = path.resolve(fileURLToPath(import.meta.url), '..')
 
   describe('issue #210', () => {
+    // eslint-disable-next-line vitest/expect-expect
     it("doesn't throw an error on gratuitous, erroneous self-reference", () => {
       const eslint = new LegacyESLint({
         cwd: testDir,

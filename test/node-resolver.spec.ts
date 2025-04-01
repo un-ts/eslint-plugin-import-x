@@ -47,7 +47,7 @@ describe('builtin', () => {
 })
 
 describe('modules', () => {
-  expectResolve('jest', true)
+  expectResolve('vitest', true)
   expectResolve('@sukka/does-not-exists', false)
 })
 

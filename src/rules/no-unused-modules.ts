@@ -7,7 +7,7 @@ import path from 'node:path'
 
 import { TSESTree } from '@typescript-eslint/utils'
 import type { TSESLint } from '@typescript-eslint/utils'
-// eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
+// eslint-disable-next-line import-x/default -- incorrect types, commonjs actually
 import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 
 import type { FileExtension, RuleContext } from '../types.js'
@@ -22,7 +22,7 @@ import {
   getValue,
 } from '../utils/index.js'
 
-// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types, commonjs actually
 const { FileEnumerator } = eslintUnsupportedApi
 
 function listFilesToProcess(src: string[], extensions: FileExtension[]) {

@@ -52,7 +52,7 @@ jobs:
         run: yarn --immutable
 
       - name: Build and Test
-        run: yarn run-s test-compiled test
+        run: yarn run-s build test
 
       - name: Lint
         run: yarn lint
