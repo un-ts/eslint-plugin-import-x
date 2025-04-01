@@ -179,7 +179,10 @@ function fullResolve(
       extensions: (resolveSettings.extensions ||
         settings['import-x/extensions']) as string[] | undefined,
       builtinModules: resolveSettings.includeCoreModules !== false,
-      modules: resolveSettings.moduleDirectory,
+      modules: [
+        resolveSettings.moduleDirectory,
+        ...(resolveSettings.paths ?? []),
+      ].filter(Boolean),
       symlinks: resolveSettings.preserveSymlinks ?? true,
     })
 
