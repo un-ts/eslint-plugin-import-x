@@ -44,7 +44,7 @@ export interface LegacyNodeResolverOptions {
   preserveSymlinks?: boolean
   /** Noop now, Previously a directory to begin resolving from */
   basedir?: string
-  /** Noop now. Previously for require.paths array to, it is now noop */
+  /** Noop now. Previously for require.paths array to */
   paths?: string[]
 
   /** Noop now. Previously for how to read files asynchronously */
