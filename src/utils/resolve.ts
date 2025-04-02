@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 import { stableHash } from 'stable-hash'
 
+import { createNodeResolver } from '../node-resolver.js'
 import type {
   ImportSettings,
   LegacyResolver,
@@ -110,6 +111,8 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
   return true
 }
 
+let fallbackLegacyNodeResolver: NewResolver
+
 function fullResolve(
   modulePath: string,
   sourceFile: string,
@@ -140,10 +143,7 @@ function fullResolve(
     return { found: true, path: cachedPath }
   }
 
-  if (
-    Object.prototype.hasOwnProperty.call(settings, 'import-x/resolver-next') &&
-    settings['import-x/resolver-next']
-  ) {
+  if (settings['import-x/resolver-next']) {
     const configResolvers = settings['import-x/resolver-next']
 
     for (let i = 0, len = configResolvers.length; i < len; i++) {
@@ -169,33 +169,56 @@ function fullResolve(
       fileExistsCache.set(cacheKey, resolved.path as string | null)
       return resolved
     }
-  } else {
-    const configResolvers = settings['import-x/resolver-legacy'] ||
-      settings['import-x/resolver'] || {
-        node: settings['import-x/resolve'],
-      } // backward compatibility
+  } else if (
+    // backward compatibility for very old `import-x/resolve` options that is no longer supported
+    settings['import-x/resolve']
+  ) {
+    const resolveSettings = settings['import-x/resolve']
 
-    for (const { enable, options, resolver } of normalizeConfigResolvers(
-      configResolvers,
-      sourceFile,
-    )) {
-      if (!enable) {
-        continue
-      }
+    fallbackLegacyNodeResolver ||= createNodeResolver({
+      extensions: (resolveSettings.extensions ||
+        settings['import-x/extensions']) as string[] | undefined,
+      builtinModules: resolveSettings.includeCoreModules !== false,
+      modules: [
+        resolveSettings.moduleDirectory,
+        ...(resolveSettings.paths ?? []),
+      ].filter(Boolean),
+      symlinks: resolveSettings.preserveSymlinks ?? true,
+    })
 
-      const resolved = resolveWithLegacyResolver(
-        resolver,
-        options,
-        modulePath,
-        sourceFile,
-      )
-      if (!resolved.found) {
-        continue
-      }
-
-      // else, counts
+    const resolved = fallbackLegacyNodeResolver.resolve(modulePath, sourceFile)
+    if (resolved.found) {
       fileExistsCache.set(cacheKey, resolved.path as string | null)
       return resolved
+    }
+
+    // not found, don't do anything
+  } else {
+    const configResolvers =
+      settings['import-x/resolver-legacy'] || settings['import-x/resolver']
+    if (configResolvers) {
+      for (const { enable, options, resolver } of normalizeConfigResolvers(
+        configResolvers,
+        sourceFile,
+      )) {
+        if (!enable) {
+          continue
+        }
+
+        const resolved = resolveWithLegacyResolver(
+          resolver,
+          options,
+          modulePath,
+          sourceFile,
+        )
+        if (!resolved.found) {
+          continue
+        }
+
+        // else, counts
+        fileExistsCache.set(cacheKey, resolved.path as string | null)
+        return resolved
+      }
     }
   }
 

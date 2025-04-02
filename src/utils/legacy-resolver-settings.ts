@@ -7,7 +7,7 @@ import { cjsRequire } from '@pkgr/core'
 import type { LiteralUnion } from 'type-fest'
 
 import type {
-  NodeResolverOptions,
+  LegacyNodeResolverOptions,
   ResolvedResult,
   TsResolverOptions,
   WebpackResolverOptions,
@@ -48,7 +48,7 @@ export interface LegacyResolverObject {
 
   // Options passed to the resolver
   options?:
-    | NodeResolverOptions
+    | LegacyNodeResolverOptions
     | TsResolverOptions
     | WebpackResolverOptions
     | unknown
@@ -58,7 +58,7 @@ export interface LegacyResolverObject {
 }
 
 export interface LegacyResolverRecord {
-  node?: boolean | NodeResolverOptions
+  node?: boolean | LegacyNodeResolverOptions
   typescript?: boolean | TsResolverOptions
   webpack?: WebpackResolverOptions
   [resolve: string]: unknown
