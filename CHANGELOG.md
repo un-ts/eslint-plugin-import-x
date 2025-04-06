@@ -1,5 +1,13 @@
 # eslint-plugin-import-x
 
+## 4.10.1
+
+### Patch Changes
+
+- [#280](https://github.com/un-ts/eslint-plugin-import-x/pull/280) [`4966857`](https://github.com/un-ts/eslint-plugin-import-x/commit/4966857262fba69b5f0cb25e3b34c2b646e55a4a) Thanks [@JounQin](https://github.com/JounQin)! - chore: bump all (dev) deps
+
+- [#280](https://github.com/un-ts/eslint-plugin-import-x/pull/280) [`4966857`](https://github.com/un-ts/eslint-plugin-import-x/commit/4966857262fba69b5f0cb25e3b34c2b646e55a4a) Thanks [@JounQin](https://github.com/JounQin)! - fix: incorrect top level `types` field for `cjs`
+
 ## 4.10.0
 
 ### Minor Changes
