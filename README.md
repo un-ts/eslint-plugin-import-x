@@ -645,8 +645,8 @@ Detailed changes for each release are documented in [CHANGELOG.md](./CHANGELOG.m
 [`eslint-loader`]: https://www.npmjs.com/package/eslint-loader
 [`resolve`]: https://www.npmjs.com/package/resolve
 [`externals`]: https://webpack.github.io/docs/library-and-externals.html
-[1stg.me]: https://www.1stg.me
-[jounqin]: https://GitHub.com/JounQin
-[mit]: http://opensource.org/licenses/MIT
+[1stG.me]: https://www.1stG.me
+[JounQin]: https://github.com/JounQin
+[MIT]: http://opensource.org/licenses/MIT
 [node]: https://www.npmjs.com/package/eslint-import-resolver-node
 [webpack]: https://www.npmjs.com/package/eslint-import-resolver-webpack
