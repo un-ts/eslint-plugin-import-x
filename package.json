@@ -33,7 +33,7 @@
     "./package.json": "./package.json",
     "./*": "./lib/*.js"
   },
-  "types": "lib/index.d.ts",
+  "types": "index.d.cts",
   "files": [
     "index.d.cts",
     "lib",
