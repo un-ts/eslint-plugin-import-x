@@ -6,7 +6,7 @@
   "repository": "https://github.com/un-ts/eslint-plugin-import-x",
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "license": "MIT",
-  "packageManager": "yarn@4.8.0",
+  "packageManager": "yarn@4.8.1",
   "engines": {
     "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
   },
