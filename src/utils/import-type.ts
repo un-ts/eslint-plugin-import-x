@@ -88,6 +88,10 @@ export function isScopedMain(name: string) {
   return !!name && scopedMainRegExp.test(name)
 }
 
+function isMapped(name: string) {
+  return name.startsWith('#')
+}
+
 function isRelativeToParent(name: string) {
   return /^\.\.$|^\.\.[/\\]/.test(name)
 }
@@ -157,6 +161,9 @@ function typeTest(
     }
     if (isBuiltIn(name, settings, path)) {
       return 'builtin'
+    }
+    if (isMapped(name)) {
+      return 'mapped'
     }
     if (isRelativeToParent(name)) {
       return 'parent'
