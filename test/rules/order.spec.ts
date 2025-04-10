@@ -4809,6 +4809,16 @@ describe('TypeScript', () => {
             },
           ],
         }),
+        // By default it should order same as TS LSP (issue-286)
+        tValid({
+          code: `import { internA } from "#a";
+import { scopeA } from "@a/a";
+import { localA } from "./a";
+
+console.log({ internA, scopeA, localA });
+`,
+          ...parserConfig,
+        }),
       ],
       invalid: [
         // Option alphabetize: {order: 'asc'}
