@@ -53,13 +53,13 @@ const defaultGroups = [
   'index',
 ] as const
 
-const defaultGroupsOfficialOrganizeImports = [
+const defaultGroupsTsOrganizeImports = [
   'private-import',
   'external',
   'builtin',
   'parent',
-  'sibling',
   'index',
+  'sibling',
 ] as const
 
 // REPORTING AND FIXING
@@ -1159,7 +1159,7 @@ export interface Options {
   pathGroups?: PathGroup[]
   sortTypesGroup?: boolean
   warnOnUnassignedImports?: boolean
-  privateImportsFeatureFlag?: boolean
+  followTsOrganizeImports?: boolean
 }
 
 type MessageId =
@@ -1282,8 +1282,9 @@ export default createRule<[Options?], MessageId>({
             type: 'boolean',
             default: false,
           },
-          privateImportsFeatureFlag: {
+          followTsOrganizeImports: {
             type: 'boolean',
+            // TODO: switch default to true in next major
             default: false,
           },
         },
@@ -1405,8 +1406,8 @@ export default createRule<[Options?], MessageId>({
       )
       const { groups, omittedTypes } = convertGroupsToRanks(
         options.groups ||
-          (options.privateImportsFeatureFlag
-            ? defaultGroupsOfficialOrganizeImports
+          (options.followTsOrganizeImports
+            ? defaultGroupsTsOrganizeImports
             : defaultGroups),
       )
       ranks = {

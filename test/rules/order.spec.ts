@@ -4813,14 +4813,18 @@ describe('TypeScript', () => {
         tValid({
           code: `import { internA } from "#a";
 import { scopeA } from "@a/a";
+import a from 'a';
+import 'format.css';
 import fs from 'node:fs';
 import path from "path";
+import index from './';
 import { localA } from "./a";
+import sibling from './foo';
 `,
           ...parserConfig,
           options: [
             {
-              privateImportsFeatureFlag: true,
+              followTsOrganizeImports: true,
             },
           ],
         }),
@@ -5224,7 +5228,7 @@ import { localA } from "./a";
           ...parserConfig,
           options: [
             {
-              privateImportsFeatureFlag: true,
+              followTsOrganizeImports: true,
             },
           ],
           errors: [

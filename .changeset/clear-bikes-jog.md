@@ -1,5 +1,5 @@
 ---
-"eslint-plugin-import-x": patch
+"eslint-plugin-import-x": minor
 ---
 
-fix: align with TypeScript Organize Imports for [mapped imports](https://nodejs.org/api/packages.html#imports)
+feat: add option `followTsOrganizeImports` for `order` rule
