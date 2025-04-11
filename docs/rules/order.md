@@ -109,6 +109,7 @@ This rule supports the following options (none of which are required):
 - [`sortTypesGroup`][7]
 - [`newlines-between-types`][27]
 - [`consolidateIslands`][25]
+- [`followTsOrganizeImports`][26]
 
 ---
 
@@ -958,6 +959,17 @@ import type { G } from './aaa.js'
 import type { H } from './bbb'
 ```
 
+### `followTsOrganizeImports`
+
+Valid values: `boolean` \
+Default: `false`
+
+> [!CAUTION]
+>
+> Currently, `followTsOrganizeImports` defaults to `false`. However, in a later update, the default might change to `true`.
+
+When set to `true`, this option will align the behavior with [TypeScript's LSP Organize Imports][34] feature. This only has an effect if no manual `groups` are defined.
+
 ## Related
 
 - [`import-x/external-module-folders`][29]
@@ -984,6 +996,7 @@ import type { H } from './bbb'
 [22]: https://prettier.io
 [23]: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html#type-modifiers-on-import-names
 [25]: #consolidateislands
+[26]: #followtsorganizeimports
 [27]: #newlines-between-types
 [28]: ../../README.md#importinternal-regex
 [29]: ../../README.md#importexternal-module-folders
@@ -991,3 +1004,4 @@ import type { H } from './bbb'
 [31]: https://webpack.js.org/guides/tree-shaking#mark-the-file-as-side-effect-free
 [32]: #distinctgroup
 [33]: #named
+[34]: https://code.visualstudio.com/docs/typescript/typescript-refactoring#_organize-imports
