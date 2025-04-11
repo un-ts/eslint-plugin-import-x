@@ -4809,6 +4809,25 @@ describe('TypeScript', () => {
             },
           ],
         }),
+        // By default it should order same as TS LSP (issue-286)
+        tValid({
+          code: `import { internA } from "#a";
+import { scopeA } from "@a/a";
+import a from 'a';
+import 'format.css';
+import fs from 'node:fs';
+import path from "path";
+import index from './';
+import { localA } from "./a";
+import sibling from './foo';
+`,
+          ...parserConfig,
+          options: [
+            {
+              followTsOrganizeImports: true,
+            },
+          ],
+        }),
       ],
       invalid: [
         // Option alphabetize: {order: 'asc'}
@@ -5190,6 +5209,30 @@ describe('TypeScript', () => {
               'import of `express`',
             ]),
             // { message: '`node:fs/promises` import should occur before import of `express`' },
+          ],
+        }),
+        // By default it should order same as TS LSP (issue-286)
+        tInvalid({
+          code: `import { scopeA } from "@a/a";
+import fs from 'node:fs';
+import path from "path";
+import { localA } from "./a";
+import { internA } from "#a";
+`,
+          output: `import { internA } from "#a";
+import { scopeA } from "@a/a";
+import fs from 'node:fs';
+import path from "path";
+import { localA } from "./a";
+`,
+          ...parserConfig,
+          options: [
+            {
+              followTsOrganizeImports: true,
+            },
+          ],
+          errors: [
+            createOrderError(['`#a` import', 'before', 'import of `@a/a`']),
           ],
         }),
       ],

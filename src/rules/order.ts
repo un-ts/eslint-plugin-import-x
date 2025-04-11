@@ -53,6 +53,15 @@ const defaultGroups = [
   'index',
 ] as const
 
+const defaultGroupsTsOrganizeImports = [
+  'private-import',
+  'external',
+  'builtin',
+  'parent',
+  'index',
+  'sibling',
+] as const
+
 // REPORTING AND FIXING
 
 function reverse(array: ImportEntryWithRank[]): ImportEntryWithRank[] {
@@ -824,6 +833,7 @@ function getRequireBlock(node: TSESTree.Node) {
 const types: ImportType[] = [
   'builtin',
   'external',
+  'private-import',
   'internal',
   'unknown',
   'parent',
@@ -1149,6 +1159,7 @@ export interface Options {
   pathGroups?: PathGroup[]
   sortTypesGroup?: boolean
   warnOnUnassignedImports?: boolean
+  followTsOrganizeImports?: boolean
 }
 
 type MessageId =
@@ -1271,6 +1282,11 @@ export default createRule<[Options?], MessageId>({
             type: 'boolean',
             default: false,
           },
+          followTsOrganizeImports: {
+            type: 'boolean',
+            // TODO: switch default to true in next major
+            default: false,
+          },
         },
         additionalProperties: false,
         dependencies: {
@@ -1389,7 +1405,10 @@ export default createRule<[Options?], MessageId>({
         options.pathGroups || [],
       )
       const { groups, omittedTypes } = convertGroupsToRanks(
-        options.groups || defaultGroups,
+        options.groups ||
+          (options.followTsOrganizeImports
+            ? defaultGroupsTsOrganizeImports
+            : defaultGroups),
       )
       ranks = {
         groups,
