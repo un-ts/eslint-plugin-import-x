@@ -4813,9 +4813,9 @@ describe('TypeScript', () => {
         tValid({
           code: `import { internA } from "#a";
 import { scopeA } from "@a/a";
+import fs from 'node:fs';
+import path from "path";
 import { localA } from "./a";
-
-console.log({ internA, scopeA, localA });
 `,
           ...parserConfig,
           options: [
@@ -5205,6 +5205,30 @@ console.log({ internA, scopeA, localA });
               'import of `express`',
             ]),
             // { message: '`node:fs/promises` import should occur before import of `express`' },
+          ],
+        }),
+        // By default it should order same as TS LSP (issue-286)
+        tInvalid({
+          code: `import { scopeA } from "@a/a";
+import fs from 'node:fs';
+import path from "path";
+import { localA } from "./a";
+import { internA } from "#a";
+`,
+          output: `import { internA } from "#a";
+import { scopeA } from "@a/a";
+import fs from 'node:fs';
+import path from "path";
+import { localA } from "./a";
+`,
+          ...parserConfig,
+          options: [
+            {
+              privateImportsFeatureFlag: true,
+            },
+          ],
+          errors: [
+            createOrderError(['`#a` import', 'before', 'import of `@a/a`']),
           ],
         }),
       ],
