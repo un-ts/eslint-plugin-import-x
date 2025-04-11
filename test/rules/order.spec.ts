@@ -4818,6 +4818,11 @@ import { localA } from "./a";
 console.log({ internA, scopeA, localA });
 `,
           ...parserConfig,
+          options: [
+            {
+              privateImportsFeatureFlag: true,
+            },
+          ],
         }),
       ],
       invalid: [

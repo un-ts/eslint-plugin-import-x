@@ -1151,6 +1151,7 @@ export interface Options {
   pathGroups?: PathGroup[]
   sortTypesGroup?: boolean
   warnOnUnassignedImports?: boolean
+  privateImportsFeatureFlag?: boolean
 }
 
 type MessageId =
@@ -1273,6 +1274,10 @@ export default createRule<[Options?], MessageId>({
             type: 'boolean',
             default: false,
           },
+          privateImportsFeatureFlag: {
+            type: 'boolean',
+            default: false,
+          },
         },
         additionalProperties: false,
         dependencies: {
@@ -1391,7 +1396,10 @@ export default createRule<[Options?], MessageId>({
         options.pathGroups || [],
       )
       const { groups, omittedTypes } = convertGroupsToRanks(
-        options.groups || defaultGroups,
+        options.groups ||
+          (options.privateImportsFeatureFlag
+            ? defaultGroups
+            : defaultGroups.slice(1)),
       )
       ranks = {
         groups,
