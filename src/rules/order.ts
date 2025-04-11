@@ -46,9 +46,17 @@ const categories = {
 type Category = keyof typeof categories
 
 const defaultGroups = [
-  'private-import',
   'builtin',
   'external',
+  'parent',
+  'sibling',
+  'index',
+] as const
+
+const defaultGroupsOfficialOrganizeImports = [
+  'private-import',
+  'external',
+  'builtin',
   'parent',
   'sibling',
   'index',
@@ -1398,8 +1406,8 @@ export default createRule<[Options?], MessageId>({
       const { groups, omittedTypes } = convertGroupsToRanks(
         options.groups ||
           (options.privateImportsFeatureFlag
-            ? defaultGroups
-            : defaultGroups.slice(1)),
+            ? defaultGroupsOfficialOrganizeImports
+            : defaultGroups),
       )
       ranks = {
         groups,
