@@ -163,7 +163,7 @@ function typeTest(
       return 'builtin'
     }
     if (isPrivateImport(name)) {
-      return 'private-imports'
+      return 'private-import'
     }
     if (isRelativeToParent(name)) {
       return 'parent'
