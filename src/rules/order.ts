@@ -46,7 +46,7 @@ const categories = {
 type Category = keyof typeof categories
 
 const defaultGroups = [
-  'mapped',
+  'private-imports',
   'builtin',
   'external',
   'parent',
@@ -825,7 +825,7 @@ function getRequireBlock(node: TSESTree.Node) {
 const types: ImportType[] = [
   'builtin',
   'external',
-  'mapped',
+  'private-imports',
   'internal',
   'unknown',
   'parent',

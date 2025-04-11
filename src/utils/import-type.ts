@@ -88,7 +88,7 @@ export function isScopedMain(name: string) {
   return !!name && scopedMainRegExp.test(name)
 }
 
-function isMapped(name: string) {
+function isPrivateImport(name: string) {
   return name.startsWith('#')
 }
 
@@ -162,8 +162,8 @@ function typeTest(
     if (isBuiltIn(name, settings, path)) {
       return 'builtin'
     }
-    if (isMapped(name)) {
-      return 'mapped'
+    if (isPrivateImport(name)) {
+      return 'private-imports'
     }
     if (isRelativeToParent(name)) {
       return 'parent'
