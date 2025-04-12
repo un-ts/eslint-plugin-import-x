@@ -6,7 +6,7 @@
   "repository": "https://github.com/un-ts/eslint-plugin-import-x",
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "license": "MIT",
-  "packageManager": "yarn@4.8.1",
+  "packageManager": "yarn@4.9.0",
   "engines": {
     "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
   },
@@ -144,7 +144,7 @@
     "eslint8.56": "npm:eslint@~8.56.0",
     "eslint9": "npm:eslint@^9.24.0",
     "globals": "^16.0.0",
-    "hermes-eslint": "^0.27.0",
+    "hermes-eslint": "^0.28.0",
     "jest": "^30.0.0-alpha.7",
     "klaw-sync": "^7.0.0",
     "lint-staged": "^15.5.0",
