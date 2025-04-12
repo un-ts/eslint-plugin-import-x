@@ -1,3 +1,5 @@
-declare const eslintPluginImportX: typeof import('./lib/index.js')
+import type eslintPluginImportX_ from './lib/index.js'
+
+declare const eslintPluginImportX: typeof eslintPluginImportX_
 
 export = eslintPluginImportX
