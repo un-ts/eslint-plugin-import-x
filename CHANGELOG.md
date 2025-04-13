@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.10.3
+
+### Patch Changes
+
+- [#292](https://github.com/un-ts/eslint-plugin-import-x/pull/292) [`1342127`](https://github.com/un-ts/eslint-plugin-import-x/commit/134212777b980fd9dea6a2dd3ead23fdee6e526f) Thanks [@JounQin](https://github.com/JounQin)! - refactor: remove unnecessary check for `pnpapi` because `unrs-resolver` already handles it
+
 ## 4.10.2
 
 ### Patch Changes
