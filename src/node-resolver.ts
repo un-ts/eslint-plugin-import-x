@@ -23,7 +23,7 @@ export function createNodeResolver({
 
   return {
     interfaceVersion: 3,
-    name: 'eslint-plugin-import-x built-in node resolver',
+    name: 'eslint-plugin-import-x:node',
     resolve(modulePath, sourceFile) {
       if (module.isBuiltin(modulePath)) {
         return { found: true, path: null }

@@ -2,4 +2,4 @@
 "eslint-plugin-import-x": patch
 ---
 
-chore: remove unnecessary check for `pnpapi` because `unrs-resolver` already handle it
+refactor: remove unnecessary check for `pnpapi` because `unrs-resolver` already handles it

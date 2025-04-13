@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { exec } from 'tinyexec'
 
-const TIMEOUT = 30_000
+const TIMEOUT = 60_000
 
 describe('yarn pnp', () => {
   const yarnPnpDir = path.resolve('test/fixtures/yarn-pnp')

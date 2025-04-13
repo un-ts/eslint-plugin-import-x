@@ -4,11 +4,29 @@ To the extent it is feasible, trailing versions of the resolvers will continue t
 
 Currently, version 1 is assumed if no `interfaceVersion` is available. (didn't think to define it until v2, heh. 😅)
 
+- [v3](#v3)
+  - [Required `interfaceVersion: number`](#required-interfaceversion-number)
+  - [Required `resolve`](#required-resolve)
+    - [Arguments](#arguments)
+      - [`source`](#source)
+      - [`file`](#file)
+  - [Optional `name`](#optional-name)
+  - [Example](#example)
+- [v2](#v2)
+  - [`interfaceVersion: number`](#interfaceversion-number)
+  - [`resolve`](#resolve)
+    - [Arguments](#arguments-1)
+      - [`source`](#source-1)
+      - [`file`](#file-1)
+      - [`config`](#config)
+  - [Example](#example-1)
+- [Shared `resolve` return value](#shared-resolve-return-value)
+
 ## v3
 
-Resolvers must export three names:
+Resolvers **must** export the following (with `name` being optional):
 
-### `interfaceVersion => Number`
+### Required `interfaceVersion: number`
 
 The following document currently describes version 3 of the resolver interface. As such, a resolver implementing this version should
 
@@ -22,9 +40,9 @@ or
 exports.interfaceVersion = 3
 ```
 
-<!-- lint disable maximum-heading-length -->
+### Required `resolve`
 
-### `resolve(source, file) => { found: boolean, path?: string | null }`
+Signature: `(source: string, file: string) => { found: boolean, path?: string | null }`
 
 Given:
 
@@ -71,6 +89,10 @@ the module identifier (`./imported-file`).
 
 the absolute path to the file making the import (`/some/path/to/module.js`)
 
+### Optional `name`
+
+the resolver name used in logs/debug output
+
 ### Example
 
 Here is most of the [New Node resolver] at the time of this writing. It is just a wrapper around [`unrs-resolver`][unrs-resolver]:
@@ -101,7 +123,7 @@ export function createNodeResolver({
 
   return {
     interfaceVersion: 3,
-    name: 'eslint-plugin-import-x built-in node resolver',
+    name: 'eslint-plugin-import-x:node',
     resolve(modulePath, sourceFile) {
       if (module.isBuiltin(modulePath)) {
         return { found: true, path: null }
@@ -127,9 +149,9 @@ export function createNodeResolver({
 
 ## v2
 
-Resolvers must export two names:
+Resolvers **must** export two names:
 
-### `interfaceVersion => Number`
+### `interfaceVersion: number`
 
 The following document currently describes version 2 of the resolver interface. As such, a resolver implementing this version should
 
@@ -143,9 +165,9 @@ or
 exports.interfaceVersion = 2
 ```
 
-<!-- lint disable maximum-heading-length -->
+### `resolve`
 
-### `resolve(source, file, config) => { found: boolean, path?: string | null }`
+Signature: `(source: string, file: string, config?: unknown) => { found: boolean, path?: string | null }`
 
 Given:
 
@@ -205,9 +227,9 @@ exports.resolve = function (source, file, config) {
 The first resolver to return `{ found: true }` is considered the source of truth. The returned object has:
 
 - `found`: `true` if the `source` module can be resolved relative to `file`, else `false`
-- `path`: an absolute path `String` if the module can be located on the filesystem; else, `null`.
+- `path`: an absolute path `string` if the module can be located on the filesystem; else, `null`.
 
-An example of a `null` path is a Node core module, such as `fs` or `crypto`. These modules can always be resolved, but the path need not be provided as the plugin will not attempt to parse core modules at this time.
+An example of a `null` path is a Node core module, such as `fs` or `crypto`. These modules can always be resolved, but the path need not be provided, as the plugin will not attempt to parse core modules at this time.
 
 If the resolver cannot resolve `source` relative to `file`, it should just return `{ found: false }`. No `path` key is needed in this case.
 
