@@ -29,19 +29,24 @@ This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, a
 - [Configuration (legacy: `.eslintrc*`)](#configuration-legacy-eslintrc)
   - [TypeScript](#typescript)
 - [Configuration (new: `eslint.config.js`)](#configuration-new-eslintconfigjs)
+  - [JS example](#js-example)
+  - [Typescript example](#typescript-example)
 - [Resolvers](#resolvers)
+  - [`import-x/resolver-next`](#import-xresolver-next)
+  - [`import-x/resolver`](#import-xresolver)
 - [Settings](#settings)
   - [`import-x/extensions`](#import-xextensions)
   - [`import-x/ignore`](#import-xignore)
   - [`import-x/core-modules`](#import-xcore-modules)
   - [`import-x/external-module-folders`](#import-xexternal-module-folders)
   - [`import-x/parsers`](#import-xparsers)
-  - [`import-x/resolver`](#import-xresolver)
+  - [`import-x/resolver` and `import-x/resolver-next`](#import-xresolver-and-import-xresolver-next)
   - [`import-x/cache`](#import-xcache)
   - [`import-x/internal-regex`](#import-xinternal-regex)
 - [SublimeLinter-eslint](#sublimelinter-eslint)
-- [Sponsors](#sponsors)
-- [Backers](#backers)
+- [Sponsors and Backers](#sponsors-and-backers)
+  - [Sponsors](#sponsors)
+  - [Backers](#backers)
 - [Changelog](#changelog)
 - [License](#license)
 
@@ -193,23 +198,16 @@ settings:
 From [`v8.21.0`](https://github.com/eslint/eslint/releases/tag/v8.21.0), ESLint announced a new config system.
 In the new system, `.eslintrc*` is no longer used. `eslint.config.js` would be the default config file name.
 
-<details>
-  <summary>JS example</summary>
+### JS example
 
 ```js
 import js from '@eslint/js'
-import eslintPluginImportX from 'eslint-plugin-import-x'
+import * as pluginImportX from 'eslint-plugin-import-x'
 
-export default [
-  js.configs.recommended,
-  eslintPluginImportX.flatConfigs.recommended,
-]
+export default [js.configs.recommended, pluginImportX.flatConfigs.recommended]
 ```
 
-</details>
-
-<details>
-  <summary>Typescript example</summary>
+### Typescript example
 
 You have to install `eslint-import-resolver-typescript`:
 
@@ -219,13 +217,13 @@ npm install eslint-import-resolver-typescript --save-dev
 
 ```js
 import js from '@eslint/js'
-import eslintPluginImportX from 'eslint-plugin-import-x'
+import * as pluginImportX from 'eslint-plugin-import-x'
 import tsParser from '@typescript-eslint/parser'
 
 export default [
   js.configs.recommended,
-  eslintPluginImportX.flatConfigs.recommended,
-  eslintPluginImportX.flatConfigs.typescript,
+  pluginImportX.flatConfigs.recommended,
+  pluginImportX.flatConfigs.typescript,
   {
     files: ['**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}'],
     ignores: ['eslint.config.js'],
@@ -242,10 +240,6 @@ export default [
   },
 ]
 ```
-
-</details>
-
----
 
 > [!NOTE]
 > A complete list of available configuration can be found in [config/flat folders](src/config/flat)
@@ -272,6 +266,32 @@ resolvers are just npm packages, so [third party packages are supported](https:/
 You can reference resolvers in several ways (in order of precedence):
 
 - as a conventional `eslint-import-resolver` name, like `eslint-import-resolver-foo`:
+
+### `import-x/resolver-next`
+
+> [!warning]
+>
+> Only available in the new flat config system. If you are using the legacy config system, please use `import-x/resolver` instead.
+
+```js
+// eslint.config.js
+
+import { createTypeScriptResolver } from 'eslint-import-resolver-typescript'
+import { createNodeResolver } from 'eslint-plugin-import-x'
+
+export default [
+  {
+    settings: {
+      'import/resolver-next': [
+        createTypeScriptResolver(/* Your override options go here */),
+        createNodeResolver(/* Your override options go here */),
+      ],
+    },
+  },
+]
+```
+
+### `import-x/resolver`
 
 ```yaml
 # .eslintrc.yml
@@ -501,7 +521,7 @@ depending on how far down the rabbit hole goes. Submit an issue if you find stra
 behavior beyond here, but steel your heart against the likely outcome of closing
 with `wontfix`.
 
-### `import-x/resolver`
+### `import-x/resolver` and `import-x/resolver-next`
 
 See [resolvers](#resolvers).
 
@@ -617,15 +637,17 @@ In Package Settings / SublimeLinter / User Settings:
 I believe this defaults to `3`, so you may not need to alter it depending on your
 project folder max depth.
 
-[![Sponsors](https://raw.githubusercontent.com/1stG/static/master/sponsors.svg)](https://github.com/sponsors/JounQin)
+## Sponsors and Backers
 
-## Sponsors
+[![Sponsors and Backers](https://raw.githubusercontent.com/1stG/static/master/sponsors.svg)](https://github.com/sponsors/JounQin)
+
+### Sponsors
 
 | 1stG                                                                                                                   | RxTS                                                                                                                   | UnTS                                                                                                                   |
 | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | [![1stG Open Collective sponsors](https://opencollective.com/1stG/organizations.svg)](https://opencollective.com/1stG) | [![RxTS Open Collective sponsors](https://opencollective.com/rxts/organizations.svg)](https://opencollective.com/rxts) | [![UnTS Open Collective sponsors](https://opencollective.com/unts/organizations.svg)](https://opencollective.com/unts) |
 
-## Backers
+### Backers
 
 | 1stG                                                                                                                | RxTS                                                                                                                | UnTS                                                                                                                |
 | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
