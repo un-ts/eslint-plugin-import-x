@@ -179,6 +179,7 @@ const flatConfigs = {
 } satisfies Record<string, PluginFlatConfig>
 
 export default {
+  meta,
   configs,
   flatConfigs,
   rules,
@@ -187,9 +188,12 @@ export default {
 }
 
 export {
+  meta,
   configs,
   flatConfigs,
   rules,
   importXResolverCompat,
   createNodeResolver,
 }
+
+export type * from './types.js'

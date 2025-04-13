@@ -12,8 +12,6 @@ export default [
     plugins: {
       'import-x': importPlugin,
     },
-    rules: {
-      ...configs.recommended.rules,
-    },
+    rules: configs.recommended.rules,
   },
 ]
