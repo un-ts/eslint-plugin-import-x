@@ -1408,8 +1408,8 @@ export default createRule<[Options?], MessageId>({
         // TODO: remove warning when default of followTsOrganizeImports switched to true
         // because then the user potentially knows what they are doing
         // and the warning is not needed anymore
-        console.warn(
-          'If you have defined your own `groups` in `order`, `followTsOrganizeImports: true` has no effect.',
+        log(
+          '`followTsOrganizeImports: true` has no effect when custom `groups` are defined.',
         )
       }
       const { groups, omittedTypes } = convertGroupsToRanks(
