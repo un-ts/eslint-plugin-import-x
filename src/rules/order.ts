@@ -1409,7 +1409,7 @@ export default createRule<[Options?], MessageId>({
         // because then the user potentially knows what they are doing
         // and the warning is not needed anymore
         console.warn(
-          'When `followTsOrganizeImports` set to `true` in `order` and you defined your own `groups`, `followTsOrganizeImports` wont have an effect.',
+          'If you have defined your own `groups` in `order`, `followTsOrganizeImports: true` has no effect.',
         )
       }
       const { groups, omittedTypes } = convertGroupsToRanks(
