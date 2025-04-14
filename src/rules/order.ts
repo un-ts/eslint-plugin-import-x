@@ -54,7 +54,7 @@ const defaultGroups = [
 ] as const
 
 const defaultGroupsTsOrganizeImports = [
-  'private-import',
+  'private',
   'external',
   'builtin',
   'parent',
@@ -833,7 +833,7 @@ function getRequireBlock(node: TSESTree.Node) {
 const types: ImportType[] = [
   'builtin',
   'external',
-  'private-import',
+  'private',
   'internal',
   'unknown',
   'parent',

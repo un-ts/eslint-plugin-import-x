@@ -88,7 +88,8 @@ export function isScopedMain(name: string) {
   return !!name && scopedMainRegExp.test(name)
 }
 
-function isPrivateImport(name: string) {
+function isPrivate(name: string) {
+  // see https://nodejs.org/api/packages.html#imports
   return name.startsWith('#')
 }
 
@@ -162,8 +163,8 @@ function typeTest(
     if (isBuiltIn(name, settings, path)) {
       return 'builtin'
     }
-    if (isPrivateImport(name)) {
-      return 'private-import'
+    if (isPrivate(name)) {
+      return 'private'
     }
     if (isRelativeToParent(name)) {
       return 'parent'
