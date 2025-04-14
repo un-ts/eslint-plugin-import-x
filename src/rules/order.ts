@@ -1404,14 +1404,6 @@ export default createRule<[Options?], MessageId>({
       const { pathGroups, maxPosition } = convertPathGroupsForRanks(
         options.pathGroups || [],
       )
-      if (options.followTsOrganizeImports && options.groups) {
-        // TODO: remove warning when default of followTsOrganizeImports switched to true
-        // because then the user potentially knows what they are doing
-        // and the warning is not needed anymore
-        log(
-          '`followTsOrganizeImports: true` has no effect when custom `groups` are defined.',
-        )
-      }
       const { groups, omittedTypes } = convertGroupsToRanks(
         options.groups ||
           (options.followTsOrganizeImports
