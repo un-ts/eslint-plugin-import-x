@@ -4847,6 +4847,26 @@ import { internA } from "#a";
             },
           ],
         }),
+        // manual `groups` always take precedence over `followTsOrganizeImports`
+        tValid({
+          code: `import 'format.css';
+import a from 'a';
+import { scopeA } from "@a/a";
+import index from './';
+import fs from 'node:fs';
+import path from "path";
+import { localA } from "./a";
+import sibling from './foo';
+import { internA } from "#a";
+`,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['external', 'internal', 'index'],
+              followTsOrganizeImports: true,
+            },
+          ],
+        }),
       ],
       invalid: [
         // Option alphabetize: {order: 'asc'}
