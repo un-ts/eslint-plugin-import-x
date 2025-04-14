@@ -4828,6 +4828,25 @@ import sibling from './foo';
             },
           ],
         }),
+        // test for explicit followTsOrganizeImports=false
+        tValid({
+          code: `import 'format.css';
+import fs from 'node:fs';
+import path from "path";
+import a from 'a';
+import { scopeA } from "@a/a";
+import { localA } from "./a";
+import sibling from './foo';
+import index from './';
+import { internA } from "#a";
+`,
+          ...parserConfig,
+          options: [
+            {
+              followTsOrganizeImports: false,
+            },
+          ],
+        }),
       ],
       invalid: [
         // Option alphabetize: {order: 'asc'}
