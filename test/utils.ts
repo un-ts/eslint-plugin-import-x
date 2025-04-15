@@ -78,13 +78,11 @@ export type GetRuleModuleMessageIds<TRule> =
 export type GetRuleModuleOptions<TRule> =
   TRule extends RuleModule<infer _, infer Options> ? Options : never
 
-/* eslint-disable prettier/prettier -- See also https://github.com/hosseinmd/prettier-plugin-jsdoc/issues/241 */
 /**
  * Type helper to build {@link TSESLintRuleTester.run} test parameters from a
  * given {@link RuleModule}
  *
  * @example
- *   ```ts
  *   const COMMON_TESTS: RunTests<typeof rule> = {
  *     valid: [
  *       {
@@ -96,18 +94,16 @@ export type GetRuleModuleOptions<TRule> =
  *       {
  *         code: "import Foo from 'Foo';",
  *         options: ['prefer-top-level'],
- *         errors: []
+ *         errors: [],
  *       },
- *     ]
- *   ```
+ *     ],
+ *   }
  */
-/* eslint-enable prettier/prettier */
 export type RuleRunTests<
   TRule extends RuleModule<string, readonly unknown[]>,
   TRuleType extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
 > = TSESLintRunTests<TRuleType['messageIds'], TRuleType['options']>
 
-/* eslint-disable prettier/prettier */
 /**
  * Create two functions that can be used to create both valid and invalid test
  * case to be provided to {@link TSESLintRuleTester}. This function accepts one
@@ -115,7 +111,6 @@ export type RuleRunTests<
  * the result with typed `MessageIds` and `Options` properties
  *
  * @example
- *   ```ts
  *   import { createRuleTestCaseFunction } from '../utils'
  *
  *   const ruleTester = new TSESLintRuleTester()
@@ -132,16 +127,14 @@ export type RuleRunTests<
  *       tInvalid({
  *         code: '...',
  *       }),
- *     ]
+ *     ],
  *   })
- *   ```
  *
  * @param defaultOptions If you have a specific set of options that need to be
  *   passed to each test case you can supply them directly to this function.
  *
  *   If the `TRule` parameter is omitted default types are used.
  */
-/* eslint-enable prettier/prettier */
 export function createRuleTestCaseFunctions<
   TRule extends RuleModule<string, unknown[]>,
   TData extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
