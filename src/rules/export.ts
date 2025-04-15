@@ -34,9 +34,11 @@ const tsTypePrefix = 'type:'
  * Remove function overloads like:
  *
  * ```ts
- * export function foo(a: number);
- * export function foo(a: string);
- * export function foo(a: number|string) { return a; }
+ * export function foo(a: number)
+ * export function foo(a: string)
+ * export function foo(a: number | string) {
+ *   return a
+ * }
  * ```
  */
 function removeTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
@@ -53,9 +55,10 @@ function removeTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
 
 /**
  * Detect merging Namespaces with Classes, Functions, or Enums like:
+ *
  * ```ts
- * export class Foo { }
- * export namespace Foo { }
+ * export class Foo {}
+ * export namespace Foo {}
  * ```
  */
 function isTypescriptNamespaceMerging(nodes: Set<TSESTree.Node>) {
@@ -84,10 +87,11 @@ function isTypescriptNamespaceMerging(nodes: Set<TSESTree.Node>) {
 
 /**
  * Detect if a typescript namespace node should be reported as multiple export:
+ *
  * ```ts
- * export class Foo { }
- * export function Foo();
- * export namespace Foo { }
+ * export class Foo {}
+ * export function Foo()
+ * export namespace Foo {}
  * ```
  */
 function shouldSkipTypescriptNamespace(

@@ -1,8 +1,6 @@
 import type { PluginFlatBaseConfig } from '../../types.js'
 
-/**
- * more opinionated config.
- */
+/** More opinionated config. */
 export default {
   rules: {
     'import-x/no-named-as-default': 1,

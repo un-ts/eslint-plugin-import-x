@@ -712,14 +712,10 @@ export class ExportMap {
     }
   >()
 
-  /**
-   * star-exports
-   */
+  /** Star-exports */
   dependencies = new Set<() => ExportMap | null>()
 
-  /**
-   * dependencies of this module that are not explicitly re-exported
-   */
+  /** Dependencies of this module that are not explicitly re-exported */
   imports = new Map<string, ModuleImport>()
   exports = new Map<string, TSESTree.Identifier | TSESTree.ProgramStatement>()
 
@@ -753,10 +749,11 @@ export class ExportMap {
   }
 
   /**
-   * Note that this does not check explicitly re-exported names for existence
-   * in the base namespace, but it will expand all `export * from '...'` exports
-   * if not found in the explicit namespace.
-   * @return true if `name` is exported by this module.
+   * Note that this does not check explicitly re-exported names for existence in
+   * the base namespace, but it will expand all `export * from '...'` exports if
+   * not found in the explicit namespace.
+   *
+   * @returns True if `name` is exported by this module.
    */
   has(name: string): boolean {
     if (this.namespace.has(name)) {
@@ -786,9 +783,7 @@ export class ExportMap {
     return false
   }
 
-  /**
-   * ensure that imported name fully resolves.
-   */
+  /** Ensure that imported name fully resolves. */
   hasDeep(name: string): { found: boolean; path: ExportMap[] } {
     if (this.namespace.has(name)) {
       return { found: true, path: [this] }
@@ -941,9 +936,7 @@ export class ExportMap {
   }
 }
 
-/**
- * parse docs from the first node that has leading comments
- */
+/** Parse docs from the first node that has leading comments */
 function captureDoc(
   source: SourceCode,
   docStyleParsers: DocStyleParsers,
@@ -998,9 +991,7 @@ const availableDocStyleParsers = {
   tomdoc: captureTomDoc,
 }
 
-/**
- * parse JSDoc from leading comments
- */
+/** Parse JSDoc from leading comments */
 function captureJsDoc(comments: TSESTree.Comment[]) {
   // capture XSDoc
 
@@ -1018,9 +1009,7 @@ function captureJsDoc(comments: TSESTree.Comment[]) {
   }
 }
 
-/**
- * parse TomDoc section from comments
- */
+/** Parse TomDoc section from comments */
 function captureTomDoc(comments: TSESTree.Comment[]): Annotation | undefined {
   // collect lines up to first paragraph break
   const lines = []
@@ -1054,17 +1043,17 @@ const supportedImportTypes = new Set([
 ])
 
 /**
- * The creation of this closure is isolated from other scopes
- * to avoid over-retention of unrelated variables, which has
- * caused memory leaks. See #1266.
+ * The creation of this closure is isolated from other scopes to avoid
+ * over-retention of unrelated variables, which has caused memory leaks. See
+ * #1266.
  */
 function thunkFor(p: string, context: RuleContext | ChildContext) {
   return () => ExportMap.for(childContext(p, context))
 }
 
 /**
- * Traverse a pattern/identifier node, calling 'callback'
- * for each leaf identifier.
+ * Traverse a pattern/identifier node, calling 'callback' for each leaf
+ * identifier.
  */
 export function recursivePatternCapture(
   pattern: TSESTree.Node,
@@ -1116,8 +1105,8 @@ export function recursivePatternCapture(
 }
 
 /**
- * don't hold full context object in memory, just grab what we need.
- * also calculate a cacheKey, where parts of the cacheKey hash are memoized
+ * Don't hold full context object in memory, just grab what we need. also
+ * calculate a cacheKey, where parts of the cacheKey hash are memoized
  */
 function childContext(
   path: string,

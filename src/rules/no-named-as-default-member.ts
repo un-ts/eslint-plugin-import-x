@@ -1,6 +1,4 @@
-/**
- * Rule to warn about potentially confused use of name exports
- */
+/** Rule to warn about potentially confused use of name exports */
 
 import type { TSESTree } from '@typescript-eslint/utils'
 

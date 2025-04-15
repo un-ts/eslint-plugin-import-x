@@ -1,6 +1,6 @@
 /**
- * Ensures that modules contain exports and/or all
- * modules are consumed within other modules.
+ * Ensures that modules contain exports and/or all modules are consumed within
+ * other modules.
  */
 
 import path from 'node:path'
@@ -84,17 +84,16 @@ function forEachDeclarationIdentifier(
  * Represented by a two-level Map to a Set of identifiers. The upper-level Map
  * keys are the paths to the modules containing the imports, while the
  * lower-level Map keys are the paths to the files which are being imported
- * from. Lastly, the Set of identifiers contains either names being imported
- * or a special AST node name listed above (e.g ImportDefaultSpecifier).
+ * from. Lastly, the Set of identifiers contains either names being imported or
+ * a special AST node name listed above (e.g ImportDefaultSpecifier).
  *
  * For example, if we have a file named foo.js containing:
  *
- *   import { o2 } from './bar.js';
+ * Import { o2 } from './bar.js';
  *
  * Then we will have a structure that looks like:
  *
- *   Map { 'foo.js' => Map { 'bar.js' => Set { 'o2' } } }
- *
+ * Map { 'foo.js' => Map { 'bar.js' => Set { 'o2' } } }
  */
 const importList = new Map<string, Map<string, Set<string>>>()
 
@@ -110,16 +109,15 @@ const importList = new Map<string, Map<string, Set<string>>>()
  *
  * For example, if we have a file named bar.js containing the following exports:
  *
- *   const o2 = 'bar';
- *   export { o2 };
+ * Const o2 = 'bar'; export { o2 };
  *
  * And a file named foo.js containing the following import:
  *
- *   import { o2 } from './bar.js';
+ * Import { o2 } from './bar.js';
  *
  * Then we will have a structure that looks like:
  *
- *   Map { 'bar.js' => Map { 'o2' => { whereUsed: Set { 'foo.js' } } } }
+ * Map { 'bar.js' => Map { 'o2' => { whereUsed: Set { 'foo.js' } } } }
  */
 const exportList = new Map<string, Map<string, { whereUsed: Set<string> }>>()
 
@@ -131,9 +129,10 @@ const filesOutsideSrc = new Set()
 const isNodeModule = (path: string) => /([/\\])(node_modules)\1/.test(path)
 
 /**
- * read all files matching the patterns in src and ignoreExports
+ * Read all files matching the patterns in src and ignoreExports
  *
- * return all files matching src pattern, which are not matching the ignoreExports pattern
+ * Return all files matching src pattern, which are not matching the
+ * ignoreExports pattern
  */
 const resolveFiles = (
   src: string[],
@@ -158,7 +157,8 @@ const resolveFiles = (
 }
 
 /**
- * parse all source files and build up 2 maps containing the existing imports and exports
+ * Parse all source files and build up 2 maps containing the existing imports
+ * and exports
  */
 const prepareImportsAndExports = (
   srcFiles: Set<string>,
@@ -265,8 +265,8 @@ const prepareImportsAndExports = (
 }
 
 /**
- * traverse through all imports and add the respective path to the whereUsed-list
- * of the corresponding export
+ * Traverse through all imports and add the respective path to the
+ * whereUsed-list of the corresponding export
  */
 const determineUsage = () => {
   for (const [listKey, listValue] of importList.entries()) {
@@ -297,8 +297,8 @@ const determineUsage = () => {
 }
 
 /**
- * prepare the lists of existing imports and exports - should only be executed once at
- * the start of a new eslint run
+ * Prepare the lists of existing imports and exports - should only be executed
+ * once at the start of a new eslint run
  */
 let srcFiles: Set<string>
 let lastPrepareKey: string
@@ -629,9 +629,9 @@ export default createRule<Options[], MessageId>({
     }
 
     /**
-     * only useful for tools like vscode-eslint
+     * Only useful for tools like vscode-eslint
      *
-     * update lists of existing exports during runtime
+     * Update lists of existing exports during runtime
      */
     const updateExportUsage = (node: TSESTree.Program) => {
       if (ignoredFiles.has(filename)) {
@@ -691,9 +691,9 @@ export default createRule<Options[], MessageId>({
     }
 
     /**
-     * only useful for tools like vscode-eslint
+     * Only useful for tools like vscode-eslint
      *
-     * update lists of existing imports during runtime
+     * Update lists of existing imports during runtime
      */
     const updateImportUsage = (node: TSESTree.Program) => {
       if (!unusedExports) {

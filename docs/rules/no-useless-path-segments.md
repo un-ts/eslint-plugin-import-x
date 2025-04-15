@@ -28,9 +28,7 @@ my-project
 The following patterns are considered problems:
 
 ```js
-/**
- *  in my-project/app.js
- */
+/** In my-project/app.js */
 
 import './../my-project/pages/about.js' // should be "./pages/about.js"
 import './../my-project/pages/about' // should be "./pages/about"
@@ -45,9 +43,7 @@ import './pages/index.js' // should be "./pages" (except if there is a ./pages.j
 The following patterns are NOT considered problems:
 
 ```js
-/**
- *  in my-project/app.js
- */
+/** In my-project/app.js */
 
 import './header.js'
 import './pages'

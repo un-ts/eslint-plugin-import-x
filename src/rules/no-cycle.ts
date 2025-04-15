@@ -1,6 +1,4 @@
-/**
- * Ensures that no imported module imports the linted module.
- */
+/** Ensures that no imported module imports the linted module. */
 
 import type { DeclarationMetadata, ModuleOptions } from '../utils/index.js'
 import {
@@ -155,7 +153,8 @@ export default createRule<[Options?], MessageId>({
             )
 
             /**
-             * If cyclic dependency is allowed via dynamic import, skip checking if any module is imported dynamically
+             * If cyclic dependency is allowed via dynamic import, skip checking
+             * if any module is imported dynamically
              */
             if (
               options.allowUnsafeDynamicCyclicDependency &&
@@ -165,14 +164,13 @@ export default createRule<[Options?], MessageId>({
             }
 
             /**
-             * Only report as a cycle if there are any import declarations that are considered by
-             * the rule. For example:
+             * Only report as a cycle if there are any import declarations that
+             * are considered by the rule. For example:
              *
-             * a.ts:
-             * import { foo } from './b' // should not be reported as a cycle
+             * A.ts: import { foo } from './b' // should not be reported as a
+             * cycle
              *
-             * b.ts:
-             * import type { Bar } from './a'
+             * B.ts: import type { Bar } from './a'
              */
             if (path === filename && toTraverse.length > 0) {
               return true

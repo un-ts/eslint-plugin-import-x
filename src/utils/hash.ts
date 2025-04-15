@@ -1,6 +1,6 @@
 /**
- * utilities for hashing config objects.
- * basically iteratively updates hash with a JSON-like format
+ * Utilities for hashing config objects. basically iteratively updates hash with
+ * a JSON-like format
  */
 
 import type { Hash } from 'node:crypto'

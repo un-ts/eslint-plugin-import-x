@@ -1,6 +1,4 @@
-/**
- * Rule to disallow anonymous default exports.
- */
+/** Rule to disallow anonymous default exports. */
 
 import type { TSESTree } from '@typescript-eslint/utils'
 

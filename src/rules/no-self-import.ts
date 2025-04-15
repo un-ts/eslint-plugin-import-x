@@ -1,6 +1,4 @@
-/**
- * Forbids a module from importing itself
- */
+/** Forbids a module from importing itself */
 
 import type { TSESTree } from '@typescript-eslint/utils'
 

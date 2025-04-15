@@ -1,6 +1,4 @@
-/**
- * Rule to prefer ES6 to CJS
- */
+/** Rule to prefer ES6 to CJS */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 

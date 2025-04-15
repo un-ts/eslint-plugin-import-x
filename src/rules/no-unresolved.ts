@@ -1,6 +1,4 @@
-/**
- * Ensures that an imported path exists, given resolution rules.
- */
+/** Ensures that an imported path exists, given resolution rules. */
 
 import type { ModuleOptions } from '../utils/index.js'
 import {

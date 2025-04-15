@@ -79,26 +79,26 @@ export type GetRuleModuleOptions<TRule> =
   TRule extends RuleModule<infer _, infer Options> ? Options : never
 
 /**
- * Type helper to build {@link TSESLintRuleTester.run} test parameters
- * from a given {@link RuleModule}
+ * Type helper to build {@link TSESLintRuleTester.run} test parameters from a
+ * given {@link RuleModule}
  *
  * @example
- * ```ts
- * const COMMON_TESTS: RunTests<typeof rule> = {
- *   valid: [
- *     {
- *       code: "import Foo from 'Foo';",
- *       options: [],
- *     },
- *   ],
- *   invalid: [
- *     {
- *       code: "import Foo from 'Foo';",
- *       options: ['prefer-top-level'],
- *       errors: []
- *     },
- *   ]
- * ```
+ *   ;```ts
+ *   const COMMON_TESTS: RunTests<typeof rule> = {
+ *     valid: [
+ *       {
+ *         code: "import Foo from 'Foo';",
+ *         options: [],
+ *       },
+ *     ],
+ *     invalid: [
+ *       {
+ *         code: "import Foo from 'Foo';",
+ *         options: ['prefer-top-level'],
+ *         errors: []
+ *       },
+ *     ]
+ *   ```
  */
 export type RuleRunTests<
   TRule extends RuleModule<string, readonly unknown[]>,
@@ -106,38 +106,37 @@ export type RuleRunTests<
 > = TSESLintRunTests<TRuleType['messageIds'], TRuleType['options']>
 
 /**
- * Create two functions that can be used to create both valid and invalid test case
- * to be provided to {@link TSESLintRuleTester}.
- * This function accepts one type parameter that should extend a {@link RuleModule}
- * to be able to provide the result with typed `MessageIds` and `Options` properties
+ * Create two functions that can be used to create both valid and invalid test
+ * case to be provided to {@link TSESLintRuleTester}. This function accepts one
+ * type parameter that should extend a {@link RuleModule} to be able to provide
+ * the result with typed `MessageIds` and `Options` properties
  *
  * @example
- * ```ts
- * import { createRuleTestCaseFunction } from '../utils'
+ *   ```ts
+ *   import { createRuleTestCaseFunction } from '../utils'
  *
- * const ruleTester = new TSESLintRuleTester()
+ *   const ruleTester = new TSESLintRuleTester()
  *
- * const { tValid, tInvalid } = createRuleTestCaseFunction<typeof rule>()
+ *   const { tValid, tInvalid } = createRuleTestCaseFunction<typeof rule>()
  *
- * ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
- *  valid: [
- *    tValid({
- *      code: '...',
- *    }),
- *  ],
- *  invalid: [
- *    tInvalid({
- *      code: '...',
- *    }),
- *  ]
- * })
- * ```
+ *   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
+ *   valid: [
+ *   tValid({
+ *   code: '...',
+ *   }),
+ *   ],
+ *   invalid: [
+ *   tInvalid({
+ *   code: '...',
+ *   }),
+ *   ]
+ *   })
+ *   ```
  *
- * @param defaultOptions If you have a specific set of options
- *                       that need to be passed to each test case you
- *                       can supply them directly to this function.
+ * @param defaultOptions If you have a specific set of options that need to be
+ *   passed to each test case you can supply them directly to this function.
  *
- * If the `TRule` parameter is omitted default types are used.
+ *   If the `TRule` parameter is omitted default types are used.
  */
 export function createRuleTestCaseFunctions<
   TRule extends RuleModule<string, unknown[]>,
@@ -164,8 +163,8 @@ export function testContext(settings?: PluginSettings) {
 }
 
 /**
- * to be added as valid cases just to ensure no nullable fields are going
- * to crash at runtime
+ * To be added as valid cases just to ensure no nullable fields are going to
+ * crash at runtime
  */
 export const SYNTAX_VALID_CASES: TSESLintRunTests<string, unknown[]>['valid'] =
   [

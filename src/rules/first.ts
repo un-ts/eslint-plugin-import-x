@@ -98,9 +98,7 @@ export default createRule<[Options?], MessageId>({
             }
 
             if (nonImportCount > 0) {
-              /**
-               * @see https://eslint.org/docs/next/use/migrate-to-9.0.0#-removed-multiple-context-methods
-               */
+              /** @see https://eslint.org/docs/next/use/migrate-to-9.0.0#-removed-multiple-context-methods */
               for (const variable of (
                 sourceCode as unknown as RuleContext
               ).getDeclaredVariables(node)) {

@@ -1,6 +1,4 @@
-/**
- * Ensures that there are no useless path segments
- */
+/** Ensures that there are no useless path segments */
 
 import path from 'node:path'
 
@@ -13,18 +11,15 @@ import {
 } from '../utils/index.js'
 
 /**
- * convert a potentially relative path from node utils into a true
- * relative path.
+ * Convert a potentially relative path from node utils into a true relative
+ * path.
  *
- * ../ -> ..
- * ./ -> .
- * .foo/bar -> ./.foo/bar
- * ..foo/bar -> ./..foo/bar
- * foo/bar -> ./foo/bar
+ * ../ -> .. ./ -> . .foo/bar -> ./.foo/bar ..foo/bar -> ./..foo/bar foo/bar ->
+ * ./foo/bar
  *
- * @param relativePath relative posix path potentially missing leading './'
- * @returns relative posix path that always starts with a ./
- **/
+ * @param relativePath Relative posix path potentially missing leading './'
+ * @returns Relative posix path that always starts with a ./
+ */
 function toRelativePath(relativePath: string): string {
   const stripped = relativePath.replaceAll(/\/$/g, '') // Remove trailing /
 

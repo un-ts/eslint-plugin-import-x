@@ -11,9 +11,10 @@ using a JSDoc `@deprecated` tag:
 // @file: ./answer.js
 
 /**
- * this is what you get when you trust a mouse talk show
- * @deprecated need to restart the experiment
- * @returns {Number} nonsense
+ * This is what you get when you trust a mouse talk show
+ *
+ * @deprecated Need to restart the experiment
+ * @returns {Number} Nonsense
  */
 export function multiply(six, nine) {
   return 42
