@@ -2,6 +2,7 @@ import { createRequire } from 'node:module'
 
 import type { CjsRequire } from '@pkgr/core'
 
+// workaround for #296
 const EVAL = new Set(['[eval]', '[worker eval]'])
 
 const cjsRequire: CjsRequire =
