@@ -1,7 +1,7 @@
 import type { PluginConfig } from '../types.js'
 
 /**
- * unopinionated config. just the things that are necessarily runtime errors
+ * Unopinionated config. just the things that are necessarily runtime errors
  * waiting to happen.
  */
 export default {

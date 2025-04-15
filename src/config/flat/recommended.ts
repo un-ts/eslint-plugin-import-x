@@ -1,8 +1,6 @@
 import type { PluginFlatBaseConfig } from '../../types.js'
 
-/**
- * The basics.
- */
+/** The basics. */
 export default {
   rules: {
     // analysis/correctness

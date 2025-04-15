@@ -79,9 +79,7 @@ export default createRule<[ModuleOptions?], MessageId>({
           continue
         }
 
-        /**
-         * @see im is @see TSESTree.ExportSpecifier or @see TSESTree.ImportSpecifier
-         */
+        /** @see im is @see TSESTree.ExportSpecifier or @see TSESTree.ImportSpecifier */
         // @ts-expect-error - it sucks, see above
         const imNode = im[key] as TSESTree.Identifier
 

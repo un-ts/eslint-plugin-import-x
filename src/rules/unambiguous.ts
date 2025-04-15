@@ -1,6 +1,4 @@
-/**
- * Report modules that could parse incorrectly as scripts.
- */
+/** Report modules that could parse incorrectly as scripts. */
 
 import { createRule, isUnambiguousModule, sourceType } from '../utils/index.js'
 

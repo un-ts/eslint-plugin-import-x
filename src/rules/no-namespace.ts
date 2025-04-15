@@ -1,6 +1,4 @@
-/**
- * Rule to disallow namespace import
- */
+/** Rule to disallow namespace import */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'

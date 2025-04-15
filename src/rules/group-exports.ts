@@ -5,11 +5,13 @@ import { createRule } from '../utils/index.js'
 export type Literal = string | number | bigint | boolean | RegExp | null
 
 /**
- * Returns an array with names of the properties in the accessor chain for MemberExpression nodes
+ * Returns an array with names of the properties in the accessor chain for
+ * MemberExpression nodes
  *
  * Example:
  *
  * `module.exports = {}` => ['module', 'exports']
+ *
  * `module.exports.property = true` => ['module', 'exports', 'property']
  */
 function accessorChain(node: TSESTree.MemberExpression) {

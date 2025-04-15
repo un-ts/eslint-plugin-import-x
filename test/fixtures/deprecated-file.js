@@ -1,12 +1,11 @@
 /**
- * ugh!
+ * Ugh!
+ *
  * @module some/deprecated
- * @deprecated this module is the worst.
+ * @deprecated This module is the worst.
  */
 
-/**
- * this class is great
- */
+/** This class is great */
 export default class Thing {}
 
 // some other comment

@@ -1,6 +1,4 @@
-/**
- * tests that require fully booting up ESLint
- */
+/** Tests that require fully booting up ESLint */
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
