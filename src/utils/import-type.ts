@@ -163,9 +163,6 @@ function typeTest(
     if (isBuiltIn(name, settings, path)) {
       return 'builtin'
     }
-    if (isPrivate(name)) {
-      return 'private'
-    }
     if (isRelativeToParent(name)) {
       return 'parent'
     }
@@ -184,6 +181,9 @@ function typeTest(
   }
   if (typeof name === 'string' && isExternalLookingName(name)) {
     return 'external'
+  }
+  if (typeof name === 'string' && isPrivate(name)) {
+    return 'private'
   }
   return 'unknown'
 }
