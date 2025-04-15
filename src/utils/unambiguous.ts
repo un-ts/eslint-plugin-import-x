@@ -4,8 +4,9 @@ const pattern = /(^|;)\s*(export|import)((\s+\w)|(\s*[*={]))|import\(/m
 /**
  * Detect possible imports/exports without a full parse.
  *
- * A negative test means that a file is definitely _not_ a module. A positive
- * test means it _could_ be.
+ * A negative test means that a file is definitely _not_ a module.
+ *
+ * A positive test means it _could_ be.
  *
  * Not perfect, just a fast way to disqualify large non-ES6 modules and avoid a
  * parse.

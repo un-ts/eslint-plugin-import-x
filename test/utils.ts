@@ -78,12 +78,13 @@ export type GetRuleModuleMessageIds<TRule> =
 export type GetRuleModuleOptions<TRule> =
   TRule extends RuleModule<infer _, infer Options> ? Options : never
 
+/* eslint-disable prettier/prettier -- See also https://github.com/hosseinmd/prettier-plugin-jsdoc/issues/241 */
 /**
  * Type helper to build {@link TSESLintRuleTester.run} test parameters from a
  * given {@link RuleModule}
  *
  * @example
- *   ;```ts
+ *   ```ts
  *   const COMMON_TESTS: RunTests<typeof rule> = {
  *     valid: [
  *       {
@@ -100,11 +101,13 @@ export type GetRuleModuleOptions<TRule> =
  *     ]
  *   ```
  */
+/* eslint-enable prettier/prettier */
 export type RuleRunTests<
   TRule extends RuleModule<string, readonly unknown[]>,
   TRuleType extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
 > = TSESLintRunTests<TRuleType['messageIds'], TRuleType['options']>
 
+/* eslint-disable prettier/prettier */
 /**
  * Create two functions that can be used to create both valid and invalid test
  * case to be provided to {@link TSESLintRuleTester}. This function accepts one
@@ -120,16 +123,16 @@ export type RuleRunTests<
  *   const { tValid, tInvalid } = createRuleTestCaseFunction<typeof rule>()
  *
  *   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
- *   valid: [
- *   tValid({
- *   code: '...',
- *   }),
- *   ],
- *   invalid: [
- *   tInvalid({
- *   code: '...',
- *   }),
- *   ]
+ *     valid: [
+ *       tValid({
+ *         code: '...',
+ *       }),
+ *     ],
+ *     invalid: [
+ *       tInvalid({
+ *         code: '...',
+ *       }),
+ *     ]
  *   })
  *   ```
  *
@@ -138,6 +141,7 @@ export type RuleRunTests<
  *
  *   If the `TRule` parameter is omitted default types are used.
  */
+/* eslint-enable prettier/prettier */
 export function createRuleTestCaseFunctions<
   TRule extends RuleModule<string, unknown[]>,
   TData extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,

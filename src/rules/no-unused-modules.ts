@@ -89,11 +89,11 @@ function forEachDeclarationIdentifier(
  *
  * For example, if we have a file named foo.js containing:
  *
- * Import { o2 } from './bar.js';
+ * `import { o2 } from './bar.js';`
  *
  * Then we will have a structure that looks like:
  *
- * Map { 'foo.js' => Map { 'bar.js' => Set { 'o2' } } }
+ * `Map { 'foo.js' => Map { 'bar.js' => Set { 'o2' } } }`
  */
 const importList = new Map<string, Map<string, Set<string>>>()
 
@@ -109,15 +109,15 @@ const importList = new Map<string, Map<string, Set<string>>>()
  *
  * For example, if we have a file named bar.js containing the following exports:
  *
- * Const o2 = 'bar'; export { o2 };
+ * `const o2 = 'bar'; export { o2 };`
  *
  * And a file named foo.js containing the following import:
  *
- * Import { o2 } from './bar.js';
+ * `import { o2 } from './bar.js';`
  *
  * Then we will have a structure that looks like:
  *
- * Map { 'bar.js' => Map { 'o2' => { whereUsed: Set { 'foo.js' } } } }
+ * `Map { 'bar.js' => Map { 'o2' => { whereUsed: Set { 'foo.js' } } } }`
  */
 const exportList = new Map<string, Map<string, { whereUsed: Set<string> }>>()
 

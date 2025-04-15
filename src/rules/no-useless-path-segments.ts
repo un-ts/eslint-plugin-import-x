@@ -14,8 +14,15 @@ import {
  * Convert a potentially relative path from node utils into a true relative
  * path.
  *
- * ../ -> .. ./ -> . .foo/bar -> ./.foo/bar ..foo/bar -> ./..foo/bar foo/bar ->
- * ./foo/bar
+ * `../ -> ..`
+ *
+ * `./ -> .`
+ *
+ * `.foo/bar -> ./.foo/bar`
+ *
+ * `..foo/bar -> ./..foo/bar`
+ *
+ * `foo/bar -> ./foo/bar`
  *
  * @param relativePath Relative posix path potentially missing leading './'
  * @returns Relative posix path that always starts with a ./

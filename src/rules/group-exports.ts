@@ -10,8 +10,9 @@ export type Literal = string | number | bigint | boolean | RegExp | null
  *
  * Example:
  *
- * `module.exports = {}` => ['module', 'exports'] `module.exports.property =
- * true` => ['module', 'exports', 'property']
+ * `module.exports = {}` => ['module', 'exports']
+ *
+ * `module.exports.property = true` => ['module', 'exports', 'property']
  */
 function accessorChain(node: TSESTree.MemberExpression) {
   const chain: Literal[] = []

@@ -167,10 +167,11 @@ export default createRule<[Options?], MessageId>({
              * Only report as a cycle if there are any import declarations that
              * are considered by the rule. For example:
              *
-             * A.ts: import { foo } from './b' // should not be reported as a
-             * cycle
+             * A.ts:
              *
-             * B.ts: import type { Bar } from './a'
+             * `import { foo } from './b'` // should not be reported as a cycle
+             *
+             * B.ts: `import type { Bar } from './a'`
              */
             if (path === filename && toTraverse.length > 0) {
               return true

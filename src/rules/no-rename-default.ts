@@ -1,7 +1,7 @@
 /**
  * @file Rule to warn about importing a default export by different name
  * @author James Whitney
- * @author Sukka [https://skk.moe](https://skk.moe) - Port to TypeScript
+ * @author [Sukka](https://skk.moe) - Port to TypeScript
  */
 
 import path from 'node:path'
