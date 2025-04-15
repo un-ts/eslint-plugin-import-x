@@ -6,7 +6,7 @@
 
 - [#299](https://github.com/un-ts/eslint-plugin-import-x/pull/299) [`bf50a4d`](https://github.com/un-ts/eslint-plugin-import-x/commit/bf50a4d87f81f5a6a7ca15f47ed9cb293f2c5262) Thanks [@renovate](https://github.com/apps/renovate)! - chore(deps): bump `@typescript-eslint/utils` to v8.30
 
-- [#297](https://github.com/un-ts/eslint-plugin-import-x/pull/297) [`9769f3c`](https://github.com/un-ts/eslint-plugin-import-x/commit/9769f3cb30e99f98fb67a05682b74164d1a87f41) Thanks [@JounQin](https://github.com/JounQin)! - fix: suppprt run with `node --eval`
+- [#297](https://github.com/un-ts/eslint-plugin-import-x/pull/297) [`9769f3c`](https://github.com/un-ts/eslint-plugin-import-x/commit/9769f3cb30e99f98fb67a05682b74164d1a87f41) Thanks [@JounQin](https://github.com/JounQin)! - fix: support run with `node --eval`
 
 ## 4.10.3
 
