@@ -3332,10 +3332,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pkgr/core@npm:^0.2.2, @pkgr/core@npm:^0.2.3":
-  version: 0.2.3
-  resolution: "@pkgr/core@npm:0.2.3"
-  checksum: 10c0/697c548226c9c5bc934c32bd9b142bf28f7d2b066295e3cb527eabb84a115ffa8c561c346e8dcb291710f9e0cc8054fbb761f65440d851e92f184fdb360b5c33
+"@pkgr/core@npm:^0.2.2, @pkgr/core@npm:^0.2.3, @pkgr/core@npm:^0.2.4":
+  version: 0.2.4
+  resolution: "@pkgr/core@npm:0.2.4"
+  checksum: 10c0/2528a443bbbef5d4686614e1d73f834f19ccbc975f62b2a64974a6b97bcdf677b9c5e8948e04808ac4f0d853e2f422adfaae2a06e9e9f4f5cf8af76f1adf8dc1
   languageName: node
   linkType: hard
 
@@ -6375,7 +6375,7 @@ __metadata:
     "@commitlint/cli": "npm:^19.8.0"
     "@eslint/import-test-order-redirect-scoped": "link:./test/fixtures/order-redirect-scoped"
     "@eslint/js": "npm:^9.24.0"
-    "@pkgr/core": "npm:^0.2.3"
+    "@pkgr/core": "npm:^0.2.4"
     "@pkgr/rollup": "npm:^6.0.3"
     "@swc-node/jest": "npm:^1.8.13"
     "@swc/core": "npm:^1.11.21"
@@ -6437,7 +6437,7 @@ __metadata:
     tinyexec: "npm:^1.0.1"
     ts-node: "npm:^10.9.2"
     tslib: "npm:^2.8.1"
-    type-fest: "npm:^4.39.1"
+    type-fest: "npm:^4.40.0"
     typescript: "npm:^5.8.3"
     typescript-eslint: "npm:^8.30.1"
     unrs-resolver: "npm:^1.5.0"
@@ -13223,10 +13223,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.0.0, type-fest@npm:^4.18.2, type-fest@npm:^4.39.1, type-fest@npm:^4.6.0":
-  version: 4.39.1
-  resolution: "type-fest@npm:4.39.1"
-  checksum: 10c0/f5bf302eb2e2f70658be1757aa578f4a09da3f65699b0b12b7ae5502ccea76e5124521a6e6b69540f442c3dc924c394202a2ab58718d0582725c7ac23c072594
+"type-fest@npm:^4.0.0, type-fest@npm:^4.18.2, type-fest@npm:^4.39.1, type-fest@npm:^4.40.0, type-fest@npm:^4.6.0":
+  version: 4.40.0
+  resolution: "type-fest@npm:4.40.0"
+  checksum: 10c0/b39d4da6f9a154e3db7e714cd05ccf56b53f4f0bbf74dd294cb6be4921b16ecca5cb00cb81b53ab621a31c8e8509c74b5101895ada47af9de368a317d24538a3
   languageName: node
   linkType: hard
 

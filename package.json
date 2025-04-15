@@ -71,7 +71,7 @@
     "eslint": "^8.57.0 || ^9.0.0"
   },
   "dependencies": {
-    "@pkgr/core": "^0.2.3",
+    "@pkgr/core": "^0.2.4",
     "@types/doctrine": "^0.0.9",
     "@typescript-eslint/utils": "^8.30.1",
     "debug": "^4.4.0",
@@ -157,7 +157,7 @@
     "simple-git-hooks": "^2.12.1",
     "tinyexec": "^1.0.1",
     "ts-node": "^10.9.2",
-    "type-fest": "^4.39.1",
+    "type-fest": "^4.40.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.30.1",
     "yarn-berry-deduplicate": "^6.1.1",
