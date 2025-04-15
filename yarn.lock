@@ -76,16 +76,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@1stg/simple-git-hooks@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@1stg/simple-git-hooks@npm:1.0.2"
+"@1stg/simple-git-hooks@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "@1stg/simple-git-hooks@npm:2.0.1"
   dependencies:
-    "@pkgr/utils": "npm:^3.1.0"
+    "@pkgr/utils": "npm:^3.1.1"
   peerDependencies:
     "@commitlint/cli": ">=11.0.0"
-    lint-staged: ">=9.0.0"
+    nano-staged: ">=0.8.0"
     simple-git-hooks: ">=2.12.1"
-  checksum: 10c0/22e92354b9933dbaebfaa5cba4863dc4ebaf36d70da3fe3340d7cf4670a29dad7e357b174f4a80084aad7b219d8e0464984c75e60fb07f4e60cb8aaa73d7d539
+  checksum: 10c0/fd76cf1d5b577711a24cfd76e6a8d6a9e9fdf4c8faaa08cea7a304080ca9c2a1d870ad4c74f6f3fa953dd4454c0daecd8b7f29d6bdc7915ddf67cf01a7971ea1
   languageName: node
   linkType: hard
 
@@ -6367,7 +6367,7 @@ __metadata:
     "@1stg/lint-staged": "npm:^4.0.8"
     "@1stg/prettier-config": "npm:^5.0.0"
     "@1stg/remark-preset": "npm:^3.0.3"
-    "@1stg/simple-git-hooks": "npm:^1.0.2"
+    "@1stg/simple-git-hooks": "npm:^2.0.0"
     "@1stg/tsconfig": "npm:^3.0.2"
     "@angular-eslint/template-parser": "npm:^19.3.0"
     "@babel/core": "npm:^7.26.10"

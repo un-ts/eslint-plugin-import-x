@@ -7,7 +7,7 @@
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "funding": "https://opencollective.com/eslint-plugin-import-x",
   "license": "MIT",
-  "packageManager": "yarn@4.9.0",
+  "packageManager": "yarn@4.9.1",
   "engines": {
     "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
   },
@@ -90,7 +90,7 @@
     "@1stg/lint-staged": "^4.0.8",
     "@1stg/prettier-config": "^5.0.0",
     "@1stg/remark-preset": "^3.0.3",
-    "@1stg/simple-git-hooks": "^1.0.2",
+    "@1stg/simple-git-hooks": "^2.0.0",
     "@1stg/tsconfig": "^3.0.2",
     "@angular-eslint/template-parser": "^19.3.0",
     "@babel/core": "^7.26.10",
