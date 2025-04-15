@@ -2,4 +2,4 @@
 "eslint-plugin-import-x": patch
 ---
 
-fix: suppprt run with worker eval
+fix: support run with worker eval
