@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import { cjsRequire, cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
@@ -4887,8 +4885,8 @@ import sibling from './foo';
             ...parserConfig.settings,
             'import-x/resolver': {
               typescript: {
-                project: path.resolve(
-                  'test/fixtures/typescript-order-custom-paths-mapping/tsconfig-with-path-mapping.json',
+                project: testFilePath(
+                  'typescript-order-custom-paths-mapping/tsconfig-with-path-mapping.json',
                 ),
               },
             },
@@ -4917,8 +4915,8 @@ import { privateA } from "#private/a";
             ...parserConfig.settings,
             'import-x/resolver': {
               typescript: {
-                project: path.resolve(
-                  'test/fixtures/typescript-order-custom-paths-mapping/tsconfig-with-path-mapping.json',
+                project: testFilePath(
+                  'typescript-order-custom-paths-mapping/tsconfig-with-path-mapping.json',
                 ),
               },
             },
