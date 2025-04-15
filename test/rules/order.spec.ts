@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import { cjsRequire, cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
@@ -4864,6 +4866,66 @@ import { internA } from "#a";
             {
               groups: ['external', 'internal', 'index'],
               followTsOrganizeImports: true,
+            },
+          ],
+        }),
+        // test with tsconfig paths mappings and followTsOrganizeImports: true
+        tValid({
+          code: `import { internA } from "#a";
+import { privateA } from "#private/a";
+import { scopeA } from "@a/a";
+import a from 'a';
+import 'format.css';
+import fs from 'node:fs';
+import path from "path";
+import index from './';
+import { localA } from "./a";
+import sibling from './foo';
+`,
+          ...parserConfig,
+          settings: {
+            ...parserConfig.settings,
+            'import-x/resolver': {
+              typescript: {
+                project: path.resolve(
+                  'test/fixtures/typescript-order-custom-paths-mapping/tsconfig-with-path-mapping.json',
+                ),
+              },
+            },
+          },
+          options: [
+            {
+              followTsOrganizeImports: true,
+            },
+          ],
+        }),
+        // test with tsconfig paths mappings and followTsOrganizeImports: false
+        tValid({
+          code: `import 'format.css';
+import fs from 'node:fs';
+import path from "path";
+import a from 'a';
+import { scopeA } from "@a/a";
+import { localA } from "./a";
+import sibling from './foo';
+import index from './';
+import { internA } from "#a";
+import { privateA } from "#private/a";
+`,
+          ...parserConfig,
+          settings: {
+            ...parserConfig.settings,
+            'import-x/resolver': {
+              typescript: {
+                project: path.resolve(
+                  'test/fixtures/typescript-order-custom-paths-mapping/tsconfig-with-path-mapping.json',
+                ),
+              },
+            },
+          },
+          options: [
+            {
+              followTsOrganizeImports: false,
             },
           ],
         }),
