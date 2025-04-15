@@ -1,4 +1,4 @@
-import { cjsRequire, cjsRequire as require } from '@pkgr/core'
+import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { TSESLint } from '@typescript-eslint/utils'
@@ -17,7 +17,7 @@ const ruleTester = new TSESLintRuleTester()
 
 const flowRuleTester = new TSESLintRuleTester({
   languageOptions: {
-    parser: cjsRequire(parsers.BABEL),
+    parser: require(parsers.BABEL),
     parserOptions: {
       requireConfigFile: false,
       babelOptions: {

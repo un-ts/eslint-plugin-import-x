@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import type { CjsRequire } from '@pkgr/core'
 
 const cjsRequire: CjsRequire =
-  typeof require === 'undefined'
+  typeof require === 'undefined' || __filename === '[eval]'
     ? createRequire(import.meta.url)
     : /* istanbul ignore next */ require
 
