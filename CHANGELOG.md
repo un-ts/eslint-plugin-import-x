@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.10.5
+
+### Patch Changes
+
+- [#300](https://github.com/un-ts/eslint-plugin-import-x/pull/300) [`db1824b`](https://github.com/un-ts/eslint-plugin-import-x/commit/db1824b04ba3fc3b1d9849c542bd93966e797c7a) Thanks [@JounQin](https://github.com/JounQin)! - fix: support run with worker eval
+
 ## 4.10.4
 
 ### Patch Changes
