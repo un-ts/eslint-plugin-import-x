@@ -20,6 +20,10 @@ import warnings from './config/warnings.js'
 import { meta } from './meta.js'
 import { createNodeResolver } from './node-resolver.js'
 import { cjsRequire } from './require.js'
+import avoidBarrelFiles from './rules/avoid-barrel-files.js'
+import avoidImportingBarrelFiles from './rules/avoid-importing-barrel-files.js'
+import avoidNamespaceImport from './rules/avoid-namespace-import.js'
+import avoidReExportAll from './rules/avoid-re-export-all.js'
 import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style.js'
 import default_ from './rules/default.js'
 import dynamicImportChunkname from './rules/dynamic-import-chunkname.js'
@@ -129,6 +133,12 @@ const rules = {
 
   // deprecated aliases to rules
   'imports-first': importsFirst,
+
+  // barrel files
+  'avoid-barrel-files': avoidBarrelFiles,
+  'avoid-importing-barrel-files': avoidImportingBarrelFiles,
+  'avoid-namespace-import': avoidNamespaceImport,
+  'avoid-re-export-all': avoidReExportAll,
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
 const configs = {
