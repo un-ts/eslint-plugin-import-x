@@ -109,6 +109,7 @@ This rule supports the following options (none of which are required):
 - [`sortTypesGroup`][7]
 - [`newlines-between-types`][27]
 - [`consolidateIslands`][25]
+- [`followTsOrganizeImports`][26]
 
 ---
 
@@ -118,7 +119,7 @@ Valid values: `("builtin" | "external" | "internal" | "unknown" | "parent" | "si
 Default: `["builtin", "external", "parent", "sibling", "index"]`
 
 Determines which imports are subject to ordering, and how to order
-them. The predefined groups are: `"builtin"`, `"external"`, `"internal"`,
+them. The predefined groups are: `"builtin"`, `"external"`, `"internal"`, `"private"`,
 `"unknown"`, `"parent"`, `"sibling"`, `"index"`, `"object"`, and `"type"`.
 
 The import order enforced by this rule is the same as the order of each group
@@ -165,17 +166,21 @@ Roughly speaking, the grouping algorithm is as follows:
 3. If the import is [type-only][6], `"type"` is in `groups`, and [`sortTypesGroup`][7] is disabled, it will be considered **type** (with additional implications if using [`pathGroups`][8] and `"type"` is in [`pathGroupsExcludedImportTypes`][9])
 4. If the import's specifier matches [`import-x/internal-regex`][28], it will be considered **internal**
 5. If the import's specifier is an absolute path, it will be considered **unknown**
-6. If the import's specifier has the name of a Node.js core module (using [is-core-module][10]), it will be considered **builtin**
-7. If the import's specifier matches [`import-x/core-modules`][11], it will be considered **builtin**
-8. If the import's specifier is a path relative to the parent directory of its containing file (e.g. starts with `../`), it will be considered **parent**
-9. If the import's specifier is one of `['.', './', './index', './index.js']`, it will be considered **index**
-10. If the import's specifier is a path relative to its containing file (e.g. starts with `./`), it will be considered **sibling**
-11. If the import's specifier is a path pointing to a file outside the current package's root directory (determined using [package-up][12]), it will be considered **external**
-12. If the import's specifier matches [`import-x/external-module-folders`][29] (defaults to matching anything pointing to files within the current package's `node_modules` directory), it will be considered **external**
-13. If the import's specifier is a path pointing to a file within the current package's root directory (determined using [package-up][12]), it will be considered **internal**
-14. If the import's specifier has a name that looks like a scoped package (e.g. `@scoped/package-name`), it will be considered **external**
-15. If the import's specifier has a name that starts with a word character, it will be considered **external**
-16. If this point is reached, the import will be ignored entirely
+6. If the import's specifier is starting with `#`, it will be considered **private**
+7. If the import's specifier has the name of a Node.js core module (using [is-core-module][10]), it will be considered **builtin**
+8. If the import's specifier matches [`import-x/core-modules`][11], it will be considered **builtin**
+9. If the import's specifier is a path relative to the parent directory of its containing file (e.g. starts with `../`), it will be considered **parent**
+10. If the import's specifier is one of `['.', './', './index', './index.js']`, it will be considered **index**
+11. If the import's specifier is a path relative to its containing file (e.g. starts with `./`), it will be considered **sibling**
+12. If the import's specifier is a path pointing to a file outside the current package's root directory (determined using [package-up][12]), it will be considered **external**
+13. If the import's specifier matches [`import-x/external-module-folders`][29] (defaults to matching anything pointing to files within the current package's `node_modules` directory), it will be considered **external**
+14. If the import's specifier is a path pointing to a file within the current package's root directory (determined using [package-up][12]), it will be considered **internal**
+15. If the import's specifier has a name that looks like a scoped package (e.g. `@scoped/package-name`), it will be considered **external**
+16. If the import's specifier has a name that starts with a word character, it will be considered **external**
+17. If this point is reached, the import will be ignored entirely
+
+If `followTsOrganizeImports` is enabled, the default grouping algorithm is following [TypeScript's LSP Organize Imports][34] feature. \
+However, the `followTsOrganizeImports` will be ignored if custom `groups` are defined.
 
 At the end of the process, if they co-exist in the same file, all top-level `require()` statements that haven't been ignored are shifted (with respect to their order) below any ES6 `import` or similar declarations. Finally, any type-only declarations are potentially reorganized according to [`sortTypesGroup`][7].
 
@@ -958,6 +963,17 @@ import type { G } from './aaa.js'
 import type { H } from './bbb'
 ```
 
+### `followTsOrganizeImports`
+
+Valid values: `boolean` \
+Default: `false`
+
+> [!CAUTION]
+>
+> Currently, `followTsOrganizeImports` defaults to `false`. However, in a later update, the default might change to `true`.
+
+When set to `true`, this option will align the behavior with [TypeScript's LSP Organize Imports][34] feature. This only has an effect if no manual `groups` are defined.
+
 ## Related
 
 - [`import-x/external-module-folders`][29]
@@ -984,6 +1000,7 @@ import type { H } from './bbb'
 [22]: https://prettier.io
 [23]: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-5.html#type-modifiers-on-import-names
 [25]: #consolidateislands
+[26]: #followtsorganizeimports
 [27]: #newlines-between-types
 [28]: ../../README.md#importinternal-regex
 [29]: ../../README.md#importexternal-module-folders
@@ -991,3 +1008,4 @@ import type { H } from './bbb'
 [31]: https://webpack.js.org/guides/tree-shaking#mark-the-file-as-side-effect-free
 [32]: #distinctgroup
 [33]: #named
+[34]: https://code.visualstudio.com/docs/typescript/typescript-refactoring#_organize-imports

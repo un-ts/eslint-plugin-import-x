@@ -4809,6 +4809,151 @@ describe('TypeScript', () => {
             },
           ],
         }),
+        // By default it should order same as TS LSP (issue-286)
+        tValid({
+          code: `import { internA } from "#a";
+import { scopeA } from "@a/a";
+import a from 'a';
+import 'format.css';
+import { glob } from 'glob';
+import fs from 'node:fs';
+import path from "path";
+import index from './';
+import { localA } from "./a";
+import sibling from './foo';
+`,
+          ...parserConfig,
+          options: [
+            {
+              followTsOrganizeImports: true,
+            },
+          ],
+        }),
+        // test for explicit followTsOrganizeImports=false
+        tValid({
+          code: `import 'format.css';
+import fs from 'node:fs';
+import path from "path";
+import { glob } from 'glob';
+import a from 'a';
+import { scopeA } from "@a/a";
+import { localA } from "./a";
+import sibling from './foo';
+import index from './';
+import { internA } from "#a";
+`,
+          ...parserConfig,
+          options: [
+            {
+              followTsOrganizeImports: false,
+            },
+          ],
+        }),
+        // manual `groups` always take precedence over `followTsOrganizeImports`
+        tValid({
+          code: `import 'format.css';
+import a from 'a';
+import { scopeA } from "@a/a";
+import { glob } from 'glob';
+import index from './';
+import fs from 'node:fs';
+import path from "path";
+import { localA } from "./a";
+import sibling from './foo';
+import { internA } from "#a";
+`,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['external', 'internal', 'index'],
+              followTsOrganizeImports: true,
+            },
+          ],
+        }),
+        // test with tsconfig paths mappings and followTsOrganizeImports: true
+        tValid({
+          code: `import { internA } from "#a";
+import { privateA } from "#private/a";
+import { scopeA } from "@a/a";
+import a from 'a';
+import 'format.css';
+import { glob } from 'glob';
+import fs from 'node:fs';
+import path from "path";
+import index from './';
+import { localA } from "./a";
+import sibling from './foo';
+`,
+          ...parserConfig,
+          settings: {
+            ...parserConfig.settings,
+            'import-x/resolver': {
+              typescript: {
+                project: testFilePath(
+                  'typescript-order-custom-paths-mapping/tsconfig-with-path-mapping.json',
+                ),
+              },
+            },
+          },
+          options: [
+            {
+              followTsOrganizeImports: true,
+            },
+          ],
+        }),
+        // test with tsconfig paths mappings and followTsOrganizeImports: false
+        tValid({
+          code: `import 'format.css';
+import fs from 'node:fs';
+import path from "path";
+import a from 'a';
+import { scopeA } from "@a/a";
+import { glob } from 'glob';
+import { localA } from "./a";
+import sibling from './foo';
+import index from './';
+import { internA } from "#a";
+import { privateA } from "#private/a";
+`,
+          ...parserConfig,
+          settings: {
+            ...parserConfig.settings,
+            'import-x/resolver': {
+              typescript: {
+                project: testFilePath(
+                  'typescript-order-custom-paths-mapping/tsconfig-with-path-mapping.json',
+                ),
+              },
+            },
+          },
+          options: [
+            {
+              followTsOrganizeImports: false,
+            },
+          ],
+        }),
+        // test followTsOrganizeImports: true and splitted node:* group
+        tValid({
+          code: `import fs from 'node:fs';
+import path from "path";
+
+import { internA } from "#a";
+import { privateA } from "#private/a";
+import { scopeA } from "@a/a";
+import a from 'a';
+import 'format.css';
+import { glob } from 'glob';
+import index from './';
+import { localA } from "./a";
+import sibling from './foo';
+`,
+          ...parserConfig,
+          options: [
+            {
+              followTsOrganizeImports: true,
+            },
+          ],
+        }),
       ],
       invalid: [
         // Option alphabetize: {order: 'asc'}
@@ -5190,6 +5335,30 @@ describe('TypeScript', () => {
               'import of `express`',
             ]),
             // { message: '`node:fs/promises` import should occur before import of `express`' },
+          ],
+        }),
+        // By default it should order same as TS LSP (issue-286)
+        tInvalid({
+          code: `import { scopeA } from "@a/a";
+import fs from 'node:fs';
+import path from "path";
+import { localA } from "./a";
+import { internA } from "#a";
+`,
+          output: `import { internA } from "#a";
+import { scopeA } from "@a/a";
+import fs from 'node:fs';
+import path from "path";
+import { localA } from "./a";
+`,
+          ...parserConfig,
+          options: [
+            {
+              followTsOrganizeImports: true,
+            },
+          ],
+          errors: [
+            createOrderError(['`#a` import', 'before', 'import of `@a/a`']),
           ],
         }),
       ],

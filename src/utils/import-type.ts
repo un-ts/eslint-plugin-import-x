@@ -88,6 +88,11 @@ export function isScopedMain(name: string) {
   return !!name && scopedMainRegExp.test(name)
 }
 
+function isPrivate(name: string) {
+  // see https://nodejs.org/api/packages.html#imports
+  return name.startsWith('#')
+}
+
 function isRelativeToParent(name: string) {
   return /^\.\.$|^\.\.[/\\]/.test(name)
 }
@@ -176,6 +181,9 @@ function typeTest(
   }
   if (typeof name === 'string' && isExternalLookingName(name)) {
     return 'external'
+  }
+  if (typeof name === 'string' && isPrivate(name)) {
+    return 'private'
   }
   return 'unknown'
 }
