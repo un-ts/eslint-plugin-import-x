@@ -4932,6 +4932,28 @@ import { privateA } from "#private/a";
             },
           ],
         }),
+        // test followTsOrganizeImports: true and splitted node:* group
+        tValid({
+          code: `import fs from 'node:fs';
+import path from "path";
+
+import { internA } from "#a";
+import { privateA } from "#private/a";
+import { scopeA } from "@a/a";
+import a from 'a';
+import 'format.css';
+import { glob } from 'glob';
+import index from './';
+import { localA } from "./a";
+import sibling from './foo';
+`,
+          ...parserConfig,
+          options: [
+            {
+              followTsOrganizeImports: true,
+            },
+          ],
+        }),
       ],
       invalid: [
         // Option alphabetize: {order: 'asc'}
