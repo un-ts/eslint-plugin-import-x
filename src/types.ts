@@ -62,7 +62,7 @@ export type NewResolverResolve = (
 // TODO: remove prefix New in the next major version
 export interface NewResolver {
   interfaceVersion: 3
-  /** optional name for the resolver, this is used in logs/debug output */
+  /** Optional name for the resolver, this is used in logs/debug output */
   name?: string
   resolve: NewResolverResolve
 }

@@ -216,9 +216,11 @@ const erroredContexts = new Set<RuleContext>()
 
 /**
  * Given
- * @param p - module path
+ *
+ * @param p - Module path
  * @param context - ESLint context
- * @return - the full module filesystem path; null if package is core; undefined if not found
+ * @returns - The full module filesystem path; null if package is core;
+ *   undefined if not found
  */
 export function resolve(p: string, context: RuleContext) {
   try {

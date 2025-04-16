@@ -1,6 +1,4 @@
-/**
- * Rule to prefer imports to AMD
- */
+/** Rule to prefer imports to AMD */
 
 import { createRule } from '../utils/index.js'
 

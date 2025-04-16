@@ -1,9 +1,12 @@
 import { createRequire } from 'node:module'
 
+import { EVAL_FILENAMES } from '@pkgr/core'
 import type { CjsRequire } from '@pkgr/core'
 
 const cjsRequire: CjsRequire =
-  typeof require === 'undefined'
+  typeof require === 'undefined' ||
+  // workaround for #296
+  EVAL_FILENAMES.has(__filename)
     ? createRequire(import.meta.url)
     : /* istanbul ignore next */ require
 

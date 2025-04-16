@@ -80,19 +80,19 @@ ruleTester.run('no-deprecated', rule, {
 
     tInvalid({
       code: "import { fn } from './deprecated'",
-      errors: [createDeprecatedDescError("please use 'x' instead.")],
+      errors: [createDeprecatedDescError("Please use 'x' instead.")],
     }),
 
     tInvalid({
       code: "import TerribleClass from './deprecated'",
-      errors: [createDeprecatedDescError('this is awful, use NotAsBadClass.')],
+      errors: [createDeprecatedDescError('This is awful, use NotAsBadClass.')],
     }),
 
     tInvalid({
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
         ),
       ],
     }),
@@ -100,7 +100,7 @@ ruleTester.run('no-deprecated', rule, {
     tInvalid({
       code: "import { fn } from './deprecated'",
       settings: { 'import-x/docstyle': ['jsdoc', 'tomdoc'] },
-      errors: [createDeprecatedDescError("please use 'x' instead.")],
+      errors: [createDeprecatedDescError("Please use 'x' instead.")],
     }),
 
     tInvalid({
@@ -130,7 +130,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; function shadow(MY_TERRIBLE_ACTION) { console.log(MY_TERRIBLE_ACTION); }",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
         ),
       ],
     }),
@@ -140,7 +140,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { MY_TERRIBLE_ACTION, fine } from './deprecated'; console.log(fine)",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
         ),
       ],
     }),
@@ -150,12 +150,12 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; console.log(MY_TERRIBLE_ACTION)",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'ImportSpecifier',
         ),
 
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'Identifier',
         ),
       ],
@@ -166,7 +166,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; console.log(someOther.MY_TERRIBLE_ACTION)",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'ImportSpecifier',
         ),
       ],
@@ -177,12 +177,12 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; console.log(MY_TERRIBLE_ACTION.whatever())",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'ImportSpecifier',
         ),
 
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'Identifier',
         ),
       ],
@@ -193,12 +193,12 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { MY_TERRIBLE_ACTION } from './deprecated'; console.log(MY_TERRIBLE_ACTION(this, is, the, worst))",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'ImportSpecifier',
         ),
 
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'Identifier',
         ),
       ],
@@ -209,7 +209,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import Thing from './deprecated-file'",
       errors: [
         createDeprecatedDescError(
-          'this module is the worst.',
+          'This module is the worst.',
           'ImportDeclaration',
         ),
       ],
@@ -220,7 +220,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import Thing from './deprecated-file'; console.log(other.Thing)",
       errors: [
         createDeprecatedDescError(
-          'this module is the worst.',
+          'This module is the worst.',
           'ImportDeclaration',
         ),
       ],
@@ -231,7 +231,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import * as depd from './deprecated'; console.log(depd.MY_TERRIBLE_ACTION)",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'Identifier',
         ),
       ],
@@ -240,7 +240,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import * as deep from './deep-deprecated'; console.log(deep.deepDep.MY_TERRIBLE_ACTION)",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'Identifier',
         ),
       ],
@@ -249,7 +249,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { deepDep } from './deep-deprecated'; console.log(deepDep.MY_TERRIBLE_ACTION)",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'Identifier',
         ),
       ],
@@ -258,7 +258,7 @@ ruleTester.run('no-deprecated', rule, {
       code: "import { deepDep } from './deep-deprecated'; function x(deepNDep) { console.log(deepDep.MY_TERRIBLE_ACTION) }",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'Identifier',
         ),
       ],
@@ -278,11 +278,11 @@ ruleTester.run('no-deprecated: hoisting', rule, {
       code: "console.log(MY_TERRIBLE_ACTION); import { MY_TERRIBLE_ACTION } from './deprecated'",
       errors: [
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'Identifier',
         ),
         createDeprecatedDescError(
-          'please stop sending/handling this action type.',
+          'Please stop sending/handling this action type.',
           'ImportSpecifier',
         ),
       ],
@@ -309,8 +309,8 @@ describe('TypeScript', () => {
       tInvalid({
         code: "import { foo } from './ts-deprecated.ts'; console.log(foo())",
         errors: [
-          createDeprecatedDescError("don't use this!", 'ImportSpecifier'),
-          createDeprecatedDescError("don't use this!", 'Identifier'),
+          createDeprecatedDescError("Don't use this!", 'ImportSpecifier'),
+          createDeprecatedDescError("Don't use this!", 'Identifier'),
         ],
         ...parserConfig,
       }),

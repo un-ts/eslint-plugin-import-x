@@ -3,9 +3,7 @@ import { ESLintUtils } from '@typescript-eslint/utils'
 import { docsUrl } from './docs-url.js'
 
 export interface ImportXPluginDocs {
-  /**
-   * The category the rule falls under
-   */
+  /** The category the rule falls under */
   category?: string
 
   recommended?: true

@@ -6,9 +6,7 @@ const noEslintrc = +version.split('.')[0] > 8
 
 const testCompiled = process.env.TEST_COMPILED === '1'
 
-/**
- * @type {import('eslint').Linter.Config}
- */
+/** @type {import('eslint').Linter.Config} */
 module.exports = {
   root: true,
   reportUnusedDisableDirectives: true,

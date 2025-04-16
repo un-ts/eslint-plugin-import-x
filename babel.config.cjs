@@ -1,6 +1,4 @@
-/**
- * @type {import('@babel/core').TransformOptions}
- */
+/** @type {import('@babel/core').TransformOptions} */
 module.exports = {
   presets: [
     [

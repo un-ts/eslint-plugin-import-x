@@ -1,8 +1,6 @@
 import type { PluginConfig } from '../types.js'
 
-/**
- * more opinionated config.
- */
+/** More opinionated config. */
 export default {
   plugins: ['import-x'],
   rules: {

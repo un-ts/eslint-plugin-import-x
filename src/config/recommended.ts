@@ -1,8 +1,6 @@
 import type { PluginConfig } from '../types.js'
 
-/**
- * The basics.
- */
+/** The basics. */
 export default {
   plugins: ['import-x'],
 

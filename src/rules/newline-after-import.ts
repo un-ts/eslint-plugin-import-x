@@ -1,6 +1,4 @@
-/**
- * Rule to enforce new line after import not followed by another import.
- */
+/** Rule to enforce new line after import not followed by another import. */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'

@@ -37,7 +37,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
       )
       expect(imports.get('fn')).toHaveProperty(
         'doc.tags[0].description',
-        "please use 'x' instead.",
+        "Please use 'x' instead.",
       )
     })
 
@@ -48,7 +48,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
       expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
       expect(importMeta).toHaveProperty(
         'doc.tags[0].description',
-        'this is awful, use NotAsBadClass.',
+        'This is awful, use NotAsBadClass.',
       )
     })
 
@@ -59,7 +59,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
       expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
       expect(importMeta).toHaveProperty(
         'doc.tags[0].description',
-        'please stop sending/handling this action type.',
+        'Please stop sending/handling this action type.',
       )
     })
 
@@ -71,7 +71,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
         expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
         expect(importMeta).toHaveProperty(
           'doc.tags[0].description',
-          'this chain is awful',
+          'This chain is awful',
         )
       })
       it('works for the second one', () => {
@@ -79,7 +79,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
         const importMeta = imports.get('CHAIN_B')
 
         expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
-        expect(importMeta).toHaveProperty('doc.tags[0].description', 'so awful')
+        expect(importMeta).toHaveProperty('doc.tags[0].description', 'So awful')
       })
       it('works for the third one, etc.', () => {
         expect(imports.has('CHAIN_C')).toBe(true)
@@ -88,7 +88,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
         expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
         expect(importMeta).toHaveProperty(
           'doc.tags[0].description',
-          'still terrible',
+          'Still terrible',
         )
       })
     })
