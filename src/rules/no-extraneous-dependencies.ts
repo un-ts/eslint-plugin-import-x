@@ -41,6 +41,8 @@ function readJSON<T>(jsonPath: string, throwException: boolean) {
 
 function extractDepFields(pkg: PackageJson) {
   return {
+    name: pkg.name,
+    exports: pkg.exports,
     dependencies: pkg.dependencies || {},
     devDependencies: pkg.devDependencies || {},
     optionalDependencies: pkg.optionalDependencies || {},
@@ -68,6 +70,8 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
 
   try {
     let packageContent: PackageDeps = {
+      name: undefined,
+      exports: undefined,
       dependencies: {},
       devDependencies: {},
       optionalDependencies: {},
@@ -90,10 +94,30 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
           paths.length === 1,
         )
         if (packageContent_) {
-          for (const depsKey of Object.keys(packageContent)) {
-            const key = depsKey as keyof PackageDeps
-            Object.assign(packageContent[key], packageContent_[key])
+          if (!packageContent.name) {
+            packageContent.name = packageContent_.name
+            packageContent.exports = packageContent_.exports
           }
+          Object.assign(
+            packageContent.dependencies,
+            packageContent_.dependencies,
+          )
+          Object.assign(
+            packageContent.devDependencies,
+            packageContent_.devDependencies,
+          )
+          Object.assign(
+            packageContent.optionalDependencies,
+            packageContent_.optionalDependencies,
+          )
+          Object.assign(
+            packageContent.peerDependencies,
+            packageContent_.peerDependencies,
+          )
+          Object.assign(
+            packageContent.bundledDependencies,
+            packageContent_.bundledDependencies,
+          )
         }
       }
     } else {
@@ -110,13 +134,17 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
     }
 
     if (
-      ![
-        packageContent.dependencies,
-        packageContent.devDependencies,
-        packageContent.optionalDependencies,
-        packageContent.peerDependencies,
-        packageContent.bundledDependencies,
-      ].some(hasKeys)
+      !(
+        packageContent.name ||
+        packageContent.exports ||
+        [
+          packageContent.dependencies,
+          packageContent.devDependencies,
+          packageContent.optionalDependencies,
+          packageContent.peerDependencies,
+          packageContent.bundledDependencies,
+        ].some(hasKeys)
+      )
     ) {
       return
     }
@@ -296,6 +324,20 @@ function reportIfMissing(
     return
   }
 
+  if (importPackageName === deps.name) {
+    if (!deps.exports) {
+      context.report({
+        node,
+        messageId: 'selfImport',
+        data: {
+          packageName,
+        },
+      })
+    }
+
+    return
+  }
+
   if (declarationStatus.isInDevDeps && !depsOptions.allowDevDeps) {
     context.report({
       node,
@@ -364,6 +406,7 @@ export type MessageId =
   | 'devDep'
   | 'optDep'
   | 'missing'
+  | 'selfImport'
 
 export default createRule<[Options?], MessageId>({
   name: 'no-extraneous-dependencies',
@@ -397,6 +440,8 @@ export default createRule<[Options?], MessageId>({
       optDep:
         "'{{packageName}}' should be listed in the project's dependencies, not optionalDependencies.",
       missing: `'{{packageName}}' should be listed in the project's dependencies. Run '${getNpmInstallCommand('{{packageName}}')}' to add it`,
+      selfImport:
+        "'{{packageName}}' may only import itself if the exports field is defined in package.json",
     },
   },
   defaultOptions: [],
