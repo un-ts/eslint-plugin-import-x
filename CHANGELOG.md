@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.10.6
+
+### Patch Changes
+
+- [#310](https://github.com/un-ts/eslint-plugin-import-x/pull/310) [`d54302f`](https://github.com/un-ts/eslint-plugin-import-x/commit/d54302f8f4f4df00015b933a6b9b5eeaf01728d9) Thanks [@JounQin](https://github.com/JounQin)! - chore: bump `unrs-resolver` to v1.6.0
+
 ## 4.10.5
 
 ### Patch Changes
