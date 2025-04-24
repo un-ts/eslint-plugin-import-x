@@ -2,9 +2,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import { parse as parseComment_ } from 'comment-parser'
+import type { Block } from 'comment-parser'
 import debug from 'debug'
-import type { Annotation } from 'doctrine'
-import * as doctrine from 'doctrine'
 import type { AST } from 'eslint'
 import { SourceCode } from 'eslint'
 import type { TsConfigJsonResolved, TsConfigResult } from 'get-tsconfig'
@@ -36,7 +36,7 @@ const tsconfigCache = new Map<string, TsConfigJsonResolved | null | undefined>()
 
 export type DocStyleParsers = Record<
   DocStyle,
-  (comments: TSESTree.Comment[]) => Annotation | undefined
+  (comments: TSESTree.Comment[]) => Block | undefined
 >
 
 export interface DeclarationMetadata {
@@ -47,7 +47,7 @@ export interface DeclarationMetadata {
 }
 
 export interface ModuleNamespace {
-  doc?: Annotation
+  doc?: Block
   namespace?: ExportMap | null
 }
 
@@ -66,6 +66,26 @@ const declTypes = new Set([
   'TSAbstractClassDeclaration',
   'TSModuleDeclaration',
 ])
+
+// https://github.com/syavorsky/comment-parser/issues/172
+const fixup = new Set(['deprecated', 'module'])
+
+const parseComment = (comment: string): Block => {
+  const restored = `/**${comment.split('\n').reduce((acc, line) => {
+    line = line.trim()
+    return line && line !== '*' ? acc + '\n  ' + line : acc
+  }, '')}
+  */`
+  const [doc] = parseComment_(restored)
+  return {
+    ...doc,
+    tags: doc.tags.map(t =>
+      t.name && fixup.has(t.tag)
+        ? { ...t, description: `${t.name} ${t.description}` }
+        : t,
+    ),
+  }
+}
 
 export class ExportMap {
   static for(context: ChildContext) {
@@ -663,20 +683,20 @@ export class ExportMap {
 
     // attempt to collect module doc
     defineLazyProperty(m, 'doc', () => {
-      if (ast.comments) {
-        for (let i = 0, len = ast.comments.length; i < len; i++) {
-          const c = ast.comments[i]
-          if (c.type !== 'Block') {
-            continue
+      if (!ast.comments?.length) {
+        return
+      }
+      for (const c of ast.comments) {
+        if (c.type !== 'Block') {
+          continue
+        }
+        try {
+          const doc = parseComment(c.value)
+          if (doc.tags.some(t => t.tag === 'module')) {
+            return doc
           }
-          try {
-            const doc = doctrine.parse(c.value, { unwrap: true })
-            if (doc.tags.some(t => t.title === 'module')) {
-              return doc
-            }
-          } catch {
-            /* ignore */
-          }
+        } catch {
+          /* ignore */
         }
       }
     })
@@ -727,7 +747,7 @@ export class ExportMap {
 
   declare private mtime: number
 
-  declare doc: Annotation | undefined
+  declare doc: Block | undefined
 
   constructor(public path: string) {}
 
@@ -943,7 +963,7 @@ function captureDoc(
   ...nodes: Array<TSESTree.Node | undefined>
 ) {
   const metadata: {
-    doc?: Annotation | undefined
+    doc?: Block | undefined
   } = {}
 
   defineLazyProperty(metadata, 'doc', () => {
@@ -1002,7 +1022,7 @@ function captureJsDoc(comments: TSESTree.Comment[]) {
       continue
     }
     try {
-      return doctrine.parse(comment.value, { unwrap: true })
+      return parseComment(comment.value)
     } catch {
       /* don't care, for now? maybe add to `errors?` */
     }
@@ -1010,7 +1030,7 @@ function captureJsDoc(comments: TSESTree.Comment[]) {
 }
 
 /** Parse TomDoc section from comments */
-function captureTomDoc(comments: TSESTree.Comment[]): Annotation | undefined {
+function captureTomDoc(comments: TSESTree.Comment[]): Block | undefined {
   // collect lines up to first paragraph break
   const lines = []
   for (const comment of comments) {
@@ -1020,7 +1040,7 @@ function captureTomDoc(comments: TSESTree.Comment[]): Annotation | undefined {
     lines.push(comment.value.trim())
   }
 
-  // return doctrine-like object
+  // return comment-parser-like object
   const statusMatch = lines
     .join(' ')
     .match(/^(Public|Internal|Deprecated):\s*(.+)/)
@@ -1029,11 +1049,11 @@ function captureTomDoc(comments: TSESTree.Comment[]): Annotation | undefined {
       description: statusMatch[2],
       tags: [
         {
-          title: statusMatch[1].toLowerCase(),
+          tag: statusMatch[1].toLowerCase(),
           description: statusMatch[2],
         },
       ],
-    }
+    } as Block
   }
 }
 

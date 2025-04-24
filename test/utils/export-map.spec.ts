@@ -31,10 +31,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
     it('works with named imports.', () => {
       expect(imports.has('fn')).toBe(true)
 
-      expect(imports.get('fn')).toHaveProperty(
-        'doc.tags[0].title',
-        'deprecated',
-      )
+      expect(imports.get('fn')).toHaveProperty('doc.tags[0].tag', 'deprecated')
       expect(imports.get('fn')).toHaveProperty(
         'doc.tags[0].description',
         "Please use 'x' instead.",
@@ -45,7 +42,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
       expect(imports.has('default')).toBe(true)
       const importMeta = imports.get('default')
 
-      expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+      expect(importMeta).toHaveProperty('doc.tags[0].tag', 'deprecated')
       expect(importMeta).toHaveProperty(
         'doc.tags[0].description',
         'This is awful, use NotAsBadClass.',
@@ -56,7 +53,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
       expect(imports.has('MY_TERRIBLE_ACTION')).toBe(true)
       const importMeta = imports.get('MY_TERRIBLE_ACTION')
 
-      expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+      expect(importMeta).toHaveProperty('doc.tags[0].tag', 'deprecated')
       expect(importMeta).toHaveProperty(
         'doc.tags[0].description',
         'Please stop sending/handling this action type.',
@@ -68,7 +65,7 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
         expect(imports.has('CHAIN_A')).toBe(true)
         const importMeta = imports.get('CHAIN_A')
 
-        expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+        expect(importMeta).toHaveProperty('doc.tags[0].tag', 'deprecated')
         expect(importMeta).toHaveProperty(
           'doc.tags[0].description',
           'This chain is awful',
@@ -78,14 +75,14 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
         expect(imports.has('CHAIN_B')).toBe(true)
         const importMeta = imports.get('CHAIN_B')
 
-        expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+        expect(importMeta).toHaveProperty('doc.tags[0].tag', 'deprecated')
         expect(importMeta).toHaveProperty('doc.tags[0].description', 'So awful')
       })
       it('works for the third one, etc.', () => {
         expect(imports.has('CHAIN_C')).toBe(true)
         const importMeta = imports.get('CHAIN_C')
 
-        expect(importMeta).toHaveProperty('doc.tags[0].title', 'deprecated')
+        expect(importMeta).toHaveProperty('doc.tags[0].tag', 'deprecated')
         expect(importMeta).toHaveProperty(
           'doc.tags[0].description',
           'Still terrible',

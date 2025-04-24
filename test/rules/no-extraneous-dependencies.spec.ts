@@ -109,7 +109,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     }),
     tValid({ code: 'require(6)' }),
     tValid({
-      code: 'import "doctrine"',
+      code: 'import "comment-parser"',
       options: [{ packageDir: path.join(_dirname, '../../') }],
     }),
     tValid({
