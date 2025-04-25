@@ -1,10 +1,10 @@
-import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
 import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 import type { GetRuleModuleMessageIds } from '../utils.js'
 
+import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-relative-parent-imports'
 
 const ruleTester = new TSESLintRuleTester()

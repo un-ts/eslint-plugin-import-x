@@ -19,6 +19,7 @@ import warnings from './config/warnings.js'
 // rules
 import { meta } from './meta.js'
 import { createNodeResolver } from './node-resolver.js'
+import { cjsRequire } from './require.js'
 import consistentTypeSpecifierStyle from './rules/consistent-type-specifier-style.js'
 import default_ from './rules/default.js'
 import dynamicImportChunkname from './rules/dynamic-import-chunkname.js'
@@ -183,6 +184,7 @@ export default {
   configs,
   flatConfigs,
   rules,
+  cjsRequire,
   importXResolverCompat,
   createNodeResolver,
 }
@@ -192,6 +194,7 @@ export {
   configs,
   flatConfigs,
   rules,
+  cjsRequire,
   importXResolverCompat,
   createNodeResolver,
 }

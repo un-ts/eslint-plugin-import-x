@@ -18,10 +18,11 @@ import {
 } from './legacy-resolver-settings.js'
 import { ModuleCache } from './module-cache.js'
 
-const _filename =
-  typeof __filename === 'undefined'
-    ? fileURLToPath(import.meta.url)
-    : /* istanbul ignore next */ __filename
+const importMetaUrl = import.meta.url
+
+const _filename = importMetaUrl
+  ? fileURLToPath(importMetaUrl)
+  : /* istanbul ignore next */ __filename
 const _dirname = path.dirname(_filename)
 
 export const CASE_SENSITIVE_FS = !fs.existsSync(

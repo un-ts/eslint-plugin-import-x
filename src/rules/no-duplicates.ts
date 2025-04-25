@@ -1,8 +1,8 @@
-import { cjsRequire } from '@pkgr/core'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import * as semver from 'semver'
 import type { PackageJson } from 'type-fest'
 
+import { cjsRequire } from '../require.js'
 import type { RuleContext } from '../types.js'
 import { createRule, lazy, resolve } from '../utils/index.js'
 
@@ -12,7 +12,7 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
   let typescriptPkg: PackageJson | undefined
 
   try {
-    typescriptPkg = cjsRequire('typescript/package.json') as PackageJson
+    typescriptPkg = cjsRequire<PackageJson>('typescript/package.json')
   } catch {
     //
   }

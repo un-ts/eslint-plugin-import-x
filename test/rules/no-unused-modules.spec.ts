@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 
 import { jest } from '@jest/globals'
-import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { TSESLint } from '@typescript-eslint/utils'
@@ -12,6 +11,7 @@ import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
 import { createRuleTestCaseFunctions, testFilePath, parsers } from '../utils.js'
 import type { GetRuleModuleOptions, GetRuleModuleMessageIds } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import jsxConfig from 'eslint-plugin-import-x/config/flat/react'
 import typescriptConfig from 'eslint-plugin-import-x/config/flat/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-unused-modules'

@@ -3,9 +3,9 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
-import { cjsRequire } from '@pkgr/core'
 import type { LiteralUnion } from 'type-fest'
 
+import { cjsRequire } from '../require.js'
 import type {
   NodeResolverOptions,
   ResolvedResult,

@@ -1,9 +1,9 @@
-import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TSESLint } from '@typescript-eslint/utils'
 
 import { parsers, createRuleTestCaseFunctions } from '../utils.js'
 
+import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-dynamic-require'
 
 const ruleTester = new TSESLintRuleTester()

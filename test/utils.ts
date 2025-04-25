@@ -1,6 +1,5 @@
 import path from 'node:path'
 
-import { cjsRequire as require } from '@pkgr/core'
 import type {
   ValidTestCase as TSESLintValidTestCase,
   InvalidTestCase as TSESLintInvalidTestCase,
@@ -10,7 +9,8 @@ import type { RuleModule } from '@typescript-eslint/utils/ts-eslint'
 import * as semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
-import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x/types'
+import { cjsRequire as require } from 'eslint-plugin-import-x'
+import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x'
 
 // warms up the module cache. this import takes a while (>500ms)
 import '@babel/eslint-parser'

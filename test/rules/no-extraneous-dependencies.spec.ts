@@ -3,11 +3,11 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import type { CjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 
+import type { CjsRequire } from 'eslint-plugin-import-x'
 import typescriptConfig from 'eslint-plugin-import-x/config/flat/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-extraneous-dependencies'
 
@@ -109,7 +109,7 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     }),
     tValid({ code: 'require(6)' }),
     tValid({
-      code: 'import "doctrine"',
+      code: 'import "comment-parser"',
       options: [{ packageDir: path.join(_dirname, '../../') }],
     }),
     tValid({
