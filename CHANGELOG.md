@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.11.0
+
+### Minor Changes
+
+- [#314](https://github.com/un-ts/eslint-plugin-import-x/pull/314) [`11ebfbd`](https://github.com/un-ts/eslint-plugin-import-x/commit/11ebfbddd5ece74eec427b5c9117387f63306f80) Thanks [@JounQin](https://github.com/JounQin)! - refactor: migrate deprecated `doctrine` to `comment-parser`
+
 ## 4.10.6
 
 ### Patch Changes
