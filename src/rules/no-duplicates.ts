@@ -12,7 +12,7 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
   let typescriptPkg: PackageJson | undefined
 
   try {
-    typescriptPkg = cjsRequire('typescript/package.json') as PackageJson
+    typescriptPkg = cjsRequire<PackageJson>('typescript/package.json')
   } catch {
     //
   }
