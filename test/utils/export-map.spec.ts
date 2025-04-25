@@ -6,7 +6,7 @@ import * as getTsconfig from 'get-tsconfig'
 
 import { TEST_FILENAME, testFilePath } from '../utils.js'
 
-import type { ChildContext, RuleContext } from 'eslint-plugin-import-x/types'
+import type { ChildContext, RuleContext } from 'eslint-plugin-import-x'
 import {
   ExportMap,
   isMaybeUnambiguousModule,

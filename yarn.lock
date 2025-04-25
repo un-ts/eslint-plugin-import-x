@@ -3323,7 +3323,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@pkgr/core@npm:^0.2.2, @pkgr/core@npm:^0.2.3, @pkgr/core@npm:^0.2.4":
+"@pkgr/core@npm:^0.2.2, @pkgr/core@npm:^0.2.3":
   version: 0.2.4
   resolution: "@pkgr/core@npm:0.2.4"
   checksum: 10c0/2528a443bbbef5d4686614e1d73f834f19ccbc975f62b2a64974a6b97bcdf677b9c5e8948e04808ac4f0d853e2f422adfaae2a06e9e9f4f5cf8af76f1adf8dc1
@@ -6366,7 +6366,6 @@ __metadata:
     "@commitlint/cli": "npm:^19.8.0"
     "@eslint/import-test-order-redirect-scoped": "link:./test/fixtures/order-redirect-scoped"
     "@eslint/js": "npm:^9.25.1"
-    "@pkgr/core": "npm:^0.2.4"
     "@pkgr/rollup": "npm:^6.0.3"
     "@swc-node/jest": "npm:^1.8.13"
     "@swc/core": "npm:^1.11.22"

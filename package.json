@@ -71,7 +71,6 @@
     "eslint": "^8.57.0 || ^9.0.0"
   },
   "dependencies": {
-    "@pkgr/core": "^0.2.4",
     "@typescript-eslint/utils": "^8.31.0",
     "comment-parser": "^1.4.1",
     "debug": "^4.4.0",

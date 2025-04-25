@@ -1,4 +1,3 @@
-import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import {
@@ -9,6 +8,7 @@ import {
 } from '../utils.js'
 import type { RuleRunTests } from '../utils.js'
 
+import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/export'
 
 const ruleTester = new TSESLintRuleTester()

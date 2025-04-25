@@ -1,7 +1,7 @@
 import Module from 'node:module'
 import path from 'node:path'
 
-import { cjsRequire } from '@pkgr/core'
+import { cjsRequire } from '../require.js'
 
 function createModule(filename: string) {
   const mod = new Module(filename)

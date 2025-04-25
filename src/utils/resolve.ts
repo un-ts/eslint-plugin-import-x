@@ -18,8 +18,10 @@ import {
 } from './legacy-resolver-settings.js'
 import { ModuleCache } from './module-cache.js'
 
-const _filename = import.meta.url
-  ? fileURLToPath(import.meta.url)
+const importMetaUrl = import.meta.url
+
+const _filename = importMetaUrl
+  ? fileURLToPath(importMetaUrl)
   : /* istanbul ignore next */ __filename
 const _dirname = path.dirname(_filename)
 

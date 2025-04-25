@@ -4,13 +4,12 @@ import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
 import { jest } from '@jest/globals'
-import type { CjsRequire } from '@pkgr/core'
 import type { TSESLint } from '@typescript-eslint/utils'
 
 import { testContext, testFilePath } from '../utils.js'
 
 import { importXResolverCompat } from 'eslint-plugin-import-x'
-import type { NewResolver } from 'eslint-plugin-import-x/types'
+import type { CjsRequire, NewResolver } from 'eslint-plugin-import-x'
 import {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,

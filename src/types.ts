@@ -235,3 +235,7 @@ export interface Ranks {
   pathGroups: RanksPathGroup[]
   maxPosition: number
 }
+
+export interface CjsRequire extends NodeJS.Require {
+  <T>(id: string): T
+}

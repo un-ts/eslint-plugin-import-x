@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { cjsRequire } from '@pkgr/core'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type * as commentParser from 'comment-parser'
 import debug from 'debug'
@@ -11,6 +10,7 @@ import type { TsConfigJsonResolved, TsConfigResult } from 'get-tsconfig'
 import { getTsconfig } from 'get-tsconfig'
 import { stableHash } from 'stable-hash'
 
+import { cjsRequire } from '../require.js'
 import type {
   ChildContext,
   DocStyle,
@@ -74,7 +74,7 @@ let parseComment_: typeof commentParser.parse | undefined
 
 const parseComment = (comment: string): commentParser.Block => {
   parseComment_ ??= cjsRequire<typeof commentParser>('comment-parser').parse
-  const restored = `/**${comment.split('\n').reduce((acc, line) => {
+  const restored = `/**${comment.split(/\r?\n/).reduce((acc, line) => {
     line = line.trim()
     return line && line !== '*' ? acc + '\n  ' + line : acc
   }, '')}

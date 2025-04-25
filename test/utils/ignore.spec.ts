@@ -1,6 +1,6 @@
 import { testContext } from '../utils.js'
 
-import type { PluginSettings } from 'eslint-plugin-import-x/types'
+import type { PluginSettings } from 'eslint-plugin-import-x'
 import {
   ignore as isIgnored,
   getFileExtensions,

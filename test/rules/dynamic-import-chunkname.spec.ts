@@ -1,4 +1,3 @@
-import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 import type { TSESLint } from '@typescript-eslint/utils'
@@ -6,6 +5,7 @@ import type { TSESLint } from '@typescript-eslint/utils'
 import { SYNTAX_VALID_CASES, parsers } from '../utils.js'
 import type { GetRuleModuleOptions, RuleRunTests } from '../utils.js'
 
+import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/dynamic-import-chunkname'
 
 const ruleTester = new TSESLintRuleTester()

@@ -317,7 +317,7 @@
   export type ResolvedResult = ResultNotFound | ResultFound
   ```
 
-  You will be able to import `NewResolver` from `eslint-plugin-import-x/types`.
+  You will be able to import `NewResolver` from `eslint-plugin-import-x`.
 
   The most notable change is that `eslint-plugin-import-x` no longer passes the third argument (`options`) to the `resolve` function.
 

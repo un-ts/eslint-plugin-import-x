@@ -1,10 +1,4 @@
-import { createRequire } from 'node:module'
-
-import type { CjsRequire } from '@pkgr/core'
-
-const cjsRequire: CjsRequire = import.meta.url
-  ? createRequire(import.meta.url)
-  : /* istanbul ignore next */ require
+import { cjsRequire } from './require.js'
 
 export const { name, version } = cjsRequire<{ name: string; version: string }>(
   '../package.json',

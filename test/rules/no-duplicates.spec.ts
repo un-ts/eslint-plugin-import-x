@@ -1,6 +1,5 @@
 import path from 'node:path'
 
-import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
@@ -12,6 +11,7 @@ import {
 } from '../utils.js'
 import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import jsxConfig from 'eslint-plugin-import-x/config/flat/react'
 import rule from 'eslint-plugin-import-x/rules/no-duplicates'
 
