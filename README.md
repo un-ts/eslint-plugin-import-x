@@ -276,14 +276,14 @@ You can reference resolvers in several ways (in order of precedence):
 ```js
 // eslint.config.js
 
-import { createTypeScriptResolver } from 'eslint-import-resolver-typescript'
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import { createNodeResolver } from 'eslint-plugin-import-x'
 
 export default [
   {
     settings: {
-      'import/resolver-next': [
-        createTypeScriptResolver(/* Your override options go here */),
+      'import-x/resolver-next': [
+        createTypeScriptImportResolver(/* Your override options go here */),
         createNodeResolver(/* Your override options go here */),
       ],
     },
