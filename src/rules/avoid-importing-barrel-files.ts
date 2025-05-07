@@ -15,7 +15,6 @@ export interface Options {
   allowList: string[]
   maxModuleGraphSizeAllowed: number
   amountOfExportsToConsiderModuleAsBarrel: number
-  debug: boolean
   exportConditions: string[]
   mainFields: string[]
   extensions: string[]
@@ -32,7 +31,6 @@ const defaultOptions: Options = {
   allowList: [],
   maxModuleGraphSizeAllowed: 20,
   amountOfExportsToConsiderModuleAsBarrel: 3,
-  debug: false,
   exportConditions: ['node', 'import'],
   mainFields: ['module', 'browser', 'main'],
   extensions: ['.js', '.ts', '.tsx', '.jsx', '.json', '.node'],
@@ -100,11 +98,6 @@ export default createRule<[Options?], MessageId>({
               'Amount of exports to consider a module as barrel file',
             default: 3,
           },
-          debug: {
-            type: 'boolean',
-            description: 'Enabling debug logging',
-            default: false,
-          },
           exportConditions: {
             type: 'array',
             description:
@@ -168,7 +161,6 @@ export default createRule<[Options?], MessageId>({
   create(context) {
     const options = context.options[0] || defaultOptions
     const maxModuleGraphSizeAllowed = options.maxModuleGraphSizeAllowed
-    const debug = options.debug
     const amountOfExportsToConsiderModuleAsBarrel =
       options.amountOfExportsToConsiderModuleAsBarrel
     const exportConditions = options.exportConditions
@@ -225,27 +217,8 @@ export default createRule<[Options?], MessageId>({
 
             throw new ResolveError(null, resolvedPath.error)
           }
-        } catch (error) {
-          if (!debug) {
-            return
-          }
-
-          if (error instanceof ResolveError) {
-            switch (error.errorVariant) {
-              case 'NotFound': {
-                console.error(
-                  `Failed to resolve "${moduleSpecifier}" from "${currentFileName}": \n\n${error.stack}`,
-                )
-                break
-              }
-              default: {
-                console.error(`${error.message}: \n\n${error.stack}`)
-              }
-            }
-          }
-
-          const stack = error instanceof Error ? error.stack : null
-          console.error(`${error}: \n\n${stack}`)
+        } catch {
+          // do nothing since we couldn't resolve it
           return
         }
 
