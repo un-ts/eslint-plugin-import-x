@@ -61,21 +61,27 @@ This can be useful when resolving project references in TypeScript.
 The rule can accept an `alias` option whose value can be an object that matches Webpack's [resolve.alias](https://webpack.js.org/configuration/resolve/) configuration.
 
 ```js
-// .eslintrc.cjs
-const path = require('path')
+// eslint.config.js
+import path from 'node:path'
+import { defineConfig } from 'eslint/config'
+import importPlugin from 'eslint-plugin-import-x'
 
-export default {
-  // ...
-  rules: {
-    'import-x/avoid-importing-barrel-files': [
-      'error',
-      {
-        alias: {
-          // "@/foo/bar.js" => "./src/foo/bar.js"
-          '@': [path.resolve('.', 'src')],
+export default defineConfig([
+  {
+    plugins: {
+      'import-x': importPlugin,
+    },
+    rules: {
+      'import-x/avoid-importing-barrel-files': [
+        'error',
+        {
+          alias: {
+            // "@/foo/bar.js" => "./src/foo/bar.js"
+            '@': [path.resolve('.', 'src')],
+          },
         },
-      },
-    ],
+      ],
+    },
   },
-}
+])
 ```
