@@ -20,7 +20,6 @@ This rule has the following options, with these defaults:
   allowList: [],
   maxModuleGraphSizeAllowed: 20,
   amountOfExportsToConsiderModuleAsBarrel: 3,
-  debug: false,
   exportConditions: ["node", "import"],
   mainFields: ["module", "browser", "main"],
   extensions: [".js", ".ts", ".tsx", ".jsx", ".json", ".node"],
@@ -69,7 +68,7 @@ export default {
   // ...
   rules: {
     'import-x/avoid-importing-barrel-files': [
-      2,
+      'error',
       {
         alias: {
           // "@/foo/bar.js" => "./src/foo/bar.js"
