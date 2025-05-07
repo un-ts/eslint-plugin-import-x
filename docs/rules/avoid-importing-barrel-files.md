@@ -68,7 +68,7 @@ const path = require('path')
 export default {
   // ...
   rules: {
-    'barrel-files/avoid-importing-barrel-files': [
+    'import-x/avoid-importing-barrel-files': [
       2,
       {
         alias: {

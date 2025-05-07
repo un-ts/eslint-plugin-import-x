@@ -15,7 +15,7 @@ import * as foo from 'foo'
 This rule has the following options, with these defaults:
 
 ```js
-"import-x/avoid-barrel-files": ["error", {
+"import-x/avoid-namespace-import": ["error", {
   allowList: []
 }]
 ```

@@ -49,8 +49,12 @@ const cache: Record<
  * @param {string} specifier
  * @returns {boolean}
  */
-const isBareModuleSpecifier = (specifier: string): boolean =>
-  !!specifier?.replace(/'/g, '')[0].match(/[@a-zA-Z]/g)
+const isBareModuleSpecifier = (specifier: string): boolean => {
+  if (specifier && specifier.length > 0) {
+    return /[@a-zA-Z]/.test(specifier.replaceAll("'", '')[0])
+  }
+  return false
+}
 
 // custom error class to emulate oxc_resolver ResolveError enum.
 // `errorVariant` can be equal to a `ResolveError` enum variant.
