@@ -145,7 +145,11 @@ function fullResolve(
     Object.prototype.hasOwnProperty.call(settings, 'import-x/resolver-next') &&
     settings['import-x/resolver-next']
   ) {
-    const configResolvers = settings['import-x/resolver-next']
+    let configResolvers = settings['import-x/resolver-next']
+
+    if (!Array.isArray(configResolvers)) {
+      configResolvers = [configResolvers]
+    }
 
     for (let i = 0, len = configResolvers.length; i < len; i++) {
       const resolver = configResolvers[i]
