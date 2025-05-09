@@ -162,6 +162,15 @@ describe('resolve', () => {
     expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
   })
 
+  it('non-array resolver interface v3', () => {
+    const context = testContext({
+      'import-x/resolver-next': require<{
+        foobarResolver: NewResolver
+      }>('../fixtures/foo-bar-resolver-v3').foobarResolver,
+    })
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
+  })
+
   it('reports invalid import-x/resolver config', () => {
     const context = testContext({
       // @ts-expect-error - testing
