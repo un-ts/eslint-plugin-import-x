@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.11.1
+
+### Patch Changes
+
+- [#321](https://github.com/un-ts/eslint-plugin-import-x/pull/321) [`fc4c72c`](https://github.com/un-ts/eslint-plugin-import-x/commit/fc4c72c8aeb7ae2f876fa6efa04cd3d269bcebbe) Thanks [@SukkaW](https://github.com/SukkaW)! - fix: accept non-array resolver in `resolver-next` setting
+
 ## 4.11.0
 
 ### Minor Changes
