@@ -101,7 +101,7 @@ export interface ImportSettings {
   resolve?: NodeResolverOptions
   resolver?: LegacyImportResolver
   'resolver-legacy'?: LegacyImportResolver
-  'resolver-next'?: NewResolver[]
+  'resolver-next'?: NewResolver[] | NewResolver
 }
 
 export type WithPluginName<T extends string | object> = T extends string
