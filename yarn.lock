@@ -6163,6 +6163,145 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-barrel-file-utils-android-arm-eabi@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-android-arm-eabi@npm:0.0.11"
+  conditions: os=android & cpu=arm
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-android-arm64@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-android-arm64@npm:0.0.11"
+  conditions: os=android & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-darwin-arm64@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-darwin-arm64@npm:0.0.11"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-darwin-x64@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-darwin-x64@npm:0.0.11"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-freebsd-x64@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-freebsd-x64@npm:0.0.11"
+  conditions: os=freebsd & cpu=x64
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-linux-arm-gnueabihf@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-linux-arm-gnueabihf@npm:0.0.11"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-linux-arm64-gnu@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-linux-arm64-gnu@npm:0.0.11"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-linux-arm64-musl@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-linux-arm64-musl@npm:0.0.11"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-linux-x64-gnu@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-linux-x64-gnu@npm:0.0.11"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-linux-x64-musl@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-linux-x64-musl@npm:0.0.11"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-win32-arm64-msvc@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-win32-arm64-msvc@npm:0.0.11"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-win32-ia32-msvc@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-win32-ia32-msvc@npm:0.0.11"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils-win32-x64-msvc@npm:0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils-win32-x64-msvc@npm:0.0.11"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"eslint-barrel-file-utils@npm:^0.0.11":
+  version: 0.0.11
+  resolution: "eslint-barrel-file-utils@npm:0.0.11"
+  dependencies:
+    eslint-barrel-file-utils-android-arm-eabi: "npm:0.0.11"
+    eslint-barrel-file-utils-android-arm64: "npm:0.0.11"
+    eslint-barrel-file-utils-darwin-arm64: "npm:0.0.11"
+    eslint-barrel-file-utils-darwin-x64: "npm:0.0.11"
+    eslint-barrel-file-utils-freebsd-x64: "npm:0.0.11"
+    eslint-barrel-file-utils-linux-arm-gnueabihf: "npm:0.0.11"
+    eslint-barrel-file-utils-linux-arm64-gnu: "npm:0.0.11"
+    eslint-barrel-file-utils-linux-arm64-musl: "npm:0.0.11"
+    eslint-barrel-file-utils-linux-x64-gnu: "npm:0.0.11"
+    eslint-barrel-file-utils-linux-x64-musl: "npm:0.0.11"
+    eslint-barrel-file-utils-win32-arm64-msvc: "npm:0.0.11"
+    eslint-barrel-file-utils-win32-ia32-msvc: "npm:0.0.11"
+    eslint-barrel-file-utils-win32-x64-msvc: "npm:0.0.11"
+  dependenciesMeta:
+    eslint-barrel-file-utils-android-arm-eabi:
+      optional: true
+    eslint-barrel-file-utils-android-arm64:
+      optional: true
+    eslint-barrel-file-utils-darwin-arm64:
+      optional: true
+    eslint-barrel-file-utils-darwin-x64:
+      optional: true
+    eslint-barrel-file-utils-freebsd-x64:
+      optional: true
+    eslint-barrel-file-utils-linux-arm-gnueabihf:
+      optional: true
+    eslint-barrel-file-utils-linux-arm64-gnu:
+      optional: true
+    eslint-barrel-file-utils-linux-arm64-musl:
+      optional: true
+    eslint-barrel-file-utils-linux-x64-gnu:
+      optional: true
+    eslint-barrel-file-utils-linux-x64-musl:
+      optional: true
+    eslint-barrel-file-utils-win32-arm64-msvc:
+      optional: true
+    eslint-barrel-file-utils-win32-ia32-msvc:
+      optional: true
+    eslint-barrel-file-utils-win32-x64-msvc:
+      optional: true
+  checksum: 10c0/e7491b1d87f6975635e1a4e05c70ff0cbec0fe749bd03e8a48f679fd6523871e15b05b2a40445dda7ec2904eaed45185bd4d4261de9e35eca0cf5d2e17473083
+  languageName: node
+  linkType: hard
+
 "eslint-compat-utils@npm:^0.5.1":
   version: 0.5.1
   resolution: "eslint-compat-utils@npm:0.5.1"
@@ -6390,6 +6529,7 @@ __metadata:
     comment-parser: "npm:^1.4.1"
     debug: "npm:^4.4.0"
     eslint: "npm:^9.25.1"
+    eslint-barrel-file-utils: "npm:^0.0.11"
     eslint-config-prettier: "npm:^10.1.2"
     eslint-doc-generator: "npm:^2.1.2"
     eslint-import-resolver-node: "npm:^0.3.9"
