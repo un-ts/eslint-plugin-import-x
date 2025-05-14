@@ -16,31 +16,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@1stg/config@npm:^1.0.4, @1stg/config@npm:^1.0.5":
+"@1stg/config@npm:^1.0.5":
   version: 1.0.5
   resolution: "@1stg/config@npm:1.0.5"
   checksum: 10c0/f7e4d638f45ea458fc80763ad26402f4606fd2cf37edb282777ab804b1c8abea866185e8287328754675261dc0bcd741d55a88338844bbf79ddc476dbe9b9503
   languageName: node
   linkType: hard
 
-"@1stg/lint-staged@npm:^4.0.9":
-  version: 4.0.9
-  resolution: "@1stg/lint-staged@npm:4.0.9"
+"@1stg/nano-staged@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@1stg/nano-staged@npm:0.1.1"
   dependencies:
-    "@1stg/config": "npm:^1.0.4"
-    "@1stg/prettier-config": "npm:^5.0.1"
-    "@1stg/tsconfig": "npm:^3.0.2"
+    "@1stg/config": "npm:^1.0.5"
+    "@1stg/prettier-config": "npm:^5.1.1"
+    "@1stg/tsconfig": "npm:^3.0.3"
     "@pkgr/core": "npm:^0.2.2"
     prettier: "npm:^3.5.3"
   peerDependencies:
-    lint-staged: ">=12.1.0"
-  checksum: 10c0/bc576e1b9e8f0fe260f9b3d00b631baa3e74088c41f03936be7028e549fcc57f0210fc8bdd69e574935653e4315fbc91e3e579776ccd0af95448b7ab15780b87
+    nano-staged: ">=0.8.0"
+  checksum: 10c0/3e0652c36c06e5c14836bf2329eb0da9d8cf6e9bb1a59ef4bc27fb85672eea685936d1b9d997ec56c3673e5458ee8cfaf34a79be701798c29b48b542bb0b0dc0
   languageName: node
   linkType: hard
 
-"@1stg/prettier-config@npm:^5.0.1, @1stg/prettier-config@npm:^5.1.4":
-  version: 5.1.4
-  resolution: "@1stg/prettier-config@npm:5.1.4"
+"@1stg/prettier-config@npm:^5.1.1, @1stg/prettier-config@npm:^5.1.4":
+  version: 5.2.0
+  resolution: "@1stg/prettier-config@npm:5.2.0"
   dependencies:
     "@1stg/config": "npm:^1.0.5"
     "@prettier/plugin-pug": "npm:^3.3.0"
@@ -57,7 +57,7 @@ __metadata:
     prettier-plugin-toml: "npm:^2.0.4"
   peerDependencies:
     prettier: ^3.0.0
-  checksum: 10c0/7950dca3881be0604eff57191b34a0f7efc0377b756225ba7ec969c81ef5cf5db2183d574679c4a1d9224e5597e110d5e78f476aab768e15d434b1c5509bbc3b
+  checksum: 10c0/a9879a9a0a84aac41d6896009f109ca03f2544e836bc388df3c581a45c4b47e2369b2104eaf35f3bff9d22fef6f2c6bb0f9941f1381b89f5ad0388e805cec028
   languageName: node
   linkType: hard
 
@@ -94,7 +94,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@1stg/tsconfig@npm:^3.0.2, @1stg/tsconfig@npm:^3.0.3":
+"@1stg/tsconfig@npm:^3.0.3":
   version: 3.0.3
   resolution: "@1stg/tsconfig@npm:3.0.3"
   peerDependencies:
@@ -6346,7 +6346,7 @@ __metadata:
   resolution: "eslint-plugin-import-x@workspace:."
   dependencies:
     "@1stg/commitlint-config": "npm:^5.0.6"
-    "@1stg/lint-staged": "npm:^4.0.9"
+    "@1stg/nano-staged": "npm:^0.1.1"
     "@1stg/prettier-config": "npm:^5.1.4"
     "@1stg/remark-preset": "npm:^3.1.1"
     "@1stg/simple-git-hooks": "npm:^2.0.1"
