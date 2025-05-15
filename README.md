@@ -14,7 +14,7 @@
 
 This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, and prevent issues with misspelling of file paths and import names. All the goodness that the ES2015+ static module syntax intends to provide, marked up in your editor.
 
-It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to replace [`tsconfig-paths`] and heavy [`typescript`] under the hood, making it faster, through less heavy dependency on Typescript, and cleaner dependencies altogether.
+It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to replace [`tsconfig-paths`] and heavy [`typescript`] under the hood, making it faster, through less [heavy dependency on Typescript](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/src/exportMap/typescript.js#L16), and cleaner dependencies altogether.
 
 [`eslint-plugin-i` is now `eslint-plugin-import-x`](https://github.com/un-ts/eslint-plugin-import-x/issues/24#issuecomment-1991605123)
 
