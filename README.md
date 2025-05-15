@@ -56,22 +56,21 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
 
 ## Why
 
-Because a lot of issues can not be fixed easily without API changes, see
+A lot of issues can not be fixed easily without API changes. E.g. see:
 
 - <https://github.com/import-js/eslint-plugin-import/issues/1479>
 - <https://github.com/import-js/eslint-plugin-import/issues/2108>
 - <https://github.com/import-js/eslint-plugin-import/issues/2111>
 
-But [`eslint-plugin-import`] refused to accept BREAKING CHANGES for these issues, so we have to fork it.
+[`eslint-plugin-import`] refused to accept BREAKING CHANGES for these issues, so we had to fork it.
 
-And then [`eslint-plugin-import`] claimed to be allowed to update with BREAKING CHANGES at <https://github.com/un-ts/eslint-plugin-import-x/issues/170>,
-but it still doesn't happen or even seems to happen: <https://github.com/import-js/eslint-plugin-import/pull/3091>.
+[`eslint-plugin-import`] now claims in <https://github.com/un-ts/eslint-plugin-import-x/issues/170> that it will accept BREAKING CHANGES. However, still nothing is happening: <https://github.com/import-js/eslint-plugin-import/pull/3091>.
 
 We haven't resolved all the issues yet, but we are working on it which could happen in the next major version (v5): <https://github.com/un-ts/eslint-plugin-import-x/issues/235>.
 
 ## Differences
 
-So what's the differences from `eslint-plugin-import` exactly?
+So what are the differences from `eslint-plugin-import` exactly?
 
 - we target [Node `^18.18.0 || ^20.9.0 || >=21.1.0`](https://github.com/un-ts/eslint-plugin-import-x/blob/8b2d6d3b612eb57fb68c3fddec25b02fc622df7c/package.json#L12) + [ESLint `^8.57.0 || ^9.0.0`](https://github.com/un-ts/eslint-plugin-import-x/blob/8b2d6d3b612eb57fb68c3fddec25b02fc622df7c/package.json#L71), while `eslint-plugin-import` targets [Node `>=4`](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/package.json#L6) and [ESLint `^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8 || ^9`](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/package.json#L115C16-L115C64)
 - we don't depend on old and outdated dependencies, so we have short dependency depths, see also <https://github.com/un-ts/eslint-plugin-import-x/pull/11>
