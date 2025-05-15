@@ -56,7 +56,7 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
 
 ## Why
 
-A lot of issues can not be fixed easily without API changes. E.g. see:
+Many issues cannot be fixed easily without API changes. For example, see:
 
 - <https://github.com/import-js/eslint-plugin-import/issues/1479>
 - <https://github.com/import-js/eslint-plugin-import/issues/2108>
@@ -66,7 +66,7 @@ A lot of issues can not be fixed easily without API changes. E.g. see:
 
 [`eslint-plugin-import`] now claims in <https://github.com/un-ts/eslint-plugin-import-x/issues/170> that it will accept BREAKING CHANGES. However, still nothing is happening: <https://github.com/import-js/eslint-plugin-import/pull/3091>.
 
-We haven't resolved all the issues yet, but we are working on it which could happen in the next major version (v5): <https://github.com/un-ts/eslint-plugin-import-x/issues/235>.
+We haven't resolved all the issues yet, but we are working on them, which could happen in the next major version (v5): <https://github.com/un-ts/eslint-plugin-import-x/issues/235>.
 
 ## Differences
 
@@ -698,6 +698,7 @@ Detailed changes for each release are documented in [CHANGELOG.md](./CHANGELOG.m
 [`eslint_d`]: https://www.npmjs.com/package/eslint_d
 [`eslint-loader`]: https://www.npmjs.com/package/eslint-loader
 [`get-tsconfig`]: https://github.com/privatenumber/get-tsconfig
+[`napi-rs`]: https://github.com/napi-rs/napi-rs
 [`tsconfig-paths`]: https://github.com/dividab/tsconfig-paths
 [`typescript`]: https://github.com/microsoft/TypeScript
 [`unrs-resolver`]: https://github.com/unrs/unrs-resolver
@@ -706,6 +707,5 @@ Detailed changes for each release are documented in [CHANGELOG.md](./CHANGELOG.m
 [1stG.me]: https://www.1stG.me
 [JounQin]: https://github.com/JounQin
 [MIT]: http://opensource.org/licenses/MIT
-[napi-rs]: https://github.com/napi-rs/napi-rs
 [node]: https://www.npmjs.com/package/eslint-import-resolver-node
 [webpack]: https://www.npmjs.com/package/eslint-import-resolver-webpack
