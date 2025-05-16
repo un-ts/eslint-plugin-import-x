@@ -14,12 +14,16 @@
 
 This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, and prevent issues with misspelling of file paths and import names. All the goodness that the ES2015+ static module syntax intends to provide, marked up in your editor.
 
+It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to replace [`tsconfig-paths`] and heavy [`typescript`] under the hood, making it faster, through less [heavy dependency on Typescript](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/src/exportMap/typescript.js#L16), and cleaner dependencies altogether.
+
 [`eslint-plugin-i` is now `eslint-plugin-import-x`](https://github.com/un-ts/eslint-plugin-import-x/issues/24#issuecomment-1991605123)
 
 **IF YOU ARE USING THIS WITH SUBLIME**: see the [bottom section](#sublimelinter-eslint) for important info.
 
 ## TOC <!-- omit in toc -->
 
+- [Why](#why)
+- [Differences](#differences)
 - [Installation](#installation)
 - [Configuration (legacy: `.eslintrc*`)](#configuration-legacy-eslintrc)
   - [TypeScript](#typescript)
@@ -49,6 +53,35 @@ This plugin intends to support linting of ES2015+ (ES6+) import/export syntax, a
   - [Backers](#backers)
 - [Changelog](#changelog)
 - [License](#license)
+
+## Why
+
+Many issues cannot be fixed easily without API changes. For example, see:
+
+- <https://github.com/import-js/eslint-plugin-import/issues/1479>
+- <https://github.com/import-js/eslint-plugin-import/issues/2108>
+- <https://github.com/import-js/eslint-plugin-import/issues/2111>
+
+[`eslint-plugin-import`] refused to accept BREAKING CHANGES for these issues, so we had to fork it.
+
+[`eslint-plugin-import`] now claims in <https://github.com/un-ts/eslint-plugin-import-x/issues/170> that it will accept BREAKING CHANGES. However, still nothing is happening: <https://github.com/import-js/eslint-plugin-import/pull/3091>.
+
+[`eslint-plugin-import`] refuses to support the `exports` feature, and the maintainer even locked the feature request issue <https://github.com/import-js/eslint-plugin-import/issues/1810> to prevent future discussion. In the meantime, `eslint-plugin-import-x` now provides first-party support for the `exports` feature <https://github.com/un-ts/eslint-plugin-import-x/pull/209>, which will become the default in the next major version (v5).
+
+We haven't resolved all the issues yet, but we are working on them, which could happen in the next major version (v5): <https://github.com/un-ts/eslint-plugin-import-x/issues/235>.
+
+## Differences
+
+So what are the differences from `eslint-plugin-import` exactly?
+
+- we target [Node `^18.18.0 || ^20.9.0 || >=21.1.0`](https://github.com/un-ts/eslint-plugin-import-x/blob/8b2d6d3b612eb57fb68c3fddec25b02fc622df7c/package.json#L12) + [ESLint `^8.57.0 || ^9.0.0`](https://github.com/un-ts/eslint-plugin-import-x/blob/8b2d6d3b612eb57fb68c3fddec25b02fc622df7c/package.json#L71), while `eslint-plugin-import` targets [Node `>=4`](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/package.json#L6) and [ESLint `^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8 || ^9`](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/package.json#L115C16-L115C64)
+- we don't depend on old and outdated dependencies, so [we have 49 dependencies](https://npmgraph.js.org/?q=eslint-plugin-import-x) compared to [117 dependencies for `eslint-plugin-import`](https://npmgraph.js.org/?q=eslint-plugin-import)
+- `eslint-plugin-import` uses `tsconfig-paths` + `typescript` itself to load `tsconfig`s while we use the single `get-tsconfig` instead, which is much faster and cleaner
+- `eslint-plugin-import` uses [`resolve`] which doesn't support the `exports` field in `package.json` while we build our own rust-based resolver [`unrs-resolver`] instead, which is feature-rich and way more performant.
+- Our [v3 resolver](./resolvers/README.md#v3) interface shares a single `resolver` instance by default which is used all across resolving chains so it would benefit from caching and memoization out-of-the-box
+- ...
+
+The list could be longer in the future, but we don't want to make it too long here. Hope you enjoy and let's get started.
 
 ## Installation
 
@@ -662,9 +695,15 @@ Detailed changes for each release are documented in [CHANGELOG.md](./CHANGELOG.m
 [MIT][] © [JounQin][]@[1stG.me][]
 
 [`@typescript-eslint/parser`]: https://github.com/typescript-eslint/typescript-eslint/tree/HEAD/packages/parser
+[`eslint-plugin-import`]: https://github.com/import-js/eslint-plugin-import
 [`eslint-import-resolver-typescript`]: https://github.com/import-js/eslint-import-resolver-typescript
 [`eslint_d`]: https://www.npmjs.com/package/eslint_d
 [`eslint-loader`]: https://www.npmjs.com/package/eslint-loader
+[`get-tsconfig`]: https://github.com/privatenumber/get-tsconfig
+[`napi-rs`]: https://github.com/napi-rs/napi-rs
+[`tsconfig-paths`]: https://github.com/dividab/tsconfig-paths
+[`typescript`]: https://github.com/microsoft/TypeScript
+[`unrs-resolver`]: https://github.com/unrs/unrs-resolver
 [`resolve`]: https://www.npmjs.com/package/resolve
 [`externals`]: https://webpack.github.io/docs/library-and-externals.html
 [1stG.me]: https://www.1stG.me

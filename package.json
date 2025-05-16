@@ -85,7 +85,7 @@
   },
   "devDependencies": {
     "@1stg/commitlint-config": "^5.0.6",
-    "@1stg/lint-staged": "^4.0.9",
+    "@1stg/nano-staged": "^0.1.1",
     "@1stg/prettier-config": "^5.1.4",
     "@1stg/remark-preset": "^3.1.1",
     "@1stg/simple-git-hooks": "^2.0.1",
