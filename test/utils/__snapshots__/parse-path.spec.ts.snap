@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parse-path should parse and stringify path expectedly 1`] = `
+{
+  "hash": "",
+  "pathname": "foo",
+  "query": "",
+}
+`;
+
+exports[`parse-path should parse and stringify path expectedly 2`] = `
+{
+  "hash": "",
+  "pathname": "foo",
+  "query": "?query",
+}
+`;
+
+exports[`parse-path should parse and stringify path expectedly 3`] = `
+{
+  "hash": "#hash",
+  "pathname": "foo",
+  "query": "",
+}
+`;
+
+exports[`parse-path should parse and stringify path expectedly 4`] = `
+{
+  "hash": "#hash",
+  "pathname": "foo",
+  "query": "?query",
+}
+`;
+
+exports[`parse-path should parse and stringify path expectedly 5`] = `
+{
+  "hash": "#hash?query",
+  "pathname": "foo",
+  "query": "",
+}
+`;

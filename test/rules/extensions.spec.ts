@@ -160,6 +160,16 @@ ruleTester.run('extensions', rule, {
       ].join('\n'),
       options: ['always'],
     }),
+
+    tValid({
+      code: "import foo from './foo';",
+      options: [{ fix: true }],
+    }),
+
+    tValid({
+      code: "import foo from './foo.js';",
+      options: [{ fix: true, pattern: { js: 'always' } }],
+    }),
   ],
 
   invalid: [
@@ -183,6 +193,17 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './file.with.dot' },
           line: 1,
           column: 17,
+          suggestions: [
+            {
+              messageId: 'addMissing',
+              data: {
+                extension: 'js',
+                importPath: './file.with.dot',
+                fixedImportPath: './file.with.dot.js',
+              },
+              output: 'import dot from "./file.with.dot.js"',
+            },
+          ],
         },
       ],
     }),
@@ -205,6 +226,20 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'json', importPath: './package' },
           line: 2,
           column: 27,
+          suggestions: [
+            {
+              messageId: 'addMissing',
+              data: {
+                extension: 'json',
+                importPath: './package',
+                fixedImportPath: './package.json',
+              },
+              output: [
+                'import a from "a/index.js"',
+                'import packageConfig from "./package.json"',
+              ].join('\n'),
+            },
+          ],
         },
       ],
     }),
@@ -308,12 +343,40 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: '.' },
           line: 1,
           column: 19,
+          suggestions: [
+            {
+              messageId: 'addMissing',
+              data: {
+                extension: 'js',
+                importPath: '.',
+                fixedImportPath: './index.js',
+              },
+              output: [
+                'import barjs from "./index.js"',
+                'import barjs2 from ".."',
+              ].join('\n'),
+            },
+          ],
         },
         {
           messageId: 'missingKnown',
           data: { extension: 'js', importPath: '..' },
           line: 2,
           column: 20,
+          suggestions: [
+            {
+              messageId: 'addMissing',
+              data: {
+                extension: 'js',
+                importPath: '..',
+                fixedImportPath: '../index.js',
+              },
+              output: [
+                'import barjs from "."',
+                'import barjs2 from "../index.js"',
+              ].join('\n'),
+            },
+          ],
         },
       ],
     }),
@@ -809,6 +872,83 @@ describe('TypeScript', () => {
         code: 'export type { MyType } from "./typescript-declare.ts";',
         options: ['always', { checkTypeImports: true }],
       }),
+
+      // pathGroupOverrides: no patterns match good bespoke specifiers
+      tValid({
+        code: `
+              import { ErrorMessage as UpstreamErrorMessage } from '@black-flag/core/util';
+
+              import { $instances } from 'rootverse+debug:src.ts';
+              import { $exists } from 'rootverse+bfe:src/symbols.ts';
+
+              import type { Entries } from 'type-fest';
+            `,
+        options: [
+          'always',
+          {
+            ignorePackages: true,
+            checkTypeImports: true,
+            pathGroupOverrides: [
+              {
+                pattern: 'multiverse{*,*/**}',
+                action: 'enforce',
+              },
+            ],
+          },
+        ],
+      }),
+      // pathGroupOverrides: an enforce pattern matches good bespoke specifiers
+      tValid({
+        code: `
+              import { ErrorMessage as UpstreamErrorMessage } from '@black-flag/core/util';
+
+              import { $instances } from 'rootverse+debug:src.ts';
+              import { $exists } from 'rootverse+bfe:src/symbols.ts';
+
+              import type { Entries } from 'type-fest';
+            `,
+        options: [
+          'always',
+          {
+            ignorePackages: true,
+            checkTypeImports: true,
+            pathGroupOverrides: [
+              {
+                pattern: 'rootverse{*,*/**}',
+                action: 'enforce',
+              },
+            ],
+          },
+        ],
+      }),
+      // pathGroupOverrides: an ignore pattern matches bad bespoke specifiers
+      tValid({
+        code: `
+              import { ErrorMessage as UpstreamErrorMessage } from '@black-flag/core/util';
+
+              import { $instances } from 'rootverse+debug:src';
+              import { $exists } from 'rootverse+bfe:src/symbols';
+
+              import type { Entries } from 'type-fest';
+            `,
+        options: [
+          'always',
+          {
+            ignorePackages: true,
+            checkTypeImports: true,
+            pathGroupOverrides: [
+              {
+                pattern: 'multiverse{*,*/**}',
+                action: 'enforce',
+              },
+              {
+                pattern: 'rootverse{*,*/**}',
+                action: 'ignore',
+              },
+            ],
+          },
+        ],
+      }),
     ],
     invalid: [
       tInvalid({
@@ -830,6 +970,59 @@ describe('TypeScript', () => {
           },
         ],
         options: ['always', { checkTypeImports: true }],
+      }),
+
+      // pathGroupOverrides: an enforce pattern matches bad bespoke specifiers
+      tInvalid({
+        code: `
+              import { ErrorMessage as UpstreamErrorMessage } from '@black-flag/core/util';
+
+              import { $instances } from 'rootverse+debug:src';
+              import { $exists } from 'rootverse+bfe:src/symbols';
+
+              import type { Entries } from 'type-fest';
+            `,
+        options: [
+          'always',
+          {
+            ignorePackages: true,
+            checkTypeImports: true,
+            pathGroupOverrides: [
+              {
+                pattern: 'rootverse{*,*/**}',
+                action: 'enforce',
+              },
+              {
+                pattern: 'universe{*,*/**}',
+                action: 'ignore',
+              },
+            ],
+          },
+        ],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: 'rootverse+debug:src' },
+            line: 4,
+          },
+          {
+            messageId: 'missing',
+            data: { importPath: 'rootverse+bfe:src/symbols' },
+            line: 5,
+          },
+        ],
+      }),
+
+      tInvalid({
+        code: 'import foo from "./foo.js";',
+        options: ['always', { pattern: { js: 'never' }, fix: true }],
+        errors: [
+          {
+            messageId: 'unexpected',
+            data: { extension: 'js', importPath: './foo.js' },
+          },
+        ],
+        output: 'import foo from "./foo";',
       }),
     ],
   })
