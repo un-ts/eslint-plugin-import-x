@@ -21,6 +21,7 @@ jobs:
           - 18
           - 20
           - 22
+          - 24
         eslint:
           - 8.56
           - 8
@@ -28,7 +29,8 @@ jobs:
 
         include:
           - executeLint: true
-            node: 20
+            node: 22
+            eslint: 9
             os: ubuntu-latest
       fail-fast: false
 
