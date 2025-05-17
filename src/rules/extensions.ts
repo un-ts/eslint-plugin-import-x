@@ -1,5 +1,7 @@
 import path from 'node:path'
 
+import { minimatch } from 'minimatch'
+
 import type { FileExtension, RuleContext } from '../types.js'
 import {
   isBuiltIn,
@@ -9,7 +11,6 @@ import {
   moduleVisitor,
   resolve,
 } from '../utils/index.js'
-import { minimatch } from 'minimatch'
 
 const modifierValues = ['always', 'ignorePackages', 'never'] as const
 
