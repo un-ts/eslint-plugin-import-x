@@ -4,7 +4,7 @@ export interface ParsedPath {
   hash: string
 }
 
-export const parsePath = (path: string) => {
+export const parsePath = (path: string): ParsedPath => {
   const hashIndex = path.indexOf('#')
   const queryIndex = path.indexOf('?')
   const hasHash = hashIndex !== -1
