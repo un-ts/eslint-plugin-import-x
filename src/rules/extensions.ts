@@ -9,6 +9,7 @@ import {
   moduleVisitor,
   resolve,
 } from '../utils/index.js'
+import { minimatch } from 'minimatch'
 
 const modifierValues = ['always', 'ignorePackages', 'never'] as const
 
@@ -32,6 +33,22 @@ const properties = {
     checkTypeImports: {
       type: 'boolean' as const,
     },
+    pathGroupOverrides: {
+      type: 'array' as const,
+      items: {
+        type: 'object' as const,
+        properties: {
+          pattern: { type: 'string' as const },
+          patternOptions: { type: 'object' as const },
+          action: {
+            type: 'string' as const,
+            enum: ['enforce', 'ignore'],
+          },
+        },
+        additionalProperties: false,
+        required: ['pattern', 'action'],
+      },
+    },
   },
 }
 
@@ -43,11 +60,21 @@ export interface OptionsItemWithPatternProperty {
   ignorePackages?: boolean
   checkTypeImports?: boolean
   pattern: ModifierByFileExtension
+  fix?: boolean
+  pathGroupOverrides?: PathGroupOverride[]
+}
+
+export interface PathGroupOverride {
+  pattern: string
+  patternOptions?: Record<string, any>
+  action: 'enforce' | 'ignore'
 }
 
 export interface OptionsItemWithoutPatternProperty {
   ignorePackages?: boolean
   checkTypeImports?: boolean
+  fix?: boolean
+  pathGroupOverrides?: PathGroupOverride[]
 }
 
 export type Options =
@@ -63,6 +90,8 @@ export interface NormalizedOptions {
   pattern?: Record<string, Modifier>
   ignorePackages?: boolean
   checkTypeImports?: boolean
+  fix?: boolean
+  pathGroupOverrides?: PathGroupOverride[]
 }
 
 export type MessageId = 'missing' | 'missingKnown' | 'unexpected'
@@ -73,6 +102,8 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
     pattern: {},
     ignorePackages: false,
     checkTypeImports: false,
+    fix: false,
+    pathGroupOverrides: [],
   }
 
   for (const obj of context.options) {
@@ -109,6 +140,14 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
     if (typeof obj.checkTypeImports === 'boolean') {
       result.checkTypeImports = obj.checkTypeImports
     }
+
+    if ('fix' in obj) {
+      result.fix = Boolean(obj.fix)
+    }
+
+    if ('pathGroupOverrides' in obj && Array.isArray(obj.pathGroupOverrides)) {
+      result.pathGroupOverrides = obj.pathGroupOverrides
+    }
   }
 
   if (result.defaultConfig === 'ignorePackages') {
@@ -124,14 +163,15 @@ function isExternalRootModule(file: string) {
     return false
   }
   const slashCount = file.split('/').length - 1
+  return slashCount === 0 || (isScoped(file) && slashCount <= 1)
+}
 
-  if (slashCount === 0) {
-    return true
+function computeOverrideAction(overrides: PathGroupOverride[], path: string) {
+  for (const { pattern, patternOptions, action } of overrides) {
+    if (minimatch(path, pattern, patternOptions || { nocomment: true })) {
+      return action
+    }
   }
-  if (isScoped(file) && slashCount <= 1) {
-    return true
-  }
-  return false
 }
 
 export default createRule<Options, MessageId>({
@@ -143,6 +183,7 @@ export default createRule<Options, MessageId>({
       description:
         'Ensure consistent use of file extension within the import path.',
     },
+    fixable: 'code',
     schema: {
       anyOf: [
         {
@@ -220,9 +261,14 @@ export default createRule<Options, MessageId>({
         }
 
         const importPathWithQueryString = source.value
+        const overrideAction = computeOverrideAction(
+          props.pathGroupOverrides || [],
+          importPathWithQueryString,
+        )
+        if (overrideAction === 'ignore') return
 
         // don't enforce anything on builtins
-        if (isBuiltIn(importPathWithQueryString, context.settings)) {
+        if (!overrideAction && isBuiltIn(importPathWithQueryString, context.settings)) {
           return
         }
 
@@ -230,7 +276,7 @@ export default createRule<Options, MessageId>({
 
         // don't enforce in root external packages as they may have names with `.js`.
         // Like `import Decimal from decimal.js`)
-        if (isExternalRootModule(importPath)) {
+        if (!overrideAction && isExternalRootModule(importPath)) {
           return
         }
 
@@ -261,7 +307,7 @@ export default createRule<Options, MessageId>({
           }
           const extensionRequired = isUseOfExtensionRequired(
             extension,
-            isPackage,
+            !overrideAction && isPackage,
           )
           const extensionForbidden = isUseOfExtensionForbidden(extension)
           if (extensionRequired && !extensionForbidden) {
@@ -272,6 +318,16 @@ export default createRule<Options, MessageId>({
                 extension,
                 importPath: importPathWithQueryString,
               },
+              ...(props.fix && extension
+                ? {
+                  fix(fixer) {
+                    return fixer.replaceText(
+                      source,
+                      JSON.stringify(`${importPathWithQueryString}.${extension}`),
+                    )
+                  },
+                }
+                : {}),
             })
           }
         } else if (
@@ -286,10 +342,18 @@ export default createRule<Options, MessageId>({
               extension,
               importPath: importPathWithQueryString,
             },
+            ...(props.fix
+              ? {
+                fix(fixer) {
+                  return fixer.replaceText(
+                    source,
+                    JSON.stringify(importPath.slice(0, -(extension.length + 1))),
+                  )
+                },
+              }
+              : {}),
           })
         }
-      },
-      { commonjs: true },
-    )
+      }, { commonjs: true })
   },
 })
