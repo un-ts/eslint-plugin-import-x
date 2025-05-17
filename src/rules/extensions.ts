@@ -268,7 +268,10 @@ export default createRule<Options, MessageId>({
         if (overrideAction === 'ignore') return
 
         // don't enforce anything on builtins
-        if (!overrideAction && isBuiltIn(importPathWithQueryString, context.settings)) {
+        if (
+          !overrideAction &&
+          isBuiltIn(importPathWithQueryString, context.settings)
+        ) {
           return
         }
 
@@ -320,13 +323,15 @@ export default createRule<Options, MessageId>({
               },
               ...(props.fix && extension
                 ? {
-                  fix(fixer) {
-                    return fixer.replaceText(
-                      source,
-                      JSON.stringify(`${importPathWithQueryString}.${extension}`),
-                    )
-                  },
-                }
+                    fix(fixer) {
+                      return fixer.replaceText(
+                        source,
+                        JSON.stringify(
+                          `${importPathWithQueryString}.${extension}`,
+                        ),
+                      )
+                    },
+                  }
                 : {}),
             })
           }
@@ -344,16 +349,20 @@ export default createRule<Options, MessageId>({
             },
             ...(props.fix
               ? {
-                fix(fixer) {
-                  return fixer.replaceText(
-                    source,
-                    JSON.stringify(importPath.slice(0, -(extension.length + 1))),
-                  )
-                },
-              }
+                  fix(fixer) {
+                    return fixer.replaceText(
+                      source,
+                      JSON.stringify(
+                        importPath.slice(0, -(extension.length + 1)),
+                      ),
+                    )
+                  },
+                }
               : {}),
           })
         }
-      }, { commonjs: true })
+      },
+      { commonjs: true },
+    )
   },
 })
