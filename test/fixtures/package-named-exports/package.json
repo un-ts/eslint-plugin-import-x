@@ -1,0 +1,5 @@
+{
+  "name": "package-named-exports",
+  "description": "Standard, named package with exports",
+  "exports": "./index.js"
+}
