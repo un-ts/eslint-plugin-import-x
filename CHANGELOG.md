@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.12.0
+
+### Minor Changes
+
+- [#327](https://github.com/un-ts/eslint-plugin-import-x/pull/327) [`90c1cd0`](https://github.com/un-ts/eslint-plugin-import-x/commit/90c1cd01653d3387fb06af515b5881d3c070439a) Thanks [@JounQin](https://github.com/JounQin)! - feat(extensions): support `pathGroupOverrides` and `fix` options
+
 ## 4.11.1
 
 ### Patch Changes
