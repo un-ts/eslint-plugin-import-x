@@ -12,7 +12,7 @@ describe('parse-path', () => {
 
     for (const input of cases) {
       const output = parsePath(input)
-      expect(output).toMatchSnapshot()
+      expect(output).toMatchSnapshot(input)
       expect(stringifyPath(output)).toBe(input)
     }
   })

@@ -5,7 +5,7 @@ import type { RuleFixer } from '@typescript-eslint/utils/ts-eslint'
 import { minimatch } from 'minimatch'
 import type { MinimatchOptions } from 'minimatch'
 
-import type { FileExtension, RuleContext } from '../types.js'
+import type { RuleContext } from '../types.js'
 import {
   isBuiltIn,
   isExternalModule,
@@ -105,7 +105,12 @@ export interface NormalizedOptions {
   fix?: boolean
 }
 
-export type MessageId = 'missing' | 'missingKnown' | 'unexpected' | 'addMissing'
+export type MessageId =
+  | 'missing'
+  | 'missingKnown'
+  | 'unexpected'
+  | 'addMissing'
+  | 'removeUnexpected'
 
 function buildProperties(context: RuleContext<MessageId, Options>) {
   const result: Required<NormalizedOptions> = {
@@ -188,6 +193,20 @@ function computeOverrideAction(
   }
 }
 
+/**
+ * Replaces the import path in a source string with a new import path.
+ *
+ * @param source - The original source string containing the import statement.
+ * @param importPath - The new import path to replace the existing one.
+ * @returns The updated source string with the replaced import path.
+ */
+function replaceImportPath(source: string, importPath: string) {
+  return source.replace(
+    /^(['"])(.+)\1$/,
+    (_, quote: string) => `${quote}${importPath}${quote}`,
+  )
+}
+
 export default createRule<Options, MessageId>({
   name: 'extensions',
   meta: {
@@ -236,27 +255,26 @@ export default createRule<Options, MessageId>({
         'Unexpected use of file extension "{{extension}}" for "{{importPath}}"',
       addMissing:
         'Add "{{extension}}" file extension from "{{importPath}}" into "{{fixedImportPath}}"',
+      removeUnexpected:
+        'Remove unexpected "{{extension}}" file extension from "{{importPath}}" into "{{fixedImportPath}}"',
     },
   },
   defaultOptions: [],
   create(context) {
     const props = buildProperties(context)
 
-    function getModifier(extension: FileExtension) {
+    function getModifier(extension: string) {
       return props.pattern[extension] || props.defaultConfig
     }
 
-    function isUseOfExtensionRequired(
-      extension: FileExtension,
-      isPackage: boolean,
-    ) {
+    function isUseOfExtensionRequired(extension: string, isPackage: boolean) {
       return (
         getModifier(extension) === 'always' &&
         (!props.ignorePackages || !isPackage)
       )
     }
 
-    function isUseOfExtensionForbidden(extension: FileExtension) {
+    function isUseOfExtensionForbidden(extension: string) {
       return getModifier(extension) === 'never'
     }
 
@@ -297,7 +315,11 @@ export default createRule<Options, MessageId>({
           return
         }
 
-        const importPath = importPathWithQueryString.replace(/\?(.*)$/, '')
+        const {
+          pathname: importPath,
+          query,
+          hash,
+        } = parsePath(importPathWithQueryString)
 
         // don't enforce in root external packages as they may have names with `.js`.
         // Like `import Decimal from decimal.js`)
@@ -309,9 +331,7 @@ export default createRule<Options, MessageId>({
 
         // get extension from resolved path, if possible.
         // for unresolved, use source value.
-        const extension = path
-          .extname(resolvedPath || importPath)
-          .slice(1) as FileExtension
+        const extension = path.extname(resolvedPath || importPath).slice(1)
 
         // determine if this is a module
         const isPackage =
@@ -336,16 +356,15 @@ export default createRule<Options, MessageId>({
           )
           const extensionForbidden = isUseOfExtensionForbidden(extension)
           if (extensionRequired && !extensionForbidden) {
-            const { pathname, query, hash } = parsePath(
-              importPathWithQueryString,
-            )
             const fixedImportPath = stringifyPath({
               pathname: `${
-                /([\\/]|[\\/]?\.?\.)$/.test(pathname)
+                /([\\/]|[\\/]?\.?\.)$/.test(importPath)
                   ? `${
-                      pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
+                      importPath.endsWith('/')
+                        ? importPath.slice(0, -1)
+                        : importPath
                     }/index.${extension}`
-                  : `${pathname}.${extension}`
+                  : `${importPath}.${extension}`
               }`,
               query,
               hash,
@@ -354,7 +373,7 @@ export default createRule<Options, MessageId>({
               fix(fixer: RuleFixer) {
                 return fixer.replaceText(
                   source,
-                  JSON.stringify(fixedImportPath),
+                  replaceImportPath(source.raw, fixedImportPath),
                 )
               },
             }
@@ -376,7 +395,7 @@ export default createRule<Options, MessageId>({
                           data: {
                             extension,
                             importPath: importPathWithQueryString,
-                            fixedImportPath: fixedImportPath,
+                            fixedImportPath,
                           },
                         },
                       ],
@@ -388,6 +407,30 @@ export default createRule<Options, MessageId>({
           isUseOfExtensionForbidden(extension) &&
           isResolvableWithoutExtension(importPath)
         ) {
+          const fixedPathname = importPath.slice(0, -(extension.length + 1))
+          const isIndex = fixedPathname.endsWith('/index')
+          const fixedImportPath = stringifyPath({
+            pathname: isIndex ? fixedPathname.slice(0, -6) : fixedPathname,
+            query,
+            hash,
+          })
+          const fixOrSuggest = {
+            fix(fixer: RuleFixer) {
+              return fixer.replaceText(
+                source,
+                replaceImportPath(source.raw, fixedImportPath),
+              )
+            },
+          }
+          const commonSuggestion = {
+            ...fixOrSuggest,
+            messageId: 'removeUnexpected' as const,
+            data: {
+              extension,
+              importPath: importPathWithQueryString,
+              fixedImportPath,
+            },
+          }
           context.report({
             node: source,
             messageId: 'unexpected',
@@ -395,14 +438,37 @@ export default createRule<Options, MessageId>({
               extension,
               importPath: importPathWithQueryString,
             },
-            ...(props.fix && {
-              fix(fixer) {
-                return fixer.replaceText(
-                  source,
-                  JSON.stringify(importPath.slice(0, -(extension.length + 1))),
-                )
-              },
-            }),
+            ...(props.fix
+              ? fixOrSuggest
+              : {
+                  suggest: [
+                    commonSuggestion,
+                    isIndex && {
+                      ...commonSuggestion,
+                      fix(fixer: RuleFixer) {
+                        return fixer.replaceText(
+                          source,
+                          replaceImportPath(
+                            source.raw,
+                            stringifyPath({
+                              pathname: fixedPathname,
+                              query,
+                              hash,
+                            }),
+                          ),
+                        )
+                      },
+                      data: {
+                        ...commonSuggestion.data,
+                        fixedImportPath: stringifyPath({
+                          pathname: fixedPathname,
+                          query,
+                          hash,
+                        }),
+                      },
+                    },
+                  ].filter(Boolean),
+                }),
           })
         }
       },

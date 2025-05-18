@@ -181,6 +181,26 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: 'a/index.js' },
           line: 1,
           column: 15,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: 'a/index.js',
+                fixedImportPath: 'a',
+              },
+              output: 'import a from "a"',
+            },
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: 'a/index.js',
+                fixedImportPath: 'a/index',
+              },
+              output: 'import a from "a/index"',
+            },
+          ],
         },
       ],
     }),
@@ -220,6 +240,32 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: 'a/index.js' },
           line: 1,
           column: 15,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: 'a/index.js',
+                fixedImportPath: 'a',
+              },
+              output: [
+                'import a from "a"',
+                'import packageConfig from "./package"',
+              ].join('\n'),
+            },
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: 'a/index.js',
+                fixedImportPath: 'a/index',
+              },
+              output: [
+                'import a from "a/index"',
+                'import packageConfig from "./package"',
+              ].join('\n'),
+            },
+          ],
         },
         {
           messageId: 'missingKnown',
@@ -259,6 +305,21 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './bar.js' },
           line: 1,
           column: 17,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './bar.js',
+                fixedImportPath: './bar',
+              },
+              output: [
+                'import lib from "./bar"',
+                'import component from "./bar.jsx"',
+                'import data from "./bar.json"',
+              ].join('\n'),
+            },
+          ],
         },
       ],
     }),
@@ -278,6 +339,21 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './bar.js' },
           line: 1,
           column: 17,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './bar.js',
+                fixedImportPath: './bar',
+              },
+              output: [
+                'import lib from "./bar"',
+                'import component from "./bar.jsx"',
+                'import data from "./bar.json"',
+              ].join('\n'),
+            },
+          ],
         },
       ],
     }),
@@ -297,6 +373,20 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'jsx', importPath: './bar.jsx' },
           line: 1,
           column: 23,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'jsx',
+                importPath: './bar.jsx',
+                fixedImportPath: './bar',
+              },
+              output: [
+                'import component from "./bar"',
+                'import data from "./bar.json"',
+              ].join('\n'),
+            },
+          ],
         },
       ],
     }),
@@ -308,6 +398,17 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'coffee', importPath: './bar.coffee' },
           line: 1,
           column: 8,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'coffee',
+                importPath: './bar.coffee',
+                fixedImportPath: './bar',
+              },
+              output: 'import "./bar"',
+            },
+          ],
         },
       ],
       options: ['never', { js: 'always', jsx: 'always' }],
@@ -330,6 +431,21 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './bar.js' },
           line: 1,
           column: 19,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './bar.js',
+                fixedImportPath: './bar',
+              },
+              output: [
+                'import barjs from "./bar"',
+                'import barjson from "./bar.json"',
+                'import barnone from "./bar"',
+              ].join('\n'),
+            },
+          ],
         },
       ],
     }),
@@ -397,6 +513,21 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './bar.js' },
           line: 1,
           column: 19,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './bar.js',
+                fixedImportPath: './bar',
+              },
+              output: [
+                'import barjs from "./bar"',
+                'import barjson from "./bar.json"',
+                'import barnone from "./bar"',
+              ].join('\n'),
+            },
+          ],
         },
       ],
     }),
@@ -411,6 +542,17 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './fake-file.js' },
           line: 1,
           column: 19,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './fake-file.js',
+                fixedImportPath: './fake-file',
+              },
+              output: 'import thing from "./fake-file"',
+            },
+          ],
         },
       ],
     }),
@@ -449,6 +591,17 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: '@name/pkg/test.js' },
           line: 1,
           column: 19,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: '@name/pkg/test.js',
+                fixedImportPath: '@name/pkg/test',
+              },
+              output: 'import thing from "@name/pkg/test"',
+            },
+          ],
         },
       ],
     }),
@@ -518,15 +671,46 @@ ruleTester.run('extensions', rule, {
         {
           messageId: 'unexpected',
           data: { extension: 'js', importPath: './foo.js' },
-
           line: 2,
           column: 25,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './foo.js',
+                fixedImportPath: './foo',
+              },
+              output: `
+        import foo from './foo'
+        import bar from './bar.json'
+        import Component from './Component.jsx'
+        import express from 'express'
+      `,
+            },
+          ],
         },
         {
           messageId: 'unexpected',
           data: { extension: 'jsx', importPath: './Component.jsx' },
           line: 4,
           column: 31,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'jsx',
+                importPath: './Component.jsx',
+                fixedImportPath: './Component',
+              },
+              output: `
+        import foo from './foo.js'
+        import bar from './bar.json'
+        import Component from './Component'
+        import express from 'express'
+      `,
+            },
+          ],
         },
       ],
       options: ['never', { ignorePackages: true }],
@@ -544,6 +728,21 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'jsx', importPath: './Component.jsx' },
           line: 4,
           column: 31,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'jsx',
+                importPath: './Component.jsx',
+                fixedImportPath: './Component',
+              },
+              output: `
+        import foo from './foo.js'
+        import bar from './bar.json'
+        import Component from './Component'
+      `,
+            },
+          ],
         },
       ],
       options: ['always', { pattern: { jsx: 'never' } }],
@@ -575,6 +774,20 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './foo.js' },
           line: 1,
           column: 21,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './foo.js',
+                fixedImportPath: './foo',
+              },
+              output: [
+                'export { foo } from "./foo"',
+                'let bar; export { bar }',
+              ].join('\n'),
+            },
+          ],
         },
       ],
     }),
@@ -589,6 +802,17 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './foo.js?a=True' },
           line: 1,
           column: 27,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './foo.js?a=True',
+                fixedImportPath: './foo?a=True',
+              },
+              output: 'import withExtension from "./foo?a=True"',
+            },
+          ],
         },
       ],
     }),
@@ -629,6 +853,20 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './foo.js' },
           line: 1,
           column: 25,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './foo.js',
+                fixedImportPath: './foo',
+              },
+              output: [
+                'const { foo } = require("./foo")',
+                'export { foo }',
+              ].join('\n'),
+            },
+          ],
         },
       ],
     }),
@@ -674,6 +912,17 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './foo.js' },
           line: 1,
           column: 21,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './foo.js',
+                fixedImportPath: './foo',
+              },
+              output: 'export { foo } from "./foo"',
+            },
+          ],
         },
       ],
     }),
@@ -698,9 +947,19 @@ ruleTester.run('extensions', rule, {
         {
           messageId: 'unexpected',
           data: { extension: 'js', importPath: './foo.js' },
-
           line: 1,
           column: 15,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './foo.js',
+                fixedImportPath: './foo',
+              },
+              output: 'export * from "./foo"',
+            },
+          ],
         },
       ],
     }),
@@ -711,8 +970,18 @@ ruleTester.run('extensions', rule, {
         {
           messageId: 'unexpected',
           data: { extension: 'js', importPath: '@/ImNotAScopedModule.js' },
-
           line: 1,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: '@/ImNotAScopedModule.js',
+                fixedImportPath: '@/ImNotAScopedModule',
+              },
+              output: 'import foo from "@/ImNotAScopedModule"',
+            },
+          ],
         },
       ],
     }),
@@ -739,6 +1008,36 @@ ruleTester.run('extensions', rule, {
             importPath: '@test-scope/some-module/index.js',
           },
           line: 3,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: '@test-scope/some-module/index.js',
+                fixedImportPath: '@test-scope/some-module',
+              },
+              output: `
+        import _ from 'lodash';
+        import m from '@test-scope/some-module';
+
+        import bar from './bar';
+      `,
+            },
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: '@test-scope/some-module/index.js',
+                fixedImportPath: '@test-scope/some-module/index',
+              },
+              output: `
+        import _ from 'lodash';
+        import m from '@test-scope/some-module/index';
+
+        import bar from './bar';
+      `,
+            },
+          ],
         },
       ],
     }),
@@ -1023,6 +1322,83 @@ describe('TypeScript', () => {
           },
         ],
         output: 'import foo from "./foo";',
+      }),
+
+      tInvalid({
+        code: 'import foo from "./index.js?query#hash";',
+        options: ['always', { pattern: { js: 'never' } }],
+        errors: [
+          {
+            messageId: 'unexpected',
+            data: { extension: 'js', importPath: './index.js?query#hash' },
+            suggestions: [
+              {
+                messageId: 'removeUnexpected',
+                data: {
+                  extension: 'js',
+                  importPath: './index.js?query#hash',
+                  fixedImportPath: '.?query#hash',
+                },
+                output: 'import foo from ".?query#hash";',
+              },
+              {
+                messageId: 'removeUnexpected',
+                data: {
+                  extension: 'js',
+                  importPath: './index.js?query#hash',
+                  fixedImportPath: './index?query#hash',
+                },
+                output: 'import foo from "./index?query#hash";',
+              },
+            ],
+          },
+        ],
+      }),
+
+      tInvalid({
+        code: 'import foo from "./index.js?query#hash";',
+        options: ['always', { pattern: { js: 'never' }, fix: true }],
+        errors: [
+          {
+            messageId: 'unexpected',
+            data: { extension: 'js', importPath: './index.js?query#hash' },
+          },
+        ],
+        output: 'import foo from ".?query#hash";',
+      }),
+
+      tInvalid({
+        code: 'import foo from "./?query#hash";',
+        options: ['always', { pattern: { js: 'always' } }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: { extension: 'js', importPath: './?query#hash' },
+            suggestions: [
+              {
+                messageId: 'addMissing',
+                data: {
+                  extension: 'js',
+                  importPath: './?query#hash',
+                  fixedImportPath: './index.js?query#hash',
+                },
+                output: 'import foo from "./index.js?query#hash";',
+              },
+            ],
+          },
+        ],
+      }),
+
+      tInvalid({
+        code: 'import foo from "./?query#hash";',
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: { extension: 'js', importPath: './?query#hash' },
+          },
+        ],
+        output: 'import foo from "./index.js?query#hash";',
       }),
     ],
   })
