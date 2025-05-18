@@ -25,11 +25,11 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
 - [Why](#why)
 - [Differences](#differences)
 - [Installation](#installation)
-- [Configuration (legacy: `.eslintrc*`)](#configuration-legacy-eslintrc)
-  - [TypeScript](#typescript)
-- [Configuration (new: `eslint.config.js`)](#configuration-new-eslintconfigjs)
+- [Configuration (new: `eslint.config.*`)](#configuration-new-eslintconfig)
   - [JS example](#js-example)
   - [Typescript example](#typescript-example)
+- [Configuration (legacy: `.eslintrc*`)](#configuration-legacy-eslintrc)
+  - [TypeScript](#typescript)
 - [Rules](#rules)
   - [Helpful warnings](#helpful-warnings)
   - [Module systems](#module-systems)
@@ -90,18 +90,66 @@ The list could be longer in the future, but we don't want to make it too long he
 npm install eslint-plugin-import-x --save-dev
 ```
 
+## Configuration (new: `eslint.config.*`)
+
+From [`v8.21.0`](https://github.com/eslint/eslint/releases/tag/v8.21.0), ESLint announced a new config system.
+In the new system, `.eslintrc*` is no longer used. `eslint.config.*` would be the default config file name.
+
+### JS example
+
+```js
+import js from '@eslint/js'
+import * as importX from 'eslint-plugin-import-x'
+
+export default [js.configs.recommended, importX.flatConfigs.recommended]
+```
+
+### Typescript example
+
+You have to install `eslint-import-resolver-typescript`:
+
+```sh
+npm install eslint-import-resolver-typescript --save-dev
+```
+
+```js
+import js from '@eslint/js'
+import * as importX from 'eslint-plugin-import-x'
+import tsParser from '@typescript-eslint/parser'
+
+export default [
+  js.configs.recommended,
+  importX.flatConfigs.recommended,
+  importX.flatConfigs.typescript,
+  {
+    files: ['**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}'],
+    languageOptions: {
+      parser: tsParser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
+    rules: {
+      'import-x/no-dynamic-require': 'warn',
+      'import-x/no-nodejs-modules': 'warn',
+    },
+  },
+]
+```
+
+> [!NOTE]
+> A complete list of available configuration can be found in [config/flat folders](src/config/flat)
+
 ## Configuration (legacy: `.eslintrc*`)
 
 > [!TIP]
 > If your eslint is `>=8.23.0`, you're 100% ready to use the new config system.
-> See dedicated section below.
+> See dedicated section above.
 
 > [!NOTE]
 > All rules are off by default. However, you may configure them manually
 > in your `.eslintrc.(yml|json|js)`, or extend one of the canned configs:
 
 ```yaml
----
 extends:
   - eslint:recommended
   - plugin:import-x/recommended
@@ -140,59 +188,7 @@ settings:
     # You will also need to install and configure the TypeScript resolver
     # See also https://github.com/import-js/eslint-import-resolver-typescript#configuration
     typescript: true
-    node: true
 ```
-
-## Configuration (new: `eslint.config.js`)
-
-From [`v8.21.0`](https://github.com/eslint/eslint/releases/tag/v8.21.0), ESLint announced a new config system.
-In the new system, `.eslintrc*` is no longer used. `eslint.config.js` would be the default config file name.
-
-### JS example
-
-```js
-import js from '@eslint/js'
-import * as pluginImportX from 'eslint-plugin-import-x'
-
-export default [js.configs.recommended, pluginImportX.flatConfigs.recommended]
-```
-
-### Typescript example
-
-You have to install `eslint-import-resolver-typescript`:
-
-```shell
-npm install eslint-import-resolver-typescript --save-dev
-```
-
-```js
-import js from '@eslint/js'
-import * as pluginImportX from 'eslint-plugin-import-x'
-import tsParser from '@typescript-eslint/parser'
-
-export default [
-  js.configs.recommended,
-  pluginImportX.flatConfigs.recommended,
-  pluginImportX.flatConfigs.typescript,
-  {
-    files: ['**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}'],
-    ignores: ['eslint.config.js'],
-    languageOptions: {
-      parser: tsParser,
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-    },
-    rules: {
-      'no-unused-vars': 'off',
-      'import-x/no-dynamic-require': 'warn',
-      'import-x/no-nodejs-modules': 'warn',
-    },
-  },
-]
-```
-
-> [!NOTE]
-> A complete list of available configuration can be found in [config/flat folders](src/config/flat)
 
 ## Rules
 
