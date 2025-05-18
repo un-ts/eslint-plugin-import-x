@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.12.1
+
+### Patch Changes
+
+- [#329](https://github.com/un-ts/eslint-plugin-import-x/pull/329) [`4b284cb`](https://github.com/un-ts/eslint-plugin-import-x/commit/4b284cb39a8278fa314ff812487f932120ae4815) Thanks [@JounQin](https://github.com/JounQin)! - feat: add suggestions support for `extensions` `unexpected` case
+
 ## 4.12.0
 
 ### Minor Changes
