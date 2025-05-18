@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.12.2
+
+### Patch Changes
+
+- [#332](https://github.com/un-ts/eslint-plugin-import-x/pull/332) [`0b3809b`](https://github.com/un-ts/eslint-plugin-import-x/commit/0b3809ba1fce501ad0d5559d5b5c1618d4fbf857) Thanks [@JounQin](https://github.com/JounQin)! - fix: remove buggy `module-sync` exports field
+
 ## 4.12.1
 
 ### Patch Changes
