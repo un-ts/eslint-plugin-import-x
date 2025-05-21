@@ -1,7 +1,8 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { TsConfigJsonResolved } from 'get-tsconfig'
 import type { MinimatchOptions } from 'minimatch'
 import type { KebabCase } from 'type-fest'
-import type { NapiResolveOptions as ResolveOptions } from 'unrs-resolver'
+import type { NapiResolveOptions } from 'unrs-resolver'
 
 import type {
   ImportType as ImportType_,
@@ -41,22 +42,31 @@ export interface NodeResolverOptions {
 }
 
 export interface WebpackResolverOptions {
-  config?: string | { resolve: ResolveOptions }
+  config?: string | { resolve: NapiResolveOptions }
   'config-index'?: number
   env?: Record<string, unknown>
   argv?: Record<string, unknown>
 }
 
-export interface TsResolverOptions extends ResolveOptions {
+export interface TsResolverOptions extends NapiResolveOptions {
   alwaysTryTypes?: boolean
   project?: string[] | string
   extensions?: string[]
+}
+
+export interface ResolveOptionsExtra {
+  tsconfig?: TsConfigJsonResolved
+}
+
+export interface ResolveOptions extends ResolveOptionsExtra {
+  context: ChildContext | RuleContext
 }
 
 // TODO: remove prefix New in the next major version
 export type NewResolverResolve = (
   modulePath: string,
   sourceFile: string,
+  options: ResolveOptions,
 ) => ResolvedResult
 
 // TODO: remove prefix New in the next major version
@@ -141,7 +151,9 @@ export interface ChildContext {
   parserOptions?: TSESLint.ParserOptions
   languageOptions?: TSESLint.FlatConfig.LanguageOptions
   path: string
-  filename?: string
+  cwd: string
+  filename: string
+  physicalFilename: string
 }
 
 export interface ParseError extends Error {

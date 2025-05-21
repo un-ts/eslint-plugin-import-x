@@ -7,8 +7,12 @@ import type { LiteralUnion } from 'type-fest'
 
 import { cjsRequire } from '../require.js'
 import type {
+  ChildContext,
   NodeResolverOptions,
   ResolvedResult,
+  ResolveOptions,
+  ResolveOptionsExtra,
+  RuleContext,
   TsResolverOptions,
   WebpackResolverOptions,
 } from '../types.js'
@@ -25,12 +29,16 @@ export type LegacyResolverResolveImport<T = unknown> = (
   modulePath: string,
   sourceFile: string,
   config: T,
+  _: undefined,
+  options: ResolveOptions,
 ) => string | undefined
 
 export type LegacyResolverResolve<T = unknown> = (
   modulePath: string,
   sourceFile: string,
   config: T,
+  _: undefined,
+  options: ResolveOptions,
 ) => ResolvedResult
 
 export interface LegacyResolver<T = unknown, U = T> {
@@ -77,13 +85,23 @@ export function resolveWithLegacyResolver(
   config: unknown,
   modulePath: string,
   sourceFile: string,
+  context: ChildContext | RuleContext,
+  extra: ResolveOptionsExtra,
 ): ResolvedResult {
+  const options = { context, ...extra }
+
   if (resolver.interfaceVersion === 2) {
-    return resolver.resolve(modulePath, sourceFile, config)
+    return resolver.resolve(modulePath, sourceFile, config, undefined, options)
   }
 
   try {
-    const resolved = resolver.resolveImport(modulePath, sourceFile, config)
+    const resolved = resolver.resolveImport(
+      modulePath,
+      sourceFile,
+      config,
+      undefined,
+      options,
+    )
     if (resolved === undefined) {
       return {
         found: false,

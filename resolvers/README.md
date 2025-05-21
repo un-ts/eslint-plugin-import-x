@@ -10,6 +10,9 @@ Currently, version 1 is assumed if no `interfaceVersion` is available. (didn't t
     - [Arguments](#arguments)
       - [`source`](#source)
       - [`file`](#file)
+      - [`options`](#options)
+        - [`options.context`](#optionscontext)
+        - [`options.tsconfig`](#optionstsconfig)
   - [Optional `name`](#optional-name)
   - [Example](#example)
 - [v2](#v2)
@@ -19,6 +22,8 @@ Currently, version 1 is assumed if no `interfaceVersion` is available. (didn't t
       - [`source`](#source-1)
       - [`file`](#file-1)
       - [`config`](#config)
+      - [`undefined`](#undefined)
+      - [`options`](#options-1)
   - [Example](#example-1)
 - [Shared `resolve` return value](#shared-resolve-return-value)
 
@@ -42,7 +47,7 @@ exports.interfaceVersion = 3
 
 ### Required `resolve`
 
-Signature: `(source: string, file: string) => { found: boolean, path?: string | null }`
+Signature: `(source: string, file: string, options: { context: ChildContext | RuleContext, tsconfig?: TsConfigJsonResolved }) => { found: boolean, path?: string | null }`
 
 Given:
 
@@ -64,7 +69,7 @@ export default [
         {
           name: 'my-cool-resolver',
           interfaceVersion: 3,
-          resolve(source, file) {
+          resolve(source, file, options) {
             // use a factory to get config outside of the resolver
           },
         },
@@ -88,6 +93,22 @@ the module identifier (`./imported-file`).
 ##### `file`
 
 the absolute path to the file making the import (`/some/path/to/module.js`)
+
+##### `options`
+
+###### `options.context`
+
+> [!NOTE]
+> Only available after `eslint-plugin-import-x@4.13.0+`
+
+Please view [ChildContext] and [RuleContext] for more details.
+
+###### `options.tsconfig`
+
+> [!NOTE]
+> Only available after `eslint-plugin-import-x@4.13.0+`
+
+Please view [TsConfigJsonResolved] for more details.
 
 ### Optional `name`
 
@@ -204,6 +225,14 @@ the absolute path to the file making the import (`/some/path/to/module.js`)
 an object provided via the `import/resolver` setting. `my-cool-resolver` will get `["some", "stuff"]` as its `config`, while
 `node` will get `{ "paths": ["a", "b", "c"] }` provided as `config`.
 
+##### `undefined`
+
+For compatibility reason, the 4th argument is always passed as `undefined`. Take [TypeScript resolver](https://github.com/import-js/eslint-import-resolver-typescript/blob/c45039e5c310479c1e178c2180e054380facbadd/src/index.ts#L69) for example. It uses the 4th argument to pass the optional [unrs-resolver] `ResolverFactory` instance to support both `v2` and `v3` interface at the same time.
+
+##### `options`
+
+Same as [options](#options) in `v3` resolver above
+
 ### Example
 
 Here is most of the [Node resolver] at the time of this writing. It is just a wrapper around substack/Browserify's synchronous [`resolve`][resolve]:
@@ -212,7 +241,7 @@ Here is most of the [Node resolver] at the time of this writing. It is just a wr
 var resolve = require('resolve/sync')
 var isCoreModule = require('is-core-module')
 
-exports.resolve = function (source, file, config) {
+exports.resolve = function (source, file, config, _, options) {
   if (isCoreModule(source)) return { found: true, path: null }
   try {
     return { found: true, path: resolve(source, opts(file, config)) }
@@ -237,3 +266,6 @@ If the resolver cannot resolve `source` relative to `file`, it should just retur
 [Node resolver]: https://github.com/import-js/eslint-plugin-import/blob/main/resolvers/node/index.js
 [resolve]: https://www.npmjs.com/package/resolve
 [unrs-resolver]: https://www.npmjs.com/package/unrs-resolver
+[ChildContext]: https://github.com/un-ts/eslint-plugin-import-x/blob/685477fd509a3b5a91d68f349735198a4cf70020/src/types.ts#L137
+[RuleContext]: https://eslint.org/docs/latest/extend/custom-rules#the-context-object
+[TsConfigJsonResolved]: https://github.com/privatenumber/get-tsconfig/blob/8564f8821efa26cc53d2d60b2f63c013969dbe49/src/types.ts#L5C13-L5C33

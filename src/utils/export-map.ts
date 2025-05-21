@@ -90,6 +90,38 @@ const parseComment = (comment: string): commentParser.Block => {
   }
 }
 
+function getTsconfigWithContext(context: ChildContext | RuleContext) {
+  const parserOptions = context.parserOptions || {}
+  let tsconfigRootDir = parserOptions.tsconfigRootDir
+  const project = parserOptions.project
+  const cacheKey = stableHash({ tsconfigRootDir, project })
+  let tsConfig: TsConfigJsonResolved | null | undefined
+  if (tsconfigCache.has(cacheKey)) {
+    tsConfig = tsconfigCache.get(cacheKey)!
+  } else {
+    tsconfigRootDir = tsconfigRootDir || process.cwd()
+    let tsconfigResult: TsConfigResult | null | undefined
+    if (project) {
+      const projects = Array.isArray(project) ? project : [project]
+      for (const project of projects) {
+        tsconfigResult = getTsconfig(
+          project === true
+            ? context.physicalFilename
+            : path.resolve(tsconfigRootDir, project),
+        )
+        if (tsconfigResult) {
+          break
+        }
+      }
+    } else {
+      tsconfigResult = getTsconfig(tsconfigRootDir)
+    }
+    tsConfig = tsconfigResult?.config
+    tsconfigCache.set(cacheKey, tsConfig)
+  }
+  return tsConfig
+}
+
 export class ExportMap {
   static for(context: ChildContext) {
     const filepath = context.path
@@ -161,7 +193,13 @@ export class ExportMap {
   }
 
   static get(source: string, context: RuleContext) {
-    const path = resolve(source, context)
+    const tsconfig = lazy(() => getTsconfigWithContext(context))
+
+    const path = resolve(source, context, {
+      get tsconfig() {
+        return tsconfig()
+      },
+    })
     if (path == null) {
       return null
     }
@@ -171,7 +209,12 @@ export class ExportMap {
 
   static parse(filepath: string, content: string, context: ChildContext) {
     const m = new ExportMap(filepath)
-    const isEsModuleInteropTrue = lazy(isEsModuleInterop)
+
+    const tsconfig = lazy(() => getTsconfigWithContext(context))
+
+    const isEsModuleInteropTrue = lazy(
+      () => tsconfig()?.compilerOptions?.esModuleInterop ?? false,
+    )
 
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
@@ -243,7 +286,11 @@ export class ExportMap {
     const namespaces = new Map</* identifier */ string, /* source */ string>()
 
     function remotePath(value: string) {
-      return relative(value, filepath, context.settings)
+      return relative(value, filepath, context.settings, context, {
+        get tsconfig() {
+          return tsconfig()
+        },
+      })
     }
 
     function resolveImport(value: string) {
@@ -427,40 +474,6 @@ export class ExportMap {
     }
 
     const source = new SourceCode({ text: content, ast: ast as AST.Program })
-
-    function isEsModuleInterop() {
-      const parserOptions = context.parserOptions || {}
-      let tsconfigRootDir = parserOptions.tsconfigRootDir
-      const project = parserOptions.project
-      const cacheKey = stableHash({ tsconfigRootDir, project })
-      let tsConfig: TsConfigJsonResolved | null | undefined
-
-      if (tsconfigCache.has(cacheKey)) {
-        tsConfig = tsconfigCache.get(cacheKey)!
-      } else {
-        tsconfigRootDir = tsconfigRootDir || process.cwd()
-        let tsconfigResult: TsConfigResult | null | undefined
-        if (project) {
-          const projects = Array.isArray(project) ? project : [project]
-          for (const project of projects) {
-            tsconfigResult = getTsconfig(
-              project === true
-                ? context.filename
-                : path.resolve(tsconfigRootDir, project),
-            )
-            if (tsconfigResult) {
-              break
-            }
-          }
-        } else {
-          tsconfigResult = getTsconfig(tsconfigRootDir)
-        }
-        tsConfig = tsconfigResult?.config
-        tsconfigCache.set(cacheKey, tsConfig)
-      }
-
-      return tsConfig?.compilerOptions?.esModuleInterop ?? false
-    }
 
     for (const n of ast.body) {
       if (n.type === 'ExportDefaultDeclaration') {
@@ -1146,10 +1159,9 @@ function childContext(
     parserPath,
     languageOptions,
     path,
-    filename:
-      'physicalFilename' in context
-        ? context.physicalFilename
-        : context.filename,
+    cwd: context.cwd,
+    filename: context.filename,
+    physicalFilename: context.physicalFilename,
   }
 }
 

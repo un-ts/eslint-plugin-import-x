@@ -154,6 +154,7 @@ export function createRuleTestCaseFunctions<
 
 export function testContext(settings?: PluginSettings) {
   return {
+    cwd: FIXTURES_PATH,
     physicalFilename: TEST_FILENAME,
     settings: settings || {},
   } as RuleContext

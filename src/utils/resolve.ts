@@ -5,10 +5,12 @@ import { fileURLToPath } from 'node:url'
 import { stableHash } from 'stable-hash'
 
 import type {
+  ChildContext,
   ImportSettings,
   LegacyResolver,
   NewResolver,
   PluginSettings,
+  ResolveOptionsExtra,
   RuleContext,
 } from '../types.js'
 
@@ -115,6 +117,8 @@ function fullResolve(
   modulePath: string,
   sourceFile: string,
   settings: PluginSettings,
+  context: ChildContext | RuleContext,
+  extra: ResolveOptionsExtra = {},
 ) {
   // check if this is a bonus core module
   const coreSet = new Set(settings['import-x/core-modules'])
@@ -165,13 +169,16 @@ function fullResolve(
         throw err
       }
 
-      const resolved = resolver.resolve(modulePath, sourceFile)
+      const resolved = resolver.resolve(modulePath, sourceFile, {
+        ...extra,
+        context,
+      })
       if (!resolved.found) {
         continue
       }
 
       // else, counts
-      fileExistsCache.set(cacheKey, resolved.path as string | null)
+      fileExistsCache.set(cacheKey, resolved.path)
       return resolved
     }
   } else {
@@ -193,6 +200,8 @@ function fullResolve(
         options,
         modulePath,
         sourceFile,
+        context,
+        extra,
       )
       if (!resolved.found) {
         continue
@@ -213,8 +222,10 @@ export function relative(
   modulePath: string,
   sourceFile: string,
   settings: PluginSettings,
+  context: ChildContext | RuleContext,
+  extra?: ResolveOptionsExtra,
 ) {
-  return fullResolve(modulePath, sourceFile, settings).path
+  return fullResolve(modulePath, sourceFile, settings, context, extra).path
 }
 
 const erroredContexts = new Set<RuleContext>()
@@ -227,9 +238,19 @@ const erroredContexts = new Set<RuleContext>()
  * @returns - The full module filesystem path; null if package is core;
  *   undefined if not found
  */
-export function resolve(p: string, context: RuleContext) {
+export function resolve(
+  p: string,
+  context: RuleContext,
+  extra?: ResolveOptionsExtra,
+) {
   try {
-    return relative(p, context.physicalFilename, context.settings)
+    return relative(
+      p,
+      context.physicalFilename,
+      context.settings,
+      context,
+      extra,
+    )
   } catch (error_) {
     const error = error_ as Error
     if (!erroredContexts.has(context)) {
@@ -266,12 +287,18 @@ export function importXResolverCompat(
     // By omitting the name, the log will use identifiable name like `settings['import-x/resolver-next'][0]`
     // name: 'import-x-resolver-compat',
     interfaceVersion: 3,
-    resolve: (modulePath, sourceFile) => {
+    resolve(modulePath, sourceFile, options) {
       const resolved = resolveWithLegacyResolver(
         resolver,
         resolverOptions,
         modulePath,
         sourceFile,
+        options.context,
+        {
+          get tsconfig() {
+            return options.tsconfig
+          },
+        },
       )
       return resolved
     },
