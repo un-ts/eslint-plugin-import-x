@@ -94,7 +94,7 @@ function getTsconfigWithContext(context: ChildContext | RuleContext) {
   const parserOptions = context.parserOptions || {}
   let tsconfigRootDir = parserOptions.tsconfigRootDir
   const project = parserOptions.project
-  const cacheKey = stableHash({ tsconfigRootDir, project })
+  const cacheKey = stableHash([tsconfigRootDir, project])
   let tsConfig: TsConfigJsonResolved | null | undefined
   if (tsconfigCache.has(cacheKey)) {
     tsConfig = tsconfigCache.get(cacheKey)!
@@ -195,11 +195,11 @@ export class ExportMap {
   static get(source: string, context: RuleContext) {
     const tsconfig = lazy(() => getTsconfigWithContext(context))
 
-    const path = resolve(source, context, {
-      get tsconfig() {
-        return tsconfig()
-      },
-    })
+    const path = resolve(
+      source,
+      context,
+      defineLazyProperty({}, 'tsconfig', tsconfig),
+    )
     if (path == null) {
       return null
     }
@@ -286,11 +286,13 @@ export class ExportMap {
     const namespaces = new Map</* identifier */ string, /* source */ string>()
 
     function remotePath(value: string) {
-      return relative(value, filepath, context.settings, context, {
-        get tsconfig() {
-          return tsconfig()
-        },
-      })
+      return relative(
+        value,
+        filepath,
+        context.settings,
+        context,
+        defineLazyProperty({}, 'tsconfig', tsconfig),
+      )
     }
 
     function resolveImport(value: string) {
@@ -1146,7 +1148,7 @@ export function recursivePatternCapture(
  * Don't hold full context object in memory, just grab what we need. also
  * calculate a cacheKey, where parts of the cacheKey hash are memoized
  */
-function childContext(
+export function childContext(
   path: string,
   context: RuleContext | ChildContext,
 ): ChildContext {

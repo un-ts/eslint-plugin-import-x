@@ -14,6 +14,8 @@ import type {
   RuleContext,
 } from '../types.js'
 
+import { childContext } from './export-map.js'
+import { defineLazyProperty } from './lazy-value.js'
 import {
   normalizeConfigResolvers,
   resolveWithLegacyResolver,
@@ -129,6 +131,8 @@ function fullResolve(
     }
   }
 
+  const { cacheKey: childContextHashKey } = childContext(modulePath, context)
+
   const sourceDir = path.dirname(sourceFile)
 
   if (prevSettings !== settings) {
@@ -136,7 +140,12 @@ function fullResolve(
     prevSettings = settings
   }
 
-  const cacheKey = sourceDir + memoizedHash + modulePath
+  const cacheKey = [
+    sourceDir,
+    childContextHashKey,
+    memoizedHash,
+    modulePath,
+  ].join(',')
 
   const cacheSettings = ModuleCache.getSettings(settings)
 
@@ -146,7 +155,7 @@ function fullResolve(
   }
 
   if (
-    Object.prototype.hasOwnProperty.call(settings, 'import-x/resolver-next') &&
+    Object.hasOwn(settings, 'import-x/resolver-next') &&
     settings['import-x/resolver-next']
   ) {
     let configResolvers = settings['import-x/resolver-next']
@@ -233,19 +242,19 @@ const erroredContexts = new Set<RuleContext>()
 /**
  * Given
  *
- * @param p - Module path
+ * @param modulePath - Module path
  * @param context - ESLint context
  * @returns - The full module filesystem path; null if package is core;
  *   undefined if not found
  */
 export function resolve(
-  p: string,
+  modulePath: string,
   context: RuleContext,
   extra?: ResolveOptionsExtra,
 ) {
   try {
     return relative(
-      p,
+      modulePath,
       context.physicalFilename,
       context.settings,
       context,
@@ -294,11 +303,7 @@ export function importXResolverCompat(
         modulePath,
         sourceFile,
         options.context,
-        {
-          get tsconfig() {
-            return options.tsconfig
-          },
-        },
+        defineLazyProperty({}, 'tsconfig', () => options.tsconfig),
       )
       return resolved
     },

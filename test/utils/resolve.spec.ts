@@ -768,5 +768,61 @@ describe('resolve', () => {
         ).toBe(testFilePath('./bar.jsx'))
       })
     })
+
+    it('respect project setting', () => {
+      const tsconfigRootDir = testFilePath('')
+      expect(
+        resolve('../fixtures/foo', {
+          ...testContext({
+            'import-x/resolver': './foo-bar-resolver-v1',
+          }),
+          languageOptions: {
+            parserOptions: {
+              project: true,
+            },
+          },
+        }),
+      ).toBe(testFilePath('./bar.tsx'))
+      expect(
+        resolve('../fixtures/foo', {
+          ...testContext({
+            'import-x/resolver': './foo-bar-resolver-no-version',
+          }),
+          languageOptions: {
+            parserOptions: {
+              project: tsconfigRootDir,
+              tsconfigRootDir,
+            },
+          },
+        }),
+      ).toBe(testFilePath('./bar.tsx'))
+      expect(
+        resolve('../fixtures/foo', {
+          ...testContext({
+            'import-x/resolver': './foo-bar-resolver-v2',
+          }),
+          languageOptions: {
+            parserOptions: {
+              project: testFilePath('tsconfig.json'),
+            },
+          },
+        }),
+      ).toBe(testFilePath('./bar.tsx'))
+      expect(
+        resolve('../fixtures/foo', {
+          ...testContext({
+            'import-x/resolver-next': require<{
+              foobarResolver: NewResolver
+            }>('../fixtures/foo-bar-resolver-v3').foobarResolver,
+          }),
+          languageOptions: {
+            parserOptions: {
+              project: true,
+              tsconfigRootDir,
+            },
+          },
+        }),
+      ).toBe(testFilePath('./bar.tsx'))
+    })
   })
 })
