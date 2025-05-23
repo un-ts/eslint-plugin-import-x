@@ -774,11 +774,12 @@ describe('resolve', () => {
       expect(
         resolve('../fixtures/foo', {
           ...testContext({
-            'import-x/resolver': './foo-bar-resolver-v1',
+            'import-x/resolver': './foo-bar-resolver-no-version',
           }),
           languageOptions: {
             parserOptions: {
-              project: true,
+              project: tsconfigRootDir,
+              tsconfigRootDir,
             },
           },
         }),
@@ -786,12 +787,11 @@ describe('resolve', () => {
       expect(
         resolve('../fixtures/foo', {
           ...testContext({
-            'import-x/resolver': './foo-bar-resolver-no-version',
+            'import-x/resolver': './foo-bar-resolver-v1',
           }),
           languageOptions: {
             parserOptions: {
-              project: tsconfigRootDir,
-              tsconfigRootDir,
+              project: true,
             },
           },
         }),

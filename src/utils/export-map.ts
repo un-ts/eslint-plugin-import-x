@@ -90,16 +90,21 @@ const parseComment = (comment: string): commentParser.Block => {
   }
 }
 
-function getTsconfigWithContext(context: ChildContext | RuleContext) {
-  const parserOptions = context.parserOptions || {}
-  let tsconfigRootDir = parserOptions.tsconfigRootDir
-  const project = parserOptions.project
+export function getTsconfigWithContext(context: ChildContext | RuleContext) {
+  const parserOptions =
+    context.languageOptions?.parserOptions || context.parserOptions
+  let tsconfigRootDir = parserOptions?.tsconfigRootDir
+  const project = parserOptions?.project
   const cacheKey = stableHash([tsconfigRootDir, project])
   let tsConfig: TsConfigJsonResolved | null | undefined
   if (tsconfigCache.has(cacheKey)) {
     tsConfig = tsconfigCache.get(cacheKey)!
   } else {
-    tsconfigRootDir = tsconfigRootDir || process.cwd()
+    tsconfigRootDir =
+      tsconfigRootDir ||
+      // TODO: uncomment in next major
+      // || context.cwd
+      process.cwd()
     let tsconfigResult: TsConfigResult | null | undefined
     if (project) {
       const projects = Array.isArray(project) ? project : [project]
@@ -1148,7 +1153,7 @@ export function recursivePatternCapture(
  * Don't hold full context object in memory, just grab what we need. also
  * calculate a cacheKey, where parts of the cacheKey hash are memoized
  */
-export function childContext(
+function childContext(
   path: string,
   context: RuleContext | ChildContext,
 ): ChildContext {
@@ -1167,7 +1172,7 @@ export function childContext(
   }
 }
 
-function makeContextCacheKey(context: RuleContext | ChildContext) {
+export function makeContextCacheKey(context: RuleContext | ChildContext) {
   const { settings, parserPath, parserOptions, languageOptions } = context
 
   let hash =

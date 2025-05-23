@@ -14,7 +14,7 @@ import type {
   RuleContext,
 } from '../types.js'
 
-import { childContext } from './export-map.js'
+import { getTsconfigWithContext, makeContextCacheKey } from './export-map.js'
 import { defineLazyProperty } from './lazy-value.js'
 import {
   normalizeConfigResolvers,
@@ -120,7 +120,9 @@ function fullResolve(
   sourceFile: string,
   settings: PluginSettings,
   context: ChildContext | RuleContext,
-  extra: ResolveOptionsExtra = {},
+  extra: ResolveOptionsExtra = defineLazyProperty({}, 'tsconfig', () =>
+    getTsconfigWithContext(context),
+  ),
 ) {
   // check if this is a bonus core module
   const coreSet = new Set(settings['import-x/core-modules'])
@@ -131,7 +133,7 @@ function fullResolve(
     }
   }
 
-  const { cacheKey: childContextHashKey } = childContext(modulePath, context)
+  const childContextHashKey = makeContextCacheKey(context)
 
   const sourceDir = path.dirname(sourceFile)
 
@@ -178,10 +180,13 @@ function fullResolve(
         throw err
       }
 
-      const resolved = resolver.resolve(modulePath, sourceFile, {
-        ...extra,
-        context,
-      })
+      const resolved = resolver.resolve(
+        modulePath,
+        sourceFile,
+        // we're not using `...extra` to keep `tsconfig` getter
+        Object.assign(extra, { context }),
+      )
+
       if (!resolved.found) {
         continue
       }
