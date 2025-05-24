@@ -1,13 +1,11 @@
 import fs from 'node:fs'
-import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type * as commentParser from 'comment-parser'
 import debug from 'debug'
 import type { AST } from 'eslint'
 import { SourceCode } from 'eslint'
-import type { TsConfigJsonResolved, TsConfigResult } from 'get-tsconfig'
-import { getTsconfig } from 'get-tsconfig'
+import { getTsconfigWithContext } from 'eslint-import-context'
 import { stableHash } from 'stable-hash'
 
 import { cjsRequire } from '../require.js'
@@ -31,8 +29,6 @@ import { visit } from './visit.js'
 const log = debug('eslint-plugin-import-x:ExportMap')
 
 const exportCache = new Map<string, ExportMap | null>()
-
-const tsconfigCache = new Map<string, TsConfigJsonResolved | null | undefined>()
 
 export type DocStyleParsers = Record<
   DocStyle,
@@ -88,43 +84,6 @@ const parseComment = (comment: string): commentParser.Block => {
         : t,
     ),
   }
-}
-
-export function getTsconfigWithContext(context: ChildContext | RuleContext) {
-  const parserOptions =
-    context.languageOptions?.parserOptions || context.parserOptions
-  let tsconfigRootDir = parserOptions?.tsconfigRootDir
-  const project = parserOptions?.project
-  const cacheKey = stableHash([tsconfigRootDir, project])
-  let tsConfig: TsConfigJsonResolved | null | undefined
-  if (tsconfigCache.has(cacheKey)) {
-    tsConfig = tsconfigCache.get(cacheKey)!
-  } else {
-    tsconfigRootDir =
-      tsconfigRootDir ||
-      // TODO: uncomment in next major
-      // || context.cwd
-      process.cwd()
-    let tsconfigResult: TsConfigResult | null | undefined
-    if (project) {
-      const projects = Array.isArray(project) ? project : [project]
-      for (const project of projects) {
-        tsconfigResult = getTsconfig(
-          project === true
-            ? context.physicalFilename
-            : path.resolve(tsconfigRootDir, project),
-        )
-        if (tsconfigResult) {
-          break
-        }
-      }
-    } else {
-      tsconfigResult = getTsconfig(tsconfigRootDir)
-    }
-    tsConfig = tsconfigResult?.config
-    tsconfigCache.set(cacheKey, tsConfig)
-  }
-  return tsConfig
 }
 
 export class ExportMap {
@@ -198,13 +157,8 @@ export class ExportMap {
   }
 
   static get(source: string, context: RuleContext) {
-    const tsconfig = lazy(() => getTsconfigWithContext(context))
+    const path = resolve(source, context)
 
-    const path = resolve(
-      source,
-      context,
-      defineLazyProperty({}, 'tsconfig', tsconfig),
-    )
     if (path == null) {
       return null
     }
@@ -291,13 +245,7 @@ export class ExportMap {
     const namespaces = new Map</* identifier */ string, /* source */ string>()
 
     function remotePath(value: string) {
-      return relative(
-        value,
-        filepath,
-        context.settings,
-        context,
-        defineLazyProperty({}, 'tsconfig', tsconfig),
-      )
+      return relative(value, filepath, context.settings, context)
     }
 
     function resolveImport(value: string) {

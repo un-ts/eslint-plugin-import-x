@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { setRuleContext } from 'eslint-import-context'
 import { stableHash } from 'stable-hash'
 
 import type {
@@ -10,12 +11,10 @@ import type {
   LegacyResolver,
   NewResolver,
   PluginSettings,
-  ResolveOptionsExtra,
   RuleContext,
 } from '../types.js'
 
-import { getTsconfigWithContext, makeContextCacheKey } from './export-map.js'
-import { defineLazyProperty } from './lazy-value.js'
+import { makeContextCacheKey } from './export-map.js'
 import {
   normalizeConfigResolvers,
   resolveWithLegacyResolver,
@@ -120,9 +119,6 @@ function fullResolve(
   sourceFile: string,
   settings: PluginSettings,
   context: ChildContext | RuleContext,
-  extra: ResolveOptionsExtra = defineLazyProperty({}, 'tsconfig', () =>
-    getTsconfigWithContext(context),
-  ),
 ) {
   // check if this is a bonus core module
   const coreSet = new Set(settings['import-x/core-modules'])
@@ -142,12 +138,14 @@ function fullResolve(
     prevSettings = settings
   }
 
-  const cacheKey = [
-    sourceDir,
-    childContextHashKey,
-    memoizedHash,
-    modulePath,
-  ].join(',')
+  const cacheKey =
+    sourceDir +
+    ',' +
+    childContextHashKey +
+    ',' +
+    memoizedHash +
+    ',' +
+    modulePath
 
   const cacheSettings = ModuleCache.getSettings(settings)
 
@@ -180,11 +178,8 @@ function fullResolve(
         throw err
       }
 
-      const resolved = resolver.resolve(
-        modulePath,
-        sourceFile,
-        // we're not using `...extra` to keep `tsconfig` getter
-        Object.assign(extra, { context }),
+      const resolved = setRuleContext(context, () =>
+        resolver.resolve(modulePath, sourceFile),
       )
 
       if (!resolved.found) {
@@ -209,15 +204,11 @@ function fullResolve(
         continue
       }
 
-      const resolved = resolveWithLegacyResolver(
-        resolver,
-        options,
-        modulePath,
-        sourceFile,
-        context,
-        extra,
+      const resolved = setRuleContext(context, () =>
+        resolveWithLegacyResolver(resolver, options, modulePath, sourceFile),
       )
-      if (!resolved.found) {
+
+      if (!resolved?.found) {
         continue
       }
 
@@ -237,9 +228,8 @@ export function relative(
   sourceFile: string,
   settings: PluginSettings,
   context: ChildContext | RuleContext,
-  extra?: ResolveOptionsExtra,
 ) {
-  return fullResolve(modulePath, sourceFile, settings, context, extra).path
+  return fullResolve(modulePath, sourceFile, settings, context).path
 }
 
 const erroredContexts = new Set<RuleContext>()
@@ -252,18 +242,13 @@ const erroredContexts = new Set<RuleContext>()
  * @returns - The full module filesystem path; null if package is core;
  *   undefined if not found
  */
-export function resolve(
-  modulePath: string,
-  context: RuleContext,
-  extra?: ResolveOptionsExtra,
-) {
+export function resolve(modulePath: string, context: RuleContext) {
   try {
     return relative(
       modulePath,
       context.physicalFilename,
       context.settings,
       context,
-      extra,
     )
   } catch (error_) {
     const error = error_ as Error
@@ -301,16 +286,13 @@ export function importXResolverCompat(
     // By omitting the name, the log will use identifiable name like `settings['import-x/resolver-next'][0]`
     // name: 'import-x-resolver-compat',
     interfaceVersion: 3,
-    resolve(modulePath, sourceFile, options) {
-      const resolved = resolveWithLegacyResolver(
+    resolve(modulePath, sourceFile) {
+      return resolveWithLegacyResolver(
         resolver,
         resolverOptions,
         modulePath,
         sourceFile,
-        options.context,
-        defineLazyProperty({}, 'tsconfig', () => options.tsconfig),
       )
-      return resolved
     },
   }
 }

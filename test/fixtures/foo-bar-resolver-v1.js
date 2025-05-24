@@ -1,18 +1,26 @@
-var assert = require('assert/strict')
-var path = require('path')
+const assert = require('node:assert/strict')
+const path = require('node:path')
 
-exports.resolveImport = function (modulePath, sourceFile, config, _, options) {
+const {
+  useRuleContext,
+  getTsconfigWithContext,
+} = require('eslint-import-context')
+
+exports.resolveImport = function (modulePath, sourceFile, config) {
   var sourceFileName = path.basename(sourceFile)
-  const project = options.context.languageOptions?.parserOptions?.project
+  const context = useRuleContext()
+  assert.ok(context.cwd, 'the `context.cwd` must be present')
+  const tsconfig = getTsconfigWithContext(context)
+  const project = context.languageOptions?.parserOptions?.project
   if (project) {
     assert.ok(
-      options.tsconfig,
+      tsconfig,
       'the `tsconfig` must be present when `languageOptions.parserOptions.project` is set',
     )
   } else {
     assert.ok(
-      !options.tsconfig,
-      'the `tsconfig` must not be present when `parserOptions.project` is not set',
+      !tsconfig,
+      'the `tsconfig` must not be present when `languageOptions.parserOptions.project` is not set',
     )
   }
   if (sourceFileName === 'foo.js') {
@@ -21,8 +29,7 @@ exports.resolveImport = function (modulePath, sourceFile, config, _, options) {
   if (sourceFileName === 'exception.js') {
     throw new Error('foo-bar-resolver-v1 resolveImport test exception')
   }
-  assert.ok(!_, 'the 4th argument must be undefined')
-  assert.ok(options.context.cwd, 'the `context` must be present')
+  return undefined
 }
 
 exports.interfaceVersion = 1

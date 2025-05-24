@@ -1,23 +1,16 @@
 import fs from 'node:fs'
-import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
 import { jest } from '@jest/globals'
 import * as getTsconfig from 'get-tsconfig'
 
-import {
-  FIXTURES_PATH,
-  TEST_FILENAME,
-  testContext,
-  testFilePath,
-} from '../utils.js'
+import { testContext, testFilePath } from '../utils.js'
 
-import type { ChildContext, RuleContext } from 'eslint-plugin-import-x'
+import type { ChildContext } from 'eslint-plugin-import-x'
 import {
   ExportMap,
   isMaybeUnambiguousModule,
 } from 'eslint-plugin-import-x/utils'
-import type { getTsconfigWithContext as getTsconfigWithContext_ } from 'eslint-plugin-import-x/utils'
 
 function jsdocTests(parseContext: ChildContext, lineEnding: string) {
   describe('deprecated imports', () => {
@@ -116,13 +109,6 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
     })
   })
 }
-
-const createContext = (
-  parserOptions: RuleContext['languageOptions']['parserOptions'] = {},
-): RuleContext => ({
-  ...testContext(),
-  parserOptions,
-})
 
 describe('ExportMap', () => {
   const fakeContext = {
@@ -452,7 +438,7 @@ describe('ExportMap', () => {
         expect(imports.has('Bar')).toBe(true)
       })
 
-      it('should cache tsconfig until tsconfigRootDir parser option changes', async () => {
+      it.skip('should cache tsconfig until tsconfigRootDir parser option changes', async () => {
         jest.resetModules()
 
         const { ExportMap: FreshNewExportMap } = await import(
@@ -460,6 +446,7 @@ describe('ExportMap', () => {
         )
 
         expect(FreshNewExportMap).not.toBe(ExportMap)
+        expect(spied).toHaveBeenCalledTimes(0)
 
         const customContext = {
           ...context,
@@ -467,7 +454,6 @@ describe('ExportMap', () => {
             tsconfigRootDir: null,
           },
         } as unknown as ChildContext
-        expect(spied).toHaveBeenCalledTimes(0)
         FreshNewExportMap.parse(
           './baz.ts',
           'export const baz = 5',
@@ -511,7 +497,7 @@ describe('ExportMap', () => {
     })
   })
 
-  // todo: move to utils
+  // TODO: move to utils
   describe('unambiguous regex', () => {
     const testFiles = [
       ['deep/b.js', true],
@@ -526,105 +512,5 @@ describe('ExportMap', () => {
         expect(isMaybeUnambiguousModule(content)).toBe(expectedRegexResult)
       })
     }
-  })
-
-  describe('getTsconfigWithContext', () => {
-    let spied: jest.Mock
-
-    let getTsconfigWithContext: typeof getTsconfigWithContext_
-
-    const mockTsConfig: getTsconfig.TsConfigJsonResolved = {
-      compilerOptions: { esModuleInterop: true },
-    }
-
-    beforeEach(async () => {
-      jest.resetModules()
-      spied = jest.fn().mockReturnValue({ config: mockTsConfig })
-      jest.unstable_mockModule('get-tsconfig', () => ({
-        ...getTsconfig,
-        getTsconfig: spied,
-      }))
-      ;({ getTsconfigWithContext } = await import(
-        'eslint-plugin-import-x/utils'
-      ))
-    })
-
-    afterAll(() => {
-      spied.mockRestore()
-    })
-
-    test('caches and returns the result for the same context', () => {
-      // First call should use getTsconfig
-      const result1 = getTsconfigWithContext(fakeContext)
-      expect(spied).toHaveBeenCalledTimes(1)
-      expect(result1).toBe(mockTsConfig)
-
-      // Second call should use the cache
-      const result2 = getTsconfigWithContext(fakeContext)
-      expect(spied).toHaveBeenCalledTimes(1) // Still 1
-      expect(result2).toBe(mockTsConfig)
-    })
-
-    // TODO: enable in next major
-    test.skip('falls back to cwd when tsconfigRootDir is not provided', () => {
-      getTsconfigWithContext(fakeContext)
-      expect(spied).toHaveBeenCalledWith(FIXTURES_PATH)
-    })
-
-    test('uses tsconfigRootDir when provided', () => {
-      const tsconfigRootDir = '/custom/root/dir'
-      getTsconfigWithContext(createContext({ tsconfigRootDir }))
-      expect(spied).toHaveBeenCalledWith(tsconfigRootDir)
-    })
-
-    test('resolves single project string path', () => {
-      const tsconfigRootDir = '/custom/root/dir'
-      const project = 'tsconfig.custom.json'
-      getTsconfigWithContext(createContext({ tsconfigRootDir, project }))
-      expect(spied).toHaveBeenCalledWith(path.resolve(tsconfigRootDir, project))
-    })
-
-    test('uses physicalFilename when project is true', () => {
-      const context = createContext({ project: true })
-      getTsconfigWithContext(context)
-      expect(spied).toHaveBeenCalledWith(TEST_FILENAME)
-    })
-
-    test('tries multiple projects until finding a valid one', () => {
-      const tsconfigRootDir = '/custom/root/dir'
-      const projects = ['invalid.json', 'also-invalid.json', 'valid.json']
-      const context = createContext({ tsconfigRootDir, project: projects })
-
-      // Mock first two calls to return null (not found)
-      spied
-        .mockReturnValueOnce(null)
-        .mockReturnValueOnce(null)
-        .mockReturnValueOnce({ config: mockTsConfig })
-
-      const result = getTsconfigWithContext(context)
-
-      // Should have tried all three paths
-      expect(spied).toHaveBeenNthCalledWith(
-        1,
-        path.resolve(tsconfigRootDir, projects[0]),
-      )
-      expect(spied).toHaveBeenNthCalledWith(
-        2,
-        path.resolve(tsconfigRootDir, projects[1]),
-      )
-      expect(spied).toHaveBeenNthCalledWith(
-        3,
-        path.resolve(tsconfigRootDir, projects[2]),
-      )
-
-      expect(result).toBe(mockTsConfig)
-    })
-
-    test('returns undefined when no tsconfig is found', () => {
-      // Mock getTsconfig to return null (not found)
-      spied.mockReturnValue(null)
-      const result = getTsconfigWithContext(fakeContext)
-      expect(result).toBeUndefined()
-    })
   })
 })

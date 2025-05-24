@@ -2,8 +2,6 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { testContext } from './utils.js'
-
 import { createNodeResolver } from 'eslint-plugin-import-x/node-resolver'
 
 const resolver = createNodeResolver()
@@ -28,9 +26,7 @@ function expectResolve(source: string, expected: boolean | string) {
       requireResolve,
     }).toMatchSnapshot()
 
-    const result = resolver.resolve(source, _filename, {
-      context: testContext(),
-    })
+    const result = resolver.resolve(source, _filename)
     expect({
       source,
       expected,

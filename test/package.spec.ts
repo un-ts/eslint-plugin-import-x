@@ -3,10 +3,9 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import type { TSESLint } from '@typescript-eslint/utils'
+import { pluginName } from 'eslint-import-context'
 
 import { srcDir } from './utils.js'
-
-import { pluginName } from 'eslint-plugin-import-x/utils'
 
 function isSourceFile(f: string) {
   const ext = path.extname(f)

@@ -3,105 +3,31 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
-import type { LiteralUnion } from 'type-fest'
+import type {
+  LegacyImportResolver,
+  LegacyResolver,
+  LegacyResolverObject,
+  LegacyResolverRecord,
+  ResolvedResult,
+} from 'eslint-import-context'
 
 import { cjsRequire } from '../require.js'
-import type {
-  ChildContext,
-  NodeResolverOptions,
-  ResolvedResult,
-  ResolveOptions,
-  ResolveOptionsExtra,
-  RuleContext,
-  TsResolverOptions,
-  WebpackResolverOptions,
-} from '../types.js'
 
 import { pkgDir } from './pkg-dir.js'
 import { IMPORT_RESOLVE_ERROR_NAME } from './resolve.js'
-
-export type LegacyResolverName = LiteralUnion<
-  'node' | 'typescript' | 'webpack',
-  string
->
-
-export type LegacyResolverResolveImport<T = unknown> = (
-  modulePath: string,
-  sourceFile: string,
-  config: T,
-  _: undefined,
-  options: ResolveOptions,
-) => string | undefined
-
-export type LegacyResolverResolve<T = unknown> = (
-  modulePath: string,
-  sourceFile: string,
-  config: T,
-  _: undefined,
-  options: ResolveOptions,
-) => ResolvedResult
-
-export interface LegacyResolver<T = unknown, U = T> {
-  interfaceVersion?: 1 | 2
-  resolve: LegacyResolverResolve<T>
-  resolveImport: LegacyResolverResolveImport<U>
-}
-
-export interface LegacyResolverObject {
-  // node, typescript, webpack...
-  name: LegacyResolverName
-
-  // Enabled by default
-  enable?: boolean
-
-  // Options passed to the resolver
-  options?:
-    | NodeResolverOptions
-    | TsResolverOptions
-    | WebpackResolverOptions
-    | unknown
-
-  // Any object satisfied Resolver type
-  resolver: LegacyResolver
-}
-
-export interface LegacyResolverRecord {
-  node?: boolean | NodeResolverOptions
-  typescript?: boolean | TsResolverOptions
-  webpack?: WebpackResolverOptions
-  [resolve: string]: unknown
-}
-
-export type LegacyImportResolver =
-  | LegacyResolverName
-  | LegacyResolverRecord
-  | LegacyResolverObject
-  | LegacyResolverName[]
-  | LegacyResolverRecord[]
-  | LegacyResolverObject[]
 
 export function resolveWithLegacyResolver(
   resolver: LegacyResolver,
   config: unknown,
   modulePath: string,
   sourceFile: string,
-  context: ChildContext | RuleContext,
-  extra: ResolveOptionsExtra,
 ): ResolvedResult {
-  const options = { context, ...extra }
-
   if (resolver.interfaceVersion === 2) {
-    return resolver.resolve(modulePath, sourceFile, config, undefined, options)
+    return resolver.resolve(modulePath, sourceFile, config)
   }
 
   try {
-    const resolved = resolver.resolveImport(
-      modulePath,
-      sourceFile,
-      config,
-      undefined,
-      options,
-    )
+    const resolved = resolver.resolveImport(modulePath, sourceFile, config)
     if (resolved === undefined) {
       return {
         found: false,
