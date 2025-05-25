@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.13.0
+
+### Minor Changes
+
+- [#335](https://github.com/un-ts/eslint-plugin-import-x/pull/335) [`371ebee`](https://github.com/un-ts/eslint-plugin-import-x/commit/371ebee8f12b4f3758e56c147608222911806af6) Thanks [@JounQin](https://github.com/JounQin)! - feat: integrate `eslint-import-context` to get rule context without additional params
+
 ## 4.12.2
 
 ### Patch Changes
