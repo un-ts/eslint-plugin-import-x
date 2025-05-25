@@ -1,4 +1,15 @@
-export * from './constants.js'
+export { pluginName } from 'eslint-import-context'
+export type {
+  PluginName,
+  LegacyResolverName,
+  LegacyResolverResolveImport,
+  LegacyResolverResolve,
+  LegacyResolver,
+  LegacyResolverObject,
+  LegacyResolverRecord,
+  LegacyImportResolver,
+} from 'eslint-import-context'
+
 export * from './create-rule.js'
 export * from './declared-scope.js'
 export * from './docs-url.js'

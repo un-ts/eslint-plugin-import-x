@@ -2,9 +2,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { setRuleContext } from 'eslint-import-context'
 import { stableHash } from 'stable-hash'
 
 import type {
+  ChildContext,
   ImportSettings,
   LegacyResolver,
   NewResolver,
@@ -12,6 +14,7 @@ import type {
   RuleContext,
 } from '../types.js'
 
+import { makeContextCacheKey } from './export-map.js'
 import {
   normalizeConfigResolvers,
   resolveWithLegacyResolver,
@@ -115,6 +118,7 @@ function fullResolve(
   modulePath: string,
   sourceFile: string,
   settings: PluginSettings,
+  context: ChildContext | RuleContext,
 ) {
   // check if this is a bonus core module
   const coreSet = new Set(settings['import-x/core-modules'])
@@ -125,6 +129,8 @@ function fullResolve(
     }
   }
 
+  const childContextHashKey = makeContextCacheKey(context)
+
   const sourceDir = path.dirname(sourceFile)
 
   if (prevSettings !== settings) {
@@ -132,7 +138,14 @@ function fullResolve(
     prevSettings = settings
   }
 
-  const cacheKey = sourceDir + memoizedHash + modulePath
+  const cacheKey =
+    sourceDir +
+    ',' +
+    childContextHashKey +
+    ',' +
+    memoizedHash +
+    ',' +
+    modulePath
 
   const cacheSettings = ModuleCache.getSettings(settings)
 
@@ -142,7 +155,7 @@ function fullResolve(
   }
 
   if (
-    Object.prototype.hasOwnProperty.call(settings, 'import-x/resolver-next') &&
+    Object.hasOwn(settings, 'import-x/resolver-next') &&
     settings['import-x/resolver-next']
   ) {
     let configResolvers = settings['import-x/resolver-next']
@@ -165,13 +178,16 @@ function fullResolve(
         throw err
       }
 
-      const resolved = resolver.resolve(modulePath, sourceFile)
+      const resolved = setRuleContext(context, () =>
+        resolver.resolve(modulePath, sourceFile),
+      )
+
       if (!resolved.found) {
         continue
       }
 
       // else, counts
-      fileExistsCache.set(cacheKey, resolved.path as string | null)
+      fileExistsCache.set(cacheKey, resolved.path)
       return resolved
     }
   } else {
@@ -188,13 +204,11 @@ function fullResolve(
         continue
       }
 
-      const resolved = resolveWithLegacyResolver(
-        resolver,
-        options,
-        modulePath,
-        sourceFile,
+      const resolved = setRuleContext(context, () =>
+        resolveWithLegacyResolver(resolver, options, modulePath, sourceFile),
       )
-      if (!resolved.found) {
+
+      if (!resolved?.found) {
         continue
       }
 
@@ -213,8 +227,9 @@ export function relative(
   modulePath: string,
   sourceFile: string,
   settings: PluginSettings,
+  context: ChildContext | RuleContext,
 ) {
-  return fullResolve(modulePath, sourceFile, settings).path
+  return fullResolve(modulePath, sourceFile, settings, context).path
 }
 
 const erroredContexts = new Set<RuleContext>()
@@ -222,14 +237,19 @@ const erroredContexts = new Set<RuleContext>()
 /**
  * Given
  *
- * @param p - Module path
+ * @param modulePath - Module path
  * @param context - ESLint context
  * @returns - The full module filesystem path; null if package is core;
  *   undefined if not found
  */
-export function resolve(p: string, context: RuleContext) {
+export function resolve(modulePath: string, context: RuleContext) {
   try {
-    return relative(p, context.physicalFilename, context.settings)
+    return relative(
+      modulePath,
+      context.physicalFilename,
+      context.settings,
+      context,
+    )
   } catch (error_) {
     const error = error_ as Error
     if (!erroredContexts.has(context)) {
@@ -266,14 +286,13 @@ export function importXResolverCompat(
     // By omitting the name, the log will use identifiable name like `settings['import-x/resolver-next'][0]`
     // name: 'import-x-resolver-compat',
     interfaceVersion: 3,
-    resolve: (modulePath, sourceFile) => {
-      const resolved = resolveWithLegacyResolver(
+    resolve(modulePath, sourceFile) {
+      return resolveWithLegacyResolver(
         resolver,
         resolverOptions,
         modulePath,
         sourceFile,
       )
-      return resolved
     },
   }
 }
