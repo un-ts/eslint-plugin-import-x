@@ -84,7 +84,7 @@ export default [
 
 #### `useRuleContext` and `getTsconfigWithContext`
 
-They are powered by [eslint-import-context] in the above example, but they are not required to be used, and please be aware that `useRuleContext` could return `undefined` when using [eslint-plugin-import] or old versions of [eslint-plugin-import-x].
+They are powered by [eslint-import-context] in the above example, but they are not required to be used, and please be aware that `useRuleContext（）` could be `undefined` when using [eslint-plugin-import] or old versions of [eslint-plugin-import-x].
 
 #### Arguments
 
