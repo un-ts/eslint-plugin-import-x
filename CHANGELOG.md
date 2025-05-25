@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [#340](https://github.com/un-ts/eslint-plugin-import-x/pull/340) [`180785d`](https://github.com/un-ts/eslint-plugin-import-x/commit/180785d8a83fd8baaf48dd911e6d9617983b06d8) Thanks [@JounQin](https://github.com/JounQin)! - chore: bump `eslint-import-context` to v0.1.4
+- [#340](https://github.com/un-ts/eslint-plugin-import-x/pull/340) [`180785d`](https://github.com/un-ts/eslint-plugin-import-x/commit/180785d8a83fd8baaf48dd911e6d9617983b06d8) Thanks [@JounQin](https://github.com/JounQin)! - fix(deps): bump `eslint-import-context` to v0.1.4
 
 ## 4.13.0
 
