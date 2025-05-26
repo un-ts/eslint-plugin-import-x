@@ -5769,9 +5769,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-import-context@npm:^0.1.3, eslint-import-context@npm:^0.1.4":
-  version: 0.1.4
-  resolution: "eslint-import-context@npm:0.1.4"
+"eslint-import-context@npm:^0.1.3, eslint-import-context@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "eslint-import-context@npm:0.1.5"
   dependencies:
     get-tsconfig: "npm:^4.10.1"
     stable-hash: "npm:^0.0.5"
@@ -5780,7 +5780,7 @@ __metadata:
   peerDependenciesMeta:
     unrs-resolver:
       optional: true
-  checksum: 10c0/e595cc6006c7ede73401edfcc98e44b224219f46ffbf401f5bfb6dc0d8d30971b0617859625ce5b87d5b332e1d495ecb33861edd1fa0147d83b2ea0dc2803979
+  checksum: 10c0/30de54045e60fc8f084e2100122c8a4d77317ef2df3d3340a5f00d05ba6f6609d2b6bcc2f13414334959d8997753a5f63f69022baa7e462285949eec762ce586
   languageName: node
   linkType: hard
 
@@ -5955,7 +5955,7 @@ __metadata:
     eslint: "npm:^9.27.0"
     eslint-config-prettier: "npm:^10.1.5"
     eslint-doc-generator: "npm:^2.1.2"
-    eslint-import-context: "npm:^0.1.4"
+    eslint-import-context: "npm:^0.1.5"
     eslint-import-resolver-node: "npm:^0.3.9"
     eslint-import-resolver-typescript: "npm:^4.4.0"
     eslint-import-resolver-webpack: "npm:^0.13.10"
@@ -5978,7 +5978,7 @@ __metadata:
     klaw-sync: "npm:^7.0.0"
     minimatch: "npm:^9.0.3 || ^10.0.1"
     nano-staged: "npm:^0.8.0"
-    npm-run-all2: "npm:^8.0.3"
+    npm-run-all2: "npm:^8.0.4"
     path-serializer: "npm:^0.4.0"
     premove: "npm:^4.0.0"
     prettier: "npm:^3.5.3"
@@ -9431,7 +9431,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:10.0.1, minimatch@npm:^10.0.1, minimatch@npm:^9.0.3 || ^10.0.1":
+"minimatch@npm:10.0.1, minimatch@npm:^9.0.3 || ^10.0.1":
   version: 10.0.1
   resolution: "minimatch@npm:10.0.1"
   dependencies:
@@ -9766,14 +9766,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"npm-run-all2@npm:^8.0.3":
-  version: 8.0.3
-  resolution: "npm-run-all2@npm:8.0.3"
+"npm-run-all2@npm:^8.0.4":
+  version: 8.0.4
+  resolution: "npm-run-all2@npm:8.0.4"
   dependencies:
     ansi-styles: "npm:^6.2.1"
     cross-spawn: "npm:^7.0.6"
     memorystream: "npm:^0.3.1"
-    minimatch: "npm:^10.0.1"
+    picomatch: "npm:^4.0.2"
     pidtree: "npm:^0.6.0"
     read-package-json-fast: "npm:^4.0.0"
     shell-quote: "npm:^1.7.3"
@@ -9783,7 +9783,7 @@ __metadata:
     npm-run-all2: bin/npm-run-all/index.js
     run-p: bin/run-p/index.js
     run-s: bin/run-s/index.js
-  checksum: 10c0/22773c2144bf0477f2be464043e180c4b37078df63147a374a47b3bac9b5bc5825e7a7253d7b138a2a5e34d2ff13f0fc7cfff4f7d46170405728c373dd733855
+  checksum: 10c0/cfc2987df224e55456629301991b5fa6980cc644d1836fe3c22d74a4508512737d30389795b759bb5d659103e54281c59741ecdc0241cfd2615cb9bffbf7cceb
   languageName: node
   linkType: hard
 
