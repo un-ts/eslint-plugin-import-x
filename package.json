@@ -60,7 +60,7 @@
     "release": "clean-pkg-json && changeset publish",
     "test": "node --experimental-vm-modules --no-warnings=ESLintRCWarning node_modules/jest/bin/jest.js",
     "test-compiled": "yarn build && TEST_COMPILED=1 yarn test",
-    "update:eslint-docs": "eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️",
+    "update:eslint-docs": "eslint-doc-generator",
     "watch": "yarn test --watch"
   },
   "peerDependencies": {

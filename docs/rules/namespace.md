@@ -1,6 +1,6 @@
 # import-x/namespace
 
-💼 This rule is enabled in the following configs: ❗ `errors`, `flat/errors`, `flat/recommended`, ☑️ `recommended`.
+💼 This rule is enabled in the following configs: ❗ `errors`, ❗ `flat/errors`, ☑️ `flat/recommended`, ☑️ `recommended`.
 
 <!-- end auto-generated rule header -->
 

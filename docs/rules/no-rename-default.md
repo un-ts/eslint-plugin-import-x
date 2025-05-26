@@ -1,6 +1,6 @@
 # import-x/no-rename-default
 
-⚠️ This rule _warns_ in the following configs: `flat/warnings`, 🚸 `warnings`.
+⚠️ This rule _warns_ in the following configs: 🚸 `flat/warnings`, 🚸 `warnings`.
 
 <!-- end auto-generated rule header -->
 
