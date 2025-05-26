@@ -148,7 +148,7 @@ const configs = {
 } satisfies Record<string, PluginConfig>
 
 // Base Plugin Object
-const plugin = {
+const plugin_ = {
   meta,
   configs,
   rules,
@@ -156,6 +156,8 @@ const plugin = {
   importXResolverCompat,
   createNodeResolver,
 }
+
+const plugin = plugin_ as typeof plugin_ & { flatConfigs: typeof flatConfigs }
 
 // Create flat configs (Only ones that declare plugins and parser options need to be different from the legacy config)
 const createFlatConfig = (
@@ -183,7 +185,9 @@ const flatConfigs = {
   typescript: createFlatConfig(typescriptFlat, 'typescript'),
 } satisfies Record<string, PluginFlatConfig>
 
-export default Object.assign(plugin, { flatConfigs })
+plugin.flatConfigs = flatConfigs
+
+export default plugin
 
 export {
   meta,
