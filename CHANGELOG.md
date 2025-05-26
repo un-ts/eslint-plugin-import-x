@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.13.3
+
+### Patch Changes
+
+- [#348](https://github.com/un-ts/eslint-plugin-import-x/pull/348) [`f949929`](https://github.com/un-ts/eslint-plugin-import-x/commit/f9499298126d5f7a470f86a9c52f0f49ef4587d3) Thanks [@JounQin](https://github.com/JounQin)! - fix(types): exported `importX` should also have `flatConfigs` as property
+
 ## 4.13.2
 
 ### Patch Changes
