@@ -131,33 +131,14 @@ const rules = {
   'imports-first': importsFirst,
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
-const configs = {
-  recommended,
-
-  errors,
-  warnings,
-
-  // shhhh... work in progress "secret" rules
-  'stage-0': stage0,
-
-  // useful stuff for folks using various environments
-  react,
-  'react-native': reactNative,
-  electron,
-  typescript,
-} satisfies Record<string, PluginConfig>
-
 // Base Plugin Object
 const plugin_ = {
   meta,
-  configs,
   rules,
   cjsRequire,
   importXResolverCompat,
   createNodeResolver,
 }
-
-const plugin = plugin_ as typeof plugin_ & { flatConfigs: typeof flatConfigs }
 
 // Create flat configs (Only ones that declare plugins and parser options need to be different from the legacy config)
 const createFlatConfig = (
@@ -166,7 +147,7 @@ const createFlatConfig = (
 ): PluginFlatConfig => ({
   ...baseConfig,
   name: `import-x/${configName}`,
-  plugins: { 'import-x': plugin },
+  plugins: { 'import-x': plugin_ },
 })
 
 const flatConfigs = {
@@ -185,7 +166,38 @@ const flatConfigs = {
   typescript: createFlatConfig(typescriptFlat, 'typescript'),
 } satisfies Record<string, PluginFlatConfig>
 
+const configs = {
+  recommended,
+
+  errors,
+  warnings,
+
+  // shhhh... work in progress "secret" rules
+  'stage-0': stage0,
+
+  // useful stuff for folks using various environments
+  react,
+  'react-native': reactNative,
+  electron,
+  typescript,
+
+  'flat/recommended': flatConfigs.recommended,
+  'flat/errors': flatConfigs.errors,
+  'flat/warnings': flatConfigs.warnings,
+  'flat/stage-0': flatConfigs['stage-0'],
+  'flat/react': flatConfigs.react,
+  'flat/react-native': flatConfigs['react-native'],
+  'flat/electron': flatConfigs.electron,
+  'flat/typescript': flatConfigs.typescript,
+} satisfies Record<string, PluginConfig | PluginFlatConfig>
+
+const plugin = plugin_ as typeof plugin_ & {
+  flatConfigs: typeof flatConfigs
+  configs: typeof configs
+}
+
 plugin.flatConfigs = flatConfigs
+plugin.configs = configs
 
 export default plugin
 
