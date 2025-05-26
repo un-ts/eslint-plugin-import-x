@@ -1,5 +1,7 @@
 # import-x/no-deprecated
 
+⚠️ This rule _warns_ in the `flat/stage-0` config.
+
 <!-- end auto-generated rule header -->
 
 Reports use of a deprecated name, as indicated by a JSDoc block with a `@deprecated`
