@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 4.13.2
+
+### Patch Changes
+
+- [#344](https://github.com/un-ts/eslint-plugin-import-x/pull/344) [`2c007d0`](https://github.com/un-ts/eslint-plugin-import-x/commit/2c007d0f7601c3bd71294d83d412710edadb034d) Thanks [@JounQin](https://github.com/JounQin)! - fix: share same plugin reference for default export
+
+- [#346](https://github.com/un-ts/eslint-plugin-import-x/pull/346) [`2991f2e`](https://github.com/un-ts/eslint-plugin-import-x/commit/2991f2e839fc1cc4857a49c7270f91160437588c) Thanks [@JounQin](https://github.com/JounQin)! - fix: rule `dynamic-import-chunkname` crash due to ts migration
+
+- [#342](https://github.com/un-ts/eslint-plugin-import-x/pull/342) [`a55dcc7`](https://github.com/un-ts/eslint-plugin-import-x/commit/a55dcc7a6d744ba8ab279e8d520e5f9fc5471da0) Thanks [@JounQin](https://github.com/JounQin)! - fix(deps): bump `eslint-import-context` to v0.1.5
+
 ## 4.13.1
 
 ### Patch Changes
