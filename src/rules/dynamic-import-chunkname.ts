@@ -232,8 +232,8 @@ export default createRule<[Options?], MessageId>({
         if (
           // @ts-expect-error - legacy parser type
           node.callee.type !== 'Import' &&
-          'name' in node.callee &&
-          !importFunctions.includes(node.callee.name)
+          (!('name' in node.callee) ||
+            !importFunctions.includes(node.callee.name))
         ) {
           return
         }

@@ -1136,6 +1136,26 @@ describe('TypeScript', () => {
           )`,
         options,
       },
+      {
+        code: `import { useSyncExternalStore } from "use-sync-external-store/shim";
+
+export default function useAbortSignal(signal: AbortSignal): boolean {
+  return useSyncExternalStore(
+    (callback: () => void) => {
+      const unsubscribe = new AbortController();
+      signal.addEventListener("abort", callback, {
+        signal: unsubscribe.signal,
+        once: true,
+      });
+      return () => {
+        unsubscribe.abort();
+      };
+    },
+    () => signal.aborted,
+  );
+}`,
+        options,
+      },
     ],
     invalid: [
       {
