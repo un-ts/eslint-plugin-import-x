@@ -99,7 +99,7 @@ In the new system, `.eslintrc*` is no longer used. `eslint.config.*` would be th
 
 ```js
 import js from '@eslint/js'
-import * as importX from 'eslint-plugin-import-x'
+import { importX } from 'eslint-plugin-import-x'
 
 export default [js.configs.recommended, importX.flatConfigs.recommended]
 ```
@@ -114,7 +114,7 @@ npm install eslint-import-resolver-typescript --save-dev
 
 ```js
 import js from '@eslint/js'
-import * as importX from 'eslint-plugin-import-x'
+import { importX } from 'eslint-plugin-import-x'
 import tsParser from '@typescript-eslint/parser'
 
 export default [

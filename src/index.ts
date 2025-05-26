@@ -150,7 +150,11 @@ const configs = {
 // Base Plugin Object
 const plugin = {
   meta,
+  configs,
   rules,
+  cjsRequire,
+  importXResolverCompat,
+  createNodeResolver,
 }
 
 // Create flat configs (Only ones that declare plugins and parser options need to be different from the legacy config)
@@ -179,15 +183,7 @@ const flatConfigs = {
   typescript: createFlatConfig(typescriptFlat, 'typescript'),
 } satisfies Record<string, PluginFlatConfig>
 
-export default {
-  meta,
-  configs,
-  flatConfigs,
-  rules,
-  cjsRequire,
-  importXResolverCompat,
-  createNodeResolver,
-}
+export default Object.assign(plugin, { flatConfigs })
 
 export {
   meta,
@@ -197,6 +193,7 @@ export {
   cjsRequire,
   importXResolverCompat,
   createNodeResolver,
+  plugin as importX,
 }
 
 export type * from './types.js'
