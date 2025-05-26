@@ -1154,6 +1154,7 @@ export default function useAbortSignal(signal: AbortSignal): boolean {
     () => signal.aborted,
   );
 }`,
+        options,
       },
     ],
     invalid: [
