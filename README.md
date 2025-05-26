@@ -28,6 +28,7 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
 - [Configuration (new: `eslint.config.*`)](#configuration-new-eslintconfig)
   - [JS example](#js-example)
   - [Typescript example](#typescript-example)
+  - [As a standalone ESLint plugin](#as-a-standalone-eslint-plugin)
 - [Configuration (legacy: `.eslintrc*`)](#configuration-legacy-eslintrc)
   - [TypeScript](#typescript)
 - [Rules](#rules)
@@ -138,6 +139,28 @@ export default [
 
 > [!NOTE]
 > A complete list of available configuration can be found in [config/flat folders](src/config/flat)
+
+### As a standalone ESLint plugin
+
+```js
+import { importX } from 'eslint-plugin-import-x'
+
+export default [
+  {
+    plugins: {
+      'import-x': importX,
+    },
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
+    rules: {
+      'import-x/no-dynamic-require': 'warn',
+      'import-x/no-nodejs-modules': 'warn',
+    },
+  },
+]
+```
 
 ## Configuration (legacy: `.eslintrc*`)
 
