@@ -29,7 +29,11 @@ jobs:
 
         include:
           - executeLint: true
-            node: 22
+            node: lts/*
+            eslint: 9
+            os: ubuntu-latest
+          - noLegacyNodeResolver: true
+            node: lts/*
             eslint: 9
             os: ubuntu-latest
       fail-fast: false
@@ -52,6 +56,10 @@ jobs:
 
       - name: Install Dependencies
         run: yarn --immutable
+
+      - name: Uninstall Legacy Node Resolver
+        if: ${{ matrix.noLegacyNodeResolver }}
+        run: yarn remove eslint-import-resolver-node
 
       - name: Build and Test
         run: yarn run-s test-compiled test
