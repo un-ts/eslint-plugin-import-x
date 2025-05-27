@@ -21,8 +21,11 @@ function testIsAllow(
 
   return globs.some(
     glob =>
-      minimatch(filePath, glob) ||
-      minimatch(filePath, path.resolve(glob), { windowsPathsNoEscape: true }),
+      minimatch(filePath, glob, { nocomment: true }) ||
+      minimatch(filePath, path.resolve(glob), {
+        nocomment: true,
+        windowsPathsNoEscape: true,
+      }),
   )
 }
 
