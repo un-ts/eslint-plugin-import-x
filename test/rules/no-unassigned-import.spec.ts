@@ -73,6 +73,20 @@ ruleTester.run('no-unassigned-import', rule, {
       filename: path.resolve('src/app.js'),
       options: [{ allow: ['src/styles/**', '**/scripts/*.js'] }],
     }),
+    tValid({
+      code: 'import "#app/side-effects.js"',
+      // exactly matched
+      options: [{ allow: ['#app/side-effects.js'] }],
+    }),
+    tValid({
+      code: 'import "#app/side-effects.js"',
+      /**
+       * Matched by glob
+       *
+       * @see https://github.com/isaacs/minimatch#comparisons-to-other-fnmatchglob-implementations
+       */
+      options: [{ allow: [String.raw`\#app/side-effects.js`] }],
+    }),
   ],
   invalid: [
     tInvalid({
