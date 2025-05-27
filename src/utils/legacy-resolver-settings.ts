@@ -96,17 +96,16 @@ export function normalizeConfigResolvers(
   return [...map.values()]
 }
 
-export const LEGACY_NODE_RESOLVERS = [
+export const LEGACY_NODE_RESOLVERS = new Set([
   'node',
   'eslint-import-resolver-node',
-  (function () {
-    try {
-      return cjsRequire.resolve('eslint-import-resolver-node')
-    } catch {
-      // ignore
-    }
-  })(),
-].filter(Boolean)
+])
+
+try {
+  LEGACY_NODE_RESOLVERS.add(cjsRequire.resolve('eslint-import-resolver-node'))
+} catch {
+  // ignore
+}
 
 function requireResolver(name: string, sourceFile: string) {
   // Try to resolve package with conventional name
@@ -117,7 +116,7 @@ function requireResolver(name: string, sourceFile: string) {
 
   if (!resolver) {
     // ignore `node` resolver not found error, we'll use the new one instead
-    if (LEGACY_NODE_RESOLVERS.includes(name)) {
+    if (LEGACY_NODE_RESOLVERS.has(name)) {
       return undefined!
     }
 

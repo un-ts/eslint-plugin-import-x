@@ -130,7 +130,7 @@ function legacyNodeResolve(
     includeCoreModules,
     moduleDirectory,
     paths,
-    preserveSymlinks: symlinks,
+    preserveSymlinks,
     package: packageJson,
     packageFilter,
     pathFilter,
@@ -141,6 +141,9 @@ function legacyNodeResolve(
   const normalizedExtensions = arraify(extensions)
 
   const modules = arraify(moduleDirectory)
+
+  // TODO: change the default behavior to align node itself
+  const symlinks = preserveSymlinks === false
 
   const resolver = createNodeResolver({
     extensions: normalizedExtensions,
@@ -299,7 +302,7 @@ function fullResolve(
       }
 
       // if the resolver is `eslint-import-resolver-node`, we use the new `node` resolver as fallback instead
-      if (LEGACY_NODE_RESOLVERS.includes(name) && !resolver) {
+      if (LEGACY_NODE_RESOLVERS.has(name)) {
         const resolverOptions = (options || {}) as NodeResolverOptions
         const resolved = legacyNodeResolve(
           {
@@ -317,7 +320,9 @@ function fullResolve(
           return resolved
         }
 
-        continue
+        if (!resolver) {
+          continue
+        }
       }
 
       const resolved = setRuleContext(context, () =>
