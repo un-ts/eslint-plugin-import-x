@@ -57,7 +57,7 @@ jobs:
       - name: Install Dependencies
         run: yarn --immutable
 
-      - name: Uninstall Legacy Node Resolver
+      - name: Install Legacy Node Resolver
         if: ${{ matrix.legacyNodeResolver }}
         run: yarn add -D eslint-import-resolver-node
 

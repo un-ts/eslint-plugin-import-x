@@ -305,11 +305,13 @@ function fullResolve(
       if (LEGACY_NODE_RESOLVERS.has(name)) {
         const resolverOptions = (options || {}) as NodeResolverOptions
         const resolved = legacyNodeResolve(
-          {
-            ...resolverOptions,
-            extensions:
-              resolverOptions.extensions || settings['import-x/extensions'],
-          },
+          resolverOptions,
+          // TODO: enable the following in the next major
+          // {
+          //   ...resolverOptions,
+          //   extensions:
+          //     resolverOptions.extensions || settings['import-x/extensions'],
+          // },
           context,
           modulePath,
           sourceFile,

@@ -69,7 +69,7 @@ exports[`modules jest => true 2`] = `
   "expected": true,
   "result": {
     "found": true,
-    "path": "<ROOT>/node_modules/jest/build/index.js",
+    "path": "<ROOT>/node_modules/jest/build/index.mjs",
   },
   "source": "jest",
 }
