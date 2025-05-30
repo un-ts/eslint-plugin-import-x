@@ -262,12 +262,6 @@ function runResolverTests(resolver: 'node' | 'webpack') {
   })
 
   if (!CASE_SENSITIVE_FS) {
-    const relativePath = './test/fixtures/jsx/MyUnCoolComponent.jsx'
-    const cwd = process.cwd()
-    const mismatchedPath = path
-      .join(cwd.toUpperCase(), relativePath)
-      .replaceAll('\\', '/')
-
     ruleTester.run('case sensitivity', rule, {
       valid: [
         tValid({
@@ -296,31 +290,39 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       ],
     })
 
-    ruleTester.run('case sensitivity strict', rule, {
-      valid: [
-        // #1259 issue
-        tValid({
-          // caseSensitiveStrict is disabled by default
-          code: `import foo from "${mismatchedPath}"`,
-        }),
-      ],
+    // Windows plain absolute path is not supported by Node.js
+    // TODO: add `file:` protocol support
+    if (process.platform !== 'win32') {
+      const relativePath = './test/fixtures/jsx/MyUnCoolComponent.jsx'
+      const cwd = process.cwd()
+      const mismatchedPath = path.join(cwd.toUpperCase(), relativePath)
 
-      invalid: [
-        // #1259 issue
-        tInvalid({
-          // test with enabled caseSensitiveStrict option
-          code: `import foo from "${mismatchedPath}"`,
-          options: [{ caseSensitiveStrict: true }],
-          errors: [createError('casingMismatch', mismatchedPath)],
-        }),
-        tInvalid({
-          // test with enabled caseSensitiveStrict option and disabled caseSensitive
-          code: `import foo from "${mismatchedPath}"`,
-          options: [{ caseSensitiveStrict: true, caseSensitive: false }],
-          errors: [createError('casingMismatch', mismatchedPath)],
-        }),
-      ],
-    })
+      ruleTester.run('case sensitivity strict', rule, {
+        valid: [
+          // #1259 issue
+          tValid({
+            // caseSensitiveStrict is disabled by default
+            code: `import foo from "${mismatchedPath}"`,
+          }),
+        ],
+
+        invalid: [
+          // #1259 issue
+          tInvalid({
+            // test with enabled caseSensitiveStrict option
+            code: `import foo from "${mismatchedPath}"`,
+            options: [{ caseSensitiveStrict: true }],
+            errors: [createError('casingMismatch', mismatchedPath)],
+          }),
+          tInvalid({
+            // test with enabled caseSensitiveStrict option and disabled caseSensitive
+            code: `import foo from "${mismatchedPath}"`,
+            options: [{ caseSensitiveStrict: true, caseSensitive: false }],
+            errors: [createError('casingMismatch', mismatchedPath)],
+          }),
+        ],
+      })
+    }
   }
 }
 

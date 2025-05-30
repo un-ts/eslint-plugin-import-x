@@ -199,7 +199,12 @@ function legacyNodeResolve(
       )
     } catch {
       throw new Error(
-        "You're using legacy resolver options which are not supported by the new resolver and `eslint-import-resolver-node` is not installed as fallback,\nplease install `eslint-import-resolver-node` manually or remove those legacy resolver options including `package`, `packageFilter`, `pathFilter` and `packageIterator`.",
+        [
+          "You're using legacy resolver options which are not supported by the new resolver.",
+          'Please either:',
+          '1. Install `eslint-import-resolver-node` as a fallback, or',
+          '2. Remove legacy options: `package`, `packageFilter`, `pathFilter`, `packageIterator`',
+        ].join('\n'),
       )
     }
     const resolved = resolveWithLegacyResolver(
@@ -301,7 +306,8 @@ function fullResolve(
         continue
       }
 
-      // if the resolver is `eslint-import-resolver-node`, we use the new `node` resolver as fallback instead
+      // if the resolver is `eslint-import-resolver-node`, we use the new `node` resolver first
+      // and try `eslint-import-resolver-node` as fallback instead
       if (LEGACY_NODE_RESOLVERS.has(name)) {
         const resolverOptions = (options || {}) as NodeResolverOptions
         const resolved = legacyNodeResolve(
