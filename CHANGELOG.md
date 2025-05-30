@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.14.1
+
+### Patch Changes
+
+- [#355](https://github.com/un-ts/eslint-plugin-import-x/pull/355) [`81f3d31`](https://github.com/un-ts/eslint-plugin-import-x/commit/81f3d3159ba9a34d8ae880b58fbe03771bd33767) Thanks [@JounQin](https://github.com/JounQin)! - fix: tslib is no longer used because we're targeting ES2022
+
 ## 4.14.0
 
 ### Minor Changes
