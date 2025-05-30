@@ -55,6 +55,7 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
   - [Backers](#backers)
 - [Changelog](#changelog)
 - [License](#license)
+- [Star History](#star-history)
 
 ## Why
 
@@ -736,6 +737,16 @@ Detailed changes for each release are documented in [CHANGELOG.md](./CHANGELOG.m
 ## License
 
 [MIT][] © [JounQin][]@[1stG.me][]
+
+## Star History
+
+<a href="https://www.star-history.com/#un-ts/eslint-plugin-import-x&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=un-ts/eslint-plugin-import-x&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=un-ts/eslint-plugin-import-x&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=un-ts/eslint-plugin-import-x&type=Date" />
+ </picture>
+</a>
 
 [`@typescript-eslint/parser`]: https://github.com/typescript-eslint/typescript-eslint/tree/HEAD/packages/parser
 [`eslint-plugin-import`]: https://github.com/import-js/eslint-plugin-import
