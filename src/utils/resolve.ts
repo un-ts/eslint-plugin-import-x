@@ -5,17 +5,22 @@ import { fileURLToPath } from 'node:url'
 import { setRuleContext } from 'eslint-import-context'
 import { stableHash } from 'stable-hash'
 
+import { createNodeResolver } from '../node-resolver.js'
+import { cjsRequire } from '../require.js'
 import type {
   ChildContext,
   ImportSettings,
   LegacyResolver,
   NewResolver,
+  NodeResolverOptions,
   PluginSettings,
   RuleContext,
 } from '../types.js'
 
+import { arraify } from './arraify.js'
 import { makeContextCacheKey } from './export-map.js'
 import {
+  LEGACY_NODE_RESOLVERS,
   normalizeConfigResolvers,
   resolveWithLegacyResolver,
 } from './legacy-resolver-settings.js'
@@ -114,6 +119,106 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
   return true
 }
 
+function legacyNodeResolve(
+  resolverOptions: NodeResolverOptions,
+  context: ChildContext | RuleContext,
+  modulePath: string,
+  sourceFile: string,
+) {
+  const {
+    extensions,
+    includeCoreModules,
+    moduleDirectory,
+    paths,
+    preserveSymlinks,
+    package: packageJson,
+    packageFilter,
+    pathFilter,
+    packageIterator,
+    ...rest
+  } = resolverOptions
+
+  const normalizedExtensions = arraify(extensions)
+
+  const modules = arraify(moduleDirectory)
+
+  // TODO: change the default behavior to align node itself
+  const symlinks = preserveSymlinks === false
+
+  const resolver = createNodeResolver({
+    extensions: normalizedExtensions,
+    builtinModules: includeCoreModules !== false,
+    modules,
+    symlinks,
+    ...rest,
+  })
+
+  const resolved = setRuleContext(context, () =>
+    resolver.resolve(modulePath, sourceFile),
+  )
+
+  if (resolved.found) {
+    return resolved
+  }
+
+  const normalizedPaths = arraify(paths)
+
+  if (normalizedPaths?.length) {
+    const paths = modules?.length
+      ? normalizedPaths.filter(p => !modules.includes(p))
+      : normalizedPaths
+
+    if (paths.length > 0) {
+      const resolver = createNodeResolver({
+        extensions: normalizedExtensions,
+        builtinModules: includeCoreModules !== false,
+        modules: paths,
+        symlinks,
+        ...rest,
+      })
+
+      const resolved = setRuleContext(context, () =>
+        resolver.resolve(modulePath, sourceFile),
+      )
+
+      if (resolved.found) {
+        return resolved
+      }
+    }
+  }
+
+  if (
+    [packageJson, packageFilter, pathFilter, packageIterator].some(
+      it => it != null,
+    )
+  ) {
+    let legacyNodeResolver: LegacyResolver
+    try {
+      legacyNodeResolver = cjsRequire<LegacyResolver>(
+        'eslint-import-resolver-node',
+      )
+    } catch {
+      throw new Error(
+        [
+          "You're using legacy resolver options which are not supported by the new resolver.",
+          'Please either:',
+          '1. Install `eslint-import-resolver-node` as a fallback, or',
+          '2. Remove legacy options: `package`, `packageFilter`, `pathFilter`, `packageIterator`',
+        ].join('\n'),
+      )
+    }
+    const resolved = resolveWithLegacyResolver(
+      legacyNodeResolver,
+      resolverOptions,
+      modulePath,
+      sourceFile,
+    )
+    if (resolved.found) {
+      return resolved
+    }
+  }
+}
+
 function fullResolve(
   modulePath: string,
   sourceFile: string,
@@ -140,11 +245,11 @@ function fullResolve(
 
   const cacheKey =
     sourceDir +
-    ',' +
+    '\0' +
     childContextHashKey +
-    ',' +
+    '\0' +
     memoizedHash +
-    ',' +
+    '\0' +
     modulePath
 
   const cacheSettings = ModuleCache.getSettings(settings)
@@ -154,10 +259,7 @@ function fullResolve(
     return { found: true, path: cachedPath }
   }
 
-  if (
-    Object.hasOwn(settings, 'import-x/resolver-next') &&
-    settings['import-x/resolver-next']
-  ) {
+  if (settings['import-x/resolver-next']) {
     let configResolvers = settings['import-x/resolver-next']
 
     if (!Array.isArray(configResolvers)) {
@@ -196,12 +298,39 @@ function fullResolve(
         node: settings['import-x/resolve'],
       } // backward compatibility
 
-    for (const { enable, options, resolver } of normalizeConfigResolvers(
+    for (const { enable, name, options, resolver } of normalizeConfigResolvers(
       configResolvers,
       sourceFile,
     )) {
       if (!enable) {
         continue
+      }
+
+      // if the resolver is `eslint-import-resolver-node`, we use the new `node` resolver first
+      // and try `eslint-import-resolver-node` as fallback instead
+      if (LEGACY_NODE_RESOLVERS.has(name)) {
+        const resolverOptions = (options || {}) as NodeResolverOptions
+        const resolved = legacyNodeResolve(
+          resolverOptions,
+          // TODO: enable the following in the next major
+          // {
+          //   ...resolverOptions,
+          //   extensions:
+          //     resolverOptions.extensions || settings['import-x/extensions'],
+          // },
+          context,
+          modulePath,
+          sourceFile,
+        )
+
+        if (resolved?.found) {
+          fileExistsCache.set(cacheKey, resolved.path)
+          return resolved
+        }
+
+        if (!resolver) {
+          continue
+        }
       }
 
       const resolved = setRuleContext(context, () =>

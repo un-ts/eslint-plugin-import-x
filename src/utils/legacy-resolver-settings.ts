@@ -54,7 +54,6 @@ export function normalizeConfigResolvers(
   for (const nameOrRecordOrObject of resolverArray) {
     if (typeof nameOrRecordOrObject === 'string') {
       const name = nameOrRecordOrObject
-
       map.set(name, {
         name,
         enable: true,
@@ -64,26 +63,25 @@ export function normalizeConfigResolvers(
     } else if (typeof nameOrRecordOrObject === 'object') {
       if (nameOrRecordOrObject.name && nameOrRecordOrObject.resolver) {
         const object = nameOrRecordOrObject as LegacyResolverObject
-
         const { name, enable = true, options, resolver } = object
         map.set(name, { name, enable, options, resolver })
       } else {
         const record = nameOrRecordOrObject as LegacyResolverRecord
-
         for (const [name, enableOrOptions] of Object.entries(record)) {
+          const resolver = requireResolver(name, sourceFile)
           if (typeof enableOrOptions === 'boolean') {
             map.set(name, {
               name,
               enable: enableOrOptions,
               options: undefined,
-              resolver: requireResolver(name, sourceFile),
+              resolver,
             })
           } else {
             map.set(name, {
               name,
               enable: true,
               options: enableOrOptions,
-              resolver: requireResolver(name, sourceFile),
+              resolver,
             })
           }
         }
@@ -98,6 +96,17 @@ export function normalizeConfigResolvers(
   return [...map.values()]
 }
 
+export const LEGACY_NODE_RESOLVERS = new Set([
+  'node',
+  'eslint-import-resolver-node',
+])
+
+try {
+  LEGACY_NODE_RESOLVERS.add(cjsRequire.resolve('eslint-import-resolver-node'))
+} catch {
+  // ignore
+}
+
 function requireResolver(name: string, sourceFile: string) {
   // Try to resolve package with conventional name
   const resolver =
@@ -106,10 +115,16 @@ function requireResolver(name: string, sourceFile: string) {
     tryRequire(path.resolve(getBaseDir(sourceFile), name))
 
   if (!resolver) {
+    // ignore `node` resolver not found error, we'll use the new one instead
+    if (LEGACY_NODE_RESOLVERS.has(name)) {
+      return undefined!
+    }
+
     const err = new Error(`unable to load resolver "${name}".`)
     err.name = IMPORT_RESOLVE_ERROR_NAME
     throw err
   }
+
   if (!isLegacyResolverValid(resolver)) {
     const err = new Error(`${name} with invalid interface loaded as resolver`)
     err.name = IMPORT_RESOLVE_ERROR_NAME

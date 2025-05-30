@@ -10,6 +10,7 @@ export type {
   LegacyImportResolver,
 } from 'eslint-import-context'
 
+export * from './arraify.js'
 export * from './create-rule.js'
 export * from './declared-scope.js'
 export * from './docs-url.js'
