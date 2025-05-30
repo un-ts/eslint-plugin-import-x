@@ -8,6 +8,9 @@ Reports:
 - individual exports not being statically `import`ed or `require`ed from other modules in the same project
 - dynamic imports are supported if argument is a literal string
 
+> [!IMPORTANT]
+> This rule is only compatible with legacy configs. If you make use of the new flat config, either do not enable this rule, or provide a legacy eslintrc config at the same time together for this rule to be functional.
+
 ## Rule Details
 
 ### Usage
