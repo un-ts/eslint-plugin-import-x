@@ -5977,7 +5977,6 @@ __metadata:
     tinyexec: "npm:^1.0.1"
     ts-node: "npm:^10.9.2"
     tsdown: "npm:^0.12.3"
-    tslib: "npm:^2.8.1"
     type-fest: "npm:^4.41.0"
     typescript: "npm:^5.8.3"
     typescript-eslint: "npm:^8.32.1"
