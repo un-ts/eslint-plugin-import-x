@@ -1,5 +1,17 @@
 # eslint-plugin-import-x
 
+## 4.14.0
+
+### Minor Changes
+
+- [#272](https://github.com/un-ts/eslint-plugin-import-x/pull/272) [`43cdd21`](https://github.com/un-ts/eslint-plugin-import-x/commit/43cdd21485863292461fd640ba6da561be5e829f) Thanks [@SukkaW](https://github.com/SukkaW)! - feat: map legacy node resolver to the new one with fallback support
+
+- [#350](https://github.com/un-ts/eslint-plugin-import-x/pull/350) [`12a7cda`](https://github.com/un-ts/eslint-plugin-import-x/commit/12a7cdafe314a87709342eea6abbbcf3562c68e9) Thanks [@43081j](https://github.com/43081j)! - Expose flat configs in `configs` object to allow use of ESLint `extends`
+
+### Patch Changes
+
+- [#352](https://github.com/un-ts/eslint-plugin-import-x/pull/352) [`3bc48fc`](https://github.com/un-ts/eslint-plugin-import-x/commit/3bc48fcfab4bf5ddbabb4508cf5e63b8d8aaee04) Thanks [@JounQin](https://github.com/JounQin)! - fix: enable `nocomment` glob option for rule `no-unassigned-import`'s `allow` option
+
 ## 4.13.3
 
 ### Patch Changes
