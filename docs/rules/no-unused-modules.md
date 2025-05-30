@@ -8,6 +8,9 @@ Reports:
 - individual exports not being statically `import`ed or `require`ed from other modules in the same project
 - dynamic imports are supported if argument is a literal string
 
+> [!IMPORTANT]
+> This rule is only compatible with legacy configuration files. If you make use of the new flat configuration format, do not enable this rule.
+
 ## Rule Details
 
 ### Usage
