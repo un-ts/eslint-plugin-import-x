@@ -9,7 +9,7 @@ Reports:
 - dynamic imports are supported if argument is a literal string
 
 > [!IMPORTANT]
-> This rule is only compatible with legacy configuration files. If you make use of the new flat configuration format, do not enable this rule.
+> This rule is only compatible with legacy config. If you make use of the new flat config only, do not enable this rule, or please provide the eslintrc config at the same time together for this rule to be functional.
 
 ## Rule Details
 
