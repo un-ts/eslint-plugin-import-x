@@ -5962,6 +5962,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.33.0"
     "@typescript-eslint/parser": "npm:^8.33.0"
     "@typescript-eslint/rule-tester": "npm:^8.33.0"
+    "@typescript-eslint/types": "npm:^8.33.0"
     "@typescript-eslint/utils": "npm:^8.33.0"
     "@unts/patch-package": "npm:^8.1.1"
     clean-pkg-json: "npm:^1.3.0"
@@ -6011,9 +6012,12 @@ __metadata:
     yarn-berry-deduplicate: "npm:^6.1.3"
     zod: "npm:~3.24.4"
   peerDependencies:
+    "@typescript-eslint/utils": ^8.0.0
     eslint: ^8.57.0 || ^9.0.0
     eslint-import-resolver-node: "*"
   peerDependenciesMeta:
+    "@typescript-eslint/utils":
+      optional: true
     eslint-import-resolver-node:
       optional: true
   languageName: unknown
