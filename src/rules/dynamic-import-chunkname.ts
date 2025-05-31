@@ -1,7 +1,6 @@
 import vm from 'node:vm'
 
-import type { TSESTree } from '@typescript-eslint/utils'
-import type { RuleFixer } from '@typescript-eslint/utils/ts-eslint'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
 import { createRule } from '../utils/index.js'
 
@@ -146,7 +145,7 @@ export default createRule<[Options?], MessageId>({
       }
 
       const removeCommentsAndLeadingSpaces = (
-        fixer: RuleFixer,
+        fixer: TSESLint.RuleFixer,
         comment: TSESTree.Comment,
       ) => {
         const leftToken = sourceCode.getTokenBefore(comment)

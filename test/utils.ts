@@ -5,7 +5,7 @@ import type {
   InvalidTestCase as TSESLintInvalidTestCase,
   RunTests as TSESLintRunTests,
 } from '@typescript-eslint/rule-tester'
-import type { RuleModule } from '@typescript-eslint/utils/ts-eslint'
+import type { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
 import * as semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
@@ -68,7 +68,7 @@ function createRuleTestCase<TTestCase extends TSESLintValidTestCase<unknown[]>>(
 }
 
 type GetRuleModuleTypes<TRule> =
-  TRule extends RuleModule<infer MessageIds, infer Options>
+  TRule extends TSESLint.RuleModule<infer MessageIds, infer Options>
     ? {
         messageIds: MessageIds
         options: Options
@@ -76,14 +76,16 @@ type GetRuleModuleTypes<TRule> =
     : never
 
 export type GetRuleModuleMessageIds<TRule> =
-  TRule extends RuleModule<infer MessageIds, infer _> ? MessageIds : never
+  TRule extends TSESLint.RuleModule<infer MessageIds, infer _>
+    ? MessageIds
+    : never
 
 export type GetRuleModuleOptions<TRule> =
-  TRule extends RuleModule<infer _, infer Options> ? Options : never
+  TRule extends TSESLint.RuleModule<infer _, infer Options> ? Options : never
 
 /**
  * Type helper to build {@link TSESLintRuleTester.run} test parameters from a
- * given {@link RuleModule}
+ * given {@link TSESLint.RuleModule}
  *
  * @example
  *   const COMMON_TESTS: RunTests<typeof rule> = {
@@ -103,15 +105,15 @@ export type GetRuleModuleOptions<TRule> =
  *   }
  */
 export type RuleRunTests<
-  TRule extends RuleModule<string, readonly unknown[]>,
+  TRule extends TSESLint.RuleModule<string, readonly unknown[]>,
   TRuleType extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
 > = TSESLintRunTests<TRuleType['messageIds'], TRuleType['options']>
 
 /**
  * Create two functions that can be used to create both valid and invalid test
  * case to be provided to {@link TSESLintRuleTester}. This function accepts one
- * type parameter that should extend a {@link RuleModule} to be able to provide
- * the result with typed `MessageIds` and `Options` properties
+ * type parameter that should extend a {@link TSESLint.RuleModule} to be able to
+ * provide the result with typed `MessageIds` and `Options` properties
  *
  * @example
  *   import { createRuleTestCaseFunction } from '../utils'
@@ -139,7 +141,7 @@ export type RuleRunTests<
  *   If the `TRule` parameter is omitted default types are used.
  */
 export function createRuleTestCaseFunctions<
-  TRule extends RuleModule<string, unknown[]>,
+  TRule extends TSESLint.RuleModule<string, unknown[]>,
   TData extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
   Valid = TSESLintValidTestCase<TData['options']>,
   Invalid = TSESLintInvalidTestCase<TData['messageIds'], TData['options']>,

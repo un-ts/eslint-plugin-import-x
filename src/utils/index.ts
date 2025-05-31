@@ -10,9 +10,11 @@ export type {
   LegacyImportResolver,
 } from 'eslint-import-context'
 
+export * from './apply-default.js'
 export * from './arraify.js'
 export * from './create-rule.js'
 export * from './declared-scope.js'
+export * from './deep-merge.js'
 export * from './docs-url.js'
 export * from './export-map.js'
 export * from './get-value.js'

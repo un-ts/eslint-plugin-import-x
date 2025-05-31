@@ -1,7 +1,6 @@
 import path from 'node:path'
 
-import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema'
-import type { RuleFixer } from '@typescript-eslint/utils/ts-eslint'
+import type { JSONSchema, TSESLint } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 import type { MinimatchOptions } from 'minimatch'
 
@@ -22,12 +21,12 @@ const modifierValues = ['always', 'ignorePackages', 'never'] as const
 const modifierSchema = {
   type: 'string',
   enum: [...modifierValues],
-} satisfies JSONSchema4
+} satisfies JSONSchema.JSONSchema4
 
 const modifierByFileExtensionSchema = {
   type: 'object',
   patternProperties: { '.*': modifierSchema },
-} satisfies JSONSchema4
+} satisfies JSONSchema.JSONSchema4
 
 const properties = {
   type: 'object',
@@ -59,7 +58,7 @@ const properties = {
       type: 'boolean',
     },
   },
-} satisfies JSONSchema4
+} satisfies JSONSchema.JSONSchema4
 
 export type Modifier = (typeof modifierValues)[number]
 
@@ -370,7 +369,7 @@ export default createRule<Options, MessageId>({
               hash,
             })
             const fixOrSuggest = {
-              fix(fixer: RuleFixer) {
+              fix(fixer: TSESLint.RuleFixer) {
                 return fixer.replaceText(
                   source,
                   replaceImportPath(source.raw, fixedImportPath),
@@ -415,7 +414,7 @@ export default createRule<Options, MessageId>({
             hash,
           })
           const fixOrSuggest = {
-            fix(fixer: RuleFixer) {
+            fix(fixer: TSESLint.RuleFixer) {
               return fixer.replaceText(
                 source,
                 replaceImportPath(source.raw, fixedImportPath),
@@ -445,7 +444,7 @@ export default createRule<Options, MessageId>({
                     commonSuggestion,
                     isIndex && {
                       ...commonSuggestion,
-                      fix(fixer: RuleFixer) {
+                      fix(fixer: TSESLint.RuleFixer) {
                         return fixer.replaceText(
                           source,
                           replaceImportPath(

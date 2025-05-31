@@ -5,7 +5,7 @@
 
 import path from 'node:path'
 
-import { TSESTree } from '@typescript-eslint/utils'
+import { TSESTree } from '@typescript-eslint/types'
 import type { TSESLint } from '@typescript-eslint/utils'
 // eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
 import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
