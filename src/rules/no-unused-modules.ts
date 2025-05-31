@@ -23,17 +23,62 @@ import {
 } from '../utils/index.js'
 
 // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
-const { FileEnumerator } = eslintUnsupportedApi
+const { FileEnumerator, shouldUseFlatConfig } = eslintUnsupportedApi
 
-function listFilesToProcess(src: string[], extensions: FileExtension[]) {
-  const enumerator = new FileEnumerator({
-    extensions,
-  })
+function listFilesUsingFileEnumerator(
+  src: string[],
+  extensions: FileExtension[],
+) {
+  // We need to know whether this is being run with flat config in order to
+  // determine how to report errors if FileEnumerator throws due to a lack of eslintrc.
 
-  return Array.from(enumerator.iterateFiles(src), ({ filePath, ignored }) => ({
-    ignored,
-    filename: filePath,
-  }))
+  const { ESLINT_USE_FLAT_CONFIG } = process.env
+
+  // This condition is sufficient to test in v8, since the environment variable is necessary to turn on flat config
+  let isUsingFlatConfig: boolean
+
+  // In the case of using v9, we can check the `shouldUseFlatConfig` function
+  // If this function is present, then we assume it's v9
+  try {
+    isUsingFlatConfig =
+      // @ts-expect-error -- only available in ESLint v9
+      shouldUseFlatConfig && ESLINT_USE_FLAT_CONFIG !== 'false'
+  } catch {
+    // We don't want to throw here, since we only want to init the
+    // boolean if the function is available.
+    isUsingFlatConfig =
+      !!ESLINT_USE_FLAT_CONFIG && ESLINT_USE_FLAT_CONFIG !== 'false'
+  }
+
+  const enumerator = new FileEnumerator({ extensions })
+
+  try {
+    return Array.from(
+      enumerator.iterateFiles(src),
+      ({ filePath, ignored }) => ({ filename: filePath, ignored }),
+    )
+  } catch (error) {
+    // If we're using flat config, and FileEnumerator throws due to a lack of eslintrc,
+    // then we want to throw an error so that the user knows about this rule's reliance on
+    // the legacy config.
+    if (
+      isUsingFlatConfig &&
+      (error as Error).message.includes('No ESLint configuration found')
+    ) {
+      throw new Error(`
+Due to the exclusion of certain internal ESLint APIs when using flat config,
+the import-x/no-unused-modules rule requires an .eslintrc file (even empty) to know which
+files to ignore (even when using flat config).
+The .eslintrc file only needs to contain "ignorePatterns", or can be empty if
+you do not want to ignore any files.
+
+See https://github.com/import-js/eslint-plugin-import/issues/3079
+for additional context.
+`)
+    }
+    // If this isn't the case, then we'll just let the error bubble up
+    throw error
+  }
 }
 
 const DEFAULT = 'default'
@@ -141,10 +186,13 @@ const resolveFiles = (
 ) => {
   const extensions = [...getFileExtensions(context.settings)]
 
-  const srcFileList = listFilesToProcess(src, extensions)
+  const srcFileList = listFilesUsingFileEnumerator(src, extensions)
 
   // prepare list of ignored files
-  const ignoredFilesList = listFilesToProcess(ignoreExports, extensions)
+  const ignoredFilesList = listFilesUsingFileEnumerator(
+    ignoreExports,
+    extensions,
+  )
   for (const { filename } of ignoredFilesList) ignoredFiles.add(filename)
 
   // prepare list of source files, don't consider files from node_modules

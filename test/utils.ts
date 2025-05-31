@@ -6,6 +6,7 @@ import type {
   RunTests as TSESLintRunTests,
 } from '@typescript-eslint/rule-tester'
 import type { RuleModule } from '@typescript-eslint/utils/ts-eslint'
+import eslintPkg from 'eslint/package.json'
 import * as semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
@@ -21,6 +22,8 @@ export const parsers = {
   BABEL: require.resolve('@babel/eslint-parser'),
   HERMES: require.resolve('hermes-eslint'),
 }
+
+export const isESLint9 = semver.satisfies(eslintPkg.version, '>=9')
 
 export function tsVersionSatisfies(specifier: string) {
   return semver.satisfies(typescriptPkg.version, specifier)
