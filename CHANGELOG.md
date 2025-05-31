@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.15.0
+
+### Minor Changes
+
+- [#362](https://github.com/un-ts/eslint-plugin-import-x/pull/362) [`8bd40d8`](https://github.com/un-ts/eslint-plugin-import-x/commit/8bd40d8554b3c517fad3f1128110783e404eace0) Thanks [@JounQin](https://github.com/JounQin)! - refactor: drop @typescript-eslint/utils on production
+
 ## 4.14.2
 
 ### Patch Changes
