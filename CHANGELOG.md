@@ -1,5 +1,13 @@
 # eslint-plugin-import-x
 
+## 4.14.2
+
+### Patch Changes
+
+- [#360](https://github.com/un-ts/eslint-plugin-import-x/pull/360) [`3a3f5f8`](https://github.com/un-ts/eslint-plugin-import-x/commit/3a3f5f8755f96afe970f677ba2a9749a664c6757) Thanks [@JounQin](https://github.com/JounQin)! - fix: try/catch `enumerator.iterateFiles` gracefully
+
+- [#357](https://github.com/un-ts/eslint-plugin-import-x/pull/357) [`46c8bc6`](https://github.com/un-ts/eslint-plugin-import-x/commit/46c8bc6ce8869236e9d7e741acbd4571a352d269) Thanks [@JounQin](https://github.com/JounQin)! - chore(deps): bump `@typescript-eslint/utils` and `unrs-resolver`
+
 ## 4.14.1
 
 ### Patch Changes
