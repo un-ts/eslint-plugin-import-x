@@ -15,11 +15,4 @@ export default {
     'import-x/no-named-as-default-member': 'warn',
     'import-x/no-duplicates': 'warn',
   },
-
-  // need all these for parsing dependencies (even if _your_ code doesn't need
-  // all of them)
-  languageOptions: {
-    ecmaVersion: 2018,
-    sourceType: 'module',
-  },
 } satisfies PluginFlatBaseConfig
