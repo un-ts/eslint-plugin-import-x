@@ -328,7 +328,7 @@ function reportIfMissing(
   })
 }
 
-function testConfig(config: string[] | boolean | undefined, filename: string, { cwd }) {
+function testConfig(config: string[] | boolean | undefined, filename: string, context: RuleContext) {
   // Simplest configuration first, either a boolean or nothing.
   if (typeof config === 'boolean' || config === undefined) {
     return config
@@ -337,7 +337,7 @@ function testConfig(config: string[] | boolean | undefined, filename: string, { 
   return config.some(
     c =>
       minimatch(filename, c) ||
-      minimatch(filename, path.join(cwd, c), { windowsPathsNoEscape: true }),
+      minimatch(filename, path.join(context.cwd, c), { windowsPathsNoEscape: true }),
   )
 }
 
@@ -404,12 +404,12 @@ export default createRule<[Options?], MessageId>({
       getDependencies(context, options.packageDir) || extractDepFields({})
 
     const depsOptions = {
-      allowDevDeps: testConfig(options.devDependencies, filename, { cwd: context.cwd }) !== false,
+      allowDevDeps: testConfig(options.devDependencies, filename, context) !== false,
       allowOptDeps:
-        testConfig(options.optionalDependencies, filename, { cwd: context.cwd }) !== false,
-      allowPeerDeps: testConfig(options.peerDependencies, filename, { cwd: context.cwd }) !== false,
+        testConfig(options.optionalDependencies, filename, context) !== false,
+      allowPeerDeps: testConfig(options.peerDependencies, filename, context) !== false,
       allowBundledDeps:
-        testConfig(options.bundledDependencies, filename, { cwd: context.cwd }) !== false,
+        testConfig(options.bundledDependencies, filename, context) !== false,
       verifyInternalDeps: !!options.includeInternal,
       verifyTypeImports: !!options.includeTypes,
     }
