@@ -112,7 +112,9 @@ export default createRule<[Options?], MessageId>({
           isIdentifier &&
           hasCJSExportReference &&
           !isEntryPoint &&
-          !options.exceptions?.some(glob => minimatch(filename, glob)) &&
+          !options.exceptions?.some(glob =>
+            minimatch(filename, glob, { nocomment: true }),
+          ) &&
           !isImportBinding
         ) {
           for (const importDeclaration of importDeclarations) {
