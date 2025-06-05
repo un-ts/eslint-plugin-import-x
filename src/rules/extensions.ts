@@ -326,11 +326,7 @@ export default createRule<Options, MessageId>({
           return
         }
 
-        const resolvedPath = resolve(importPath, context)
-
-        // get extension from resolved path, if possible.
-        // for unresolved, use source value.
-        const extension = path.extname(resolvedPath || importPath).slice(1)
+        const extension = path.extname(importPath).slice(1)
 
         // determine if this is a module
         const isPackage =
