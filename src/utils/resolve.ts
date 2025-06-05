@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { setRuleContext } from 'eslint-import-context'
-import { stableHash } from 'stable-hash'
+import { stableHash } from 'stable-hash-x'
 
 import { createNodeResolver } from '../node-resolver.js'
 import { cjsRequire } from '../require.js'

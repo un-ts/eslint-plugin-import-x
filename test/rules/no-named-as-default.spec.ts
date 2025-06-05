@@ -162,8 +162,8 @@ ruleTester.run('no-named-as-default', rule, {
     }),
 
     tInvalid({
-      code: `import z from 'zod';`,
-      errors: [createDefaultError('z', 'ImportDefaultSpecifier')],
+      code: `import importX from 'eslint-plugin-import-x';`,
+      errors: [createDefaultError('importX', 'ImportDefaultSpecifier')],
     }),
   ],
 })
