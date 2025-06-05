@@ -1,5 +1,17 @@
 # eslint-plugin-import-x
 
+## 4.15.1
+
+### Patch Changes
+
+- [#373](https://github.com/un-ts/eslint-plugin-import-x/pull/373) [`90ec1f1`](https://github.com/un-ts/eslint-plugin-import-x/commit/90ec1f1f0eecc7ef566a14b5163cb7c1ec05e6de) Thanks [@JounQin](https://github.com/JounQin)! - chore: migrate `stable-hash` to `stable-hash-x`
+
+- [#371](https://github.com/un-ts/eslint-plugin-import-x/pull/371) [`4f97a1a`](https://github.com/un-ts/eslint-plugin-import-x/commit/4f97a1a1419c15821ba1ab07e4038b715208ac7a) Thanks [@dword-design](https://github.com/dword-design)! - fix: take `context.cwd` into account for glob options of rules `no-extraneous-dependencies` and `no-unassigned-import`
+
+- [#371](https://github.com/un-ts/eslint-plugin-import-x/pull/371) [`4f97a1a`](https://github.com/un-ts/eslint-plugin-import-x/commit/4f97a1a1419c15821ba1ab07e4038b715208ac7a) Thanks [@dword-design](https://github.com/dword-design)! - fix: enable `nocomment: true` for glob options of rules `no-import-module-exports` and `no-namespace`
+
+- [#368](https://github.com/un-ts/eslint-plugin-import-x/pull/368) [`74a16c5`](https://github.com/un-ts/eslint-plugin-import-x/commit/74a16c52bfba784ae44db7e200a3023d00dc82f3) Thanks [@JoseGoncalves](https://github.com/JoseGoncalves)! - fix: drop `languageOptions` config from `flat/recommended`
+
 ## 4.15.0
 
 ### Minor Changes
