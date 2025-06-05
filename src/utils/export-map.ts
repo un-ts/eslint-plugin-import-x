@@ -6,7 +6,7 @@ import debug from 'debug'
 import type { AST } from 'eslint'
 import { SourceCode } from 'eslint'
 import { getTsconfigWithContext } from 'eslint-import-context'
-import { stableHash } from 'stable-hash'
+import { stableHash } from 'stable-hash-x'
 
 import { cjsRequire } from '../require.js'
 import type {
