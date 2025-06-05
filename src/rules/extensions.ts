@@ -329,8 +329,8 @@ export default createRule<Options, MessageId>({
         const resolvedPath = resolve(importPath, context)
 
         const extension =
-          path.extname(importPath)?.slice?.(1) ||
-          path.extname(resolvedPath).slice(1)
+          path.extname(importPath).slice(1) ||
+          (resolvedPath ? path.extname(resolvedPath).slice(1) : '')
 
         // determine if this is a module
         const isPackage =
