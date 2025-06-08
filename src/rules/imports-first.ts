@@ -13,6 +13,7 @@ export default createRule({
       deprecatedSince: '2.0.0',
       replacedBy: [
         {
+          message: 'Replaced by `import-x/first`.',
           rule: { name: 'first', url: docsUrl('first') },
         },
       ],
