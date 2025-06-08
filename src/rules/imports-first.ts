@@ -1,4 +1,4 @@
-import { createRule } from '../utils/index.js'
+import { createRule, docsUrl } from '../utils/index.js'
 
 import first from './first.js'
 
@@ -7,7 +7,16 @@ export default createRule({
   name: 'imports-first',
   meta: {
     ...first.meta,
-    deprecated: true,
+    deprecated: {
+      message: 'Replaced by `import-x/first`.',
+      url: 'https://github.com/import-js/eslint-plugin-import/blob/main/CHANGELOG.md#changed-24',
+      deprecatedSince: '2.0.0',
+      replacedBy: [
+        {
+          rule: { name: 'first', url: docsUrl('first') },
+        },
+      ],
+    },
     docs: {
       category: 'Style guide',
       description: 'Replaced by `import-x/first`.',
