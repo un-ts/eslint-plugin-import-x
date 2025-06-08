@@ -68,23 +68,21 @@ describe('package', () => {
 
   it('provides information about deprecated rules', () => {
     expect(module.rules!['imports-first'].meta).not.toHaveProperty('replacedBy')
-
-    expect(typeof module.rules!['imports-first'].meta.deprecated).toBe('object')
-    const deprecated = module.rules!['imports-first'].meta.deprecated as Record<
-      string,
-      unknown
-    >
-
-    expect(deprecated).toHaveProperty('message')
-    expect(deprecated).toHaveProperty('url')
-    expect(deprecated).toHaveProperty('deprecatedSince')
-    expect(deprecated).toHaveProperty('replacedBy')
-
-    expect(Array.isArray(deprecated.replacedBy)).toBe(true)
-    const replacedBy = deprecated.replacedBy as unknown[]
-
-    expect(typeof replacedBy[0]).toBe('object')
-    expect(replacedBy[0]).toHaveProperty('message')
-    expect(replacedBy[0]).toHaveProperty('rule')
+    expect(module.rules!['imports-first'].meta.deprecated).toEqual(
+      expect.objectContaining<TSESLint.DeprecatedInfo>({
+        message: expect.any(String),
+        url: expect.any(String),
+        deprecatedSince: expect.any(String),
+        replacedBy: [
+          {
+            message: expect.any(String),
+            rule: {
+              name: expect.any(String),
+              url: expect.any(String),
+            },
+          },
+        ],
+      }),
+    )
   })
 })
