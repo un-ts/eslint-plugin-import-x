@@ -53,6 +53,7 @@ jobs:
         if: ${{ matrix.eslint != 9 }}
         run: |
           yarn add -D eslint@${{ matrix.eslint }} eslint-plugin-unicorn@56
+          yarn --no-immutable
 
       - name: Install Dependencies
         run: yarn --immutable
