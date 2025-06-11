@@ -156,3 +156,6 @@ export interface Ranks {
 export interface CjsRequire extends NodeJS.Require {
   <T>(id: string): T
 }
+
+export type SetValue<T extends Set<unknown>> =
+  T extends Set<infer U> ? U : never

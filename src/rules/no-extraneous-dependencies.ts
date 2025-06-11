@@ -13,6 +13,7 @@ import {
   pkgUp,
   importType,
   getFilePackageName,
+  getNpmInstallCommand,
 } from '../utils/index.js'
 
 export type PackageDeps = ReturnType<typeof extractDepFields>
@@ -397,8 +398,7 @@ export default createRule<[Options?], MessageId>({
         "'{{packageName}}' should be listed in the project's dependencies, not devDependencies.",
       optDep:
         "'{{packageName}}' should be listed in the project's dependencies, not optionalDependencies.",
-      missing:
-        "'{{packageName}}' should be listed in the project's dependencies. Run 'npm i -S {{packageName}}' to add it",
+      missing: `'{{packageName}}' should be listed in the project's dependencies. Run '${getNpmInstallCommand('{{packageName}}')}' to add it`,
     },
   },
   defaultOptions: [],
