@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 4.15.2
+
+### Patch Changes
+
+- [#378](https://github.com/un-ts/eslint-plugin-import-x/pull/378) [`cdb95ba`](https://github.com/un-ts/eslint-plugin-import-x/commit/cdb95ba7799f2cdfd52dd123090fe10b6fd75415) Thanks [@error-four-o-four](https://github.com/error-four-o-four)! - chore: adopt new `deprecated: DeprecatedInfo` meta rule option
+
+- [#383](https://github.com/un-ts/eslint-plugin-import-x/pull/383) [`738a7cf`](https://github.com/un-ts/eslint-plugin-import-x/commit/738a7cf5645742fab811b9bb916c7b08c2853526) Thanks [@JounQin](https://github.com/JounQin)! - fix: get npm client and install command correctly
+
+- [#382](https://github.com/un-ts/eslint-plugin-import-x/pull/382) [`d536756`](https://github.com/un-ts/eslint-plugin-import-x/commit/d5367564c0308708caed38ced72b27b953cf1b97) Thanks [@JounQin](https://github.com/JounQin)! - chore: bump `unrs-resolver` to `v1.9.0`, it'll fallback to `napi-postinstall` check at runtime
+
 ## 4.15.1
 
 ### Patch Changes
