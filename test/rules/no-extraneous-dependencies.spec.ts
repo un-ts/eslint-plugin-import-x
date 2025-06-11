@@ -238,6 +238,11 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         { packageDir: packageDirMonoRepoRoot, whitelist: ['not-a-dependency'] },
       ],
     }),
+    tValid({
+      code: 'import "package-named-exports"',
+      filename: testFilePath('package-named-exports/index.js'),
+      options: [{ packageDir: testFilePath('package-named-exports') }],
+    }),
   ],
   invalid: [
     tInvalid({
@@ -444,6 +449,14 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       options: [{ includeInternal: true }],
       errors: [
         { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
+      ],
+    }),
+    tInvalid({
+      code: 'import "package-named"',
+      filename: testFilePath('package-named/index.js'),
+      options: [{ packageDir: testFilePath('package-named') }],
+      errors: [
+        { messageId: 'selfImport', data: { packageName: 'package-named' } },
       ],
     }),
   ],
