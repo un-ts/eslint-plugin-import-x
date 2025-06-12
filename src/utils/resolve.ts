@@ -300,7 +300,7 @@ function fullResolve(
 
     for (const { enable, name, options, resolver } of normalizeConfigResolvers(
       configResolvers,
-      sourceFile,
+      context.physicalFilename,
     )) {
       if (!enable) {
         continue
