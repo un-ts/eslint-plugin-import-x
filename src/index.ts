@@ -65,7 +65,7 @@ import noUselessPathSegments from './rules/no-useless-path-segments.js'
 import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax.js'
 import order from './rules/order.js'
 import preferDefaultExport from './rules/prefer-default-export.js'
-import preferNamespaceImport from "./rules/prefer-namespace-import.js"
+import preferNamespaceImport from './rules/prefer-namespace-import.js'
 import unambiguous from './rules/unambiguous.js'
 // configs
 import type {

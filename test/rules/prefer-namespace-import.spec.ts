@@ -57,23 +57,23 @@ describe('TypeScript', () => {
           import Name2 from 'prefix-name';`,
           errors: [
             {
-              messageId: "preferNamespaceImport",
-              data: { source: "@scope/name", specifier: "Name1" },
+              messageId: 'preferNamespaceImport',
+              data: { source: '@scope/name', specifier: 'Name1' },
             },
             {
-              messageId: "preferNamespaceImport",
-              data: { source: "prefix-name", specifier: "Name2" },
+              messageId: 'preferNamespaceImport',
+              data: { source: 'prefix-name', specifier: 'Name2' },
             },
           ],
           options: [
             {
-              patterns: ["/^@scope/", "/^prefix-/"],
+              patterns: ['/^@scope/', '/^prefix-/'],
             },
           ],
           output: `
           import * as Name1 from '@scope/name';
           import * as Name2 from 'prefix-name';`,
-        })
+        }),
       ],
     })
   }
