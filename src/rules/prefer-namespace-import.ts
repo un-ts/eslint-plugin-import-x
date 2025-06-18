@@ -1,9 +1,7 @@
-import type { TSESTree } from '@typescript-eslint/types'
-
 import { createRule } from '../utils/index.js'
 
 export interface Options {
-  patterns?: string[]
+  patterns?: readonly string[]
 }
 
 export type MessageId = 'preferNamespaceImport'
@@ -44,9 +42,7 @@ export default createRule<[Options?], MessageId>({
     }
     const regexps = patterns.map(toRegExp)
     return {
-      [`ImportDeclaration ImportDefaultSpecifier`](
-        node: TSESTree.ImportDefaultSpecifier,
-      ) {
+      ImportDefaultSpecifier(node) {
         const importSource = node.parent.source.value
         if (!regexps.some(exp => exp.test(importSource))) {
           return
@@ -64,27 +60,24 @@ export default createRule<[Options?], MessageId>({
             const importDeclarationText = context.sourceCode.getText(
               node.parent,
             )
-            const semi = importDeclarationText.endsWith(';') ? ';' : ''
-            const quote = node.parent.source.raw.at(0) ?? "'"
+            const localName = node.local.name
+            if (!hasOtherSpecifiers) {
+              return fixer.replaceText(node, `* as ${localName}`)
+            }
             const isTypeImport = node.parent.importKind === 'type'
             const importStringPrefix = `import${isTypeImport ? ' type' : ''}`
-            const importSourceQuoted = `${quote}${importSource}${quote}`
-            if (!hasOtherSpecifiers) {
-              return fixer.replaceText(
-                node.parent,
-                `${importStringPrefix} * as ${node.local.name} from ${importSourceQuoted}${semi}`,
-              )
-            }
             // remove the default specifier and prepend the namespace import specifier
+            const rightBraceIndex = importDeclarationText.indexOf('}') + 1
             const specifiers = importDeclarationText.slice(
               importDeclarationText.indexOf('{'),
-              importDeclarationText.indexOf('}') + 1,
+              rightBraceIndex,
             )
+            const remainingText = importDeclarationText.slice(rightBraceIndex)
             return fixer.replaceText(
               node.parent,
               [
-                `${importStringPrefix} * as ${node.local.name} from ${importSourceQuoted}${semi}`,
-                `${importStringPrefix} ${specifiers} from ${importSourceQuoted}${semi}`,
+                `${importStringPrefix} * as ${localName} ${remainingText.trimStart()}`,
+                `${importStringPrefix} ${specifiers}${remainingText}`,
               ].join('\n'),
             )
           },
