@@ -15,7 +15,7 @@ const ruleTester = new TSESLintRuleTester()
 
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
-const options = [{ patterns: ['/^@scope/', '/^prefix-/'] }] as const
+const options = [{ patterns: ['/^@scope/', '/^prefix-/', 'specific'] }] as const
 
 ruleTester.run('prefer-namespace-import', rule, {
   valid: [
@@ -26,9 +26,13 @@ ruleTester.run('prefer-namespace-import', rule, {
       code: `import * as Name from 'prefix-name';`,
     }),
     tValid({
+      code: `import * as Name from 'specific';`,
+    }),
+    tValid({
       code: `
           import * as Name1 from '@scope/name';
           import * as Name2 from 'prefix-name';
+          import * as Name2 from 'specific';
           `,
     }),
     tValid({
@@ -43,7 +47,8 @@ import Name1 from '@scope/name';
 import Name2 from 'prefix-name';
 import Name3 from 'prefix-name' with { type: 'json' };
 import Name4, { name4 } from 'prefix-name' with { type: 'json' };
-import Name5 from 'other-name';
+import Name5 from 'specific';
+import Name6 from 'other-name';
           `,
       errors: [
         {
@@ -62,6 +67,10 @@ import Name5 from 'other-name';
           messageId: 'preferNamespaceImport',
           data: { source: 'prefix-name', specifier: 'Name4' },
         },
+        {
+          messageId: 'preferNamespaceImport',
+          data: { source: 'specific', specifier: 'Name5' },
+        },
       ],
       options,
       output: `
@@ -70,7 +79,8 @@ import * as Name2 from 'prefix-name';
 import * as Name3 from 'prefix-name' with { type: 'json' };
 import * as Name4 from 'prefix-name' with { type: 'json' };
 import { name4 } from 'prefix-name' with { type: 'json' };
-import Name5 from 'other-name';
+import * as Name5 from 'specific';
+import Name6 from 'other-name';
           `,
     }),
   ],
@@ -109,7 +119,8 @@ import type Name1 from '@scope/name';
 import type Name2 from 'prefix-name';
 import type Name3 from 'prefix-name' with { type: 'json' };
 import Name4, { type name4 } from 'prefix-name' with { type: 'json' };
-import type Name5 from 'other-name';
+import type Name5 from 'specific';
+import type Name6 from 'other-name';
           `,
           errors: [
             {
@@ -128,6 +139,10 @@ import type Name5 from 'other-name';
               messageId: 'preferNamespaceImport',
               data: { source: 'prefix-name', specifier: 'Name4' },
             },
+            {
+              messageId: 'preferNamespaceImport',
+              data: { source: 'specific', specifier: 'Name5' },
+            },
           ],
           options,
           output: `
@@ -136,7 +151,8 @@ import type * as Name2 from 'prefix-name';
 import type * as Name3 from 'prefix-name' with { type: 'json' };
 import * as Name4 from 'prefix-name' with { type: 'json' };
 import { type name4 } from 'prefix-name' with { type: 'json' };
-import type Name5 from 'other-name';
+import type * as Name5 from 'specific';
+import type Name6 from 'other-name';
           `,
           ...parserConfig,
         }),
