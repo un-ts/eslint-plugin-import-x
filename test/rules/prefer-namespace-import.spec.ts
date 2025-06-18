@@ -11,14 +11,10 @@ const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 ruleTester.run('prefer-namespace-import', rule, {
   valid: [
     tValid({
-      code: `
-          import * as Name from '@scope/name';
-          `,
+      code: `import * as Name from '@scope/name';`,
     }),
     tValid({
-      code: `
-          import * as Name from 'prefix-name';
-          `,
+      code: `import * as Name from 'prefix-name';`,
     }),
     tValid({
       code: `
@@ -26,12 +22,23 @@ ruleTester.run('prefer-namespace-import', rule, {
           import * as Name2 from 'prefix-name';
           `,
     }),
+    tValid({
+      code: `import Name from 'other-name';`,
+      options: [
+        {
+          patterns: ['/^@scope/', '/^prefix-/'],
+        },
+      ],
+    }),
   ],
   invalid: [
     tInvalid({
       code: `
-          import Name1 from '@scope/name';
-          import Name2 from 'prefix-name';`,
+import Name1 from '@scope/name';
+import Name2 from 'prefix-name';
+import Name3, { named } from 'prefix-name';
+import Name4 from 'other-name';
+          `,
       errors: [
         {
           messageId: 'preferNamespaceImport',
@@ -41,6 +48,10 @@ ruleTester.run('prefer-namespace-import', rule, {
           messageId: 'preferNamespaceImport',
           data: { source: 'prefix-name', specifier: 'Name2' },
         },
+        {
+          messageId: 'preferNamespaceImport',
+          data: { source: 'prefix-name', specifier: 'Name3' },
+        },
       ],
       options: [
         {
@@ -48,8 +59,12 @@ ruleTester.run('prefer-namespace-import', rule, {
         },
       ],
       output: `
-          import * as Name1 from '@scope/name';
-          import * as Name2 from 'prefix-name';`,
+import * as Name1 from '@scope/name';
+import * as Name2 from 'prefix-name';
+import * as Name3 from 'prefix-name';
+import { named } from 'prefix-name';
+import Name4 from 'other-name';
+          `,
     }),
   ],
 })
