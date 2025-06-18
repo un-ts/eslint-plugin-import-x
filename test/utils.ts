@@ -56,14 +56,6 @@ function createRuleTestCase<TTestCase extends TSESLintValidTestCase<unknown[]>>(
   return {
     filename: TEST_FILENAME,
     ...t,
-    languageOptions: {
-      ...t.languageOptions,
-      parserOptions: {
-        sourceType: 'module',
-        ecmaVersion: 9,
-        ...t.languageOptions?.parserOptions,
-      },
-    },
   }
 }
 

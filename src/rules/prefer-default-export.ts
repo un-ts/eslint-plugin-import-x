@@ -6,7 +6,7 @@ export interface Options {
   target?: 'single' | 'any'
 }
 
-type MessageId = 'single' | 'any'
+export type MessageId = 'single' | 'any'
 
 export default createRule<[Options?], MessageId>({
   name: 'prefer-default-export',
