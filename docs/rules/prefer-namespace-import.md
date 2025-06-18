@@ -4,7 +4,7 @@
 
 <!-- end auto-generated rule header -->
 
-Enforces specific modules are imported via namespace imports, like `react`/`react-dom`, etc.
+Enforce using namespace imports for specific modules, like `react`/`react-dom`, etc.
 
 ## Rule Details
 

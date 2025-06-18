@@ -11,7 +11,9 @@ export default createRule<[Options?], MessageId>({
   meta: {
     type: 'problem',
     docs: {
-      description: 'Enforces using namespace imports for specific modules.',
+      category: 'Style guide',
+      description:
+        'Enforce using namespace imports for specific modules, like `react`/`react-dom`, etc.',
     },
     fixable: 'code',
     schema: [
