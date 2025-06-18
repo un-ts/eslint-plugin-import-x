@@ -1,4 +1,4 @@
-import module from 'node:module'
+import { isBuiltin } from 'node:module'
 import path from 'node:path'
 
 import { ResolverFactory } from 'unrs-resolver'
@@ -6,18 +6,29 @@ import type { NapiResolveOptions } from 'unrs-resolver'
 
 import type { NewResolver } from './types.js'
 
+let resolver: ResolverFactory | undefined
+
+// @internal
+export function clearNodeResolverCache() {
+  resolver?.clearCache()
+}
+
 export function createNodeResolver({
   extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
   conditionNames = ['import', 'require', 'default'],
   mainFields = ['module', 'main'],
   ...restOptions
 }: NapiResolveOptions = {}): NewResolver {
-  const resolver = new ResolverFactory({
+  const options = {
     extensions,
     conditionNames,
     mainFields,
     ...restOptions,
-  })
+  }
+
+  resolver = resolver
+    ? resolver.cloneWithOptions(options)
+    : new ResolverFactory(options)
 
   // shared context across all resolve calls
 
@@ -25,23 +36,19 @@ export function createNodeResolver({
     interfaceVersion: 3,
     name: 'eslint-plugin-import-x:node',
     resolve(modulePath, sourceFile) {
-      if (module.isBuiltin(modulePath)) {
-        return { found: true, path: null }
-      }
-
-      if (modulePath.startsWith('data:')) {
+      if (isBuiltin(modulePath) || modulePath.startsWith('data:')) {
         return { found: true, path: null }
       }
 
       try {
-        const resolved = resolver.sync(path.dirname(sourceFile), modulePath)
+        const resolved = resolver!.sync(path.dirname(sourceFile), modulePath)
         if (resolved.path) {
           return { found: true, path: resolved.path }
         }
-        return { found: false }
       } catch {
-        return { found: false }
+        //
       }
+      return { found: false }
     },
   }
 }

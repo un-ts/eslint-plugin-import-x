@@ -1,5 +1,9 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import type { PluginName, PluginSettings } from 'eslint-import-context'
+import type {
+  ImportSettings,
+  PluginName,
+  PluginSettings,
+} from 'eslint-import-context'
 import type { MinimatchOptions } from 'minimatch'
 
 import type { ImportType as ImportType_ } from './utils/index.js'
@@ -159,3 +163,8 @@ export interface CjsRequire extends NodeJS.Require {
 
 export type SetValue<T extends Set<unknown>> =
   T extends Set<infer U> ? U : never
+
+export interface NormalizedCacheSettings
+  extends NonNullable<ImportSettings['cache']> {
+  lifetime: number
+}
