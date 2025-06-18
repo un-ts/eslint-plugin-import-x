@@ -253,6 +253,10 @@ settings:
 💡 Manually fixable by [editor suggestions](https://eslint.org/docs/latest/use/core-concepts#rule-suggestions).\
 ❌ Deprecated.
 
+| Name                                                             | Description                                            | 💼  | ⚠️  | 🚫  | 🔧  | 💡  | ❌  |
+| :--------------------------------------------------------------- | :----------------------------------------------------- | :-- | :-- | :-- | :-- | :-- | :-- |
+| [prefer-namespace-import](docs/rules/prefer-namespace-import.md) | Enforces using namespace imports for specific modules. |     |     |     | 🔧  |     |     |
+
 ### Helpful warnings
 
 | Name                                                                   | Description                                                                           | 💼          | ⚠️          | 🚫  | 🔧  | 💡  | ❌  |
