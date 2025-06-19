@@ -1,10 +1,8 @@
 import debug from 'debug'
 
-import type { ImportSettings, PluginSettings } from '../types.js'
+import type { NormalizedCacheSettings, PluginSettings } from '../types.js'
 
 const log = debug('eslint-plugin-import-x:utils:ModuleCache')
-
-export type CacheKey = unknown
 
 export interface CacheObject {
   result: unknown
@@ -12,9 +10,9 @@ export interface CacheObject {
 }
 
 export class ModuleCache {
-  constructor(public map: Map<CacheKey, CacheObject> = new Map()) {}
+  constructor(public map: Map<string, CacheObject> = new Map()) {}
 
-  set(cacheKey: CacheKey, result: unknown) {
+  set(cacheKey: string, result: unknown) {
     this.map.set(cacheKey, {
       result,
       lastSeen: process.hrtime(),
@@ -23,13 +21,12 @@ export class ModuleCache {
     return result
   }
 
-  get<T>(cacheKey: CacheKey, settings: ImportSettings['cache']): T | undefined {
-    if (this.map.has(cacheKey)) {
-      const f = this.map.get(cacheKey)
+  get<T>(cacheKey: string, settings: NormalizedCacheSettings): T | undefined {
+    const cache = this.map.get(cacheKey)
+    if (cache) {
       // check freshness
-      // @ts-expect-error TS can't narrow properly from `has` and `get`
-      if (process.hrtime(f.lastSeen)[0] < settings.lifetime) {
-        return f!.result as T
+      if (process.hrtime(cache.lastSeen)[0] < settings.lifetime) {
+        return cache.result as T
       }
     } else {
       log('cache miss for', cacheKey)
@@ -51,8 +48,6 @@ export class ModuleCache {
       cacheSettings.lifetime = Number.POSITIVE_INFINITY
     }
 
-    return cacheSettings as ImportSettings['cache'] & {
-      lifetime: number
-    }
+    return cacheSettings as NormalizedCacheSettings
   }
 }

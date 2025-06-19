@@ -1105,36 +1105,52 @@ function childContext(
   path: string,
   context: RuleContext | ChildContext,
 ): ChildContext {
-  const { settings, parserOptions, parserPath, languageOptions } = context
+  const {
+    settings,
+    parserOptions,
+    parserPath,
+    languageOptions,
+    cwd,
+    filename,
+    physicalFilename,
+  } = context
 
   return {
-    cacheKey: makeContextCacheKey(context) + path,
+    cacheKey: makeContextCacheKey(context) + '\0' + path,
     settings,
     parserOptions,
     parserPath,
     languageOptions,
     path,
-    cwd: context.cwd,
-    filename: context.filename,
-    physicalFilename: context.physicalFilename,
+    cwd,
+    filename,
+    physicalFilename,
   }
 }
 
 export function makeContextCacheKey(context: RuleContext | ChildContext) {
-  const { settings, parserPath, parserOptions, languageOptions } = context
+  const { settings, parserPath, parserOptions, languageOptions, cwd } = context
 
   let hash =
+    cwd +
+    '\0' +
     stableHash(settings) +
+    '\0' +
     stableHash(languageOptions?.parserOptions ?? parserOptions)
 
   if (languageOptions) {
     hash +=
-      String(languageOptions.ecmaVersion) + String(languageOptions.sourceType)
+      '\0' +
+      String(languageOptions.ecmaVersion) +
+      '\0' +
+      String(languageOptions.sourceType)
   }
 
-  hash += stableHash(
-    parserPath ?? languageOptions?.parser?.meta ?? languageOptions?.parser,
-  )
+  hash +=
+    '\0' +
+    stableHash(
+      parserPath ?? languageOptions?.parser?.meta ?? languageOptions?.parser,
+    )
 
   return hash
 }

@@ -9,10 +9,10 @@ import { createNodeResolver } from '../node-resolver.js'
 import { cjsRequire } from '../require.js'
 import type {
   ChildContext,
-  ImportSettings,
   LegacyResolver,
   NewResolver,
   NodeResolverOptions,
+  NormalizedCacheSettings,
   PluginSettings,
   RuleContext,
 } from '../types.js'
@@ -47,7 +47,7 @@ export const fileExistsCache = new ModuleCache()
 // https://stackoverflow.com/a/27382838
 export function fileExistsWithCaseSync(
   filepath: string | null,
-  cacheSettings?: ImportSettings['cache'],
+  cacheSettings: NormalizedCacheSettings,
   strict?: boolean,
 ): boolean {
   // don't care if the FS is case-sensitive
