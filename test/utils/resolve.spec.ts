@@ -9,7 +9,11 @@ import type { TSESLint } from '@typescript-eslint/utils'
 import { testContext, testFilePath } from '../utils.js'
 
 import { importXResolverCompat } from 'eslint-plugin-import-x'
-import type { CjsRequire, NewResolver } from 'eslint-plugin-import-x'
+import type {
+  CjsRequire,
+  NewResolver,
+  NormalizedCacheSettings,
+} from 'eslint-plugin-import-x'
 import {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
@@ -450,7 +454,9 @@ describe('resolve', () => {
       'import-x/cache': { lifetime: 0 },
     })
 
-    const cacheSettings = context.settings['import-x/cache']
+    const cacheSettings = context.settings[
+      'import-x/cache'
+    ] as NormalizedCacheSettings
 
     const file = resolve(
       // Note the case difference 'MyUncoolComponent' vs 'MyUnCoolComponent'

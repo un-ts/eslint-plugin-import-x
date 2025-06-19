@@ -6,29 +6,18 @@ import type { NapiResolveOptions } from 'unrs-resolver'
 
 import type { NewResolver } from './types.js'
 
-let resolver: ResolverFactory | undefined
-
-// @internal
-export function clearNodeResolverCache() {
-  resolver?.clearCache()
-}
-
 export function createNodeResolver({
   extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
   conditionNames = ['import', 'require', 'default'],
   mainFields = ['module', 'main'],
   ...restOptions
 }: NapiResolveOptions = {}): NewResolver {
-  const options = {
+  const resolver = new ResolverFactory({
     extensions,
     conditionNames,
     mainFields,
     ...restOptions,
-  }
-
-  resolver = resolver
-    ? resolver.cloneWithOptions(options)
-    : new ResolverFactory(options)
+  })
 
   // shared context across all resolve calls
 
@@ -41,7 +30,7 @@ export function createNodeResolver({
       }
 
       try {
-        const resolved = resolver!.sync(path.dirname(sourceFile), modulePath)
+        const resolved = resolver.sync(path.dirname(sourceFile), modulePath)
         if (resolved.path) {
           return { found: true, path: resolved.path }
         }

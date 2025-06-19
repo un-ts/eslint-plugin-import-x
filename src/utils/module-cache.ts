@@ -1,6 +1,5 @@
 import debug from 'debug'
 
-import { clearNodeResolverCache } from '../node-resolver.js'
 import type { NormalizedCacheSettings, PluginSettings } from '../types.js'
 
 const log = debug('eslint-plugin-import-x:utils:ModuleCache')
@@ -33,7 +32,6 @@ export class ModuleCache {
       log('cache miss for', cacheKey)
     }
     // cache miss
-    clearNodeResolverCache()
   }
 
   static getSettings(settings: PluginSettings) {
