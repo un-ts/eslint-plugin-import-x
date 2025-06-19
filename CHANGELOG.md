@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 4.16.0
+
+### Minor Changes
+
+- [#386](https://github.com/un-ts/eslint-plugin-import-x/pull/386) [`1c8b9ae`](https://github.com/un-ts/eslint-plugin-import-x/commit/1c8b9ae3a6f99f15d34c5be3d65d99582fba7c62) Thanks [@JounQin](https://github.com/JounQin)! - feat: port [`react-x/prefer-react-namespace-import`](https://eslint-react.xyz/docs/rules/prefer-react-namespace-import) into `prefer-namespace-import`
+
+### Patch Changes
+
+- [#388](https://github.com/un-ts/eslint-plugin-import-x/pull/388) [`1089d9f`](https://github.com/un-ts/eslint-plugin-import-x/commit/1089d9ff44a49bbb6a23db54c8b4bef2478ee8c2) Thanks [@JounQin](https://github.com/JounQin)! - fix: take `context.cwd` into account for cache key
+
 ## 4.15.2
 
 ### Patch Changes
