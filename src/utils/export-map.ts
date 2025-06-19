@@ -1116,7 +1116,7 @@ function childContext(
   } = context
 
   return {
-    cacheKey: makeContextCacheKey(context) + path,
+    cacheKey: makeContextCacheKey(context) + '\0' + path,
     settings,
     parserOptions,
     parserPath,
@@ -1129,10 +1129,10 @@ function childContext(
 }
 
 export function makeContextCacheKey(context: RuleContext | ChildContext) {
-  const { settings, parserPath, parserOptions, languageOptions } = context
+  const { settings, parserPath, parserOptions, languageOptions, cwd } = context
 
   let hash =
-    process.cwd() +
+    cwd +
     '\0' +
     stableHash(settings) +
     '\0' +
