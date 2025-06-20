@@ -1,11 +1,14 @@
 {
   "name": "test-package",
-  "private": true,
   "version": "1.0.0",
   "description": "A test project for ESLint configuration",
+  "private": true,
   "scripts": {
-    "lint": "eslint",
-    "demo": "tsx test.ts"
+    "demo": "tsx test.ts",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "nanoid": "^5.1.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
@@ -17,8 +20,5 @@
     "globals": "^16.2.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
-  },
-  "dependencies": {
-    "nanoid": "^5.1.5"
   }
 }
