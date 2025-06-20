@@ -2,7 +2,6 @@ import Module, { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { cjsRequire } from '../require.js'
-import type { ChildContext, RuleContext } from '../types.js'
 
 function createModule(filename: string) {
   const mod = new Module(filename)
@@ -12,10 +11,7 @@ function createModule(filename: string) {
   return mod
 }
 
-export function moduleRequire<T>(
-  p: string,
-  context: ChildContext | RuleContext,
-): T {
+export function moduleRequire<T>(p: string, sourceFile: string): T {
   try {
     // attempt to get espree relative to eslint
     const eslintPath = cjsRequire.resolve('eslint')
@@ -38,7 +34,7 @@ export function moduleRequire<T>(
 
   try {
     // try relative to the current context
-    return createRequire(context.physicalFilename)(p)
+    return createRequire(sourceFile)(p)
   } catch {
     //
   }
