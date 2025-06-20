@@ -1,10 +1,10 @@
 {
   "name": "yarn-pnp",
   "type": "module",
-  "packageManager": "yarn@4.9.2",
   "workspaces": [
     "test-package"
   ],
+  "packageManager": "yarn@4.9.2",
   "exports": {
     ".": "./index.js",
     "./add": "./add.js?custom"
