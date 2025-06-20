@@ -117,7 +117,10 @@ export function parse(
   // require the parser relative to the main module (i.e., ESLint)
   const parser =
     typeof parserOrPath === 'string'
-      ? moduleRequire<TSESLint.Parser.ParserModule>(parserOrPath)
+      ? moduleRequire<TSESLint.Parser.ParserModule>(
+          parserOrPath,
+          context.physicalFilename,
+        )
       : parserOrPath
 
   // replicate bom strip and hashbang transform of ESLint
