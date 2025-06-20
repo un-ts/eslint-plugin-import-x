@@ -298,52 +298,61 @@ function fullResolve(
         node: settings['import-x/resolve'],
       } // backward compatibility
 
-    for (const { enable, name, options, resolver } of normalizeConfigResolvers(
-      configResolvers,
-      context.physicalFilename,
-    )) {
-      if (!enable) {
-        continue
-      }
+    const sourceFiles =
+      context.physicalFilename === sourceFile
+        ? [sourceFile]
+        : [context.physicalFilename, sourceFile]
 
-      // if the resolver is `eslint-import-resolver-node`, we use the new `node` resolver first
-      // and try `eslint-import-resolver-node` as fallback instead
-      if (LEGACY_NODE_RESOLVERS.has(name)) {
-        const resolverOptions = (options || {}) as NodeResolverOptions
-        const resolved = legacyNodeResolve(
-          resolverOptions,
-          // TODO: enable the following in the next major
-          // {
-          //   ...resolverOptions,
-          //   extensions:
-          //     resolverOptions.extensions || settings['import-x/extensions'],
-          // },
-          context,
-          modulePath,
-          sourceFile,
-        )
-
-        if (resolved?.found) {
-          fileExistsCache.set(cacheKey, resolved.path)
-          return resolved
-        }
-
-        if (!resolver) {
+    for (const sourceFile of sourceFiles) {
+      for (const {
+        enable,
+        name,
+        options,
+        resolver,
+      } of normalizeConfigResolvers(configResolvers, sourceFile)) {
+        if (!enable) {
           continue
         }
+
+        // if the resolver is `eslint-import-resolver-node`, we use the new `node` resolver first
+        // and try `eslint-import-resolver-node` as fallback instead
+        if (LEGACY_NODE_RESOLVERS.has(name)) {
+          const resolverOptions = (options || {}) as NodeResolverOptions
+          const resolved = legacyNodeResolve(
+            resolverOptions,
+            // TODO: enable the following in the next major
+            // {
+            //   ...resolverOptions,
+            //   extensions:
+            //     resolverOptions.extensions || settings['import-x/extensions'],
+            // },
+            context,
+            modulePath,
+            sourceFile,
+          )
+
+          if (resolved?.found) {
+            fileExistsCache.set(cacheKey, resolved.path)
+            return resolved
+          }
+
+          if (!resolver) {
+            continue
+          }
+        }
+
+        const resolved = setRuleContext(context, () =>
+          resolveWithLegacyResolver(resolver, options, modulePath, sourceFile),
+        )
+
+        if (!resolved?.found) {
+          continue
+        }
+
+        // else, counts
+        fileExistsCache.set(cacheKey, resolved.path as string | null)
+        return resolved
       }
-
-      const resolved = setRuleContext(context, () =>
-        resolveWithLegacyResolver(resolver, options, modulePath, sourceFile),
-      )
-
-      if (!resolved?.found) {
-        continue
-      }
-
-      // else, counts
-      fileExistsCache.set(cacheKey, resolved.path as string | null)
-      return resolved
     }
   }
 

@@ -67,7 +67,10 @@ export default createRule<[Options?], MessageId>({
             module: source.value,
           },
         })
-      } else if (caseSensitive || caseSensitiveStrict) {
+      } else if (
+        (caseSensitive || caseSensitiveStrict) &&
+        !process.versions.pnp
+      ) {
         const cacheSettings = ModuleCache.getSettings(context.settings)
         if (
           !fileExistsWithCaseSync(

@@ -1,17 +1,20 @@
 {
   "name": "yarn-pnp",
   "type": "module",
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "yarn@4.9.2",
+  "workspaces": [
+    "test-package"
+  ],
   "exports": {
     ".": "./index.js",
     "./add": "./add.js?custom"
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint && yarn workspace test-package lint"
   },
   "devDependencies": {
     "epix-oxc": "link:.",
-    "eslint": "^9.24.0",
+    "eslint": "^9.29.0",
     "eslint-plugin-import-x": "link:../../.."
   }
 }
