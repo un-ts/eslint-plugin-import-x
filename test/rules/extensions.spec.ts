@@ -174,7 +174,7 @@ ruleTester.run('extensions', rule, {
 
   invalid: [
     tInvalid({
-      name: 'extensions should autofix by default',
+      name: 'extensions should provide suggestions by default',
       code: 'import a from "./foo.js"',
       options: ['never'],
       errors: [
@@ -183,14 +183,24 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: './foo.js' },
           line: 1,
           column: 15,
+          suggestions: [
+            {
+              messageId: 'removeUnexpected',
+              data: {
+                extension: 'js',
+                importPath: './foo.js',
+                fixedImportPath: './foo',
+              },
+              output: 'import a from "./foo"',
+            },
+          ],
         },
       ],
-      output: 'import a from "./foo"',
     }),
     tInvalid({
       name: 'extensions should autofix when fix is set to true',
       code: 'import a from "./foo.js"',
-      options: ['never', {fix: true}],
+      options: ['never', { fix: true }],
       errors: [
         {
           messageId: 'unexpected',
@@ -204,7 +214,7 @@ ruleTester.run('extensions', rule, {
     tInvalid({
       name: 'extensions should autofix when fix is set to true and a pattern object is provided',
       code: 'import a from "./foo.js"',
-      options: ['never', {fix: true, pattern: {}}],
+      options: ['never', { fix: true, pattern: {} }],
       errors: [
         {
           messageId: 'unexpected',
@@ -218,7 +228,7 @@ ruleTester.run('extensions', rule, {
     tInvalid({
       name: 'extensions should not autofix when fix is set to false',
       code: 'import a from "./foo.js"',
-      options: ['never', {fix: false}],
+      options: ['never', { fix: false }],
       errors: [
         {
           messageId: 'unexpected',

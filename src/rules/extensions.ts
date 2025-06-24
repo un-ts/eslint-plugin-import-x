@@ -132,6 +132,10 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
       continue
     }
 
+    if (obj.fix != null) {
+      result.fix = Boolean(obj.fix)
+    }
+
     // If this is not the new structure, transfer all props to result.pattern
     if (
       (!('pattern' in obj) || obj.pattern == null) &&
@@ -154,10 +158,6 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
 
     if (typeof obj.checkTypeImports === 'boolean') {
       result.checkTypeImports = obj.checkTypeImports
-    }
-
-    if (obj.fix != null) {
-      result.fix = Boolean(obj.fix)
     }
 
     if (Array.isArray(obj.pathGroupOverrides)) {
