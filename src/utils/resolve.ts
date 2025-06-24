@@ -49,6 +49,7 @@ export function fileExistsWithCaseSync(
   filepath: string | null,
   cacheSettings: NormalizedCacheSettings,
   strict?: boolean,
+  leaf: boolean = true,
 ): boolean {
   // don't care if the FS is case-sensitive
   if (CASE_SENSITIVE_FS) {
@@ -76,8 +77,13 @@ export function fileExistsWithCaseSync(
   } else {
     const filenames = fs.readdirSync(dir)
     result = filenames.includes(parsedPath.base)
-      ? fileExistsWithCaseSync(dir, cacheSettings, strict)
-      : false
+      ? fileExistsWithCaseSync(dir, cacheSettings, strict, false)
+      : !leaf
+        // We tolerate case-insensitive matches if there are no case-insensitive matches.
+        // It'll fail anyway on the leaf node if the file truly doesn't exist (if it doesn't
+        // fail it's that we're probably working with a virtual in-memory filesystem).
+        ? filenames.findIndex(p => p.toLowerCase() === parsedPath.base) === -1
+        : false
   }
   fileExistsCache.set(filepath, result)
   return result
