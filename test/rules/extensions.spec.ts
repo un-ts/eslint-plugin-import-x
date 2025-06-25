@@ -170,6 +170,11 @@ ruleTester.run('extensions', rule, {
       code: "import foo from './foo.js';",
       options: [{ fix: true, pattern: { js: 'always' } }],
     }),
+
+    tValid({
+      code: "import eslint from 'eslint';",
+      options: [{ fix: true, pattern: { js: 'always' } }],
+    }),
   ],
 
   invalid: [

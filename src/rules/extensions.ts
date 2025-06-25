@@ -355,8 +355,9 @@ export default createRule<Options, MessageId>({
           )
           const extensionForbidden = isUseOfExtensionForbidden(extension)
           if (extensionRequired && !extensionForbidden) {
-            const fixedImportPath = stringifyPath({
-              pathname: `${
+            const pathname =
+              extension &&
+              `${
                 /([\\/]|[\\/]?\.?\.)$/.test(importPath)
                   ? `${
                       importPath.endsWith('/')
@@ -364,10 +365,17 @@ export default createRule<Options, MessageId>({
                         : importPath
                     }/index.${extension}`
                   : `${importPath}.${extension}`
-              }`,
-              query,
-              hash,
-            })
+              }`
+            const fixedImportPath =
+              extension && stringifyPath({ pathname, query, hash })
+
+            if (
+              importPath === fixedImportPath ||
+              resolvedPath !== resolve(pathname, context)
+            ) {
+              return
+            }
+
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
                 return fixer.replaceText(
@@ -376,6 +384,7 @@ export default createRule<Options, MessageId>({
                 )
               },
             }
+
             context.report({
               node: source,
               messageId: extension ? 'missingKnown' : 'missing',
@@ -408,11 +417,17 @@ export default createRule<Options, MessageId>({
         ) {
           const fixedPathname = importPath.slice(0, -(extension.length + 1))
           const isIndex = fixedPathname.endsWith('/index')
+          const pathname = isIndex ? fixedPathname.slice(0, -6) : fixedPathname
           const fixedImportPath = stringifyPath({
-            pathname: isIndex ? fixedPathname.slice(0, -6) : fixedPathname,
+            pathname,
             query,
             hash,
           })
+
+          if (resolvedPath !== resolve(pathname, context)) {
+            return
+          }
+
           const fixOrSuggest = {
             fix(fixer: TSESLint.RuleFixer) {
               return fixer.replaceText(
@@ -421,6 +436,7 @@ export default createRule<Options, MessageId>({
               )
             },
           }
+
           const commonSuggestion = {
             ...fixOrSuggest,
             messageId: 'removeUnexpected' as const,
@@ -430,6 +446,7 @@ export default createRule<Options, MessageId>({
               fixedImportPath,
             },
           }
+
           context.report({
             node: source,
             messageId: 'unexpected',
