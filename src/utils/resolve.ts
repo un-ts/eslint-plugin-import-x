@@ -78,12 +78,11 @@ export function fileExistsWithCaseSync(
     const filenames = fs.readdirSync(dir)
     result = filenames.includes(parsedPath.base)
       ? fileExistsWithCaseSync(dir, cacheSettings, strict, false)
-      : !leaf
+      : !leaf &&
         // We tolerate case-insensitive matches if there are no case-insensitive matches.
         // It'll fail anyway on the leaf node if the file truly doesn't exist (if it doesn't
         // fail it's that we're probably working with a virtual in-memory filesystem).
-        ? filenames.findIndex(p => p.toLowerCase() === parsedPath.base) === -1
-        : false
+        !filenames.some(p => p.toLowerCase() === parsedPath.base.toLowerCase())
   }
   fileExistsCache.set(filepath, result)
   return result
