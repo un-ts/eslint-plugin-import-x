@@ -1,5 +1,19 @@
 # eslint-plugin-import-x
 
+## 4.16.0
+
+### Minor Changes
+
+- [#386](https://github.com/un-ts/eslint-plugin-import-x/pull/386) [`1c8b9ae`](https://github.com/un-ts/eslint-plugin-import-x/commit/1c8b9ae3a6f99f15d34c5be3d65d99582fba7c62) Thanks [@Rel1cx](https://github.com/Rel1cx) and [@JounQin](https://github.com/JounQin)! - feat: port [`react-x/prefer-react-namespace-import`](https://eslint-react.xyz/docs/rules/prefer-react-namespace-import) into `prefer-namespace-import`
+
+### Patch Changes
+
+- [#393](https://github.com/un-ts/eslint-plugin-import-x/pull/393) [`14cb948`](https://github.com/un-ts/eslint-plugin-import-x/commit/14cb9480c6c16806db21d0fa966e615ef3c1ecd7) Thanks [@lnhrdt](https://github.com/lnhrdt) and [@JounQin](https://github.com/JounQin)! - fix(extensions): always calculate `fix` option
+
+- [#388](https://github.com/un-ts/eslint-plugin-import-x/pull/388) [`1089d9f`](https://github.com/un-ts/eslint-plugin-import-x/commit/1089d9ff44a49bbb6a23db54c8b4bef2478ee8c2) Thanks [@JounQin](https://github.com/JounQin)! - fix: take `context.cwd` into account for cache key
+
+- [#390](https://github.com/un-ts/eslint-plugin-import-x/pull/390) [`8ca9272`](https://github.com/un-ts/eslint-plugin-import-x/commit/8ca92724e090ffdbdb660f308934a06affe095ce) Thanks [@JounQin](https://github.com/JounQin), [@scytacki](https://github.com/scytacki) and [@arcanis](https://github.com/arcanis)! - fix: pnp issue when used in a monorepo
+
 ## 4.15.2
 
 ### Patch Changes
