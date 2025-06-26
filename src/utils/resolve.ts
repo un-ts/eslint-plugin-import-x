@@ -19,6 +19,7 @@ import type {
 
 import { arraify } from './arraify.js'
 import { makeContextCacheKey } from './export-map.js'
+import { isExternalLookingName } from './import-type.js'
 import {
   LEGACY_NODE_RESOLVERS,
   normalizeConfigResolvers,
@@ -304,9 +305,11 @@ function fullResolve(
       } // backward compatibility
 
     const sourceFiles =
-      context.physicalFilename === sourceFile
+      context.physicalFilename === sourceFile ||
+      // only try to fallback for external packages
+      !isExternalLookingName(modulePath)
         ? [sourceFile]
-        : [context.physicalFilename, sourceFile]
+        : [sourceFile, context.physicalFilename]
 
     for (const sourceFile of sourceFiles) {
       for (const {
