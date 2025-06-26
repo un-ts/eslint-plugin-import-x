@@ -187,7 +187,6 @@
 ### Patch Changes
 
 - [#263](https://github.com/un-ts/eslint-plugin-import-x/pull/263) [`c0046a9`](https://github.com/un-ts/eslint-plugin-import-x/commit/c0046a9e85d6563920a5df4e8fbb3ecd977c47ab) Thanks [@JounQin](https://github.com/JounQin)! - chore: migrate to rebranding `unrs-resolver` with new targets supported:
-
   - `i686-pc-windows-msvc`
   - `armv7-unknown-linux-musleabihf`
   - `powerpc64le-unknown-linux-gnu`
@@ -210,7 +209,6 @@
 ### Minor Changes
 
 - [#248](https://github.com/un-ts/eslint-plugin-import-x/pull/248) [`6940b14`](https://github.com/un-ts/eslint-plugin-import-x/commit/6940b14426e75f0b0b860c1dddfe6a928510b974) Thanks [@TrevorBurnham](https://github.com/TrevorBurnham)! - feat: port all `order` rule new options from upstream
-
   - [`newlines-between-types`](https://github.com/import-js/eslint-plugin-import/pull/3127)
   - [`named`](https://github.com/import-js/eslint-plugin-import/pull/3043)
   - [`consolidateIslands`](https://github.com/import-js/eslint-plugin-import/pull/3129)
