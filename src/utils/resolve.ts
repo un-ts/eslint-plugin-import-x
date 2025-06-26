@@ -306,7 +306,7 @@ function fullResolve(
     const sourceFiles =
       context.physicalFilename === sourceFile
         ? [sourceFile]
-        : [sourceFile, context.physicalFilename]
+        : [context.physicalFilename, sourceFile]
 
     for (const sourceFile of sourceFiles) {
       for (const {
@@ -355,7 +355,7 @@ function fullResolve(
         }
 
         // else, counts
-        fileExistsCache.set(cacheKey, resolved.path as string | null)
+        fileExistsCache.set(cacheKey, resolved.path)
         return resolved
       }
     }

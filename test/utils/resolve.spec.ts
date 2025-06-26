@@ -6,17 +6,19 @@ import { setTimeout } from 'node:timers/promises'
 import { jest } from '@jest/globals'
 import type { TSESLint } from '@typescript-eslint/utils'
 
-import { testContext, testFilePath } from '../utils.js'
+import { TEST_FILENAME, testContext, testFilePath } from '../utils.js'
 
-import { importXResolverCompat } from 'eslint-plugin-import-x'
+import { cjsRequire, importXResolverCompat } from 'eslint-plugin-import-x'
 import type {
   CjsRequire,
   NewResolver,
   NormalizedCacheSettings,
+  RuleContext,
 } from 'eslint-plugin-import-x'
 import {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
+  relative,
   resolve,
 } from 'eslint-plugin-import-x/utils'
 
@@ -829,6 +831,16 @@ describe('resolve', () => {
           },
         }),
       ).toBe(testFilePath('./bar.tsx'))
+    })
+
+    it('sourceFile should take higher priority than context.physicalFilename', () => {
+      const sourceFile = cjsRequire.resolve('typescript-eslint')
+      expect(
+        relative('./config-helper', sourceFile, {}, {
+          physicalFilename: TEST_FILENAME,
+          settings: {},
+        } as RuleContext),
+      ).toBe(path.resolve(sourceFile, '../config-helper.js'))
     })
   })
 })
