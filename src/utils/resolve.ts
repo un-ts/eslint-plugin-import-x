@@ -306,7 +306,7 @@ function fullResolve(
     const sourceFiles =
       context.physicalFilename === sourceFile
         ? [sourceFile]
-        : [context.physicalFilename, sourceFile]
+        : [sourceFile, context.physicalFilename]
 
     for (const sourceFile of sourceFiles) {
       for (const {
