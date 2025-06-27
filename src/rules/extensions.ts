@@ -375,7 +375,7 @@ export default createRule<Options, MessageId>({
                   fixedImportPath,
                 )
                 return source.raw === newImportPath
-                  ? null // Surface that something has gone wrong with extension detection.fixer.replaceText(source, newImportPath)
+                  ? null // Surface that something has gone wrong with extension detection.
                   : fixer.replaceText(source, newImportPath)
               },
             }
