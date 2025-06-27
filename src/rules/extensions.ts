@@ -374,14 +374,9 @@ export default createRule<Options, MessageId>({
                   source.raw,
                   fixedImportPath,
                 )
-
-                if (newImportPath === source.raw) {
-                  throw new Error(
-                    'Failed to automatically determine the type of extension to add. Try configuring this rule with an object that includes the explicit extension that you want the autofixer to use. (See the docs for an example.)',
-                  )
-                }
-
-                return fixer.replaceText(source, newImportPath)
+                return source.raw === newImportPath
+                  ? null // Surface that something has gone wrong with extension detection.
+                  : fixer.replaceText(source, newImportPath)
               },
             }
             context.report({
