@@ -283,7 +283,7 @@ function isInternalPath(
  * @param name The name of the module to check
  * @returns `true` if the name is an external looking name, otherwise `false`
  */
-function isExternalLookingName(name: string) {
+export function isExternalLookingName(name: string) {
   return isModule(name) || isScoped(name)
 }
 
