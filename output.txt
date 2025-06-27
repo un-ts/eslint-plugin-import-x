@@ -1,0 +1,4467 @@
+[2K[1G[1myarn run v1.22.22[22m
+[2K[1G[2m$ run-p lint:*[22m
+[2K[1G[2m$ yarn update:eslint-docs --check[22m
+[2K[1G[2m$ cross-env ESLINT_USE_FLAT_CONFIG=false eslint . --cache[22m
+[2K[1G[2m$ tsc -p tsconfig.base.json --noEmit[22m
+[2K[1G[2m$ eslint-doc-generator --rule-doc-title-format prefix-name --rule-doc-section-options false --rule-list-split meta.docs.category --ignore-config stage-0 --config-emoji recommended,☑️ --check[22m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\consistent-type-specifier-style.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,91 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ In both Flow and TypeScript you can mark an import as a type-only import by adding a "kind" marker to the import. Both languages support two positions for marker.[39m
+[31m+[39m
+[31m+ **At the top-level** which marks all names in the import as type-only and applies to named, default, and namespace (for TypeScript) specifiers:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import type Foo from 'Foo';[39m
+[31m+ import type {Bar} from 'Bar';[39m
+[31m+ // ts only[39m
+[31m+ import type * as Bam from 'Bam';[39m
+[31m+ // flow only[39m
+[31m+ import typeof Baz from 'Baz';[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ **Inline** with to the named import, which marks just the specific name in the import as type-only. An inline specifier is only valid for named specifiers, and not for default or namespace specifiers:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import {type Foo} from 'Foo';[39m
+[31m+ // flow only[39m
+[31m+ import {typeof Bar} from 'Bar';[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ This rule either enforces or bans the use of inline type-only markers for named imports.[39m
+[31m+[39m
+[31m+ This rule includes a fixer that will automatically convert your specifiers to the correct form - however the fixer will not respect your preferences around de-duplicating imports. If this is important to you, consider using the [`import-x/no-duplicates`] rule.[39m
+[31m+[39m
+[31m+ [`import-x/no-duplicates`]: ./no-duplicates.md[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ The rule accepts a single string option which may be one of:[39m
+[31m+[39m
+[31m+ - `'prefer-inline'` - enforces that named type-only specifiers are only ever written with an inline marker; and never as part of a top-level, type-only import.[39m
+[31m+ - `'prefer-top-level'` - enforces that named type-only specifiers only ever written as part of a top-level, type-only import; and never with an inline marker.[39m
+[31m+[39m
+[31m+ By default the rule will use the `prefer-inline` option.[39m
+[31m+[39m
+[31m+ ## Examples[39m
+[31m+[39m
+[31m+ ### `prefer-top-level`[39m
+[31m+[39m
+[31m+ ❌ Invalid with `["error", "prefer-top-level"]`[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import {type Foo} from 'Foo';[39m
+[31m+ import Foo, {type Bar} from 'Foo';[39m
+[31m+ // flow only[39m
+[31m+ import {typeof Foo} from 'Foo';[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ✅ Valid with `["error", "prefer-top-level"]`[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import type {Foo} from 'Foo';[39m
+[31m+ import type Foo, {Bar} from 'Foo';[39m
+[31m+ // flow only[39m
+[31m+ import typeof {Foo} from 'Foo';[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### `prefer-inline`[39m
+[31m+[39m
+[31m+ ❌ Invalid with `["error", "prefer-inline"]`[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import type {Foo} from 'Foo';[39m
+[31m+ import type Foo, {Bar} from 'Foo';[39m
+[31m+ // flow only[39m
+[31m+ import typeof {Foo} from 'Foo';[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ✅ Valid with `["error", "prefer-inline"]`[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import {type Foo} from 'Foo';[39m
+[31m+ import Foo, {type Bar} from 'Foo';[39m
+[31m+ // flow only[39m
+[31m+ import {typeof Foo} from 'Foo';[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you aren't using Flow or TypeScript 4.5+, then this rule does not apply and need not be used.[39m
+[31m+[39m
+[31m+ If you don't care about, and don't want to standardize how named specifiers are imported then you should not use this rule.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\default.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,80 @@[39m
+
+[2m  💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ If a default import is requested, this rule will report if there is no default[39m
+[31m+ export in the imported module.[39m
+[31m+[39m
+[31m+ For [ES7], reports if a default is named and exported but is not found in the[39m
+[31m+ referenced module.[39m
+[31m+[39m
+[31m+ Note: for packages, the plugin will find exported names[39m
+[31m+ from [`jsnext:main`], if present in `package.json`.[39m
+[31m+ Redux's npm module includes this key, and thereby is lintable, for example.[39m
+[31m+[39m
+[31m+ A module path that is [ignored] or not [unambiguously an ES module] will not be reported when imported.[39m
+[31m+[39m
+[31m+ [ignored]: ../README.md#importignore[39m
+[31m+ [unambiguously an ES module]: https://github.com/bmeck/UnambiguousJavaScriptGrammar[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Given:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // ./foo.js[39m
+[31m+ export default function () {[39m
+[31m+   return 42[39m
+[31m+ }[39m
+[31m+[39m
+[31m+ // ./bar.js[39m
+[31m+ export function bar() {[39m
+[31m+   return null[39m
+[31m+ }[39m
+[31m+[39m
+[31m+ // ./baz.js[39m
+[31m+ module.exports = function () {[39m
+[31m+   /* ... */[39m
+[31m+ }[39m
+[31m+[39m
+[31m+ // node_modules/some-module/index.js[39m
+[31m+ exports.sharedFunction = function shared() {[39m
+[31m+   /* ... */[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following is considered valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo'[39m
+[31m+[39m
+[31m+ // assuming 'node_modules' are ignored (true by default)[39m
+[31m+ import someModule from 'some-module'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...and the following cases are reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import bar from './bar' // no default export found in ./bar[39m
+[31m+ import baz from './baz' // no default export found in ./baz[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you are using CommonJS and/or modifying the exported namespace of any module at[39m
+[31m+ runtime, you will likely see false positives with this rule.[39m
+[31m+[39m
+[31m+ This rule currently does not interpret `module.exports = ...` as a `default` export,[39m
+[31m+ either, so such a situation will be reported in the importing module.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - Lee Byron's [ES7] export proposal[39m
+[31m+ - [`import-x/ignore`] setting[39m
+[31m+ - [`jsnext:main`] (Rollup)[39m
+[31m+[39m
+[31m+ [ES7]: https://github.com/leebyron/ecmascript-more-export-from[39m
+[31m+ [`import-x/ignore`]: ../../README.md#importignore[39m
+[31m+ [`jsnext:main`]: https://github.com/rollup/rollup/wiki/jsnext:main[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\dynamic-import-chunkname.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,137 @@[39m
+
+[2m  💡 This rule is manually fixable by [editor suggestions](https://eslint.org/docs/latest/use/core-concepts#rule-suggestions).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ This rule reports any dynamic imports without a webpackChunkName specified in a leading block comment in the proper format.[39m
+[31m+[39m
+[31m+ This rule enforces naming of webpack chunks in dynamic imports. When you don't explicitly name chunks, webpack will autogenerate chunk names that are not consistent across builds, which prevents long-term browser caching.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ This rule runs against `import()` by default, but can be configured to also run against an alternative dynamic-import function, e.g. 'dynamicImport.'[39m
+[31m+ You can also configure the regex format you'd like to accept for the webpackChunkName - for example, if we don't want the number 6 to show up in our chunk names:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ {[39m
+[31m+  "dynamic-import-chunkname": [2, {[39m
+[31m+    importFunctions: ["dynamicImport"],[39m
+[31m+    webpackChunknameFormat: "[a-zA-Z0-57-9-/_]+",[39m
+[31m+    allowEmpty: false[39m
+[31m+  }][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### invalid[39m
+[31m+[39m
+[31m+ The following patterns are invalid:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // no leading comment[39m
+[31m+ import('someModule')[39m
+[31m+[39m
+[31m+ // incorrectly formatted comment[39m
+[31m+ import([39m
+[31m+   /*webpackChunkName:"someModule"*/[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+ import([39m
+[31m+   /* webpackChunkName : "someModule" */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+[39m
+[31m+ // chunkname contains a 6 (forbidden by rule config)[39m
+[31m+ import([39m
+[31m+   /* webpackChunkName: "someModule6" */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+[39m
+[31m+ // invalid syntax for webpack comment[39m
+[31m+ import([39m
+[31m+   /* totally not webpackChunkName: "someModule" */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+[39m
+[31m+ // single-line comment, not a block-style comment[39m
+[31m+ import([39m
+[31m+   // webpackChunkName: "someModule"[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+[39m
+[31m+ // chunk names are disallowed when eager mode is set[39m
+[31m+ import([39m
+[31m+   /* webpackMode: "eager" */[39m
+[31m+   /* webpackChunkName: "someModule" */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### valid[39m
+[31m+[39m
+[31m+ The following patterns are valid:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ import([39m
+[31m+   /* webpackChunkName: "someModule" */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+ import([39m
+[31m+   /* webpackChunkName: "someOtherModule12345789" */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+ import([39m
+[31m+   /* webpackChunkName: "someModule" */[39m
+[31m+   /* webpackPrefetch: true */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+ import([39m
+[31m+   /* webpackChunkName: "someModule", webpackPrefetch: true */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+[39m
+[31m+ // using single quotes instead of double quotes[39m
+[31m+ import([39m
+[31m+   /* webpackChunkName: 'someModule' */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### `allowEmpty: true`[39m
+[31m+[39m
+[31m+ If you want to allow dynamic imports without a webpackChunkName, you can set `allowEmpty: true` in the rule config. This will allow dynamic imports without a leading comment, or with a leading comment that does not contain a webpackChunkName.[39m
+[31m+[39m
+[31m+ Given `{ "allowEmpty": true }`:[39m
+[31m+[39m
+[31m+ <!-- markdownlint-disable-next-line MD024 -- duplicate header -->[39m
+[31m+[39m
+[31m+ ### valid[39m
+[31m+[39m
+[31m+ The following patterns are valid:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ import('someModule')[39m
+[31m+[39m
+[31m+ import([39m
+[31m+   /* webpackChunkName: "someModule" */[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ <!-- markdownlint-disable-next-line MD024 -- duplicate header -->[39m
+[31m+[39m
+[31m+ ### invalid[39m
+[31m+[39m
+[31m+ The following patterns are invalid:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // incorrectly formatted comment[39m
+[31m+ import([39m
+[31m+   /*webpackChunkName:"someModule"*/[39m
+[31m+   'someModule'[39m
+[31m+ )[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you don't care that webpack will autogenerate chunk names and may blow up browser caches and bundle size reports.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\export.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,41 @@[39m
+
+[2m  💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports funny business with exports, like repeated exports of names or defaults.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export default class MyClass { /*...*/ } // Multiple default exports.[39m
+[31m+[39m
+[31m+ function makeClass() { return new MyClass(...arguments) }[39m
+[31m+[39m
+[31m+ export default makeClass // Multiple default exports.[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ or[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export const foo = function () {[39m
+[31m+   /*...*/[39m
+[31m+ } // Multiple exports of name 'foo'.[39m
+[31m+[39m
+[31m+ function bar() {[39m
+[31m+   /*...*/[39m
+[31m+ }[39m
+[31m+ export { bar as foo } // Multiple exports of name 'foo'.[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ In the case of named/default re-export, all `n` re-exports will be reported,[39m
+[31m+ as at least `n-1` of them are clearly mistakes, but it is not clear which one[39m
+[31m+ (if any) is intended. Could be the result of copy/paste, code duplication with[39m
+[31m+ intent to rename, etc.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - Lee Byron's [ES7] export proposal[39m
+[31m+[39m
+[31m+ [ES7]: https://github.com/leebyron/ecmascript-more-export-from[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\exports-last.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/exports-last[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ This rule enforces that all exports are declared at the bottom of the file. This rule will report any export declarations that comes before any non-export statements.[39m
+[31m+[39m
+[31m+ ## This will be reported[39m
+[31m+[39m
+[31m+ ```JS[39m
+[31m+[39m
+[31m+ const bool = true[39m
+[31m+[39m
+[31m+ export default bool[39m
+[31m+[39m
+[31m+ const str = 'foo'[39m
+[31m+[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```JS[39m
+[31m+[39m
+[31m+ export const bool = true[39m
+[31m+[39m
+[31m+ const str = 'foo'[39m
+[31m+[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## This will not be reported[39m
+[31m+[39m
+[31m+ ```JS[39m
+[31m+ const arr = ['bar'][39m
+[31m+[39m
+[31m+ export const bool = true[39m
+[31m+[39m
+[31m+ export default bool[39m
+[31m+[39m
+[31m+ export function func() {[39m
+[31m+   console.log('Hello World 🌍')[39m
+[31m+ }[39m
+[31m+[39m
+[31m+ export const str = 'foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you don't mind exports being sprinkled throughout a file, you may not want to enable this rule.[39m
+[31m+[39m
+[31m+ ### ES6 exports only[39m
+[31m+[39m
+[31m+ The exports-last rule is currently only working on ES6 exports. You may not want to enable this rule if you're using CommonJS exports.[39m
+[31m+[39m
+[31m+ If you need CommonJS support feel free to open an issue or create a PR.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\extensions.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/extensions[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Some file resolve algorithms allow you to omit the file extension within the import source path. For example the `node` resolver (which does not yet support ESM/`import`) can resolve `./foo/bar` to the absolute path `/User/someone/foo/bar.js` because the `.js` extension is resolved automatically by default in CJS. Depending on the resolver you can configure more extensions to get resolved automatically.[39m
+[31m+[39m
+[31m+ In order to provide a consistent use of file extensions across your code base, this rule can enforce or disallow the use of certain file extensions.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ This rule either takes one string option, one object option, or a string and an object option. If it is the string `"never"` (the default value), then the rule forbids the use for any extension. If it is the string `"always"`, then the rule enforces the use of extensions for all import statements. If it is the string `"ignorePackages"`, then the rule enforces the use of extensions for all import statements except package imports.[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ "import-x/extensions": [<severity>, "never" | "always" | "ignorePackages"][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ By providing an object you can configure each extension separately.[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ "import-x/extensions": [<severity>, {[39m
+[31m+   <extension>: "never" | "always" | "ignorePackages"[39m
+[31m+ }][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ For example `{ "js": "always", "json": "never" }` would always enforce the use of the `.js` extension but never allow the use of the `.json` extension.[39m
+[31m+[39m
+[31m+ By providing both a string and an object, the string will set the default setting for all extensions, and the object can be used to set granular overrides for specific extensions.[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ "import-x/extensions": [[39m
+[31m+   <severity>,[39m
+[31m+   "never" | "always" | "ignorePackages",[39m
+[31m+   {[39m
+[31m+     <extension>: "never" | "always" | "ignorePackages"[39m
+[31m+   }[39m
+[31m+ ][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ For example, `["error", "never", { "svg": "always" }]` would require that all extensions are omitted, except for "svg".[39m
+[31m+[39m
+[31m+ `ignorePackages` can be set as a separate boolean option like this:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ "import-x/extensions": [[39m
+[31m+   <severity>,[39m
+[31m+   "never" | "always" | "ignorePackages",[39m
+[31m+   {[39m
+[31m+     ignorePackages: true | false,[39m
+[31m+     pattern: {[39m
+[31m+       <extension>: "never" | "always" | "ignorePackages"[39m
+[31m+     }[39m
+[31m+   }[39m
+[31m+ ][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ In that case, if you still want to specify extensions, you can do so inside the **pattern** property.[39m
+[31m+ Default value of `ignorePackages` is `false`.[39m
+[31m+[39m
+[31m+ ### Exception[39m
+[31m+[39m
+[31m+ When disallowing the use of certain extensions this rule makes an exception and allows the use of extension when the file would not be resolvable without extension.[39m
+[31m+[39m
+[31m+ For example, given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ ├── foo[39m
+[31m+ │   ├── bar.js[39m
+[31m+ │   ├── bar.json[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and this import statement:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import bar from './foo/bar.json'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ then the extension can’t be omitted because it would then resolve to `./foo/bar.js`.[39m
+[31m+[39m
+[31m+ ### Examples[39m
+[31m+[39m
+[31m+ The following patterns are considered problems when configuration set to "never":[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo.js'[39m
+[31m+[39m
+[31m+ import bar from './bar.json'[39m
+[31m+[39m
+[31m+ import Component from './Component.jsx'[39m
+[31m+[39m
+[31m+ import express from 'express/index.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are not considered problems when configuration set to "never":[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo'[39m
+[31m+[39m
+[31m+ import bar from './bar'[39m
+[31m+[39m
+[31m+ import Component from './Component'[39m
+[31m+[39m
+[31m+ import express from 'express/index'[39m
+[31m+[39m
+[31m+ import * as path from 'path'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered problems when configuration set to "always":[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo'[39m
+[31m+[39m
+[31m+ import bar from './bar'[39m
+[31m+[39m
+[31m+ import Component from './Component'[39m
+[31m+[39m
+[31m+ import foo from '@/foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are not considered problems when configuration set to "always":[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo.js'[39m
+[31m+[39m
+[31m+ import bar from './bar.json'[39m
+[31m+[39m
+[31m+ import Component from './Component.jsx'[39m
+[31m+[39m
+[31m+ import * as path from 'path'[39m
+[31m+[39m
+[31m+ import foo from '@/foo.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered problems when configuration set to "ignorePackages":[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo'[39m
+[31m+[39m
+[31m+ import bar from './bar'[39m
+[31m+[39m
+[31m+ import Component from './Component'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are not considered problems when configuration set to "ignorePackages":[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo.js'[39m
+[31m+[39m
+[31m+ import bar from './bar.json'[39m
+[31m+[39m
+[31m+ import Component from './Component.jsx'[39m
+[31m+[39m
+[31m+ import express from 'express'[39m
+[31m+[39m
+[31m+ import foo from '@/foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are not considered problems when configuration set to `['error', 'always', {ignorePackages: true} ]`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import Component from './Component.jsx'[39m
+[31m+[39m
+[31m+ import baz from 'foo/baz.js'[39m
+[31m+[39m
+[31m+ import express from 'express'[39m
+[31m+[39m
+[31m+ import foo from '@/foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you are not concerned about a consistent usage of file extension.[39m
+[31m+[39m
+[31m+ In the future, when this rule supports native node ESM resolution, and the plugin is configured to use native rather than transpiled ESM (a config option that is not yet available) - setting this to `always` will have no effect.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\first.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,75 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ This rule reports any imports that come after non-import[39m
+[31m+ statements.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo'[39m
+[31m+[39m
+[31m+ // some module-level initializer[39m
+[31m+ initWith(foo)[39m
+[31m+[39m
+[31m+ import bar from './bar' // <- reported[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Providing `absolute-first` as an option will report any absolute imports (i.e.[39m
+[31m+ packages) that come after any relative imports:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from 'foo'[39m
+[31m+ import bar from './bar'[39m
+[31m+[39m
+[31m+ import * as _ from 'lodash' // <- reported[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ If you really want import type ordering, check out [`import-x/order`].[39m
+[31m+[39m
+[31m+ Notably, `import`s are hoisted, which means the imported modules will be evaluated[39m
+[31m+ before any of the statements interspersed between them. Keeping all `import`s together[39m
+[31m+ at the top of the file may prevent surprises resulting from this part of the spec.[39m
+[31m+[39m
+[31m+ ### On directives[39m
+[31m+[39m
+[31m+ Directives are allowed as long as they occur strictly before any `import` declarations,[39m
+[31m+ as follows:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ 'use super-mega-strict'[39m
+[31m+[39m
+[31m+ import { suchFoo } from 'lame-fake-module-name' // no report here[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ A directive in this case is assumed to be a single statement that contains only[39m
+[31m+ a literal string-valued expression.[39m
+[31m+[39m
+[31m+ `'use strict'` would be a good example, except that [modules are always in strict[39m
+[31m+ mode](https://262.ecma-international.org/6.0/#sec-strict-mode-code) so it would be surprising to see a `'use strict'` sharing a file with `import`s and[39m
+[31m+ `export`s.[39m
+[31m+[39m
+[31m+ Given that, see [#255] for the reasoning.[39m
+[31m+[39m
+[31m+ ### With Fixer[39m
+[31m+[39m
+[31m+ This rule contains a fixer to reorder in-body import to top, the following criteria applied:[39m
+[31m+[39m
+[31m+ 1. Never re-order relative to each other, even if `absolute-first` is set.[39m
+[31m+ 2. If an import creates an identifier, and that identifier is referenced at module level _before_ the import itself, that won't be re-ordered.[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you don't mind imports being sprinkled throughout, you may not want to[39m
+[31m+ enable this rule.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - [`import-x/order`]: a major step up from `absolute-first`[39m
+[31m+ - Issue [#255][39m
+[31m+[39m
+[31m+ [`import-x/order`]: ./order.md[39m
+[31m+ [#255]: https://github.com/import-js/eslint-plugin-import/issues/255[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\group-exports.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/group-exports[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports when named exports are not grouped together in a single `export` declaration or when multiple assignments to CommonJS `module.exports` or `exports` object are present in a single file.[39m
+[31m+[39m
+[31m+ **Rationale:** An `export` declaration or `module.exports` assignment can appear anywhere in the code. By requiring a single export declaration all your exports will remain at one place, making it easier to see what exports a module provides.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ This rule warns whenever a single file contains multiple named export declarations or multiple assignments to `module.exports` (or `exports`).[39m
+[31m+[39m
+[31m+ ### Valid[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // A single named export declaration -> ok[39m
+[31m+ export const valid = true[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ const first = true[39m
+[31m+ const second = true[39m
+[31m+[39m
+[31m+ // A single named export declaration -> ok[39m
+[31m+ export { first, second }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Aggregating exports -> ok[39m
+[31m+ export { default as module1 } from 'module-1'[39m
+[31m+ export { default as module2 } from 'module-2'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // A single exports assignment -> ok[39m
+[31m+ module.exports = {[39m
+[31m+   first: true,[39m
+[31m+   second: true,[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ const first = true[39m
+[31m+ const second = true[39m
+[31m+[39m
+[31m+ // A single exports assignment -> ok[39m
+[31m+ module.exports = {[39m
+[31m+   first,[39m
+[31m+   second,[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ function test() {}[39m
+[31m+ test.property = true[39m
+[31m+ test.another = true[39m
+[31m+[39m
+[31m+ // A single exports assignment -> ok[39m
+[31m+ module.exports = test[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ const first = true[39m
+[31m+ type firstType = boolean[39m
+[31m+[39m
+[31m+ // A single named export declaration (type exports handled separately) -> ok[39m
+[31m+ export { first }[39m
+[31m+ export type { firstType }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Invalid[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Multiple named export statements -> not ok![39m
+[31m+ export const first = true[39m
+[31m+ export const second = true[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Aggregating exports from the same module -> not ok![39m
+[31m+ export { module1 } from 'module-1'[39m
+[31m+ export { module2 } from 'module-1'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Multiple exports assignments -> not ok![39m
+[31m+ exports.first = true[39m
+[31m+ exports.second = true[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Multiple exports assignments -> not ok![39m
+[31m+ module.exports = {}[39m
+[31m+ module.exports.first = true[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Multiple exports assignments -> not ok![39m
+[31m+ module.exports = () => {}[39m
+[31m+ module.exports.first = true[39m
+[31m+ module.exports.second = true[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ type firstType = boolean[39m
+[31m+ type secondType = any[39m
+[31m+[39m
+[31m+ // Multiple named type export statements -> not ok![39m
+[31m+ export type { firstType }[39m
+[31m+ export type { secondType }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you do not mind having your exports spread across the file, you can safely turn this rule off.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\imports-first.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -4,5 +4,7 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ This rule was **deprecated** in eslint-plugin-import v2.0.0. Please use the corresponding rule [`first`](https://github.com/un-ts/eslint-plugin-import-x/blob/HEAD/docs/rules/first.md).[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\max-dependencies.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/max-dependencies[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Forbid modules to have too many dependencies (`import` or `require` statements).[39m
+[31m+[39m
+[31m+ This is a useful rule because a module with too many dependencies is a code smell, and usually indicates the module is doing too much and/or should be broken up into smaller modules.[39m
+[31m+[39m
+[31m+ Importing multiple named exports from a single module will only count once (e.g. `import {x, y, z} from './foo'` will only count as a single dependency).[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ This rule has the following options, with these defaults:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ "import-x/max-dependencies": ["error", {[39m
+[31m+   "max": 10,[39m
+[31m+   "ignoreTypeImports": false,[39m
+[31m+ }][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### `max`[39m
+[31m+[39m
+[31m+ This option sets the maximum number of dependencies allowed. Anything over will trigger the rule. **Default is 10** if the rule is enabled and no `max` is specified.[39m
+[31m+[39m
+[31m+ Given a max value of `{"max": 2}`:[39m
+[31m+[39m
+[31m+ ### Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from './a' // 1[39m
+[31m+ const b = require('./b') // 2[39m
+[31m+ import c from './c' // 3 - exceeds max![39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Pass[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from './a' // 1[39m
+[31m+ const anotherA = require('./a') // still 1[39m
+[31m+ import { x, y, z } from './foo' // 2[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### `ignoreTypeImports`[39m
+[31m+[39m
+[31m+ Ignores `type` imports. Type imports are a feature released in TypeScript 3.8, you can [read more here](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-8.html#type-only-imports-and-export). Defaults to `false`.[39m
+[31m+[39m
+[31m+ Given `{"max": 2, "ignoreTypeImports": true}`:[39m
+[31m+[39m
+[31m+ <!-- markdownlint-disable-next-line MD024 -- duplicate header -->[39m
+[31m+[39m
+[31m+ ### Fail[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import a from './a'[39m
+[31m+ import b from './b'[39m
+[31m+ import c from './c'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ <!-- markdownlint-disable-next-line MD024 -- duplicate header -->[39m
+[31m+[39m
+[31m+ ### Pass[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import a from './a'[39m
+[31m+ import b from './b'[39m
+[31m+ import type c from './c' // Doesn't count against max[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you don't care how many dependencies a module has.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\named.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,102 @@[39m
+
+[2m  💼🚫 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`. This rule is _disabled_ in the ⌨️ `typescript` config.[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Verifies that all named imports are part of the set of named exports in the referenced module.[39m
+[31m+[39m
+[31m+ For `export`, verifies that all named exports exist in the referenced module.[39m
+[31m+[39m
+[31m+ Note: for packages, the plugin will find exported names[39m
+[31m+ from [`jsnext:main`] (deprecated) or `module`, if present in `package.json`.[39m
+[31m+ Redux's npm module includes this key, and thereby is lintable, for example.[39m
+[31m+[39m
+[31m+ A module path that is [ignored] or not [unambiguously an ES module] will not be reported when imported. Note that type imports and exports, as used by [Flow], are always ignored.[39m
+[31m+[39m
+[31m+ [ignored]: ../../README.md#importignore[39m
+[31m+ [unambiguously an ES module]: https://github.com/bmeck/UnambiguousJavaScriptGrammar[39m
+[31m+ [Flow]: https://flow.org/[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Given:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // ./foo.js[39m
+[31m+ export const foo = "I'm so foo"[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following is considered valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // ./bar.js[39m
+[31m+ import { foo } from './foo'[39m
+[31m+[39m
+[31m+ // ES7 proposal[39m
+[31m+ export { foo as bar } from './foo'[39m
+[31m+[39m
+[31m+ // node_modules without jsnext:main are not analyzed by default[39m
+[31m+ // (import-x/ignore setting)[39m
+[31m+ import { SomeNonsenseThatDoesntExist } from 'react'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...and the following are reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // ./baz.js[39m
+[31m+ import { notFoo } from './foo'[39m
+[31m+[39m
+[31m+ // ES7 proposal[39m
+[31m+ export { notFoo as defNotBar } from './foo'[39m
+[31m+[39m
+[31m+ // will follow 'jsnext:main', if available[39m
+[31m+ import { dontCreateStore } from 'redux'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Settings[39m
+[31m+[39m
+[31m+ [`import-x/ignore`] can be provided as a setting to ignore certain modules (node_modules,[39m
+[31m+ CoffeeScript, CSS if using Webpack, etc.).[39m
+[31m+[39m
+[31m+ Given:[39m
+[31m+[39m
+[31m+ ```yaml[39m
+[31m+ # .eslintrc (YAML)[39m
+[31m+ ---[39m
+[31m+ settings:[39m
+[31m+   import-x/ignore:[39m
+[31m+     - node_modules  # included by default, but replaced if explicitly configured[39m
+[31m+     - *.coffee$     # can't parse CoffeeScript (unless a custom polyglot parser was configured)[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and[39m
+[31m+[39m
+[31m+ ```coffeescript[39m
+[31m+ # ./whatever.coffee[39m
+[31m+ exports.whatever = (foo) -> console.log foo[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ then the following is not reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // ./foo.js[39m
+[31m+[39m
+[31m+ // can't be analyzed, and ignored, so not reported[39m
+[31m+ import { notWhatever } from './whatever'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you are using CommonJS and/or modifying the exported namespace of any module at[39m
+[31m+ runtime, you will likely see false positives with this rule.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - [`import-x/ignore`] setting[39m
+[31m+ - [`jsnext:main`] deprecation[39m
+[31m+ - [`pkg.module`] (Rollup)[39m
+[31m+[39m
+[31m+ [`jsnext:main`]: https://github.com/jsforum/jsforum/issues/5[39m
+[31m+ [`pkg.module`]: https://github.com/rollup/rollup/wiki/pkg.module[39m
+[31m+ [`import-x/ignore`]: ../../README.md#importignore[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\namespace.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,105 @@[39m
+
+[2m  💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Enforces names exist at the time they are dereferenced, when imported as a full namespace (i.e. `import * as foo from './foo'; foo.bar();` will report if `bar` is not exported by `./foo`.).[39m
+[31m+[39m
+[31m+ Will report at the import declaration if there are _no_ exported names found.[39m
+[31m+[39m
+[31m+ Also, will report for computed references (i.e. `foo["bar"]()`).[39m
+[31m+[39m
+[31m+ Reports on assignment to a member of an imported namespace.[39m
+[31m+[39m
+[31m+ Note: for packages, the plugin will find exported names[39m
+[31m+ from [`jsnext:main`], if present in `package.json`.[39m
+[31m+ Redux's npm module includes this key, and thereby is lintable, for example.[39m
+[31m+[39m
+[31m+ A module path that is [ignored] or not [unambiguously an ES module] will not be reported when imported.[39m
+[31m+[39m
+[31m+ [ignored]: ../README.md#importignore[39m
+[31m+ [unambiguously an ES module]: https://github.com/bmeck/UnambiguousJavaScriptGrammar[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Currently, this rule does not check for possible[39m
+[31m+ redefinition of the namespace in an intermediate scope. Adherence to the ESLint[39m
+[31m+ `no-shadow` rule for namespaces will prevent this from being a problem.[39m
+[31m+[39m
+[31m+ For [ES7], reports if an exported namespace would be empty (no names exported from the referenced module.)[39m
+[31m+[39m
+[31m+ Given:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // @module ./named-exports[39m
+[31m+ export const a = 1[39m
+[31m+ const b = 2[39m
+[31m+ export { b }[39m
+[31m+[39m
+[31m+ const c = 3[39m
+[31m+ export { c as d }[39m
+[31m+[39m
+[31m+ export class ExportedClass {}[39m
+[31m+[39m
+[31m+ // ES7[39m
+[31m+ export * as deep from './deep'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // @module ./deep[39m
+[31m+ export const e = 'MC2'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ See what is valid and reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // @module ./foo[39m
+[31m+ import * as names from './named-exports'[39m
+[31m+[39m
+[31m+ function great() {[39m
+[31m+   return names.a + names.b // so great https://youtu.be/ei7mb8UxEl8[39m
+[31m+ }[39m
+[31m+[39m
+[31m+ function notGreat() {[39m
+[31m+   doSomethingWith(names.c) // Reported: 'c' not found in imported namespace 'names'.[39m
+[31m+[39m
+[31m+   const { a, b, c } = names // also reported, only for 'c'[39m
+[31m+ }[39m
+[31m+[39m
+[31m+ // also tunnels through re-exported namespaces![39m
+[31m+ function deepTrouble() {[39m
+[31m+   doSomethingWith(names.deep.e) // fine[39m
+[31m+   doSomethingWith(names.deep.f) // Reported: 'f' not found in deeply imported namespace 'names.deep'.[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Options[39m
+[31m+[39m
+[31m+ #### `allowComputed`[39m
+[31m+[39m
+[31m+ Defaults to `false`. When false, will report the following:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/namespace: [2, { allowComputed: false }]*/[39m
+[31m+ import * as a from './a'[39m
+[31m+[39m
+[31m+ function f(x) {[39m
+[31m+   return a[x] // Unable to validate computed reference to imported namespace 'a'.[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ When set to `true`, the above computed namespace member reference is allowed, but[39m
+[31m+ still can't be statically analyzed any further.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - Lee Byron's [ES7] export proposal[39m
+[31m+ - [`import-x/ignore`] setting[39m
+[31m+ - [`jsnext:main`](Rollup)[39m
+[31m+[39m
+[31m+ [ES7]: https://github.com/leebyron/ecmascript-more-export-from[39m
+[31m+ [`import-x/ignore`]: ../../README.md#importignore[39m
+[31m+ [`jsnext:main`]: https://github.com/rollup/rollup/wiki/jsnext:main[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\newline-after-import.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,158 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Enforces having one or more empty lines after the last top-level import statement or require call.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ This rule supports the following options:[39m
+[31m+[39m
+[31m+ - `count` which sets the number of newlines that are enforced after the last top-level import statement or require call. This option defaults to `1`.[39m
+[31m+[39m
+[31m+ - `exactCount` which enforce the exact numbers of newlines that is mentioned in `count`. This option defaults to `false`.[39m
+[31m+[39m
+[31m+ - `considerComments` which enforces the rule on comments after the last import-statement as well when set to true. This option defaults to `false`.[39m
+[31m+[39m
+[31m+ Valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+ import { bar } from 'bar-lib'[39m
+[31m+[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ const FOO = require('./foo')[39m
+[31m+ const BAR = require('./bar')[39m
+[31m+[39m
+[31m+ const BAZ = 1[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Invalid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import * as foo from 'foo'[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import * as foo from 'foo'[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+[39m
+[31m+ import { bar } from 'bar-lib'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ const FOO = require('./foo')[39m
+[31m+ const BAZ = 1[39m
+[31m+ const BAR = require('./bar')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ With `count` set to `2` this will be considered valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ With `count` set to `2` these will be considered invalid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ With `count` set to `2` and `exactCount` set to `true` this will be considered valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ With `count` set to `2` and `exactCount` set to `true` these will be considered invalid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ With `considerComments` set to `false` this will be considered valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+ // some comment here.[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ With `considerComments` set to `true` this will be considered valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+[39m
+[31m+ // some comment here.[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ With `considerComments` set to `true` this will be considered invalid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+ // some comment here.[39m
+[31m+ const FOO = 'BAR'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Example options usage[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   "rules": {[39m
+[31m+     "import-x/newline-after-import": ["error", { "count": 2 }][39m
+[31m+   }[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you like to visually group module imports with its usage, you don't want to use this rule.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-absolute-path.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,58 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Node.js allows the import of modules using an absolute path such as `/home/xyz/file.js`. That is a bad practice as it ties the code using it to your computer, and therefore makes it unusable in packages distributed on `npm` for instance.[39m
+[31m+[39m
+[31m+ This rule forbids the import of modules using absolute paths.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import f from '/foo'[39m
+[31m+ import f from '/some/path'[39m
+[31m+[39m
+[31m+ var f = require('/foo')[39m
+[31m+ var f = require('/some/path')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Pass[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import _ from 'lodash'[39m
+[31m+ import foo from 'foo'[39m
+[31m+ import foo from './foo'[39m
+[31m+[39m
+[31m+ var _ = require('lodash')[39m
+[31m+ var foo = require('foo')[39m
+[31m+ var foo = require('./foo')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Options[39m
+[31m+[39m
+[31m+ By default, only ES6 imports and CommonJS `require` calls will have this rule enforced.[39m
+[31m+[39m
+[31m+ You may provide an options object providing true/false for any of[39m
+[31m+[39m
+[31m+ - `esmodule`: defaults to `true`[39m
+[31m+ - `commonjs`: defaults to `true`[39m
+[31m+ - `amd`: defaults to `false`[39m
+[31m+[39m
+[31m+ If `{ amd: true }` is provided, dependency paths for AMD-style `define` and `require`[39m
+[31m+ calls will be resolved:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-absolute-path: [2, { commonjs: false, amd: true }]*/[39m
+[31m+ define(['/foo'], function (foo) {[39m
+[31m+   /*...*/[39m
+[31m+ }) // reported[39m
+[31m+ require(['/foo'], function (foo) {[39m
+[31m+   /*...*/[39m
+[31m+ }) // reported[39m
+[31m+[39m
+[31m+ const foo = require('/foo') // ignored because of explicit `commonjs: false`[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-amd.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-amd[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports `require([array], ...)` and `define([array], ...)` function calls at the[39m
+[31m+ module scope. Will not report if !=2 arguments, or first argument is not a literal array.[39m
+[31m+[39m
+[31m+ Intended for temporary use when migrating to pure ES6 modules.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ This will be reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ define(['a', 'b'], function (a, b) {[39m
+[31m+   /* ... */[39m
+[31m+ })[39m
+[31m+[39m
+[31m+ require(['b', 'c'], function (b, c) {[39m
+[31m+   /* ... */[39m
+[31m+ })[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ CommonJS `require` is still valid.[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you don't mind mixing module systems (sometimes this is useful), you probably[39m
+[31m+ don't want this rule.[39m
+[31m+[39m
+[31m+ It is also fairly noisy if you have a larger codebase that is being transitioned[39m
+[31m+ from AMD to ES6 modules.[39m
+[31m+[39m
+[31m+ ## Contributors[39m
+[31m+[39m
+[31m+ Special thanks to @xjamundx for donating his no-define rule as a start to this.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - [`no-commonjs`](./no-commonjs.md): report CommonJS `require` and `exports`[39m
+[31m+ - Source: <https://github.com/xjamundx/eslint-plugin-modules>[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-anonymous-default-export.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-anonymous-default-export[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports if a module's default export is unnamed. This includes several types of unnamed data types; literals, object expressions, arrays, anonymous functions, arrow functions, and anonymous class declarations.[39m
+[31m+[39m
+[31m+ Ensuring that default exports are named helps improve the grepability of the codebase by encouraging the re-use of the same identifier for the module's default export at its declaration site and at its import sites.[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ By default, all types of anonymous default exports are forbidden, but any types can be selectively allowed by toggling them on in the options.[39m
+[31m+[39m
+[31m+ The complete default configuration looks like this.[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ "import-x/no-anonymous-default-export": ["error", {[39m
+[31m+   "allowArray": false,[39m
+[31m+   "allowArrowFunction": false,[39m
+[31m+   "allowAnonymousClass": false,[39m
+[31m+   "allowAnonymousFunction": false,[39m
+[31m+   "allowCallExpression": true, // The true value here is for backward compatibility[39m
+[31m+   "allowNew": false,[39m
+[31m+   "allowLiteral": false,[39m
+[31m+   "allowObject": false[39m
+[31m+ }][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export default [][39m
+[31m+[39m
+[31m+ export default () => {}[39m
+[31m+[39m
+[31m+ export default class {}[39m
+[31m+[39m
+[31m+ export default function () {}[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-anonymous-default-export: [2, {"allowCallExpression": false}] */[39m
+[31m+ export default foo(bar)[39m
+[31m+[39m
+[31m+ export default 123[39m
+[31m+[39m
+[31m+ export default {}[39m
+[31m+[39m
+[31m+ export default new Foo()[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Pass[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ const foo = 123[39m
+[31m+ export default foo[39m
+[31m+[39m
+[31m+ export default class MyClass() {}[39m
+[31m+[39m
+[31m+ export default function foo() {}[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-anonymous-default-export: [2, {"allowArray": true}] */[39m
+[31m+ export default [][39m
+[31m+[39m
+[31m+ /* eslint import-x/no-anonymous-default-export: [2, {"allowArrowFunction": true}] */[39m
+[31m+ export default () => {}[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-anonymous-default-export: [2, {"allowAnonymousClass": true}] */[39m
+[31m+ export default class {}[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-anonymous-default-export: [2, {"allowAnonymousFunction": true}] */[39m
+[31m+ export default function () {}[39m
+[31m+[39m
+[31m+ export default foo(bar)[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-anonymous-default-export: [2, {"allowLiteral": true}] */[39m
+[31m+ export default 123[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-anonymous-default-export: [2, {"allowObject": true}] */[39m
+[31m+ export default {}[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-anonymous-default-export: [2, {"allowNew": true}] */[39m
+[31m+ export default new Foo()[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-commonjs.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-commonjs[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports `require([string])` function calls. Will not report if >1 argument,[39m
+[31m+ or single argument is not a literal string.[39m
+[31m+[39m
+[31m+ Reports `module.exports` or `exports.*`, also.[39m
+[31m+[39m
+[31m+ Intended for temporary use when migrating to pure ES6 modules.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ This will be reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ var mod = require('./mod'),[39m
+[31m+   common = require('./common'),[39m
+[31m+   fs = require('fs'),[39m
+[31m+   whateverModule = require('./not-found')[39m
+[31m+[39m
+[31m+ module.exports = { a: 'b' }[39m
+[31m+ exports.c = 'd'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Allow require[39m
+[31m+[39m
+[31m+ If `allowRequire` option is set to `true`, `require` calls are valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint no-commonjs: [2, { allowRequire: true }]*/[39m
+[31m+ var mod = require('./mod')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ but `module.exports` is reported as usual.[39m
+[31m+[39m
+[31m+ ### Allow conditional require[39m
+[31m+[39m
+[31m+ By default, conditional requires are allowed:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ var a = b && require('c')[39m
+[31m+[39m
+[31m+ if (typeof window !== 'undefined') {[39m
+[31m+   require('that-ugly-thing')[39m
+[31m+ }[39m
+[31m+[39m
+[31m+ var fs = null[39m
+[31m+ try {[39m
+[31m+   fs = require('fs')[39m
+[31m+ } catch (error) {}[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ If the `allowConditionalRequire` option is set to `false`, they will be reported.[39m
+[31m+[39m
+[31m+ If you don't rely on synchronous module loading, check out [dynamic import](https://github.com/airbnb/babel-plugin-dynamic-import-node).[39m
+[31m+[39m
+[31m+ ### Allow primitive modules[39m
+[31m+[39m
+[31m+ If `allowPrimitiveModules` option is set to `true`, the following is valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint no-commonjs: [2, { allowPrimitiveModules: true }]*/[39m
+[31m+[39m
+[31m+ module.exports = 'foo'[39m
+[31m+ module.exports = function rule(context) {[39m
+[31m+   return {[39m
+[31m+     /* ... */[39m
+[31m+   }[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ but this is still reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint no-commonjs: [2, { allowPrimitiveModules: true }]*/[39m
+[31m+[39m
+[31m+ module.exports = { x: 'y' }[39m
+[31m+ exports.z = function boop() {[39m
+[31m+   /* ... */[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ This is useful for things like ESLint rule modules, which must export a function as[39m
+[31m+ the module.[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you don't mind mixing module systems (sometimes this is useful), you probably[39m
+[31m+ don't want this rule.[39m
+[31m+[39m
+[31m+ It is also fairly noisy if you have a larger codebase that is being transitioned[39m
+[31m+ from CommonJS to ES6 modules.[39m
+[31m+[39m
+[31m+ ## Contributors[39m
+[31m+[39m
+[31m+ Special thanks to @xjamundx for donating the module.exports and exports.\* bits.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - [`no-amd`](./no-amd.md): report on AMD `require`, `define`[39m
+[31m+ - Source: <https://github.com/xjamundx/eslint-plugin-modules>[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-cycle.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-cycle[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Ensures that there is no resolvable path back to this module via its dependencies.[39m
+[31m+[39m
+[31m+ This includes cycles of depth 1 (imported module imports me) to `"∞"` (or `Infinity`), if the[39m
+[31m+ [`maxDepth`](#maxdepth) option is not set.[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // dep-b.js[39m
+[31m+ import './dep-a.js'[39m
+[31m+[39m
+[31m+ export function b() {[39m
+[31m+   /* ... */[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // dep-a.js[39m
+[31m+ import { b } from './dep-b.js' // reported: Dependency cycle detected.[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ This rule does _not_ detect imports that resolve directly to the linted module;[39m
+[31m+ for that, see [`no-self-import`].[39m
+[31m+[39m
+[31m+ This rule ignores type-only imports in Flow and TypeScript syntax (`import type` and `import typeof`), which have no runtime effect.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Options[39m
+[31m+[39m
+[31m+ By default, this rule only detects cycles for ES6 imports, but see the [`no-unresolved` options](./no-unresolved.md#options) as this rule also supports the same `commonjs` and `amd` flags. However, these flags only impact which import types are _linted_; the[39m
+[31m+ import-x/export infrastructure only registers `import` statements in dependencies, so[39m
+[31m+ cycles created by `require` within imported modules may not be detected.[39m
+[31m+[39m
+[31m+ #### `maxDepth`[39m
+[31m+[39m
+[31m+ There is a `maxDepth` option available to prevent full expansion of very deep dependency trees:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-cycle: [2, { maxDepth: 1 }]*/[39m
+[31m+[39m
+[31m+ // dep-c.js[39m
+[31m+ import './dep-a.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // dep-b.js[39m
+[31m+ import './dep-c.js'[39m
+[31m+[39m
+[31m+ export function b() {[39m
+[31m+   /* ... */[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // dep-a.js[39m
+[31m+ import { b } from './dep-b.js' // not reported as the cycle is at depth 2[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ This is not necessarily recommended, but available as a cost/benefit tradeoff mechanism[39m
+[31m+ for reducing total project lint time, if needed.[39m
+[31m+[39m
+[31m+ #### `ignoreExternal`[39m
+[31m+[39m
+[31m+ An `ignoreExternal` option is available to prevent the cycle detection to expand to external modules:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-cycle: [2, { ignoreExternal: true }]*/[39m
+[31m+[39m
+[31m+ // dep-a.js[39m
+[31m+ import 'module-b/dep-b.js'[39m
+[31m+[39m
+[31m+ export function a() {[39m
+[31m+   /* ... */[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // node_modules/module-b/dep-b.js[39m
+[31m+ import { a } from './dep-a.js' // not reported as this module is external[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Its value is `false` by default, but can be set to `true` for reducing total project lint time, if needed.[39m
+[31m+[39m
+[31m+ #### `allowUnsafeDynamicCyclicDependency`[39m
+[31m+[39m
+[31m+ This option disable reporting of errors if a cycle is detected with at least one dynamic import.[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // bar.js[39m
+[31m+ import { foo } from './foo'[39m
+[31m+ export const bar = foo[39m
+[31m+[39m
+[31m+ // foo.js[39m
+[31m+ export const foo = 'Foo'[39m
+[31m+ export function getBar() {[39m
+[31m+   return import('./bar')[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ > Cyclic dependency are **always** a dangerous anti-pattern as discussed extensively in [#2265](https://github.com/import-js/eslint-plugin-import/issues/2265). Please be extra careful about using this option.[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ This rule is comparatively computationally expensive. If you are pressed for lint[39m
+[31m+ time, or don't think you have an issue with dependency cycles, you may not want[39m
+[31m+ this rule enabled.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - [Original inspiring issue](https://github.com/import-js/eslint-plugin-import/issues/941)[39m
+[31m+ - Rule to detect that module imports itself: [`no-self-import`][39m
+[31m+ - [`import-x/external-module-folders`] setting[39m
+[31m+[39m
+[31m+ [`no-self-import`]: ./no-self-import.md[39m
+[31m+ [`import-x/external-module-folders`]: ../../README.md#importexternal-module-folders[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-default-export.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-default-export[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Prohibit default exports. Mostly an inverse of [`prefer-default-export`].[39m
+[31m+[39m
+[31m+ [`prefer-default-export`]: ./prefer-default-export.md[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ The following patterns are considered warnings:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad1.js[39m
+[31m+[39m
+[31m+ // There is a default export.[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ const bar = 'bar'[39m
+[31m+ export default 'bar'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad2.js[39m
+[31m+[39m
+[31m+ // There is a default export.[39m
+[31m+ const foo = 'foo'[39m
+[31m+ export { foo as default }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are not warnings:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good1.js[39m
+[31m+[39m
+[31m+ // There is only a single module export and it's a named export.[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good2.js[39m
+[31m+[39m
+[31m+ // There is more than one named export in the module.[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ export const bar = 'bar'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good3.js[39m
+[31m+[39m
+[31m+ // There is more than one named export in the module[39m
+[31m+ const foo = 'foo'[39m
+[31m+ const bar = 'bar'[39m
+[31m+ export { foo, bar }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // export-star.js[39m
+[31m+[39m
+[31m+ // Any batch export will disable this rule. The remote module is not inspected.[39m
+[31m+ export * from './other-module'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you don't care if default imports are used, or if you prefer default imports over named imports.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-deprecated.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-deprecated[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports use of a deprecated name, as indicated by a JSDoc block with a `@deprecated`[39m
+[31m+ tag or TomDoc `Deprecated:` comment.[39m
+[31m+[39m
+[31m+ using a JSDoc `@deprecated` tag:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // @file: ./answer.js[39m
+[31m+[39m
+[31m+ /**[39m
+[31m+  * this is what you get when you trust a mouse talk show[39m
+[31m+  * @deprecated need to restart the experiment[39m
+[31m+  * @returns {Number} nonsense[39m
+[31m+  */[39m
+[31m+ export function multiply(six, nine) {[39m
+[31m+   return 42[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ will report as such:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import { multiply } from './answer' // Deprecated: need to restart the experiment[39m
+[31m+[39m
+[31m+ function whatever(y, z) {[39m
+[31m+   return multiply(y, z) // Deprecated: need to restart the experiment[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ or using the TomDoc equivalent:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Deprecated: This is what you get when you trust a mouse talk show, need to[39m
+[31m+ // restart the experiment.[39m
+[31m+ //[39m
+[31m+ // Returns a Number nonsense[39m
+[31m+ export function multiply(six, nine) {[39m
+[31m+   return 42[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Only JSDoc is enabled by default. Other documentation styles can be enabled with[39m
+[31m+ the `import-x/docstyle` setting.[39m
+[31m+[39m
+[31m+ ```yaml[39m
+[31m+ # .eslintrc.yml[39m
+[31m+ settings:[39m
+[31m+   import-x/docstyle: ['jsdoc', 'tomdoc'][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Worklist[39m
+[31m+[39m
+[31m+ - [x] report explicit imports on the import node[39m
+[31m+ - [x] support namespaces[39m
+[31m+   - [x] should bubble up through deep namespaces (#157)[39m
+[31m+ - [x] report explicit imports at reference time (at the identifier) similar to namespace[39m
+[31m+ - [x] mark module deprecated if file JSDoc has a @deprecated tag?[39m
+[31m+ - [ ] don't flag redeclaration of imported, deprecated names[39m
+[31m+ - [ ] flag destructuring[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-duplicates.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -4,5 +4,107 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports if a resolved path is imported more than once.[39m
+[31m+[39m
+[31m+ ESLint core has a similar rule ([`no-duplicate-imports`](https://eslint.org/docs/rules/no-duplicate-imports)), but this version[39m
+[31m+ is different in two key ways:[39m
+[31m+[39m
+[31m+ 1. the paths in the source code don't have to exactly match, they just have to point to the same module on the filesystem. (i.e. `./foo` and `./foo.js`)[39m
+[31m+ 2. this version distinguishes Flow `type` imports from standard imports. ([#334](https://github.com/import-js/eslint-plugin-import/pull/334))[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import SomeDefaultClass, * as names from './mod'[39m
+[31m+ // Flow `type` import from same module is fine[39m
+[31m+ import type SomeType from './mod'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...whereas here, both `./mod` imports will be reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import SomeDefaultClass from './mod'[39m
+[31m+[39m
+[31m+ // oops, some other import separated these lines[39m
+[31m+ import foo from './some-other-mod'[39m
+[31m+[39m
+[31m+ import * as names from './mod'[39m
+[31m+[39m
+[31m+ // will catch this too, assuming it is the same target module[39m
+[31m+ import { something } from './mod.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The motivation is that this is likely a result of two developers importing different[39m
+[31m+ names from the same module at different times (and potentially largely different[39m
+[31m+ locations in the file.) This rule brings both (or n-many) to attention.[39m
+[31m+[39m
+[31m+ ### Query Strings[39m
+[31m+[39m
+[31m+ By default, this rule ignores query strings (i.e. paths followed by a question mark), and thus imports from `./mod?a` and `./mod?b` will be considered as duplicates. However you can use the option `considerQueryString` to handle them as different (primarily because browsers will resolve those imports differently).[39m
+[31m+[39m
+[31m+ Config:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ "import-x/no-duplicates": ["error", {"considerQueryString": true}][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ And then the following code becomes valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import minifiedMod from './mod?minify'[39m
+[31m+ import noCommentsMod from './mod?comments=0'[39m
+[31m+ import originalMod from './mod'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ It will still catch duplicates when using the same module and the exact same query string:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import SomeDefaultClass from './mod?minify'[39m
+[31m+[39m
+[31m+ // This is invalid, assuming `./mod` and `./mod.js` are the same target:[39m
+[31m+ import * from './mod.js?minify'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Inline Type imports[39m
+[31m+[39m
+[31m+ TypeScript 4.5 introduced a new [feature](https://devblogs.microsoft.com/typescript/announcing-typescript-4-5/#type-on-import-names) that allows mixing of named value and type imports. In order to support fixing to an inline type import when duplicate imports are detected, `prefer-inline` can be set to true.[39m
+[31m+[39m
+[31m+ Config:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ "import-x/no-duplicates": ["error", {"prefer-inline": true}][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ <!--tabs-->[39m
+[31m+[39m
+[31m+ ❌ Invalid `["error", {"prefer-inline": true}]`[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import { AValue, type AType } from './mama-mia'[39m
+[31m+ import type { BType } from './mama-mia'[39m
+[31m+[39m
+[31m+ import { CValue } from './papa-mia'[39m
+[31m+ import type { CType } from './papa-mia'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ✅ Valid with `["error", {"prefer-inline": true}]`[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import { AValue, type AType, type BType } from './mama-mia'[39m
+[31m+[39m
+[31m+ import { CValue, type CType } from './papa-mia'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ <!--tabs-->[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If the core ESLint version is good enough (i.e. you're _not_ using Flow and you _are_ using [`import-x/extensions`](./extensions.md)), keep it and don't use this.[39m
+[31m+[39m
+[31m+ If you like to split up imports across lines or may need to import a default and a namespace,[39m
+[31m+ you may not want to enable this rule.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-dynamic-require.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-dynamic-require[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ The `require` method from CommonJS is used to import modules from different files. Unlike the ES6 `import` syntax, it can be given expressions that will be resolved at runtime. While this is sometimes necessary and useful, in most cases it isn't. Using expressions (for instance, concatenating a path and variable) as the argument makes it harder for tools to do static code analysis, or to find where in the codebase a module is used.[39m
+[31m+[39m
+[31m+ This rule forbids every call to `require()` that uses expressions for the module name argument.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ require(name)[39m
+[31m+ require('../' + name)[39m
+[31m+ require(`../${name}`)[39m
+[31m+ require(name())[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Pass[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ require('../name')[39m
+[31m+ require(`../name`)[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-empty-named-blocks.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,49 @@[39m
+
+[2m  🔧💡 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix) and manually fixable by [editor suggestions](https://eslint.org/docs/latest/use/core-concepts#rule-suggestions).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports the use of empty named import blocks.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Valid[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import { mod } from 'mod'[39m
+[31m+ import Default, { mod } from 'mod'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ When using typescript[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import type { mod } from 'mod'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ When using flow[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import typeof { mod } from 'mod'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Invalid[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import {} from 'mod'[39m
+[31m+ import Default from 'mod'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ When using typescript[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import type Default, {} from 'mod'[39m
+[31m+ import type {} from 'mod'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ When using flow[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import typeof {} from 'mod'[39m
+[31m+ import typeof Default, {} from 'mod'[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-extraneous-dependencies.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-extraneous-dependencies[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Forbid the import of external modules that are not declared in the `package.json`'s `dependencies`, `devDependencies`, `optionalDependencies`, `peerDependencies`, or `bundledDependencies`.[39m
+[31m+ The closest parent `package.json` will be used. If no `package.json` is found, the rule will not lint anything. This behavior can be changed with the rule option `packageDir`. Normally ignores imports of modules marked internal, but this can be changed with the rule option `includeInternal`. Type imports can be verified by specifying `includeTypes`.[39m
+[31m+[39m
+[31m+ Modules have to be installed for this rule to work.[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ ### Dependency Options[39m
+[31m+[39m
+[31m+ `devDependencies`: If set to `false`, then the rule will show an error when `devDependencies` are imported. Defaults to `true`.[39m
+[31m+ Type imports are ignored by default.[39m
+[31m+[39m
+[31m+ `optionalDependencies`: If set to `false`, then the rule will show an error when `optionalDependencies` are imported. Defaults to `true`.[39m
+[31m+[39m
+[31m+ `peerDependencies`: If set to `false`, then the rule will show an error when `peerDependencies` are imported. Defaults to `true`.[39m
+[31m+[39m
+[31m+ `bundledDependencies`: If set to `false`, then the rule will show an error when `bundledDependencies` are imported. Defaults to `true`.[39m
+[31m+[39m
+[31m+ You can set the options like this:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ "import-x/no-extraneous-dependencies": ["error", {"devDependencies": false, "optionalDependencies": false, "peerDependencies": false}][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ You can also use an array of globs instead of literal booleans:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ "import-x/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.js", "**/*.spec.js"]}][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ When using an array of globs, the setting will be set to `true` (no errors reported) if the name of the file being linted (i.e. not the imported file/module) matches a single glob in the array, and `false` otherwise.[39m
+[31m+[39m
+[31m+ ### Other Options[39m
+[31m+[39m
+[31m+ #### `includeInternal` & `includeTypes`[39m
+[31m+[39m
+[31m+ There are 2 boolean options to opt into checking extra imports that are normally ignored: `includeInternal`, which enables the checking of internal modules, and `includeTypes`, which enables checking of type imports in TypeScript.[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ "import-x/no-extraneous-dependencies": ["error", {"includeInternal": true, "includeTypes": true}][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ #### `packageDir`[39m
+[31m+[39m
+[31m+ The `packageDir` option is to specify the path to the folder containing package.json.[39m
+[31m+[39m
+[31m+ If provided as a relative path string, will be computed relative to the current working directory at linter execution time. If this is not ideal (does not work with some editor integrations), consider using `__dirname` to provide a path relative to your configuration.[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ "import-x/no-extraneous-dependencies": ["error", {"packageDir": "./some-dir/"}][39m
+[31m+ // or[39m
+[31m+ "import-x/no-extraneous-dependencies": ["error", {"packageDir": path.join(__dirname, "some-dir")}][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ It may also be an array of multiple paths, to support monorepos or other novel project[39m
+[31m+ folder layouts:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ "import-x/no-extraneous-dependencies": ["error", {"packageDir": ["./some-dir/", "./root-pkg"]}][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ #### `whitelist`[39m
+[31m+[39m
+[31m+ The `whitelist` option is an optional string array to specify the names of packages that this rule should ignore.[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ "import-x/no-extraneous-dependencies": ["error", {"whitelist": ["foo", "bar"]}][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Given the following `package.json`:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   "name": "my-project",[39m
+[31m+   "...": "...",[39m
+[31m+   "dependencies": {[39m
+[31m+     "builtin-modules": "^1.1.1",[39m
+[31m+     "lodash.cond": "^4.2.0",[39m
+[31m+     "lodash.find": "^4.2.0",[39m
+[31m+     "pkg-up": "^1.0.0"[39m
+[31m+   },[39m
+[31m+   "devDependencies": {[39m
+[31m+     "ava": "^0.13.0",[39m
+[31m+     "eslint": "^2.4.0",[39m
+[31m+     "eslint-plugin-ava": "^1.3.0",[39m
+[31m+     "xo": "^0.13.0"[39m
+[31m+   },[39m
+[31m+   "optionalDependencies": {[39m
+[31m+     "lodash.isarray": "^4.0.0"[39m
+[31m+   },[39m
+[31m+   "peerDependencies": {[39m
+[31m+     "react": ">=15.0.0 <16.0.0"[39m
+[31m+   },[39m
+[31m+   "bundledDependencies": ["@generated/foo"][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ var _ = require('lodash');[39m
+[31m+ import _ from 'lodash';[39m
+[31m+[39m
+[31m+ import react from 'react';[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-extraneous-dependencies: ["error", {"devDependencies": false}] */[39m
+[31m+ import test from 'ava';[39m
+[31m+ var test = require('ava');[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-extraneous-dependencies: ["error", {"optionalDependencies": false}] */[39m
+[31m+ import isArray from 'lodash.isarray';[39m
+[31m+ var isArray = require('lodash.isarray');[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-extraneous-dependencies: ["error", {"bundledDependencies": false}] */[39m
+[31m+ import foo from '"@generated/foo"';[39m
+[31m+ var foo = require('"@generated/foo"');[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-extraneous-dependencies: ["error", {"includeInternal": true}] */[39m
+[31m+ import foo from './foo';[39m
+[31m+ var foo = require('./foo');[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-extraneous-dependencies: ["error", {"includeTypes": true}] */[39m
+[31m+ import type { MyType } from 'foo';[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Pass[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Builtin and internal modules are fine[39m
+[31m+ var path = require('path');[39m
+[31m+ var foo = require('./foo');[39m
+[31m+[39m
+[31m+ import test from 'ava';[39m
+[31m+ import find from 'lodash.find';[39m
+[31m+ import isArray from 'lodash.isarray';[39m
+[31m+ import foo from '"@generated/foo"';[39m
+[31m+ import type { MyType } from 'foo';[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-extraneous-dependencies: ["error", {"peerDependencies": true}] */[39m
+[31m+ import react from 'react';[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you do not have a `package.json` file in your project.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-import-module-exports.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,81 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports the use of import declarations with CommonJS exports in any module[39m
+[31m+ except for the [main module](https://docs.npmjs.com/files/package.json#main).[39m
+[31m+[39m
+[31m+ If you have multiple entry points or are using `js:next` this rule includes an[39m
+[31m+ `exceptions` option which you can use to exclude those files from the rule.[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ ### `exceptions`[39m
+[31m+[39m
+[31m+ - An array of globs. The rule will be omitted from any file that matches a glob[39m
+[31m+   in the options array. For example, the following setting will omit the rule[39m
+[31m+   in the `some-file.js` file.[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ "import-x/no-import-module-exports": ["error", {[39m
+[31m+     "exceptions": ["**/*/some-file.js"][39m
+[31m+ }][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import { stuff } from 'starwars'[39m
+[31m+ module.exports = thing[39m
+[31m+[39m
+[31m+ import * as allThings from 'starwars'[39m
+[31m+ exports.bar = thing[39m
+[31m+[39m
+[31m+ import thing from 'other-thing'[39m
+[31m+ exports.foo = bar[39m
+[31m+[39m
+[31m+ import thing from 'starwars'[39m
+[31m+ const baz = (module.exports = thing)[39m
+[31m+ console.log(baz)[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Pass[39m
+[31m+[39m
+[31m+ Given the following package.json:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   "main": "lib/index.js"[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import thing from 'other-thing'[39m
+[31m+ export default thing[39m
+[31m+[39m
+[31m+ const thing = require('thing')[39m
+[31m+ module.exports = thing[39m
+[31m+[39m
+[31m+ const thing = require('thing')[39m
+[31m+ exports.foo = bar[39m
+[31m+[39m
+[31m+ import thing from 'otherthing'[39m
+[31m+ console.log(thing.module.exports)[39m
+[31m+[39m
+[31m+ // in lib/index.js[39m
+[31m+ import foo from 'path'[39m
+[31m+ module.exports = foo[39m
+[31m+[39m
+[31m+ // in some-file.js[39m
+[31m+ // eslint import-x/no-import-module-exports: ["error", {"exceptions": ["**/*/some-file.js"]}][39m
+[31m+ import foo from 'path'[39m
+[31m+ module.exports = foo[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Further Reading[39m
+[31m+[39m
+[31m+ - [webpack issue #4039](https://github.com/webpack/webpack/issues/4039)[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-internal-modules.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-internal-modules[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Use this rule to prevent importing the submodules of other modules.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ This rule has two mutally exclusive options that are arrays of [minimatch/glob patterns](https://github.com/isaacs/node-glob#glob-primer) patterns:[39m
+[31m+[39m
+[31m+ - `allow` that include paths and import statements that can be imported with reaching.[39m
+[31m+ - `forbid` that exclude paths and import statements that can be imported with reaching.[39m
+[31m+[39m
+[31m+ ### Examples[39m
+[31m+[39m
+[31m+ Given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ my-project[39m
+[31m+ ├── actions[39m
+[31m+ │   └── getUser.js[39m
+[31m+ │   └── updateUser.js[39m
+[31m+ ├── reducer[39m
+[31m+ │   └── index.js[39m
+[31m+ │   └── user.js[39m
+[31m+ ├── redux[39m
+[31m+ │   └── index.js[39m
+[31m+ │   └── configureStore.js[39m
+[31m+ └── app[39m
+[31m+ │   └── index.js[39m
+[31m+ │   └── settings.js[39m
+[31m+ └── entry.js[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ And the .eslintrc file:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   ...[39m
+[31m+   "rules": {[39m
+[31m+     "import-x/no-internal-modules": [ "error", {[39m
+[31m+       "allow": [ "**/actions/*", "source-map-support/*" ],[39m
+[31m+     } ][39m
+[31m+   }[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/entry.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import { settings } from './app/index' // Reaching to "./app/index" is not allowed[39m
+[31m+ import userReducer from './reducer/user' // Reaching to "./reducer/user" is not allowed[39m
+[31m+ import configureStore from './redux/configureStore' // Reaching to "./redux/configureStore" is not allowed[39m
+[31m+[39m
+[31m+ export { settings } from './app/index' // Reaching to "./app/index" is not allowed[39m
+[31m+ export * from './reducer/user' // Reaching to "./reducer/user" is not allowed[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are NOT considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/entry.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import 'source-map-support/register'[39m
+[31m+ import { settings } from '../app'[39m
+[31m+ import getUser from '../actions/getUser'[39m
+[31m+[39m
+[31m+ export * from 'source-map-support/register'[39m
+[31m+ export { settings } from '../app'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ my-project[39m
+[31m+ ├── actions[39m
+[31m+ │   └── getUser.js[39m
+[31m+ │   └── updateUser.js[39m
+[31m+ ├── reducer[39m
+[31m+ │   └── index.js[39m
+[31m+ │   └── user.js[39m
+[31m+ ├── redux[39m
+[31m+ │   └── index.js[39m
+[31m+ │   └── configureStore.js[39m
+[31m+ └── app[39m
+[31m+ │   └── index.js[39m
+[31m+ │   └── settings.js[39m
+[31m+ └── entry.js[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ And the .eslintrc file:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   ...[39m
+[31m+   "rules": {[39m
+[31m+     "import-x/no-internal-modules": [ "error", {[39m
+[31m+       "forbid": [ "**/actions/*", "source-map-support/*" ],[39m
+[31m+     } ][39m
+[31m+   }[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/entry.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import 'source-map-support/register'[39m
+[31m+ import getUser from '../actions/getUser'[39m
+[31m+[39m
+[31m+ export * from 'source-map-support/register'[39m
+[31m+ export getUser from '../actions/getUser'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are NOT considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/entry.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import 'source-map-support'[39m
+[31m+ import { getUser } from '../actions'[39m
+[31m+[39m
+[31m+ export * from 'source-map-support'[39m
+[31m+ export { getUser } from '../actions'[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-mutable-exports.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-mutable-exports[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Forbids the use of mutable exports with `var` or `let`.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export const count = 1[39m
+[31m+ export function getCount() {}[39m
+[31m+ export class Counter {}[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...whereas here exports will be reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export let count = 2[39m
+[31m+ export var count = 3[39m
+[31m+[39m
+[31m+ let count = 4[39m
+[31m+ export { count } // reported here[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Functions/Classes[39m
+[31m+[39m
+[31m+ Note that exported function/class declaration identifiers may be reassigned,[39m
+[31m+ but are not flagged by this rule at this time. They may be in the future, if a[39m
+[31m+ reassignment is detected, i.e.[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // possible future behavior![39m
+[31m+ export class Counter {} // reported here: exported class is reassigned on line [x].[39m
+[31m+ Counter = KitchenSink // not reported here unless you enable no-class-assign[39m
+[31m+[39m
+[31m+ // this pre-declaration reassignment is valid on account of function hoisting[39m
+[31m+ getCount = function getDuke() {} // not reported here without no-func-assign[39m
+[31m+ export function getCount() {} // reported here: exported function is reassigned on line [x].[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ To prevent general reassignment of these identifiers, exported or not, you may[39m
+[31m+ want to enable the following core ESLint rules:[39m
+[31m+[39m
+[31m+ - [no-func-assign][39m
+[31m+ - [no-class-assign][39m
+[31m+[39m
+[31m+ [no-func-assign]: https://eslint.org/docs/rules/no-func-assign[39m
+[31m+ [no-class-assign]: https://eslint.org/docs/rules/no-class-assign[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If your environment correctly implements mutable export bindings.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-named-as-default.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,53 @@[39m
+
+[2m  ⚠️ This rule _warns_ in the following configs: ☑️ `recommended`, 🚸 `warnings`.[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports use of an exported name as the locally imported name of a default export.[39m
+[31m+[39m
+[31m+ Rationale: using an exported name as the name of the default export is likely...[39m
+[31m+[39m
+[31m+ - _misleading_: others familiar with `foo.js` probably expect the name to be `foo`[39m
+[31m+ - _a mistake_: only needed to import `bar` and forgot the brackets (the case that is prompting this)[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Given:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // foo.js[39m
+[31m+ export default 'foo'[39m
+[31m+ export const bar = 'baz'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...this would be valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...and this would be reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // message: Using exported name 'bar' as identifier for default export.[39m
+[31m+ import bar from './foo.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ For post-ES2015 `export` extensions, this also prevents exporting the default from a referenced module as a name within that module, for the same reasons:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // valid:[39m
+[31m+ export foo from './foo.js'[39m
+[31m+[39m
+[31m+ // message: Using exported name 'bar' as identifier for default export.[39m
+[31m+ export bar from './foo.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - ECMAScript Proposal: [export ns from][39m
+[31m+ - ECMAScript Proposal: [export default from][39m
+[31m+[39m
+[31m+ [export ns from]: https://github.com/leebyron/ecmascript-export-ns-from[39m
+[31m+ [export default from]: https://github.com/leebyron/ecmascript-export-default-from[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-named-as-default-member.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,52 @@[39m
+
+[2m  ⚠️ This rule _warns_ in the following configs: ☑️ `recommended`, 🚸 `warnings`.[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports use of an exported name as a property on the default export.[39m
+[31m+[39m
+[31m+ Rationale: Accessing a property that has a name that is shared by an exported[39m
+[31m+ name from the same module is likely to be a mistake.[39m
+[31m+[39m
+[31m+ Named import syntax looks very similar to destructuring assignment. It's easy to[39m
+[31m+ make the (incorrect) assumption that named exports are also accessible as[39m
+[31m+ properties of the default export.[39m
+[31m+[39m
+[31m+ Furthermore, [in Babel 5 this is actually how things worked][blog]. This was[39m
+[31m+ fixed in Babel 6. Before upgrading an existing codebase to Babel 6, it can be[39m
+[31m+ useful to run this lint rule.[39m
+[31m+[39m
+[31m+ [blog]: https://kentcdodds.com/blog/misunderstanding-es6-modules-upgrading-babel-tears-and-a-solution[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Given:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // foo.js[39m
+[31m+ export default 'foo'[39m
+[31m+ export const bar = 'baz'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...this would be valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo, { bar } from './foo.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...and the following would be reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Caution: `foo` also has a named export `bar`.[39m
+[31m+ // Check if you meant to write `import {bar} from './foo.js'` instead.[39m
+[31m+ import foo from './foo.js'[39m
+[31m+ const bar = foo.bar[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Caution: `foo` also has a named export `bar`.[39m
+[31m+ // Check if you meant to write `import {bar} from './foo.js'` instead.[39m
+[31m+ import foo from './foo.js'[39m
+[31m+ const { bar } = foo[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-named-default.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-named-default[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports use of a default export as a locally named import.[39m
+[31m+[39m
+[31m+ Rationale: the syntax exists to import default exports expressively, let's use it.[39m
+[31m+[39m
+[31m+ Note that type imports, as used by [Flow], are always ignored.[39m
+[31m+[39m
+[31m+ [Flow]: https://flow.org/[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Given:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // foo.js[39m
+[31m+ export default 'foo'[39m
+[31m+ export const bar = 'baz'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...these would be valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import foo from './foo.js'[39m
+[31m+ import foo, { bar } from './foo.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...and these would be reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // message: Using exported name 'bar' as identifier for default export.[39m
+[31m+ import { default as foo } from './foo.js'[39m
+[31m+ import { default as foo, bar } from './foo.js'[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-named-export.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-named-export[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Prohibit named exports. Mostly an inverse of [`no-default-export`].[39m
+[31m+[39m
+[31m+ [`no-default-export`]: ./no-default-export.md[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ The following patterns are considered warnings:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad1.js[39m
+[31m+[39m
+[31m+ // There is only a single module export and it's a named export.[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad2.js[39m
+[31m+[39m
+[31m+ // There is more than one named export in the module.[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ export const bar = 'bar'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad3.js[39m
+[31m+[39m
+[31m+ // There is more than one named export in the module.[39m
+[31m+ const foo = 'foo'[39m
+[31m+ const bar = 'bar'[39m
+[31m+ export { foo, bar }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad4.js[39m
+[31m+[39m
+[31m+ // There is more than one named export in the module.[39m
+[31m+ export * from './other-module'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad5.js[39m
+[31m+[39m
+[31m+ // There is a default and a named export.[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ const bar = 'bar'[39m
+[31m+ export default 'bar'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are not warnings:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good1.js[39m
+[31m+[39m
+[31m+ // There is only a single module export and it's a default export.[39m
+[31m+ export default 'bar'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good2.js[39m
+[31m+[39m
+[31m+ // There is only a single module export and it's a default export.[39m
+[31m+ const foo = 'foo'[39m
+[31m+ export { foo as default }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good3.js[39m
+[31m+[39m
+[31m+ // There is only a single module export and it's a default export.[39m
+[31m+ export default from './other-module'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you don't care if named imports are used, or if you prefer named imports over default imports.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-namespace.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,44 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Enforce a convention of not using namespace (a.k.a. "wildcard" `*`) imports.[39m
+[31m+[39m
+[31m+ The rule is auto-fixable when the namespace object is only used for direct member access, e.g. `namespace.a`.[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ This rule supports the following options:[39m
+[31m+[39m
+[31m+ - `ignore`: array of glob strings for modules that should be ignored by the rule.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport from './foo'[39m
+[31m+ import { a, b } from './bar'[39m
+[31m+ import defaultExport, { a, b } from './foobar'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /* eslint import-x/no-namespace: ["error", {ignore: ['*.ext']}] */[39m
+[31m+ import * as bar from './ignored-module.ext'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Invalid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import * as foo from 'foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import defaultExport, * as foo from 'foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you want to use namespaces, you don't want to use this rule.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-nodejs-modules.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-nodejs-modules[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Forbid the use of Node.js builtin modules. Can be useful for client-side web projects that do not have access to those modules.[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ This rule supports the following options:[39m
+[31m+[39m
+[31m+ - `allow`: Array of names of allowed modules. Defaults to an empty array.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import fs from 'fs'[39m
+[31m+ import path from 'path'[39m
+[31m+[39m
+[31m+ var fs = require('fs')[39m
+[31m+ var path = require('path')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Pass[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import _ from 'lodash'[39m
+[31m+ import foo from 'foo'[39m
+[31m+ import foo from './foo'[39m
+[31m+[39m
+[31m+ var _ = require('lodash')[39m
+[31m+ var foo = require('foo')[39m
+[31m+ var foo = require('./foo')[39m
+[31m+[39m
+[31m+ /* eslint import-x/no-nodejs-modules: ["error", {"allow": ["path"]}] */[39m
+[31m+ import path from 'path'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you have a project that is run mainly or partially using Node.js.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-relative-packages.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,70 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Use this rule to prevent importing packages through relative paths.[39m
+[31m+[39m
+[31m+ It's useful in Yarn/Lerna workspaces, were it's possible to import a sibling[39m
+[31m+ package using `../package` relative path, while direct `package` is the correct one.[39m
+[31m+[39m
+[31m+ ## Examples[39m
+[31m+[39m
+[31m+ Given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ my-project[39m
+[31m+ ├── packages[39m
+[31m+ │   ├── foo[39m
+[31m+ │   │   ├── index.js[39m
+[31m+ │   │   └── package.json[39m
+[31m+ │   └── bar[39m
+[31m+ │       ├── index.js[39m
+[31m+ │       └── package.json[39m
+[31m+ └── entry.js[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ And the .eslintrc file:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   ...[39m
+[31m+   "rules": {[39m
+[31m+     "import-x/no-relative-packages": "error"[39m
+[31m+   }[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/packages/foo.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import bar from '../bar' // Import sibling package using relative path[39m
+[31m+ import entry from '../../entry.js' // Import from parent package using relative path[39m
+[31m+[39m
+[31m+ /**[39m
+[31m+  *  in my-project/entry.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import bar from './packages/bar' // Import child package using relative path[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are NOT considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/packages/foo.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import bar from 'bar' // Import sibling package using package name[39m
+[31m+[39m
+[31m+ /**[39m
+[31m+  *  in my-project/entry.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import bar from 'bar' // Import sibling package using package name[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-relative-parent-imports.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-relative-parent-imports[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Use this rule to prevent imports to folders in relative parent paths.[39m
+[31m+[39m
+[31m+ This rule is useful for enforcing tree-like folder structures instead of complex graph-like folder structures. While this restriction might be a departure from Node's default resolution style, it can lead large, complex codebases to be easier to maintain. If you've ever had debates over "where to put files" this rule is for you.[39m
+[31m+[39m
+[31m+ To fix violations of this rule there are three general strategies. Given this example:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ numbers[39m
+[31m+ └── three.js[39m
+[31m+ add.js[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // ./add.js[39m
+[31m+ export default function (numbers) {[39m
+[31m+   return numbers.reduce((sum, n) => sum + n, 0);[39m
+[31m+ }[39m
+[31m+[39m
+[31m+ // ./numbers/three.js[39m
+[31m+ import add from '../add'; // violates import-x/no-relative-parent-imports[39m
+[31m+[39m
+[31m+ export default function three() {[39m
+[31m+   return add([1, 2]);[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ You can,[39m
+[31m+[39m
+[31m+ 1. Move the file to be in a sibling folder (or higher) of the dependency.[39m
+[31m+[39m
+[31m+    `three.js` could be be in the same folder as `add.js`:[39m
+[31m+[39m
+[31m+    ```pt[39m
+[31m+    three.js[39m
+[31m+    add.js[39m
+[31m+    ```[39m
+[31m+[39m
+[31m+    or since `add` doesn't have any imports, it could be in it's own directory (namespace):[39m
+[31m+[39m
+[31m+    ```pt[39m
+[31m+    math[39m
+[31m+    └── add.js[39m
+[31m+    three.js[39m
+[31m+    ```[39m
+[31m+[39m
+[31m+ 2. Pass the dependency as an argument at runtime (dependency injection)[39m
+[31m+[39m
+[31m+    ```js[39m
+[31m+    // three.js[39m
+[31m+    export default function three(add) {[39m
+[31m+      return add([1, 2])[39m
+[31m+    }[39m
+[31m+[39m
+[31m+    // somewhere else when you use `three.js`:[39m
+[31m+    import add from './add'[39m
+[31m+    import three from './numbers/three'[39m
+[31m+    console.log(three(add))[39m
+[31m+    ```[39m
+[31m+[39m
+[31m+ 3. Make the dependency a package so it's globally available to all files in your project:[39m
+[31m+[39m
+[31m+    ```js[39m
+[31m+    import add from 'add' // from https://www.npmjs.com/package/add[39m
+[31m+    export default function three() {[39m
+[31m+      return add([1, 2])[39m
+[31m+    }[39m
+[31m+    ```[39m
+[31m+[39m
+[31m+ These are (respectively) static, dynamic & global solutions to graph-like dependency resolution.[39m
+[31m+[39m
+[31m+ ## Examples[39m
+[31m+[39m
+[31m+ Given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ my-project[39m
+[31m+ ├── lib[39m
+[31m+ │   ├── a.js[39m
+[31m+ │   └── b.js[39m
+[31m+ └── main.js[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ And the .eslintrc file:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   ...[39m
+[31m+   "rules": {[39m
+[31m+     "import-x/no-relative-parent-imports": "error"[39m
+[31m+   }[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/lib/a.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import bar from '../main' // Import parent file using a relative path[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are NOT considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/main.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import foo from 'foo' // Import package using module path[39m
+[31m+ import a from './lib/a' // Import child file using relative path[39m
+[31m+[39m
+[31m+ /**[39m
+[31m+  *  in my-project/lib/a.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import b from './b' // Import sibling file using relative path[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-rename-default.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,31 @@[39m
+
+[2m  ⚠️ This rule _warns_ in the 🚸 `warnings` config.[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Prohibit importing a default export by another name.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Given:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // api/get-users.js[39m
+[31m+ export default async function getUsers() {}[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...this would be valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import getUsers from './api/get-users.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...and the following would be reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // Caution: `get-users.js` has a default export `getUsers`.[39m
+[31m+ // This imports `getUsers` as `findUsers`.[39m
+[31m+ // Check if you meant to write `import getUsers from './api/get-users'` instead.[39m
+[31m+ import findUsers from './get-users'[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-restricted-paths.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-restricted-paths[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Some projects contain files which are not always meant to be executed in the same environment.[39m
+[31m+ For example consider a web application that contains specific code for the server and some specific code for the browser/client. In this case you don’t want to import server-only files in your client code.[39m
+[31m+[39m
+[31m+ In order to prevent such scenarios this rule allows you to define restricted zones where you can forbid files from imported if they match a specific path.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ This rule has one option. The option is an object containing the definition of all restricted `zones` and the optional `basePath` which is used to resolve relative paths within.[39m
+[31m+ The default value for `basePath` is the current working directory.[39m
+[31m+[39m
+[31m+ Each zone consists of the `target` paths, a `from` paths, and an optional `except` and `message` attribute.[39m
+[31m+[39m
+[31m+ - `target` contains the paths where the restricted imports should be applied. It can be expressed by[39m
+[31m+   - directory string path that matches all its containing files[39m
+[31m+   - glob pattern matching all the targeted files[39m
+[31m+   - an array of multiple of the two types above[39m
+[31m+ - `from` paths define the folders that are not allowed to be used in an import. It can be expressed by[39m
+[31m+   - directory string path that matches all its containing files[39m
+[31m+   - glob pattern matching all the files restricted to be imported[39m
+[31m+   - an array of multiple directory string path[39m
+[31m+   - an array of multiple glob patterns[39m
+[31m+ - `except` may be defined for a zone, allowing exception paths that would otherwise violate the related `from`. Note that it does not alter the behaviour of `target` in any way.[39m
+[31m+   - in case `from` contains only glob patterns, `except` must be an array of glob patterns as well[39m
+[31m+   - in case `from` contains only directory path, `except` is relative to `from` and cannot backtrack to a parent directory[39m
+[31m+ - `message` - will be displayed in case of the rule violation.[39m
+[31m+[39m
+[31m+ ### Examples[39m
+[31m+[39m
+[31m+ Given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ my-project[39m
+[31m+ ├── client[39m
+[31m+ │   └── foo.js[39m
+[31m+ │   └── baz.js[39m
+[31m+ └── server[39m
+[31m+     └── bar.js[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and the current file being linted is `my-project/client/foo.js`.[39m
+[31m+[39m
+[31m+ The following patterns are considered problems when configuration set to `{ "zones": [ { "target": "./client", "from": "./server" } ] }`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import bar from '../server/bar'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are not considered problems when configuration set to `{ "zones": [ { "target": "./client", "from": "./server" } ] }`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import baz from '../client/baz'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ my-project[39m
+[31m+ ├── client[39m
+[31m+ │   └── foo.js[39m
+[31m+ │   └── baz.js[39m
+[31m+ └── server[39m
+[31m+     ├── one[39m
+[31m+     │   └── a.js[39m
+[31m+     │   └── b.js[39m
+[31m+     └── two[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and the current file being linted is `my-project/server/one/a.js`.[39m
+[31m+[39m
+[31m+ and the current configuration is set to:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   "zones": [[39m
+[31m+     {[39m
+[31m+       "target": "./tests/files/restricted-paths/server/one",[39m
+[31m+       "from": "./tests/files/restricted-paths/server",[39m
+[31m+       "except": ["./one"][39m
+[31m+     }[39m
+[31m+   ][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following pattern is considered a problem:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from '../two/a'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following pattern is not considered a problem:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import b from './b'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ my-project[39m
+[31m+ ├── client[39m
+[31m+     └── foo.js[39m
+[31m+     └── sub-module[39m
+[31m+         └── bar.js[39m
+[31m+         └── baz.js[39m
+[31m+[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and the current configuration is set to:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   "zones": [[39m
+[31m+     {[39m
+[31m+       "target": "./tests/files/restricted-paths/client/!(sub-module)/**/*",[39m
+[31m+       "from": "./tests/files/restricted-paths/client/sub-module/**/*"[39m
+[31m+     }[39m
+[31m+   ][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following import is considered a problem in `my-project/client/foo.js`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from './sub-module/baz'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following import is not considered a problem in `my-project/client/sub-module/bar.js`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import b from './baz'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ my-project[39m
+[31m+ └── one[39m
+[31m+    └── a.js[39m
+[31m+    └── b.js[39m
+[31m+ └── two[39m
+[31m+    └── a.js[39m
+[31m+    └── b.js[39m
+[31m+ └── three[39m
+[31m+    └── a.js[39m
+[31m+    └── b.js[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and the current configuration is set to:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   "zones": [[39m
+[31m+     {[39m
+[31m+       "target": [[39m
+[31m+         "./tests/files/restricted-paths/two/*",[39m
+[31m+         "./tests/files/restricted-paths/three/*"[39m
+[31m+       ],[39m
+[31m+       "from": [[39m
+[31m+         "./tests/files/restricted-paths/one",[39m
+[31m+         "./tests/files/restricted-paths/three"[39m
+[31m+       ][39m
+[31m+     }[39m
+[31m+   ][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are not considered a problem in `my-project/one/b.js`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from '../three/a'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from './a'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following pattern is not considered a problem in `my-project/two/b.js`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from './a'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered a problem in `my-project/two/a.js`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from '../one/a'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from '../three/a'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered a problem in `my-project/three/b.js`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from '../one/a'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import a from './a'[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-self-import.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-self-import[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Forbid a module from importing itself. This can sometimes happen during refactoring.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // foo.js[39m
+[31m+ import foo from './foo'[39m
+[31m+[39m
+[31m+ const foo = require('./foo')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // index.js[39m
+[31m+ import index from '.'[39m
+[31m+[39m
+[31m+ const index = require('.')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Pass[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // foo.js[39m
+[31m+ import bar from './bar'[39m
+[31m+[39m
+[31m+ const bar = require('./bar')[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-unassigned-import.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-unassigned-import[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ With both CommonJS' `require` and the ES6 modules' `import` syntax, it is possible to import a module but not to use its result. This can be done explicitly by not assigning the module to as variable. Doing so can mean either of the following things:[39m
+[31m+[39m
+[31m+ - The module is imported but not used[39m
+[31m+ - The module has side-effects (like [`should`](https://www.npmjs.com/package/should)). Having side-effects, makes it hard to know whether the module is actually used or can be removed. It can also make it harder to test or mock parts of your application.[39m
+[31m+[39m
+[31m+ This rule aims to remove modules with side-effects by reporting when a module is imported but not assigned.[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ This rule supports the following option:[39m
+[31m+[39m
+[31m+ `allow`: An Array of globs. The files that match any of these patterns would be ignored/allowed by the linter. This can be useful for some build environments (e.g. css-loader in webpack).[39m
+[31m+[39m
+[31m+ Note that the globs start from the where the linter is executed (usually project root), but not from each file that includes the source. Learn more in both the pass and fail examples below.[39m
+[31m+[39m
+[31m+ ## Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import 'should'[39m
+[31m+ require('should')[39m
+[31m+[39m
+[31m+ // In <PROJECT_ROOT>/src/app.js[39m
+[31m+ import '../styles/app.css'[39m
+[31m+ // {"allow": ["styles/*.css"]}[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Pass[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import _ from 'foo'[39m
+[31m+ import _, { foo } from 'foo'[39m
+[31m+ import _, { foo as bar } from 'foo'[39m
+[31m+ import { foo as bar } from 'foo'[39m
+[31m+ import * as _ from 'foo'[39m
+[31m+[39m
+[31m+ const _ = require('foo')[39m
+[31m+ const { foo } = require('foo')[39m
+[31m+ const { foo: bar } = require('foo')[39m
+[31m+ const [a, b] = require('foo')[39m
+[31m+ const _ = require('foo')[39m
+[31m+[39m
+[31m+ // Module is not assigned, but it is used[39m
+[31m+ bar(require('foo'))[39m
+[31m+ require('foo').bar[39m
+[31m+ require('foo').bar()[39m
+[31m+ require('foo')()[39m
+[31m+[39m
+[31m+ // With allow option set[39m
+[31m+ import './style.css' // {"allow": ["**/*.css"]}[39m
+[31m+ import 'babel-register' // {"allow": ["babel-register"]}[39m
+[31m+[39m
+[31m+ // In <PROJECT_ROOT>/src/app.js[39m
+[31m+ import './styles/app.css'[39m
+[31m+ import '../scripts/register.js'[39m
+[31m+ // {"allow": ["src/styles/**", "**/scripts/*.js"]}[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-unresolved.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,120 @@[39m
+
+[2m  💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Ensures an imported module can be resolved to a module on the local filesystem,[39m
+[31m+ as defined by standard Node `require.resolve` behavior.[39m
+[31m+[39m
+[31m+ See [settings](../../README.md#settings) for customization options for the resolution (i.e.[39m
+[31m+ additional filetypes, `NODE_PATH`, etc.)[39m
+[31m+[39m
+[31m+ This rule can also optionally report on unresolved modules in CommonJS `require('./foo')` calls and AMD `require(['./foo'], function (foo) {...})` and `define(['./foo'], function (foo) {...})`.[39m
+[31m+[39m
+[31m+ To enable this, send `{ commonjs: true/false, amd: true/false }` as a rule option.[39m
+[31m+ Both are disabled by default.[39m
+[31m+[39m
+[31m+ If you are using Webpack, see the section on [resolvers](../../README.md#resolvers).[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Options[39m
+[31m+[39m
+[31m+ By default, only ES6 imports will be resolved:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-unresolved: 2*/[39m
+[31m+ import x from './foo' // reports if './foo' cannot be resolved on the filesystem[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ If `{commonjs: true}` is provided, single-argument `require` calls will be resolved:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-unresolved: [2, { commonjs: true }]*/[39m
+[31m+ const { default: x } = require('./foo') // reported if './foo' is not found[39m
+[31m+[39m
+[31m+ require(0) // ignored[39m
+[31m+ require(['x', 'y'], function (x, y) {[39m
+[31m+   /*...*/[39m
+[31m+ }) // ignored[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Similarly, if `{ amd: true }` is provided, dependency paths for `define` and `require`[39m
+[31m+ calls will be resolved:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-unresolved: [2, { amd: true }]*/[39m
+[31m+ define(['./foo'], function (foo) {[39m
+[31m+   /*...*/[39m
+[31m+ }) // reported if './foo' is not found[39m
+[31m+ require(['./foo'], function (foo) {[39m
+[31m+   /*...*/[39m
+[31m+ }) // reported if './foo' is not found[39m
+[31m+[39m
+[31m+ const { default: x } = require('./foo') // ignored[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Both may be provided, too:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-unresolved: [2, { commonjs: true, amd: true }]*/[39m
+[31m+ const { default: x } = require('./foo') // reported if './foo' is not found[39m
+[31m+ define(['./foo'], function (foo) {[39m
+[31m+   /*...*/[39m
+[31m+ }) // reported if './foo' is not found[39m
+[31m+ require(['./foo'], function (foo) {[39m
+[31m+   /*...*/[39m
+[31m+ }) // reported if './foo' is not found[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ #### `ignore`[39m
+[31m+[39m
+[31m+ This rule has its own ignore list, separate from [`import-x/ignore`]. This is because you may want to know whether a module can be located, regardless of whether it can be parsed for exports: `node_modules`, CoffeeScript files, etc. are all good to resolve properly, but will not be parsed if configured as such via [`import-x/ignore`].[39m
+[31m+[39m
+[31m+ To suppress errors from files that may not be properly resolved by your [resolver settings](../../README.md#resolver-plugins), you may add an `ignore` key with an array of `RegExp` pattern strings:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-unresolved: [2, { ignore: ['\\.img$'] }]*/[39m
+[31m+[39m
+[31m+ import { x } from './mod' // may be reported, if not resolved to a module[39m
+[31m+[39m
+[31m+ import coolImg from '../../img/coolImg.img' // will not be reported, even if not found[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ #### `caseSensitive`[39m
+[31m+[39m
+[31m+ By default, this rule will report paths whose case do not match the underlying filesystem path, if the FS is not case-sensitive. To disable this behavior, set the `caseSensitive` option to `false`.[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-unresolved: [2, { caseSensitive: true (default) | false }]*/[39m
+[31m+ const { default: x } = require('./foo') // reported if './foo' is actually './Foo' and caseSensitive: true[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ #### `caseSensitiveStrict`[39m
+[31m+[39m
+[31m+ The `caseSensitive` option does not detect case for the current working directory. The `caseSensitiveStrict` option allows checking `cwd` in resolved path. By default, the option is disabled.[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /*eslint import-x/no-unresolved: [2, { caseSensitiveStrict: true }]*/[39m
+[31m+[39m
+[31m+ // Absolute paths[39m
+[31m+ import Foo from `/Users/fOo/bar/file.js` // reported, /Users/foo/bar/file.js[39m
+[31m+ import Foo from `d:/fOo/bar/file.js` // reported, d:/foo/bar/file.js[39m
+[31m+[39m
+[31m+ // Relative paths, cwd is Users/foo/[39m
+[31m+ import Foo from `./../fOo/bar/file.js` // reported[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you're using a module bundler other than Node or Webpack, you may end up with a lot of false positive reports of missing dependencies.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - [Resolver plugins](../../README.md#resolvers)[39m
+[31m+ - [Node resolver](https://npmjs.com/package/eslint-import-resolver-node) (default)[39m
+[31m+ - [Webpack resolver](https://npmjs.com/package/eslint-import-resolver-webpack)[39m
+[31m+ - [`import-x/ignore`] global setting[39m
+[31m+[39m
+[31m+ [`import-x/ignore`]: ../../README.md#importignore[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-unused-modules.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-unused-modules[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Reports:[39m
+[31m+[39m
+[31m+ - modules without any exports[39m
+[31m+ - individual exports not being statically `import`ed or `require`ed from other modules in the same project[39m
+[31m+ - dynamic imports are supported if argument is a literal string[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Usage[39m
+[31m+[39m
+[31m+ In order for this plugin to work, at least one of the options `missingExports` or `unusedExports` must be enabled (see "Options" section below). In the future, these options will be enabled by default (see <https://github.com/import-js/eslint-plugin-import/issues/1324>)[39m
+[31m+[39m
+[31m+ Example:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ "rules: {[39m
+[31m+   ...otherRules,[39m
+[31m+   "import-x/no-unused-modules": [1, {"unusedExports": true}][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Options[39m
+[31m+[39m
+[31m+ This rule takes the following option:[39m
+[31m+[39m
+[31m+ - **`missingExports`**: if `true`, files without any exports are reported (defaults to `false`)[39m
+[31m+ - **`unusedExports`**: if `true`, exports without any static usage within other modules are reported (defaults to `false`)[39m
+[31m+ - **`ignoreUnusedTypeExports`**: if `true`, TypeScript type exports without any static usage within other modules are reported (defaults to `false` and has no effect unless `unusedExports` is `true`)[39m
+[31m+ - `src`: an array with files/paths to be analyzed. It only applies to unused exports. Defaults to `process.cwd()`, if not provided[39m
+[31m+ - `ignoreExports`: an array with files/paths for which unused exports will not be reported (e.g module entry points in a published package)[39m
+[31m+[39m
+[31m+ ### Example for missing exports[39m
+[31m+[39m
+[31m+ #### The following will be reported[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ const class MyClass { /*...*/ }[39m
+[31m+[39m
+[31m+ function makeClass() { return new MyClass(...arguments) }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ #### The following will not be reported[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export default function () {[39m
+[31m+   /*...*/[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export const foo = function () {[39m
+[31m+   /*...*/[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export { foo, bar }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export { foo as bar }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Example for unused exports[39m
+[31m+[39m
+[31m+ given file-f:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import { e } from 'file-a'[39m
+[31m+ import { f } from 'file-b'[39m
+[31m+ import * as fileC from 'file-c'[39m
+[31m+ export { default, i0 } from 'file-d' // both will be reported[39m
+[31m+[39m
+[31m+ export const j = 99 // will be reported[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and file-d:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export const i0 = 9 // will not be reported[39m
+[31m+ export const i1 = 9 // will be reported[39m
+[31m+ export default () => {} // will not be reported[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and file-c:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export const h = 8 // will not be reported[39m
+[31m+ export default () => {} // will be reported, as export * only considers named exports and ignores default exports[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and file-b:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import two, { b, c, doAnything } from 'file-a'[39m
+[31m+[39m
+[31m+ export const f = 6 // will not be reported[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ and file-a:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ const b = 2[39m
+[31m+ const c = 3[39m
+[31m+ const d = 4[39m
+[31m+[39m
+[31m+ export const a = 1 // will be reported[39m
+[31m+[39m
+[31m+ export { b, c } // will not be reported[39m
+[31m+[39m
+[31m+ export { d as e } // will not be reported[39m
+[31m+[39m
+[31m+ export function doAnything() {[39m
+[31m+   // some code[39m
+[31m+ } // will not be reported[39m
+[31m+[39m
+[31m+ export default 5 // will not be reported[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Unused exports with `ignoreUnusedTypeExports` set to `true`[39m
+[31m+[39m
+[31m+ The following will not be reported:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ export type Foo = {}; // will not be reported[39m
+[31m+ export interface Foo = {}; // will not be reported[39m
+[31m+ export enum Foo {}; // will not be reported[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ #### Important Note[39m
+[31m+[39m
+[31m+ Exports from files listed as a main file (`main`, `browser`, or `bin` fields in `package.json`) will be ignored by default. This only applies if the `package.json` is not set to `private: true`[39m
+[31m+[39m
+[31m+ ## When not to use[39m
+[31m+[39m
+[31m+ If you don't mind having unused files or dead code within your codebase, you can disable this rule[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-useless-path-segments.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,85 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Use this rule to prevent unnecessary path segments in import and require statements.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ Given the following folder structure:[39m
+[31m+[39m
+[31m+ ```pt[39m
+[31m+ my-project[39m
+[31m+ ├── app.js[39m
+[31m+ ├── footer.js[39m
+[31m+ ├── header.js[39m
+[31m+ └── helpers.js[39m
+[31m+ └── helpers[39m
+[31m+     └── index.js[39m
+[31m+ ├── index.js[39m
+[31m+ └── pages[39m
+[31m+     ├── about.js[39m
+[31m+     ├── contact.js[39m
+[31m+     └── index.js[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/app.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import './../my-project/pages/about.js' // should be "./pages/about.js"[39m
+[31m+ import './../my-project/pages/about' // should be "./pages/about"[39m
+[31m+ import '../my-project/pages/about.js' // should be "./pages/about.js"[39m
+[31m+ import '../my-project/pages/about' // should be "./pages/about"[39m
+[31m+ import './pages//about' // should be "./pages/about"[39m
+[31m+ import './pages/' // should be "./pages"[39m
+[31m+ import './pages/index' // should be "./pages" (except if there is a ./pages.js file)[39m
+[31m+ import './pages/index.js' // should be "./pages" (except if there is a ./pages.js file)[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are NOT considered problems:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ /**[39m
+[31m+  *  in my-project/app.js[39m
+[31m+  */[39m
+[31m+[39m
+[31m+ import './header.js'[39m
+[31m+ import './pages'[39m
+[31m+ import './pages/about'[39m
+[31m+ import '.'[39m
+[31m+ import '..'[39m
+[31m+ import fs from 'fs'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ ### noUselessIndex[39m
+[31m+[39m
+[31m+ If you want to detect unnecessary `/index` or `/index.js` (depending on the specified file extensions, see below) imports in your paths, you can enable the option `noUselessIndex`. By default it is set to `false`:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ "import-x/no-useless-path-segments": ["error", {[39m
+[31m+   noUselessIndex: true,[39m
+[31m+ }][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Additionally to the patterns described above, the following imports are considered problems if `noUselessIndex` is enabled:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ // in my-project/app.js[39m
+[31m+ import './helpers/index' // should be "./helpers/" (not auto-fixable to `./helpers` because this would lead to an ambiguous import of `./helpers.js` and `./helpers/index.js`)[39m
+[31m+ import './pages/index' // should be "./pages" (auto-fixable)[39m
+[31m+ import './pages/index.js' // should be "./pages" (auto-fixable)[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Note: `noUselessIndex` only avoids ambiguous imports for `.js` files if you haven't specified other resolved file extensions. See [Settings: import-x/extensions](https://github.com/import-js/eslint-plugin-import#importextensions) for details.[39m
+[31m+[39m
+[31m+ ### commonjs[39m
+[31m+[39m
+[31m+ When set to `true`, this rule checks CommonJS imports. Default to `false`.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\no-webpack-loader-syntax.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/no-webpack-loader-syntax[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Forbid Webpack loader syntax in imports.[39m
+[31m+[39m
+[31m+ [Webpack](https://webpack.js.org) allows specifying the [loaders](https://webpack.js.org/concepts/loaders/) to use in the import source string using a special syntax like this:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ var moduleWithOneLoader = require('my-loader!./my-awesome-module')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ This syntax is non-standard, so it couples the code to Webpack. The recommended way to specify Webpack loader configuration is in a [Webpack configuration file](https://webpack.js.org/concepts/loaders/#configuration).[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### Fail[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import myModule from 'my-loader!my-module'[39m
+[31m+ import theme from 'style!css!./theme.css'[39m
+[31m+[39m
+[31m+ var myModule = require('my-loader!./my-module')[39m
+[31m+ var theme = require('style!css!./theme.css')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Pass[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import myModule from 'my-module'[39m
+[31m+ import theme from './theme.css'[39m
+[31m+[39m
+[31m+ var myModule = require('my-module')[39m
+[31m+ var theme = require('./theme.css')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If you have a project that doesn't use Webpack you can safely disable this rule.[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\order.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -2,5 +2,371 @@[39m
+
+[2m  🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Enforce a convention in the order of `require()` / `import` statements.[39m
+[31m+[39m
+[31m+ With the [`groups`](#groups-array) option set to `["builtin", "external", "internal", "parent", "sibling", "index", "object", "type"]` the order is as shown in the following example:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ // 1. node "builtin" modules[39m
+[31m+ import fs from 'fs'[39m
+[31m+ import path from 'path'[39m
+[31m+ // 2. "external" modules[39m
+[31m+ import _ from 'lodash'[39m
+[31m+ import chalk from 'chalk'[39m
+[31m+ // 3. "internal" modules[39m
+[31m+ // (if you have configured your path or webpack to handle your internal paths differently)[39m
+[31m+ import foo from 'src/foo'[39m
+[31m+ // 4. modules from a "parent" directory[39m
+[31m+ import foo from '../foo'[39m
+[31m+ import qux from '../../foo/qux'[39m
+[31m+ // 5. "sibling" modules from the same or a sibling's directory[39m
+[31m+ import bar from './bar'[39m
+[31m+ import baz from './bar/baz'[39m
+[31m+ // 6. "index" of the current directory[39m
+[31m+ import main from './'[39m
+[31m+ // 7. "object"-imports (only available in TypeScript)[39m
+[31m+ import log = console.log[39m
+[31m+ // 8. "type" imports (only available in Flow and TypeScript)[39m
+[31m+ import type { Foo } from 'foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ Unassigned imports are ignored, as the order they are imported in may be important.[39m
+[31m+[39m
+[31m+ Statements using the ES6 `import` syntax must appear before any `require()` statements.[39m
+[31m+[39m
+[31m+ ## Fail[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import _ from 'lodash'[39m
+[31m+ import path from 'path' // `path` import should occur before import of `lodash`[39m
+[31m+[39m
+[31m+ // -----[39m
+[31m+[39m
+[31m+ var _ = require('lodash')[39m
+[31m+ var path = require('path') // `path` import should occur before import of `lodash`[39m
+[31m+[39m
+[31m+ // -----[39m
+[31m+[39m
+[31m+ var path = require('path')[39m
+[31m+ import foo from './foo' // `import` statements must be before `require` statement[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Pass[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ import path from 'path'[39m
+[31m+ import _ from 'lodash'[39m
+[31m+[39m
+[31m+ // -----[39m
+[31m+[39m
+[31m+ var path = require('path')[39m
+[31m+ var _ = require('lodash')[39m
+[31m+[39m
+[31m+ // -----[39m
+[31m+[39m
+[31m+ // Allowed as ̀`babel-register` is not assigned.[39m
+[31m+ require('babel-register')[39m
+[31m+ var path = require('path')[39m
+[31m+[39m
+[31m+ // -----[39m
+[31m+[39m
+[31m+ // Allowed as `import` must be before `require`[39m
+[31m+ import foo from './foo'[39m
+[31m+ var path = require('path')[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Limitations of `--fix`[39m
+[31m+[39m
+[31m+ Unbound imports are assumed to have side effects, and will never be moved/reordered. This can cause other imports to get "stuck" around them, and the fix to fail.[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ import b from 'b'[39m
+[31m+ import 'format.css' // This will prevent --fix from working.[39m
+[31m+ import a from 'a'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ As a workaround, move unbound imports to be entirely above or below bound ones.[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ import 'format1.css' // OK[39m
+[31m+ import b from 'b'[39m
+[31m+ import a from 'a'[39m
+[31m+ import 'format2.css' // OK[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Options[39m
+[31m+[39m
+[31m+ This rule supports the following options:[39m
+[31m+[39m
+[31m+ ### `groups: [array]`[39m
+[31m+[39m
+[31m+ How groups are defined, and the order to respect. `groups` must be an array of `string` or [`string`]. The only allowed `string`s are:[39m
+[31m+ `"builtin"`, `"external"`, `"internal"`, `"unknown"`, `"parent"`, `"sibling"`, `"index"`, `"object"`, `"type"`.[39m
+[31m+ The enforced order is the same as the order of each element in a group. Omitted types are implicitly grouped together as the last element. Example:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ ;[[39m
+[31m+   'builtin', // Built-in types are first[39m
+[31m+   ['sibling', 'parent'], // Then sibling and parent types. They can be mingled together[39m
+[31m+   'index', // Then the index file[39m
+[31m+   'object',[39m
+[31m+   // Then the rest: internal and external type[39m
+[31m+ ][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The default value is `["builtin", "external", "parent", "sibling", "index"]`.[39m
+[31m+[39m
+[31m+ You can set the options like this:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ "import-x/order": [[39m
+[31m+   "error",[39m
+[31m+   {[39m
+[31m+     "groups": [[39m
+[31m+       "index",[39m
+[31m+       "sibling",[39m
+[31m+       "parent",[39m
+[31m+       "internal",[39m
+[31m+       "external",[39m
+[31m+       "builtin",[39m
+[31m+       "object",[39m
+[31m+       "type"[39m
+[31m+     ][39m
+[31m+   }[39m
+[31m+ ][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### `pathGroups: [array of objects]`[39m
+[31m+[39m
+[31m+ To be able to group by paths mostly needed with aliases pathGroups can be defined.[39m
+[31m+[39m
+[31m+ Properties of the objects[39m
+[31m+[39m
+[31m+ | property       | required | type   | description                                                                                                                                              |[39m
+[31m+ | -------------- | :------: | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |[39m
+[31m+ | pattern        |    x     | string | minimatch pattern for the paths to be in this group (will not be used for builtins or externals)                                                         |[39m
+[31m+ | patternOptions |          | object | options for minimatch, default: { nocomment: true }                                                                                                      |[39m
+[31m+ | group          |    x     | string | one of the allowed groups, the pathGroup will be positioned relative to this group                                                                       |[39m
+[31m+ | position       |          | string | defines where around the group the pathGroup will be positioned, can be 'after' or 'before', if not provided pathGroup will be positioned like the group |[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   "import-x/order": [[39m
+[31m+     "error",[39m
+[31m+     {[39m
+[31m+       "pathGroups": [[39m
+[31m+         {[39m
+[31m+           "pattern": "~/**",[39m
+[31m+           "group": "external"[39m
+[31m+         }[39m
+[31m+       ][39m
+[31m+     }[39m
+[31m+   ][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### `distinctGroup: [boolean]`[39m
+[31m+[39m
+[31m+ This changes how `pathGroups[].position` affects grouping. The property is most useful when `newlines-between` is set to `always` and at least 1 `pathGroups` entry has a `position` property set.[39m
+[31m+[39m
+[31m+ By default, in the context of a particular `pathGroup` entry, when setting `position`, a new "group" will silently be created. That is, even if the `group` is specified, a newline will still separate imports that match that `pattern` with the rest of the group (assuming `newlines-between` is `always`). This is undesirable if your intentions are to use `position` to position _within_ the group (and not create a new one). Override this behavior by setting `distinctGroup` to `false`; this will keep imports within the same group as intended.[39m
+[31m+[39m
+[31m+ Note that currently, `distinctGroup` defaults to `true`. However, in a later update, the default will change to `false`[39m
+[31m+[39m
+[31m+ Example:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   "import-x/order": [[39m
+[31m+     "error",[39m
+[31m+     {[39m
+[31m+       "newlines-between": "always",[39m
+[31m+       "pathGroups": [[39m
+[31m+         {[39m
+[31m+           "pattern": "@app/**",[39m
+[31m+           "group": "external",[39m
+[31m+           "position": "after"[39m
+[31m+         }[39m
+[31m+       ],[39m
+[31m+       "distinctGroup": false[39m
+[31m+     }[39m
+[31m+   ][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### `pathGroupsExcludedImportTypes: [array]`[39m
+[31m+[39m
+[31m+ This defines import types that are not handled by configured pathGroups.[39m
+[31m+[39m
+[31m+ If you have added path groups with patterns that look like `"builtin"` or `"external"` imports, you have to remove this group (`"builtin"` and/or `"external"`) from the default exclusion list (e.g., `["builtin", "external", "object"]`, etc) to sort these path groups correctly.[39m
+[31m+[39m
+[31m+ Example:[39m
+[31m+[39m
+[31m+ ```json[39m
+[31m+ {[39m
+[31m+   "import-x/order": [[39m
+[31m+     "error",[39m
+[31m+     {[39m
+[31m+       "pathGroups": [[39m
+[31m+         {[39m
+[31m+           "pattern": "@app/**",[39m
+[31m+           "group": "external",[39m
+[31m+           "position": "after"[39m
+[31m+         }[39m
+[31m+       ],[39m
+[31m+       "pathGroupsExcludedImportTypes": ["builtin"][39m
+[31m+     }[39m
+[31m+   ][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ [Import Type](https://github.com/un-ts/eslint-plugin-import-x/blob/ea7c13eb9b18357432e484b25dfa4451eca69c5b/src/utils/import-type.ts#L145) is resolved as a fixed string in predefined set, it can't be a `patterns` (e.g., `react`, `react-router-dom`, etc).[39m
+[31m+[39m
+[31m+ ### `newlines-between: [ignore|always|always-and-inside-groups|never]`[39m
+[31m+[39m
+[31m+ Enforces or forbids new lines between import groups:[39m
+[31m+[39m
+[31m+ - If set to `ignore`, no errors related to new lines between import groups will be reported.[39m
+[31m+ - If set to `always`, at least one new line between each group will be enforced, and new lines inside a group will be forbidden. To prevent multiple lines between imports, core `no-multiple-empty-lines` rule can be used.[39m
+[31m+ - If set to `always-and-inside-groups`, it will act like `always` except newlines are allowed inside import groups.[39m
+[31m+ - If set to `never`, no new lines are allowed in the entire import section.[39m
+[31m+[39m
+[31m+ The default value is `"ignore"`.[39m
+[31m+[39m
+[31m+ With the default group setting, the following will be invalid:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"newlines-between": "always"}] */[39m
+[31m+ import fs from 'fs'[39m
+[31m+ import path from 'path'[39m
+[31m+ import index from './'[39m
+[31m+ import sibling from './foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"newlines-between": "always-and-inside-groups"}] */[39m
+[31m+ import fs from 'fs'[39m
+[31m+[39m
+[31m+ import path from 'path'[39m
+[31m+ import index from './'[39m
+[31m+ import sibling from './foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"newlines-between": "never"}] */[39m
+[31m+ import fs from 'fs'[39m
+[31m+ import path from 'path'[39m
+[31m+[39m
+[31m+ import index from './'[39m
+[31m+[39m
+[31m+ import sibling from './foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ while those will be valid:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"newlines-between": "always"}] */[39m
+[31m+ import fs from 'fs'[39m
+[31m+ import path from 'path'[39m
+[31m+[39m
+[31m+ import index from './'[39m
+[31m+[39m
+[31m+ import sibling from './foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"newlines-between": "always-and-inside-groups"}] */[39m
+[31m+ import fs from 'fs'[39m
+[31m+[39m
+[31m+ import path from 'path'[39m
+[31m+[39m
+[31m+ import index from './'[39m
+[31m+[39m
+[31m+ import sibling from './foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"newlines-between": "never"}] */[39m
+[31m+ import fs from 'fs'[39m
+[31m+ import path from 'path'[39m
+[31m+ import index from './'[39m
+[31m+ import sibling from './foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### `alphabetize: {order: asc|desc|ignore, orderImportKind: asc|desc|ignore, caseInsensitive: true|false}`[39m
+[31m+[39m
+[31m+ Sort the order within each group in alphabetical manner based on **import path**:[39m
+[31m+[39m
+[31m+ - `order`: use `asc` to sort in ascending order, and `desc` to sort in descending order (default: `ignore`).[39m
+[31m+ - `orderImportKind`: use `asc` to sort in ascending order various import kinds, e.g. imports prefixed with `type` or `typeof`, with same import path. Use `desc` to sort in descending order (default: `ignore`).[39m
+[31m+ - `caseInsensitive`: use `true` to ignore case, and `false` to consider case (default: `false`).[39m
+[31m+[39m
+[31m+ Example setting:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ alphabetize: {[39m
+[31m+   order: 'asc', /* sort in ascending order. Options: ['ignore', 'asc', 'desc'] */[39m
+[31m+   caseInsensitive: true /* ignore case. Options: [true, false] */[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ This will fail the rule check:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"alphabetize": {"order": "asc", "caseInsensitive": true}}] */[39m
+[31m+ import React, { PureComponent } from 'react'[39m
+[31m+ import aTypes from 'prop-types'[39m
+[31m+ import { compose, apply } from 'xcompose'[39m
+[31m+ import * as classnames from 'classnames'[39m
+[31m+ import blist from 'BList'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ While this will pass:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"alphabetize": {"order": "asc", "caseInsensitive": true}}] */[39m
+[31m+ import blist from 'BList'[39m
+[31m+ import * as classnames from 'classnames'[39m
+[31m+ import aTypes from 'prop-types'[39m
+[31m+ import React, { PureComponent } from 'react'[39m
+[31m+ import { compose, apply } from 'xcompose'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### `warnOnUnassignedImports: true|false`[39m
+[31m+[39m
+[31m+ - default: `false`[39m
+[31m+[39m
+[31m+ Warns when unassigned imports are out of order. These warning will not be fixed[39m
+[31m+ with `--fix` because unassigned imports are used for side-effects and changing the[39m
+[31m+ import of order of modules with side effects can not be done automatically in a[39m
+[31m+ way that is safe.[39m
+[31m+[39m
+[31m+ This will fail the rule check:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"warnOnUnassignedImports": true}] */[39m
+[31m+ import fs from 'fs'[39m
+[31m+ import './styles.css'[39m
+[31m+ import path from 'path'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ While this will pass:[39m
+[31m+[39m
+[31m+ ```ts[39m
+[31m+ /* eslint import-x/order: ["error", {"warnOnUnassignedImports": true}] */[39m
+[31m+ import fs from 'fs'[39m
+[31m+ import path from 'path'[39m
+[31m+ import './styles.css'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## Related[39m
+[31m+[39m
+[31m+ - [`import-x/external-module-folders`] setting[39m
+[31m+[39m
+[31m+ - [`import-x/internal-regex`] setting[39m
+[31m+[39m
+[31m+ [`import-x/external-module-folders`]: ../../README.md#importexternal-module-folders[39m
+[31m+ [`import-x/internal-regex`]: ../../README.md#importinternal-regex[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\prefer-default-export.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/prefer-default-export[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ In exporting files, this rule checks if there is default export or not.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ ### rule schema[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ "import-x/prefer-default-export": [[39m
+[31m+     ( "off" | "warn" | "error" ),[39m
+[31m+     { "target": "single" | "any" } // default is "single"[39m
+[31m+ ][39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ### Config Options[39m
+[31m+[39m
+[31m+ There are two options available: `single` and `any`. By default, if you do not specify the option, rule will assume it is `single`.[39m
+[31m+[39m
+[31m+ #### single[39m
+[31m+[39m
+[31m+ **Definition**: When there is only a single export from a module, prefer using default export over named export.[39m
+[31m+[39m
+[31m+ How to setup config file for this rule:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // you can manually specify it[39m
+[31m+ "rules": {[39m
+[31m+     "import-x/prefer-default-export": [[39m
+[31m+         ( "off" | "warn" | "error" ),[39m
+[31m+         { "target": "single" }[39m
+[31m+     ][39m
+[31m+ }[39m
+[31m+[39m
+[31m+ // config setup below will also work[39m
+[31m+ "rules": {[39m
+[31m+     "import-x/prefer-default-export": "off" | "warn" | "error"[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered warnings:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad.js[39m
+[31m+[39m
+[31m+ // There is only a single module export and it's a named export.[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are not warnings:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good1.js[39m
+[31m+[39m
+[31m+ // There is a default export.[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ const bar = 'bar'[39m
+[31m+ export default bar[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good2.js[39m
+[31m+[39m
+[31m+ // There is more than one named export in the module.[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ export const bar = 'bar'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good3.js[39m
+[31m+[39m
+[31m+ // There is more than one named export in the module[39m
+[31m+ const foo = 'foo'[39m
+[31m+ const bar = 'bar'[39m
+[31m+ export { foo, bar }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good4.js[39m
+[31m+[39m
+[31m+ // There is a default export.[39m
+[31m+ const foo = 'foo'[39m
+[31m+ export { foo as default }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // export-star.js[39m
+[31m+[39m
+[31m+ // Any batch export will disable this rule. The remote module is not inspected.[39m
+[31m+ export * from './other-module'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ #### any[39m
+[31m+[39m
+[31m+ **Definition**: any exporting file must contain a default export.[39m
+[31m+[39m
+[31m+ How to setup config file for this rule:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // you have to manually specify it[39m
+[31m+ "rules": {[39m
+[31m+     "import-x/prefer-default-export": [[39m
+[31m+         ( "off" | "warn" | "error" ),[39m
+[31m+         { "target": "any" }[39m
+[31m+     ][39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are _not_ considered warnings:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good1.js[39m
+[31m+[39m
+[31m+ //has default export[39m
+[31m+ export default function bar() {}[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good2.js[39m
+[31m+[39m
+[31m+ // has default export[39m
+[31m+ let foo[39m
+[31m+ export { foo as default }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good3.js[39m
+[31m+[39m
+[31m+ //contains multiple exports AND default export[39m
+[31m+ export const a = 5[39m
+[31m+ export function bar() {}[39m
+[31m+ let foo[39m
+[31m+ export { foo as default }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // good4.js[39m
+[31m+[39m
+[31m+ // does not contain any exports => file is not checked by the rule[39m
+[31m+ import * as foo from './foo'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // export-star.js[39m
+[31m+[39m
+[31m+ // Any batch export will disable this rule. The remote module is not inspected.[39m
+[31m+ export * from './other-module'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ The following patterns are considered warnings:[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad1.js[39m
+[31m+[39m
+[31m+ //has 2 named exports, but no default export[39m
+[31m+ export const foo = 'foo'[39m
+[31m+ export const bar = 'bar'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad2.js[39m
+[31m+[39m
+[31m+ // does not have default export[39m
+[31m+ let foo, bar[39m
+[31m+ export { foo, bar }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad3.js[39m
+[31m+[39m
+[31m+ // does not have default export[39m
+[31m+ export { a, b } from 'foo.js'[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```javascript[39m
+[31m+ // bad4.js[39m
+[31m+[39m
+[31m+ // does not have default export[39m
+[31m+ let item[39m
+[31m+ export const foo = item[39m
+[31m+ export { item }[39m
+[31m+ ```[39m
+[31m+[39m
+Please run eslint-doc-generator. A rule doc is out-of-date: docs\rules\unambiguous.md
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  # import-x/unambiguous[22m
+
+[2m  <!-- end auto-generated rule header -->[22m
+
+[31m+ Warn if a `module` could be mistakenly parsed as a `script` by a consumer leveraging[39m
+[31m+ [Unambiguous JavaScript Grammar] to determine correct parsing goal.[39m
+[31m+[39m
+[31m+ Will respect the [`parserOptions.sourceType`] from ESLint config, i.e. files parsed[39m
+[31m+ as `script` per that setting will not be reported.[39m
+[31m+[39m
+[31m+ This plugin uses [Unambiguous JavaScript Grammar] internally to decide whether[39m
+[31m+ dependencies should be parsed as modules and searched for exports matching the[39m
+[31m+ `import`ed names, so it may be beneficial to keep this rule on even if your application[39m
+[31m+ will run in an explicit `module`-only environment.[39m
+[31m+[39m
+[31m+ ## Rule Details[39m
+[31m+[39m
+[31m+ For files parsed as `module` by ESLint, the following are valid:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ import 'foo'[39m
+[31m+ function x() {[39m
+[31m+   return 42[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ export function x() {[39m
+[31m+   return 42[39m
+[31m+ }[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ ;(function x() {[39m
+[31m+   return 42[39m
+[31m+ })()[39m
+[31m+ export {} // simple way to mark side-effects-only file as 'module' without any imports/exports[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ...whereas the following file would be reported:[39m
+[31m+[39m
+[31m+ ```js[39m
+[31m+ ;(function x() {[39m
+[31m+   return 42[39m
+[31m+ })()[39m
+[31m+ ```[39m
+[31m+[39m
+[31m+ ## When Not To Use It[39m
+[31m+[39m
+[31m+ If your application environment will always know via [some other means](https://github.com/nodejs/node-eps/issues/13)[39m
+[31m+ how to parse, regardless of syntax, you may not need this rule.[39m
+[31m+[39m
+[31m+ Remember, though, that this plugin uses this strategy internally, so if you were[39m
+[31m+ to `import` from a module with no `import`s or `export`s, this plugin would not[39m
+[31m+ report it as it would not be clear whether it should be considered a `script` or[39m
+[31m+ a `module`.[39m
+[31m+[39m
+[31m+ ## Further Reading[39m
+[31m+[39m
+[31m+ - [Unambiguous JavaScript Grammar][39m
+[31m+ - [`parserOptions.sourceType`][39m
+[31m+ - [node-eps#13](https://github.com/nodejs/node-eps/issues/13)[39m
+[31m+[39m
+[31m+ [`parserOptions.sourceType`]: https://eslint.org/docs/user-guide/configuring#specifying-parser-options[39m
+[31m+ [Unambiguous JavaScript Grammar]: https://github.com/nodejs/node-eps/blob/HEAD/002-es-modules.md#32-determining-if-source-is-an-es-module[39m
+[31m+[39m
+Please run eslint-doc-generator. The rules table in README.md is out-of-date.
+[32m- Expected[39m
+[31m+ Received[39m
+
+[33m@@ -30,11 +30,11 @@[39m
+[2m  🚸 Set in the `warnings` configuration.\[22m
+[2m  🔧 Automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/user-guide/command-line-interface#--fix).\[22m
+[2m  💡 Manually fixable by [editor suggestions](https://eslint.org/docs/latest/use/core-concepts#rule-suggestions).\[22m
+[2m  ❌ Deprecated.[22m
+
+[32m- # Helpful warnings[39m
+[31m+ ### Helpful warnings[39m
+
+[2m  | Name                                                                   | Description                                                                           | 💼    | ⚠️    | 🚫  | 🔧  | 💡  | ❌  |[22m
+[2m  | :--------------------------------------------------------------------- | :------------------------------------------------------------------------------------ | :---- | :---- | :-- | :-- | :-- | :-- |[22m
+[2m  | [export](docs/rules/export.md)                                         | Forbid any invalid exports, i.e. re-export of the same name.                          | ❗ ☑️ |       |     |     |     |     |[22m
+[2m  | [no-deprecated](docs/rules/no-deprecated.md)                           | Forbid imported names marked with `@deprecated` documentation tag.                    |       |       |     |     |     |     |[22m
+[33m@@ -44,21 +44,21 @@[39m
+[2m  | [no-named-as-default](docs/rules/no-named-as-default.md)               | Forbid use of exported name as identifier of default export.                          |       | ☑️ 🚸 |     |     |     |     |[22m
+[2m  | [no-named-as-default-member](docs/rules/no-named-as-default-member.md) | Forbid use of exported name as property of default export.                            |       | ☑️ 🚸 |     |     |     |     |[22m
+[2m  | [no-rename-default](docs/rules/no-rename-default.md)                   | Forbid importing a default export by a different name.                                |       | 🚸    |     |     |     |     |[22m
+[2m  | [no-unused-modules](docs/rules/no-unused-modules.md)                   | Forbid modules without exports, or exports without matching import in another module. |       |       |     |     |     |     |[22m
+
+[32m- # Module systems[39m
+[31m+ ### Module systems[39m
+
+[2m  | Name                                                               | Description                                                          | 💼  | ⚠️  | 🚫  | 🔧  | 💡  | ❌  |[22m
+[2m  | :----------------------------------------------------------------- | :------------------------------------------------------------------- | :-- | :-- | :-- | :-- | :-- | :-- |[22m
+[2m  | [no-amd](docs/rules/no-amd.md)                                     | Forbid AMD `require` and `define` calls.                             |     |     |     |     |     |     |[22m
+[2m  | [no-commonjs](docs/rules/no-commonjs.md)                           | Forbid CommonJS `require` calls and `module.exports` or `exports.*`. |     |     |     |     |     |     |[22m
+[2m  | [no-import-module-exports](docs/rules/no-import-module-exports.md) | Forbid import statements with CommonJS module.exports.               |     |     |     | 🔧  |     |     |[22m
+[2m  | [no-nodejs-modules](docs/rules/no-nodejs-modules.md)               | Forbid Node.js builtin modules.                                      |     |     |     |     |     |     |[22m
+[2m  | [unambiguous](docs/rules/unambiguous.md)                           | Forbid potentially ambiguous parse goal (`script` vs. `module`).     |     |     |     |     |     |     |[22m
+
+[32m- # Static analysis[39m
+[31m+ ### Static analysis[39m
+
+[2m  | Name                                                                   | Description                                                                          | 💼    | ⚠️  | 🚫  | 🔧  | 💡  | ❌  |[22m
+[2m  | :--------------------------------------------------------------------- | :----------------------------------------------------------------------------------- | :---- | :-- | :-- | :-- | :-- | :-- |[22m
+[2m  | [default](docs/rules/default.md)                                       | Ensure a default export is present, given a default import.                          | ❗ ☑️ |     |     |     |     |     |[22m
+[2m  | [named](docs/rules/named.md)                                           | Ensure named imports correspond to a named export in the remote file.                | ❗ ☑️ |     | ⌨️  |     |     |     |[22m
+[33m@@ -73,11 +73,11 @@[39m
+[2m  | [no-self-import](docs/rules/no-self-import.md)                         | Forbid a module from importing itself.                                               |       |     |     |     |     |     |[22m
+[2m  | [no-unresolved](docs/rules/no-unresolved.md)                           | Ensure imports point to a file/module that can be resolved.                          | ❗ ☑️ |     |     |     |     |     |[22m
+[2m  | [no-useless-path-segments](docs/rules/no-useless-path-segments.md)     | Forbid unnecessary path segments in import and require statements.                   |       |     |     | 🔧  |     |     |[22m
+[2m  | [no-webpack-loader-syntax](docs/rules/no-webpack-loader-syntax.md)     | Forbid webpack loader syntax in imports.                                             |       |     |     |     |     |     |[22m
+
+[32m- # Style guide[39m
+[31m+ ### Style guide[39m
+
+[2m  | Name                                                                             | Description                                                                 | 💼  | ⚠️    | 🚫  | 🔧  | 💡  | ❌  |[22m
+[2m  | :------------------------------------------------------------------------------- | :-------------------------------------------------------------------------- | :-- | :---- | :-- | :-- | :-- | :-- |[22m
+[2m  | [consistent-type-specifier-style](docs/rules/consistent-type-specifier-style.md) | Enforce or ban the use of inline type-only markers for named imports.       |     |       |     | 🔧  |     |     |[22m
+[2m  | [dynamic-import-chunkname](docs/rules/dynamic-import-chunkname.md)               | Enforce a leading comment with the webpackChunkName for dynamic imports.    |     |       |     |     | 💡  |     |[22m
+[2K[1G[2K[1G[31merror[39m Command failed with exit code 1.
+[34minfo[39m Visit [1mhttps://yarnpkg.com/en/docs/cli/run[22m for documentation about this command.
+[2K[1G[31merror[39m Command failed with exit code 1.
+[2K[1G[34minfo[39m Visit [1mhttps://yarnpkg.com/en/docs/cli/run[22m for documentation about this command.
+ERROR: "lint:docs" exited with 1.
+[2K[1G[31merror[39m Command failed with exit code 1.
+[2K[1G[34minfo[39m Visit [1mhttps://yarnpkg.com/en/docs/cli/run[22m for documentation about this command.
