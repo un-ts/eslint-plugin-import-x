@@ -370,10 +370,18 @@ export default createRule<Options, MessageId>({
             })
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
-                return fixer.replaceText(
-                  source,
-                  replaceImportPath(source.raw, fixedImportPath),
+                const newImportPath = replaceImportPath(
+                  source.raw,
+                  fixedImportPath,
                 )
+
+                if (newImportPath === source.raw) {
+                  throw new Error(
+                    'Failed to automatically determine the type of extension to add. Try configuring this rule with an object that includes the explicit extension that you want the autofixer to use. (See the docs for an example.)',
+                  )
+                }
+
+                return fixer.replaceText(source, newImportPath)
               },
             }
             context.report({
