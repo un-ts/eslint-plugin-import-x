@@ -1,5 +1,13 @@
 # eslint-plugin-import-x
 
+## 4.16.1
+
+### Patch Changes
+
+- [#399](https://github.com/un-ts/eslint-plugin-import-x/pull/399) [`33f07b4`](https://github.com/un-ts/eslint-plugin-import-x/commit/33f07b42a17813f8672e5f450eab68e9dffec67b) Thanks [@JounQin](https://github.com/JounQin)! - fix: should only use `context.physicalFilename` as fallback instead of main source
+
+- [#400](https://github.com/un-ts/eslint-plugin-import-x/pull/400) [`34adb40`](https://github.com/un-ts/eslint-plugin-import-x/commit/34adb4025ef7bead7991752acf32ac3fd31ef16e) Thanks [@renovate](https://github.com/apps/renovate)! - chore(deps): bump `stable-hash-x` v0.2
+
 ## 4.16.0
 
 ### Minor Changes
