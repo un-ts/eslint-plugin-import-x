@@ -26,8 +26,6 @@
         "default": "./lib/index.cjs"
       }
     },
-    "./config": "./lib/config/index.js",
-    "./rules": "./lib/rules/index.js",
     "./utils": "./lib/utils/index.js",
     "./package.json": "./package.json",
     "./*": "./lib/*.js"
