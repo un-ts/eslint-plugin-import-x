@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.16.2
+
+### Patch Changes
+
+- [#406](https://github.com/un-ts/eslint-plugin-import-x/pull/406) [`d0a7816`](https://github.com/un-ts/eslint-plugin-import-x/commit/d0a78167791f41804e880356c9c69d7a45c4b45d) Thanks [@marcalexiei](https://github.com/marcalexiei)! - fix(package): remove config and rules exports pointing to empty files
+
 ## 4.16.1
 
 ### Patch Changes
