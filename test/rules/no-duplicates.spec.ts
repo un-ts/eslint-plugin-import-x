@@ -784,6 +784,29 @@ describe('TypeScript', () => {
             ],
           }),
           tInvalid({
+            code: `
+              import {
+                type bar,
+                buzz,
+              } from 'foo';
+              import type {bizz} from 'foo';
+              `,
+            ...parserConfig,
+            output: `import {type bar, buzz, type bizz} from 'foo'; `,
+            errors: [
+              {
+                ...createDuplicatedError('foo'),
+                line: 1,
+                column: 38,
+              },
+              {
+                ...createDuplicatedError('foo'),
+                line: 1,
+                column: 68,
+              },
+            ],
+          }),
+          tInvalid({
             code: "import {AValue, type x, BValue} from './foo'; import {type y} from './foo'",
             ...parserConfig,
             output: `import {AValue, type x, BValue,type y} from './foo'; `,
