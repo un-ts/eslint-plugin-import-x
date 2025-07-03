@@ -81,7 +81,7 @@ export default createRule<[Options?], MessageId>({
           allowList: {
             type: 'array',
             description: 'List of modules from which to allow barrel files',
-            default: [],
+            default: defaultOptions.allowList,
             uniqueItems: true,
             items: {
               type: 'string',
@@ -90,19 +90,19 @@ export default createRule<[Options?], MessageId>({
           maxModuleGraphSizeAllowed: {
             type: 'number',
             description: 'Maximum allowed module graph size',
-            default: 20,
+            default: defaultOptions.maxModuleGraphSizeAllowed,
           },
           amountOfExportsToConsiderModuleAsBarrel: {
             type: 'number',
             description:
               'Amount of exports to consider a module as barrel file',
-            default: 3,
+            default: defaultOptions.amountOfExportsToConsiderModuleAsBarrel,
           },
           exportConditions: {
             type: 'array',
             description:
               'Export conditions to use to resolve bare module specifiers',
-            default: [],
+            default: defaultOptions.exportConditions,
             uniqueItems: true,
             items: {
               type: 'string',
@@ -111,7 +111,7 @@ export default createRule<[Options?], MessageId>({
           mainFields: {
             type: 'array',
             description: 'Main fields to use to resolve modules',
-            default: [],
+            default: defaultOptions.mainFields,
             uniqueItems: true,
             items: {
               type: 'string',
@@ -120,7 +120,7 @@ export default createRule<[Options?], MessageId>({
           extensions: {
             type: 'array',
             description: 'Extensions to use to resolve modules',
-            default: [],
+            default: defaultOptions.extensions,
             uniqueItems: true,
             items: {
               type: 'string',
@@ -157,7 +157,7 @@ export default createRule<[Options?], MessageId>({
         'The imported module "{{specifier}}" is a barrel file, which leads to importing a module graph of {{amount}} modules, which exceeds the maximum allowed size of {{maxModuleGraphSizeAllowed}} modules',
     },
   },
-  defaultOptions: [defaultOptions],
+  defaultOptions: [],
   create(context) {
     const options = context.options[0] || defaultOptions
     const maxModuleGraphSizeAllowed = options.maxModuleGraphSizeAllowed
