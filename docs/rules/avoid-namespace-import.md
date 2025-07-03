@@ -1,5 +1,7 @@
 # import-x/avoid-namespace-import
 
+<!-- end auto-generated rule header -->
+
 This rule forbids the use of namespace imports as they can lead to unused imports and prevent treeshaking.
 
 ## Rule Details

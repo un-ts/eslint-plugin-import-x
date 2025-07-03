@@ -1,5 +1,7 @@
 # import-x/avoid-barrel-files
 
+<!-- end auto-generated rule header -->
+
 This rule disallows _authoring_ barrel files in your project.
 
 ## Rule Details

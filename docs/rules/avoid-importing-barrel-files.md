@@ -1,5 +1,7 @@
 # import-x/avoid-importing-barrel-files
 
+<!-- end auto-generated rule header -->
+
 This rule aims to avoid importing barrel files that lead to loading large module graphs. This rule is different from the `avoid-barrel-files` rule, which lints against _authoring_ barrel files. This rule lints against _importing_ barrel files.
 
 ## Rule Details
