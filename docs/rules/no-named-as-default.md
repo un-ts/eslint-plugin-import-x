@@ -1,6 +1,6 @@
 # import-x/no-named-as-default
 
-⚠️ This rule _warns_ in the following configs: ☑️ `recommended`, 🚸 `warnings`.
+⚠️ This rule _warns_ in the following configs: ☑️ `flat/recommended`, 🚸 `flat/warnings`, ☑️ `recommended`, 🚸 `warnings`.
 
 <!-- end auto-generated rule header -->
 

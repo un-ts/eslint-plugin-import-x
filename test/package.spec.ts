@@ -3,10 +3,9 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import type { TSESLint } from '@typescript-eslint/utils'
+import { pluginName } from 'eslint-import-context'
 
 import { srcDir } from './utils.js'
-
-import { pluginName } from 'eslint-plugin-import-x/utils'
 
 function isSourceFile(f: string) {
   const ext = path.extname(f)
@@ -63,7 +62,27 @@ describe('package', () => {
   })
 
   it('marks deprecated rules in their metadata', () => {
-    expect(module.rules!['imports-first'].meta.deprecated).toBe(true)
+    expect(module.rules!['imports-first'].meta.deprecated).toBeDefined()
     expect(module.rules!.first.meta.deprecated).not.toBe(true)
+  })
+
+  it('provides information about deprecated rules', () => {
+    expect(module.rules!['imports-first'].meta).not.toHaveProperty('replacedBy')
+    expect(module.rules!['imports-first'].meta.deprecated).toEqual(
+      expect.objectContaining<TSESLint.DeprecatedInfo>({
+        message: expect.any(String),
+        url: expect.any(String),
+        deprecatedSince: expect.any(String),
+        replacedBy: [
+          {
+            message: expect.any(String),
+            rule: {
+              name: expect.any(String),
+              url: expect.any(String),
+            },
+          },
+        ],
+      }),
+    )
   })
 })

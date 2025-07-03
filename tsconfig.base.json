@@ -9,5 +9,5 @@
       "eslint-plugin-import-x/package.json": ["./package.json"]
     }
   },
-  "exclude": ["test/fixtures"]
+  "exclude": ["test/fixtures", "lib"]
 }

@@ -1,5 +1,5 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
-import type { Parser as TSESLintParser } from '@typescript-eslint/utils/ts-eslint'
+import type { TSESLint } from '@typescript-eslint/utils'
 
 import { parsers, createRuleTestCaseFunctions } from '../utils.js'
 
@@ -12,7 +12,7 @@ const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function generateSuggestionsTestCases(
   cases: string[],
-  parser?: TSESLintParser.LooseParserModule,
+  parser?: TSESLint.Parser.LooseParserModule,
 ): Array<ReturnType<typeof tInvalid>> {
   return cases.map(code =>
     tInvalid({

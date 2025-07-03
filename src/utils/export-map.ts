@@ -1,14 +1,12 @@
 import fs from 'node:fs'
-import path from 'node:path'
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type * as commentParser from 'comment-parser'
 import debug from 'debug'
 import type { AST } from 'eslint'
 import { SourceCode } from 'eslint'
-import type { TsConfigJsonResolved, TsConfigResult } from 'get-tsconfig'
-import { getTsconfig } from 'get-tsconfig'
-import { stableHash } from 'stable-hash'
+import { getTsconfigWithContext } from 'eslint-import-context'
+import { stableHash } from 'stable-hash-x'
 
 import { cjsRequire } from '../require.js'
 import type {
@@ -31,8 +29,6 @@ import { visit } from './visit.js'
 const log = debug('eslint-plugin-import-x:ExportMap')
 
 const exportCache = new Map<string, ExportMap | null>()
-
-const tsconfigCache = new Map<string, TsConfigJsonResolved | null | undefined>()
 
 export type DocStyleParsers = Record<
   DocStyle,
@@ -162,6 +158,7 @@ export class ExportMap {
 
   static get(source: string, context: RuleContext) {
     const path = resolve(source, context)
+
     if (path == null) {
       return null
     }
@@ -171,7 +168,12 @@ export class ExportMap {
 
   static parse(filepath: string, content: string, context: ChildContext) {
     const m = new ExportMap(filepath)
-    const isEsModuleInteropTrue = lazy(isEsModuleInterop)
+
+    const tsconfig = lazy(() => getTsconfigWithContext(context))
+
+    const isEsModuleInteropTrue = lazy(
+      () => tsconfig()?.compilerOptions?.esModuleInterop ?? false,
+    )
 
     let ast: TSESTree.Program
     let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
@@ -243,7 +245,7 @@ export class ExportMap {
     const namespaces = new Map</* identifier */ string, /* source */ string>()
 
     function remotePath(value: string) {
-      return relative(value, filepath, context.settings)
+      return relative(value, filepath, context.settings, context)
     }
 
     function resolveImport(value: string) {
@@ -427,40 +429,6 @@ export class ExportMap {
     }
 
     const source = new SourceCode({ text: content, ast: ast as AST.Program })
-
-    function isEsModuleInterop() {
-      const parserOptions = context.parserOptions || {}
-      let tsconfigRootDir = parserOptions.tsconfigRootDir
-      const project = parserOptions.project
-      const cacheKey = stableHash({ tsconfigRootDir, project })
-      let tsConfig: TsConfigJsonResolved | null | undefined
-
-      if (tsconfigCache.has(cacheKey)) {
-        tsConfig = tsconfigCache.get(cacheKey)!
-      } else {
-        tsconfigRootDir = tsconfigRootDir || process.cwd()
-        let tsconfigResult: TsConfigResult | null | undefined
-        if (project) {
-          const projects = Array.isArray(project) ? project : [project]
-          for (const project of projects) {
-            tsconfigResult = getTsconfig(
-              project === true
-                ? context.filename
-                : path.resolve(tsconfigRootDir, project),
-            )
-            if (tsconfigResult) {
-              break
-            }
-          }
-        } else {
-          tsconfigResult = getTsconfig(tsconfigRootDir)
-        }
-        tsConfig = tsconfigResult?.config
-        tsconfigCache.set(cacheKey, tsConfig)
-      }
-
-      return tsConfig?.compilerOptions?.esModuleInterop ?? false
-    }
 
     for (const n of ast.body) {
       if (n.type === 'ExportDefaultDeclaration') {
@@ -1137,37 +1105,52 @@ function childContext(
   path: string,
   context: RuleContext | ChildContext,
 ): ChildContext {
-  const { settings, parserOptions, parserPath, languageOptions } = context
+  const {
+    settings,
+    parserOptions,
+    parserPath,
+    languageOptions,
+    cwd,
+    filename,
+    physicalFilename,
+  } = context
 
   return {
-    cacheKey: makeContextCacheKey(context) + path,
+    cacheKey: makeContextCacheKey(context) + '\0' + path,
     settings,
     parserOptions,
     parserPath,
     languageOptions,
     path,
-    filename:
-      'physicalFilename' in context
-        ? context.physicalFilename
-        : context.filename,
+    cwd,
+    filename,
+    physicalFilename,
   }
 }
 
-function makeContextCacheKey(context: RuleContext | ChildContext) {
-  const { settings, parserPath, parserOptions, languageOptions } = context
+export function makeContextCacheKey(context: RuleContext | ChildContext) {
+  const { settings, parserPath, parserOptions, languageOptions, cwd } = context
 
   let hash =
+    cwd +
+    '\0' +
     stableHash(settings) +
+    '\0' +
     stableHash(languageOptions?.parserOptions ?? parserOptions)
 
   if (languageOptions) {
     hash +=
-      String(languageOptions.ecmaVersion) + String(languageOptions.sourceType)
+      '\0' +
+      String(languageOptions.ecmaVersion) +
+      '\0' +
+      String(languageOptions.sourceType)
   }
 
-  hash += stableHash(
-    parserPath ?? languageOptions?.parser?.meta ?? languageOptions?.parser,
-  )
+  hash +=
+    '\0' +
+    stableHash(
+      parserPath ?? languageOptions?.parser?.meta ?? languageOptions?.parser,
+    )
 
   return hash
 }

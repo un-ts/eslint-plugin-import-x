@@ -1,3 +1,5 @@
+import { execSync } from 'node:child_process'
+import type { ChildProcess } from 'node:child_process'
 import fs from 'node:fs'
 
 import { jest } from '@jest/globals'
@@ -7,8 +9,14 @@ import type { TSESLint } from '@typescript-eslint/utils'
 // eslint-disable-next-line import-x/default -- incorrect types
 import eslint8UnsupportedApi from 'eslint8.56/use-at-your-own-risk'
 import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
+import { dirSync } from 'tmp'
 
-import { createRuleTestCaseFunctions, testFilePath, parsers } from '../utils.js'
+import {
+  createRuleTestCaseFunctions,
+  testFilePath,
+  parsers,
+  isESLint9,
+} from '../utils.js'
 import type { GetRuleModuleOptions, GetRuleModuleMessageIds } from '../utils.js'
 
 import { cjsRequire as require } from 'eslint-plugin-import-x'
@@ -1560,3 +1568,40 @@ for (const [name, FlatRuleTester] of [
     })
   })
 }
+
+;(isESLint9 ? describe : describe.skip)('with eslint 9+', () => {
+  it('provides meaningful error when eslintrc is not present', () => {
+    // Create temp directory outside of project root
+    const { name: tempDir, removeCallback } = dirSync({
+      unsafeCleanup: true,
+    })
+
+    // Copy example project to temp directory
+    // eslint-disable-next-line n/no-unsupported-features/node-builtins -- false positive
+    fs.cpSync(testFilePath('eslint-v9'), tempDir, {
+      recursive: true,
+    })
+
+    let errorMessage = ''
+
+    // We run `test-compiled` first, so that the plugin is already built
+    // But don't forget to run `yarn build` first if you're developing the rule or test case
+
+    // Install the plugin and run the lint command in the temp directory
+    try {
+      execSync(`npm install -D ${process.cwd()} && npm run lint`, {
+        cwd: tempDir,
+      })
+    } catch (error) {
+      errorMessage = (error as ChildProcess).stderr!.toString()
+    }
+
+    // Verify that the error message is as expected
+    expect(errorMessage).toContain(
+      'the import-x/no-unused-modules rule requires an .eslintrc file (even empty)',
+    )
+
+    // Cleanup
+    removeCallback()
+  }, 100_000)
+})

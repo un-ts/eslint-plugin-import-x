@@ -69,6 +69,7 @@ import noUselessPathSegments from './rules/no-useless-path-segments.js'
 import noWebpackLoaderSyntax from './rules/no-webpack-loader-syntax.js'
 import order from './rules/order.js'
 import preferDefaultExport from './rules/prefer-default-export.js'
+import preferNamespaceImport from './rules/prefer-namespace-import.js'
 import unambiguous from './rules/unambiguous.js'
 // configs
 import type {
@@ -115,6 +116,7 @@ const rules = {
   order,
   'newline-after-import': newlineAfterImport,
   'prefer-default-export': preferDefaultExport,
+  'prefer-namespace-import': preferNamespaceImport,
   'no-default-export': noDefaultExport,
   'no-named-export': noNamedExport,
   'no-dynamic-require': noDynamicRequire,
@@ -141,26 +143,13 @@ const rules = {
   'avoid-re-export-all': avoidReExportAll,
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
-const configs = {
-  recommended,
-
-  errors,
-  warnings,
-
-  // shhhh... work in progress "secret" rules
-  'stage-0': stage0,
-
-  // useful stuff for folks using various environments
-  react,
-  'react-native': reactNative,
-  electron,
-  typescript,
-} satisfies Record<string, PluginConfig>
-
 // Base Plugin Object
-const plugin = {
+const plugin_ = {
   meta,
   rules,
+  cjsRequire,
+  importXResolverCompat,
+  createNodeResolver,
 }
 
 // Create flat configs (Only ones that declare plugins and parser options need to be different from the legacy config)
@@ -170,7 +159,7 @@ const createFlatConfig = (
 ): PluginFlatConfig => ({
   ...baseConfig,
   name: `import-x/${configName}`,
-  plugins: { 'import-x': plugin },
+  plugins: { 'import-x': plugin_ },
 })
 
 const flatConfigs = {
@@ -189,15 +178,40 @@ const flatConfigs = {
   typescript: createFlatConfig(typescriptFlat, 'typescript'),
 } satisfies Record<string, PluginFlatConfig>
 
-export default {
-  meta,
-  configs,
-  flatConfigs,
-  rules,
-  cjsRequire,
-  importXResolverCompat,
-  createNodeResolver,
+const configs = {
+  recommended,
+
+  errors,
+  warnings,
+
+  // shhhh... work in progress "secret" rules
+  'stage-0': stage0,
+
+  // useful stuff for folks using various environments
+  react,
+  'react-native': reactNative,
+  electron,
+  typescript,
+
+  'flat/recommended': flatConfigs.recommended,
+  'flat/errors': flatConfigs.errors,
+  'flat/warnings': flatConfigs.warnings,
+  'flat/stage-0': flatConfigs['stage-0'],
+  'flat/react': flatConfigs.react,
+  'flat/react-native': flatConfigs['react-native'],
+  'flat/electron': flatConfigs.electron,
+  'flat/typescript': flatConfigs.typescript,
+} satisfies Record<string, PluginConfig | PluginFlatConfig>
+
+const plugin = plugin_ as typeof plugin_ & {
+  flatConfigs: typeof flatConfigs
+  configs: typeof configs
 }
+
+plugin.flatConfigs = flatConfigs
+plugin.configs = configs
+
+export default plugin
 
 export {
   meta,
@@ -207,6 +221,7 @@ export {
   cjsRequire,
   importXResolverCompat,
   createNodeResolver,
+  plugin as importX,
 }
 
 export type * from './types.js'

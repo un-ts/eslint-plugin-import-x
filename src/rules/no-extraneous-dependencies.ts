@@ -13,6 +13,7 @@ import {
   pkgUp,
   importType,
   getFilePackageName,
+  getNpmInstallCommand,
 } from '../utils/index.js'
 
 export type PackageDeps = ReturnType<typeof extractDepFields>
@@ -328,15 +329,22 @@ function reportIfMissing(
   })
 }
 
-function testConfig(config: string[] | boolean | undefined, filename: string) {
+function testConfig(
+  config: string[] | boolean | undefined,
+  context: RuleContext,
+) {
   // Simplest configuration first, either a boolean or nothing.
   if (typeof config === 'boolean' || config === undefined) {
     return config
   }
+  const filename = context.physicalFilename
   // Array of globs.
   return config.some(
     c =>
       minimatch(filename, c) ||
+      minimatch(filename, path.resolve(context.cwd, c), {
+        windowsPathsNoEscape: true,
+      }) ||
       minimatch(filename, path.resolve(c), { windowsPathsNoEscape: true }),
   )
 }
@@ -390,26 +398,22 @@ export default createRule<[Options?], MessageId>({
         "'{{packageName}}' should be listed in the project's dependencies, not devDependencies.",
       optDep:
         "'{{packageName}}' should be listed in the project's dependencies, not optionalDependencies.",
-      missing:
-        "'{{packageName}}' should be listed in the project's dependencies. Run 'npm i -S {{packageName}}' to add it",
+      missing: `'{{packageName}}' should be listed in the project's dependencies. Run '${getNpmInstallCommand('{{packageName}}')}' to add it`,
     },
   },
   defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
 
-    const filename = context.physicalFilename
-
     const deps =
       getDependencies(context, options.packageDir) || extractDepFields({})
 
     const depsOptions = {
-      allowDevDeps: testConfig(options.devDependencies, filename) !== false,
-      allowOptDeps:
-        testConfig(options.optionalDependencies, filename) !== false,
-      allowPeerDeps: testConfig(options.peerDependencies, filename) !== false,
+      allowDevDeps: testConfig(options.devDependencies, context) !== false,
+      allowOptDeps: testConfig(options.optionalDependencies, context) !== false,
+      allowPeerDeps: testConfig(options.peerDependencies, context) !== false,
       allowBundledDeps:
-        testConfig(options.bundledDependencies, filename) !== false,
+        testConfig(options.bundledDependencies, context) !== false,
       verifyInternalDeps: !!options.includeInternal,
       verifyTypeImports: !!options.includeTypes,
     }

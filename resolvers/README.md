@@ -7,6 +7,7 @@ Currently, version 1 is assumed if no `interfaceVersion` is available. (didn't t
 - [v3](#v3)
   - [Required `interfaceVersion: number`](#required-interfaceversion-number)
   - [Required `resolve`](#required-resolve)
+    - [`useRuleContext` and `getTsconfigWithContext`](#userulecontext-and-gettsconfigwithcontext)
     - [Arguments](#arguments)
       - [`source`](#source)
       - [`file`](#file)
@@ -15,6 +16,7 @@ Currently, version 1 is assumed if no `interfaceVersion` is available. (didn't t
 - [v2](#v2)
   - [`interfaceVersion: number`](#interfaceversion-number)
   - [`resolve`](#resolve)
+    - [`useRuleContext` and `getTsconfigWithContext`](#userulecontext-and-gettsconfigwithcontext-1)
     - [Arguments](#arguments-1)
       - [`source`](#source-1)
       - [`file`](#file-1)
@@ -55,6 +57,7 @@ and
 
 ```js
 // eslint.config.js
+import { useRuleContext, getTsconfigWithContext } from 'eslint-import-context'
 import { createNodeResolver } from 'eslint-plugin-import-x'
 
 export default [
@@ -65,6 +68,8 @@ export default [
           name: 'my-cool-resolver',
           interfaceVersion: 3,
           resolve(source, file) {
+            const ruleContext = useRuleContext()
+            const tsconfig = getTsconfigWithContext(ruleContext)
             // use a factory to get config outside of the resolver
           },
         },
@@ -76,6 +81,10 @@ export default [
   },
 ]
 ```
+
+#### `useRuleContext` and `getTsconfigWithContext`
+
+They are powered by [eslint-import-context] in the above example, but they are not required to be used, and please be aware that `useRuleContext（）` could be `undefined` when using [eslint-plugin-import] or old versions of [eslint-plugin-import-x].
 
 #### Arguments
 
@@ -187,6 +196,10 @@ settings:
     node: { paths: [a, b, c] }
 ```
 
+#### `useRuleContext` and `getTsconfigWithContext`
+
+They are also available via [eslint-import-context] in the `my-cool-resolver` example, same as [v3](#userulecontext-and-gettsconfigwithcontext).
+
 #### Arguments
 
 The arguments provided will be:
@@ -209,11 +222,13 @@ an object provided via the `import/resolver` setting. `my-cool-resolver` will ge
 Here is most of the [Node resolver] at the time of this writing. It is just a wrapper around substack/Browserify's synchronous [`resolve`][resolve]:
 
 ```js
-var resolve = require('resolve/sync')
-var isCoreModule = require('is-core-module')
+const resolve = require('resolve/sync')
+const isCoreModule = require('is-core-module')
 
 exports.resolve = function (source, file, config) {
-  if (isCoreModule(source)) return { found: true, path: null }
+  if (isCoreModule(source)) {
+    return { found: true, path: null }
+  }
   try {
     return { found: true, path: resolve(source, opts(file, config)) }
   } catch (err) {
@@ -235,5 +250,8 @@ If the resolver cannot resolve `source` relative to `file`, it should just retur
 
 [New Node resolver]: https://github.com/un-ts/eslint-plugin-import-x/blob/master/src/node-resolver.ts
 [Node resolver]: https://github.com/import-js/eslint-plugin-import/blob/main/resolvers/node/index.js
-[resolve]: https://www.npmjs.com/package/resolve
-[unrs-resolver]: https://www.npmjs.com/package/unrs-resolver
+[eslint-import-context]: https://github.com/un-ts/eslint-import-context
+[eslint-plugin-import]: https://github.com/import-js/eslint-plugin-import
+[eslint-plugin-import-x]: https://github.com/un-ts/eslint-plugin-import-x
+[resolve]: https://github.com/browserify/resolve
+[unrs-resolver]: https://github.com/unrs/unrs-resolver

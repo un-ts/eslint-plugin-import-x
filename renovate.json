@@ -7,7 +7,6 @@
   "ignoreDeps": [
     "@types/eslint8.56",
     "eslint8.56",
-    "eslint-plugin-unicorn",
-    "tinyexec"
+    "zod"
   ]
 }

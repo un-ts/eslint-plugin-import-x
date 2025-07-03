@@ -1,17 +1,20 @@
 import path from 'node:path'
 
+import type { RuleContext } from 'eslint-import-context'
 import { minimatch } from 'minimatch'
 
 import { isStaticRequire, createRule } from '../utils/index.js'
 
 function testIsAllow(
   globs: string[] | undefined,
-  filename: string,
+  context: RuleContext,
   source: string,
 ) {
   if (!Array.isArray(globs)) {
     return false // default doesn't allow any patterns
   }
+
+  const filename = context.physicalFilename
 
   const filePath =
     // a node module
@@ -21,8 +24,15 @@ function testIsAllow(
 
   return globs.some(
     glob =>
-      minimatch(filePath, glob) ||
-      minimatch(filePath, path.resolve(glob), { windowsPathsNoEscape: true }),
+      minimatch(filePath, glob, { nocomment: true }) ||
+      minimatch(filePath, path.resolve(context.cwd, glob), {
+        nocomment: true,
+        windowsPathsNoEscape: true,
+      }) ||
+      minimatch(filePath, path.resolve(glob), {
+        nocomment: true,
+        windowsPathsNoEscape: true,
+      }),
   )
 }
 
@@ -65,10 +75,8 @@ export default createRule<[Options?], MessageId>({
   create(context) {
     const options = context.options[0] || {}
 
-    const filename = context.physicalFilename
-
     const isAllow = (source: string) =>
-      testIsAllow(options.allow, filename, source)
+      testIsAllow(options.allow, context, source)
 
     return {
       ImportDeclaration(node) {
