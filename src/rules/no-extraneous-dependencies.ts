@@ -105,13 +105,10 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
             'devDependencies',
             'optionalDependencies',
             'peerDependencies',
-            'bundledDependencies'
+            'bundledDependencies',
           ] as const
-          for(const field of fieldsToMerge) {
-            Object.assign(
-              packageContent[field],
-              packageContent_[field],
-            )
+          for (const field of fieldsToMerge) {
+            Object.assign(packageContent[field], packageContent_[field])
           }
         }
       }
