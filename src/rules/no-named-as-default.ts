@@ -40,6 +40,7 @@ export default createRule<[], MessageId>({
           declaration.source.value,
           context,
         )
+
         if (exportMapOfImported == null) {
           return
         }

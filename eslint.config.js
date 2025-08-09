@@ -149,6 +149,7 @@ export default config(
       '.*.js',
       '**/*.d.ts',
       '**/.eslintrc.js',
+      'test.local.*',
       'eslint.config.js',
       'jest.config.ts',
     ],

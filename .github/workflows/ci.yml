@@ -21,6 +21,7 @@ jobs:
           - 18
           - 20
           - 22
+          - 24
         eslint:
           - 8.56
           - 8
@@ -28,14 +29,19 @@ jobs:
 
         include:
           - executeLint: true
-            node: 20
+            node: lts/*
+            eslint: 9
+            os: ubuntu-latest
+          - legacyNodeResolver: true
+            node: lts/*
+            eslint: 9
             os: ubuntu-latest
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Node.js ${{ matrix.node }}
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -47,9 +53,14 @@ jobs:
         if: ${{ matrix.eslint != 9 }}
         run: |
           yarn add -D eslint@${{ matrix.eslint }} eslint-plugin-unicorn@56
+          yarn --no-immutable
 
       - name: Install Dependencies
         run: yarn --immutable
+
+      - name: Install Legacy Node Resolver
+        if: ${{ matrix.legacyNodeResolver }}
+        run: yarn add -D eslint-import-resolver-node
 
       - name: Build and Test
         run: yarn run-s test-compiled test
@@ -61,6 +72,16 @@ jobs:
           PARSER_NO_WATCH: true
 
       - name: Codecov
-        uses: codecov/codecov-action@ad3126e916f78f00edff4ed0317cf185271ccc2d # v5.4.2
+        # bad Windows -- https://github.com/codecov/codecov-action/issues/1787
+        if: ${{ !github.event.pull_request.head.repo.fork && matrix.os != 'windows-latest' }}
+        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Run codacy-coverage-reporter
+        # bad Windows -- https://github.com/codacy/codacy-coverage-reporter-action/issues/91
+        if: ${{ !github.event.pull_request.head.repo.fork && matrix.os != 'windows-latest' }}
+        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
+        continue-on-error: true
+        with:
+          api-token: ${{ secrets.CODACY_API_TOKEN }}

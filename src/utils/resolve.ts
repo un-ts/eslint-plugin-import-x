@@ -2,26 +2,36 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { stableHash } from 'stable-hash'
+import { setRuleContext } from 'eslint-import-context'
+import { stableHash } from 'stable-hash-x'
 
+import { createNodeResolver } from '../node-resolver.js'
+import { cjsRequire } from '../require.js'
 import type {
-  ImportSettings,
+  ChildContext,
   LegacyResolver,
   NewResolver,
+  NodeResolverOptions,
+  NormalizedCacheSettings,
   PluginSettings,
   RuleContext,
 } from '../types.js'
 
+import { arraify } from './arraify.js'
+import { makeContextCacheKey } from './export-map.js'
+import { isExternalLookingName } from './import-type.js'
 import {
+  LEGACY_NODE_RESOLVERS,
   normalizeConfigResolvers,
   resolveWithLegacyResolver,
 } from './legacy-resolver-settings.js'
 import { ModuleCache } from './module-cache.js'
 
-const _filename =
-  typeof __filename === 'undefined'
-    ? fileURLToPath(import.meta.url)
-    : /* istanbul ignore next */ __filename
+const importMetaUrl = import.meta.url
+
+const _filename = importMetaUrl
+  ? fileURLToPath(importMetaUrl)
+  : /* istanbul ignore next */ __filename
 const _dirname = path.dirname(_filename)
 
 export const CASE_SENSITIVE_FS = !fs.existsSync(
@@ -38,8 +48,9 @@ export const fileExistsCache = new ModuleCache()
 // https://stackoverflow.com/a/27382838
 export function fileExistsWithCaseSync(
   filepath: string | null,
-  cacheSettings?: ImportSettings['cache'],
+  cacheSettings: NormalizedCacheSettings,
   strict?: boolean,
+  leaf: boolean = true,
 ): boolean {
   // don't care if the FS is case-sensitive
   if (CASE_SENSITIVE_FS) {
@@ -67,8 +78,12 @@ export function fileExistsWithCaseSync(
   } else {
     const filenames = fs.readdirSync(dir)
     result = filenames.includes(parsedPath.base)
-      ? fileExistsWithCaseSync(dir, cacheSettings, strict)
-      : false
+      ? fileExistsWithCaseSync(dir, cacheSettings, strict, false)
+      : !leaf &&
+        // We tolerate case-insensitive matches if there are no case-insensitive matches.
+        // It'll fail anyway on the leaf node if the file truly doesn't exist (if it doesn't
+        // fail it's that we're probably working with a virtual in-memory filesystem).
+        !filenames.some(p => p.toLowerCase() === parsedPath.base.toLowerCase())
   }
   fileExistsCache.set(filepath, result)
   return result
@@ -110,10 +125,111 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
   return true
 }
 
+function legacyNodeResolve(
+  resolverOptions: NodeResolverOptions,
+  context: ChildContext | RuleContext,
+  modulePath: string,
+  sourceFile: string,
+) {
+  const {
+    extensions,
+    includeCoreModules,
+    moduleDirectory,
+    paths,
+    preserveSymlinks,
+    package: packageJson,
+    packageFilter,
+    pathFilter,
+    packageIterator,
+    ...rest
+  } = resolverOptions
+
+  const normalizedExtensions = arraify(extensions)
+
+  const modules = arraify(moduleDirectory)
+
+  // TODO: change the default behavior to align node itself
+  const symlinks = preserveSymlinks === false
+
+  const resolver = createNodeResolver({
+    extensions: normalizedExtensions,
+    builtinModules: includeCoreModules !== false,
+    modules,
+    symlinks,
+    ...rest,
+  })
+
+  const resolved = setRuleContext(context, () =>
+    resolver.resolve(modulePath, sourceFile),
+  )
+
+  if (resolved.found) {
+    return resolved
+  }
+
+  const normalizedPaths = arraify(paths)
+
+  if (normalizedPaths?.length) {
+    const paths = modules?.length
+      ? normalizedPaths.filter(p => !modules.includes(p))
+      : normalizedPaths
+
+    if (paths.length > 0) {
+      const resolver = createNodeResolver({
+        extensions: normalizedExtensions,
+        builtinModules: includeCoreModules !== false,
+        modules: paths,
+        symlinks,
+        ...rest,
+      })
+
+      const resolved = setRuleContext(context, () =>
+        resolver.resolve(modulePath, sourceFile),
+      )
+
+      if (resolved.found) {
+        return resolved
+      }
+    }
+  }
+
+  if (
+    [packageJson, packageFilter, pathFilter, packageIterator].some(
+      it => it != null,
+    )
+  ) {
+    let legacyNodeResolver: LegacyResolver
+    try {
+      legacyNodeResolver = cjsRequire<LegacyResolver>(
+        'eslint-import-resolver-node',
+      )
+    } catch {
+      throw new Error(
+        [
+          "You're using legacy resolver options which are not supported by the new resolver.",
+          'Please either:',
+          '1. Install `eslint-import-resolver-node` as a fallback, or',
+          '2. Remove legacy options: `package`, `packageFilter`, `pathFilter`, `packageIterator`',
+        ].join('\n'),
+      )
+    }
+    const resolved = resolveWithLegacyResolver(
+      legacyNodeResolver,
+      resolverOptions,
+      modulePath,
+      sourceFile,
+    )
+    if (resolved.found) {
+      return resolved
+    }
+  }
+}
+
 function fullResolve(
   modulePath: string,
   sourceFile: string,
   settings: PluginSettings,
+  context: ChildContext | RuleContext,
 ) {
   // check if this is a bonus core module
   const coreSet = new Set(settings['import-x/core-modules'])
@@ -124,6 +240,8 @@ function fullResolve(
     }
   }
 
+  const childContextHashKey = makeContextCacheKey(context)
+
   const sourceDir = path.dirname(sourceFile)
 
   if (prevSettings !== settings) {
@@ -131,7 +249,14 @@ function fullResolve(
     prevSettings = settings
   }
 
-  const cacheKey = sourceDir + memoizedHash + modulePath
+  const cacheKey =
+    sourceDir +
+    '\0' +
+    childContextHashKey +
+    '\0' +
+    memoizedHash +
+    '\0' +
+    modulePath
 
   const cacheSettings = ModuleCache.getSettings(settings)
 
@@ -140,11 +265,12 @@ function fullResolve(
     return { found: true, path: cachedPath }
   }
 
-  if (
-    Object.prototype.hasOwnProperty.call(settings, 'import-x/resolver-next') &&
-    settings['import-x/resolver-next']
-  ) {
-    const configResolvers = settings['import-x/resolver-next']
+  if (settings['import-x/resolver-next']) {
+    let configResolvers = settings['import-x/resolver-next']
+
+    if (!Array.isArray(configResolvers)) {
+      configResolvers = [configResolvers]
+    }
 
     for (let i = 0, len = configResolvers.length; i < len; i++) {
       const resolver = configResolvers[i]
@@ -160,13 +286,16 @@ function fullResolve(
         throw err
       }
 
-      const resolved = resolver.resolve(modulePath, sourceFile)
+      const resolved = setRuleContext(context, () =>
+        resolver.resolve(modulePath, sourceFile),
+      )
+
       if (!resolved.found) {
         continue
       }
 
       // else, counts
-      fileExistsCache.set(cacheKey, resolved.path as string | null)
+      fileExistsCache.set(cacheKey, resolved.path)
       return resolved
     }
   } else {
@@ -175,27 +304,63 @@ function fullResolve(
         node: settings['import-x/resolve'],
       } // backward compatibility
 
-    for (const { enable, options, resolver } of normalizeConfigResolvers(
-      configResolvers,
-      sourceFile,
-    )) {
-      if (!enable) {
-        continue
-      }
+    const sourceFiles =
+      context.physicalFilename === sourceFile ||
+      // only try to fallback for external packages
+      !isExternalLookingName(modulePath)
+        ? [sourceFile]
+        : [sourceFile, context.physicalFilename]
 
-      const resolved = resolveWithLegacyResolver(
-        resolver,
+    for (const sourceFile of sourceFiles) {
+      for (const {
+        enable,
+        name,
         options,
-        modulePath,
-        sourceFile,
-      )
-      if (!resolved.found) {
-        continue
-      }
+        resolver,
+      } of normalizeConfigResolvers(configResolvers, sourceFile)) {
+        if (!enable) {
+          continue
+        }
 
-      // else, counts
-      fileExistsCache.set(cacheKey, resolved.path as string | null)
-      return resolved
+        // if the resolver is `eslint-import-resolver-node`, we use the new `node` resolver first
+        // and try `eslint-import-resolver-node` as fallback instead
+        if (LEGACY_NODE_RESOLVERS.has(name)) {
+          const resolverOptions = (options || {}) as NodeResolverOptions
+          const resolved = legacyNodeResolve(
+            resolverOptions,
+            // TODO: enable the following in the next major
+            // {
+            //   ...resolverOptions,
+            //   extensions:
+            //     resolverOptions.extensions || settings['import-x/extensions'],
+            // },
+            context,
+            modulePath,
+            sourceFile,
+          )
+
+          if (resolved?.found) {
+            fileExistsCache.set(cacheKey, resolved.path)
+            return resolved
+          }
+
+          if (!resolver) {
+            continue
+          }
+        }
+
+        const resolved = setRuleContext(context, () =>
+          resolveWithLegacyResolver(resolver, options, modulePath, sourceFile),
+        )
+
+        if (!resolved?.found) {
+          continue
+        }
+
+        // else, counts
+        fileExistsCache.set(cacheKey, resolved.path)
+        return resolved
+      }
     }
   }
 
@@ -208,8 +373,9 @@ export function relative(
   modulePath: string,
   sourceFile: string,
   settings: PluginSettings,
+  context: ChildContext | RuleContext,
 ) {
-  return fullResolve(modulePath, sourceFile, settings).path
+  return fullResolve(modulePath, sourceFile, settings, context).path
 }
 
 const erroredContexts = new Set<RuleContext>()
@@ -217,14 +383,19 @@ const erroredContexts = new Set<RuleContext>()
 /**
  * Given
  *
- * @param p - Module path
+ * @param modulePath - Module path
  * @param context - ESLint context
  * @returns - The full module filesystem path; null if package is core;
  *   undefined if not found
  */
-export function resolve(p: string, context: RuleContext) {
+export function resolve(modulePath: string, context: RuleContext) {
   try {
-    return relative(p, context.physicalFilename, context.settings)
+    return relative(
+      modulePath,
+      context.physicalFilename,
+      context.settings,
+      context,
+    )
   } catch (error_) {
     const error = error_ as Error
     if (!erroredContexts.has(context)) {
@@ -261,14 +432,13 @@ export function importXResolverCompat(
     // By omitting the name, the log will use identifiable name like `settings['import-x/resolver-next'][0]`
     // name: 'import-x-resolver-compat',
     interfaceVersion: 3,
-    resolve: (modulePath, sourceFile) => {
-      const resolved = resolveWithLegacyResolver(
+    resolve(modulePath, sourceFile) {
+      return resolveWithLegacyResolver(
         resolver,
         resolverOptions,
         modulePath,
         sourceFile,
       )
-      return resolved
     },
   }
 }

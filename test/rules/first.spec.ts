@@ -1,10 +1,10 @@
 import fs from 'node:fs'
 
-import { cjsRequire } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
 import { createRuleTestCaseFunctions, parsers, testFilePath } from '../utils.js'
 
+import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/first'
 
 const ruleTester = new TSESLintRuleTester()

@@ -4,16 +4,21 @@ import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
 import { jest } from '@jest/globals'
-import type { CjsRequire } from '@pkgr/core'
 import type { TSESLint } from '@typescript-eslint/utils'
 
-import { testContext, testFilePath } from '../utils.js'
+import { TEST_FILENAME, testContext, testFilePath } from '../utils.js'
 
-import { importXResolverCompat } from 'eslint-plugin-import-x'
-import type { NewResolver } from 'eslint-plugin-import-x/types'
+import { cjsRequire, importXResolverCompat } from 'eslint-plugin-import-x'
+import type {
+  CjsRequire,
+  NewResolver,
+  NormalizedCacheSettings,
+  RuleContext,
+} from 'eslint-plugin-import-x'
 import {
   CASE_SENSITIVE_FS,
   fileExistsWithCaseSync,
+  relative,
   resolve,
 } from 'eslint-plugin-import-x/utils'
 
@@ -159,6 +164,15 @@ describe('resolve', () => {
       'import-x/resolver-next': [
         importXResolverCompat(require('../fixtures/foo-bar-resolver-v1')),
       ],
+    })
+    expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
+  })
+
+  it('non-array resolver interface v3', () => {
+    const context = testContext({
+      'import-x/resolver-next': require<{
+        foobarResolver: NewResolver
+      }>('../fixtures/foo-bar-resolver-v3').foobarResolver,
     })
     expect(resolve('../fixtures/foo', context)).toBe(testFilePath('./bar.jsx'))
   })
@@ -442,7 +456,9 @@ describe('resolve', () => {
       'import-x/cache': { lifetime: 0 },
     })
 
-    const cacheSettings = context.settings['import-x/cache']
+    const cacheSettings = context.settings[
+      'import-x/cache'
+    ] as NormalizedCacheSettings
 
     const file = resolve(
       // Note the case difference 'MyUncoolComponent' vs 'MyUnCoolComponent'
@@ -759,6 +775,72 @@ describe('resolve', () => {
           ),
         ).toBe(testFilePath('./bar.jsx'))
       })
+    })
+
+    it('respect project setting', () => {
+      const tsconfigRootDir = testFilePath('')
+      expect(
+        resolve('../fixtures/foo', {
+          ...testContext({
+            'import-x/resolver': './foo-bar-resolver-no-version',
+          }),
+          languageOptions: {
+            parserOptions: {
+              project: tsconfigRootDir,
+              tsconfigRootDir,
+            },
+          },
+        }),
+      ).toBe(testFilePath('./bar.tsx'))
+      expect(
+        resolve('../fixtures/foo', {
+          ...testContext({
+            'import-x/resolver': './foo-bar-resolver-v1',
+          }),
+          languageOptions: {
+            parserOptions: {
+              project: true,
+            },
+          },
+        }),
+      ).toBe(testFilePath('./bar.tsx'))
+      expect(
+        resolve('../fixtures/foo', {
+          ...testContext({
+            'import-x/resolver': './foo-bar-resolver-v2',
+          }),
+          languageOptions: {
+            parserOptions: {
+              project: testFilePath('tsconfig.json'),
+            },
+          },
+        }),
+      ).toBe(testFilePath('./bar.tsx'))
+      expect(
+        resolve('../fixtures/foo', {
+          ...testContext({
+            'import-x/resolver-next': require<{
+              foobarResolver: NewResolver
+            }>('../fixtures/foo-bar-resolver-v3').foobarResolver,
+          }),
+          languageOptions: {
+            parserOptions: {
+              project: true,
+              tsconfigRootDir,
+            },
+          },
+        }),
+      ).toBe(testFilePath('./bar.tsx'))
+    })
+
+    it('sourceFile should take higher priority than context.physicalFilename', () => {
+      const sourceFile = cjsRequire.resolve('typescript-eslint')
+      expect(
+        relative('./config-helper', sourceFile, {}, {
+          physicalFilename: TEST_FILENAME,
+          settings: {},
+        } as RuleContext),
+      ).toBe(path.resolve(sourceFile, '../config-helper.js'))
     })
   })
 })

@@ -1,4 +1,4 @@
-import module from 'node:module'
+import { isBuiltin } from 'node:module'
 import path from 'node:path'
 
 import { ResolverFactory } from 'unrs-resolver'
@@ -25,11 +25,7 @@ export function createNodeResolver({
     interfaceVersion: 3,
     name: 'eslint-plugin-import-x:node',
     resolve(modulePath, sourceFile) {
-      if (module.isBuiltin(modulePath)) {
-        return { found: true, path: null }
-      }
-
-      if (modulePath.startsWith('data:')) {
+      if (isBuiltin(modulePath) || modulePath.startsWith('data:')) {
         return { found: true, path: null }
       }
 
@@ -38,10 +34,10 @@ export function createNodeResolver({
         if (resolved.path) {
           return { found: true, path: resolved.path }
         }
-        return { found: false }
       } catch {
-        return { found: false }
+        //
       }
+      return { found: false }
     },
   }
 }

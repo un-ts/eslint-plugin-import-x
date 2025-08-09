@@ -13,7 +13,7 @@ import type {
   ChildContext,
   PluginSettings,
   RuleContext,
-} from 'eslint-plugin-import-x/types'
+} from 'eslint-plugin-import-x'
 import { parse } from 'eslint-plugin-import-x/utils'
 
 const parseStubParser = __importDefault(parseStubParser_).default

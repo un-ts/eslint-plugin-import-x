@@ -1,9 +1,9 @@
-import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
-import type { Parser as TSESLintParser } from '@typescript-eslint/utils/ts-eslint'
+import type { TSESLint } from '@typescript-eslint/utils'
 
 import { parsers, createRuleTestCaseFunctions } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-empty-named-blocks'
 
 const ruleTester = new TSESLintRuleTester()
@@ -12,7 +12,7 @@ const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function generateSuggestionsTestCases(
   cases: string[],
-  parser?: TSESLintParser.LooseParserModule,
+  parser?: TSESLint.Parser.LooseParserModule,
 ): Array<ReturnType<typeof tInvalid>> {
   return cases.map(code =>
     tInvalid({

@@ -1,7 +1,6 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { cjsRequire as require } from '@pkgr/core'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
@@ -14,6 +13,7 @@ import {
 } from '../utils.js'
 import type { RuleRunTests, GetRuleModuleMessageIds } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/named'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 

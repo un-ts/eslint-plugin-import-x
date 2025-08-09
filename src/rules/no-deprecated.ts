@@ -1,5 +1,5 @@
 import type { TSESTree } from '@typescript-eslint/utils'
-import type { Tag } from 'doctrine'
+import type { Spec } from 'comment-parser'
 
 import type { ModuleNamespace } from '../utils/index.js'
 import {
@@ -9,7 +9,7 @@ import {
   getValue,
 } from '../utils/index.js'
 
-function message(deprecation: Tag) {
+function message(deprecation: Spec) {
   if (deprecation.description) {
     return {
       messageId: 'deprecatedDesc',
@@ -25,7 +25,7 @@ function getDeprecation(metadata?: ModuleNamespace | null) {
     return
   }
 
-  return metadata.doc.tags.find(t => t.title === 'deprecated')
+  return metadata.doc.tags.find(t => t.tag === 'deprecated')
 }
 
 export default createRule({
@@ -45,7 +45,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context) {
-    const deprecated = new Map<string, Tag>()
+    const deprecated = new Map<string, Spec>()
     const namespaces = new Map<string, ExportMap | null>()
 
     return {
@@ -66,7 +66,7 @@ export default createRule({
           }
 
           const moduleDeprecation = imports.doc?.tags.find(
-            t => t.title === 'deprecated',
+            t => t.tag === 'deprecated',
           )
           if (moduleDeprecation) {
             context.report({

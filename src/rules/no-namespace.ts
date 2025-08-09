@@ -47,7 +47,10 @@ export default createRule<[Options?], MessageId>({
       ImportNamespaceSpecifier(node) {
         if (
           ignoreGlobs?.find(glob =>
-            minimatch(node.parent.source.value, glob, { matchBase: true }),
+            minimatch(node.parent.source.value, glob, {
+              matchBase: true,
+              nocomment: true,
+            }),
           )
         ) {
           return

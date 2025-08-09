@@ -1,5 +1,145 @@
 # eslint-plugin-import-x
 
+## 4.16.1
+
+### Patch Changes
+
+- [#399](https://github.com/un-ts/eslint-plugin-import-x/pull/399) [`33f07b4`](https://github.com/un-ts/eslint-plugin-import-x/commit/33f07b42a17813f8672e5f450eab68e9dffec67b) Thanks [@JounQin](https://github.com/JounQin)! - fix: should only use `context.physicalFilename` as fallback instead of main source
+
+- [#400](https://github.com/un-ts/eslint-plugin-import-x/pull/400) [`34adb40`](https://github.com/un-ts/eslint-plugin-import-x/commit/34adb4025ef7bead7991752acf32ac3fd31ef16e) Thanks [@renovate](https://github.com/apps/renovate)! - chore(deps): bump `stable-hash-x` v0.2
+
+## 4.16.0
+
+### Minor Changes
+
+- [#386](https://github.com/un-ts/eslint-plugin-import-x/pull/386) [`1c8b9ae`](https://github.com/un-ts/eslint-plugin-import-x/commit/1c8b9ae3a6f99f15d34c5be3d65d99582fba7c62) Thanks [@Rel1cx](https://github.com/Rel1cx) and [@JounQin](https://github.com/JounQin)! - feat: port [`react-x/prefer-react-namespace-import`](https://eslint-react.xyz/docs/rules/prefer-react-namespace-import) into `prefer-namespace-import`
+
+### Patch Changes
+
+- [#393](https://github.com/un-ts/eslint-plugin-import-x/pull/393) [`14cb948`](https://github.com/un-ts/eslint-plugin-import-x/commit/14cb9480c6c16806db21d0fa966e615ef3c1ecd7) Thanks [@lnhrdt](https://github.com/lnhrdt) and [@JounQin](https://github.com/JounQin)! - fix(extensions): always calculate `fix` option
+
+- [#388](https://github.com/un-ts/eslint-plugin-import-x/pull/388) [`1089d9f`](https://github.com/un-ts/eslint-plugin-import-x/commit/1089d9ff44a49bbb6a23db54c8b4bef2478ee8c2) Thanks [@JounQin](https://github.com/JounQin)! - fix: take `context.cwd` into account for cache key
+
+- [#390](https://github.com/un-ts/eslint-plugin-import-x/pull/390) [`8ca9272`](https://github.com/un-ts/eslint-plugin-import-x/commit/8ca92724e090ffdbdb660f308934a06affe095ce) Thanks [@JounQin](https://github.com/JounQin), [@scytacki](https://github.com/scytacki) and [@arcanis](https://github.com/arcanis)! - fix: pnp issue when used in a monorepo
+
+## 4.15.2
+
+### Patch Changes
+
+- [#378](https://github.com/un-ts/eslint-plugin-import-x/pull/378) [`cdb95ba`](https://github.com/un-ts/eslint-plugin-import-x/commit/cdb95ba7799f2cdfd52dd123090fe10b6fd75415) Thanks [@error-four-o-four](https://github.com/error-four-o-four)! - chore: adopt new `deprecated: DeprecatedInfo` meta rule option
+
+- [#383](https://github.com/un-ts/eslint-plugin-import-x/pull/383) [`738a7cf`](https://github.com/un-ts/eslint-plugin-import-x/commit/738a7cf5645742fab811b9bb916c7b08c2853526) Thanks [@JounQin](https://github.com/JounQin)! - fix: get npm client and install command correctly
+
+- [#382](https://github.com/un-ts/eslint-plugin-import-x/pull/382) [`d536756`](https://github.com/un-ts/eslint-plugin-import-x/commit/d5367564c0308708caed38ced72b27b953cf1b97) Thanks [@JounQin](https://github.com/JounQin)! - chore: bump `unrs-resolver` to `v1.9.0`, it'll fallback to `napi-postinstall` check at runtime
+
+## 4.15.1
+
+### Patch Changes
+
+- [#373](https://github.com/un-ts/eslint-plugin-import-x/pull/373) [`90ec1f1`](https://github.com/un-ts/eslint-plugin-import-x/commit/90ec1f1f0eecc7ef566a14b5163cb7c1ec05e6de) Thanks [@JounQin](https://github.com/JounQin)! - chore: migrate `stable-hash` to `stable-hash-x`
+
+- [#371](https://github.com/un-ts/eslint-plugin-import-x/pull/371) [`4f97a1a`](https://github.com/un-ts/eslint-plugin-import-x/commit/4f97a1a1419c15821ba1ab07e4038b715208ac7a) Thanks [@dword-design](https://github.com/dword-design) and [@JounQin](https://github.com/JounQin)! - fix: take `context.cwd` into account for glob options of rules `no-extraneous-dependencies` and `no-unassigned-import`
+
+- [#371](https://github.com/un-ts/eslint-plugin-import-x/pull/371) [`4f97a1a`](https://github.com/un-ts/eslint-plugin-import-x/commit/4f97a1a1419c15821ba1ab07e4038b715208ac7a) Thanks [@JounQin](https://github.com/JounQin)! - fix: enable `nocomment: true` for glob options of rules `no-import-module-exports` and `no-namespace`
+
+- [#368](https://github.com/un-ts/eslint-plugin-import-x/pull/368) [`74a16c5`](https://github.com/un-ts/eslint-plugin-import-x/commit/74a16c52bfba784ae44db7e200a3023d00dc82f3) Thanks [@JoseGoncalves](https://github.com/JoseGoncalves)! - fix: drop `languageOptions` config from `flat/recommended`
+
+## 4.15.0
+
+### Minor Changes
+
+- [#362](https://github.com/un-ts/eslint-plugin-import-x/pull/362) [`8bd40d8`](https://github.com/un-ts/eslint-plugin-import-x/commit/8bd40d8554b3c517fad3f1128110783e404eace0) Thanks [@JounQin](https://github.com/JounQin)! - refactor: drop @typescript-eslint/utils on production
+
+## 4.14.2
+
+### Patch Changes
+
+- [#360](https://github.com/un-ts/eslint-plugin-import-x/pull/360) [`3a3f5f8`](https://github.com/un-ts/eslint-plugin-import-x/commit/3a3f5f8755f96afe970f677ba2a9749a664c6757) Thanks [@JounQin](https://github.com/JounQin)! - fix: try/catch `enumerator.iterateFiles` gracefully
+
+- [#357](https://github.com/un-ts/eslint-plugin-import-x/pull/357) [`46c8bc6`](https://github.com/un-ts/eslint-plugin-import-x/commit/46c8bc6ce8869236e9d7e741acbd4571a352d269) Thanks [@JounQin](https://github.com/JounQin)! - chore(deps): bump `@typescript-eslint/utils` and `unrs-resolver`
+
+## 4.14.1
+
+### Patch Changes
+
+- [#355](https://github.com/un-ts/eslint-plugin-import-x/pull/355) [`81f3d31`](https://github.com/un-ts/eslint-plugin-import-x/commit/81f3d3159ba9a34d8ae880b58fbe03771bd33767) Thanks [@JounQin](https://github.com/JounQin)! - fix: tslib is no longer used because we're targeting ES2022
+
+## 4.14.0
+
+### Minor Changes
+
+- [#272](https://github.com/un-ts/eslint-plugin-import-x/pull/272) [`43cdd21`](https://github.com/un-ts/eslint-plugin-import-x/commit/43cdd21485863292461fd640ba6da561be5e829f) Thanks [@SukkaW](https://github.com/SukkaW) and [@JounQin](https://github.com/JounQin)! - feat: map legacy node resolver to the new one with fallback support
+
+- [#350](https://github.com/un-ts/eslint-plugin-import-x/pull/350) [`12a7cda`](https://github.com/un-ts/eslint-plugin-import-x/commit/12a7cdafe314a87709342eea6abbbcf3562c68e9) Thanks [@43081j](https://github.com/43081j)! - Expose flat configs in `configs` object to allow use of ESLint `extends`
+
+### Patch Changes
+
+- [#352](https://github.com/un-ts/eslint-plugin-import-x/pull/352) [`3bc48fc`](https://github.com/un-ts/eslint-plugin-import-x/commit/3bc48fcfab4bf5ddbabb4508cf5e63b8d8aaee04) Thanks [@JounQin](https://github.com/JounQin)! - fix: enable `nocomment` glob option for rule `no-unassigned-import`'s `allow` option
+
+## 4.13.3
+
+### Patch Changes
+
+- [#348](https://github.com/un-ts/eslint-plugin-import-x/pull/348) [`f949929`](https://github.com/un-ts/eslint-plugin-import-x/commit/f9499298126d5f7a470f86a9c52f0f49ef4587d3) Thanks [@JounQin](https://github.com/JounQin)! - fix(types): exported `importX` should also have `flatConfigs` as property
+
+## 4.13.2
+
+### Patch Changes
+
+- [#344](https://github.com/un-ts/eslint-plugin-import-x/pull/344) [`2c007d0`](https://github.com/un-ts/eslint-plugin-import-x/commit/2c007d0f7601c3bd71294d83d412710edadb034d) Thanks [@JounQin](https://github.com/JounQin)! - fix: share same plugin reference for default export
+
+- [#346](https://github.com/un-ts/eslint-plugin-import-x/pull/346) [`2991f2e`](https://github.com/un-ts/eslint-plugin-import-x/commit/2991f2e839fc1cc4857a49c7270f91160437588c) Thanks [@JounQin](https://github.com/JounQin)! - fix: rule `dynamic-import-chunkname` crash due to ts migration
+
+- [#342](https://github.com/un-ts/eslint-plugin-import-x/pull/342) [`a55dcc7`](https://github.com/un-ts/eslint-plugin-import-x/commit/a55dcc7a6d744ba8ab279e8d520e5f9fc5471da0) Thanks [@JounQin](https://github.com/JounQin)! - fix(deps): bump `eslint-import-context` to v0.1.5
+
+## 4.13.1
+
+### Patch Changes
+
+- [#340](https://github.com/un-ts/eslint-plugin-import-x/pull/340) [`180785d`](https://github.com/un-ts/eslint-plugin-import-x/commit/180785d8a83fd8baaf48dd911e6d9617983b06d8) Thanks [@JounQin](https://github.com/JounQin)! - fix(deps): bump `eslint-import-context` to v0.1.4
+
+## 4.13.0
+
+### Minor Changes
+
+- [#335](https://github.com/un-ts/eslint-plugin-import-x/pull/335) [`371ebee`](https://github.com/un-ts/eslint-plugin-import-x/commit/371ebee8f12b4f3758e56c147608222911806af6) Thanks [@JounQin](https://github.com/JounQin)! - feat: integrate `eslint-import-context` to get rule context without additional params
+
+## 4.12.2
+
+### Patch Changes
+
+- [#332](https://github.com/un-ts/eslint-plugin-import-x/pull/332) [`0b3809b`](https://github.com/un-ts/eslint-plugin-import-x/commit/0b3809ba1fce501ad0d5559d5b5c1618d4fbf857) Thanks [@JounQin](https://github.com/JounQin)! - fix: remove buggy `module-sync` exports field
+
+## 4.12.1
+
+### Patch Changes
+
+- [#329](https://github.com/un-ts/eslint-plugin-import-x/pull/329) [`4b284cb`](https://github.com/un-ts/eslint-plugin-import-x/commit/4b284cb39a8278fa314ff812487f932120ae4815) Thanks [@JounQin](https://github.com/JounQin)! - feat: add suggestions support for `extensions` `unexpected` case
+
+## 4.12.0
+
+### Minor Changes
+
+- [#327](https://github.com/un-ts/eslint-plugin-import-x/pull/327) [`90c1cd0`](https://github.com/un-ts/eslint-plugin-import-x/commit/90c1cd01653d3387fb06af515b5881d3c070439a) Thanks [@JounQin](https://github.com/JounQin)! - feat(extensions): support `pathGroupOverrides` and `fix` options
+
+## 4.11.1
+
+### Patch Changes
+
+- [#321](https://github.com/un-ts/eslint-plugin-import-x/pull/321) [`fc4c72c`](https://github.com/un-ts/eslint-plugin-import-x/commit/fc4c72c8aeb7ae2f876fa6efa04cd3d269bcebbe) Thanks [@SukkaW](https://github.com/SukkaW)! - fix: accept non-array resolver in `resolver-next` setting
+
+## 4.11.0
+
+### Minor Changes
+
+- [#314](https://github.com/un-ts/eslint-plugin-import-x/pull/314) [`11ebfbd`](https://github.com/un-ts/eslint-plugin-import-x/commit/11ebfbddd5ece74eec427b5c9117387f63306f80) Thanks [@JounQin](https://github.com/JounQin)! - refactor: migrate deprecated `doctrine` to `comment-parser`
+
+## 4.10.6
+
+### Patch Changes
+
+- [#310](https://github.com/un-ts/eslint-plugin-import-x/pull/310) [`d54302f`](https://github.com/un-ts/eslint-plugin-import-x/commit/d54302f8f4f4df00015b933a6b9b5eeaf01728d9) Thanks [@JounQin](https://github.com/JounQin)! - chore: bump `unrs-resolver` to v1.6.0
+
 ## 4.10.5
 
 ### Patch Changes
@@ -55,7 +195,6 @@
 ### Patch Changes
 
 - [#263](https://github.com/un-ts/eslint-plugin-import-x/pull/263) [`c0046a9`](https://github.com/un-ts/eslint-plugin-import-x/commit/c0046a9e85d6563920a5df4e8fbb3ecd977c47ab) Thanks [@JounQin](https://github.com/JounQin)! - chore: migrate to rebranding `unrs-resolver` with new targets supported:
-
   - `i686-pc-windows-msvc`
   - `armv7-unknown-linux-musleabihf`
   - `powerpc64le-unknown-linux-gnu`
@@ -78,7 +217,6 @@
 ### Minor Changes
 
 - [#248](https://github.com/un-ts/eslint-plugin-import-x/pull/248) [`6940b14`](https://github.com/un-ts/eslint-plugin-import-x/commit/6940b14426e75f0b0b860c1dddfe6a928510b974) Thanks [@TrevorBurnham](https://github.com/TrevorBurnham)! - feat: port all `order` rule new options from upstream
-
   - [`newlines-between-types`](https://github.com/import-js/eslint-plugin-import/pull/3127)
   - [`named`](https://github.com/import-js/eslint-plugin-import/pull/3043)
   - [`consolidateIslands`](https://github.com/import-js/eslint-plugin-import/pull/3129)
@@ -311,7 +449,7 @@
   export type ResolvedResult = ResultNotFound | ResultFound
   ```
 
-  You will be able to import `NewResolver` from `eslint-plugin-import-x/types`.
+  You will be able to import `NewResolver` from `eslint-plugin-import-x`.
 
   The most notable change is that `eslint-plugin-import-x` no longer passes the third argument (`options`) to the `resolve` function.
 

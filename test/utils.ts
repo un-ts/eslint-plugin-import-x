@@ -1,16 +1,17 @@
 import path from 'node:path'
 
-import { cjsRequire as require } from '@pkgr/core'
 import type {
   ValidTestCase as TSESLintValidTestCase,
   InvalidTestCase as TSESLintInvalidTestCase,
   RunTests as TSESLintRunTests,
 } from '@typescript-eslint/rule-tester'
-import type { RuleModule } from '@typescript-eslint/utils/ts-eslint'
+import type { TSESLint } from '@typescript-eslint/utils'
+import eslintPkg from 'eslint/package.json'
 import * as semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
-import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x/types'
+import { cjsRequire as require } from 'eslint-plugin-import-x'
+import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x'
 
 // warms up the module cache. this import takes a while (>500ms)
 import '@babel/eslint-parser'
@@ -21,6 +22,8 @@ export const parsers = {
   BABEL: require.resolve('@babel/eslint-parser'),
   HERMES: require.resolve('hermes-eslint'),
 }
+
+export const isESLint9 = semver.satisfies(eslintPkg.version, '>=9')
 
 export function tsVersionSatisfies(specifier: string) {
   return semver.satisfies(typescriptPkg.version, specifier)
@@ -53,19 +56,11 @@ function createRuleTestCase<TTestCase extends TSESLintValidTestCase<unknown[]>>(
   return {
     filename: TEST_FILENAME,
     ...t,
-    languageOptions: {
-      ...t.languageOptions,
-      parserOptions: {
-        sourceType: 'module',
-        ecmaVersion: 9,
-        ...t.languageOptions?.parserOptions,
-      },
-    },
   }
 }
 
 type GetRuleModuleTypes<TRule> =
-  TRule extends RuleModule<infer MessageIds, infer Options>
+  TRule extends TSESLint.RuleModule<infer MessageIds, infer Options>
     ? {
         messageIds: MessageIds
         options: Options
@@ -73,14 +68,16 @@ type GetRuleModuleTypes<TRule> =
     : never
 
 export type GetRuleModuleMessageIds<TRule> =
-  TRule extends RuleModule<infer MessageIds, infer _> ? MessageIds : never
+  TRule extends TSESLint.RuleModule<infer MessageIds, infer _>
+    ? MessageIds
+    : never
 
 export type GetRuleModuleOptions<TRule> =
-  TRule extends RuleModule<infer _, infer Options> ? Options : never
+  TRule extends TSESLint.RuleModule<infer _, infer Options> ? Options : never
 
 /**
  * Type helper to build {@link TSESLintRuleTester.run} test parameters from a
- * given {@link RuleModule}
+ * given {@link TSESLint.RuleModule}
  *
  * @example
  *   const COMMON_TESTS: RunTests<typeof rule> = {
@@ -100,15 +97,15 @@ export type GetRuleModuleOptions<TRule> =
  *   }
  */
 export type RuleRunTests<
-  TRule extends RuleModule<string, readonly unknown[]>,
+  TRule extends TSESLint.RuleModule<string, readonly unknown[]>,
   TRuleType extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
 > = TSESLintRunTests<TRuleType['messageIds'], TRuleType['options']>
 
 /**
  * Create two functions that can be used to create both valid and invalid test
  * case to be provided to {@link TSESLintRuleTester}. This function accepts one
- * type parameter that should extend a {@link RuleModule} to be able to provide
- * the result with typed `MessageIds` and `Options` properties
+ * type parameter that should extend a {@link TSESLint.RuleModule} to be able to
+ * provide the result with typed `MessageIds` and `Options` properties
  *
  * @example
  *   import { createRuleTestCaseFunction } from '../utils'
@@ -136,7 +133,7 @@ export type RuleRunTests<
  *   If the `TRule` parameter is omitted default types are used.
  */
 export function createRuleTestCaseFunctions<
-  TRule extends RuleModule<string, unknown[]>,
+  TRule extends TSESLint.RuleModule<string, unknown[]>,
   TData extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
   Valid = TSESLintValidTestCase<TData['options']>,
   Invalid = TSESLintInvalidTestCase<TData['messageIds'], TData['options']>,
@@ -154,6 +151,7 @@ export function createRuleTestCaseFunctions<
 
 export function testContext(settings?: PluginSettings) {
   return {
+    cwd: FIXTURES_PATH,
     physicalFilename: TEST_FILENAME,
     settings: settings || {},
   } as RuleContext

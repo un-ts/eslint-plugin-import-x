@@ -26,3 +26,6 @@ lib
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
+
+# Local test
+test.local.*

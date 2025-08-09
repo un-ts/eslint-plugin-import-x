@@ -1,1 +1,1 @@
-export { default } from '@1stg/lint-staged/tsc'
+export { default } from '@1stg/nano-staged/tsc'

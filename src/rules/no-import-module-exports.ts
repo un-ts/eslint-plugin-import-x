@@ -1,9 +1,9 @@
 import path from 'node:path'
 
-import { cjsRequire } from '@pkgr/core'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
+import { cjsRequire } from '../require.js'
 import type { RuleContext } from '../types.js'
 import { createRule, pkgUp } from '../utils/index.js'
 
@@ -112,7 +112,9 @@ export default createRule<[Options?], MessageId>({
           isIdentifier &&
           hasCJSExportReference &&
           !isEntryPoint &&
-          !options.exceptions?.some(glob => minimatch(filename, glob)) &&
+          !options.exceptions?.some(glob =>
+            minimatch(filename, glob, { nocomment: true }),
+          ) &&
           !isImportBinding
         ) {
           for (const importDeclaration of importDeclarations) {
