@@ -99,26 +99,19 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
             packageContent.name = packageContent_.name
             packageContent.exports = packageContent_.exports
           }
-          Object.assign(
-            packageContent.dependencies,
-            packageContent_.dependencies,
-          )
-          Object.assign(
-            packageContent.devDependencies,
-            packageContent_.devDependencies,
-          )
-          Object.assign(
-            packageContent.optionalDependencies,
-            packageContent_.optionalDependencies,
-          )
-          Object.assign(
-            packageContent.peerDependencies,
-            packageContent_.peerDependencies,
-          )
-          Object.assign(
-            packageContent.bundledDependencies,
-            packageContent_.bundledDependencies,
-          )
+          const fieldsToMerge = [
+            'dependencies',
+            'devDependencies',
+            'optionalDependencies',
+            'peerDependencies',
+            'bundledDependencies'
+          ] as const
+          for(const field of fieldsToMerge) {
+            Object.assign(
+              packageContent[field],
+              packageContent_[field],
+            )
+          }
         }
       }
     } else {
