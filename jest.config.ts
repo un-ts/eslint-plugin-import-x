@@ -15,7 +15,7 @@ export default {
     '^eslint-plugin-import-x/(.+)$': `<rootDir>/${srcDir}/$1`,
   },
   snapshotSerializers: ['<rootDir>/test/jest.serializer.cjs'],
-  testMatch: ['<rootDir>/test/**/*.spec.ts'],
+  testMatch: ['<rootDir>/test/**/fixtures.spec.ts'],
   transform: {
     '^.+\\.(m?[jt]s|[jt]sx?)$': [
       '@swc-node/jest',

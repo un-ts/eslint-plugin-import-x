@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "demo": "tsx test.ts",
-    "lint": "eslint"
+    "lint": "tsx resolve.cts"
   },
   "dependencies": {
     "nanoid": "^5.1.5"
@@ -15,10 +15,11 @@
     "@types/node": "^22.15.32",
     "@typescript-eslint/parser": "^8.34.1",
     "eslint": "^9.29.0",
-    "eslint-import-resolver-typescript": "^4.4.3",
+    "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "link:../../../..",
     "globals": "^16.2.0",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "unrs-resolver": "~1.10.0"
   }
 }
