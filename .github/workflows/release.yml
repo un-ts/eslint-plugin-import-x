@@ -30,9 +30,9 @@ jobs:
         with:
           node-version: lts/*
           cache: yarn
-        env:
-          # https://github.com/actions/setup-node/issues/531#issuecomment-1819151412
-          SKIP_YARN_COREPACK_CHECK: 1
+
+      - name: Upgrade npm
+        run: npm install -g npm@latest
 
       - name: Install Dependencies
         run: yarn --immutable
@@ -50,5 +50,3 @@ jobs:
           publish: yarn release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
