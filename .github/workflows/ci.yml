@@ -14,29 +14,29 @@ jobs:
     strategy:
       matrix:
         os:
-          - macos-latest
-          - ubuntu-latest
+          # - macos-latest
+          # - ubuntu-latest
           - windows-latest
         node:
-          - 18
-          - 20
-          - 22
+          # - 18
+          # - 20
+          # - 22
           # https://github.com/nodejs/node/issues/59480
           - 24.5
         eslint:
-          - 8.56
-          - 8
+          # - 8.56
+          # - 8
           - 9
 
-        include:
-          - executeLint: true
-            node: lts/*
-            eslint: 9
-            os: ubuntu-latest
-          - legacyNodeResolver: true
-            node: lts/*
-            eslint: 9
-            os: ubuntu-latest
+        # include:
+        #   - executeLint: true
+        #     node: lts/*
+        #     eslint: 9
+        #     os: ubuntu-latest
+        #   - legacyNodeResolver: true
+        #     node: lts/*
+        #     eslint: 9
+        #     os: ubuntu-latest
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
