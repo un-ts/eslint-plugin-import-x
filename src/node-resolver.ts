@@ -34,8 +34,10 @@ export function createNodeResolver({
         if (resolved.path) {
           return { found: true, path: resolved.path }
         }
-      } catch {
-        //
+      } catch (error) {
+        console.log('----------------------')
+        console.error(modulePath, sourceFile, error)
+        console.log('----------------------')
       }
       return { found: false }
     },
