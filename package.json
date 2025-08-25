@@ -83,7 +83,7 @@
     "minimatch": "^9.0.3 || ^10.0.1",
     "semver": "^7.7.2",
     "stable-hash-x": "^0.2.0",
-    "unrs-resolver": "^1.9.2"
+    "unrs-resolver": "~1.10.0"
   },
   "devDependencies": {
     "@1stg/commitlint-config": "^5.1.0",
