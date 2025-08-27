@@ -1,8 +1,8 @@
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
 
-import { ResolverFactory } from 'unrs-resolver'
-import type { NapiResolveOptions } from 'unrs-resolver'
+import { ResolverFactory } from 'oxc-resolver'
+import type { NapiResolveOptions } from 'oxc-resolver'
 
 import type { NewResolver } from './types.js'
 
@@ -34,8 +34,10 @@ export function createNodeResolver({
         if (resolved.path) {
           return { found: true, path: resolved.path }
         }
-      } catch {
-        //
+      } catch (error) {
+        console.log('----------------------')
+        console.error(modulePath, sourceFile, error)
+        console.log('----------------------')
       }
       return { found: false }
     },

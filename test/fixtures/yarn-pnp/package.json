@@ -10,11 +10,14 @@
     "./add": "./add.js?custom"
   },
   "scripts": {
-    "lint": "eslint && yarn workspace test-package lint"
+    "lint": "yarn workspace test-package lint"
   },
   "devDependencies": {
     "epix-oxc": "link:.",
     "eslint": "^9.29.0",
     "eslint-plugin-import-x": "link:../../.."
+  },
+  "resolutions": {
+    "unrs-resolver": "npm:oxc-resolver@^11.7.1"
   }
 }

@@ -23,7 +23,10 @@ export function resolveWithLegacyResolver(
   sourceFile: string,
 ): ResolvedResult {
   if (resolver.interfaceVersion === 2) {
-    return resolver.resolve(modulePath, sourceFile, config)
+    console.log(modulePath, sourceFile, config)
+    const result = resolver.resolve(modulePath, sourceFile, config)
+    console.log('result:', result)
+    return result
   }
 
   try {
