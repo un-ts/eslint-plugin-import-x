@@ -1,9 +1,10 @@
-import type { PluginFlatBaseConfig } from '../../types'
+import type { PluginFlatBaseConfig } from '../../types.js'
 
 /**
  * This config:
- * 1) adds `.jsx`, `.ts`, `.cts`, `.mts`, and `.tsx` as an extension
- * 2) enables JSX/TSX parsing
+ *
+ * 1. Adds `.jsx`, `.ts`, `.cts`, `.mts`, and `.tsx` as an extension
+ * 2. Enables JSX/TSX parsing
  */
 
 // Omit `.d.ts` because 1) TypeScript compilation already confirms that

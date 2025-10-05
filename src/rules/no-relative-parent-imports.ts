@@ -1,17 +1,17 @@
 import path from 'node:path'
 
-import type { ModuleOptions } from '../utils'
+import type { ModuleOptions } from '../utils/index.js'
 import {
   importType,
   createRule,
   moduleVisitor,
   makeOptionsSchema,
   resolve,
-} from '../utils'
+} from '../utils/index.js'
 
 type MessageId = 'noAllowed'
 
-export = createRule<[ModuleOptions?], MessageId>({
+export default createRule<[ModuleOptions?], MessageId>({
   name: 'no-relative-parent-imports',
   meta: {
     type: 'suggestion',

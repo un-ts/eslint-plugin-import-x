@@ -1,77 +1,81 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test } from '../utils'
+import { createRuleTestCaseFunctions } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-webpack-loader-syntax'
 
-const ruleTester = new TSESLintRuleTester()
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
-const message = 'Do not use import syntax to configure webpack loaders.'
+const ruleTester = new TSESLintRuleTester()
 
 ruleTester.run('no-webpack-loader-syntax', rule, {
   valid: [
-    test({ code: 'import _ from "lodash"' }),
-    test({ code: 'import find from "lodash.find"' }),
-    test({ code: 'import foo from "./foo.css"' }),
-    test({ code: 'import data from "@scope/my-package/data.json"' }),
-    test({ code: 'var _ = require("lodash")' }),
-    test({ code: 'var find = require("lodash.find")' }),
-    test({ code: 'var foo = require("./foo")' }),
-    test({ code: 'var foo = require("../foo")' }),
-    test({ code: 'var foo = require("foo")' }),
-    test({ code: 'var foo = require("./")' }),
-    test({ code: 'var foo = require("@scope/foo")' }),
+    tValid({ code: 'import _ from "lodash"' }),
+    tValid({ code: 'import find from "lodash.find"' }),
+    tValid({ code: 'import foo from "./foo.css"' }),
+    tValid({ code: 'import data from "@scope/my-package/data.json"' }),
+    tValid({ code: 'var _ = require("lodash")' }),
+    tValid({ code: 'var find = require("lodash.find")' }),
+    tValid({ code: 'var foo = require("./foo")' }),
+    tValid({ code: 'var foo = require("../foo")' }),
+    tValid({ code: 'var foo = require("foo")' }),
+    tValid({ code: 'var foo = require("./")' }),
+    tValid({ code: 'var foo = require("@scope/foo")' }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: 'import _ from "babel!lodash"',
-      errors: [{ message: `Unexpected '!' in 'babel!lodash'. ${message}` }],
+      errors: [{ messageId: 'unexpected', data: { name: 'babel!lodash' } }],
     }),
-    test({
+    tInvalid({
       code: 'import find from "-babel-loader!lodash.find"',
       errors: [
         {
-          message: `Unexpected '!' in '-babel-loader!lodash.find'. ${message}`,
+          messageId: 'unexpected',
+          data: { name: '-babel-loader!lodash.find' },
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import foo from "style!css!./foo.css"',
       errors: [
-        { message: `Unexpected '!' in 'style!css!./foo.css'. ${message}` },
+        { messageId: 'unexpected', data: { name: 'style!css!./foo.css' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import data from "json!@scope/my-package/data.json"',
       errors: [
         {
-          message: `Unexpected '!' in 'json!@scope/my-package/data.json'. ${message}`,
+          messageId: 'unexpected',
+          data: { name: 'json!@scope/my-package/data.json' },
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'var _ = require("babel!lodash")',
-      errors: [{ message: `Unexpected '!' in 'babel!lodash'. ${message}` }],
+      errors: [{ messageId: 'unexpected', data: { name: 'babel!lodash' } }],
     }),
-    test({
+    tInvalid({
       code: 'var find = require("-babel-loader!lodash.find")',
       errors: [
         {
-          message: `Unexpected '!' in '-babel-loader!lodash.find'. ${message}`,
+          messageId: 'unexpected',
+          data: { name: '-babel-loader!lodash.find' },
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'var foo = require("style!css!./foo.css")',
       errors: [
-        { message: `Unexpected '!' in 'style!css!./foo.css'. ${message}` },
+        { messageId: 'unexpected', data: { name: 'style!css!./foo.css' } },
       ],
     }),
-    test({
+    tInvalid({
       code: 'var data = require("json!@scope/my-package/data.json")',
       errors: [
         {
-          message: `Unexpected '!' in 'json!@scope/my-package/data.json'. ${message}`,
+          messageId: 'unexpected',
+          data: { name: 'json!@scope/my-package/data.json' },
         },
       ],
     }),

@@ -11,9 +11,10 @@ using a JSDoc `@deprecated` tag:
 // @file: ./answer.js
 
 /**
- * this is what you get when you trust a mouse talk show
- * @deprecated need to restart the experiment
- * @returns {Number} nonsense
+ * This is what you get when you trust a mouse talk show
+ *
+ * @deprecated Need to restart the experiment
+ * @returns {Number} Nonsense
  */
 export function multiply(six, nine) {
   return 42
@@ -50,6 +51,13 @@ the `import-x/docstyle` setting.
 settings:
   import-x/docstyle: ['jsdoc', 'tomdoc']
 ```
+
+## When Not To Use It
+
+TypeScript supports [multiple function signatures](https://www.typescriptlang.org/docs/handbook/2/functions.html#function-overloads)
+where only some of signatures can be deprecated. This rule does not support this
+configuration. Consider using [`@typescript-eslint/no-deprecated`](https://typescript-eslint.io/rules/no-deprecated/)
+instead.
 
 ## Worklist
 

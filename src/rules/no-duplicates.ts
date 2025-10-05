@@ -1,10 +1,10 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import semver from 'semver'
+import * as semver from 'semver'
 import type { PackageJson } from 'type-fest'
 
-import type { RuleContext } from '../types'
-import { createRule, resolve } from '../utils'
-import { lazy } from '../utils/lazy-value'
+import { cjsRequire } from '../require.js'
+import type { RuleContext } from '../types.js'
+import { createRule, lazy, resolve } from '../utils/index.js'
 
 // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
 // pre-calculate if the TypeScript version is supported
@@ -12,8 +12,7 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
   let typescriptPkg: PackageJson | undefined
 
   try {
-    // eslint-disable-next-line import-x/no-extraneous-dependencies
-    typescriptPkg = require('typescript/package.json') as PackageJson
+    typescriptPkg = cjsRequire<PackageJson>('typescript/package.json')
   } catch {
     //
   }
@@ -21,12 +20,12 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
   return !typescriptPkg || !semver.satisfies(typescriptPkg.version!, '>= 4.5')
 })
 
-type Options = {
+export interface Options {
   considerQueryString?: boolean
   'prefer-inline'?: boolean
 }
 
-type MessageId = 'duplicate'
+export type MessageId = 'duplicate'
 
 function checkImports(
   imported: Map<string, TSESTree.ImportDeclaration[]>,
@@ -152,7 +151,7 @@ function getFix(
           sourceCode.text
             .slice(openBrace.range[1], closeBrace.range[0])
             .split(',')
-            .map(x => x.trim()),
+            .map(x => x.split(' as ')[0].trim()),
         )
 
     const [specifiersText] = specifiers.reduce(
@@ -172,13 +171,15 @@ function getFix(
           specifier.identifiers.reduce(
             ([text, set], cur) => {
               const trimmed = cur.trim() // Trim whitespace before/after to compare to our set of existing identifiers
-              const curWithType =
-                trimmed.length > 0 && preferInline && isTypeSpecifier
-                  ? `type ${cur}`
-                  : cur
-              if (existingIdentifiers.has(trimmed)) {
+              if (trimmed.length === 0 || existingIdentifiers.has(trimmed)) {
                 return [text, set]
               }
+
+              const curWithType =
+                preferInline && isTypeSpecifier
+                  ? cur.replace(/^(\s*)/, '$1type ')
+                  : cur
+
               return [
                 text.length > 0 ? `${text},${curWithType}` : curWithType,
                 set.add(trimmed),
@@ -267,8 +268,9 @@ function getFix(
         )
       }
     } else if (openBrace != null && closeBrace != null && !shouldAddDefault()) {
+      const tokenBefore = sourceCode.getTokenBefore(closeBrace)!
       // `import {...} './foo'` → `import {..., ...} from './foo'`
-      fixes.push(fixer.insertTextBefore(closeBrace, specifiersText))
+      fixes.push(fixer.insertTextAfter(tokenBefore, specifiersText))
     }
 
     // Remove imports whose specifiers have been moved into the first import.
@@ -381,7 +383,7 @@ function hasCommentInsideNonSpecifiers(
   // `node` (only inside). If there's a `{...}` part, look for comments before
   // the `{`, but not before the `}` (hence the `+1`s).
   const someTokens =
-    openBraceIndex >= 0 && closeBraceIndex >= 0
+    openBraceIndex !== -1 && closeBraceIndex !== -1
       ? [
           ...tokens.slice(1, openBraceIndex + 1),
           ...tokens.slice(closeBraceIndex + 1),
@@ -392,7 +394,15 @@ function hasCommentInsideNonSpecifiers(
   )
 }
 
-export = createRule<[Options?], MessageId>({
+export interface ModuleMap {
+  imported: Map<string, TSESTree.ImportDeclaration[]>
+  nsImported: Map<string, TSESTree.ImportDeclaration[]>
+  defaultTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+  namespaceTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+  namedTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+}
+
+export default createRule<[Options?], MessageId>({
   name: 'no-duplicates',
   meta: {
     type: 'problem',
@@ -438,19 +448,11 @@ export = createRule<[Options?], MessageId>({
         }
       : defaultResolver
 
-    const moduleMaps = new Map<
-      TSESTree.Node,
-      {
-        imported: Map<string, TSESTree.ImportDeclaration[]>
-        nsImported: Map<string, TSESTree.ImportDeclaration[]>
-        defaultTypesImported: Map<string, TSESTree.ImportDeclaration[]>
-        namedTypesImported: Map<string, TSESTree.ImportDeclaration[]>
-      }
-    >()
+    const moduleMaps = new Map<TSESTree.Node, ModuleMap>()
 
     function getImportMap(n: TSESTree.ImportDeclaration) {
       const parent = n.parent!
-      let map
+      let map: ModuleMap
       if (moduleMaps.has(parent)) {
         map = moduleMaps.get(parent)!
       } else {
@@ -458,17 +460,31 @@ export = createRule<[Options?], MessageId>({
           imported: new Map(),
           nsImported: new Map(),
           defaultTypesImported: new Map(),
+          namespaceTypesImported: new Map(),
           namedTypesImported: new Map(),
         }
         moduleMaps.set(parent, map)
       }
 
-      if (!preferInline && n.importKind === 'type') {
-        return n.specifiers.length > 0 &&
+      if (n.importKind === 'type') {
+        if (
+          n.specifiers.length > 0 &&
           n.specifiers[0].type === 'ImportDefaultSpecifier'
-          ? map.defaultTypesImported
-          : map.namedTypesImported
+        ) {
+          return map.defaultTypesImported
+        }
+        if (
+          n.specifiers.length > 0 &&
+          n.specifiers[0].type === 'ImportNamespaceSpecifier'
+        ) {
+          return map.namespaceTypesImported
+        }
+
+        if (!preferInline) {
+          return map.namedTypesImported
+        }
       }
+
       if (
         !preferInline &&
         n.specifiers.some(

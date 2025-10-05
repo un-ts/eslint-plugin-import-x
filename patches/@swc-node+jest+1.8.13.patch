@@ -1,0 +1,20 @@
+diff --git a/node_modules/@swc-node/jest/lib/index.js b/node_modules/@swc-node/jest/lib/index.js
+index 9a2fc9d..92f19fc 100644
+--- a/node_modules/@swc-node/jest/lib/index.js
++++ b/node_modules/@swc-node/jest/lib/index.js
+@@ -17,13 +17,13 @@ function getJestTransformConfig(jestConfig) {
+ const defaultTsConfig = (0, read_default_tsconfig_1.readDefaultTsConfig)();
+ module.exports = {
+     process(src, path, jestConfig) {
+-        if (/\.(tsx?|jsx?|mjs)$/.test(path)) {
++        if (/\.([cm]ts|tsx?|[cm]js|jsx?)$/.test(path)) {
+             return (0, core_1.transformJest)(src, path, {
+                 ...(0, read_default_tsconfig_1.tsCompilerOptionsToSwcConfig)(defaultTsConfig, path),
+                 ...getJestTransformConfig(jestConfig),
+             });
+         }
+-        return src;
++        return {code: src};
+     },
+     getCacheKey(src, _filepath, config) {
+         return (0, xxhash_1.xxh64)(src + JSON.stringify(config)).toString(16);

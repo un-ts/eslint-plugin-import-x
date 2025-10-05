@@ -1,9 +1,7 @@
-import type { PluginConfig } from '../types'
+import type { PluginConfig } from '../types.js'
 
-/**
- * The basics.
- */
-export = {
+/** The basics. */
+export default {
   plugins: ['import-x'],
 
   rules: {

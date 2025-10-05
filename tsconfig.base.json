@@ -2,11 +2,12 @@
   "extends": "@1stg/tsconfig/node16",
   "compilerOptions": {
     "lib": ["ES2022"],
+    "rootDir": ".",
     "paths": {
-      "eslint-plugin-import-x": ["./src"],
-      "eslint-plugin-import-x/package.json": ["./package.json"],
-      "eslint-plugin-import-x/*": ["./src/*"]
+      "eslint-plugin-import-x": ["./src/index.ts"],
+      "eslint-plugin-import-x/*": ["./src/*.ts"],
+      "eslint-plugin-import-x/package.json": ["./package.json"]
     }
   },
-  "exclude": ["test/fixtures"]
+  "exclude": ["test/fixtures", "lib"]
 }

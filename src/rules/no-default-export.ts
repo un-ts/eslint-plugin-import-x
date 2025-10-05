@@ -1,6 +1,6 @@
-import { createRule } from '../utils'
+import { createRule, getValue, sourceType } from '../utils/index.js'
 
-export = createRule({
+export default createRule({
   name: 'no-default-export',
   meta: {
     type: 'suggestion',
@@ -18,7 +18,7 @@ export = createRule({
   defaultOptions: [],
   create(context) {
     // ignore non-modules
-    if (context.parserOptions.sourceType !== 'module') {
+    if (sourceType(context) !== 'module') {
       return {}
     }
 
@@ -36,10 +36,7 @@ export = createRule({
 
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers.filter(
-          specifier =>
-            (specifier.exported.name ||
-              ('value' in specifier.exported && specifier.exported.value)) ===
-            'default',
+          specifier => getValue(specifier.exported) === 'default',
         )) {
           const { loc } = sourceCode.getFirstTokens(node)[1] || {}
           // @ts-expect-error - experimental parser type
@@ -54,7 +51,7 @@ export = createRule({
               node,
               messageId: 'noAliasDefault',
               data: {
-                local: specifier.local.name,
+                local: getValue(specifier.local),
               },
               loc,
             })

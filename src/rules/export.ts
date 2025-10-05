@@ -1,3 +1,4 @@
+import { AST_NODE_TYPES } from '@typescript-eslint/types'
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import {
@@ -5,7 +6,7 @@ import {
   recursivePatternCapture,
   createRule,
   getValue,
-} from '../utils'
+} from '../utils/index.js'
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:
@@ -30,44 +31,34 @@ const rootProgram = 'root'
 const tsTypePrefix = 'type:'
 
 /**
- * Detect function overloads like:
+ * Remove function overloads like:
+ *
  * ```ts
- * export function foo(a: number);
- * export function foo(a: string);
- * export function foo(a: number|string) { return a; }
+ * export function foo(a: number)
+ * export function foo(a: string)
+ * export function foo(a: number | string) {
+ *   return a
+ * }
  * ```
  */
-function isTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
-  const nodesArr = [...nodes]
-
-  const idents = nodesArr.flatMap(node =>
-    'declaration' in node && node.declaration?.type === 'TSDeclareFunction'
-      ? node.declaration.id!.name
-      : [],
-  )
-
-  if (new Set(idents).size !== idents.length) {
-    return true
+function removeTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
+  for (const node of nodes) {
+    const declType =
+      node.type === AST_NODE_TYPES.ExportDefaultDeclaration
+        ? node.declaration.type
+        : node.parent?.type
+    if (declType === AST_NODE_TYPES.TSDeclareFunction) {
+      nodes.delete(node)
+    }
   }
-
-  const types = new Set(nodesArr.map(node => `${node.parent!.type}` as const))
-  if (!types.has('TSDeclareFunction')) {
-    return false
-  }
-  if (types.size === 1) {
-    return true
-  }
-  if (types.size === 2 && types.has('FunctionDeclaration')) {
-    return true
-  }
-  return false
 }
 
 /**
  * Detect merging Namespaces with Classes, Functions, or Enums like:
+ *
  * ```ts
- * export class Foo { }
- * export namespace Foo { }
+ * export class Foo {}
+ * export namespace Foo {}
  * ```
  */
 function isTypescriptNamespaceMerging(nodes: Set<TSESTree.Node>) {
@@ -96,10 +87,11 @@ function isTypescriptNamespaceMerging(nodes: Set<TSESTree.Node>) {
 
 /**
  * Detect if a typescript namespace node should be reported as multiple export:
+ *
  * ```ts
- * export class Foo { }
- * export function Foo();
- * export namespace Foo { }
+ * export class Foo {}
+ * export function Foo()
+ * export namespace Foo {}
  * ```
  */
 function shouldSkipTypescriptNamespace(
@@ -120,9 +112,9 @@ function shouldSkipTypescriptNamespace(
   )
 }
 
-type MessageId = 'noNamed' | 'multiDefault' | 'multiNamed'
+export type MessageId = 'noNamed' | 'multiDefault' | 'multiNamed'
 
-export = createRule<[], MessageId>({
+export default createRule<[], MessageId>({
   name: 'export',
   meta: {
     type: 'problem',
@@ -257,8 +249,7 @@ export = createRule<[], MessageId>({
 
         let any = false
 
-        // eslint-disable-next-line unicorn/no-array-for-each
-        remoteExports.forEach((_, name) => {
+        remoteExports.$forEach((_, name) => {
           if (name !== 'default') {
             any = true // poor man's filter
             addNamed(name, node, parent)
@@ -277,14 +268,17 @@ export = createRule<[], MessageId>({
       'Program:exit'() {
         for (const [, named] of namespace) {
           for (const [name, nodes] of named) {
+            if (nodes.size === 0) {
+              continue
+            }
+
+            removeTypescriptFunctionOverloads(nodes)
+
             if (nodes.size <= 1) {
               continue
             }
 
-            if (
-              isTypescriptFunctionOverloads(nodes) ||
-              isTypescriptNamespaceMerging(nodes)
-            ) {
+            if (isTypescriptNamespaceMerging(nodes)) {
               continue
             }
 

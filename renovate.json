@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>1stG/configs"
+  ],
+  "forkProcessing": "enabled",
+  "ignoreDeps": [
+    "@types/eslint8.56",
+    "eslint8.56",
+    "zod"
+  ]
+}

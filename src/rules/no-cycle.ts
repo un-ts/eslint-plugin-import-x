@@ -1,8 +1,6 @@
-/**
- * Ensures that no imported module imports the linted module.
- */
+/** Ensures that no imported module imports the linted module. */
 
-import type { DeclarationMetadata, ModuleOptions } from '../utils'
+import type { DeclarationMetadata, ModuleOptions } from '../utils/index.js'
 import {
   ExportMap,
   isExternalModule,
@@ -10,24 +8,24 @@ import {
   moduleVisitor,
   makeOptionsSchema,
   resolve,
-} from '../utils'
+} from '../utils/index.js'
 
-type Options = {
+export interface Options extends ModuleOptions {
   allowUnsafeDynamicCyclicDependency?: boolean
   ignoreExternal?: boolean
-  maxDepth?: number
-} & ModuleOptions
+  maxDepth?: number | '∞'
+}
 
-type MessageId = 'cycle'
+export type MessageId = 'cycle' | 'cycleSource'
 
-type Traverser = {
+export interface Traverser {
   mget(): ExportMap | null
   route: Array<DeclarationMetadata['source']>
 }
 
 const traversed = new Set<string>()
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-cycle',
   meta: {
     type: 'suggestion',
@@ -65,7 +63,8 @@ export = createRule<[Options?], MessageId>({
       }),
     ],
     messages: {
-      cycle: 'Dependency cycle {{source}}',
+      cycle: 'Dependency cycle detected',
+      cycleSource: 'Dependency cycle via "{{source}}"',
     },
   },
   defaultOptions: [],
@@ -154,7 +153,8 @@ export = createRule<[Options?], MessageId>({
             )
 
             /**
-             * If cyclic dependency is allowed via dynamic import, skip checking if any module is imported dynamically
+             * If cyclic dependency is allowed via dynamic import, skip checking
+             * if any module is imported dynamically
              */
             if (
               options.allowUnsafeDynamicCyclicDependency &&
@@ -164,14 +164,14 @@ export = createRule<[Options?], MessageId>({
             }
 
             /**
-             * Only report as a cycle if there are any import declarations that are considered by
-             * the rule. For example:
+             * Only report as a cycle if there are any import declarations that
+             * are considered by the rule. For example:
              *
-             * a.ts:
-             * import { foo } from './b' // should not be reported as a cycle
+             * A.ts:
              *
-             * b.ts:
-             * import type { Bar } from './a'
+             * `import { foo } from './b'` // should not be reported as a cycle
+             *
+             * B.ts: `import type { Bar } from './a'`
              */
             if (path === filename && toTraverse.length > 0) {
               return true
@@ -187,16 +187,20 @@ export = createRule<[Options?], MessageId>({
         while (untraversed.length > 0) {
           const next = untraversed.shift()! // bfs!
           if (detectCycle(next)) {
-            context.report({
-              node: importer,
-              messageId: 'cycle',
-              data: {
-                source:
-                  next.route.length > 0
-                    ? `via ${routeString(next.route)}`
-                    : 'detected.',
-              },
-            })
+            if (next.route.length > 0) {
+              context.report({
+                node: importer,
+                messageId: 'cycleSource',
+                data: {
+                  source: routeString(next.route),
+                },
+              })
+            } else {
+              context.report({
+                node: importer,
+                messageId: 'cycle',
+              })
+            }
             return
           }
         }

@@ -1,9 +1,10 @@
-import type { PluginConfig } from '../types'
+import type { PluginConfig } from '../types.js'
 
 /**
  * This config:
- * 1) adds `.jsx`, `.ts`, `.cts`, `.mts`, and `.tsx` as an extension
- * 2) enables JSX/TSX parsing
+ *
+ * 1. Adds `.jsx`, `.ts`, `.cts`, `.mts`, and `.tsx` as an extension
+ * 2. Enables JSX/TSX parsing
  */
 
 // Omit `.d.ts` because 1) TypeScript compilation already confirms that
@@ -19,7 +20,7 @@ const allExtensions = [
   '.mjs',
 ] as const
 
-export = {
+export default {
   settings: {
     'import-x/extensions': allExtensions,
     'import-x/external-module-folders': ['node_modules', 'node_modules/@types'],

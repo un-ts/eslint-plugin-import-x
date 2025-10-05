@@ -1,18 +1,23 @@
 import type { TSESTree } from '@typescript-eslint/utils'
-import type { Tag } from 'doctrine'
+import type { Spec } from 'comment-parser'
 
-import type { ModuleNamespace } from '../utils'
-import { ExportMap, createRule, declaredScope } from '../utils'
+import type { ModuleNamespace } from '../utils/index.js'
+import {
+  ExportMap,
+  createRule,
+  declaredScope,
+  getValue,
+} from '../utils/index.js'
 
-function message(deprecation: Tag) {
-  return {
-    messageId: 'deprecated',
-    data: {
-      description: deprecation.description
-        ? `: ${deprecation.description}`
-        : '.',
-    },
-  } as const
+function message(deprecation: Spec) {
+  if (deprecation.description) {
+    return {
+      messageId: 'deprecatedDesc',
+      data: { description: deprecation.description },
+    } as const
+  }
+
+  return { messageId: 'deprecated' } as const
 }
 
 function getDeprecation(metadata?: ModuleNamespace | null) {
@@ -20,10 +25,10 @@ function getDeprecation(metadata?: ModuleNamespace | null) {
     return
   }
 
-  return metadata.doc.tags.find(t => t.title === 'deprecated')
+  return metadata.doc.tags.find(t => t.tag === 'deprecated')
 }
 
-export = createRule({
+export default createRule({
   name: 'no-deprecated',
   meta: {
     type: 'suggestion',
@@ -34,13 +39,14 @@ export = createRule({
     },
     schema: [],
     messages: {
-      deprecated: 'Deprecated{{description}}',
+      deprecatedDesc: 'Deprecated: {{description}}',
+      deprecated: 'Deprecated: consider to find an alternative.',
     },
   },
   defaultOptions: [],
   create(context) {
-    const deprecated = new Map()
-    const namespaces = new Map()
+    const deprecated = new Map<string, Spec>()
+    const namespaces = new Map<string, ExportMap | null>()
 
     return {
       Program({ body }) {
@@ -60,7 +66,7 @@ export = createRule({
           }
 
           const moduleDeprecation = imports.doc?.tags.find(
-            t => t.title === 'deprecated',
+            t => t.tag === 'deprecated',
           )
           if (moduleDeprecation) {
             context.report({
@@ -93,7 +99,7 @@ export = createRule({
               }
 
               case 'ImportSpecifier': {
-                imported = im.imported.name
+                imported = getValue(im.imported)
                 local = im.local.name
                 break
               }
@@ -153,7 +159,7 @@ export = createRule({
         }
         context.report({
           node,
-          ...message(deprecated.get(node.name)),
+          ...message(deprecated.get(node.name)!),
         })
       },
 

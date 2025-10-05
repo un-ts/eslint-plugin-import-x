@@ -1,10 +1,28 @@
 import { RuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { parsers, test } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-rename-default'
 
 const ruleTester = new RuleTester()
+
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createRenameDefaultError(
+  data: {
+    importBasename: string
+    defaultExportName: string
+    requiresOrImports: string
+    importName: string
+    suggestion: string
+  },
+  type: `${AST_NODE_TYPES}`,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return { messageId: 'renameDefault', data, type: type as AST_NODE_TYPES }
+}
 
 // IMPORT
 // anonymous-arrow.js
@@ -31,23 +49,23 @@ ruleTester.run('no-rename-default', rule, {
 // anonymous-primitive.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const _ = require('./no-rename-default/anonymous-arrow')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const _ = require('./no-rename-default/anonymous-arrow-async')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const _ = require('./no-rename-default/anonymous-class')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const _ = require('./no-rename-default/anonymous-object')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const _ = require('./no-rename-default/anonymous-primitive')`,
       options: [{ commonjs: true }],
     }),
@@ -76,84 +94,128 @@ ruleTester.run('no-rename-default', rule, {
     `import generator from './no-rename-default/assign-generator-named'`,
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `import myArrow from './no-rename-default/assign-arrow'`,
       errors: [
-        {
-          message:
-            "Caution: `assign-arrow.js` has a default export `arrow`. This imports `arrow` as `myArrow`. Check if you meant to write `import arrow from './no-rename-default/assign-arrow'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-arrow.js',
+            defaultExportName: 'arrow',
+            requiresOrImports: 'imports',
+            importName: 'myArrow',
+            suggestion: "import arrow from './no-rename-default/assign-arrow'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import myArrowAsync from './no-rename-default/assign-arrow-async'`,
       errors: [
-        {
-          message:
-            "Caution: `assign-arrow-async.js` has a default export `arrowAsync`. This imports `arrowAsync` as `myArrowAsync`. Check if you meant to write `import arrowAsync from './no-rename-default/assign-arrow-async'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-arrow-async.js',
+            defaultExportName: 'arrowAsync',
+            requiresOrImports: 'imports',
+            importName: 'myArrowAsync',
+            suggestion:
+              "import arrowAsync from './no-rename-default/assign-arrow-async'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import MyUser from './no-rename-default/assign-class'`,
       errors: [
-        {
-          message:
-            "Caution: `assign-class.js` has a default export `User`. This imports `User` as `MyUser`. Check if you meant to write `import User from './no-rename-default/assign-class'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-class.js',
+            defaultExportName: 'User',
+            requiresOrImports: 'imports',
+            importName: 'MyUser',
+            suggestion: "import User from './no-rename-default/assign-class'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import MyUser from './no-rename-default/assign-class-named'`,
       errors: [
-        {
-          message:
-            "Caution: `assign-class-named.js` has a default export `User`. This imports `User` as `MyUser`. Check if you meant to write `import User from './no-rename-default/assign-class-named'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-class-named.js',
+            defaultExportName: 'User',
+            requiresOrImports: 'imports',
+            importName: 'MyUser',
+            suggestion:
+              "import User from './no-rename-default/assign-class-named'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import myFn from './no-rename-default/assign-fn'`,
       errors: [
-        {
-          message:
-            "Caution: `assign-fn.js` has a default export `fn`. This imports `fn` as `myFn`. Check if you meant to write `import fn from './no-rename-default/assign-fn'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-fn.js',
+            defaultExportName: 'fn',
+            requiresOrImports: 'imports',
+            importName: 'myFn',
+            suggestion: "import fn from './no-rename-default/assign-fn'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import myFn from './no-rename-default/assign-fn-named'`,
       errors: [
-        {
-          message:
-            "Caution: `assign-fn-named.js` has a default export `fn`. This imports `fn` as `myFn`. Check if you meant to write `import fn from './no-rename-default/assign-fn-named'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-fn-named.js',
+            defaultExportName: 'fn',
+            requiresOrImports: 'imports',
+            importName: 'myFn',
+            suggestion: "import fn from './no-rename-default/assign-fn-named'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import myGenerator from './no-rename-default/assign-generator'`,
       errors: [
-        {
-          message:
-            "Caution: `assign-generator.js` has a default export `generator`. This imports `generator` as `myGenerator`. Check if you meant to write `import generator from './no-rename-default/assign-generator'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-generator.js',
+            defaultExportName: 'generator',
+            requiresOrImports: 'imports',
+            importName: 'myGenerator',
+            suggestion:
+              "import generator from './no-rename-default/assign-generator'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import myGenerator from './no-rename-default/assign-generator-named'`,
       errors: [
-        {
-          message:
-            "Caution: `assign-generator-named.js` has a default export `generator`. This imports `generator` as `myGenerator`. Check if you meant to write `import generator from './no-rename-default/assign-generator-named'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-generator-named.js',
+            defaultExportName: 'generator',
+            requiresOrImports: 'imports',
+            importName: 'myGenerator',
+            suggestion:
+              "import generator from './no-rename-default/assign-generator-named'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
   ],
@@ -170,35 +232,35 @@ ruleTester.run('no-rename-default', rule, {
 // assign-generator-named.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `import myArrow from './no-rename-default/assign-arrow'`,
       options: [{ preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `import myArrowAsync from './no-rename-default/assign-arrow-async'`,
       options: [{ preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `import MyUser from './no-rename-default/assign-class'`,
       options: [{ preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `import MyUser from './no-rename-default/assign-class-named'`,
       options: [{ preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `import myFn from './no-rename-default/assign-fn'`,
       options: [{ preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `import myFn from './no-rename-default/assign-fn-named'`,
       options: [{ preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `import myGenerator from './no-rename-default/assign-generator'`,
       options: [{ preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `import myGenerator from './no-rename-default/assign-generator-named'`,
       options: [{ preventRenamingBindings: false }],
     }),
@@ -217,126 +279,173 @@ ruleTester.run('no-rename-default', rule, {
 // assign-generator-named.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const arrow = require('./no-rename-default/assign-arrow')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const arrowAsync = require('./no-rename-default/assign-arrow-async')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const User = require('./no-rename-default/assign-class')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const User = require('./no-rename-default/assign-class-named')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const fn = require('./no-rename-default/assign-fn')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const fn = require('./no-rename-default/assign-fn-named')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const generator = require('./no-rename-default/assign-generator')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const generator = require('./no-rename-default/assign-generator-named')`,
       options: [{ commonjs: true }],
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `const myArrow = require('./no-rename-default/assign-arrow')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `assign-arrow.js` has a default export `arrow`. This requires `arrow` as `myArrow`. Check if you meant to write `const arrow = require('./no-rename-default/assign-arrow')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-arrow.js',
+            defaultExportName: 'arrow',
+            requiresOrImports: 'requires',
+            importName: 'myArrow',
+            suggestion:
+              "const arrow = require('./no-rename-default/assign-arrow')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const myArrowAsync = require('./no-rename-default/assign-arrow-async')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `assign-arrow-async.js` has a default export `arrowAsync`. This requires `arrowAsync` as `myArrowAsync`. Check if you meant to write `const arrowAsync = require('./no-rename-default/assign-arrow-async')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-arrow-async.js',
+            defaultExportName: 'arrowAsync',
+            requiresOrImports: 'requires',
+            importName: 'myArrowAsync',
+            suggestion:
+              "const arrowAsync = require('./no-rename-default/assign-arrow-async')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const MyUser = require('./no-rename-default/assign-class')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `assign-class.js` has a default export `User`. This requires `User` as `MyUser`. Check if you meant to write `const User = require('./no-rename-default/assign-class')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-class.js',
+            defaultExportName: 'User',
+            requiresOrImports: 'requires',
+            importName: 'MyUser',
+            suggestion:
+              "const User = require('./no-rename-default/assign-class')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const MyUser = require('./no-rename-default/assign-class-named')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `assign-class-named.js` has a default export `User`. This requires `User` as `MyUser`. Check if you meant to write `const User = require('./no-rename-default/assign-class-named')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-class-named.js',
+            defaultExportName: 'User',
+            requiresOrImports: 'requires',
+            importName: 'MyUser',
+            suggestion:
+              "const User = require('./no-rename-default/assign-class-named')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const myFn = require('./no-rename-default/assign-fn')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `assign-fn.js` has a default export `fn`. This requires `fn` as `myFn`. Check if you meant to write `const fn = require('./no-rename-default/assign-fn')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-fn.js',
+            defaultExportName: 'fn',
+            requiresOrImports: 'requires',
+            importName: 'myFn',
+            suggestion: "const fn = require('./no-rename-default/assign-fn')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const myFn = require('./no-rename-default/assign-fn-named')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `assign-fn-named.js` has a default export `fn`. This requires `fn` as `myFn`. Check if you meant to write `const fn = require('./no-rename-default/assign-fn-named')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-fn-named.js',
+            defaultExportName: 'fn',
+            requiresOrImports: 'requires',
+            importName: 'myFn',
+            suggestion:
+              "const fn = require('./no-rename-default/assign-fn-named')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const myGenerator = require('./no-rename-default/assign-generator')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `assign-generator.js` has a default export `generator`. This requires `generator` as `myGenerator`. Check if you meant to write `const generator = require('./no-rename-default/assign-generator')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-generator.js',
+            defaultExportName: 'generator',
+            requiresOrImports: 'requires',
+            importName: 'myGenerator',
+            suggestion:
+              "const generator = require('./no-rename-default/assign-generator')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const myGenerator = require('./no-rename-default/assign-generator-named')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `assign-generator-named.js` has a default export `generator`. This requires `generator` as `myGenerator`. Check if you meant to write `const generator = require('./no-rename-default/assign-generator-named')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-generator-named.js',
+            defaultExportName: 'generator',
+            requiresOrImports: 'requires',
+            importName: 'myGenerator',
+            suggestion:
+              "const generator = require('./no-rename-default/assign-generator-named')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
   ],
@@ -353,35 +462,35 @@ ruleTester.run('no-rename-default', rule, {
 // assign-generator-named.js
 ruleTester.run('no-renamed-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const myArrow = require('./no-rename-default/assign-arrow')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `const myArrowAsync = require('./no-rename-default/assign-arrow-async')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `const MyUser = require('./no-rename-default/assign-class')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `const MyUser = require('./no-rename-default/assign-class-named')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `const myFn = require('./no-rename-default/assign-fn')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `const myFn = require('./no-rename-default/assign-fn-named')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `const myGenerator = require('./no-rename-default/assign-generator')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
-    test({
+    tValid({
       code: `const myGenerator = require('./no-rename-default/assign-generator-named')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
@@ -394,14 +503,19 @@ ruleTester.run('no-renamed-default', rule, {
 ruleTester.run('no-rename-default', rule, {
   valid: [`import User from './no-rename-default/class-user'`],
   invalid: [
-    test({
+    tInvalid({
       code: `import MyUser from './no-rename-default/class-user'`,
       errors: [
-        {
-          message:
-            "Caution: `class-user.js` has a default export `User`. This imports `User` as `MyUser`. Check if you meant to write `import User from './no-rename-default/class-user'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'class-user.js',
+            defaultExportName: 'User',
+            requiresOrImports: 'imports',
+            importName: 'MyUser',
+            suggestion: "import User from './no-rename-default/class-user'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
   ],
@@ -411,21 +525,27 @@ ruleTester.run('no-rename-default', rule, {
 // class-user.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const User = require('./no-rename-default/class-user')`,
       options: [{ commonjs: true }],
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `const MyUser = require('./no-rename-default/class-user')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `class-user.js` has a default export `User`. This requires `User` as `MyUser`. Check if you meant to write `const User = require('./no-rename-default/class-user')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'class-user.js',
+            defaultExportName: 'User',
+            requiresOrImports: 'requires',
+            importName: 'MyUser',
+            suggestion:
+              "const User = require('./no-rename-default/class-user')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
   ],
@@ -452,96 +572,150 @@ ruleTester.run('no-rename-default', rule, {
     `,
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `import bar from './no-rename-default/const-foo'`,
       errors: [
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This imports `foo` as `bar`. Check if you meant to write `import foo from './no-rename-default/const-foo'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'imports',
+            importName: 'bar',
+            suggestion: "import foo from './no-rename-default/const-foo'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import { default as bar } from './no-rename-default/const-foo'`,
       errors: [
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This imports `foo` as `bar`. Check if you meant to write `import { default as foo } from './no-rename-default/const-foo'` instead.",
-          type: 'ImportSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'imports',
+            importName: 'bar',
+            suggestion:
+              "import { default as foo } from './no-rename-default/const-foo'",
+          },
+          'ImportSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import { default as bar, fooNamed1 } from './no-rename-default/const-foo'`,
       errors: [
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This imports `foo` as `bar`. Check if you meant to write `import { default as foo } from './no-rename-default/const-foo'` instead.",
-          type: 'ImportSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'imports',
+            importName: 'bar',
+            suggestion:
+              "import { default as foo } from './no-rename-default/const-foo'",
+          },
+          'ImportSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import bar, { fooNamed1 } from './no-rename-default/const-foo'`,
       errors: [
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This imports `foo` as `bar`. Check if you meant to write `import foo from './no-rename-default/const-foo'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'imports',
+            importName: 'bar',
+            suggestion: "import foo from './no-rename-default/const-foo'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import foo from './no-rename-default/const-bar'
         import bar from './no-rename-default/const-foo'`,
       errors: [
-        {
-          message:
-            "Caution: `const-bar.js` has a default export `bar`. This imports `bar` as `foo`. Check if you meant to write `import bar from './no-rename-default/const-bar'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This imports `foo` as `bar`. Check if you meant to write `import foo from './no-rename-default/const-foo'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-bar.js',
+            defaultExportName: 'bar',
+            requiresOrImports: 'imports',
+            importName: 'foo',
+            suggestion: "import bar from './no-rename-default/const-bar'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'imports',
+            importName: 'bar',
+            suggestion: "import foo from './no-rename-default/const-foo'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import findUsers from './no-rename-default/fn-get-users'`,
       errors: [
-        {
-          message:
-            "Caution: `fn-get-users.js` has a default export `getUsers`. This imports `getUsers` as `findUsers`. Check if you meant to write `import getUsers from './no-rename-default/fn-get-users'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'fn-get-users.js',
+            defaultExportName: 'getUsers',
+            requiresOrImports: 'imports',
+            importName: 'findUsers',
+            suggestion:
+              "import getUsers from './no-rename-default/fn-get-users'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import findUsersSync from './no-rename-default/fn-get-users-sync'`,
       errors: [
-        {
-          message:
-            "Caution: `fn-get-users-sync.js` has a default export `getUsersSync`. This imports `getUsersSync` as `findUsersSync`. Check if you meant to write `import getUsersSync from './no-rename-default/fn-get-users-sync'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'fn-get-users-sync.js',
+            defaultExportName: 'getUsersSync',
+            requiresOrImports: 'imports',
+            importName: 'findUsersSync',
+            suggestion:
+              "import getUsersSync from './no-rename-default/fn-get-users-sync'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import foo, { barNamed1 } from './no-rename-default/const-bar'
         import bar, { fooNamed1 } from './no-rename-default/const-foo'`,
       errors: [
-        {
-          message:
-            "Caution: `const-bar.js` has a default export `bar`. This imports `bar` as `foo`. Check if you meant to write `import bar from './no-rename-default/const-bar'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This imports `foo` as `bar`. Check if you meant to write `import foo from './no-rename-default/const-foo'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-bar.js',
+            defaultExportName: 'bar',
+            requiresOrImports: 'imports',
+            importName: 'foo',
+            suggestion: "import bar from './no-rename-default/const-bar'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'imports',
+            importName: 'bar',
+            suggestion: "import foo from './no-rename-default/const-foo'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
   ],
@@ -552,40 +726,40 @@ ruleTester.run('no-rename-default', rule, {
 // const-foo.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const foo = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const { fooNamed1 } = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const { fooNamed1, fooNamed2 } = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const { default: foo } = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const { default: foo, fooNamed1 } = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const foo = require('./no-rename-default/const-foo')
         const { fooNamed1 } = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const getUsers = require('./no-rename-default/fn-get-users')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const getUsersSync = require('./no-rename-default/fn-get-users-sync')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `
         const bar = require('./no-rename-default/const-bar')
         const { barNamed1 } = require('./no-rename-default/const-bar')
@@ -596,71 +770,103 @@ ruleTester.run('no-rename-default', rule, {
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `const bar = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This requires `foo` as `bar`. Check if you meant to write `const foo = require('./no-rename-default/const-foo')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'requires',
+            importName: 'bar',
+            suggestion: "const foo = require('./no-rename-default/const-foo')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const bar = require('./no-rename-default/const-foo')
         const { fooNamed1 } = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This requires `foo` as `bar`. Check if you meant to write `const foo = require('./no-rename-default/const-foo')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'requires',
+            importName: 'bar',
+            suggestion: "const foo = require('./no-rename-default/const-foo')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const { default: bar } = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This requires `foo` as `bar`. Check if you meant to write `const { default: foo } = require('./no-rename-default/const-foo')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'requires',
+            importName: 'bar',
+            suggestion:
+              "const { default: foo } = require('./no-rename-default/const-foo')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const { default: bar, fooNamed1 } = require('./no-rename-default/const-foo')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This requires `foo` as `bar`. Check if you meant to write `const { default: foo } = require('./no-rename-default/const-foo')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'requires',
+            importName: 'bar',
+            suggestion:
+              "const { default: foo } = require('./no-rename-default/const-foo')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `
         const foo = require('./no-rename-default/const-bar')
         const bar = require('./no-rename-default/const-foo')
       `,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `const-bar.js` has a default export `bar`. This requires `bar` as `foo`. Check if you meant to write `const bar = require('./no-rename-default/const-bar')` instead.",
-          type: 'VariableDeclarator',
-        },
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This requires `foo` as `bar`. Check if you meant to write `const foo = require('./no-rename-default/const-foo')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-bar.js',
+            defaultExportName: 'bar',
+            requiresOrImports: 'requires',
+            importName: 'foo',
+            suggestion: "const bar = require('./no-rename-default/const-bar')",
+          },
+          'VariableDeclarator',
+        ),
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'requires',
+            importName: 'bar',
+            suggestion: "const foo = require('./no-rename-default/const-foo')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `
         const foo = require('./no-rename-default/const-bar')
         const { barNamed1 } = require('./no-rename-default/const-bar')
@@ -669,16 +875,26 @@ ruleTester.run('no-rename-default', rule, {
       `,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `const-bar.js` has a default export `bar`. This requires `bar` as `foo`. Check if you meant to write `const bar = require('./no-rename-default/const-bar')` instead.",
-          type: 'VariableDeclarator',
-        },
-        {
-          message:
-            "Caution: `const-foo.js` has a default export `foo`. This requires `foo` as `bar`. Check if you meant to write `const foo = require('./no-rename-default/const-foo')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'const-bar.js',
+            defaultExportName: 'bar',
+            requiresOrImports: 'requires',
+            importName: 'foo',
+            suggestion: "const bar = require('./no-rename-default/const-bar')",
+          },
+          'VariableDeclarator',
+        ),
+        createRenameDefaultError(
+          {
+            importBasename: 'const-foo.js',
+            defaultExportName: 'foo',
+            requiresOrImports: 'requires',
+            importName: 'bar',
+            suggestion: "const foo = require('./no-rename-default/const-foo')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
   ],
@@ -693,24 +909,36 @@ ruleTester.run('no-rename-default', rule, {
     `import getUsersSync from './no-rename-default/fn-get-users-sync'`,
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `import findUsers from './no-rename-default/fn-get-users'`,
       errors: [
-        {
-          message:
-            "Caution: `fn-get-users.js` has a default export `getUsers`. This imports `getUsers` as `findUsers`. Check if you meant to write `import getUsers from './no-rename-default/fn-get-users'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'fn-get-users.js',
+            defaultExportName: 'getUsers',
+            requiresOrImports: 'imports',
+            importName: 'findUsers',
+            suggestion:
+              "import getUsers from './no-rename-default/fn-get-users'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `import findUsersSync from './no-rename-default/fn-get-users-sync'`,
       errors: [
-        {
-          message:
-            "Caution: `fn-get-users-sync.js` has a default export `getUsersSync`. This imports `getUsersSync` as `findUsersSync`. Check if you meant to write `import getUsersSync from './no-rename-default/fn-get-users-sync'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'fn-get-users-sync.js',
+            defaultExportName: 'getUsersSync',
+            requiresOrImports: 'imports',
+            importName: 'findUsersSync',
+            suggestion:
+              "import getUsersSync from './no-rename-default/fn-get-users-sync'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
   ],
@@ -721,36 +949,48 @@ ruleTester.run('no-rename-default', rule, {
 // fn-get-users-sync.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const getUsers = require('./no-rename-default/fn-get-users')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const getUsersSync = require('./no-rename-default/fn-get-users-sync')`,
       options: [{ commonjs: true }],
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `const findUsers = require('./no-rename-default/fn-get-users')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `fn-get-users.js` has a default export `getUsers`. This requires `getUsers` as `findUsers`. Check if you meant to write `const getUsers = require('./no-rename-default/fn-get-users')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'fn-get-users.js',
+            defaultExportName: 'getUsers',
+            requiresOrImports: 'requires',
+            importName: 'findUsers',
+            suggestion:
+              "const getUsers = require('./no-rename-default/fn-get-users')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: `const findUsersSync = require('./no-rename-default/fn-get-users-sync')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `fn-get-users-sync.js` has a default export `getUsersSync`. This requires `getUsersSync` as `findUsersSync`. Check if you meant to write `const getUsersSync = require('./no-rename-default/fn-get-users-sync')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'fn-get-users-sync.js',
+            defaultExportName: 'getUsersSync',
+            requiresOrImports: 'requires',
+            importName: 'findUsersSync',
+            suggestion:
+              "const getUsersSync = require('./no-rename-default/fn-get-users-sync')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
   ],
@@ -761,14 +1001,20 @@ ruleTester.run('no-rename-default', rule, {
 ruleTester.run('no-rename-default', rule, {
   valid: [`import reader from './no-rename-default/generator-reader'`],
   invalid: [
-    test({
+    tInvalid({
       code: `import myReader from './no-rename-default/generator-reader'`,
       errors: [
-        {
-          message:
-            "Caution: `generator-reader.js` has a default export `reader`. This imports `reader` as `myReader`. Check if you meant to write `import reader from './no-rename-default/generator-reader'` instead.",
-          type: 'ImportDefaultSpecifier',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'generator-reader.js',
+            defaultExportName: 'reader',
+            requiresOrImports: 'imports',
+            importName: 'myReader',
+            suggestion:
+              "import reader from './no-rename-default/generator-reader'",
+          },
+          'ImportDefaultSpecifier',
+        ),
       ],
     }),
   ],
@@ -778,21 +1024,27 @@ ruleTester.run('no-rename-default', rule, {
 // generator-reader.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const reader = require('./no-rename-default/generator-reader')`,
       options: [{ commonjs: true }],
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: `const myReader = require('./no-rename-default/generator-reader')`,
       options: [{ commonjs: true }],
       errors: [
-        {
-          message:
-            "Caution: `generator-reader.js` has a default export `reader`. This requires `reader` as `myReader`. Check if you meant to write `const reader = require('./no-rename-default/generator-reader')` instead.",
-          type: 'VariableDeclarator',
-        },
+        createRenameDefaultError(
+          {
+            importBasename: 'generator-reader.js',
+            defaultExportName: 'reader',
+            requiresOrImports: 'requires',
+            importName: 'myReader',
+            suggestion:
+              "const reader = require('./no-rename-default/generator-reader')",
+          },
+          'VariableDeclarator',
+        ),
       ],
     }),
   ],
@@ -815,7 +1067,7 @@ ruleTester.run('no-rename-default', rule, {
 // binding-const-rename-fn.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const foo = require('./no-rename-default/pr-3006-feedback/binding-const-rename-fn')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
@@ -842,15 +1094,15 @@ ruleTester.run('no-rename-default', rule, {
 // binding-hoc-with-logger-with-auth-for-get-users.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const foo = require('./no-rename-default/pr-3006-feedback/binding-hoc-with-logger-for-foo')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const getUsers = require('./no-rename-default/pr-3006-feedback/binding-hoc-with-logger-for-get-users')`,
       options: [{ commonjs: true }],
     }),
-    test({
+    tValid({
       code: `const getUsers = require('./no-rename-default/pr-3006-feedback/binding-hoc-with-logger-with-auth-for-get-users')`,
       options: [{ commonjs: true }],
     }),
@@ -862,7 +1114,7 @@ ruleTester.run('no-rename-default', rule, {
 // binding-fn-rename.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `import _ from './no-rename-default/pr-3006-feedback/binding-fn-rename'`,
       options: [{ preventRenamingBindings: false }],
     }),
@@ -874,7 +1126,7 @@ ruleTester.run('no-rename-default', rule, {
 // binding-fn-rename.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
-    test({
+    tValid({
       code: `const _ = require('./no-rename-default/pr-3006-feedback/binding-fn-rename')`,
       options: [{ commonjs: true, preventRenamingBindings: false }],
     }),
@@ -885,7 +1137,7 @@ ruleTester.run('no-rename-default', rule, {
 describe('TypeScript', function () {
   ruleTester.run('no-rename-default', rule, {
     valid: [
-      test({
+      tValid({
         code: `import foo from './no-rename-default/typescript-default'`,
         settings: {
           'import-x/parsers': { [parsers.TS]: ['.ts'] },

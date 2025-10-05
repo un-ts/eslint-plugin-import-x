@@ -1,27 +1,27 @@
-import type { TSESTree } from '@typescript-eslint/utils'
+import type { TSESTree, TSESLint } from '@typescript-eslint/utils'
 
-import type { RuleContext } from '../types'
 import {
   importDeclaration,
   ExportMap,
   createRule,
   declaredScope,
   getValue,
-} from '../utils'
+} from '../utils/index.js'
 
-type MessageId =
+export type MessageId =
   | 'noNamesFound'
   | 'computedReference'
   | 'namespaceMember'
   | 'topLevelNames'
   | 'notFoundInNamespace'
+  | 'notFoundInNamespaceDeep'
 
-type Options = {
+export interface Options {
   allowComputed?: boolean
 }
 
 function processBodyStatement(
-  context: RuleContext<MessageId>,
+  context: TSESLint.RuleContext<MessageId, [Options]>,
   namespaces: Map<string, ExportMap | null>,
   declaration: TSESTree.ProgramStatement,
 ) {
@@ -86,18 +86,19 @@ function makeMessage(
   namepath: string[],
   node: TSESTree.Node = last,
 ) {
+  const messageId =
+    namepath.length > 1 ? 'notFoundInNamespaceDeep' : 'notFoundInNamespace'
   return {
     node,
-    messageId: 'notFoundInNamespace' as const,
+    messageId,
     data: {
       name: last.name,
-      depth: namepath.length > 1 ? 'deeply ' : '',
       namepath: namepath.join('.'),
     },
-  }
+  } as const
 }
 
-export = createRule<[Options], MessageId>({
+export default createRule<[Options], MessageId>({
   name: 'namespace',
   meta: {
     type: 'problem',
@@ -127,7 +128,9 @@ export = createRule<[Options], MessageId>({
       namespaceMember: "Assignment to member of namespace '{{namespace}}'.",
       topLevelNames: 'Only destructure top-level names.',
       notFoundInNamespace:
-        "'{{name}}' not found in {{depth}}imported namespace '{{namepath}}'.",
+        "'{{name}}' not found in imported namespace '{{namepath}}'.",
+      notFoundInNamespaceDeep:
+        "'{{name}}' not found in deeply imported namespace '{{namepath}}'.",
     },
   },
   defaultOptions: [
@@ -151,7 +154,10 @@ export = createRule<[Options], MessageId>({
 
       // same as above, but does not add names to local map
       ExportNamespaceSpecifier(namespace) {
-        const declaration = importDeclaration(context, namespace)
+        const declaration = importDeclaration(
+          context,
+          namespace as TSESTree.ImportDefaultSpecifier,
+        )
 
         const imports = ExportMap.get(declaration.source.value, context)
         if (imports == null) {

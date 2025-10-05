@@ -1,63 +1,69 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers, test } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-useless-path-segments'
 
 const ruleTester = new TSESLintRuleTester()
+
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 function runResolverTests(resolver: 'node' | 'webpack') {
   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
     valid: [
       // CommonJS modules with default options
-      test({
+      tValid({
         code: 'require("./../fixtures/malformed.js")',
         languageOptions: { parser: require(parsers.ESPREE) },
       }),
 
       // ES modules with default options
-      test({
+      tValid({
         code: 'import "./malformed.js"',
         languageOptions: { parser: require(parsers.ESPREE) },
       }),
-      test({ code: 'import "./test-module"' }),
-      test({ code: 'import "./bar/"' }),
-      test({ code: 'import "."' }),
-      test({ code: 'import ".."' }),
-      test({ code: 'import fs from "fs"' }),
+      tValid({ code: 'import "./test-module"' }),
+      tValid({ code: 'import "./bar/"' }),
+      tValid({ code: 'import "."' }),
+      tValid({ code: 'import ".."' }),
+      tValid({ code: 'import fs from "fs"' }),
 
       // ES modules + noUselessIndex
-      test({ code: 'import "../index"' }), // noUselessIndex is false by default
-      test({
+      tValid({ code: 'import "../index"' }), // noUselessIndex is false by default
+      tValid({
         code: 'import "../my-custom-index"',
         options: [{ noUselessIndex: true }],
       }),
-      test({ code: 'import "./bar.js"', options: [{ noUselessIndex: true }] }), // ./bar/index.js exists
-      test({ code: 'import "./bar"', options: [{ noUselessIndex: true }] }),
-      test({ code: 'import "./bar/"', options: [{ noUselessIndex: true }] }), // ./bar.js exists
-      test({
+      tValid({
+        code: 'import "./bar.js"',
+        options: [{ noUselessIndex: true }],
+      }), // ./bar/index.js exists
+      tValid({ code: 'import "./bar"', options: [{ noUselessIndex: true }] }),
+      tValid({ code: 'import "./bar/"', options: [{ noUselessIndex: true }] }), // ./bar.js exists
+      tValid({
         code: 'import "./malformed.js"',
         languageOptions: { parser: require(parsers.BABEL) },
         options: [{ noUselessIndex: true }],
       }), // ./malformed directory does not exist
-      test({
+      tValid({
         code: 'import "./malformed"',
         options: [{ noUselessIndex: true }],
       }), // ./malformed directory does not exist
-      test({
+      tValid({
         code: 'import "./importType"',
         options: [{ noUselessIndex: true }],
       }), // ./importType.js does not exist
 
-      test({
+      tValid({
         code: 'import(".")',
         languageOptions: { parser: require(parsers.BABEL) },
       }),
-      test({
+      tValid({
         code: 'import("..")',
         languageOptions: { parser: require(parsers.BABEL) },
       }),
-      test({
+      tValid({
         code: 'import("fs").then(function(fs) {})',
         languageOptions: { parser: require(parsers.BABEL) },
       }),
@@ -65,7 +71,7 @@ function runResolverTests(resolver: 'node' | 'webpack') {
 
     invalid: [
       // CommonJS modules
-      test({
+      tInvalid({
         code: 'require("./../fixtures/malformed.js")',
         output: [
           'require("../fixtures/malformed.js")',
@@ -74,124 +80,207 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./../fixtures/malformed.js", should be "../fixtures/malformed.js"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './../fixtures/malformed.js',
+              proposedPath: '../fixtures/malformed.js',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'require("./../fixtures/malformed")',
         output: ['require("../fixtures/malformed")', 'require("./malformed")'],
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./../fixtures/malformed", should be "../fixtures/malformed"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './../fixtures/malformed',
+              proposedPath: '../fixtures/malformed',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'require("../fixtures/malformed.js")',
         output: 'require("./malformed.js")',
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.BABEL) },
         errors: [
-          'Useless path segments for "../fixtures/malformed.js", should be "./malformed.js"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '../fixtures/malformed.js',
+              proposedPath: './malformed.js',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'require("../fixtures/malformed")',
         output: 'require("./malformed")',
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "../fixtures/malformed", should be "./malformed"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '../fixtures/malformed',
+              proposedPath: './malformed',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'require("./test-module/")',
         output: 'require("./test-module")',
         options: [{ commonjs: true }],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./test-module/", should be "./test-module"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './test-module/',
+              proposedPath: './test-module',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'require("./")',
         output: 'require(".")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "./", should be "."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './', proposedPath: '.' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'require("../")',
         output: 'require("..")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "../", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../', proposedPath: '..' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'require("./deep//a")',
         output: 'require("./deep/a")',
         options: [{ commonjs: true }],
-        errors: ['Useless path segments for "./deep//a", should be "./deep/a"'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './deep//a', proposedPath: './deep/a' },
+          },
+        ],
       }),
 
       // CommonJS modules + noUselessIndex
-      test({
+      tInvalid({
         code: 'require("./bar/index.js")',
         output: 'require("./bar/")',
         options: [{ commonjs: true, noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./bar/index.js", should be "./bar/"',
+          {
+            messageId: 'useless',
+            data: { importPath: './bar/index.js', proposedPath: './bar/' },
+          },
         ], // ./bar.js exists
       }),
-      test({
+      tInvalid({
         code: 'require("./bar/index")',
         output: 'require("./bar/")',
         options: [{ commonjs: true, noUselessIndex: true }],
-        errors: ['Useless path segments for "./bar/index", should be "./bar/"'], // ./bar.js exists
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './bar/index', proposedPath: './bar/' },
+          },
+        ], // ./bar.js exists
       }),
-      test({
+      tInvalid({
         code: 'require("./importPath/")',
         output: 'require("./importPath")',
         options: [{ commonjs: true, noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: { importPath: './importPath/', proposedPath: './importPath' },
+          },
         ], // ./importPath.js does not exist
       }),
-      test({
+      tInvalid({
         code: 'require("./importPath/index.js")',
         output: 'require("./importPath")',
         options: [{ commonjs: true, noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/index.js", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './importPath/index.js',
+              proposedPath: './importPath',
+            },
+          },
         ], // ./importPath.js does not exist
       }),
-      test({
+      tInvalid({
         code: 'require("./importType/index")',
         output: 'require("./importType")',
         options: [{ commonjs: true, noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importType/index", should be "./importType"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './importType/index',
+              proposedPath: './importType',
+            },
+          },
         ], // ./importPath.js does not exist
       }),
-      test({
+      tInvalid({
         code: 'require("./index")',
         output: 'require(".")',
         options: [{ commonjs: true, noUselessIndex: true }],
-        errors: ['Useless path segments for "./index", should be "."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './index', proposedPath: '.' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'require("../index")',
         output: 'require("..")',
         options: [{ commonjs: true, noUselessIndex: true }],
-        errors: ['Useless path segments for "../index", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../index', proposedPath: '..' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'require("../index.js")',
         output: 'require("..")',
         options: [{ commonjs: true, noUselessIndex: true }],
-        errors: ['Useless path segments for "../index.js", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../index.js', proposedPath: '..' },
+          },
+        ],
       }),
 
       // ES modules
-      test({
+      tInvalid({
         code: 'import "./../fixtures/malformed.js"',
         output: [
           'import "../fixtures/malformed.js"',
@@ -199,130 +288,228 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         ],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./../fixtures/malformed.js", should be "../fixtures/malformed.js"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './../fixtures/malformed.js',
+              proposedPath: '../fixtures/malformed.js',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'import "./../fixtures/malformed"',
         output: ['import "../fixtures/malformed"', 'import "./malformed"'],
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "./../fixtures/malformed", should be "../fixtures/malformed"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './../fixtures/malformed',
+              proposedPath: '../fixtures/malformed',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'import "../fixtures/malformed.js"',
         output: 'import "./malformed.js"',
         languageOptions: { parser: require(parsers.BABEL) },
         errors: [
-          'Useless path segments for "../fixtures/malformed.js", should be "./malformed.js"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '../fixtures/malformed.js',
+              proposedPath: './malformed.js',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'import "../fixtures/malformed"',
         output: 'import "./malformed"',
         languageOptions: { parser: require(parsers.ESPREE) },
         errors: [
-          'Useless path segments for "../fixtures/malformed", should be "./malformed"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '../fixtures/malformed',
+              proposedPath: './malformed',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'import "./test-module/"',
         output: 'import "./test-module"',
         errors: [
-          'Useless path segments for "./test-module/", should be "./test-module"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './test-module/',
+              proposedPath: './test-module',
+            },
+          },
         ],
       }),
-      test({
+      tInvalid({
         code: 'import "./"',
         output: 'import "."',
-        errors: ['Useless path segments for "./", should be "."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './', proposedPath: '.' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'import "../"',
         output: 'import ".."',
-        errors: ['Useless path segments for "../", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../', proposedPath: '..' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'import "./deep//a"',
         output: 'import "./deep/a"',
-        errors: ['Useless path segments for "./deep//a", should be "./deep/a"'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './deep//a', proposedPath: './deep/a' },
+          },
+        ],
       }),
 
       // ES modules + noUselessIndex
-      test({
+      tInvalid({
         code: 'import "./bar/index.js"',
         output: 'import "./bar/"',
         options: [{ noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./bar/index.js", should be "./bar/"',
+          {
+            messageId: 'useless',
+            data: { importPath: './bar/index.js', proposedPath: './bar/' },
+          },
         ], // ./bar.js exists
       }),
-      test({
+      tInvalid({
         code: 'import "./bar/index"',
         output: 'import "./bar/"',
         options: [{ noUselessIndex: true }],
-        errors: ['Useless path segments for "./bar/index", should be "./bar/"'], // ./bar.js exists
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './bar/index', proposedPath: './bar/' },
+          },
+        ], // ./bar.js exists
       }),
-      test({
+      tInvalid({
         code: 'import "./importPath/"',
         output: 'import "./importPath"',
         options: [{ noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: { importPath: './importPath/', proposedPath: './importPath' },
+          },
         ], // ./importPath.js does not exist
       }),
-      test({
+      tInvalid({
         code: 'import "./importPath/index.js"',
         output: 'import "./importPath"',
         options: [{ noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/index.js", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './importPath/index.js',
+              proposedPath: './importPath',
+            },
+          },
         ], // ./importPath.js does not exist
       }),
-      test({
+      tInvalid({
         code: 'import "./importPath/index"',
         output: 'import "./importPath"',
         options: [{ noUselessIndex: true }],
         errors: [
-          'Useless path segments for "./importPath/index", should be "./importPath"',
+          {
+            messageId: 'useless',
+            data: {
+              importPath: './importPath/index',
+              proposedPath: './importPath',
+            },
+          },
         ], // ./importPath.js does not exist
       }),
-      test({
+      tInvalid({
         code: 'import "./index"',
         output: 'import "."',
         options: [{ noUselessIndex: true }],
-        errors: ['Useless path segments for "./index", should be "."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './index', proposedPath: '.' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'import "../index"',
         output: 'import ".."',
         options: [{ noUselessIndex: true }],
-        errors: ['Useless path segments for "../index", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../index', proposedPath: '..' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'import "../index.js"',
         output: 'import ".."',
         options: [{ noUselessIndex: true }],
-        errors: ['Useless path segments for "../index.js", should be ".."'],
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../index.js', proposedPath: '..' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'import("./")',
         output: 'import(".")',
-        errors: ['Useless path segments for "./", should be "."'],
         languageOptions: { parser: require(parsers.BABEL) },
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './', proposedPath: '.' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'import("../")',
         output: 'import("..")',
-        errors: ['Useless path segments for "../", should be ".."'],
         languageOptions: { parser: require(parsers.BABEL) },
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: '../', proposedPath: '..' },
+          },
+        ],
       }),
-      test({
+      tInvalid({
         code: 'import("./deep//a")',
         output: 'import("./deep/a")',
-        errors: ['Useless path segments for "./deep//a", should be "./deep/a"'],
         languageOptions: { parser: require(parsers.BABEL) },
+        errors: [
+          {
+            messageId: 'useless',
+            data: { importPath: './deep//a', proposedPath: './deep/a' },
+          },
+        ],
       }),
     ],
   })

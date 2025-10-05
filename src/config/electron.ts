@@ -1,9 +1,7 @@
-import type { PluginConfig } from '../types'
+import type { PluginConfig } from '../types.js'
 
-/**
- * Default settings for Electron applications.
- */
-export = {
+/** Default settings for Electron applications. */
+export default {
   settings: {
     'import-x/core-modules': ['electron'],
   },

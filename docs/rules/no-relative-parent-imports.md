@@ -98,9 +98,7 @@ And the .eslintrc file:
 The following patterns are considered problems:
 
 ```js
-/**
- *  in my-project/lib/a.js
- */
+/** In my-project/lib/a.js */
 
 import bar from '../main' // Import parent file using a relative path
 ```
@@ -108,16 +106,12 @@ import bar from '../main' // Import parent file using a relative path
 The following patterns are NOT considered problems:
 
 ```js
-/**
- *  in my-project/main.js
- */
+/** In my-project/main.js */
 
 import foo from 'foo' // Import package using module path
 import a from './lib/a' // Import child file using relative path
 
-/**
- *  in my-project/lib/a.js
- */
+/** In my-project/lib/a.js */
 
 import b from './b' // Import sibling file using relative path
 ```

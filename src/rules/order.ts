@@ -1,19 +1,30 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import debug from 'debug'
 import { minimatch } from 'minimatch'
-import type { MinimatchOptions } from 'minimatch'
 
 import type {
   AlphabetizeOptions,
   Arrayable,
+  ImportEntry,
+  ImportEntryType,
+  ImportEntryWithRank,
   ImportType,
+  NamedOptions,
+  NewLinesOptions,
   PathGroup,
+  Ranks,
+  RanksGroups,
+  RanksPathGroup,
   RuleContext,
-} from '../types'
-import { importType, isStaticRequire, createRule } from '../utils'
+} from '../types.js'
+import {
+  getValue,
+  importType,
+  isStaticRequire,
+  createRule,
+} from '../utils/index.js'
 
-type ImportEntryWithRank = {
-  rank: number
-} & ImportEntry
+const log = debug('eslint-plugin-import-x:rules:order')
 
 // This is a **non-spec compliant** but works in practice replacement of `object.groupby` package.
 const groupBy = <T>(
@@ -26,6 +37,14 @@ const groupBy = <T>(
     return acc
   }, {})
 
+const categories = {
+  named: 'named',
+  import: 'import',
+  exports: 'exports',
+} as const
+
+type Category = keyof typeof categories
+
 const defaultGroups = [
   'builtin',
   'external',
@@ -37,11 +56,7 @@ const defaultGroups = [
 // REPORTING AND FIXING
 
 function reverse(array: ImportEntryWithRank[]): ImportEntryWithRank[] {
-  return array
-    .map(function (v) {
-      return { ...v, rank: -v.rank }
-    })
-    .reverse()
+  return array.map(v => ({ ...v, rank: -v.rank })).reverse()
 }
 
 function getTokensOrCommentsAfter(
@@ -138,7 +153,7 @@ function findRootNode(node: TSESTree.Node) {
   ) {
     parent = parent.parent
   }
-  return parent as TSESTree.ProgramStatement
+  return parent
 }
 
 function findEndOfLineWithComments(
@@ -198,6 +213,32 @@ function findStartOfLineWithComments(
     result = i
   }
   return result
+}
+
+function findSpecifierStart(
+  sourceCode: TSESLint.SourceCode,
+  node: TSESTree.Node,
+) {
+  let token: TSESTree.Token
+
+  do {
+    token = sourceCode.getTokenBefore(node)!
+  } while (token.value !== ',' && token.value !== '{')
+
+  return token.range[1]
+}
+
+function findSpecifierEnd(
+  sourceCode: TSESLint.SourceCode,
+  node: TSESTree.Node,
+) {
+  let token: TSESTree.Token
+
+  do {
+    token = sourceCode.getTokenAfter(node)!
+  } while (token.value !== ',' && token.value !== '}')
+
+  return token.range[0]
 }
 
 function isRequireExpression(
@@ -260,6 +301,50 @@ function isPlainImportEquals(
   )
 }
 
+function isCJSExports(context: RuleContext, node: TSESTree.Expression) {
+  if (
+    node.type === 'MemberExpression' &&
+    node.object.type === 'Identifier' &&
+    node.property.type === 'Identifier' &&
+    node.object.name === 'module' &&
+    node.property.name === 'exports'
+  ) {
+    return !context.sourceCode
+      .getScope(node)
+      .variables.some(variable => variable.name === 'module')
+  }
+  if (node.type === 'Identifier' && node.name === 'exports') {
+    return !context.sourceCode
+      .getScope(node)
+      .variables.some(variable => variable.name === 'exports')
+  }
+}
+
+function getNamedCJSExports(context: RuleContext, node: TSESTree.Node) {
+  if (node.type !== 'MemberExpression') {
+    return
+  }
+  const result: string[] = []
+  let root: TSESTree.Expression = node
+  let parent!: TSESTree.Expression
+  while (root.type === 'MemberExpression') {
+    if (root.property.type !== 'Identifier') {
+      return
+    }
+    result.unshift(root.property.name)
+    parent = root
+    root = root.object
+  }
+
+  if (isCJSExports(context, root)) {
+    return result
+  }
+
+  if (isCJSExports(context, parent)) {
+    return result.slice(1)
+  }
+}
+
 function canCrossNodeWhileReorder(node: TSESTree.Node) {
   return (
     isSupportedRequireModule(node) ||
@@ -268,14 +353,15 @@ function canCrossNodeWhileReorder(node: TSESTree.Node) {
   )
 }
 
-function canReorderItems(
-  firstNode: TSESTree.ProgramStatement,
-  secondNode: TSESTree.ProgramStatement,
-) {
-  const parent = firstNode.parent as TSESTree.Program
+function canReorderItems(firstNode: TSESTree.Node, secondNode: TSESTree.Node) {
+  const parent = firstNode.parent
+  if (!parent || !('body' in parent) || !Array.isArray(parent.body)) {
+    return false
+  }
+  const body: TSESTree.Node[] = parent.body
   const [firstIndex, secondIndex] = [
-    parent.body.indexOf(firstNode),
-    parent.body.indexOf(secondNode),
+    body.indexOf(firstNode),
+    body.indexOf(secondNode),
   ].sort()
   const nodesBetween = parent.body.slice(firstIndex, secondIndex + 1)
   for (const nodeBetween of nodesBetween) {
@@ -287,65 +373,163 @@ function canReorderItems(
 }
 
 function makeImportDescription(node: ImportEntry) {
-  if ('importKind' in node.node) {
-    if (node.node.importKind === 'type') {
-      return 'type import'
+  if (node.type === 'export') {
+    if (node.node.exportKind === 'type') {
+      return 'type export'
     }
-    // @ts-expect-error - flow type
-    if (node.node.importKind === 'typeof') {
-      return 'typeof import'
-    }
+    return 'export'
+  }
+  if (node.node.importKind === 'type') {
+    return 'type import'
+  }
+  // @ts-expect-error - flow type
+  if (node.node.importKind === 'typeof') {
+    return 'typeof import'
   }
   return 'import'
 }
 
 function fixOutOfOrder(
-  context: RuleContext<MessageId>,
-  firstNode: ImportEntryWithRank,
-  secondNode: ImportEntryWithRank,
+  context: RuleContext,
+  firstNode: ImportEntry,
+  secondNode: ImportEntry,
   order: 'before' | 'after',
+  category: Category,
 ) {
+  const isNamed = category === categories.named
+  const isExports = category === categories.exports
   const { sourceCode } = context
 
-  const firstRoot = findRootNode(firstNode.node)
-  const firstRootStart = findStartOfLineWithComments(sourceCode, firstRoot)
-  const firstRootEnd = findEndOfLineWithComments(sourceCode, firstRoot)
+  const { firstRoot, secondRoot } = isNamed
+    ? { firstRoot: firstNode.node, secondRoot: secondNode.node }
+    : {
+        firstRoot: findRootNode(firstNode.node),
+        secondRoot: findRootNode(secondNode.node),
+      }
 
-  const secondRoot = findRootNode(secondNode.node)
-  const secondRootStart = findStartOfLineWithComments(sourceCode, secondRoot)
-  const secondRootEnd = findEndOfLineWithComments(sourceCode, secondRoot)
-  const canFix = canReorderItems(firstRoot, secondRoot)
+  const { firstRootStart, firstRootEnd, secondRootStart, secondRootEnd } =
+    isNamed
+      ? {
+          firstRootStart: findSpecifierStart(sourceCode, firstRoot),
+          firstRootEnd: findSpecifierEnd(sourceCode, firstRoot),
+          secondRootStart: findSpecifierStart(sourceCode, secondRoot),
+          secondRootEnd: findSpecifierEnd(sourceCode, secondRoot),
+        }
+      : {
+          firstRootStart: findStartOfLineWithComments(sourceCode, firstRoot),
+          firstRootEnd: findEndOfLineWithComments(sourceCode, firstRoot),
+          secondRootStart: findStartOfLineWithComments(sourceCode, secondRoot),
+          secondRootEnd: findEndOfLineWithComments(sourceCode, secondRoot),
+        }
 
-  let newCode = sourceCode.text.slice(secondRootStart, secondRootEnd)
-  if (newCode[newCode.length - 1] !== '\n') {
-    newCode = `${newCode}\n`
+  if (firstNode.displayName === secondNode.displayName) {
+    if (firstNode.alias) {
+      firstNode.displayName = `${firstNode.displayName} as ${firstNode.alias}`
+    }
+    if (secondNode.alias) {
+      secondNode.displayName = `${secondNode.displayName} as ${secondNode.alias}`
+    }
   }
 
-  const firstImport = `${makeImportDescription(firstNode)} of \`${firstNode.displayName}\``
-  const secondImport = `\`${secondNode.displayName}\` ${makeImportDescription(secondNode)}`
+  const firstDesc = makeImportDescription(firstNode)
+  const secondDesc = makeImportDescription(secondNode)
 
-  context.report({
-    node: secondNode.node,
+  // FIXME: find out why this happens, upstream doesn't have this check
+  if (
+    firstNode.displayName === secondNode.displayName &&
+    firstDesc === secondDesc
+  ) {
+    log(
+      firstNode.displayName,
+      firstNode.node.loc,
+      secondNode.displayName,
+      secondNode.node.loc,
+    )
+    return
+  }
+
+  const firstImport = `${firstDesc} of \`${firstNode.displayName}\``
+  const secondImport = `\`${secondNode.displayName}\` ${secondDesc}`
+
+  const messageOptions = {
     messageId: 'order',
-    data: {
-      firstImport,
-      secondImport,
-      order,
-    },
-    fix: canFix
-      ? fixer =>
-          order === 'before'
-            ? fixer.replaceTextRange(
+    data: { firstImport, secondImport, order },
+  } as const
+
+  if (isNamed) {
+    const firstCode = sourceCode.text.slice(firstRootStart, firstRoot.range[1])
+    const firstTrivia = sourceCode.text.slice(firstRoot.range[1], firstRootEnd)
+    const secondCode = sourceCode.text.slice(
+      secondRootStart,
+      secondRoot.range[1],
+    )
+    const secondTrivia = sourceCode.text.slice(
+      secondRoot.range[1],
+      secondRootEnd,
+    )
+
+    if (order === 'before') {
+      const trimmedTrivia = secondTrivia.trimEnd()
+      const gapCode = sourceCode.text.slice(firstRootEnd, secondRootStart - 1)
+      const whitespaces = secondTrivia.slice(trimmedTrivia.length)
+      context.report({
+        node: secondNode.node,
+        ...messageOptions,
+        fix: fixer =>
+          fixer.replaceTextRange(
+            [firstRootStart, secondRootEnd],
+            `${secondCode},${trimmedTrivia}${firstCode}${firstTrivia}${gapCode}${whitespaces}`,
+          ),
+      })
+    } else if (order === 'after') {
+      const trimmedTrivia = firstTrivia.trimEnd()
+      const gapCode = sourceCode.text.slice(secondRootEnd + 1, firstRootStart)
+      const whitespaces = firstTrivia.slice(trimmedTrivia.length)
+      context.report({
+        node: secondNode.node,
+        ...messageOptions,
+        fix: fixes =>
+          fixes.replaceTextRange(
+            [secondRootStart, firstRootEnd],
+            `${gapCode}${firstCode},${trimmedTrivia}${secondCode}${whitespaces}`,
+          ),
+      })
+    }
+  } else {
+    const canFix = isExports || canReorderItems(firstRoot, secondRoot)
+    let newCode = sourceCode.text.slice(secondRootStart, secondRootEnd)
+
+    if (newCode[newCode.length - 1] !== '\n') {
+      newCode = `${newCode}\n`
+    }
+
+    if (order === 'before') {
+      context.report({
+        node: secondNode.node,
+        ...messageOptions,
+        fix: canFix
+          ? fixer =>
+              fixer.replaceTextRange(
                 [firstRootStart, secondRootEnd],
                 newCode +
                   sourceCode.text.slice(firstRootStart, secondRootStart),
               )
-            : fixer.replaceTextRange(
+          : null,
+      })
+    } else if (order === 'after') {
+      context.report({
+        node: secondNode.node,
+        ...messageOptions,
+        fix: canFix
+          ? fixer =>
+              fixer.replaceTextRange(
                 [secondRootStart, firstRootEnd],
                 sourceCode.text.slice(secondRootEnd, firstRootEnd) + newCode,
               )
-      : null,
-  })
+          : null,
+      })
+    }
+  }
 }
 
 function reportOutOfOrder(
@@ -353,6 +537,7 @@ function reportOutOfOrder(
   imported: ImportEntryWithRank[],
   outOfOrder: ImportEntryWithRank[],
   order: 'before' | 'after',
+  category: Category,
 ) {
   for (const imp of outOfOrder) {
     fixOutOfOrder(
@@ -360,6 +545,7 @@ function reportOutOfOrder(
       imported.find(importedItem => importedItem.rank > imp.rank)!,
       imp,
       order,
+      category,
     )
   }
 }
@@ -367,6 +553,7 @@ function reportOutOfOrder(
 function makeOutOfOrderReport(
   context: RuleContext,
   imported: ImportEntryWithRank[],
+  category: Category,
 ) {
   const outOfOrder = findOutOfOrder(imported)
   if (outOfOrder.length === 0) {
@@ -377,10 +564,16 @@ function makeOutOfOrderReport(
   const reversedImported = reverse(imported)
   const reversedOrder = findOutOfOrder(reversedImported)
   if (reversedOrder.length < outOfOrder.length) {
-    reportOutOfOrder(context, reversedImported, reversedOrder, 'after')
+    reportOutOfOrder(
+      context,
+      reversedImported,
+      reversedOrder,
+      'after',
+      category,
+    )
     return
   }
-  reportOutOfOrder(context, imported, outOfOrder, 'before')
+  reportOutOfOrder(context, imported, outOfOrder, 'before', category)
 }
 
 const compareString = (a: string, b: string) => {
@@ -397,9 +590,11 @@ const compareString = (a: string, b: string) => {
 const DEFAULT_IMPORT_KIND = 'value'
 
 const getNormalizedValue = (node: ImportEntry, toLowerCase?: boolean) => {
-  const value = node.value
-  return toLowerCase ? String(value).toLowerCase() : value
+  const value = String(node.value)
+  return toLowerCase ? value.toLowerCase() : value
 }
+
+const RELATIVE_DOTS = new Set(['.', '..'])
 
 function getSorter(alphabetizeOptions: AlphabetizeOptions) {
   const multiplier = alphabetizeOptions.order === 'asc' ? 1 : -1
@@ -408,7 +603,7 @@ function getSorter(alphabetizeOptions: AlphabetizeOptions) {
     orderImportKind !== 'ignore' &&
     (alphabetizeOptions.orderImportKind === 'asc' ? 1 : -1)
 
-  return (nodeA: ImportEntry, nodeB: ImportEntry) => {
+  return function importsSorter(nodeA: ImportEntry, nodeB: ImportEntry) {
     const importA = getNormalizedValue(
       nodeA,
       alphabetizeOptions.caseInsensitive,
@@ -428,7 +623,17 @@ function getSorter(alphabetizeOptions: AlphabetizeOptions) {
       const b = B.length
 
       for (let i = 0; i < Math.min(a, b); i++) {
-        result = compareString(A[i], B[i])
+        // Skip comparing the first path segment, if they are relative segments for both imports
+        const x = A[i]
+        const y = B[i]
+        if (i === 0 && RELATIVE_DOTS.has(x) && RELATIVE_DOTS.has(y)) {
+          // If one is sibling and the other parent import, no need to compare at all, since the paths belong in different groups
+          if (x !== y) {
+            break
+          }
+          continue
+        }
+        result = compareString(x, y)
         if (result) {
           break
         }
@@ -446,10 +651,8 @@ function getSorter(alphabetizeOptions: AlphabetizeOptions) {
       result =
         multiplierImportKind *
         compareString(
-          ('importKind' in nodeA.node && nodeA.node.importKind) ||
-            DEFAULT_IMPORT_KIND,
-          ('importKind' in nodeB.node && nodeB.node.importKind) ||
-            DEFAULT_IMPORT_KIND,
+          nodeA.node.importKind || DEFAULT_IMPORT_KIND,
+          nodeB.node.importKind || DEFAULT_IMPORT_KIND,
         )
     }
 
@@ -478,9 +681,8 @@ function mutateRanksToAlphabetize(
   const alphabetizedRanks = groupRanks.reduce<Record<string, number>>(
     (acc, groupRank) => {
       for (const importedItem of groupedByRanks[groupRank]) {
-        acc[
-          `${importedItem.value}|${'importKind' in importedItem.node ? importedItem.node.importKind : ''}`
-        ] = Number.parseInt(groupRank, 10) + newRank
+        acc[`${importedItem.value}|${importedItem.node.importKind}`] =
+          Number.parseInt(groupRank, 10) + newRank
         newRank += 1
       }
       return acc
@@ -491,45 +693,23 @@ function mutateRanksToAlphabetize(
   // mutate the original group-rank with alphabetized-rank
   for (const importedItem of imported) {
     importedItem.rank =
-      alphabetizedRanks[
-        `${importedItem.value}|${'importKind' in importedItem.node ? importedItem.node.importKind : ''}`
-      ]
+      alphabetizedRanks[`${importedItem.value}|${importedItem.node.importKind}`]
   }
-}
-
-type Ranks = {
-  omittedTypes: string[]
-  groups: Record<string, number>
-  pathGroups: Array<{
-    pattern: string
-    patternOptions?: MinimatchOptions
-    group: string
-    position?: number
-  }>
-  maxPosition: number
 }
 
 // DETECTING
 
 function computePathRank(
-  ranks: Ranks['groups'],
-  pathGroups: Ranks['pathGroups'],
+  ranks: RanksGroups,
+  pathGroups: RanksPathGroup[],
   path: string,
   maxPosition: number,
 ) {
-  for (let i = 0, l = pathGroups.length; i < l; i++) {
-    const { pattern, patternOptions, group, position = 1 } = pathGroups[i]
+  for (const { pattern, patternOptions, group, position = 1 } of pathGroups) {
     if (minimatch(path, pattern, patternOptions || { nocomment: true })) {
       return ranks[group] + position / maxPosition
     }
   }
-}
-
-type ImportEntry = {
-  type: 'import:object' | 'import' | 'require'
-  node: TSESTree.Node
-  value: string
-  displayName: string
 }
 
 function computeRank(
@@ -537,31 +717,48 @@ function computeRank(
   ranks: Ranks,
   importEntry: ImportEntry,
   excludedImportTypes: Set<ImportType>,
+  isSortingTypesGroup?: boolean,
 ) {
   let impType: ImportType
-  let rank
+  let rank: number | undefined
+
+  const isTypeGroupInGroups = !ranks.omittedTypes.includes('type')
+  const isTypeOnlyImport = importEntry.node.importKind === 'type'
+  const isExcludedFromPathRank =
+    isTypeOnlyImport && isTypeGroupInGroups && excludedImportTypes.has('type')
+
   if (importEntry.type === 'import:object') {
     impType = 'object'
-  } else if (
-    'importKind' in importEntry.node &&
-    importEntry.node.importKind === 'type' &&
-    !ranks.omittedTypes.includes('type')
-  ) {
+  } else if (isTypeOnlyImport && isTypeGroupInGroups && !isSortingTypesGroup) {
     impType = 'type'
   } else {
     impType = importType(importEntry.value, context)
   }
-  if (!excludedImportTypes.has(impType)) {
-    rank = computePathRank(
-      ranks.groups,
-      ranks.pathGroups,
-      importEntry.value,
-      ranks.maxPosition,
-    )
+
+  if (!excludedImportTypes.has(impType) && !isExcludedFromPathRank) {
+    rank =
+      typeof importEntry.value === 'string'
+        ? computePathRank(
+            ranks.groups,
+            ranks.pathGroups,
+            importEntry.value,
+            ranks.maxPosition,
+          )
+        : undefined
   }
+
   if (rank === undefined) {
     rank = ranks.groups[impType]
+
+    if (rank === undefined) {
+      return -1
+    }
   }
+
+  if (isTypeOnlyImport && isSortingTypesGroup) {
+    rank = ranks.groups.type + rank / 10
+  }
+
   if (
     importEntry.type !== 'import' &&
     !importEntry.type.startsWith('import:')
@@ -578,10 +775,30 @@ function registerNode(
   ranks: Ranks,
   imported: ImportEntryWithRank[],
   excludedImportTypes: Set<ImportType>,
+  isSortingTypesGroup?: boolean,
 ) {
-  const rank = computeRank(context, ranks, importEntry, excludedImportTypes)
+  const rank = computeRank(
+    context,
+    ranks,
+    importEntry,
+    excludedImportTypes,
+    isSortingTypesGroup,
+  )
   if (rank !== -1) {
-    imported.push({ ...importEntry, rank })
+    let importNode = importEntry.node
+
+    if (
+      importEntry.type === 'require' &&
+      importNode.parent?.parent?.type === 'VariableDeclaration'
+    ) {
+      importNode = importNode.parent.parent
+    }
+
+    imported.push({
+      ...importEntry,
+      rank,
+      isMultiline: importNode.loc.end.line !== importNode.loc.start.line,
+    })
   }
 }
 
@@ -590,22 +807,21 @@ function getRequireBlock(node: TSESTree.Node) {
   // Handle cases like `const baz = require('foo').bar.baz`
   // and `const foo = require('foo')()`
   while (
-    n.parent &&
-    ((n.parent.type === 'MemberExpression' && n.parent.object === n) ||
-      (n.parent.type === 'CallExpression' && n.parent.callee === n))
+    (n.parent?.type === 'MemberExpression' && n.parent.object === n) ||
+    (n.parent?.type === 'CallExpression' && n.parent.callee === n)
   ) {
     n = n.parent
   }
   if (
     n.parent?.type === 'VariableDeclarator' &&
-    n.parent.parent?.type === 'VariableDeclaration' &&
-    n.parent.parent.parent?.type === 'Program'
+    n.parent.parent.type === 'VariableDeclaration' &&
+    n.parent.parent.parent.type === 'Program'
   ) {
     return n.parent.parent.parent
   }
 }
 
-const types = [
+const types: ImportType[] = [
   'builtin',
   'external',
   'internal',
@@ -615,7 +831,7 @@ const types = [
   'index',
   'object',
   'type',
-] as const
+]
 
 // Creates an object with type-rank pairs.
 // Example: { index: 0, sibling: 1, parent: 1, external: 1, builtin: 2, internal: 2 }
@@ -641,9 +857,7 @@ function convertGroupsToRanks(groups: ReadonlyArray<Arrayable<ImportType>>) {
     {} as Record<ImportType, number>,
   )
 
-  const omittedTypes = types.filter(function (type) {
-    return rankObject[type] === undefined
-  })
+  const omittedTypes = types.filter(type => rankObject[type] === undefined)
 
   const ranks = omittedTypes.reduce(function (res, type) {
     res[type] = groups.length * 2
@@ -731,21 +945,24 @@ function removeNewLineAfterImport(
   if (/^\s*$/.test(sourceCode.text.slice(rangeToRemove[0], rangeToRemove[1]))) {
     return (fixer: TSESLint.RuleFixer) => fixer.removeRange(rangeToRemove)
   }
+  return
 }
 
 function makeNewlinesBetweenReport(
   context: RuleContext<MessageId>,
   imported: ImportEntryWithRank[],
-  newlinesBetweenImports: Options['newlines-between'],
-  distinctGroup?: boolean,
+  newlinesBetweenImports_: NewLinesOptions,
+  newlinesBetweenTypeOnlyImports_: NewLinesOptions,
+  distinctGroup: boolean,
+  isSortingTypesGroup?: boolean,
+  isConsolidatingSpaceBetweenImports?: boolean,
 ) {
   const getNumberOfEmptyLinesBetween = (
-    currentImport: ImportEntryWithRank,
-    previousImport: ImportEntryWithRank,
+    currentImport: ImportEntry,
+    previousImport: ImportEntry,
   ) => {
-    return context
-      .getSourceCode()
-      .lines.slice(
+    return context.sourceCode.lines
+      .slice(
         previousImport.node.loc.end.line,
         currentImport.node.loc.start.line - 1,
       )
@@ -762,44 +979,147 @@ function makeNewlinesBetweenReport(
       currentImport,
       previousImport,
     )
+
     const isStartOfDistinctGroup = getIsStartOfDistinctGroup(
       currentImport,
       previousImport,
     )
 
-    if (
-      newlinesBetweenImports === 'always' ||
-      newlinesBetweenImports === 'always-and-inside-groups'
-    ) {
-      if (
-        currentImport.rank !== previousImport.rank &&
-        emptyLinesBetween === 0
-      ) {
-        if (distinctGroup || (!distinctGroup && isStartOfDistinctGroup)) {
+    const isTypeOnlyImport = currentImport.node.importKind === 'type'
+    const isPreviousImportTypeOnlyImport =
+      previousImport.node.importKind === 'type'
+
+    const isNormalImportNextToTypeOnlyImportAndRelevant =
+      isTypeOnlyImport !== isPreviousImportTypeOnlyImport && isSortingTypesGroup
+
+    const isTypeOnlyImportAndRelevant = isTypeOnlyImport && isSortingTypesGroup
+
+    // In the special case where newlinesBetweenImports and consolidateIslands
+    // want the opposite thing, consolidateIslands wins
+    const newlinesBetweenImports =
+      isSortingTypesGroup &&
+      isConsolidatingSpaceBetweenImports &&
+      (previousImport.isMultiline || currentImport.isMultiline) &&
+      newlinesBetweenImports_ === 'never'
+        ? 'always-and-inside-groups'
+        : newlinesBetweenImports_
+
+    // In the special case where newlinesBetweenTypeOnlyImports and
+    // consolidateIslands want the opposite thing, consolidateIslands wins
+    const newlinesBetweenTypeOnlyImports =
+      isSortingTypesGroup &&
+      isConsolidatingSpaceBetweenImports &&
+      (isNormalImportNextToTypeOnlyImportAndRelevant ||
+        previousImport.isMultiline ||
+        currentImport.isMultiline) &&
+      newlinesBetweenTypeOnlyImports_ === 'never'
+        ? 'always-and-inside-groups'
+        : newlinesBetweenTypeOnlyImports_
+
+    const isNotIgnored =
+      (isTypeOnlyImportAndRelevant &&
+        newlinesBetweenTypeOnlyImports !== 'ignore') ||
+      (!isTypeOnlyImportAndRelevant && newlinesBetweenImports !== 'ignore')
+
+    if (isNotIgnored) {
+      const shouldAssertNewlineBetweenGroups =
+        ((isTypeOnlyImportAndRelevant ||
+          isNormalImportNextToTypeOnlyImportAndRelevant) &&
+          (newlinesBetweenTypeOnlyImports === 'always' ||
+            newlinesBetweenTypeOnlyImports === 'always-and-inside-groups')) ||
+        (!isTypeOnlyImportAndRelevant &&
+          !isNormalImportNextToTypeOnlyImportAndRelevant &&
+          (newlinesBetweenImports === 'always' ||
+            newlinesBetweenImports === 'always-and-inside-groups'))
+
+      const shouldAssertNoNewlineWithinGroup =
+        ((isTypeOnlyImportAndRelevant ||
+          isNormalImportNextToTypeOnlyImportAndRelevant) &&
+          newlinesBetweenTypeOnlyImports !== 'always-and-inside-groups') ||
+        (!isTypeOnlyImportAndRelevant &&
+          !isNormalImportNextToTypeOnlyImportAndRelevant &&
+          newlinesBetweenImports !== 'always-and-inside-groups')
+
+      const shouldAssertNoNewlineBetweenGroup =
+        !isSortingTypesGroup ||
+        !isNormalImportNextToTypeOnlyImportAndRelevant ||
+        newlinesBetweenTypeOnlyImports === 'never'
+
+      const isTheNewlineBetweenImportsInTheSameGroup =
+        (distinctGroup && currentImport.rank === previousImport.rank) ||
+        (!distinctGroup && !isStartOfDistinctGroup)
+
+      // Let's try to cut down on linting errors sent to the user
+      let alreadyReported = false
+
+      if (shouldAssertNewlineBetweenGroups) {
+        if (
+          currentImport.rank !== previousImport.rank &&
+          emptyLinesBetween === 0
+        ) {
+          if (distinctGroup || isStartOfDistinctGroup) {
+            alreadyReported = true
+            context.report({
+              node: previousImport.node,
+              messageId: 'oneLineBetweenGroups',
+              fix: fixNewLineAfterImport(context, previousImport),
+            })
+          }
+        } else if (
+          emptyLinesBetween > 0 &&
+          shouldAssertNoNewlineWithinGroup &&
+          isTheNewlineBetweenImportsInTheSameGroup
+        ) {
+          alreadyReported = true
           context.report({
             node: previousImport.node,
-            messageId: 'oneLineBetweenGroups',
-            fix: fixNewLineAfterImport(context, previousImport),
+            messageId: 'noLineWithinGroup',
+            fix: removeNewLineAfterImport(
+              context,
+              currentImport,
+              previousImport,
+            ),
           })
         }
-      } else if (
-        emptyLinesBetween > 0 &&
-        newlinesBetweenImports !== 'always-and-inside-groups' &&
-        ((distinctGroup && currentImport.rank === previousImport.rank) ||
-          (!distinctGroup && !isStartOfDistinctGroup))
-      ) {
+      } else if (emptyLinesBetween > 0 && shouldAssertNoNewlineBetweenGroup) {
+        alreadyReported = true
         context.report({
           node: previousImport.node,
-          messageId: 'noLineWithinGroup',
+          messageId: 'noLineBetweenGroups',
           fix: removeNewLineAfterImport(context, currentImport, previousImport),
         })
       }
-    } else if (emptyLinesBetween > 0) {
-      context.report({
-        node: previousImport.node,
-        messageId: 'noLineBetweenGroups',
-        fix: removeNewLineAfterImport(context, currentImport, previousImport),
-      })
+
+      if (!alreadyReported && isConsolidatingSpaceBetweenImports) {
+        if (emptyLinesBetween === 0 && currentImport.isMultiline) {
+          context.report({
+            node: previousImport.node,
+            messageId: 'oneLineBetweenTheMultiLineImport',
+            fix: fixNewLineAfterImport(context, previousImport),
+          })
+        } else if (emptyLinesBetween === 0 && previousImport.isMultiline) {
+          context.report({
+            node: previousImport.node,
+            messageId: 'oneLineBetweenThisMultiLineImport',
+            fix: fixNewLineAfterImport(context, previousImport),
+          })
+        } else if (
+          emptyLinesBetween > 0 &&
+          !previousImport.isMultiline &&
+          !currentImport.isMultiline &&
+          isTheNewlineBetweenImportsInTheSameGroup
+        ) {
+          context.report({
+            node: previousImport.node,
+            messageId: 'noLineBetweenSingleLineImport',
+            fix: removeNewLineAfterImport(
+              context,
+              currentImport,
+              previousImport,
+            ),
+          })
+        }
+      }
     }
 
     previousImport = currentImport
@@ -817,17 +1137,17 @@ function getAlphabetizeConfig(options: Options): AlphabetizeOptions {
 // TODO, semver-major: Change the default of "distinctGroup" from true to false
 const defaultDistinctGroup = true
 
-type Options = {
-  'newlines-between'?:
-    | 'always'
-    | 'always-and-inside-groups'
-    | 'ignore'
-    | 'never'
+export interface Options {
+  'newlines-between'?: NewLinesOptions
+  'newlines-between-types'?: NewLinesOptions
+  named?: boolean | NamedOptions
   alphabetize?: Partial<AlphabetizeOptions>
+  consolidateIslands?: 'inside-groups' | 'never'
   distinctGroup?: boolean
   groups?: ReadonlyArray<Arrayable<ImportType>>
   pathGroupsExcludedImportTypes?: ImportType[]
   pathGroups?: PathGroup[]
+  sortTypesGroup?: boolean
   warnOnUnassignedImports?: boolean
 }
 
@@ -837,8 +1157,11 @@ type MessageId =
   | 'noLineBetweenGroups'
   | 'oneLineBetweenGroups'
   | 'order'
+  | 'oneLineBetweenTheMultiLineImport'
+  | 'oneLineBetweenThisMultiLineImport'
+  | 'noLineBetweenSingleLineImport'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'order',
   meta: {
     type: 'suggestion',
@@ -874,7 +1197,7 @@ export = createRule<[Options?], MessageId>({
                 },
                 group: {
                   type: 'string',
-                  enum: [...types],
+                  enum: types,
                 },
                 position: {
                   type: 'string',
@@ -888,6 +1211,41 @@ export = createRule<[Options?], MessageId>({
           'newlines-between': {
             type: 'string',
             enum: ['ignore', 'always', 'always-and-inside-groups', 'never'],
+          },
+          'newlines-between-types': {
+            type: 'string',
+            enum: ['ignore', 'always', 'always-and-inside-groups', 'never'],
+          },
+          consolidateIslands: {
+            type: 'string',
+            enum: ['inside-groups', 'never'],
+          },
+          sortTypesGroup: {
+            type: 'boolean',
+            default: false,
+          },
+          named: {
+            default: false,
+            oneOf: [
+              {
+                type: 'boolean',
+              },
+              {
+                type: 'object',
+                properties: {
+                  enabled: { type: 'boolean' },
+                  import: { type: 'boolean' },
+                  export: { type: 'boolean' },
+                  require: { type: 'boolean' },
+                  cjsExports: { type: 'boolean' },
+                  types: {
+                    type: 'string',
+                    enum: ['mixed', 'types-first', 'types-last'],
+                  },
+                },
+                additionalProperties: false,
+              },
+            ],
           },
           alphabetize: {
             type: 'object',
@@ -915,6 +1273,42 @@ export = createRule<[Options?], MessageId>({
           },
         },
         additionalProperties: false,
+        dependencies: {
+          'newlines-between-types': {
+            type: 'object',
+            properties: {
+              sortTypesGroup: {
+                type: 'boolean',
+                enum: [true],
+              },
+            },
+            required: ['sortTypesGroup'],
+          },
+          consolidateIslands: {
+            anyOf: [
+              {
+                type: 'object',
+                properties: {
+                  'newlines-between': {
+                    type: 'string',
+                    enum: ['always-and-inside-groups'],
+                  },
+                },
+                required: ['newlines-between'],
+              },
+              {
+                type: 'object',
+                properties: {
+                  'newlines-between-types': {
+                    type: 'string',
+                    enum: ['always-and-inside-groups'],
+                  },
+                },
+                required: ['newlines-between-types'],
+              },
+            ],
+          },
+        },
       },
     ],
     messages: {
@@ -925,19 +1319,63 @@ export = createRule<[Options?], MessageId>({
       oneLineBetweenGroups:
         'There should be at least one empty line between import groups',
       order: '{{secondImport}} should occur {{order}} {{firstImport}}',
+      oneLineBetweenTheMultiLineImport:
+        'There should be at least one empty line between this import and the multi-line import that follows it',
+      oneLineBetweenThisMultiLineImport:
+        'There should be at least one empty line between this multi-line import and the import that follows it',
+      noLineBetweenSingleLineImport:
+        'There should be no empty lines between this single-line import and the single-line import that follows it',
     },
   },
   defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
     const newlinesBetweenImports = options['newlines-between'] || 'ignore'
-    const pathGroupsExcludedImportTypes = new Set<ImportType>(
-      options.pathGroupsExcludedImportTypes || [
-        'builtin',
-        'external',
-        'object',
-      ],
+    const newlinesBetweenTypeOnlyImports =
+      options['newlines-between-types'] || newlinesBetweenImports
+    const pathGroupsExcludedImportTypes = new Set(
+      options.pathGroupsExcludedImportTypes ||
+        (['builtin', 'external', 'object'] as const),
     )
+    const sortTypesGroup = options.sortTypesGroup
+    const consolidateIslands = options.consolidateIslands || 'never'
+
+    const named: NamedOptions = {
+      types: 'mixed',
+      ...(typeof options.named === 'object'
+        ? {
+            ...options.named,
+            import:
+              'import' in options.named
+                ? options.named.import
+                : options.named.enabled,
+            export:
+              'export' in options.named
+                ? options.named.export
+                : options.named.enabled,
+            require:
+              'require' in options.named
+                ? options.named.require
+                : options.named.enabled,
+            cjsExports:
+              'cjsExports' in options.named
+                ? options.named.cjsExports
+                : options.named.enabled,
+          }
+        : {
+            import: options.named,
+            export: options.named,
+            require: options.named,
+            cjsExports: options.named,
+          }),
+    }
+
+    const namedGroups =
+      named.types === 'mixed'
+        ? []
+        : named.types === 'types-last'
+          ? ['value']
+          : ['type']
     const alphabetize = getAlphabetizeConfig(options)
     const distinctGroup =
       options.distinctGroup == null
@@ -975,12 +1413,49 @@ export = createRule<[Options?], MessageId>({
     }
 
     const importMap = new Map<TSESTree.Node, ImportEntryWithRank[]>()
+    const exportMap = new Map<TSESTree.Node, ImportEntryWithRank[]>()
+
+    const isTypeGroupInGroups = !ranks.omittedTypes.includes('type')
+    const isSortingTypesGroup = isTypeGroupInGroups && sortTypesGroup
 
     function getBlockImports(node: TSESTree.Node) {
-      if (!importMap.has(node)) {
-        importMap.set(node, [])
+      let blockImports = importMap.get(node)
+      if (!blockImports) {
+        importMap.set(node, (blockImports = []))
       }
-      return importMap.get(node)!
+      return blockImports
+    }
+
+    function getBlockExports(node: TSESTree.Node) {
+      let blockExports = exportMap.get(node)
+      if (!blockExports) {
+        exportMap.set(node, (blockExports = []))
+      }
+      return blockExports
+    }
+
+    function makeNamedOrderReport(
+      context: RuleContext,
+      namedImports: ImportEntry[],
+    ) {
+      if (namedImports.length > 1) {
+        const imports = namedImports.map(namedImport => {
+          const kind = namedImport.kind || 'value'
+          const rank = namedGroups.indexOf(kind)
+          return {
+            displayName: namedImport.value,
+            rank: rank === -1 ? namedGroups.length : rank,
+            ...namedImport,
+            value: `${namedImport.value}:${namedImport.alias || ''}`,
+          }
+        })
+
+        if (alphabetize.order !== 'ignore') {
+          mutateRanksToAlphabetize(imports, alphabetize)
+        }
+
+        makeOutOfOrderReport(context, imports, categories.named)
+      }
     }
 
     return {
@@ -997,25 +1472,42 @@ export = createRule<[Options?], MessageId>({
               type: 'import',
             },
             ranks,
-            getBlockImports(node.parent!),
+            getBlockImports(node.parent),
             pathGroupsExcludedImportTypes,
+            isSortingTypesGroup,
           )
+
+          if (named.import) {
+            makeNamedOrderReport(
+              context,
+              node.specifiers
+                .filter(specifier => specifier.type === 'ImportSpecifier')
+                .map(specifier => ({
+                  node: specifier,
+                  value: getValue(specifier.imported),
+                  type: 'import',
+                  kind: specifier.importKind,
+                  ...(specifier.local.range[0] !==
+                    specifier.imported.range[0] && {
+                    alias: specifier.local.name,
+                  }),
+                })),
+            )
+          }
         }
       },
       TSImportEqualsDeclaration(node) {
-        let displayName: string
-        let value: string
-        let type: 'import:object' | 'import'
         // @ts-expect-error - legacy parser type
         // skip "export import"s
         if (node.isExport) {
           return
         }
-        if (
-          node.moduleReference.type === 'TSExternalModuleReference' &&
-          'value' in node.moduleReference.expression &&
-          typeof node.moduleReference.expression.value === 'string'
-        ) {
+
+        let displayName: string
+        let value: string
+        let type: ImportEntryType
+
+        if (node.moduleReference.type === 'TSExternalModuleReference') {
           value = node.moduleReference.expression.value
           displayName = value
           type = 'import'
@@ -1024,6 +1516,7 @@ export = createRule<[Options?], MessageId>({
           displayName = context.sourceCode.getText(node.moduleReference)
           type = 'import:object'
         }
+
         registerNode(
           context,
           {
@@ -1033,8 +1526,9 @@ export = createRule<[Options?], MessageId>({
             type,
           },
           ranks,
-          getBlockImports(node.parent!),
+          getBlockImports(node.parent),
           pathGroupsExcludedImportTypes,
+          isSortingTypesGroup,
         )
       },
       CallExpression(node) {
@@ -1043,35 +1537,141 @@ export = createRule<[Options?], MessageId>({
         }
         const block = getRequireBlock(node)
         const firstArg = node.arguments[0]
-        if (
-          !block ||
-          !('value' in firstArg) ||
-          typeof firstArg.value !== 'string'
-        ) {
+        if (!block || !('value' in firstArg)) {
           return
         }
-        const name = firstArg.value
+        const { value } = firstArg
         registerNode(
           context,
           {
             node,
-            value: name,
-            displayName: name,
+            value,
+            displayName: value,
             type: 'require',
           },
           ranks,
           getBlockImports(block),
           pathGroupsExcludedImportTypes,
+          isSortingTypesGroup,
         )
       },
+      ...(named.require && {
+        VariableDeclarator(node) {
+          if (
+            node.id.type === 'ObjectPattern' &&
+            isRequireExpression(node.init)
+          ) {
+            const { properties } = node.id
+            for (const p of properties) {
+              if (
+                !('key' in p) ||
+                p.key.type !== 'Identifier' ||
+                p.value.type !== 'Identifier'
+              ) {
+                return
+              }
+            }
+            makeNamedOrderReport(
+              context,
+              node.id.properties.map(prop_ => {
+                const prop = prop_ as TSESTree.Property
+                const key = prop.key as TSESTree.Identifier
+                const value = prop.value as TSESTree.Identifier
+                return {
+                  node: prop,
+                  value: key.name,
+                  type: 'require',
+                  ...(key.range[0] !== value.range[0] && {
+                    alias: value.name,
+                  }),
+                }
+              }),
+            )
+          }
+        },
+      }),
+      ...(named.export && {
+        ExportNamedDeclaration(node) {
+          makeNamedOrderReport(
+            context,
+            node.specifiers.map(specifier => ({
+              node: specifier,
+              value: getValue(specifier.local),
+              type: 'export',
+              kind: specifier.exportKind,
+              ...(specifier.local.range[0] !== specifier.exported.range[0] && {
+                alias: getValue(specifier.exported),
+              }),
+            })),
+          )
+        },
+      }),
+      ...(named.cjsExports && {
+        AssignmentExpression(node) {
+          if (node.parent.type === 'ExpressionStatement') {
+            if (isCJSExports(context, node.left)) {
+              if (node.right.type === 'ObjectExpression') {
+                const { properties } = node.right
+                for (const p of properties) {
+                  if (
+                    !('key' in p) ||
+                    p.key.type !== 'Identifier' ||
+                    p.value.type !== 'Identifier'
+                  ) {
+                    return
+                  }
+                }
+
+                makeNamedOrderReport(
+                  context,
+                  properties.map(prop_ => {
+                    const prop = prop_ as TSESTree.Property
+                    const key = prop.key as TSESTree.Identifier
+                    const value = prop.value as TSESTree.Identifier
+                    return {
+                      node: prop,
+                      value: key.name,
+                      type: 'export',
+                      ...(key.range[0] !== value.range[0] && {
+                        alias: value.name,
+                      }),
+                    }
+                  }),
+                )
+              }
+            } else {
+              const nameParts = getNamedCJSExports(context, node.left)
+              if (nameParts && nameParts.length > 0) {
+                const name = nameParts.join('.')
+                getBlockExports(node.parent.parent).push({
+                  node,
+                  value: name,
+                  displayName: name,
+                  type: 'export',
+                  rank: 0,
+                })
+              }
+            }
+          }
+        },
+      }),
       'Program:exit'() {
         for (const imported of importMap.values()) {
-          if (newlinesBetweenImports !== 'ignore') {
+          if (
+            newlinesBetweenImports !== 'ignore' ||
+            newlinesBetweenTypeOnlyImports !== 'ignore'
+          ) {
             makeNewlinesBetweenReport(
               context,
               imported,
               newlinesBetweenImports,
+              newlinesBetweenTypeOnlyImports,
               distinctGroup,
+              isSortingTypesGroup,
+              consolidateIslands === 'inside-groups' &&
+                (newlinesBetweenImports === 'always-and-inside-groups' ||
+                  newlinesBetweenTypeOnlyImports ===
+                    'always-and-inside-groups'),
             )
           }
 
@@ -1079,10 +1679,18 @@ export = createRule<[Options?], MessageId>({
             mutateRanksToAlphabetize(imported, alphabetize)
           }
 
-          makeOutOfOrderReport(context, imported)
+          makeOutOfOrderReport(context, imported, categories.import)
+        }
+
+        for (const exported of exportMap.values()) {
+          if (alphabetize.order !== 'ignore') {
+            mutateRanksToAlphabetize(exported, alphabetize)
+            makeOutOfOrderReport(context, exported, categories.exports)
+          }
         }
 
         importMap.clear()
+        exportMap.clear()
       },
     }
   },

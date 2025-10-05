@@ -3,35 +3,34 @@ import path from 'node:path'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
-import type { RuleContext } from '../types'
-import { createRule, pkgUp } from '../utils'
+import { cjsRequire } from '../require.js'
+import type { RuleContext } from '../types.js'
+import { createRule, pkgUp } from '../utils/index.js'
 
 function getEntryPoint(context: RuleContext) {
   const pkgPath = pkgUp({
     cwd: context.physicalFilename,
   })!
   try {
-    return require.resolve(path.dirname(pkgPath))
+    return cjsRequire.resolve(path.dirname(pkgPath))
   } catch {
     // Assume the package has no entrypoint (e.g. CLI packages)
-    // in which case require.resolve would throw.
+    // in which case `cjsRequire.resolve` would throw.
     return null
   }
 }
 
 function findScope(context: RuleContext, identifier: string) {
   const { scopeManager } = context.sourceCode
-  return (
-    scopeManager?.scopes
-      // eslint-disable-next-line unicorn/prefer-spread
-      .slice()
-      .reverse()
-      .find(scope =>
-        scope.variables.some(variable =>
-          variable.identifiers.some(node => node.name === identifier),
-        ),
-      )
-  )
+  return scopeManager?.scopes
+
+    .slice()
+    .reverse()
+    .find(scope =>
+      scope.variables.some(variable =>
+        variable.identifiers.some(node => node.name === identifier),
+      ),
+    )
 }
 
 function findDefinition(objectScope: TSESLint.Scope.Scope, identifier: string) {
@@ -43,13 +42,13 @@ function findDefinition(objectScope: TSESLint.Scope.Scope, identifier: string) {
   )
 }
 
-type Options = {
+export interface Options {
   exceptions?: string[]
 }
 
-type MessageId = 'notAllowed'
+export type MessageId = 'notAllowed'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-import-module-exports',
   meta: {
     type: 'problem',
@@ -108,15 +107,14 @@ export = createRule<[Options?], MessageId>({
         const isImportBinding = variableDefinition?.type === 'ImportBinding'
         const hasCJSExportReference =
           hasKeywords && (!objectScope || objectScope.type === 'module')
-        const isException = !!options.exceptions?.some(glob =>
-          minimatch(filename, glob),
-        )
 
         if (
           isIdentifier &&
           hasCJSExportReference &&
           !isEntryPoint &&
-          !isException &&
+          !options.exceptions?.some(glob =>
+            minimatch(filename, glob, { nocomment: true }),
+          ) &&
           !isImportBinding
         ) {
           for (const importDeclaration of importDeclarations) {

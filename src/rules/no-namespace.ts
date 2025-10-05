@@ -1,19 +1,17 @@
-/**
- * Rule to disallow namespace import
- */
+/** Rule to disallow namespace import */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
-type MessageId = 'noNamespace'
+export type MessageId = 'noNamespace'
 
-type Options = {
+export interface Options {
   ignore?: string[]
 }
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-namespace',
   meta: {
     type: 'suggestion',
@@ -49,11 +47,10 @@ export = createRule<[Options?], MessageId>({
       ImportNamespaceSpecifier(node) {
         if (
           ignoreGlobs?.find(glob =>
-            minimatch(
-              (node.parent as TSESTree.ImportDeclaration).source.value,
-              glob,
-              { matchBase: true },
-            ),
+            minimatch(node.parent.source.value, glob, {
+              matchBase: true,
+              nocomment: true,
+            }),
           )
         ) {
           return

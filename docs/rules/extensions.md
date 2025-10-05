@@ -1,6 +1,20 @@
 # import-x/extensions
 
+🔧💡 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix) and manually fixable by [editor suggestions](https://eslint.org/docs/latest/use/core-concepts#rule-suggestions).
+
 <!-- end auto-generated rule header -->
+
+> [!NOTE]
+>
+> This rule is only fixable when the `fix` option is set to `true` for compatibility, otherwise `suggestions` will be provided instead.
+>
+> Example:
+>
+> ```json
+> "import-x/extensions": ["error", "never", { "fix": true }]
+> ```
+>
+> It will change to be automatically fixable in the next major version.
 
 Some file resolve algorithms allow you to omit the file extension within the import source path. For example the `node` resolver (which does not yet support ESM/`import`) can resolve `./foo/bar` to the absolute path `/User/someone/foo/bar.js` because the `.js` extension is resolved automatically by default in CJS. Depending on the resolver you can configure more extensions to get resolved automatically.
 
@@ -22,7 +36,7 @@ By providing an object you can configure each extension separately.
 }]
 ```
 
-For example `{ "js": "always", "json": "never" }` would always enforce the use of the `.js` extension but never allow the use of the `.json` extension.
+For example `{ "js": "always", "json": "never" }` would always enforce the use of the `.js` extension but never allow the use of the `.json` extension.
 
 By providing both a string and an object, the string will set the default setting for all extensions, and the object can be used to set granular overrides for specific extensions.
 
@@ -56,6 +70,8 @@ For example, `["error", "never", { "svg": "always" }]` would require that all ex
 In that case, if you still want to specify extensions, you can do so inside the **pattern** property.
 Default value of `ignorePackages` is `false`.
 
+By default, `import type` and `export type` style imports/exports are ignored. If you want to check them as well, you can set the `checkTypeImports` option to `true`.
+
 ### Exception
 
 When disallowing the use of certain extensions this rule makes an exception and allows the use of extension when the file would not be resolvable without extension.
@@ -64,8 +80,8 @@ For example, given the following folder structure:
 
 ```pt
 ├── foo
-│   ├── bar.js
-│   ├── bar.json
+│   ├── bar.js
+│   ├── bar.json
 ```
 
 and this import statement:
@@ -102,6 +118,13 @@ import Component from './Component'
 import express from 'express/index'
 
 import * as path from 'path'
+```
+
+The following patterns are considered problems when the configuration is set to "never" and the option "checkTypeImports" is set to `true`:
+
+```js
+import type { Foo } from './foo.ts';
+export type { Foo } from './foo.ts';
 ```
 
 The following patterns are considered problems when configuration set to "always":
@@ -164,6 +187,13 @@ import baz from 'foo/baz.js'
 import express from 'express'
 
 import foo from '@/foo'
+```
+
+The following patterns are considered problems when the configuration is set to "always" and the option "checkTypeImports" is set to `true`:
+
+```js
+import type { Foo } from './foo';
+export type { Foo } from './foo';
 ```
 
 ## When Not To Use It

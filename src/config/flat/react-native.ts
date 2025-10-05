@@ -1,8 +1,6 @@
-import type { PluginFlatBaseConfig } from '../../types'
+import type { PluginFlatBaseConfig } from '../../types.js'
 
-/**
- * adds platform extensions to Node resolver
- */
+/** Adds platform extensions to Node resolver */
 export default {
   settings: {
     'import-x/resolver': {

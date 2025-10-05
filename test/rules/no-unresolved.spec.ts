@@ -1,279 +1,240 @@
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_CASES, parsers, testFilePath } from '../utils'
-import type { ValidTestCase } from '../utils'
+import {
+  createRuleTestCaseFunctions,
+  SYNTAX_VALID_CASES,
+  parsers,
+  testFilePath,
+} from '../utils.js'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-unresolved'
 import { CASE_SENSITIVE_FS } from 'eslint-plugin-import-x/utils'
 
+const require = createRequire(import.meta.url)
+
 const ruleTester = new TSESLintRuleTester()
 
-function runResolverTests(resolver: 'node' | 'webpack') {
-  // redefine 'test' to set a resolver
-  // thus 'rest'. needed something 4-chars-long for formatting simplicity
-  function rest<T extends ValidTestCase>(specs: T) {
-    return test({
-      ...specs,
-      settings: {
-        ...specs.settings,
-        'import-x/resolver': resolver,
-        'import-x/cache': { lifetime: 0 },
-      },
-    })
+function createError(
+  messageId: GetRuleModuleMessageIds<typeof rule>,
+  module: string,
+  type?: `${AST_NODE_TYPES}`,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId,
+    data: { module },
+    type: type as AST_NODE_TYPES,
   }
+}
+
+function runResolverTests(resolver: 'node' | 'webpack') {
+  const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>({
+    settings: {
+      'import-x/resolver': resolver,
+      'import-x/cache': { lifetime: 0 },
+    },
+  })
 
   ruleTester.run(`no-unresolved (${resolver})`, rule, {
     valid: [
-      test({
+      tValid({
         code: 'import "./malformed.js"',
         languageOptions: { parser: require(parsers.ESPREE) },
       }),
 
-      rest({ code: 'import foo from "./bar";' }),
-      rest({ code: "import bar from './bar.js';" }),
-      rest({ code: "import {someThing} from './test-module';" }),
-      rest({ code: "import fs from 'fs';" }),
-      rest({
+      tValid({ code: 'import foo from "./bar";' }),
+      tValid({ code: "import bar from './bar.js';" }),
+      tValid({ code: "import {someThing} from './test-module';" }),
+      tValid({ code: "import fs from 'fs';" }),
+      tValid({
         code: "import('fs');",
         languageOptions: { parser: require(parsers.BABEL) },
       }),
 
       // check with eslint parser
-      rest({
+      tValid({
         code: "import('fs');",
         languageOptions: {
           parserOptions: { ecmaVersion: 2021 },
         },
       }),
 
-      rest({ code: 'import * as foo from "a"' }),
+      tValid({ code: 'import * as foo from "a"' }),
 
-      rest({ code: 'export { foo } from "./bar"' }),
-      rest({ code: 'export * from "./bar"' }),
-      rest({ code: 'let foo; export { foo }' }),
+      tValid({ code: 'export { foo } from "./bar"' }),
+      tValid({ code: 'export * from "./bar"' }),
+      tValid({ code: 'let foo; export { foo }' }),
 
       // stage 1 proposal for export symmetry,
-      rest({
+      tValid({
         code: 'export * as bar from "./bar"',
         languageOptions: { parser: require(parsers.BABEL) },
       }),
-      rest({
+      tValid({
         code: 'export bar from "./bar"',
         languageOptions: { parser: require(parsers.BABEL) },
       }),
-      rest({ code: 'import foo from "./jsx/MyUnCoolComponent.jsx"' }),
+      tValid({ code: 'import foo from "./jsx/MyUnCoolComponent.jsx"' }),
 
       // commonjs setting
-      rest({
+      tValid({
         code: 'var foo = require("./bar")',
         options: [{ commonjs: true }],
       }),
-      rest({
+      tValid({
         code: 'require("./bar")',
         options: [{ commonjs: true }],
       }),
-      rest({
+      tValid({
         code: 'require("./does-not-exist")',
         options: [{ commonjs: false }],
       }),
-      rest({ code: 'require("./does-not-exist")' }),
+      tValid({ code: 'require("./does-not-exist")' }),
 
       // amd setting
-      rest({
+      tValid({
         code: 'require(["./bar"], function (bar) {})',
         options: [{ amd: true }],
       }),
-      rest({
+      tValid({
         code: 'define(["./bar"], function (bar) {})',
         options: [{ amd: true }],
       }),
-      rest({
+      tValid({
         code: 'require(["./does-not-exist"], function (bar) {})',
         options: [{ amd: false }],
       }),
       // magic modules: https://github.com/requirejs/requirejs/wiki/Differences-between-the-simplified-CommonJS-wrapper-and-standard-AMD-define#magic-modules
-      rest({
+      tValid({
         code: 'define(["require", "exports", "module"], function (r, e, m) { })',
         options: [{ amd: true }],
       }),
 
       // don't validate without callback param
-      rest({
+      tValid({
         code: 'require(["./does-not-exist"])',
         options: [{ amd: true }],
       }),
-      rest({ code: 'define(["./does-not-exist"], function (bar) {})' }),
+      tValid({ code: 'define(["./does-not-exist"], function (bar) {})' }),
 
       // stress tests
-      rest({
+      tValid({
         code: 'require("./does-not-exist", "another arg")',
         options: [{ commonjs: true, amd: true }],
       }),
-      rest({
+      tValid({
         code: 'proxyquire("./does-not-exist")',
         options: [{ commonjs: true, amd: true }],
       }),
-      rest({
+      tValid({
         code: '(function() {})("./does-not-exist")',
         options: [{ commonjs: true, amd: true }],
       }),
-      rest({
+      tValid({
         code: 'define([0, foo], function (bar) {})',
         options: [{ amd: true }],
       }),
-      rest({
+      tValid({
         code: 'require(0)',
         options: [{ commonjs: true }],
       }),
-      rest({
+      tValid({
         code: 'require(foo)',
         options: [{ commonjs: true }],
       }),
     ],
 
     invalid: [
-      rest({
+      tInvalid({
         code: 'import reallyfake from "./reallyfake/module"',
-        settings: { 'import-x/ignore': ['^\\./fake/'] },
-        errors: [
-          {
-            message: "Unable to resolve path to module './reallyfake/module'.",
-          },
-        ],
+        settings: { 'import-x/ignore': [String.raw`^\./fake/`] },
+        errors: [createError('unresolved', './reallyfake/module')],
       }),
 
-      rest({
+      tInvalid({
         code: "import bar from './baz';",
-        errors: [
-          {
-            message: "Unable to resolve path to module './baz'.",
-            type: 'Literal',
-          },
-        ],
+        errors: [createError('unresolved', './baz', 'Literal')],
       }),
-      rest({
+      tInvalid({
         code: "import bar from './empty-folder';",
-        errors: [
-          {
-            message: "Unable to resolve path to module './empty-folder'.",
-            type: 'Literal',
-          },
-        ],
+        errors: [createError('unresolved', './empty-folder', 'Literal')],
       }),
 
       // sanity check that this module is _not_ found without proper settings
-      rest({
+      tInvalid({
         code: "import { DEEP } from 'in-alternate-root';",
-        errors: [
-          {
-            message: "Unable to resolve path to module 'in-alternate-root'.",
-            type: 'Literal',
-          },
-        ],
+        errors: [createError('unresolved', 'in-alternate-root', 'Literal')],
       }),
-      rest({
+      tInvalid({
         code: "import('in-alternate-root').then(function({DEEP}) {});",
-        errors: [
-          {
-            message: "Unable to resolve path to module 'in-alternate-root'.",
-            type: 'Literal',
-          },
-        ],
+        errors: [createError('unresolved', 'in-alternate-root', 'Literal')],
         languageOptions: { parser: require(parsers.BABEL) },
       }),
 
-      rest({
+      tInvalid({
         code: 'export { foo } from "./does-not-exist"',
-        errors: ["Unable to resolve path to module './does-not-exist'."],
+        errors: [createError('unresolved', './does-not-exist')],
       }),
-      rest({
+      tInvalid({
         code: 'export * from "./does-not-exist"',
-        errors: ["Unable to resolve path to module './does-not-exist'."],
+        errors: [createError('unresolved', './does-not-exist')],
       }),
 
       // check with eslint parser
-      rest({
+      tInvalid({
         code: "import('in-alternate-root').then(function({DEEP}) {});",
-        errors: [
-          {
-            message: "Unable to resolve path to module 'in-alternate-root'.",
-            type: 'Literal',
-          },
-        ],
+        errors: [createError('unresolved', 'in-alternate-root', 'Literal')],
         languageOptions: {
           parserOptions: { ecmaVersion: 2021 },
         },
       }),
 
       // export symmetry proposal
-      rest({
+      tInvalid({
         code: 'export * as bar from "./does-not-exist"',
         languageOptions: { parser: require(parsers.BABEL) },
-        errors: ["Unable to resolve path to module './does-not-exist'."],
+        errors: [createError('unresolved', './does-not-exist')],
       }),
-      rest({
+      tInvalid({
         code: 'export bar from "./does-not-exist"',
         languageOptions: { parser: require(parsers.BABEL) },
-        errors: ["Unable to resolve path to module './does-not-exist'."],
+        errors: [createError('unresolved', './does-not-exist')],
       }),
 
       // commonjs setting
-      rest({
+      tInvalid({
         code: 'var bar = require("./baz")',
         options: [{ commonjs: true }],
-        errors: [
-          {
-            message: "Unable to resolve path to module './baz'.",
-            type: 'Literal',
-          },
-        ],
+        errors: [createError('unresolved', './baz', 'Literal')],
       }),
-      rest({
+      tInvalid({
         code: 'require("./baz")',
         options: [{ commonjs: true }],
-        errors: [
-          {
-            message: "Unable to resolve path to module './baz'.",
-            type: 'Literal',
-          },
-        ],
+        errors: [createError('unresolved', './baz', 'Literal')],
       }),
 
       // amd
-      rest({
+      tInvalid({
         code: 'require(["./baz"], function (bar) {})',
         options: [{ amd: true }],
-        errors: [
-          {
-            message: "Unable to resolve path to module './baz'.",
-            type: 'Literal',
-          },
-        ],
+        errors: [createError('unresolved', './baz', 'Literal')],
       }),
-      rest({
+      tInvalid({
         code: 'define(["./baz"], function (bar) {})',
         options: [{ amd: true }],
-        errors: [
-          {
-            message: "Unable to resolve path to module './baz'.",
-            type: 'Literal',
-          },
-        ],
+        errors: [createError('unresolved', './baz', 'Literal')],
       }),
-      rest({
+      tInvalid({
         code: 'define(["./baz", "./bar", "./does-not-exist"], function (bar) {})',
         options: [{ amd: true }],
         errors: [
-          {
-            message: "Unable to resolve path to module './baz'.",
-            type: 'Literal',
-          },
-          {
-            message: "Unable to resolve path to module './does-not-exist'.",
-            type: 'Literal',
-          },
+          createError('unresolved', './baz', 'Literal'),
+          createError('unresolved', './does-not-exist', 'Literal'),
         ],
       }),
     ],
@@ -281,35 +242,29 @@ function runResolverTests(resolver: 'node' | 'webpack') {
 
   ruleTester.run(`issue #333 (${resolver})`, rule, {
     valid: [
-      rest({ code: 'import foo from "./bar.json"' }),
-      rest({ code: 'import foo from "./bar"' }),
-      rest({
+      tValid({ code: 'import foo from "./bar.json"' }),
+      tValid({ code: 'import foo from "./bar"' }),
+      tValid({
         code: 'import foo from "./bar.json"',
         settings: { 'import-x/extensions': ['.js'] },
       }),
-      rest({
+      tValid({
         code: 'import foo from "./bar"',
         settings: { 'import-x/extensions': ['.js'] },
       }),
     ],
     invalid: [
-      rest({
+      tInvalid({
         code: 'import bar from "./foo.json"',
-        errors: ["Unable to resolve path to module './foo.json'."],
+        errors: [createError('unresolved', './foo.json', 'Literal')],
       }),
     ],
   })
 
   if (!CASE_SENSITIVE_FS) {
-    const relativePath = './test/fixtures/jsx/MyUnCoolComponent.jsx'
-    const cwd = process.cwd()
-    const mismatchedPath = path
-      .join(cwd.toUpperCase(), relativePath)
-      .replaceAll('\\', '/')
-
     ruleTester.run('case sensitivity', rule, {
       valid: [
-        rest({
+        tValid({
           // test with explicit flag
           code: 'import foo from "./jsx/MyUncoolComponent.jsx"',
           options: [{ caseSensitive: false }],
@@ -317,53 +272,57 @@ function runResolverTests(resolver: 'node' | 'webpack') {
       ],
 
       invalid: [
-        rest({
+        tInvalid({
           // test default
           code: 'import foo from "./jsx/MyUncoolComponent.jsx"',
           errors: [
-            `Casing of ./jsx/MyUncoolComponent.jsx does not match the underlying filesystem.`,
+            createError('casingMismatch', './jsx/MyUncoolComponent.jsx'),
           ],
         }),
-        rest({
+        tInvalid({
           // test with explicit flag
           code: 'import foo from "./jsx/MyUncoolComponent.jsx"',
           options: [{ caseSensitive: true }],
           errors: [
-            `Casing of ./jsx/MyUncoolComponent.jsx does not match the underlying filesystem.`,
+            createError('casingMismatch', './jsx/MyUncoolComponent.jsx'),
           ],
         }),
       ],
     })
 
-    ruleTester.run('case sensitivity strict', rule, {
-      valid: [
-        // #1259 issue
-        rest({
-          // caseSensitiveStrict is disabled by default
-          code: `import foo from "${mismatchedPath}"`,
-        }),
-      ],
+    // Windows plain absolute path is not supported by Node.js
+    // TODO: add `file:` protocol support
+    if (process.platform !== 'win32') {
+      const relativePath = './test/fixtures/jsx/MyUnCoolComponent.jsx'
+      const cwd = process.cwd()
+      const mismatchedPath = path.join(cwd.toUpperCase(), relativePath)
 
-      invalid: [
-        // #1259 issue
-        rest({
-          // test with enabled caseSensitiveStrict option
-          code: `import foo from "${mismatchedPath}"`,
-          options: [{ caseSensitiveStrict: true }],
-          errors: [
-            `Casing of ${mismatchedPath} does not match the underlying filesystem.`,
-          ],
-        }),
-        rest({
-          // test with enabled caseSensitiveStrict option and disabled caseSensitive
-          code: `import foo from "${mismatchedPath}"`,
-          options: [{ caseSensitiveStrict: true, caseSensitive: false }],
-          errors: [
-            `Casing of ${mismatchedPath} does not match the underlying filesystem.`,
-          ],
-        }),
-      ],
-    })
+      ruleTester.run('case sensitivity strict', rule, {
+        valid: [
+          // #1259 issue
+          tValid({
+            // caseSensitiveStrict is disabled by default
+            code: `import foo from "${mismatchedPath}"`,
+          }),
+        ],
+
+        invalid: [
+          // #1259 issue
+          tInvalid({
+            // test with enabled caseSensitiveStrict option
+            code: `import foo from "${mismatchedPath}"`,
+            options: [{ caseSensitiveStrict: true }],
+            errors: [createError('casingMismatch', mismatchedPath)],
+          }),
+          tInvalid({
+            // test with enabled caseSensitiveStrict option and disabled caseSensitive
+            code: `import foo from "${mismatchedPath}"`,
+            options: [{ caseSensitiveStrict: true, caseSensitive: false }],
+            errors: [createError('casingMismatch', mismatchedPath)],
+          }),
+        ],
+      })
+    }
   }
 }
 
@@ -371,9 +330,11 @@ for (const resolver of ['node', 'webpack'] as const) {
   runResolverTests(resolver)
 }
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
 ruleTester.run('no-unresolved (import-x resolve legacy)', rule, {
   valid: [
-    test({
+    tValid({
       code: "import { DEEP } from 'in-alternate-root';",
       settings: {
         'import-x/resolve': {
@@ -382,7 +343,7 @@ ruleTester.run('no-unresolved (import-x resolve legacy)', rule, {
       },
     }),
 
-    test({
+    tValid({
       code: "import { DEEP } from 'in-alternate-root'; import { bar } from 'src-bar';",
       settings: {
         'import-x/resolve': {
@@ -391,79 +352,79 @@ ruleTester.run('no-unresolved (import-x resolve legacy)', rule, {
       },
     }),
 
-    test({
+    tValid({
       code: 'import * as foo from "jsx-module/foo"',
       settings: { 'import-x/resolve': { extensions: ['.jsx'] } },
     }),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'import * as foo from "jsx-module/foo"',
-      errors: ["Unable to resolve path to module 'jsx-module/foo'."],
+      errors: [createError('unresolved', 'jsx-module/foo')],
     }),
   ],
 })
 
 ruleTester.run('no-unresolved (webpack-specific)', rule, {
   valid: [
-    test({
+    tValid({
       // default webpack config in fixtures/webpack.config.js knows about jsx
       code: 'import * as foo from "jsx-module/foo"',
       settings: { 'import-x/resolver': 'webpack' },
     }),
-    test({
+    tValid({
       // should ignore loaders
       code: 'import * as foo from "some-loader?with=args!jsx-module/foo"',
       settings: { 'import-x/resolver': 'webpack' },
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       // default webpack config in fixtures/webpack.config.js knows about jsx
       code: 'import * as foo from "jsx-module/foo"',
       settings: {
         'import-x/resolver': { webpack: { config: 'webpack.empty.config.js' } },
       },
-      errors: ["Unable to resolve path to module 'jsx-module/foo'."],
+      errors: [createError('unresolved', 'jsx-module/foo')],
     }),
   ],
 })
 
 ruleTester.run('no-unresolved ignore list', rule, {
   valid: [
-    test({
+    tValid({
       code: 'import "./malformed.js"',
       languageOptions: { parser: require(parsers.BABEL) },
       options: [{ ignore: ['.png$', '.gif$'] }],
     }),
-    test({
+    tValid({
       code: 'import "./test.giffy"',
       options: [{ ignore: ['.png$', '.gif$'] }],
     }),
 
-    test({
+    tValid({
       code: 'import "./test.gif"',
       options: [{ ignore: ['.png$', '.gif$'] }],
     }),
 
-    test({
+    tValid({
       code: 'import "./test.png"',
       options: [{ ignore: ['.png$', '.gif$'] }],
     }),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'import "./test.gif"',
       options: [{ ignore: ['.png$'] }],
-      errors: ["Unable to resolve path to module './test.gif'."],
+      errors: [createError('unresolved', './test.gif')],
     }),
 
-    test({
+    tInvalid({
       code: 'import "./test.png"',
       options: [{ ignore: ['.gif$'] }],
-      errors: ["Unable to resolve path to module './test.png'."],
+      errors: [createError('unresolved', './test.png')],
     }),
   ],
 })
@@ -473,24 +434,26 @@ ruleTester.run('no-unresolved unknown resolver', rule, {
 
   invalid: [
     // logs resolver load error
-    test({
+    tInvalid({
       code: 'import "./malformed.js"',
       languageOptions: { parser: require(parsers.BABEL) },
       settings: { 'import-x/resolver': 'doesnt-exist' },
       errors: [
+        // @ts-expect-error resolver error
         `Resolve error: unable to load resolver "doesnt-exist".`,
-        `Unable to resolve path to module './malformed.js'.`,
+        createError('unresolved', './malformed.js'),
       ],
     }),
 
     // only logs resolver message once
-    test({
+    tInvalid({
       code: 'import "./malformed.js"; import "./fake.js"',
       settings: { 'import-x/resolver': 'doesnt-exist' },
       errors: [
+        // @ts-expect-error resolver error
         `Resolve error: unable to load resolver "doesnt-exist".`,
-        `Unable to resolve path to module './malformed.js'.`,
-        `Unable to resolve path to module './fake.js'.`,
+        createError('unresolved', './malformed.js'),
+        createError('unresolved', './fake.js'),
       ],
     }),
   ],
@@ -498,39 +461,37 @@ ruleTester.run('no-unresolved unknown resolver', rule, {
 
 ruleTester.run('no-unresolved electron', rule, {
   valid: [
-    test({
+    tValid({
       code: 'import "electron"',
       settings: { 'import-x/core-modules': ['electron'] },
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: 'import "electron"',
-      errors: [`Unable to resolve path to module 'electron'.`],
+      errors: [createError('unresolved', 'electron')],
     }),
   ],
 })
 
 ruleTester.run('no-unresolved syntax verification', rule, {
-  valid: SYNTAX_CASES,
+  valid: SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid'],
   invalid: [],
 })
 
 // https://github.com/import-js/eslint-plugin-import-x/issues/2024
 ruleTester.run('import() with built-in parser', rule, {
   valid: [
-    test({
+    tValid({
       code: "import('fs');",
       languageOptions: { parserOptions: { ecmaVersion: 2021 } },
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: 'import("./does-not-exist-l0w9ssmcqy9").then(() => {})',
       languageOptions: { parserOptions: { ecmaVersion: 2021 } },
-      errors: [
-        "Unable to resolve path to module './does-not-exist-l0w9ssmcqy9'.",
-      ],
+      errors: [createError('unresolved', './does-not-exist-l0w9ssmcqy9')],
     }),
   ],
 })
@@ -539,21 +500,21 @@ describe('TypeScript', () => {
   // Type-only imports were added in TypeScript ESTree 2.23.0
   ruleTester.run('no-unresolved (ignore type-only)', rule, {
     valid: [
-      test({
+      tValid({
         code: 'import type { JSONSchema7Type } from "@types/json-schema";',
       }),
-      test({
+      tValid({
         code: 'export type { JSONSchema7Type } from "@types/json-schema";',
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: 'import { JSONSchema7Type } from "@types/json-schema";',
-        errors: ["Unable to resolve path to module '@types/json-schema'."],
+        errors: [createError('unresolved', '@types/json-schema')],
       }),
-      test({
+      tInvalid({
         code: 'export { JSONSchema7Type } from "@types/json-schema";',
-        errors: ["Unable to resolve path to module '@types/json-schema'."],
+        errors: [createError('unresolved', '@types/json-schema')],
       }),
     ],
   })

@@ -46,9 +46,9 @@ want to enable the following core ESLint rules:
 - [no-func-assign]
 - [no-class-assign]
 
-[no-func-assign]: https://eslint.org/docs/rules/no-func-assign
-[no-class-assign]: https://eslint.org/docs/rules/no-class-assign
-
 ## When Not To Use It
 
 If your environment correctly implements mutable export bindings.
+
+[no-func-assign]: https://eslint.org/docs/rules/no-func-assign
+[no-class-assign]: https://eslint.org/docs/rules/no-class-assign

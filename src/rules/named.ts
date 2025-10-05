@@ -2,12 +2,12 @@ import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { ExportMap, createRule } from '../utils'
-import type { ModuleOptions } from '../utils'
+import { ExportMap, createRule } from '../utils/index.js'
+import type { ModuleOptions } from '../utils/index.js'
 
-type MessageId = 'notFound' | 'notFoundDeep'
+export type MessageId = 'notFound' | 'notFoundDeep'
 
-export = createRule<[ModuleOptions?], MessageId>({
+export default createRule<[ModuleOptions?], MessageId>({
   name: 'named',
   meta: {
     type: 'problem',
@@ -79,9 +79,7 @@ export = createRule<[ModuleOptions?], MessageId>({
           continue
         }
 
-        /**
-         * @see im is @see TSESTree.ExportSpecifier or @see TSESTree.ImportSpecifier
-         */
+        /** @see im is @see TSESTree.ExportSpecifier or @see TSESTree.ImportSpecifier */
         // @ts-expect-error - it sucks, see above
         const imNode = im[key] as TSESTree.Identifier
 

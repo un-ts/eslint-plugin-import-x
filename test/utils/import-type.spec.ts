@@ -1,6 +1,6 @@
 import { isBuiltin } from 'node:module'
 
-import { FIXTURES_PATH, testContext, testFilePath } from '../utils'
+import { FIXTURES_PATH, testContext, testFilePath } from '../utils.js'
 
 import {
   importType,
@@ -106,7 +106,7 @@ describe('importType(name)', () => {
     // `@` for internal modules is a common alias and is different from scoped names.
     // Scoped names are prepended with `@` (e.g. `@scoped/some-file.js`) whereas `@`
     // as an alias by itelf is the full root name (e.g. `@/some-file.js`).
-    const alias = { '@': testFilePath('internal-modules') }
+    const alias = { '@': [testFilePath('internal-modules')] }
     const webpackConfig = { resolve: { alias } }
     const pathContext = testContext({
       'import-x/resolver': { webpack: { config: webpackConfig } },
@@ -313,21 +313,23 @@ describe('importType(name)', () => {
   it('`isExternalModule` works with windows directory separator', () => {
     const context = testContext()
     expect(
-      isExternalModule('foo', 'E:\\path\\to\\node_modules\\foo', context),
+      isExternalModule('foo', String.raw`E:\path\to\node_modules\foo`, context),
     ).toBe(true)
     expect(
       isExternalModule(
         '@foo/bar',
-        'E:\\path\\to\\node_modules\\@foo\\bar',
+        String.raw`E:\path\to\node_modules\@foo\bar`,
         context,
       ),
     ).toBe(true)
     expect(
       isExternalModule(
         'foo',
-        'E:\\path\\to\\node_modules\\foo',
+        String.raw`E:\path\to\node_modules\foo`,
         testContext({
-          'import-x/external-module-folders': ['E:\\path\\to\\node_modules'],
+          'import-x/external-module-folders': [
+            String.raw`E:\path\to\node_modules`,
+          ],
         }),
       ),
     ).toBe(true)

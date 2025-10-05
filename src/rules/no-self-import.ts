@@ -1,13 +1,11 @@
-/**
- * Forbids a module from importing itself
- */
+/** Forbids a module from importing itself */
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import type { RuleContext } from '../types'
-import { createRule, moduleVisitor, resolve } from '../utils'
+import type { RuleContext } from '../types.js'
+import { createRule, moduleVisitor, resolve } from '../utils/index.js'
 
-type MessageId = 'self'
+export type MessageId = 'self'
 
 function isImportingSelf(
   context: RuleContext<MessageId>,
@@ -25,7 +23,7 @@ function isImportingSelf(
   }
 }
 
-export = createRule<[], MessageId>({
+export default createRule<[], MessageId>({
   name: 'no-self-import',
   meta: {
     type: 'problem',

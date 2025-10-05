@@ -1,21 +1,24 @@
-/**
- * tests that require fully booting up ESLint
- */
+/** Tests that require fully booting up ESLint */
 
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import eslintPkg from 'eslint/package.json'
-import { LegacyESLint } from 'eslint/use-at-your-own-risk'
-import semver from 'semver'
+// eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
+import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 
 import importPlugin from 'eslint-plugin-import-x'
 
+// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+const { LegacyESLint } = eslintUnsupportedApi
+
 describe('CLI regression tests', () => {
+  const testDir = path.resolve(fileURLToPath(import.meta.url), '..')
+
   describe('issue #210', () => {
     it("doesn't throw an error on gratuitous, erroneous self-reference", () => {
       const eslint = new LegacyESLint({
-        overrideConfigFile: './test/fixtures/issue210.config.js',
-        // rulePaths: ['./src/rules'],
+        cwd: testDir,
+        overrideConfigFile: 'fixtures/issue210.config.js',
         overrideConfig: {
           rules: {
             named: 2,
@@ -26,15 +29,16 @@ describe('CLI regression tests', () => {
           'eslint-plugin-import-x': importPlugin,
         },
       })
-      return eslint.lintFiles(['./test/fixtures/issue210.js'])
+      return eslint.lintFiles(['fixtures/issue210.js'])
     })
   })
 
   describe('issue #1645', () => {
     it('throws an error on invalid JSON', async () => {
-      const invalidJSON = './test/fixtures/just-json-files/invalid.json'
+      const invalidJSON = 'fixtures/just-json-files/invalid.json'
       const eslint = new LegacyESLint({
-        overrideConfigFile: './test/fixtures/just-json-files/.eslintrc.json',
+        cwd: testDir,
+        overrideConfigFile: 'fixtures/just-json-files/.eslintrc.json',
         ignore: false,
         plugins: {
           // @ts-expect-error - incompatible types
@@ -44,7 +48,7 @@ describe('CLI regression tests', () => {
       const results = await eslint.lintFiles([invalidJSON])
       expect(results).toEqual([
         {
-          filePath: path.resolve(invalidJSON),
+          filePath: path.resolve(testDir, invalidJSON),
           messages: [
             {
               column: 2,
@@ -60,16 +64,12 @@ describe('CLI regression tests', () => {
             },
           ],
           errorCount: 1,
-          ...(semver.satisfies(eslintPkg.version, '>= 7.32 || ^8.0.0') && {
-            fatalErrorCount: 0,
-          }),
+          fatalErrorCount: 0,
           warningCount: 0,
           fixableErrorCount: 0,
           fixableWarningCount: 0,
           source: results[0].source, // NewLine-characters might differ depending on git-settings
-          ...(semver.satisfies(eslintPkg.version, '>= 8.8') && {
-            suppressedMessages: [],
-          }),
+          suppressedMessages: [],
           usedDeprecatedRules: results[0].usedDeprecatedRules, // we don't care about this one
         },
       ])

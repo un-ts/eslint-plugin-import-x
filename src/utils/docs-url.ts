@@ -1,8 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - The structures of `lib` and `src` are same
-import pkg from '../../package.json'
+import { version } from '../meta.js'
 
 const repoUrl = 'https://github.com/un-ts/eslint-plugin-import-x'
 
-export const docsUrl = (ruleName: string, commitish = `v${pkg.version}`) =>
+export const docsUrl = (ruleName: string, commitish = `v${version}`) =>
   `${repoUrl}/blob/${commitish}/docs/rules/${ruleName}.md`

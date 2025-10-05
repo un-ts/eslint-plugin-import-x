@@ -1,0 +1,7 @@
+{
+  "extends": "@1stg/tsconfig/node",
+  "compilerOptions": {
+    "allowJs": true,
+    "verbatimModuleSyntax": false
+  }
+}

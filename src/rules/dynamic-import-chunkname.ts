@@ -1,17 +1,16 @@
 import vm from 'node:vm'
 
-import type { TSESTree } from '@typescript-eslint/utils'
-import type { RuleFixer } from '@typescript-eslint/utils/ts-eslint'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
-type Options = {
+export interface Options {
   allowEmpty?: boolean
   importFunctions?: readonly string[]
   webpackChunknameFormat?: string
 }
 
-type MessageId =
+export type MessageId =
   | 'leadingComment'
   | 'blockComment'
   | 'paddedSpaces'
@@ -21,7 +20,7 @@ type MessageId =
   | 'webpackRemoveEagerMode'
   | 'webpackRemoveChunkName'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'dynamic-import-chunkname',
   meta: {
     type: 'suggestion',
@@ -73,7 +72,7 @@ export = createRule<[Options?], MessageId>({
     const {
       importFunctions = [],
       allowEmpty = false,
-      webpackChunknameFormat = '([0-9a-zA-Z-_/.]|\\[(request|index)\\])+',
+      webpackChunknameFormat = String.raw`([0-9a-zA-Z-_/.]|\[(request|index)\])+`,
     } = context.options[0] || {}
 
     const paddedCommentRegex = /^ (\S[\S\s]+\S) $/
@@ -146,7 +145,7 @@ export = createRule<[Options?], MessageId>({
       }
 
       const removeCommentsAndLeadingSpaces = (
-        fixer: RuleFixer,
+        fixer: TSESLint.RuleFixer,
         comment: TSESTree.Comment,
       ) => {
         const leftToken = sourceCode.getTokenBefore(comment)
@@ -232,8 +231,8 @@ export = createRule<[Options?], MessageId>({
         if (
           // @ts-expect-error - legacy parser type
           node.callee.type !== 'Import' &&
-          'name' in node.callee &&
-          !importFunctions.includes(node.callee.name)
+          (!('name' in node.callee) ||
+            !importFunctions.includes(node.callee.name))
         ) {
           return
         }

@@ -1,37 +1,42 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { parsers, test as _test, testFilePath } from '../utils'
-import type { ValidTestCase } from '../utils'
+import { createRuleTestCaseFunctions, parsers, testFilePath } from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-cycle'
 
 const ruleTester = new TSESLintRuleTester()
 
-const error = (message: string) => ({ message })
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>({
+  filename: testFilePath('./cycles/depth-zero.js'),
+})
 
-const test = <T extends ValidTestCase>(def: T) =>
-  _test({
-    ...def,
-    filename: testFilePath('./cycles/depth-zero.js'),
-  })
+const createCycleSourceError = (
+  source: string,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> => ({
+  messageId: 'cycleSource',
+  data: { source },
+})
 
 ruleTester.run('no-cycle', rule, {
   valid: [
     // this rule doesn't care if the cycle length is 0
-    test({ code: 'import foo from "./foo.js"' }),
+    tValid({ code: 'import foo from "./foo.js"' }),
 
-    test({ code: 'import _ from "lodash"' }),
-    test({ code: 'import foo from "@scope/foo"' }),
-    test({ code: 'var _ = require("lodash")' }),
-    test({ code: 'var find = require("lodash.find")' }),
-    test({ code: 'var foo = require("./foo")' }),
-    test({ code: 'var foo = require("../foo")' }),
-    test({ code: 'var foo = require("foo")' }),
-    test({ code: 'var foo = require("./")' }),
-    test({ code: 'var foo = require("@scope/foo")' }),
-    test({ code: 'var bar = require("./bar/index")' }),
-    test({ code: 'var bar = require("./bar")' }),
-    test({
+    tValid({ code: 'import _ from "lodash"' }),
+    tValid({ code: 'import foo from "@scope/foo"' }),
+    tValid({ code: 'var _ = require("lodash")' }),
+    tValid({ code: 'var find = require("lodash.find")' }),
+    tValid({ code: 'var foo = require("./foo")' }),
+    tValid({ code: 'var foo = require("../foo")' }),
+    tValid({ code: 'var foo = require("foo")' }),
+    tValid({ code: 'var foo = require("./")' }),
+    tValid({ code: 'var foo = require("@scope/foo")' }),
+    tValid({ code: 'var bar = require("./bar/index")' }),
+    tValid({ code: 'var bar = require("./bar")' }),
+    tValid({
       code: 'import { foo } from "cycles/external/depth-one"',
       options: [{ ignoreExternal: true }],
       settings: {
@@ -39,7 +44,7 @@ ruleTester.run('no-cycle', rule, {
         'import-x/external-module-folders': ['cycles/external'],
       },
     }),
-    test({
+    tValid({
       code: 'import { foo } from "./external-depth-two"',
       options: [{ ignoreExternal: true }],
       settings: {
@@ -48,81 +53,81 @@ ruleTester.run('no-cycle', rule, {
       },
     }),
 
-    test({
+    tValid({
       code: `import { foo } from "./es6/depth-two"`,
       options: [{ maxDepth: 1 }],
     }),
-    test({
+    tValid({
       code: `import { foo, bar } from "./es6/depth-two"`,
       options: [{ maxDepth: 1 }],
     }),
-    test({
+    tValid({
       code: `import("./es6/depth-two").then(function({ foo }) {})`,
       options: [{ maxDepth: 1 }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: `import type { FooType } from "./es6/depth-one"`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: `import type { FooType, BarType } from "./es6/depth-one"`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: `function bar(){ return import("./es6/depth-one"); } // #2265 1`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: `import { foo } from "./es6/depth-one-dynamic"; // #2265 2`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: `function bar(){ return import("./es6/depth-one"); } // #2265 3`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
     }),
-    test({
+    tValid({
       code: `import { foo } from "./es6/depth-one-dynamic"; // #2265 4`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
     }),
 
-    test({
+    tValid({
       code: 'import { bar } from "./flow-types"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import { bar } from "./flow-types-only-importing-type"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import { bar } from "./flow-types-only-importing-multiple-types"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'import { bar } from "./flow-typeof"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'import { bar } from "./flow-types-some-type-imports"',
       languageOptions: { parser: require(parsers.BABEL) },
-      errors: [error(`Dependency cycle detected.`)],
+      errors: [{ messageId: 'cycle' }],
     }),
-    test({
+    tInvalid({
       code: 'import { foo } from "cycles/external/depth-one"',
-      errors: [error(`Dependency cycle detected.`)],
+      errors: [{ messageId: 'cycle' }],
       settings: {
         'import-x/resolver': 'webpack',
         'import-x/external-module-folders': ['cycles/external'],
       },
     }),
-    test({
+    tInvalid({
       code: 'import { foo } from "./external-depth-two"',
-      errors: [error(`Dependency cycle via cycles/external/depth-one:1`)],
+      errors: [createCycleSourceError('cycles/external/depth-one:1')],
       settings: {
         'import-x/resolver': 'webpack',
         'import-x/external-module-folders': ['cycles/external'],
@@ -131,150 +136,138 @@ ruleTester.run('no-cycle', rule, {
 
     // Ensure behavior does not change for those tests, with or without
     ...[{}, { allowUnsafeDynamicCyclicDependency: true }].flatMap(opts => [
-      test({
+      tInvalid({
         code: `import { foo } from "./es6/depth-one"`,
         options: [{ ...opts }],
-        errors: [error(`Dependency cycle detected.`)],
+        errors: [{ messageId: 'cycle' }],
       }),
-      test({
+      tInvalid({
         code: `import { foo } from "./es6/depth-one"`,
         options: [{ ...opts, maxDepth: 1 }],
-        errors: [error(`Dependency cycle detected.`)],
+        errors: [{ messageId: 'cycle' }],
       }),
-      test({
+      tInvalid({
         code: `const { foo } = require("./es6/depth-one")`,
-        errors: [error(`Dependency cycle detected.`)],
         options: [{ ...opts, commonjs: true }],
+        errors: [{ messageId: 'cycle' }],
       }),
-      test({
+      tInvalid({
         code: `require(["./es6/depth-one"], d1 => {})`,
-        errors: [error(`Dependency cycle detected.`)],
         options: [{ ...opts, amd: true }],
+        errors: [{ messageId: 'cycle' }],
       }),
-      test({
+      tInvalid({
         code: `define(["./es6/depth-one"], d1 => {})`,
-        errors: [error(`Dependency cycle detected.`)],
         options: [{ ...opts, amd: true }],
+        errors: [{ messageId: 'cycle' }],
       }),
-      test({
+      tInvalid({
         code: `import { foo } from "./es6/depth-one-reexport"`,
         options: [{ ...opts }],
-        errors: [error(`Dependency cycle detected.`)],
+        errors: [{ messageId: 'cycle' }],
       }),
-      test({
+      tInvalid({
         code: `import { foo } from "./es6/depth-two"`,
         options: [{ ...opts }],
-        errors: [error(`Dependency cycle via ./depth-one:1`)],
+        errors: [createCycleSourceError('./depth-one:1')],
       }),
-      test({
+      tInvalid({
         code: `import { foo } from "./es6/depth-two"`,
         options: [{ ...opts, maxDepth: 2 }],
-        errors: [error(`Dependency cycle via ./depth-one:1`)],
+        errors: [createCycleSourceError('./depth-one:1')],
       }),
-      test({
+      tInvalid({
         code: `const { foo } = require("./es6/depth-two")`,
-        errors: [error(`Dependency cycle via ./depth-one:1`)],
+        errors: [createCycleSourceError('./depth-one:1')],
         options: [{ ...opts, commonjs: true }],
       }),
-      test({
+      tInvalid({
         code: `import { two } from "./es6/depth-three-star"`,
         options: [{ ...opts }],
-        errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
+        errors: [createCycleSourceError('./depth-two:1=>./depth-one:1')],
       }),
-      test({
+      tInvalid({
         code: `import one, { two, three } from "./es6/depth-three-star"`,
         options: [{ ...opts }],
-        errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
+        errors: [createCycleSourceError('./depth-two:1=>./depth-one:1')],
       }),
-      test({
+      tInvalid({
         code: `import { bar } from "./es6/depth-three-indirect"`,
         options: [{ ...opts }],
-        errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
+        errors: [createCycleSourceError('./depth-two:1=>./depth-one:1')],
       }),
-      test({
+      tInvalid({
         code: `import { bar } from "./es6/depth-three-indirect"`,
         options: [{ ...opts }],
-        errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
+        errors: [createCycleSourceError('./depth-two:1=>./depth-one:1')],
         languageOptions: { parser: require(parsers.BABEL) },
       }),
-      test({
+      tInvalid({
         code: `import { foo } from "./es6/depth-two"`,
         options: [{ ...opts, maxDepth: Number.POSITIVE_INFINITY }],
-        errors: [error(`Dependency cycle via ./depth-one:1`)],
+        errors: [createCycleSourceError('./depth-one:1')],
       }),
-      test({
+      tInvalid({
         code: `import { foo } from "./es6/depth-two"`,
         options: [{ ...opts, maxDepth: '∞' }],
-        errors: [error(`Dependency cycle via ./depth-one:1`)],
+        errors: [createCycleSourceError('./depth-one:1')],
       }),
     ]),
 
-    test({
+    tInvalid({
       code: `import("./es6/depth-three-star")`,
-      errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
+      errors: [createCycleSourceError('./depth-two:1=>./depth-one:1')],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tInvalid({
       code: `import("./es6/depth-three-indirect")`,
-      errors: [error(`Dependency cycle via ./depth-two:1=>./depth-one:1`)],
+      errors: [createCycleSourceError('./depth-two:1=>./depth-one:1')],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tInvalid({
       code: `import("./es6/depth-two")`,
       options: [{ maxDepth: Number.POSITIVE_INFINITY }],
-      errors: [error(`Dependency cycle via ./depth-one:1`)],
+      errors: [createCycleSourceError('./depth-one:1')],
     }),
-    test({
+    tInvalid({
       code: `import("./es6/depth-two")`,
       options: [{ maxDepth: '∞' }],
-      errors: [error(`Dependency cycle via ./depth-one:1`)],
+      errors: [createCycleSourceError('./depth-one:1')],
     }),
-    test({
+    tInvalid({
       code: `function bar(){ return import("./es6/depth-one"); } // #2265 5`,
-      errors: [error(`Dependency cycle detected.`)],
+      errors: [{ messageId: 'cycle' }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tInvalid({
       // Dynamic import is not properly caracterized with eslint < 4
       code: `import { foo } from "./es6/depth-one-dynamic"; // #2265 6`,
-      errors: [error(`Dependency cycle detected.`)],
+      errors: [{ messageId: 'cycle' }],
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tInvalid({
       code: `function bar(){ return import("./es6/depth-one"); } // #2265 7`,
-      errors: [error(`Dependency cycle detected.`)],
+      errors: [{ messageId: 'cycle' }],
     }),
-    test({
+    tInvalid({
       code: `import { foo } from "./es6/depth-one-dynamic"; // #2265 8`,
-      errors: [error(`Dependency cycle detected.`)],
+      errors: [{ messageId: 'cycle' }],
     }),
 
-    test({
+    tInvalid({
       code: 'import { bar } from "./flow-types-depth-one"',
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [
-        error(
-          `Dependency cycle via ./flow-types-depth-two:4=>./es6/depth-one:1`,
-        ),
+        createCycleSourceError('./flow-types-depth-two:4=>./es6/depth-one:1'),
       ],
     }),
-    test({
+    tInvalid({
       code: 'import { foo } from "./intermediate-ignore"',
-      errors: [
-        {
-          message: 'Dependency cycle via ./ignore:1',
-          line: 1,
-        },
-      ],
+      errors: [{ ...createCycleSourceError('./ignore:1'), line: 1 }],
     }),
-    test({
+    tInvalid({
       code: 'import { foo } from "./ignore"',
-      errors: [
-        {
-          message: 'Dependency cycle detected.',
-          line: 1,
-        },
-      ],
+      errors: [{ messageId: 'cycle', line: 1 }],
     }),
   ],
 })

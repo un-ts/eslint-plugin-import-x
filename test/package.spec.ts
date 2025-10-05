@@ -1,11 +1,11 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import type { TSESLint } from '@typescript-eslint/utils'
+import { pluginName } from 'eslint-import-context'
 
-import { srcDir } from './utils'
-
-import { moduleRequire, pluginName } from 'eslint-plugin-import-x/utils'
+import { srcDir } from './utils.js'
 
 function isSourceFile(f: string) {
   const ext = path.extname(f)
@@ -19,11 +19,13 @@ function getRulePath(ruleName: string) {
 describe('package', () => {
   const pkg = path.resolve(srcDir)
 
-  const module = moduleRequire<
-    TSESLint.Linter.Plugin & {
-      rules: Record<string, TSESLint.RuleModule<string>>
-    }
-  >(pkg)
+  let module: TSESLint.Linter.Plugin & {
+    rules: Record<string, TSESLint.RuleModule<string>>
+  }
+
+  beforeAll(async () => {
+    ;({ default: module } = await import(pathToFileURL(pkg).href))
+  })
 
   it('exists', () => {
     expect(module).toBeDefined()
@@ -45,22 +47,42 @@ describe('package', () => {
     }
   })
 
-  it('has configs only for rules that exist', () => {
+  it('has configs only for rules that exist', async () => {
     const preamble = `${pluginName}/`
     for (const config of Object.values(module.configs!)) {
       if (!config.rules) {
         continue
       }
       for (const rule of Object.keys(config.rules)) {
-        expect(() =>
-          require(getRulePath(rule.slice(preamble.length))),
-        ).not.toThrow()
+        await expect(
+          import(pathToFileURL(getRulePath(rule.slice(preamble.length))).href),
+        ).resolves.toHaveProperty('default')
       }
     }
   })
 
   it('marks deprecated rules in their metadata', () => {
-    expect(module.rules!['imports-first'].meta.deprecated).toBe(true)
+    expect(module.rules!['imports-first'].meta.deprecated).toBeDefined()
     expect(module.rules!.first.meta.deprecated).not.toBe(true)
+  })
+
+  it('provides information about deprecated rules', () => {
+    expect(module.rules!['imports-first'].meta).not.toHaveProperty('replacedBy')
+    expect(module.rules!['imports-first'].meta.deprecated).toEqual(
+      expect.objectContaining<TSESLint.DeprecatedInfo>({
+        message: expect.any(String),
+        url: expect.any(String),
+        deprecatedSince: expect.any(String),
+        replacedBy: [
+          {
+            message: expect.any(String),
+            rule: {
+              name: expect.any(String),
+              url: expect.any(String),
+            },
+          },
+        ],
+      }),
+    )
   })
 })

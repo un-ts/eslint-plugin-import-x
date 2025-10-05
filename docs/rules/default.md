@@ -1,6 +1,6 @@
 # import-x/default
 
-💼 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`.
+💼 This rule is enabled in the following configs: ❗ `errors`, ❗ `flat/errors`, ☑️ `flat/recommended`, ☑️ `recommended`.
 
 <!-- end auto-generated rule header -->
 
@@ -15,9 +15,6 @@ from [`jsnext:main`], if present in `package.json`.
 Redux's npm module includes this key, and thereby is lintable, for example.
 
 A module path that is [ignored] or not [unambiguously an ES module] will not be reported when imported.
-
-[ignored]: ../README.md#importignore
-[unambiguously an ES module]: https://github.com/bmeck/UnambiguousJavaScriptGrammar
 
 ## Rule Details
 
@@ -78,3 +75,5 @@ either, so such a situation will be reported in the importing module.
 [ES7]: https://github.com/leebyron/ecmascript-more-export-from
 [`import-x/ignore`]: ../../README.md#importignore
 [`jsnext:main`]: https://github.com/rollup/rollup/wiki/jsnext:main
+[ignored]: ../../README.md#importignore
+[unambiguously an ES module]: https://github.com/bmeck/UnambiguousJavaScriptGrammar

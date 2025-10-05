@@ -1,11 +1,11 @@
-import type { PluginConfig } from '../types'
+import type { PluginConfig } from '../types.js'
 
 /**
  * Rules in progress.
  *
  * Do not expect these to adhere to semver across releases.
  */
-export = {
+export default {
   plugins: ['import-x'],
   rules: {
     'import-x/no-deprecated': 1,

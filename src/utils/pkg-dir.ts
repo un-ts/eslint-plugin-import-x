@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { pkgUp } from './pkg-up'
+import { pkgUp } from './pkg-up.js'
 
 export function pkgDir(cwd: string) {
   const fp = pkgUp({ cwd })

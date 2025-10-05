@@ -5,12 +5,12 @@ import {
   createRule,
   moduleVisitor,
   makeOptionsSchema,
-} from '../utils'
-import type { ModuleOptions } from '../utils'
+} from '../utils/index.js'
+import type { ModuleOptions } from '../utils/index.js'
 
-type MessageId = 'absolute'
+export type MessageId = 'absolute'
 
-export = createRule<[ModuleOptions?], MessageId>({
+export default createRule<[ModuleOptions?], MessageId>({
   name: 'no-absolute-path',
   meta: {
     type: 'suggestion',

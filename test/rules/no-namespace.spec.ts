@@ -1,12 +1,14 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test } from '../utils'
+import { createRuleTestCaseFunctions } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-namespace'
 
-const ERROR_MESSAGE = 'Unexpected namespace import.'
-
 const ruleTester = new TSESLintRuleTester()
+
+const { tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+const NO_NAMESPACE_ERROR = { messageId: 'noNamespace' } as const
 
 ruleTester.run('no-namespace', rule, {
   valid: [
@@ -44,37 +46,37 @@ ruleTester.run('no-namespace', rule, {
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: "import * as foo from 'foo';",
       errors: [
         {
+          ...NO_NAMESPACE_ERROR,
           line: 1,
           column: 8,
-          message: ERROR_MESSAGE,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: "import defaultExport, * as foo from 'foo';",
       errors: [
         {
+          ...NO_NAMESPACE_ERROR,
           line: 1,
           column: 23,
-          message: ERROR_MESSAGE,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: "import * as foo from './foo';",
       errors: [
         {
+          ...NO_NAMESPACE_ERROR,
           line: 1,
           column: 8,
-          message: ERROR_MESSAGE,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         import * as foo from './foo';
         florp(foo.bar);
@@ -87,13 +89,13 @@ ruleTester.run('no-namespace', rule, {
       `.trim(),
       errors: [
         {
+          ...NO_NAMESPACE_ERROR,
           line: 1,
           column: 8,
-          message: ERROR_MESSAGE,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         import * as foo from './foo';
         const bar = 'name conflict';
@@ -112,13 +114,13 @@ ruleTester.run('no-namespace', rule, {
       `.trim(),
       errors: [
         {
+          ...NO_NAMESPACE_ERROR,
           line: 1,
           column: 8,
-          message: ERROR_MESSAGE,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: `
         import * as foo from './foo';
         function func(arg) {
@@ -135,9 +137,9 @@ ruleTester.run('no-namespace', rule, {
       `.trim(),
       errors: [
         {
+          ...NO_NAMESPACE_ERROR,
           line: 1,
           column: 8,
-          message: ERROR_MESSAGE,
         },
       ],
     }),

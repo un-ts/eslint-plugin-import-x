@@ -1,14 +1,14 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule, getValue } from '../utils/index.js'
 
-type Options = {
+export interface Options {
   target?: 'single' | 'any'
 }
 
-type MessageId = 'single' | 'any'
+export type MessageId = 'single' | 'any'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'prefer-default-export',
   meta: {
     type: 'suggestion',
@@ -69,10 +69,7 @@ export = createRule<[Options?], MessageId>({
       },
 
       ExportSpecifier(node) {
-        if (
-          (node.exported.name ||
-            ('value' in node.exported && node.exported.value)) === 'default'
-        ) {
+        if (getValue(node.exported) === 'default') {
           hasDefaultExport = true
         } else {
           specifierExportCount++

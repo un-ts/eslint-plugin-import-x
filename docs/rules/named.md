@@ -1,6 +1,6 @@
 # import-x/named
 
-💼🚫 This rule is enabled in the following configs: ❗ `errors`, ☑️ `recommended`. This rule is _disabled_ in the ⌨️ `typescript` config.
+💼🚫 This rule is enabled in the following configs: ❗ `errors`, ❗ `flat/errors`, ☑️ `flat/recommended`, ☑️ `recommended`. This rule is _disabled_ in the following configs: ⌨️ `flat/typescript`, ⌨️ `typescript`.
 
 <!-- end auto-generated rule header -->
 
@@ -13,10 +13,6 @@ from [`jsnext:main`] (deprecated) or `module`, if present in `package.json`.
 Redux's npm module includes this key, and thereby is lintable, for example.
 
 A module path that is [ignored] or not [unambiguously an ES module] will not be reported when imported. Note that type imports and exports, as used by [Flow], are always ignored.
-
-[ignored]: ../../README.md#importignore
-[unambiguously an ES module]: https://github.com/bmeck/UnambiguousJavaScriptGrammar
-[Flow]: https://flow.org/
 
 ## Rule Details
 
@@ -100,3 +96,6 @@ runtime, you will likely see false positives with this rule.
 [`jsnext:main`]: https://github.com/jsforum/jsforum/issues/5
 [`pkg.module`]: https://github.com/rollup/rollup/wiki/pkg.module
 [`import-x/ignore`]: ../../README.md#importignore
+[ignored]: ../../README.md#importignore
+[unambiguously an ES module]: https://github.com/bmeck/UnambiguousJavaScriptGrammar
+[Flow]: https://flow.org/

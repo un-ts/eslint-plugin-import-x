@@ -1,15 +1,36 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_CASES, parsers } from '../utils'
+import {
+  createRuleTestCaseFunctions,
+  SYNTAX_VALID_CASES,
+  parsers,
+} from '../utils.js'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createDefaultError(
+  name: string,
+  type: `${AST_NODE_TYPES}`,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId: 'default',
+    data: { name },
+    type: type as AST_NODE_TYPES,
+  }
+}
+
 ruleTester.run('no-named-as-default', rule, {
   valid: [
     // https://github.com/un-ts/eslint-plugin-import-x/issues/123
-    test({
+    tValid({
       code: `/** TypeScript */ import klawSync from "klaw-sync";`,
       settings: {
         'import-x/extensions': [
@@ -47,7 +68,7 @@ ruleTester.run('no-named-as-default', rule, {
       },
     }),
 
-    test({
+    tValid({
       code: 'import "./malformed.js"',
       languageOptions: { parser: require(parsers.ESPREE) },
     }),
@@ -56,22 +77,22 @@ ruleTester.run('no-named-as-default', rule, {
     'import bar, { foo } from "./empty-folder";',
 
     // es7
-    test({
+    tValid({
       code: 'export bar, { foo } from "./bar";',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'export bar from "./bar";',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // #566: don't false-positive on `default` itself
-    test({
+    tValid({
       code: 'export default from "./bar";',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
 
-    test({
+    tValid({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
       languageOptions: {
         parser: require(parsers.ESPREE),
@@ -79,106 +100,70 @@ ruleTester.run('no-named-as-default', rule, {
       },
     }),
 
-    ...SYNTAX_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'import foo from "./bar";',
-      errors: [
-        {
-          message:
-            "Using exported name 'foo' as identifier for default export.",
-          type: 'ImportDefaultSpecifier',
-        },
-      ],
+      errors: [createDefaultError('foo', 'ImportDefaultSpecifier')],
     }),
-    test({
+    tInvalid({
       code: 'import foo, { foo as bar } from "./bar";',
-      errors: [
-        {
-          message:
-            "Using exported name 'foo' as identifier for default export.",
-          type: 'ImportDefaultSpecifier',
-        },
-      ],
+      errors: [createDefaultError('foo', 'ImportDefaultSpecifier')],
     }),
 
     // es7
-    test({
+    tInvalid({
       code: 'export foo from "./bar";',
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [
-        {
-          message:
-            "Using exported name 'foo' as identifier for default export.",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- ExportDefaultSpecifier is unavailable yet
-          type: 'ExportDefaultSpecifier' as any,
-        },
+        // @ts-expect-error ExportDefaultSpecifier is unavailable yet
+        createDefaultError('foo', 'ExportDefaultSpecifier'),
       ],
     }),
-    test({
+    tInvalid({
       code: 'export foo, { foo as bar } from "./bar";',
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [
-        {
-          message:
-            "Using exported name 'foo' as identifier for default export.",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- ExportDefaultSpecifier is unavailable yet
-          type: 'ExportDefaultSpecifier' as any,
-        },
+        // @ts-expect-error ExportDefaultSpecifier is unavailable yet
+        createDefaultError('foo', 'ExportDefaultSpecifier'),
       ],
     }),
 
-    test({
+    tInvalid({
       code: 'import foo from "./malformed.js"',
       languageOptions: { parser: require(parsers.ESPREE) },
       errors: [
         {
+          // @ts-expect-error parsing error
           message:
             "Parse errors in imported module './malformed.js': 'return' outside of function (1:1)",
-          type: 'Literal',
+          type: 'Literal' as AST_NODE_TYPES,
         },
       ],
     }),
 
-    test({
+    tInvalid({
       code: 'import foo from "./export-default-string-and-named"',
-      errors: [
-        {
-          message:
-            "Using exported name 'foo' as identifier for default export.",
-          type: 'ImportDefaultSpecifier',
-        },
-      ],
+      errors: [createDefaultError('foo', 'ImportDefaultSpecifier')],
       languageOptions: {
         parser: require(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
       },
     }),
-    test({
+    tInvalid({
       code: 'import foo, { foo as bar } from "./export-default-string-and-named"',
-      errors: [
-        {
-          message:
-            "Using exported name 'foo' as identifier for default export.",
-          type: 'ImportDefaultSpecifier',
-        },
-      ],
+      errors: [createDefaultError('foo', 'ImportDefaultSpecifier')],
       languageOptions: {
         parser: require(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
       },
     }),
 
-    test({
-      code: `import z from 'zod';`,
-      errors: [
-        {
-          message: "Using exported name 'z' as identifier for default export.",
-          type: 'ImportDefaultSpecifier',
-        },
-      ],
+    tInvalid({
+      code: `import importX from 'eslint-plugin-import-x';`,
+      errors: [createDefaultError('importX', 'ImportDefaultSpecifier')],
     }),
   ],
 })

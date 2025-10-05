@@ -1,163 +1,136 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { test, SYNTAX_CASES, parsers } from '../utils'
+import {
+  SYNTAX_VALID_CASES,
+  parsers,
+  createRuleTestCaseFunctions,
+} from '../utils.js'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
+import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-anonymous-default-export'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createAssignError(
+  type: string,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId: 'assign',
+    data: { type },
+  }
+}
+
 ruleTester.run('no-anonymous-default-export', rule, {
   valid: [
     // Exports with identifiers are valid
-    test({ code: 'const foo = 123\nexport default foo' }),
-    test({ code: 'export default function foo() {}' }),
-    test({ code: 'export default class MyClass {}' }),
+    tValid({ code: 'const foo = 123\nexport default foo' }),
+    tValid({ code: 'export default function foo() {}' }),
+    tValid({ code: 'export default class MyClass {}' }),
 
     // Allow each forbidden type with appropriate option
-    test({ code: 'export default []', options: [{ allowArray: true }] }),
-    test({
+    tValid({ code: 'export default []', options: [{ allowArray: true }] }),
+    tValid({
       code: 'export default () => {}',
       options: [{ allowArrowFunction: true }],
     }),
-    test({
+    tValid({
       code: 'export default class {}',
       options: [{ allowAnonymousClass: true }],
     }),
-    test({
+    tValid({
       code: 'export default function() {}',
       options: [{ allowAnonymousFunction: true }],
     }),
-    test({ code: 'export default 123', options: [{ allowLiteral: true }] }),
-    test({ code: "export default 'foo'", options: [{ allowLiteral: true }] }),
-    test({ code: 'export default `foo`', options: [{ allowLiteral: true }] }),
-    test({ code: 'export default {}', options: [{ allowObject: true }] }),
-    test({
+    tValid({ code: 'export default 123', options: [{ allowLiteral: true }] }),
+    tValid({ code: "export default 'foo'", options: [{ allowLiteral: true }] }),
+    tValid({ code: 'export default `foo`', options: [{ allowLiteral: true }] }),
+    tValid({ code: 'export default {}', options: [{ allowObject: true }] }),
+    tValid({
       code: 'export default foo(bar)',
       options: [{ allowCallExpression: true }],
     }),
-    test({ code: 'export default new Foo()', options: [{ allowNew: true }] }),
+    tValid({ code: 'export default new Foo()', options: [{ allowNew: true }] }),
 
     // Allow forbidden types with multiple options
-    test({
+    tValid({
       code: 'export default 123',
       options: [{ allowLiteral: true, allowObject: true }],
     }),
-    test({
+    tValid({
       code: 'export default {}',
       options: [{ allowLiteral: true, allowObject: true }],
     }),
 
     // Sanity check unrelated export syntaxes
-    test({ code: "export * from 'foo'" }),
-    test({ code: 'const foo = 123\nexport { foo }' }),
-    test({ code: 'const foo = 123\nexport { foo as default }' }),
-    test({
+    tValid({ code: "export * from 'foo'" }),
+    tValid({ code: 'const foo = 123\nexport { foo }' }),
+    tValid({ code: 'const foo = 123\nexport { foo as default }' }),
+    tValid({
       code: 'const foo = 123\nexport { foo as "default" }',
       languageOptions: {
-        parser: require(parsers.ESPREE),
+        parser: cjsRequire(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
       },
     }),
 
     // Allow call expressions by default for backwards compatibility
-    test({ code: 'export default foo(bar)' }),
+    tValid({ code: 'export default foo(bar)' }),
 
-    ...SYNTAX_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'export default []',
-      errors: [
-        {
-          message:
-            'Assign array to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('array')],
     }),
-    test({
+    tInvalid({
       code: 'export default () => {}',
-      errors: [
-        {
-          message:
-            'Assign arrow function to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('arrow function')],
     }),
-    test({
+    tInvalid({
       code: 'export default class {}',
-      errors: [{ message: 'Unexpected default export of anonymous class' }],
+      errors: [{ messageId: 'anonymous', data: { type: 'class' } }],
     }),
-    test({
+    tInvalid({
       code: 'export default function() {}',
-      errors: [{ message: 'Unexpected default export of anonymous function' }],
+      errors: [{ messageId: 'anonymous', data: { type: 'function' } }],
     }),
-    test({
+    tInvalid({
       code: 'export default 123',
-      errors: [
-        {
-          message:
-            'Assign literal to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('literal')],
     }),
-    test({
+    tInvalid({
       code: "export default 'foo'",
-      errors: [
-        {
-          message:
-            'Assign literal to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('literal')],
     }),
-    test({
+    tInvalid({
       code: 'export default `foo`',
-      errors: [
-        {
-          message:
-            'Assign literal to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('literal')],
     }),
-    test({
+    tInvalid({
       code: 'export default {}',
-      errors: [
-        {
-          message:
-            'Assign object to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('object')],
     }),
-    test({
+    tInvalid({
       code: 'export default foo(bar)',
       options: [{ allowCallExpression: false }],
-      errors: [
-        {
-          message:
-            'Assign call result to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('call result')],
     }),
-    test({
+    tInvalid({
       code: 'export default new Foo()',
-      errors: [
-        {
-          message:
-            'Assign instance to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('instance')],
     }),
 
     // Test failure with non-covering exception
-    test({
+    tInvalid({
       code: 'export default 123',
       options: [{ allowObject: true }],
-      errors: [
-        {
-          message:
-            'Assign literal to a variable before exporting as module default',
-        },
-      ],
+      errors: [createAssignError('literal')],
     }),
   ],
 })

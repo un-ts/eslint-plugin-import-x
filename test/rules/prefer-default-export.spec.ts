@@ -1,102 +1,113 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import type { AST_NODE_TYPES, TSESLint } from '@typescript-eslint/utils'
 
-import { test, getNonDefaultParsers, parsers } from '../utils'
+import {
+  createRuleTestCaseFunctions,
+  getNonDefaultParsers,
+  parsers,
+} from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/prefer-default-export'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createSingleError(
+  type: `${AST_NODE_TYPES}`,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return { messageId: 'single', type: type as AST_NODE_TYPES }
+}
+
 // test cases for default option { target: 'single' }
 ruleTester.run('prefer-default-export', rule, {
   valid: [
-    test({
+    tValid({
       code: `
         export const foo = 'foo';
         export const bar = 'bar';`,
     }),
-    test({
+    tValid({
       code: `
         export default function bar() {};`,
     }),
-    test({
+    tValid({
       code: `
         export const foo = 'foo';
         export function bar() {};`,
     }),
-    test({
+    tValid({
       code: `
         export const foo = 'foo';
         export default bar;`,
     }),
-    test({
+    tValid({
       code: `
         let foo, bar;
         export { foo, bar }`,
     }),
-    test({
-      code: `
-        export const { foo, bar } = item;`,
+    tValid({
+      code: `export const { foo, bar } = item;`,
     }),
-    test({
-      code: `
-        export const { foo, bar: baz } = item;`,
+    tValid({
+      code: `export const { foo, bar: baz } = item;`,
     }),
-    test({
-      code: `
-        export const { foo: { bar, baz } } = item;`,
+    tValid({
+      code: `export const { foo: { bar, baz } } = item;`,
     }),
-    test({
-      code: `
-        export const [a, b] = item;`,
+    tValid({
+      code: `export const [a, b] = item;`,
     }),
-    test({
+    tValid({
       code: `
         let item;
         export const foo = item;
         export { item };`,
     }),
-    test({
+    tValid({
       code: `
         let foo;
         export { foo as default }`,
     }),
-    test({
+    tValid({
       code: `
         export * from './foo';`,
     }),
-    test({
+    tValid({
       code: `export Memory, { MemoryValue } from './Memory'`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // no exports at all
-    test({
-      code: `
-        import * as foo from './foo';`,
+    tValid({
+      code: `import * as foo from './foo';`,
     }),
 
-    test({
+    tValid({
       code: `export type UserId = number;`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
 
     // issue #653
-    test({
+    tValid({
       code: 'export default from "foo.js"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'export { a, b } from "foo.js"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     // ...SYNTAX_CASES,
-    test({
+    tValid({
       code: `
         export const [CounterProvider,, withCounter] = func();;
       `,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
-    test({
+    tValid({
       code: 'let foo; export { foo as "default" };',
       languageOptions: {
         parser: require(parsers.ESPREE),
@@ -105,66 +116,31 @@ ruleTester.run('prefer-default-export', rule, {
     }),
   ],
   invalid: [
-    test({
-      code: `
-        export function bar() {};`,
-      errors: [
-        {
-          type: 'ExportNamedDeclaration',
-          messageId: 'single',
-        },
-      ],
+    tInvalid({
+      code: `export function bar() {};`,
+      errors: [createSingleError('ExportNamedDeclaration')],
     }),
-    test({
-      code: `
-        export const foo = 'foo';`,
-      errors: [
-        {
-          type: 'ExportNamedDeclaration',
-          messageId: 'single',
-        },
-      ],
+    tInvalid({
+      code: `export const foo = 'foo';`,
+      errors: [createSingleError('ExportNamedDeclaration')],
     }),
-    test({
+    tInvalid({
       code: `
         const foo = 'foo';
         export { foo };`,
-      errors: [
-        {
-          type: 'ExportSpecifier',
-          messageId: 'single',
-        },
-      ],
+      errors: [createSingleError('ExportSpecifier')],
     }),
-    test({
-      code: `
-        export const { foo } = { foo: "bar" };`,
-      errors: [
-        {
-          type: 'ExportNamedDeclaration',
-          messageId: 'single',
-        },
-      ],
+    tInvalid({
+      code: `export const { foo } = { foo: "bar" };`,
+      errors: [createSingleError('ExportNamedDeclaration')],
     }),
-    test({
-      code: `
-        export const { foo: { bar } } = { foo: { bar: "baz" } };`,
-      errors: [
-        {
-          type: 'ExportNamedDeclaration',
-          messageId: 'single',
-        },
-      ],
+    tInvalid({
+      code: `export const { foo: { bar } } = { foo: { bar: "baz" } };`,
+      errors: [createSingleError('ExportNamedDeclaration')],
     }),
-    test({
-      code: `
-        export const [a] = ["foo"]`,
-      errors: [
-        {
-          type: 'ExportNamedDeclaration',
-          messageId: 'single',
-        },
-      ],
+    tInvalid({
+      code: `export const [a] = ["foo"]`,
+      errors: [createSingleError('ExportNamedDeclaration')],
     }),
   ],
 })
@@ -173,94 +149,54 @@ ruleTester.run('prefer-default-export', rule, {
 ruleTester.run('prefer-default-export', rule, {
   // Any exporting file must contain default export
   valid: [
-    test({
-      code: `
-          export default function bar() {};`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+    tValid({
+      code: `export default function bar() {};`,
+      options: [{ target: 'any' }],
     }),
-    test({
+    tValid({
       code: `
               export const foo = 'foo';
               export const bar = 'bar';
               export default 42;`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
     }),
-    test({
-      code: `
-            export default a = 2;`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+    tValid({
+      code: `export default a = 2;`,
+      options: [{ target: 'any' }],
     }),
-    test({
+    tValid({
       code: `
             export const a = 2;
             export default function foo() {};`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
     }),
-    test({
+    tValid({
       code: `
           export const a = 5;
           export function bar(){};
           let foo;
           export { foo as default }`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
     }),
-    test({
-      code: `
-          export * from './foo';`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+    tValid({
+      code: `export * from './foo';`,
+      options: [{ target: 'any' }],
     }),
-    test({
+    tValid({
       code: `export Memory, { MemoryValue } from './Memory'`,
       languageOptions: { parser: require(parsers.BABEL) },
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
     }),
     // no exports at all
-    test({
-      code: `
-            import * as foo from './foo';`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+    tValid({
+      code: `import * as foo from './foo';`,
+      options: [{ target: 'any' }],
     }),
-    test({
+    tValid({
       code: `const a = 5;`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
     }),
-    test({
+    tValid({
       code: 'export const a = 4; let foo; export { foo as "default" };',
       options: [{ target: 'any' }],
       languageOptions: {
@@ -271,123 +207,57 @@ ruleTester.run('prefer-default-export', rule, {
   ],
   // { target: 'any' } invalid cases when any exporting file must contain default export but does not
   invalid: [
-    test({
+    tInvalid({
       code: `
         export const foo = 'foo';
         export const bar = 'bar';`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
-      errors: [
-        {
-          messageId: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
+      errors: [{ messageId: 'any' }],
     }),
-    test({
+    tInvalid({
       code: `
         export const foo = 'foo';
         export function bar() {};`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
-      errors: [
-        {
-          messageId: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
+      errors: [{ messageId: 'any' }],
     }),
-    test({
+    tInvalid({
       code: `
         let foo, bar;
         export { foo, bar }`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
-      errors: [
-        {
-          messageId: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
+      errors: [{ messageId: 'any' }],
     }),
-    test({
+    tInvalid({
       code: `
         let item;
         export const foo = item;
         export { item };`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
-      errors: [
-        {
-          messageId: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
+      errors: [{ messageId: 'any' }],
     }),
-    test({
+    tInvalid({
       code: 'export { a, b } from "foo.js"',
       languageOptions: { parser: require(parsers.BABEL) },
-      options: [
-        {
-          target: 'any',
-        },
-      ],
-      errors: [
-        {
-          messageId: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
+      errors: [{ messageId: 'any' }],
     }),
-    test({
+    tInvalid({
       code: `
         const foo = 'foo';
         export { foo };`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
-      errors: [
-        {
-          messageId: 'any',
-        },
-      ],
+      options: [{ target: 'any' }],
+      errors: [{ messageId: 'any' }],
     }),
-    test({
-      code: `
-        export const { foo } = { foo: "bar" };`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
-      errors: [
-        {
-          messageId: 'any',
-        },
-      ],
+    tInvalid({
+      code: `export const { foo } = { foo: "bar" };`,
+      options: [{ target: 'any' }],
+      errors: [{ messageId: 'any' }],
     }),
-    test({
-      code: `
-        export const { foo: { bar } } = { foo: { bar: "baz" } };`,
-      options: [
-        {
-          target: 'any',
-        },
-      ],
-      errors: [
-        {
-          messageId: 'any',
-        },
-      ],
+    tInvalid({
+      code: `export const { foo: { bar } } = { foo: { bar: "baz" } };`,
+      options: [{ target: 'any' }],
+      errors: [{ messageId: 'any' }],
     }),
   ],
 })
@@ -396,7 +266,9 @@ describe('TypeScript', () => {
   for (const parser of getNonDefaultParsers()) {
     const parserConfig = {
       languageOptions: {
-        ...(parser === parsers.BABEL && { parser: require(parsers.BABEL) }),
+        ...(parser === parsers.BABEL && {
+          parser: require<TSESLint.Parser.LooseParserModule>(parsers.BABEL),
+        }),
       },
       settings: {
         'import-x/parsers': { [parsers.TS]: ['.ts'] },
@@ -407,7 +279,7 @@ describe('TypeScript', () => {
     ruleTester.run('prefer-default-export', rule, {
       valid: [
         // Exporting types
-        test({
+        tValid({
           code: `
             export type foo = string;
             export type bar = number;
@@ -415,15 +287,15 @@ describe('TypeScript', () => {
           `,
           ...parserConfig,
         }),
-        test({
+        tValid({
           code: `export type foo = string /* ${parser.replace(process.cwd(), '$$PWD')}*/`,
           ...parserConfig,
         }),
-        test({
+        tValid({
           code: `export interface foo { bar: string; } /* ${parser.replace(process.cwd(), '$$PWD')}*/`,
           ...parserConfig,
         }),
-        test({
+        tValid({
           code: `export interface foo { bar: string; }; export function goo() {} /* ${parser.replace(process.cwd(), '$$PWD')}*/`,
           ...parserConfig,
         }),

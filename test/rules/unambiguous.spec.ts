@@ -1,7 +1,8 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers } from '../utils'
+import { parsers } from '../utils.js'
 
+import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/unambiguous'
 
 const ruleTester = new TSESLintRuleTester()
@@ -65,7 +66,7 @@ ruleTester.run('unambiguous', rule, {
     {
       code: 'function x() {}; export * as y from "z"',
       languageOptions: {
-        parser: require(parsers.BABEL),
+        parser: cjsRequire(parsers.BABEL),
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     },
@@ -83,11 +84,7 @@ ruleTester.run('unambiguous', rule, {
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
       output: null,
-      errors: [
-        {
-          messageId: 'module',
-        },
-      ],
+      errors: [{ messageId: 'module' }],
     },
   ],
 })

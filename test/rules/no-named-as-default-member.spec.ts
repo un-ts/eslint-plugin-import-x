@@ -1,23 +1,40 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import type { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { test, SYNTAX_CASES, parsers } from '../utils'
+import {
+  createRuleTestCaseFunctions,
+  SYNTAX_VALID_CASES,
+  parsers,
+} from '../utils.js'
+import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-named-as-default-member'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createMemberError(
+  data: { objectName: string; propName: string; sourcePath: string },
+  type: `${AST_NODE_TYPES}`,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return { messageId: 'member', data, type: type as AST_NODE_TYPES }
+}
+
 ruleTester.run('no-named-as-default-member', rule, {
   valid: [
-    test({ code: 'import bar, {foo} from "./bar";' }),
-    test({ code: 'import bar from "./bar"; const baz = bar.baz' }),
-    test({ code: 'import {foo} from "./bar"; const baz = foo.baz;' }),
-    test({
+    tValid({ code: 'import bar, {foo} from "./bar";' }),
+    tValid({ code: 'import bar from "./bar"; const baz = bar.baz' }),
+    tValid({ code: 'import {foo} from "./bar"; const baz = foo.baz;' }),
+    tValid({
       code: 'import * as named from "./named-exports"; const a = named.a',
     }),
-    test({
+    tValid({
       code: 'import foo from "./default-export-default-property"; const a = foo.default',
     }),
-    test({
+    tValid({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
       languageOptions: {
         parser: require(parsers.ESPREE),
@@ -25,58 +42,57 @@ ruleTester.run('no-named-as-default-member', rule, {
       },
     }),
 
-    ...SYNTAX_CASES,
+    ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'import bar from "./bar"; const foo = bar.foo;',
       errors: [
-        {
-          message:
-            "Caution: `bar` also has a named export `foo`. Check if you meant to write `import {foo} from './bar'` instead.",
-          type: 'MemberExpression',
-        },
+        createMemberError(
+          { objectName: 'bar', propName: 'foo', sourcePath: './bar' },
+          'MemberExpression',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: 'import bar from "./bar"; bar.foo();',
       errors: [
-        {
-          message:
-            "Caution: `bar` also has a named export `foo`. Check if you meant to write `import {foo} from './bar'` instead.",
-          type: 'MemberExpression',
-        },
+        createMemberError(
+          { objectName: 'bar', propName: 'foo', sourcePath: './bar' },
+          'MemberExpression',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: 'import bar from "./bar"; const {foo} = bar;',
       errors: [
-        {
-          message:
-            "Caution: `bar` also has a named export `foo`. Check if you meant to write `import {foo} from './bar'` instead.",
-          type: 'Identifier',
-        },
+        createMemberError(
+          { objectName: 'bar', propName: 'foo', sourcePath: './bar' },
+          'Identifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: 'import bar from "./bar"; const {foo: foo2, baz} = bar;',
       errors: [
-        {
-          message:
-            "Caution: `bar` also has a named export `foo`. Check if you meant to write `import {foo} from './bar'` instead.",
-          type: 'Identifier',
-        },
+        createMemberError(
+          { objectName: 'bar', propName: 'foo', sourcePath: './bar' },
+          'Identifier',
+        ),
       ],
     }),
-    test({
+    tInvalid({
       code: 'import bar from "./export-default-string-and-named"; const foo = bar.foo;',
       errors: [
-        {
-          message:
-            "Caution: `bar` also has a named export `foo`. Check if you meant to write `import {foo} from './export-default-string-and-named'` instead.",
-          type: 'MemberExpression',
-        },
+        createMemberError(
+          {
+            objectName: 'bar',
+            propName: 'foo',
+            sourcePath: './export-default-string-and-named',
+          },
+          'MemberExpression',
+        ),
       ],
       languageOptions: {
         parser: require(parsers.ESPREE),

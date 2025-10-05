@@ -1,6 +1,6 @@
 import type { JSONSchema, TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-type Visitor = (
+export type Visitor = (
   source: TSESTree.StringLiteral,
   importer:
     | TSESTree.ImportDeclaration
@@ -11,7 +11,7 @@ type Visitor = (
     | TSESTree.StringLiteral,
 ) => void
 
-export type ModuleOptions = {
+export interface ModuleOptions {
   amd?: boolean
   commonjs?: boolean
   esmodule?: boolean
@@ -19,8 +19,8 @@ export type ModuleOptions = {
 }
 
 /**
- * Returns an object of node visitors that will call
- * 'visitor' with every discovered module path.
+ * Returns an object of node visitors that will call 'visitor' with every
+ * discovered module path.
  */
 export function moduleVisitor(visitor: Visitor, options?: ModuleOptions) {
   const ignore = options?.ignore
@@ -188,7 +188,8 @@ export function moduleVisitor(visitor: Visitor, options?: ModuleOptions) {
 }
 
 /**
- * make an options schema for the module visitor, optionally adding extra fields.
+ * Make an options schema for the module visitor, optionally adding extra
+ * fields.
  */
 export function makeOptionsSchema(
   additionalProperties?: Record<string, JSONSchema.JSONSchema4>,
@@ -219,6 +220,7 @@ export function makeOptionsSchema(
 }
 
 /**
- * json schema object for options parameter. can be used to build rule options schema object.
+ * Json schema object for options parameter. can be used to build rule options
+ * schema object.
  */
 export const optionsSchema = makeOptionsSchema()

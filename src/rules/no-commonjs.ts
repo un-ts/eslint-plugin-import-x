@@ -1,18 +1,16 @@
-/**
- * Rule to prefer ES6 to CJS
- */
+/** Rule to prefer ES6 to CJS */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
-type NormalizedOptions = {
+export interface NormalizedOptions {
   allowPrimitiveModules?: boolean
   allowRequire?: boolean
   allowConditionalRequire?: boolean
 }
 
-type Options = 'allow-primitive-modules' | NormalizedOptions
+export type Options = 'allow-primitive-modules' | NormalizedOptions
 
 type MessageId = 'export' | 'import'
 
@@ -63,7 +61,7 @@ function isLiteralString(node: TSESTree.CallExpressionArgument) {
   )
 }
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-commonjs',
   meta: {
     type: 'suggestion',

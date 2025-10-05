@@ -1,90 +1,108 @@
 import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath } from '../utils'
+import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-relative-packages'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createNotFoundError(
+  importPath: string,
+  properImport: string,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId: 'noAllowed',
+    data: { properImport, importPath },
+  }
+}
+
 ruleTester.run('no-relative-packages', rule, {
   valid: [
-    test({
+    tValid({
       code: 'import foo from "./index.js"',
       filename: testFilePath('./package/index.js'),
     }),
-    test({
+    tValid({
       code: 'import bar from "../bar"',
       filename: testFilePath('./package/index.js'),
     }),
-    test({
+    tValid({
       code: 'import {foo} from "a"',
       filename: testFilePath('./package-named/index.js'),
     }),
-    test({
+    tValid({
       code: 'const bar = require("../bar.js")',
       filename: testFilePath('./package/index.js'),
     }),
-    test({
+    tValid({
       code: 'const bar = require("../not/a/file/path.js")',
       filename: testFilePath('./package/index.js'),
     }),
-    test({
+    tValid({
       code: 'import "package"',
       filename: testFilePath('./package/index.js'),
     }),
-    test({
+    tValid({
       code: 'require("../bar.js")',
       filename: testFilePath('./package/index.js'),
     }),
   ],
 
   invalid: [
-    test({
+    tInvalid({
       code: 'import foo from "./package-named"',
       filename: testFilePath('./bar.js'),
       errors: [
         {
-          message:
-            'Relative import from another package is not allowed. Use `package-named` instead of `./package-named`',
+          ...createNotFoundError('./package-named', 'package-named'),
           line: 1,
           column: 17,
         },
       ],
       output: 'import foo from "package-named"',
     }),
-    test({
+    tInvalid({
       code: 'import foo from "../package-named"',
       filename: testFilePath('./package/index.js'),
       errors: [
         {
-          message:
-            'Relative import from another package is not allowed. Use `package-named` instead of `../package-named`',
+          ...createNotFoundError('../package-named', 'package-named'),
           line: 1,
           column: 17,
         },
       ],
       output: 'import foo from "package-named"',
     }),
-    test({
+    tInvalid({
       code: 'import foo from "../package-scoped"',
       filename: testFilePath('./package/index.js'),
       errors: [
         {
-          message: `Relative import from another package is not allowed. Use \`${path.normalize('@scope/package-named')}\` instead of \`../package-scoped\``,
+          ...createNotFoundError(
+            '../package-scoped',
+            path.normalize('@scope/package-named'),
+          ),
           line: 1,
           column: 17,
         },
       ],
       output: `import foo from "@scope/package-named"`,
     }),
-    test({
+    tInvalid({
       code: 'import bar from "../bar"',
       filename: testFilePath('./package-named/index.js'),
       errors: [
         {
-          message: `Relative import from another package is not allowed. Use \`${path.normalize('eslint-plugin-import-x/test/fixtures/bar')}\` instead of \`../bar\``,
+          ...createNotFoundError(
+            '../bar',
+            path.normalize('eslint-plugin-import-x/test/fixtures/bar'),
+          ),
           line: 1,
           column: 17,
         },

@@ -1,14 +1,16 @@
 /**
- * Ensures that modules contain exports and/or all
- * modules are consumed within other modules.
+ * Ensures that modules contain exports and/or all modules are consumed within
+ * other modules.
  */
 
 import path from 'node:path'
 
-import { TSESTree } from '@typescript-eslint/utils'
-import { FileEnumerator } from 'eslint/use-at-your-own-risk'
+import { TSESTree } from '@typescript-eslint/types'
+import type { TSESLint } from '@typescript-eslint/utils'
+// eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
+import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 
-import type { FileExtension, RuleContext } from '../types'
+import type { FileExtension, RuleContext } from '../types.js'
 import {
   ExportMap,
   recursivePatternCapture,
@@ -18,17 +20,65 @@ import {
   readPkgUp,
   visit,
   getValue,
-} from '../utils'
+} from '../utils/index.js'
 
-function listFilesToProcess(src: string[], extensions: FileExtension[]) {
-  const enumerator = new FileEnumerator({
-    extensions,
-  })
+// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+const { FileEnumerator, shouldUseFlatConfig } = eslintUnsupportedApi
 
-  return Array.from(enumerator.iterateFiles(src), ({ filePath, ignored }) => ({
-    ignored,
-    filename: filePath,
-  }))
+function listFilesUsingFileEnumerator(
+  src: string[],
+  extensions: FileExtension[],
+) {
+  // We need to know whether this is being run with flat config in order to
+  // determine how to report errors if FileEnumerator throws due to a lack of eslintrc.
+
+  const { ESLINT_USE_FLAT_CONFIG } = process.env
+
+  // This condition is sufficient to test in v8, since the environment variable is necessary to turn on flat config
+  let isUsingFlatConfig: boolean
+
+  // In the case of using v9, we can check the `shouldUseFlatConfig` function
+  // If this function is present, then we assume it's v9
+  try {
+    isUsingFlatConfig =
+      // @ts-expect-error -- only available in ESLint v9
+      shouldUseFlatConfig && ESLINT_USE_FLAT_CONFIG !== 'false'
+  } catch {
+    // We don't want to throw here, since we only want to init the
+    // boolean if the function is available.
+    isUsingFlatConfig =
+      !!ESLINT_USE_FLAT_CONFIG && ESLINT_USE_FLAT_CONFIG !== 'false'
+  }
+
+  const enumerator = new FileEnumerator({ extensions })
+
+  try {
+    return Array.from(
+      enumerator.iterateFiles(src),
+      ({ filePath, ignored }) => ({ filename: filePath, ignored }),
+    )
+  } catch (error) {
+    // If we're using flat config, and FileEnumerator throws due to a lack of eslintrc,
+    // then we want to throw an error so that the user knows about this rule's reliance on
+    // the legacy config.
+    if (
+      isUsingFlatConfig &&
+      (error as Error).message.includes('No ESLint configuration found')
+    ) {
+      throw new Error(`
+Due to the exclusion of certain internal ESLint APIs when using flat config,
+the import-x/no-unused-modules rule requires an .eslintrc file (even empty) to know which
+files to ignore (even when using flat config).
+The .eslintrc file only needs to contain "ignorePatterns", or can be empty if
+you do not want to ignore any files.
+
+See https://github.com/import-js/eslint-plugin-import/issues/3079
+for additional context.
+`)
+    }
+    // If this isn't the case, then we'll just let the error bubble up
+    throw error
+  }
 }
 
 const DEFAULT = 'default'
@@ -79,17 +129,16 @@ function forEachDeclarationIdentifier(
  * Represented by a two-level Map to a Set of identifiers. The upper-level Map
  * keys are the paths to the modules containing the imports, while the
  * lower-level Map keys are the paths to the files which are being imported
- * from. Lastly, the Set of identifiers contains either names being imported
- * or a special AST node name listed above (e.g ImportDefaultSpecifier).
+ * from. Lastly, the Set of identifiers contains either names being imported or
+ * a special AST node name listed above (e.g ImportDefaultSpecifier).
  *
  * For example, if we have a file named foo.js containing:
  *
- *   import { o2 } from './bar.js';
+ * `import { o2 } from './bar.js';`
  *
  * Then we will have a structure that looks like:
  *
- *   Map { 'foo.js' => Map { 'bar.js' => Set { 'o2' } } }
- *
+ * `Map { 'foo.js' => Map { 'bar.js' => Set { 'o2' } } }`
  */
 const importList = new Map<string, Map<string, Set<string>>>()
 
@@ -105,20 +154,19 @@ const importList = new Map<string, Map<string, Set<string>>>()
  *
  * For example, if we have a file named bar.js containing the following exports:
  *
- *   const o2 = 'bar';
- *   export { o2 };
+ * `const o2 = 'bar'; export { o2 };`
  *
  * And a file named foo.js containing the following import:
  *
- *   import { o2 } from './bar.js';
+ * `import { o2 } from './bar.js';`
  *
  * Then we will have a structure that looks like:
  *
- *   Map { 'bar.js' => Map { 'o2' => { whereUsed: Set { 'foo.js' } } } }
+ * `Map { 'bar.js' => Map { 'o2' => { whereUsed: Set { 'foo.js' } } } }`
  */
 const exportList = new Map<string, Map<string, { whereUsed: Set<string> }>>()
 
-const visitorKeyMap = new Map()
+const visitorKeyMap = new Map<string, TSESLint.SourceCode.VisitorKeys | null>()
 
 const ignoredFiles = new Set()
 const filesOutsideSrc = new Set()
@@ -126,9 +174,10 @@ const filesOutsideSrc = new Set()
 const isNodeModule = (path: string) => /([/\\])(node_modules)\1/.test(path)
 
 /**
- * read all files matching the patterns in src and ignoreExports
+ * Read all files matching the patterns in src and ignoreExports
  *
- * return all files matching src pattern, which are not matching the ignoreExports pattern
+ * Return all files matching src pattern, which are not matching the
+ * ignoreExports pattern
  */
 const resolveFiles = (
   src: string[],
@@ -137,10 +186,13 @@ const resolveFiles = (
 ) => {
   const extensions = [...getFileExtensions(context.settings)]
 
-  const srcFileList = listFilesToProcess(src, extensions)
+  const srcFileList = listFilesUsingFileEnumerator(src, extensions)
 
   // prepare list of ignored files
-  const ignoredFilesList = listFilesToProcess(ignoreExports, extensions)
+  const ignoredFilesList = listFilesUsingFileEnumerator(
+    ignoreExports,
+    extensions,
+  )
   for (const { filename } of ignoredFilesList) ignoredFiles.add(filename)
 
   // prepare list of source files, don't consider files from node_modules
@@ -153,7 +205,8 @@ const resolveFiles = (
 }
 
 /**
- * parse all source files and build up 2 maps containing the existing imports and exports
+ * Parse all source files and build up 2 maps containing the existing imports
+ * and exports
  */
 const prepareImportsAndExports = (
   srcFiles: Set<string>,
@@ -260,8 +313,8 @@ const prepareImportsAndExports = (
 }
 
 /**
- * traverse through all imports and add the respective path to the whereUsed-list
- * of the corresponding export
+ * Traverse through all imports and add the respective path to the
+ * whereUsed-list of the corresponding export
  */
 const determineUsage = () => {
   for (const [listKey, listValue] of importList.entries()) {
@@ -292,8 +345,8 @@ const determineUsage = () => {
 }
 
 /**
- * prepare the lists of existing imports and exports - should only be executed once at
- * the start of a new eslint run
+ * Prepare the lists of existing imports and exports - should only be executed
+ * once at the start of a new eslint run
  */
 let srcFiles: Set<string>
 let lastPrepareKey: string
@@ -388,17 +441,17 @@ const fileIsInPkg = (file: string) => {
   return false
 }
 
-type Options = {
+export interface Options {
   src?: string[]
   ignoreExports?: string[]
-  missingExports?: string[]
+  missingExports?: true
   unusedExports?: boolean
   ignoreUnusedTypeExports?: boolean
 }
 
 type MessageId = 'notFound' | 'unused'
 
-export = createRule<Options[], MessageId>({
+export default createRule<Options[], MessageId>({
   name: 'no-unused-modules',
   meta: {
     type: 'suggestion',
@@ -624,9 +677,9 @@ export = createRule<Options[], MessageId>({
     }
 
     /**
-     * only useful for tools like vscode-eslint
+     * Only useful for tools like vscode-eslint
      *
-     * update lists of existing exports during runtime
+     * Update lists of existing exports during runtime
      */
     const updateExportUsage = (node: TSESTree.Program) => {
       if (ignoredFiles.has(filename)) {
@@ -686,9 +739,9 @@ export = createRule<Options[], MessageId>({
     }
 
     /**
-     * only useful for tools like vscode-eslint
+     * Only useful for tools like vscode-eslint
      *
-     * update lists of existing imports during runtime
+     * Update lists of existing imports during runtime
      */
     const updateImportUsage = (node: TSESTree.Program) => {
       if (!unusedExports) {
@@ -707,8 +760,8 @@ export = createRule<Options[], MessageId>({
       const oldDefaultImports = new Set<string>()
       const newDefaultImports = new Set<string>()
 
-      const oldImports = new Map()
-      const newImports = new Map()
+      const oldImports = new Map<string, string>()
+      const newImports = new Map<string, string>()
       for (const [key, value] of oldImportPaths.entries()) {
         if (value.has(AST_NODE_TYPES.ExportAllDeclaration)) {
           oldExportAll.add(key)
@@ -770,7 +823,7 @@ export = createRule<Options[], MessageId>({
             if (name === DEFAULT) {
               newDefaultImports.add(resolvedPath!)
             } else {
-              newImports.set(name, resolvedPath)
+              newImports.set(name, resolvedPath!)
             }
           }
         }

@@ -1,1 +1,1 @@
-export default arrowAsync = async () => {};
+export default arrowAsync = async () => {}

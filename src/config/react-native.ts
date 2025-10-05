@@ -1,9 +1,7 @@
-import type { PluginConfig } from '../types'
+import type { PluginConfig } from '../types.js'
 
-/**
- * adds platform extensions to Node resolver
- */
-export = {
+/** Adds platform extensions to Node resolver */
+export default {
   settings: {
     'import-x/resolver': {
       node: {

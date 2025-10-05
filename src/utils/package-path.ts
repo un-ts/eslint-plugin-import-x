@@ -1,9 +1,9 @@
 import path from 'node:path'
 
-import type { RuleContext } from '../types'
+import type { RuleContext } from '../types.js'
 
-import { pkgUp } from './pkg-up'
-import { readPkgUp } from './read-pkg-up'
+import { pkgUp } from './pkg-up.js'
+import { readPkgUp } from './read-pkg-up.js'
 
 export function getContextPackagePath(context: RuleContext) {
   return getFilePackagePath(context.physicalFilename)

@@ -1,40 +1,53 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { parsers, test } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-mutable-exports'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createNoMutableError(
+  kind: string,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return { messageId: 'noMutable', data: { kind } }
+}
+
 ruleTester.run('no-mutable-exports', rule, {
   valid: [
-    test({ code: 'export const count = 1' }),
-    test({ code: 'export function getCount() {}' }),
-    test({ code: 'export class Counter {}' }),
-    test({ code: 'export default count = 1' }),
-    test({ code: 'export default function getCount() {}' }),
-    test({ code: 'export default class Counter {}' }),
-    test({ code: 'const count = 1\nexport { count }' }),
-    test({ code: 'const count = 1\nexport { count as counter }' }),
-    test({ code: 'const count = 1\nexport default count' }),
-    test({ code: 'const count = 1\nexport { count as default }' }),
-    test({ code: 'function getCount() {}\nexport { getCount }' }),
-    test({ code: 'function getCount() {}\nexport { getCount as getCounter }' }),
-    test({ code: 'function getCount() {}\nexport default getCount' }),
-    test({ code: 'function getCount() {}\nexport { getCount as default }' }),
-    test({ code: 'class Counter {}\nexport { Counter }' }),
-    test({ code: 'class Counter {}\nexport { Counter as Count }' }),
-    test({ code: 'class Counter {}\nexport default Counter' }),
-    test({ code: 'class Counter {}\nexport { Counter as default }' }),
-    test({
-      languageOptions: { parser: require(parsers.BABEL) },
+    tValid({ code: 'export const count = 1' }),
+    tValid({ code: 'export function getCount() {}' }),
+    tValid({ code: 'export class Counter {}' }),
+    tValid({ code: 'export default count = 1' }),
+    tValid({ code: 'export default function getCount() {}' }),
+    tValid({ code: 'export default class Counter {}' }),
+    tValid({ code: 'const count = 1\nexport { count }' }),
+    tValid({ code: 'const count = 1\nexport { count as counter }' }),
+    tValid({ code: 'const count = 1\nexport default count' }),
+    tValid({ code: 'const count = 1\nexport { count as default }' }),
+    tValid({ code: 'function getCount() {}\nexport { getCount }' }),
+    tValid({
+      code: 'function getCount() {}\nexport { getCount as getCounter }',
+    }),
+    tValid({ code: 'function getCount() {}\nexport default getCount' }),
+    tValid({ code: 'function getCount() {}\nexport { getCount as default }' }),
+    tValid({ code: 'class Counter {}\nexport { Counter }' }),
+    tValid({ code: 'class Counter {}\nexport { Counter as Count }' }),
+    tValid({ code: 'class Counter {}\nexport default Counter' }),
+    tValid({ code: 'class Counter {}\nexport { Counter as default }' }),
+    tValid({
       code: 'export Something from "./something";',
-    }),
-    test({
       languageOptions: { parser: require(parsers.BABEL) },
-      code: 'type Foo = {}\nexport type {Foo}',
     }),
-    test({
+    tValid({
+      code: 'type Foo = {}\nexport type {Foo}',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
+    tValid({
       code: 'const count = 1\nexport { count as "counter" }',
       languageOptions: {
         parser: require(parsers.ESPREE),
@@ -43,41 +56,41 @@ ruleTester.run('no-mutable-exports', rule, {
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: 'export let count = 1',
-      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
+      errors: [createNoMutableError('let')],
     }),
-    test({
+    tInvalid({
       code: 'export var count = 1',
-      errors: ["Exporting mutable 'var' binding, use 'const' instead."],
+      errors: [createNoMutableError('var')],
     }),
-    test({
+    tInvalid({
       code: 'let count = 1\nexport { count }',
-      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
+      errors: [createNoMutableError('let')],
     }),
-    test({
+    tInvalid({
       code: 'var count = 1\nexport { count }',
-      errors: ["Exporting mutable 'var' binding, use 'const' instead."],
+      errors: [createNoMutableError('var')],
     }),
-    test({
+    tInvalid({
       code: 'let count = 1\nexport { count as counter }',
-      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
+      errors: [createNoMutableError('let')],
     }),
-    test({
+    tInvalid({
       code: 'var count = 1\nexport { count as counter }',
-      errors: ["Exporting mutable 'var' binding, use 'const' instead."],
+      errors: [createNoMutableError('var')],
     }),
-    test({
+    tInvalid({
       code: 'let count = 1\nexport default count',
-      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
+      errors: [createNoMutableError('let')],
     }),
-    test({
+    tInvalid({
       code: 'var count = 1\nexport default count',
-      errors: ["Exporting mutable 'var' binding, use 'const' instead."],
+      errors: [createNoMutableError('var')],
     }),
-    test({
+    tInvalid({
       code: 'let count = 1\nexport { count as "counter" }',
-      errors: ["Exporting mutable 'let' binding, use 'const' instead."],
+      errors: [createNoMutableError('let')],
       languageOptions: {
         parser: require(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
@@ -85,13 +98,13 @@ ruleTester.run('no-mutable-exports', rule, {
     }),
 
     // todo: undeclared globals
-    // test({
+    // tInvalid({
     //   code: 'count = 1\nexport { count }',
-    //   errors: ['Exporting mutable global binding, use \'const\' instead.'],
+    //   errors: [createNoMutableError('global binding')],
     // }),
-    // test({
+    // tInvalid({
     //   code: 'count = 1\nexport default count',
-    //   errors: ['Exporting mutable global binding, use \'const\' instead.'],
+    //   errors: [createNoMutableError('global binding')],
     // }),
   ],
 })

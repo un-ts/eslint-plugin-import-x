@@ -1,16 +1,19 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test, parsers } from '../utils'
+import { parsers, createRuleTestCaseFunctions } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/max-dependencies'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
 ruleTester.run('max-dependencies', rule, {
   valid: [
-    test({ code: 'import "./foo.js"' }),
+    tValid({ code: 'import "./foo.js"' }),
 
-    test({
+    tValid({
       code: 'import "./foo.js"; import "./bar.js";',
       options: [
         {
@@ -19,7 +22,7 @@ ruleTester.run('max-dependencies', rule, {
       ],
     }),
 
-    test({
+    tValid({
       code: 'import "./foo.js"; import "./bar.js"; const a = require("./foo.js"); const b = require("./bar.js");',
       options: [
         {
@@ -28,50 +31,50 @@ ruleTester.run('max-dependencies', rule, {
       ],
     }),
 
-    test({ code: 'import {x, y, z} from "./foo"' }),
+    tValid({ code: 'import {x, y, z} from "./foo"' }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: "import { x } from './foo'; import { y } from './foo'; import {z} from './bar';",
       options: [
         {
           max: 1,
         },
       ],
-      errors: ['Maximum number of dependencies (1) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 1 } }],
     }),
 
-    test({
+    tInvalid({
       code: "import { x } from './foo'; import { y } from './bar'; import { z } from './baz';",
       options: [
         {
           max: 2,
         },
       ],
-      errors: ['Maximum number of dependencies (2) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 2 } }],
     }),
 
-    test({
+    tInvalid({
       code: "import { x } from './foo'; require(\"./bar\"); import { z } from './baz';",
       options: [
         {
           max: 2,
         },
       ],
-      errors: ['Maximum number of dependencies (2) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 2 } }],
     }),
 
-    test({
+    tInvalid({
       code: 'import { x } from \'./foo\'; import { z } from \'./foo\'; require("./bar"); const path = require("path");',
       options: [
         {
           max: 2,
         },
       ],
-      errors: ['Maximum number of dependencies (2) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 2 } }],
     }),
 
-    test({
+    tInvalid({
       code: "import type { x } from './foo'; import type { y } from './bar'",
       languageOptions: { parser: require(parsers.BABEL) },
       options: [
@@ -79,10 +82,10 @@ ruleTester.run('max-dependencies', rule, {
           max: 1,
         },
       ],
-      errors: ['Maximum number of dependencies (1) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 1 } }],
     }),
 
-    test({
+    tInvalid({
       code: "import type { x } from './foo'; import type { y } from './bar'; import type { z } from './baz'",
       languageOptions: { parser: require(parsers.BABEL) },
       options: [
@@ -91,7 +94,7 @@ ruleTester.run('max-dependencies', rule, {
           ignoreTypeImports: false,
         },
       ],
-      errors: ['Maximum number of dependencies (2) exceeded.'],
+      errors: [{ messageId: 'max', data: { max: 2 } }],
     }),
   ],
 })
@@ -99,7 +102,7 @@ ruleTester.run('max-dependencies', rule, {
 describe('TypeScript', () => {
   ruleTester.run('max-dependencies', rule, {
     valid: [
-      test({
+      tValid({
         code: "import type { x } from './foo'; import { y } from './bar';",
 
         options: [
@@ -111,7 +114,7 @@ describe('TypeScript', () => {
       }),
     ],
     invalid: [
-      test({
+      tInvalid({
         code: "import type { x } from './foo'; import type { y } from './bar'",
 
         options: [
@@ -119,10 +122,10 @@ describe('TypeScript', () => {
             max: 1,
           },
         ],
-        errors: ['Maximum number of dependencies (1) exceeded.'],
+        errors: [{ messageId: 'max', data: { max: 1 } }],
       }),
 
-      test({
+      tInvalid({
         code: "import type { x } from './foo'; import type { y } from './bar'; import type { z } from './baz'",
 
         options: [
@@ -131,7 +134,7 @@ describe('TypeScript', () => {
             ignoreTypeImports: false,
           },
         ],
-        errors: ['Maximum number of dependencies (2) exceeded.'],
+        errors: [{ messageId: 'max', data: { max: 2 } }],
       }),
     ],
   })

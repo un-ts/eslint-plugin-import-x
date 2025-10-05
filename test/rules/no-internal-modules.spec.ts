@@ -1,44 +1,57 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { test, testFilePath } from '../utils'
+import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
+import type { GetRuleModuleMessageIds } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-internal-modules'
 
 const ruleTester = new TSESLintRuleTester()
 
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+function createNotAllowedError(
+  importPath: string,
+): TSESLintTestCaseError<GetRuleModuleMessageIds<typeof rule>> {
+  return {
+    messageId: 'noAllowed',
+    data: { importPath },
+  }
+}
+
 ruleTester.run('no-internal-modules', rule, {
   valid: [
     // imports
-    test({
+    tValid({
       code: 'import a from "./plugin2"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       options: [],
     }),
-    test({
+    tValid({
       code: 'const a = require("./plugin2")',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
     }),
-    test({
+    tValid({
       code: 'const a = require("./plugin2/")',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
     }),
-    test({
+    tValid({
       code: 'const dynamic = "./plugin2/"; const a = require(dynamic)',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
     }),
-    test({
+    tValid({
       code: 'import b from "./internal.js"',
       filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
     }),
-    test({
+    tValid({
       code: 'import get from "lodash.get"',
       filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
     }),
-    test({
+    tValid({
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
     }),
-    test({
+    tValid({
       code: 'import b from "../../api/service"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -47,7 +60,7 @@ ruleTester.run('no-internal-modules', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import "jquery/dist/jquery"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -56,7 +69,7 @@ ruleTester.run('no-internal-modules', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import "./app/index.js";\nimport "./app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -65,7 +78,7 @@ ruleTester.run('no-internal-modules', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import a from "./plugin2/thing"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       options: [
@@ -74,7 +87,7 @@ ruleTester.run('no-internal-modules', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'const a = require("./plugin2/thing")',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       options: [
@@ -83,7 +96,7 @@ ruleTester.run('no-internal-modules', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -93,19 +106,19 @@ ruleTester.run('no-internal-modules', rule, {
       ],
     }),
     // exports
-    test({
+    tValid({
       code: 'export {a} from "./internal.js"',
       filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
     }),
-    test({
+    tValid({
       code: 'export * from "lodash.get"',
       filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
     }),
-    test({
+    tValid({
       code: 'export {b} from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
     }),
-    test({
+    tValid({
       code: 'export {b} from "../../api/service"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -114,7 +127,7 @@ ruleTester.run('no-internal-modules', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'export * from "jquery/dist/jquery"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -123,7 +136,7 @@ ruleTester.run('no-internal-modules', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: 'export * from "./app/index.js";\nexport * from "./app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -132,7 +145,7 @@ ruleTester.run('no-internal-modules', rule, {
         },
       ],
     }),
-    test({
+    tValid({
       code: `
         export class AuthHelper {
 
@@ -141,7 +154,7 @@ ruleTester.run('no-internal-modules', rule, {
         }
       `,
     }),
-    test({
+    tValid({
       code: `
         export class AuthHelper {
 
@@ -150,92 +163,72 @@ ruleTester.run('no-internal-modules', rule, {
         }
       `,
     }),
-    test({
+    tValid({
       code: 'export * from "./plugin2/thing"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [
-        {
-          forbid: ['**/api/*'],
-        },
-      ],
+      options: [{ forbid: ['**/api/*'] }],
     }),
-    test({
+    tValid({
       code: 'export { b } from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['@org/package/*'],
-        },
-      ],
+      options: [{ forbid: ['@org/package/*'] }],
     }),
-    test({
+    tValid({
       code: 'export * from "./app/index.js";\nexport * from "./app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['**/index.ts'],
-        },
-      ],
+      options: [{ forbid: ['**/index.ts'] }],
     }),
   ],
 
   invalid: [
     // imports
-    test({
+    tInvalid({
       code: 'import "./plugin2/index.js";\nimport "./plugin2/app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [
-        {
-          allow: ['*/index.js'],
-        },
-      ],
+      options: [{ allow: ['*/index.js'] }],
       errors: [
         {
-          message: 'Reaching to "./plugin2/app/index" is not allowed.',
+          ...createNotAllowedError('./plugin2/app/index'),
           line: 2,
           column: 8,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "app/a"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['app/**/**'],
-        },
-      ],
+      options: [{ forbid: ['app/**/**'] }],
       errors: [
         {
-          message: 'Reaching to "app/a" is not allowed.',
+          ...createNotAllowedError('app/a'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "./app/index.js"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       errors: [
         {
-          message: 'Reaching to "./app/index.js" is not allowed.',
+          ...createNotAllowedError('./app/index.js'),
           line: 1,
           column: 8,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "./plugin2/internal"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       errors: [
         {
-          message: 'Reaching to "./plugin2/internal" is not allowed.',
+          ...createNotAllowedError('./plugin2/internal'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import a from "../api/service/index"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       options: [
@@ -245,129 +238,105 @@ ruleTester.run('no-internal-modules', rule, {
       ],
       errors: [
         {
-          message: 'Reaching to "../api/service/index" is not allowed.',
+          ...createNotAllowedError('../api/service/index'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "@org/package/internal"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       errors: [
         {
-          message: 'Reaching to "@org/package/internal" is not allowed.',
+          ...createNotAllowedError('@org/package/internal'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import get from "debug/src/node"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       errors: [
         {
-          message: 'Reaching to "debug/src/node" is not allowed.',
+          ...createNotAllowedError('debug/src/node'),
           line: 1,
           column: 17,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "./app/index.js"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['**/app/*'],
-        },
-      ],
+      options: [{ forbid: ['**/app/*'] }],
       errors: [
         {
-          message: 'Reaching to "./app/index.js" is not allowed.',
+          ...createNotAllowedError('./app/index.js'),
           line: 1,
           column: 8,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['@org/**'],
-        },
-      ],
+      options: [{ forbid: ['@org/**'] }],
       errors: [
         {
-          message: 'Reaching to "@org/package" is not allowed.',
+          ...createNotAllowedError('@org/package'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import b from "app/a/b"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['app/**/**'],
-        },
-      ],
+      options: [{ forbid: ['app/**/**'] }],
       errors: [
         {
-          message: 'Reaching to "app/a/b" is not allowed.',
+          ...createNotAllowedError('app/a/b'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import get from "lodash.get"',
       filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
-      options: [
-        {
-          forbid: ['lodash.*'],
-        },
-      ],
+      options: [{ forbid: ['lodash.*'] }],
       errors: [
         {
-          message: 'Reaching to "lodash.get" is not allowed.',
+          ...createNotAllowedError('lodash.get'),
           line: 1,
           column: 17,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "./app/index.js";\nimport "./app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['**/index{.js,}'],
-        },
-      ],
+      options: [{ forbid: ['**/index{.js,}'] }],
       errors: [
         {
-          message: 'Reaching to "./app/index.js" is not allowed.',
+          ...createNotAllowedError('./app/index.js'),
           line: 1,
           column: 8,
         },
         {
-          message: 'Reaching to "./app/index" is not allowed.',
+          ...createNotAllowedError('./app/index'),
           line: 2,
           column: 8,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'import "@/api/service";',
-      options: [
-        {
-          forbid: ['**/api/*'],
-        },
-      ],
+      options: [{ forbid: ['**/api/*'] }],
       errors: [
         {
-          message: 'Reaching to "@/api/service" is not allowed.',
+          ...createNotAllowedError('@/api/service'),
           line: 1,
           column: 8,
         },
@@ -387,125 +356,105 @@ ruleTester.run('no-internal-modules', rule, {
       },
     }),
     // exports
-    test({
+    tInvalid({
       code: 'export * from "./plugin2/index.js";\nexport * from "./plugin2/app/index"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [
-        {
-          allow: ['*/index.js'],
-        },
-      ],
+      options: [{ allow: ['*/index.js'] }],
       errors: [
         {
-          message: 'Reaching to "./plugin2/app/index" is not allowed.',
+          ...createNotAllowedError('./plugin2/app/index'),
           line: 2,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export * from "app/a"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['app/**/**'],
-        },
-      ],
+      options: [{ forbid: ['app/**/**'] }],
       errors: [
         {
-          message: 'Reaching to "app/a" is not allowed.',
+          ...createNotAllowedError('app/a'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export * from "./app/index.js"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       errors: [
         {
-          message: 'Reaching to "./app/index.js" is not allowed.',
+          ...createNotAllowedError('./app/index.js'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export {b} from "./plugin2/internal"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       errors: [
         {
-          message: 'Reaching to "./plugin2/internal" is not allowed.',
+          ...createNotAllowedError('./plugin2/internal'),
           line: 1,
           column: 17,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export {a} from "../api/service/index"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [
-        {
-          allow: ['**/internal-modules/*'],
-        },
-      ],
+      options: [{ allow: ['**/internal-modules/*'] }],
       errors: [
         {
-          message: 'Reaching to "../api/service/index" is not allowed.',
+          ...createNotAllowedError('../api/service/index'),
           line: 1,
           column: 17,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export {b} from "@org/package/internal"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       errors: [
         {
-          message: 'Reaching to "@org/package/internal" is not allowed.',
+          ...createNotAllowedError('@org/package/internal'),
           line: 1,
           column: 17,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export {get} from "debug/src/node"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
       errors: [
         {
-          message: 'Reaching to "debug/src/node" is not allowed.',
+          ...createNotAllowedError('debug/src/node'),
           line: 1,
           column: 19,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export * from "./plugin2/thing"',
       filename: testFilePath('./internal-modules/plugins/plugin.js'),
-      options: [
-        {
-          forbid: ['**/plugin2/*'],
-        },
-      ],
+      options: [{ forbid: ['**/plugin2/*'] }],
       errors: [
         {
-          message: 'Reaching to "./plugin2/thing" is not allowed.',
+          ...createNotAllowedError('./plugin2/thing'),
           line: 1,
           column: 15,
         },
       ],
     }),
-    test({
+    tInvalid({
       code: 'export * from "app/a"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
-      options: [
-        {
-          forbid: ['**'],
-        },
-      ],
+      options: [{ forbid: ['**'] }],
       errors: [
         {
-          message: 'Reaching to "app/a" is not allowed.',
+          ...createNotAllowedError('app/a'),
           line: 1,
           column: 15,
         },

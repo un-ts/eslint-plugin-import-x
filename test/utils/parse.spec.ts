@@ -1,16 +1,24 @@
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 
-import { testFilePath } from '../utils'
+import { jest } from '@jest/globals'
+import type { TSESLint } from '@typescript-eslint/utils'
+import { __importDefault } from 'tslib'
 
-import eslintParser from './eslint-parser'
-import parseStubParser from './parse-stub-parser'
+import { testFilePath } from '../utils.js'
+
+import * as parseStubParser_ from './parse-stub-parser.cjs'
 
 import type {
   ChildContext,
   PluginSettings,
   RuleContext,
-} from 'eslint-plugin-import-x/types'
+} from 'eslint-plugin-import-x'
 import { parse } from 'eslint-plugin-import-x/utils'
+
+const parseStubParser = __importDefault(parseStubParser_).default
+
+const require = createRequire(import.meta.url)
 
 describe('parse(content, { settings, ecmaFeatures })', () => {
   const filepath = testFilePath('jsx.js')
@@ -44,7 +52,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
   it('passes expected parserOptions to custom parser', () => {
     const parseSpy = jest.fn()
     const parserOptions = { ecmaFeatures: { jsx: true } }
-    parseStubParser.parse = parseSpy
+    parseStubParser.setParse(parseSpy)
     parse(filepath, content, {
       settings: {},
       parserPath: parseStubParserPath,
@@ -58,7 +66,8 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     // custom parser to clone the parserOptions object
     expect(parseSpy.mock.calls[0][1]).not.toBe(parserOptions)
     // custom parser to get ecmaFeatures in parserOptions which is a clone of ecmaFeatures passed in
-    const mockParserOptions = parseSpy.mock.calls[0][1]
+    const mockParserOptions = parseSpy.mock
+      .calls[0][1] as TSESLint.ParserOptions
     expect(mockParserOptions).toHaveProperty('ecmaFeatures')
     expect(mockParserOptions.ecmaFeatures).toEqual(parserOptions.ecmaFeatures)
     expect(mockParserOptions.ecmaFeatures).not.toBe(parserOptions.ecmaFeatures)
@@ -72,13 +81,25 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     expect(parseSpy.mock.calls[0][1]).toHaveProperty('filePath', filepath)
   })
 
-  it('passes with custom `parseForESLint` parser', () => {
+  it('passes with custom `parseForESLint` parser', async () => {
+    jest.resetModules()
+    const { parse: freshNewParse } = await import(
+      'eslint-plugin-import-x/utils'
+    )
+    expect(freshNewParse).not.toBe(parse)
+
+    const { setParseForESLint, setParse } = __importDefault(
+      await import('./eslint-parser.cjs'),
+    ).default
+
     const parseForESLintSpy = jest
-      .spyOn(eslintParser, 'parseForESLint')
-      .mockClear()
+      .fn<() => { ast: object }>()
+      .mockImplementationOnce(() => ({ ast: {} }))
+    setParseForESLint(parseForESLintSpy)
     const parseSpy = jest.fn()
-    Object.assign(eslintParser, { parse: parseSpy })
-    parse(filepath, content, {
+    setParse(parseSpy)
+
+    freshNewParse(filepath, content, {
       settings: {},
       parserPath: eslintParserPath,
     } as ChildContext)
@@ -115,8 +136,17 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     ).toThrow()
   })
 
-  it('takes the alternate parser specified in settings', () => {
-    jest.spyOn(parseStubParser, 'parse').mockClear()
+  it('takes the alternate parser specified in settings', async () => {
+    jest.resetModules()
+    const { parse: freshNewParse } = await import(
+      'eslint-plugin-import-x/utils'
+    )
+    expect(freshNewParse).not.toBe(parse)
+    const { setParse } = __importDefault(
+      await import('./parse-stub-parser.cjs'),
+    ).default
+    const parseSpy = jest.fn()
+    setParse(parseSpy)
     const parserOptions = { ecmaFeatures: { jsx: true } }
     expect(
       parse.bind(null, filepath, content, {
@@ -131,7 +161,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
       } as ChildContext),
     ).not.toThrow()
     // custom parser to be called once
-    expect(parseStubParser.parse).toHaveBeenCalledTimes(1)
+    expect(parseSpy).toHaveBeenCalledTimes(1)
   })
 
   it('throws on invalid languageOptions', () => {
@@ -280,11 +310,21 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
     expect(parseSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('prefers parsers specified in the settings over languageOptions.parser', () => {
+  it('prefers parsers specified in the settings over languageOptions.parser', async () => {
+    jest.resetModules()
+    const { parse: freshNewParse } = await import(
+      'eslint-plugin-import-x/utils'
+    )
+    expect(freshNewParse).not.toBe(parse)
     const parseSpy = jest.fn()
-    parseStubParser.parse = parseSpy
+
+    const { setParse } = __importDefault(
+      await import('./parse-stub-parser.cjs'),
+    ).default
+
+    setParse(parseSpy)
     expect(
-      parse.bind(
+      freshNewParse.bind(
         null,
         filepath,
         content,
@@ -308,7 +348,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
 
   it('ignores parser options from language options set to null', () => {
     const parseSpy = jest.fn()
-    parseStubParser.parse = parseSpy
+    parseStubParser.setParse(parseSpy)
     expect(
       parse.bind(null, filepath, content, {
         settings: {},
@@ -328,7 +368,7 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
 
   it('prefers languageOptions.parserOptions over parserOptions', () => {
     const parseSpy = jest.fn()
-    parseStubParser.parse = parseSpy
+    parseStubParser.setParse(parseSpy)
     expect(
       parse.bind(null, filepath, content, {
         settings: {},

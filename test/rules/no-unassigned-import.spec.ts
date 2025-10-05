@@ -2,109 +2,121 @@ import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { test } from '../utils'
+import { createRuleTestCaseFunctions } from '../utils.js'
 
 import rule from 'eslint-plugin-import-x/rules/no-unassigned-import'
 
 const ruleTester = new TSESLintRuleTester()
 
-const error = {
-  messageId: 'unassigned',
-} as const
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 ruleTester.run('no-unassigned-import', rule, {
   valid: [
-    test({ code: 'import _ from "lodash"' }),
-    test({ code: 'import _, {foo} from "lodash"' }),
-    test({ code: 'import _, {foo as bar} from "lodash"' }),
-    test({ code: 'import {foo as bar} from "lodash"' }),
-    test({ code: 'import * as _ from "lodash"' }),
-    test({ code: 'import _ from "./"' }),
-    test({ code: 'const _ = require("lodash")' }),
-    test({ code: 'const {foo} = require("lodash")' }),
-    test({ code: 'const {foo: bar} = require("lodash")' }),
-    test({ code: 'const [a, b] = require("lodash")' }),
-    test({ code: 'const _ = require("./")' }),
-    test({ code: 'foo(require("lodash"))' }),
-    test({ code: 'require("lodash").foo' }),
-    test({ code: 'require("lodash").foo()' }),
-    test({ code: 'require("lodash")()' }),
-    test({
+    tValid({ code: 'import _, {foo} from "lodash"' }),
+    tValid({ code: 'import _ from "lodash"' }),
+    tValid({ code: 'import _, {foo as bar} from "lodash"' }),
+    tValid({ code: 'import {foo as bar} from "lodash"' }),
+    tValid({ code: 'import * as _ from "lodash"' }),
+    tValid({ code: 'import _ from "./"' }),
+    tValid({ code: 'const _ = require("lodash")' }),
+    tValid({ code: 'const {foo} = require("lodash")' }),
+    tValid({ code: 'const {foo: bar} = require("lodash")' }),
+    tValid({ code: 'const [a, b] = require("lodash")' }),
+    tValid({ code: 'const _ = require("./")' }),
+    tValid({ code: 'foo(require("lodash"))' }),
+    tValid({ code: 'require("lodash").foo' }),
+    tValid({ code: 'require("lodash").foo()' }),
+    tValid({ code: 'require("lodash")()' }),
+    tValid({
       code: 'import "app.css"',
       options: [{ allow: ['**/*.css'] }],
     }),
-    test({
+    tValid({
       code: 'import "app.css";',
       options: [{ allow: ['*.css'] }],
     }),
-    test({
+    tValid({
       code: 'import "./app.css"',
       options: [{ allow: ['**/*.css'] }],
     }),
-    test({
+    tValid({
       code: 'import "foo/bar"',
       options: [{ allow: ['foo/**'] }],
     }),
-    test({
+    tValid({
       code: 'import "foo/bar"',
       options: [{ allow: ['foo/bar'] }],
     }),
-    test({
+    tValid({
       code: 'import "../dir/app.css"',
       options: [{ allow: ['**/*.css'] }],
     }),
-    test({
+    tValid({
       code: 'import "../dir/app.js"',
       options: [{ allow: ['**/dir/**'] }],
     }),
-    test({
+    tValid({
       code: 'require("./app.css")',
       options: [{ allow: ['**/*.css'] }],
     }),
-    test({
+    tValid({
       code: 'import "babel-register"',
       options: [{ allow: ['babel-register'] }],
     }),
-    test({
+    tValid({
       code: 'import "./styles/app.css"',
+      filename: path.resolve('src/app.js'),
       options: [{ allow: ['src/styles/**'] }],
-      filename: path.resolve('src/app.js'),
     }),
-    test({
+    tValid({
       code: 'import "../scripts/register.js"',
-      options: [{ allow: ['src/styles/**', '**/scripts/*.js'] }],
       filename: path.resolve('src/app.js'),
+      options: [{ allow: ['src/styles/**', '**/scripts/*.js'] }],
+    }),
+    tValid({
+      code: 'import "#app/side-effects.js"',
+      // exactly matched
+      options: [{ allow: ['#app/side-effects.js'] }],
+    }),
+    tValid({
+      code: 'import "#app/side-effects.js"',
+      /**
+       * Matched by glob
+       *
+       * @see https://github.com/isaacs/minimatch#comparisons-to-other-fnmatchglob-implementations
+       */
+      options: [{ allow: [String.raw`\#app/side-effects.js`] }],
     }),
   ],
   invalid: [
-    test({
+    tInvalid({
       code: 'import "lodash"',
-      errors: [error],
+      errors: [{ messageId: 'unassigned' }],
     }),
-    test({
+    tInvalid({
       code: 'require("lodash")',
-      errors: [error],
+      errors: [{ messageId: 'unassigned' }],
     }),
-    test({
+    tInvalid({
       code: 'import "./app.css"',
       options: [{ allow: ['**/*.js'] }],
-      errors: [error],
+      errors: [{ messageId: 'unassigned' }],
     }),
-    test({
+    tInvalid({
       code: 'import "./app.css"',
       options: [{ allow: ['**/dir/**'] }],
-      errors: [error],
+      errors: [{ messageId: 'unassigned' }],
     }),
-    test({
+    tInvalid({
       code: 'require("./app.css")',
       options: [{ allow: ['**/*.js'] }],
-      errors: [error],
+      errors: [{ messageId: 'unassigned' }],
     }),
-    test({
+    tInvalid({
       code: 'import "./styles/app.css"',
-      options: [{ allow: ['styles/*.css'] }],
       filename: path.resolve('src/app.js'),
-      errors: [error],
+      options: [{ allow: ['styles/*.css'] }],
+      errors: [{ messageId: 'unassigned' }],
     }),
   ],
 })

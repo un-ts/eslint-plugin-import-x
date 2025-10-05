@@ -1,6 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule, getValue } from '../utils/index.js'
 
 function isComma(token: TSESTree.Token): token is TSESTree.PunctuatorToken {
   return token.type === 'Punctuator' && token.value === ','
@@ -34,20 +34,21 @@ function getImportText(
   }
 
   const names = specifiers.map(s => {
-    if (s.imported.name === s.local.name) {
-      return s.imported.name
+    const importedName = getValue(s.imported)
+    if (importedName === s.local.name) {
+      return importedName
     }
-    return `${s.imported.name} as ${s.local.name}`
+    return `${importedName} as ${s.local.name}`
   })
   // insert a fresh top-level import
   return `import ${kind} {${names.join(', ')}} from ${sourceString};`
 }
 
-type Options = 'prefer-inline' | 'prefer-top-level'
+export type Options = 'prefer-inline' | 'prefer-top-level'
 
 type MessageId = 'inline' | 'topLevel'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'consistent-type-specifier-style',
   meta: {
     type: 'suggestion',
@@ -60,8 +61,8 @@ export = createRule<[Options?], MessageId>({
     schema: [
       {
         type: 'string',
-        enum: ['prefer-inline', 'prefer-top-level'],
-        default: 'prefer-inline',
+        enum: ['prefer-top-level', 'prefer-inline'],
+        default: 'prefer-top-level',
       },
     ],
     messages: {

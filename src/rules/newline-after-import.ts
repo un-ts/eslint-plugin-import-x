@@ -1,11 +1,9 @@
-/**
- * Rule to enforce new line after import not followed by another import.
- */
+/** Rule to enforce new line after import not followed by another import. */
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 
-import { isStaticRequire, createRule } from '../utils'
+import { isStaticRequire, createRule } from '../utils/index.js'
 
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')
 
@@ -74,15 +72,15 @@ function isExportNameClass(
   )
 }
 
-type Options = {
+export interface Options {
   count?: number
   exactCount?: boolean
   considerComments?: boolean
 }
 
-type MessageId = 'newline'
+export type MessageId = 'newline'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'newline-after-import',
   meta: {
     type: 'layout',

@@ -9,9 +9,9 @@ import type {
   FileExtension,
   ParseError,
   RuleContext,
-} from '../types'
+} from '../types.js'
 
-import { moduleRequire } from './module-require'
+import { moduleRequire } from './module-require.js'
 
 // https://github.com/nuxt/eslint/issues/494
 function withoutProjectParserOptions(
@@ -29,7 +29,7 @@ function withoutProjectParserOptions(
 const log = debug('eslint-plugin-import-x:parse')
 
 function keysFromParser(
-  parserPath: string | TSESLint.Parser.ParserModule,
+  _parserPath: string | TSESLint.Parser.ParserModule,
   parserInstance: TSESLint.Parser.ParserModule,
   parsedResult?: TSESLint.Parser.ParseResult,
 ) {
@@ -37,8 +37,14 @@ function keysFromParser(
   if (parsedResult && parsedResult.visitorKeys) {
     return parsedResult.visitorKeys
   }
-  if (typeof parserPath === 'string' && /.*espree.*/.test(parserPath)) {
-    // @ts-expect-error - no type yet
+
+  // The espree parser doesn't have the `parseForESLint` function, so we don't ended up with a
+  // `parsedResult` here, but it does expose the visitor keys on the parser instance that we can use.
+  if (
+    parserInstance &&
+    'VisitorKeys' in parserInstance &&
+    parserInstance.VisitorKeys
+  ) {
     return parserInstance.VisitorKeys as TSESLint.SourceCode.VisitorKeys
   }
   return null
@@ -73,8 +79,7 @@ export function parse(
 
   // ESLint in "flat" mode only sets context.languageOptions.parserOptions
   let parserOptions =
-    ('languageOptions' in context && context.languageOptions?.parserOptions) ||
-    context.parserOptions
+    context.languageOptions?.parserOptions || context.parserOptions
 
   const parserOrPath = getParser(path, context)
 
@@ -105,10 +110,17 @@ export function parse(
   // https://github.com/import-js/eslint-plugin-import/issues/1408#issuecomment-509298962
   parserOptions = withoutProjectParserOptions(parserOptions)
 
+  // If this is a flat config, we need to add ecmaVersion and sourceType (if present) from languageOptions
+  parserOptions.ecmaVersion ??= context.languageOptions?.ecmaVersion
+  parserOptions.sourceType ??= context.languageOptions?.sourceType
+
   // require the parser relative to the main module (i.e., ESLint)
   const parser =
     typeof parserOrPath === 'string'
-      ? moduleRequire<TSESLint.Parser.ParserModule>(parserOrPath)
+      ? moduleRequire<TSESLint.Parser.ParserModule>(
+          parserOrPath,
+          context.physicalFilename,
+        )
       : parserOrPath
 
   // replicate bom strip and hashbang transform of ESLint
@@ -137,7 +149,7 @@ export function parse(
     if (!ast || typeof ast !== 'object') {
       console.warn(
         // Can only be invalid for custom parser per imports/parser
-        `\`parseForESLint\` from parser \`${typeof parserOrPath === 'string' ? parserOrPath : '`context.languageOptions.parser`'}\` is invalid and will just be ignored`,
+        `\`parseForESLint\` from parser \`${typeof parserOrPath === 'string' ? parserOrPath : 'context.languageOptions.parser'}\` is invalid and will just be ignored`,
         { content, parserMeta: parser.meta },
       )
     } else {

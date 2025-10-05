@@ -1,91 +1,56 @@
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import stableHash from 'stable-hash'
+import { setRuleContext } from 'eslint-import-context'
+import { stableHash } from 'stable-hash-x'
 
+import { createNodeResolver } from '../node-resolver.js'
+import { cjsRequire } from '../require.js'
 import type {
-  Arrayable,
-  ImportResolver,
-  ImportSettings,
+  ChildContext,
+  LegacyResolver,
+  NewResolver,
+  NodeResolverOptions,
+  NormalizedCacheSettings,
   PluginSettings,
   RuleContext,
-} from '../types'
+} from '../types.js'
 
-import { ModuleCache } from './module-cache'
-import { pkgDir } from './pkg-dir'
+import { arraify } from './arraify.js'
+import { makeContextCacheKey } from './export-map.js'
+import { isExternalLookingName } from './import-type.js'
+import {
+  LEGACY_NODE_RESOLVERS,
+  normalizeConfigResolvers,
+  resolveWithLegacyResolver,
+} from './legacy-resolver-settings.js'
+import { ModuleCache } from './module-cache.js'
 
-export type ResultNotFound = {
-  found: false
-  path?: undefined
-}
+const importMetaUrl = import.meta.url
 
-export type ResultFound = {
-  found: true
-  path: string | null
-}
-
-export type ResolvedResult = ResultNotFound | ResultFound
-
-export type ResolverResolve = (
-  modulePath: string,
-  sourceFile: string,
-  config: unknown,
-) => ResolvedResult
-
-export type ResolverResolveImport = (
-  modulePath: string,
-  sourceFile: string,
-  config: unknown,
-) => string | undefined
-
-export type Resolver = {
-  interfaceVersion?: 1 | 2
-  resolve: ResolverResolve
-  resolveImport: ResolverResolveImport
-}
+const _filename = importMetaUrl
+  ? fileURLToPath(importMetaUrl)
+  : /* istanbul ignore next */ __filename
+const _dirname = path.dirname(_filename)
 
 export const CASE_SENSITIVE_FS = !fs.existsSync(
   path.resolve(
-    __dirname,
-    path.basename(__filename).replace(/^resolve\./, 'reSOLVE.'),
+    _dirname,
+    path.basename(_filename).replace(/^resolve\./, 'reSOLVE.'),
   ),
 )
 
-const ERROR_NAME = 'EslintPluginImportResolveError'
+export const IMPORT_RESOLVE_ERROR_NAME = 'EslintPluginImportResolveError'
 
-const fileExistsCache = new ModuleCache()
-
-function tryRequire<T>(
-  target: string,
-  sourceFile?: string | null,
-): undefined | T {
-  let resolved
-  try {
-    // Check if the target exists
-    if (sourceFile == null) {
-      resolved = require.resolve(target)
-    } else {
-      try {
-        resolved = createRequire(path.resolve(sourceFile)).resolve(target)
-      } catch {
-        resolved = require.resolve(target)
-      }
-    }
-  } catch {
-    // If the target does not exist then just return undefined
-    return undefined
-  }
-
-  // If the target exists then return the loaded module
-  return require(resolved)
-}
+export const fileExistsCache = new ModuleCache()
 
 // https://stackoverflow.com/a/27382838
 export function fileExistsWithCaseSync(
   filepath: string | null,
-  cacheSettings?: ImportSettings['cache'],
+  cacheSettings: NormalizedCacheSettings,
   strict?: boolean,
+  leaf: boolean = true,
 ): boolean {
   // don't care if the FS is case-sensitive
   if (CASE_SENSITIVE_FS) {
@@ -113,8 +78,12 @@ export function fileExistsWithCaseSync(
   } else {
     const filenames = fs.readdirSync(dir)
     result = filenames.includes(parsedPath.base)
-      ? fileExistsWithCaseSync(dir, cacheSettings, strict)
-      : false
+      ? fileExistsWithCaseSync(dir, cacheSettings, strict, false)
+      : !leaf &&
+        // We tolerate case-insensitive matches if there are no case-insensitive matches.
+        // It'll fail anyway on the leaf node if the file truly doesn't exist (if it doesn't
+        // fail it's that we're probably working with a virtual in-memory filesystem).
+        !filenames.some(p => p.toLowerCase() === parsedPath.base.toLowerCase())
   }
   fileExistsCache.set(filepath, result)
   return result
@@ -123,10 +92,144 @@ export function fileExistsWithCaseSync(
 let prevSettings: PluginSettings | null = null
 let memoizedHash: string
 
+function isNamedResolver(resolver: unknown): resolver is { name: string } {
+  return !!(
+    typeof resolver === 'object' &&
+    resolver &&
+    'name' in resolver &&
+    typeof resolver.name === 'string' &&
+    resolver.name
+  )
+}
+
+function isValidNewResolver(resolver: unknown): resolver is NewResolver {
+  if (typeof resolver !== 'object' || resolver == null) {
+    return false
+  }
+
+  if (!('resolve' in resolver) || !('interfaceVersion' in resolver)) {
+    return false
+  }
+
+  if (
+    typeof resolver.interfaceVersion !== 'number' ||
+    resolver.interfaceVersion !== 3
+  ) {
+    return false
+  }
+
+  if (typeof resolver.resolve !== 'function') {
+    return false
+  }
+
+  return true
+}
+
+function legacyNodeResolve(
+  resolverOptions: NodeResolverOptions,
+  context: ChildContext | RuleContext,
+  modulePath: string,
+  sourceFile: string,
+) {
+  const {
+    extensions,
+    includeCoreModules,
+    moduleDirectory,
+    paths,
+    preserveSymlinks,
+    package: packageJson,
+    packageFilter,
+    pathFilter,
+    packageIterator,
+    ...rest
+  } = resolverOptions
+
+  const normalizedExtensions = arraify(extensions)
+
+  const modules = arraify(moduleDirectory)
+
+  // TODO: change the default behavior to align node itself
+  const symlinks = preserveSymlinks === false
+
+  const resolver = createNodeResolver({
+    extensions: normalizedExtensions,
+    builtinModules: includeCoreModules !== false,
+    modules,
+    symlinks,
+    ...rest,
+  })
+
+  const resolved = setRuleContext(context, () =>
+    resolver.resolve(modulePath, sourceFile),
+  )
+
+  if (resolved.found) {
+    return resolved
+  }
+
+  const normalizedPaths = arraify(paths)
+
+  if (normalizedPaths?.length) {
+    const paths = modules?.length
+      ? normalizedPaths.filter(p => !modules.includes(p))
+      : normalizedPaths
+
+    if (paths.length > 0) {
+      const resolver = createNodeResolver({
+        extensions: normalizedExtensions,
+        builtinModules: includeCoreModules !== false,
+        modules: paths,
+        symlinks,
+        ...rest,
+      })
+
+      const resolved = setRuleContext(context, () =>
+        resolver.resolve(modulePath, sourceFile),
+      )
+
+      if (resolved.found) {
+        return resolved
+      }
+    }
+  }
+
+  if (
+    [packageJson, packageFilter, pathFilter, packageIterator].some(
+      it => it != null,
+    )
+  ) {
+    let legacyNodeResolver: LegacyResolver
+    try {
+      legacyNodeResolver = cjsRequire<LegacyResolver>(
+        'eslint-import-resolver-node',
+      )
+    } catch {
+      throw new Error(
+        [
+          "You're using legacy resolver options which are not supported by the new resolver.",
+          'Please either:',
+          '1. Install `eslint-import-resolver-node` as a fallback, or',
+          '2. Remove legacy options: `package`, `packageFilter`, `pathFilter`, `packageIterator`',
+        ].join('\n'),
+      )
+    }
+    const resolved = resolveWithLegacyResolver(
+      legacyNodeResolver,
+      resolverOptions,
+      modulePath,
+      sourceFile,
+    )
+    if (resolved.found) {
+      return resolved
+    }
+  }
+}
+
 function fullResolve(
   modulePath: string,
   sourceFile: string,
   settings: PluginSettings,
+  context: ChildContext | RuleContext,
 ) {
   // check if this is a bonus core module
   const coreSet = new Set(settings['import-x/core-modules'])
@@ -137,6 +240,8 @@ function fullResolve(
     }
   }
 
+  const childContextHashKey = makeContextCacheKey(context)
+
   const sourceDir = path.dirname(sourceFile)
 
   if (prevSettings !== settings) {
@@ -144,7 +249,14 @@ function fullResolve(
     prevSettings = settings
   }
 
-  const cacheKey = sourceDir + memoizedHash + modulePath
+  const cacheKey =
+    sourceDir +
+    '\0' +
+    childContextHashKey +
+    '\0' +
+    memoizedHash +
+    '\0' +
+    modulePath
 
   const cacheSettings = ModuleCache.getSettings(settings)
 
@@ -153,50 +265,103 @@ function fullResolve(
     return { found: true, path: cachedPath }
   }
 
-  function cache(resolvedPath: string | null) {
-    fileExistsCache.set(cacheKey, resolvedPath)
-  }
+  if (settings['import-x/resolver-next']) {
+    let configResolvers = settings['import-x/resolver-next']
 
-  function withResolver(resolver: Resolver, config: unknown) {
-    if (resolver.interfaceVersion === 2) {
-      return resolver.resolve(modulePath, sourceFile, config)
+    if (!Array.isArray(configResolvers)) {
+      configResolvers = [configResolvers]
     }
 
-    try {
-      const resolved = resolver.resolveImport(modulePath, sourceFile, config)
-      if (resolved === undefined) {
-        return {
-          found: false,
+    for (let i = 0, len = configResolvers.length; i < len; i++) {
+      const resolver = configResolvers[i]
+      const resolverName = isNamedResolver(resolver)
+        ? resolver.name
+        : `settings['import-x/resolver-next'][${i}]`
+
+      if (!isValidNewResolver(resolver)) {
+        const err = new TypeError(
+          `${resolverName} is not a valid import resolver for eslint-plugin-import-x!`,
+        )
+        err.name = IMPORT_RESOLVE_ERROR_NAME
+        throw err
+      }
+
+      const resolved = setRuleContext(context, () =>
+        resolver.resolve(modulePath, sourceFile),
+      )
+
+      if (!resolved.found) {
+        continue
+      }
+
+      // else, counts
+      fileExistsCache.set(cacheKey, resolved.path)
+      return resolved
+    }
+  } else {
+    const configResolvers = settings['import-x/resolver-legacy'] ||
+      settings['import-x/resolver'] || {
+        node: settings['import-x/resolve'],
+      } // backward compatibility
+
+    const sourceFiles =
+      context.physicalFilename === sourceFile ||
+      // only try to fallback for external packages
+      !isExternalLookingName(modulePath)
+        ? [sourceFile]
+        : [sourceFile, context.physicalFilename]
+
+    for (const sourceFile of sourceFiles) {
+      for (const {
+        enable,
+        name,
+        options,
+        resolver,
+      } of normalizeConfigResolvers(configResolvers, sourceFile)) {
+        if (!enable) {
+          continue
         }
-      }
-      return {
-        found: true,
-        path: resolved,
-      }
-    } catch {
-      return {
-        found: false,
+
+        // if the resolver is `eslint-import-resolver-node`, we use the new `node` resolver first
+        // and try `eslint-import-resolver-node` as fallback instead
+        if (LEGACY_NODE_RESOLVERS.has(name)) {
+          const resolverOptions = (options || {}) as NodeResolverOptions
+          const resolved = legacyNodeResolve(
+            resolverOptions,
+            // TODO: enable the following in the next major
+            // {
+            //   ...resolverOptions,
+            //   extensions:
+            //     resolverOptions.extensions || settings['import-x/extensions'],
+            // },
+            context,
+            modulePath,
+            sourceFile,
+          )
+
+          if (resolved?.found) {
+            fileExistsCache.set(cacheKey, resolved.path)
+            return resolved
+          }
+
+          if (!resolver) {
+            continue
+          }
+        }
+
+        const resolved = setRuleContext(context, () =>
+          resolveWithLegacyResolver(resolver, options, modulePath, sourceFile),
+        )
+
+        if (!resolved?.found) {
+          continue
+        }
+
+        // else, counts
+        fileExistsCache.set(cacheKey, resolved.path)
+        return resolved
       }
     }
-  }
-
-  const configResolvers = settings['import-x/resolver'] || {
-    node: settings['import-x/resolve'],
-  } // backward compatibility
-
-  const resolvers = resolverReducer(configResolvers, new Map())
-
-  for (const [name, config] of resolvers) {
-    const resolver = requireResolver(name, sourceFile)
-    const resolved = withResolver(resolver, config)
-
-    if (!resolved.found) {
-      continue
-    }
-
-    // else, counts
-    cache(resolved.path as string | null)
-    return resolved
   }
 
   // failed
@@ -208,94 +373,36 @@ export function relative(
   modulePath: string,
   sourceFile: string,
   settings: PluginSettings,
+  context: ChildContext | RuleContext,
 ) {
-  return fullResolve(modulePath, sourceFile, settings).path
-}
-
-function resolverReducer(
-  resolvers: Arrayable<ImportResolver>,
-  map: Map<string, unknown>,
-) {
-  if (Array.isArray(resolvers)) {
-    for (const r of resolvers as ImportResolver[]) resolverReducer(r, map)
-    return map
-  }
-
-  if (typeof resolvers === 'string') {
-    map.set(resolvers, null)
-    return map
-  }
-
-  if (typeof resolvers === 'object') {
-    for (const [key, value] of Object.entries(resolvers)) {
-      map.set(key, value)
-    }
-    return map
-  }
-
-  const err = new Error('invalid resolver config')
-  err.name = ERROR_NAME
-  throw err
-}
-
-function getBaseDir(sourceFile: string): string {
-  return pkgDir(sourceFile) || process.cwd()
-}
-
-function requireResolver(name: string, sourceFile: string) {
-  // Try to resolve package with conventional name
-  const resolver =
-    tryRequire(`eslint-import-resolver-${name}`, sourceFile) ||
-    tryRequire(name, sourceFile) ||
-    tryRequire(path.resolve(getBaseDir(sourceFile), name))
-
-  if (!resolver) {
-    const err = new Error(`unable to load resolver "${name}".`)
-    err.name = ERROR_NAME
-    throw err
-  }
-  if (!isResolverValid(resolver)) {
-    const err = new Error(`${name} with invalid interface loaded as resolver`)
-    err.name = ERROR_NAME
-    throw err
-  }
-
-  return resolver
-}
-
-function isResolverValid(resolver: object): resolver is Resolver {
-  if ('interfaceVersion' in resolver && resolver.interfaceVersion === 2) {
-    return (
-      'resolve' in resolver &&
-      !!resolver.resolve &&
-      typeof resolver.resolve === 'function'
-    )
-  }
-  return (
-    'resolveImport' in resolver &&
-    !!resolver.resolveImport &&
-    typeof resolver.resolveImport === 'function'
-  )
+  return fullResolve(modulePath, sourceFile, settings, context).path
 }
 
 const erroredContexts = new Set<RuleContext>()
 
 /**
  * Given
- * @param p - module path
+ *
+ * @param modulePath - Module path
  * @param context - ESLint context
- * @return - the full module filesystem path; null if package is core; undefined if not found
+ * @returns - The full module filesystem path; null if package is core;
+ *   undefined if not found
  */
-export function resolve(p: string, context: RuleContext) {
+export function resolve(modulePath: string, context: RuleContext) {
   try {
-    return relative(p, context.physicalFilename, context.settings)
+    return relative(
+      modulePath,
+      context.physicalFilename,
+      context.settings,
+      context,
+    )
   } catch (error_) {
     const error = error_ as Error
     if (!erroredContexts.has(context)) {
       // The `err.stack` string starts with `err.name` followed by colon and `err.message`.
       // We're filtering out the default `err.name` because it adds little value to the message.
       let errMessage = error.message
-      if (error.name !== ERROR_NAME && error.stack) {
+      if (error.name !== IMPORT_RESOLVE_ERROR_NAME && error.stack) {
         errMessage = error.stack.replace(/^Error: /, '')
       }
       context.report({
@@ -308,5 +415,30 @@ export function resolve(p: string, context: RuleContext) {
       })
       erroredContexts.add(context)
     }
+  }
+}
+
+export function importXResolverCompat(
+  resolver: LegacyResolver | NewResolver,
+  resolverOptions: unknown = {},
+): NewResolver {
+  // Somehow the resolver is already using v3 interface
+  if (isValidNewResolver(resolver)) {
+    return resolver
+  }
+
+  return {
+    // deliberately not providing the name, because we can't get the name from legacy resolvers
+    // By omitting the name, the log will use identifiable name like `settings['import-x/resolver-next'][0]`
+    // name: 'import-x-resolver-compat',
+    interfaceVersion: 3,
+    resolve(modulePath, sourceFile) {
+      return resolveWithLegacyResolver(
+        resolver,
+        resolverOptions,
+        modulePath,
+        sourceFile,
+      )
+    },
   }
 }

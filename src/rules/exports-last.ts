@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule } from '../utils'
+import { createRule } from '../utils/index.js'
 
 const findLastIndex = <T>(array: T[], predicate: (item: T) => boolean) => {
   let i = array.length - 1
@@ -21,7 +21,7 @@ function isNonExportStatement({ type }: TSESTree.Node) {
   )
 }
 
-export = createRule({
+export default createRule({
   name: 'exports-last',
   meta: {
     type: 'suggestion',

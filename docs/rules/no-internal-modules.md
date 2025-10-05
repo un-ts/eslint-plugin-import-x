@@ -48,9 +48,7 @@ And the .eslintrc file:
 The following patterns are considered problems:
 
 ```js
-/**
- *  in my-project/entry.js
- */
+/** In my-project/entry.js */
 
 import { settings } from './app/index' // Reaching to "./app/index" is not allowed
 import userReducer from './reducer/user' // Reaching to "./reducer/user" is not allowed
@@ -63,9 +61,7 @@ export * from './reducer/user' // Reaching to "./reducer/user" is not allowed
 The following patterns are NOT considered problems:
 
 ```js
-/**
- *  in my-project/entry.js
- */
+/** In my-project/entry.js */
 
 import 'source-map-support/register'
 import { settings } from '../app'
@@ -110,9 +106,7 @@ And the .eslintrc file:
 The following patterns are considered problems:
 
 ```js
-/**
- *  in my-project/entry.js
- */
+/** In my-project/entry.js */
 
 import 'source-map-support/register'
 import getUser from '../actions/getUser'
@@ -124,9 +118,7 @@ export getUser from '../actions/getUser'
 The following patterns are NOT considered problems:
 
 ```js
-/**
- *  in my-project/entry.js
- */
+/** In my-project/entry.js */
 
 import 'source-map-support'
 import { getUser } from '../actions'

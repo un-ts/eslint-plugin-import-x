@@ -1,1 +1,1 @@
-export default async () => {};
+export default async () => {}

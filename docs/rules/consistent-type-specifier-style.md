@@ -31,16 +31,14 @@ This rule either enforces or bans the use of inline type-only markers for named 
 
 This rule includes a fixer that will automatically convert your specifiers to the correct form - however the fixer will not respect your preferences around de-duplicating imports. If this is important to you, consider using the [`import-x/no-duplicates`] rule.
 
-[`import-x/no-duplicates`]: ./no-duplicates.md
-
 ## Options
 
 The rule accepts a single string option which may be one of:
 
-- `'prefer-inline'` - enforces that named type-only specifiers are only ever written with an inline marker; and never as part of a top-level, type-only import.
 - `'prefer-top-level'` - enforces that named type-only specifiers only ever written as part of a top-level, type-only import; and never with an inline marker.
+- `'prefer-inline'` - enforces that named type-only specifiers are only ever written with an inline marker; and never as part of a top-level, type-only import.
 
-By default the rule will use the `prefer-inline` option.
+By default the rule will use the `prefer-top-level` option.
 
 ## Examples
 
@@ -89,3 +87,5 @@ import {typeof Foo} from 'Foo';
 If you aren't using Flow or TypeScript 4.5+, then this rule does not apply and need not be used.
 
 If you don't care about, and don't want to standardize how named specifiers are imported then you should not use this rule.
+
+[`import-x/no-duplicates`]: ./no-duplicates.md

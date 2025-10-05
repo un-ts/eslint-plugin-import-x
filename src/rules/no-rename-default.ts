@@ -1,23 +1,23 @@
 /**
- * @fileOverview Rule to warn about importing a default export by different name
+ * @file Rule to warn about importing a default export by different name
  * @author James Whitney
- * @author Sukka <https://skk.moe> - Port to TypeScript
+ * @author [Sukka](https://skk.moe) - Port to TypeScript
  */
 
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule, ExportMap } from '../utils'
-import type { ModuleOptions } from '../utils'
+import { createRule, ExportMap, getValue } from '../utils/index.js'
+import type { ModuleOptions } from '../utils/index.js'
 
-type Options = ModuleOptions & {
+export type Options = ModuleOptions & {
   preventRenamingBindings?: boolean
 }
 
-type MessageId = 'renameDefault'
+export type MessageId = 'renameDefault'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-rename-default',
   meta: {
     type: 'suggestion',
@@ -86,7 +86,7 @@ export = createRule<[Options?], MessageId>({
           return
         }
         case 'ExportSpecifier': {
-          return targetNode.local.name
+          return getValue(targetNode.local)
         }
         case 'FunctionDeclaration': {
           return targetNode.id?.name
@@ -182,7 +182,7 @@ export = createRule<[Options?], MessageId>({
         return
       }
 
-      if (node.imported.name !== 'default') {
+      if (getValue(node.imported) !== 'default') {
         return
       }
 
@@ -333,7 +333,7 @@ function getDefaultExportNode(
     }
     case 'ExportNamedDeclaration': {
       return defaultExportNode.specifiers.find(
-        specifier => specifier.exported.name === 'default',
+        specifier => getValue(specifier.exported) === 'default',
       )
     }
     default: {

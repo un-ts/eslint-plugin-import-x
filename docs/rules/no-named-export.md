@@ -4,8 +4,6 @@
 
 Prohibit named exports. Mostly an inverse of [`no-default-export`].
 
-[`no-default-export`]: ./no-default-export.md
-
 ## Rule Details
 
 The following patterns are considered warnings:
@@ -77,3 +75,5 @@ export default from './other-module'
 ## When Not To Use It
 
 If you don't care if named imports are used, or if you prefer named imports over default imports.
+
+[`no-default-export`]: ./no-default-export.md

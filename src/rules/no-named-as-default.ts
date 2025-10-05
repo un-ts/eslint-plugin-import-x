@@ -1,10 +1,10 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { importDeclaration, ExportMap, createRule } from '../utils'
+import { importDeclaration, ExportMap, createRule } from '../utils/index.js'
 
-type MessageId = 'default'
+export type MessageId = 'default'
 
-export = createRule<[], MessageId>({
+export default createRule<[], MessageId>({
   name: 'no-named-as-default',
   meta: {
     type: 'problem',
@@ -40,12 +40,24 @@ export = createRule<[], MessageId>({
           declaration.source.value,
           context,
         )
+
         if (exportMapOfImported == null) {
           return
         }
 
         if (exportMapOfImported.errors.length > 0) {
           exportMapOfImported.reportErrors(context, declaration)
+          return
+        }
+
+        if (!exportMapOfImported.hasDefault) {
+          // The rule is triggered for default imports/exports, so if the imported module has no default
+          // this means we're dealing with incorrect source code anyway
+          return
+        }
+
+        if (!exportMapOfImported.has(nameValue)) {
+          // The name used locally for the default import was not even used in the imported module.
           return
         }
 

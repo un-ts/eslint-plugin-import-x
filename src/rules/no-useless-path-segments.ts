@@ -1,25 +1,32 @@
-/**
- * Ensures that there are no useless path segments
- */
+/** Ensures that there are no useless path segments */
 
 import path from 'node:path'
 
-import type { ModuleOptions } from '../utils'
-import { createRule, moduleVisitor, resolve, getFileExtensions } from '../utils'
+import type { ModuleOptions } from '../utils/index.js'
+import {
+  createRule,
+  moduleVisitor,
+  resolve,
+  getFileExtensions,
+} from '../utils/index.js'
 
 /**
- * convert a potentially relative path from node utils into a true
- * relative path.
+ * Convert a potentially relative path from node utils into a true relative
+ * path.
  *
- * ../ -> ..
- * ./ -> .
- * .foo/bar -> ./.foo/bar
- * ..foo/bar -> ./..foo/bar
- * foo/bar -> ./foo/bar
+ * `../ -> ..`
  *
- * @param relativePath relative posix path potentially missing leading './'
- * @returns relative posix path that always starts with a ./
- **/
+ * `./ -> .`
+ *
+ * `.foo/bar -> ./.foo/bar`
+ *
+ * `..foo/bar -> ./..foo/bar`
+ *
+ * `foo/bar -> ./foo/bar`
+ *
+ * @param relativePath Relative posix path potentially missing leading './'
+ * @returns Relative posix path that always starts with a ./
+ */
 function toRelativePath(relativePath: string): string {
   const stripped = relativePath.replaceAll(/\/$/g, '') // Remove trailing /
 
@@ -34,13 +41,13 @@ function countRelativeParents(pathSegments: string[]) {
   return pathSegments.filter(x => x === '..').length
 }
 
-type Options = ModuleOptions & {
+export interface Options extends ModuleOptions {
   noUselessIndex?: boolean
 }
 
-type MessageId = 'useless'
+export type MessageId = 'useless'
 
-export = createRule<[Options?], MessageId>({
+export default createRule<[Options?], MessageId>({
   name: 'no-useless-path-segments',
   meta: {
     type: 'suggestion',

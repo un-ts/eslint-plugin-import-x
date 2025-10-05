@@ -1,6 +1,6 @@
-import { createRule } from '../utils'
+import { createRule, getValue, sourceType } from '../utils/index.js'
 
-export = createRule({
+export default createRule({
   name: 'no-named-export',
   meta: {
     type: 'suggestion',
@@ -16,7 +16,7 @@ export = createRule({
   defaultOptions: [],
   create(context) {
     // ignore non-modules
-    if (context.parserOptions.sourceType !== 'module') {
+    if (sourceType(context) !== 'module') {
       return {}
     }
 
@@ -31,10 +31,7 @@ export = createRule({
         }
 
         const someNamed = node.specifiers.some(
-          specifier =>
-            (specifier.exported.name ||
-              ('value' in specifier.exported && specifier.exported.value)) !==
-            'default',
+          specifier => getValue(specifier.exported) !== 'default',
         )
         if (someNamed) {
           context.report({ node, messageId: 'noAllowed' })

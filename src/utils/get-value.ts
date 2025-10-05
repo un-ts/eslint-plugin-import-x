@@ -1,4 +1,4 @@
-import { TSESTree } from '@typescript-eslint/utils'
+import { TSESTree } from '@typescript-eslint/types'
 
 export const getValue = (
   node: TSESTree.Identifier | TSESTree.StringLiteral,

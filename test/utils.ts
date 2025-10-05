@@ -3,14 +3,15 @@ import path from 'node:path'
 import type {
   ValidTestCase as TSESLintValidTestCase,
   InvalidTestCase as TSESLintInvalidTestCase,
+  RunTests as TSESLintRunTests,
 } from '@typescript-eslint/rule-tester'
-import type { TSESTree } from '@typescript-eslint/utils'
-import type { RuleTester } from 'eslint'
+import type { TSESLint } from '@typescript-eslint/utils'
 import eslintPkg from 'eslint/package.json'
-import semver from 'semver'
+import * as semver from 'semver'
 import typescriptPkg from 'typescript/package.json'
 
-import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x/types'
+import { cjsRequire as require } from 'eslint-plugin-import-x'
+import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x'
 
 // warms up the module cache. this import takes a while (>500ms)
 import '@babel/eslint-parser'
@@ -22,13 +23,16 @@ export const parsers = {
   HERMES: require.resolve('hermes-eslint'),
 }
 
+export const isESLint9 = semver.satisfies(eslintPkg.version, '>=9')
+
 export function tsVersionSatisfies(specifier: string) {
   return semver.satisfies(typescriptPkg.version, specifier)
 }
 
 export function typescriptEslintParserSatisfies(specifier: string) {
   return semver.satisfies(
-    require('@typescript-eslint/parser/package.json').version,
+    require<{ version: string }>('@typescript-eslint/parser/package.json')
+      .version,
     specifier,
   )
 }
@@ -45,131 +49,181 @@ export function getNonDefaultParsers() {
 
 export const TEST_FILENAME = testFilePath()
 
-export function eslintVersionSatisfies(specifier: string) {
-  return semver.satisfies(eslintPkg.version, specifier)
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
-export type ValidTestCase = TSESLintValidTestCase<any> & {
-  errors?: readonly InvalidTestCaseError[] | number
-  parser?: never
-  parserOptions?: never
-}
-
-export type InvalidTestCase = // eslint-disable-next-line @typescript-eslint/no-explicit-any -- simplify testing
-  TSESLintInvalidTestCase<any, any>
-
-export function testVersion<T extends ValidTestCase>(
-  specifier: string,
-  t: () => T,
-): T extends { errors: readonly InvalidTestCaseError[] }
-  ? InvalidTestCase[]
-  : ValidTestCase[] {
-  // @ts-expect-error -- simplify testing
-  return eslintVersionSatisfies(specifier) ? [test(t())] : []
-}
-
-export type InvalidTestCaseError =
-  | string
-  | InvalidTestCase['errors'][number]
-  | (RuleTester.TestCaseError & {
-      type?: `${TSESTree.AST_NODE_TYPES}`
-    })
-
-// eslint-disable-next-line eslint-plugin/require-meta-docs-description, eslint-plugin/require-meta-type, eslint-plugin/prefer-message-ids, eslint-plugin/prefer-object-rule, eslint-plugin/require-meta-schema
-export function test<T extends ValidTestCase>(
-  t: T,
-): T extends { errors: InvalidTestCaseError[] | number }
-  ? InvalidTestCase
-  : ValidTestCase {
-  // @ts-expect-error -- simplify testing
+/** @warning DO NOT EXPORT THIS. Use {@link createRuleTestCaseFunctions} instead */
+function createRuleTestCase<TTestCase extends TSESLintValidTestCase<unknown[]>>(
+  t: TTestCase,
+): TTestCase {
   return {
     filename: TEST_FILENAME,
     ...t,
-    languageOptions: {
-      ...t.languageOptions,
-      parserOptions: {
-        sourceType: 'module',
-        ecmaVersion: 9,
-        ...t.languageOptions?.parserOptions,
-      },
-    },
+  }
+}
+
+type GetRuleModuleTypes<TRule> =
+  TRule extends TSESLint.RuleModule<infer MessageIds, infer Options>
+    ? {
+        messageIds: MessageIds
+        options: Options
+      }
+    : never
+
+export type GetRuleModuleMessageIds<TRule> =
+  TRule extends TSESLint.RuleModule<infer MessageIds, infer _>
+    ? MessageIds
+    : never
+
+export type GetRuleModuleOptions<TRule> =
+  TRule extends TSESLint.RuleModule<infer _, infer Options> ? Options : never
+
+/**
+ * Type helper to build {@link TSESLintRuleTester.run} test parameters from a
+ * given {@link TSESLint.RuleModule}
+ *
+ * @example
+ *   const COMMON_TESTS: RunTests<typeof rule> = {
+ *     valid: [
+ *       {
+ *         code: "import Foo from 'Foo';",
+ *         options: [],
+ *       },
+ *     ],
+ *     invalid: [
+ *       {
+ *         code: "import Foo from 'Foo';",
+ *         options: ['prefer-top-level'],
+ *         errors: [],
+ *       },
+ *     ],
+ *   }
+ */
+export type RuleRunTests<
+  TRule extends TSESLint.RuleModule<string, readonly unknown[]>,
+  TRuleType extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
+> = TSESLintRunTests<TRuleType['messageIds'], TRuleType['options']>
+
+/**
+ * Create two functions that can be used to create both valid and invalid test
+ * case to be provided to {@link TSESLintRuleTester}. This function accepts one
+ * type parameter that should extend a {@link TSESLint.RuleModule} to be able to
+ * provide the result with typed `MessageIds` and `Options` properties
+ *
+ * @example
+ *   import { createRuleTestCaseFunction } from '../utils'
+ *
+ *   const ruleTester = new TSESLintRuleTester()
+ *
+ *   const { tValid, tInvalid } = createRuleTestCaseFunction<typeof rule>()
+ *
+ *   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
+ *     valid: [
+ *       tValid({
+ *         code: '...',
+ *       }),
+ *     ],
+ *     invalid: [
+ *       tInvalid({
+ *         code: '...',
+ *       }),
+ *     ],
+ *   })
+ *
+ * @param defaultOptions If you have a specific set of options that need to be
+ *   passed to each test case you can supply them directly to this function.
+ *
+ *   If the `TRule` parameter is omitted default types are used.
+ */
+export function createRuleTestCaseFunctions<
+  TRule extends TSESLint.RuleModule<string, unknown[]>,
+  TData extends GetRuleModuleTypes<TRule> = GetRuleModuleTypes<TRule>,
+  Valid = TSESLintValidTestCase<TData['options']>,
+  Invalid = TSESLintInvalidTestCase<TData['messageIds'], TData['options']>,
+>(
+  defaultOptions: Pick<
+    TSESLintValidTestCase<TData['options']>,
+    'filename' | 'languageOptions' | 'settings'
+  > = {},
+): { tValid: (t: Valid) => Valid; tInvalid: (t: Invalid) => Invalid } {
+  return {
+    tValid: t => createRuleTestCase({ ...defaultOptions, ...t } as never),
+    tInvalid: t => createRuleTestCase({ ...defaultOptions, ...t } as never),
   }
 }
 
 export function testContext(settings?: PluginSettings) {
   return {
+    cwd: FIXTURES_PATH,
     physicalFilename: TEST_FILENAME,
     settings: settings || {},
   } as RuleContext
 }
 
 /**
- * to be added as valid cases just to ensure no nullable fields are going
- * to crash at runtime
+ * To be added as valid cases just to ensure no nullable fields are going to
+ * crash at runtime
  */
-export const SYNTAX_CASES = [
-  'for (let { foo, bar } of baz) {}',
-  'for (let [ foo, bar ] of baz) {}',
+export const SYNTAX_VALID_CASES: TSESLintRunTests<string, unknown[]>['valid'] =
+  [
+    'for (let { foo, bar } of baz) {}',
+    'for (let [ foo, bar ] of baz) {}',
 
-  'const { x, y } = bar',
-  test({
-    code: 'const { x, y, ...z } = bar',
-    languageOptions: { parser: require(parsers.BABEL) },
-  }),
+    'const { x, y } = bar',
+    createRuleTestCase({
+      code: 'const { x, y, ...z } = bar',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
 
-  // all the exports
-  'let x; export { x }',
-  'let x; export { x as y }',
+    // all the exports
+    'let x; export { x }',
+    'let x; export { x as y }',
 
-  // not sure about these since they reference a file
-  // 'export { x } from "./y.js"'}),
-  // 'export * as y from "./y.js"', languageOptions: { parser: require(parsers.BABEL) } }),
+    // not sure about these since they reference a file
+    // 'export { x } from "./y.js"'}),
+    // 'export * as y from "./y.js"', languageOptions: { parser: require(parsers.BABEL) } }),
 
-  'export const x = null',
-  'export var x = null',
-  'export let x = null',
+    'export const x = null',
+    'export var x = null',
+    'export let x = null',
 
-  'export default x',
-  'export default class x {}',
+    'export default x',
+    'export default class x {}',
 
-  // issue #267: parser opt-in extension list
-  test({
-    code: 'import json from "./data.json"',
-    settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
-  }),
+    // issue #267: parser opt-in extension list
+    createRuleTestCase({
+      code: 'import json from "./data.json"',
+      settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
+    }),
 
-  // JSON
-  test({
-    code: 'import foo from "./foobar.json";',
-    settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
-  }),
-  test({
-    code: 'import foo from "./foobar";',
-    settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
-  }),
+    // JSON
+    createRuleTestCase({
+      code: 'import foo from "./foobar.json";',
+      settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
+    }),
+    createRuleTestCase({
+      code: 'import foo from "./foobar";',
+      settings: { 'import-x/extensions': ['.js'] }, // breaking: remove for v2
+    }),
 
-  // issue #370: deep commonjs import
-  test({
-    code: 'import { foo } from "./issue-370-commonjs-namespace/bar"',
-    settings: { 'import-x/ignore': ['foo'] },
-  }),
+    // issue #370: deep commonjs import
+    createRuleTestCase({
+      code: 'import { foo } from "./issue-370-commonjs-namespace/bar"',
+      settings: { 'import-x/ignore': ['foo'] },
+    }),
 
-  // issue #348: deep commonjs re-export
-  test({
-    code: 'export * from "./issue-370-commonjs-namespace/bar"',
-    settings: { 'import-x/ignore': ['foo'] },
-  }),
+    // issue #348: deep commonjs re-export
+    createRuleTestCase({
+      code: 'export * from "./issue-370-commonjs-namespace/bar"',
+      settings: { 'import-x/ignore': ['foo'] },
+    }),
 
-  test({
-    code: 'import * as a from "./commonjs-namespace/a"; a.b',
-  }),
+    createRuleTestCase({
+      code: 'import * as a from "./commonjs-namespace/a"; a.b',
+    }),
 
-  // ignore invalid extensions
-  test({
-    code: 'import { foo } from "./ignore.invalid.extension"',
-  }),
-]
+    // ignore invalid extensions
+    createRuleTestCase({
+      code: 'import { foo } from "./ignore.invalid.extension"',
+    }),
+  ]
 
 export const testCompiled = process.env.TEST_COMPILED === '1'
 

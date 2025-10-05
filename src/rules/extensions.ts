@@ -1,6 +1,10 @@
 import path from 'node:path'
 
-import type { FileExtension, RuleContext } from '../types'
+import type { JSONSchema, TSESLint } from '@typescript-eslint/utils'
+import { minimatch } from 'minimatch'
+import type { MinimatchOptions } from 'minimatch'
+
+import type { RuleContext } from '../types.js'
 import {
   isBuiltIn,
   isExternalModule,
@@ -8,45 +12,113 @@ import {
   createRule,
   moduleVisitor,
   resolve,
-} from '../utils'
+  parsePath,
+  stringifyPath,
+} from '../utils/index.js'
 
-const enumValues = {
-  type: 'string' as const,
-  enum: ['always', 'ignorePackages', 'never'],
-}
+const modifierValues = ['always', 'ignorePackages', 'never'] as const
 
-const patternProperties = {
-  type: 'object' as const,
-  patternProperties: { '.*': enumValues },
-}
+const modifierSchema = {
+  type: 'string',
+  enum: [...modifierValues],
+} satisfies JSONSchema.JSONSchema4
+
+const modifierByFileExtensionSchema = {
+  type: 'object',
+  patternProperties: { '.*': modifierSchema },
+} satisfies JSONSchema.JSONSchema4
 
 const properties = {
-  type: 'object' as const,
+  type: 'object',
   properties: {
-    pattern: patternProperties,
+    pattern: modifierByFileExtensionSchema,
     ignorePackages: {
-      type: 'boolean' as const,
+      type: 'boolean',
+    },
+    checkTypeImports: {
+      type: 'boolean',
+    },
+    pathGroupOverrides: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          pattern: { type: 'string' },
+          patternOptions: { type: 'object' },
+          action: {
+            type: 'string',
+            enum: ['enforce', 'ignore'],
+          },
+        },
+        additionalProperties: false,
+        required: ['pattern', 'action'],
+      },
+    },
+    fix: {
+      type: 'boolean',
     },
   },
-}
+} satisfies JSONSchema.JSONSchema4
 
-type DefaultConfig = (typeof enumValues)['enum'][number]
+export type Modifier = (typeof modifierValues)[number]
 
-type MessageId = 'missing' | 'unexpected'
+export type ModifierByFileExtension = Partial<Record<string, Modifier>>
 
-type NormalizedOptions = {
-  defaultConfig?: DefaultConfig
-  pattern?: Record<FileExtension, DefaultConfig>
+export interface OptionsItemWithPatternProperty {
   ignorePackages?: boolean
+  checkTypeImports?: boolean
+  pattern: ModifierByFileExtension
+  pathGroupOverrides?: PathGroupOverride[]
+  fix?: boolean
 }
 
-type Options = DefaultConfig | NormalizedOptions
+export interface PathGroupOverride {
+  pattern: string
+  patternOptions?: Record<string, MinimatchOptions>
+  action: 'enforce' | 'ignore'
+}
 
-function buildProperties(context: RuleContext<MessageId, Options[]>) {
+export interface OptionsItemWithoutPatternProperty {
+  ignorePackages?: boolean
+  checkTypeImports?: boolean
+  pathGroupOverrides?: PathGroupOverride[]
+  fix?: boolean
+}
+
+export type Options =
+  | []
+  | [OptionsItemWithoutPatternProperty]
+  | [OptionsItemWithPatternProperty]
+  | [Modifier]
+  | [Modifier, OptionsItemWithoutPatternProperty]
+  | [Modifier, OptionsItemWithPatternProperty]
+  | [Modifier, ModifierByFileExtension]
+  | [ModifierByFileExtension]
+
+export interface NormalizedOptions {
+  defaultConfig?: Modifier
+  pattern?: Record<string, Modifier>
+  ignorePackages?: boolean
+  checkTypeImports?: boolean
+  pathGroupOverrides?: PathGroupOverride[]
+  fix?: boolean
+}
+
+export type MessageId =
+  | 'missing'
+  | 'missingKnown'
+  | 'unexpected'
+  | 'addMissing'
+  | 'removeUnexpected'
+
+function buildProperties(context: RuleContext<MessageId, Options>) {
   const result: Required<NormalizedOptions> = {
     defaultConfig: 'never',
     pattern: {},
     ignorePackages: false,
+    checkTypeImports: false,
+    pathGroupOverrides: [],
+    fix: false,
   }
 
   for (const obj of context.options) {
@@ -56,20 +128,40 @@ function buildProperties(context: RuleContext<MessageId, Options[]>) {
       continue
     }
 
+    if (typeof obj !== 'object' || !obj) {
+      continue
+    }
+
+    if (obj.fix != null) {
+      result.fix = Boolean(obj.fix)
+    }
+
     // If this is not the new structure, transfer all props to result.pattern
-    if (obj.pattern === undefined && obj.ignorePackages === undefined) {
+    if (
+      (!('pattern' in obj) || obj.pattern == null) &&
+      obj.ignorePackages == null &&
+      obj.checkTypeImports == null
+    ) {
       Object.assign(result.pattern, obj)
       continue
     }
 
     // If pattern is provided, transfer all props
-    if (obj.pattern !== undefined) {
+    if ('pattern' in obj && obj.pattern != null) {
       Object.assign(result.pattern, obj.pattern)
     }
 
     // If ignorePackages is provided, transfer it to result
-    if (obj.ignorePackages !== undefined) {
+    if (typeof obj.ignorePackages === 'boolean') {
       result.ignorePackages = obj.ignorePackages
+    }
+
+    if (typeof obj.checkTypeImports === 'boolean') {
+      result.checkTypeImports = obj.checkTypeImports
+    }
+
+    if (Array.isArray(obj.pathGroupOverrides)) {
+      result.pathGroupOverrides = obj.pathGroupOverrides
     }
   }
 
@@ -86,17 +178,35 @@ function isExternalRootModule(file: string) {
     return false
   }
   const slashCount = file.split('/').length - 1
-
-  if (slashCount === 0) {
-    return true
-  }
-  if (isScoped(file) && slashCount <= 1) {
-    return true
-  }
-  return false
+  return slashCount === 0 || (isScoped(file) && slashCount <= 1)
 }
 
-export = createRule<Options[], MessageId>({
+function computeOverrideAction(
+  pathGroupOverrides: PathGroupOverride[],
+  path: string,
+) {
+  for (const { pattern, patternOptions, action } of pathGroupOverrides) {
+    if (minimatch(path, pattern, patternOptions || { nocomment: true })) {
+      return action
+    }
+  }
+}
+
+/**
+ * Replaces the import path in a source string with a new import path.
+ *
+ * @param source - The original source string containing the import statement.
+ * @param importPath - The new import path to replace the existing one.
+ * @returns The updated source string with the replaced import path.
+ */
+function replaceImportPath(source: string, importPath: string) {
+  return source.replace(
+    /^(['"])(.+)\1$/,
+    (_, quote: string) => `${quote}${importPath}${quote}`,
+  )
+}
+
+export default createRule<Options, MessageId>({
   name: 'extensions',
   meta: {
     type: 'suggestion',
@@ -105,16 +215,18 @@ export = createRule<Options[], MessageId>({
       description:
         'Ensure consistent use of file extension within the import path.',
     },
+    fixable: 'code',
+    hasSuggestions: true,
     schema: {
       anyOf: [
         {
           type: 'array',
-          items: [enumValues],
+          items: [modifierSchema],
           additionalItems: false,
         },
         {
           type: 'array',
-          items: [enumValues, properties],
+          items: [modifierSchema, properties],
           additionalItems: false,
         },
         {
@@ -124,41 +236,44 @@ export = createRule<Options[], MessageId>({
         },
         {
           type: 'array',
-          items: [patternProperties],
+          items: [modifierSchema, modifierByFileExtensionSchema],
           additionalItems: false,
         },
         {
           type: 'array',
-          items: [enumValues, patternProperties],
+          items: [modifierByFileExtensionSchema],
           additionalItems: false,
         },
       ],
     },
     messages: {
-      missing: 'Missing file extension {{extension}}for "{{importPath}}"',
+      missing: 'Missing file extension for "{{importPath}}"',
+      missingKnown:
+        'Missing file extension "{{extension}}" for "{{importPath}}"',
       unexpected:
         'Unexpected use of file extension "{{extension}}" for "{{importPath}}"',
+      addMissing:
+        'Add "{{extension}}" file extension from "{{importPath}}" into "{{fixedImportPath}}"',
+      removeUnexpected:
+        'Remove unexpected "{{extension}}" file extension from "{{importPath}}" into "{{fixedImportPath}}"',
     },
   },
   defaultOptions: [],
   create(context) {
     const props = buildProperties(context)
 
-    function getModifier(extension: FileExtension) {
+    function getModifier(extension: string) {
       return props.pattern[extension] || props.defaultConfig
     }
 
-    function isUseOfExtensionRequired(
-      extension: FileExtension,
-      isPackage: boolean,
-    ) {
+    function isUseOfExtensionRequired(extension: string, isPackage: boolean) {
       return (
         getModifier(extension) === 'always' &&
         (!props.ignorePackages || !isPackage)
       )
     }
 
-    function isUseOfExtensionForbidden(extension: FileExtension) {
+    function isUseOfExtensionForbidden(extension: string) {
       return getModifier(extension) === 'never'
     }
 
@@ -181,16 +296,33 @@ export = createRule<Options[], MessageId>({
 
         const importPathWithQueryString = source.value
 
-        // don't enforce anything on builtins
-        if (isBuiltIn(importPathWithQueryString, context.settings)) {
+        // If not undefined, the user decided if rules are enforced on this import
+        const overrideAction = computeOverrideAction(
+          props.pathGroupOverrides || [],
+          importPathWithQueryString,
+        )
+
+        if (overrideAction === 'ignore') {
           return
         }
 
-        const importPath = importPathWithQueryString.replace(/\?(.*)$/, '')
+        // don't enforce anything on builtins
+        if (
+          !overrideAction &&
+          isBuiltIn(importPathWithQueryString, context.settings)
+        ) {
+          return
+        }
+
+        const {
+          pathname: importPath,
+          query,
+          hash,
+        } = parsePath(importPathWithQueryString)
 
         // don't enforce in root external packages as they may have names with `.js`.
         // Like `import Decimal from decimal.js`)
-        if (isExternalRootModule(importPath)) {
+        if (!overrideAction && isExternalRootModule(importPath)) {
           return
         }
 
@@ -198,9 +330,7 @@ export = createRule<Options[], MessageId>({
 
         // get extension from resolved path, if possible.
         // for unresolved, use source value.
-        const extension = path
-          .extname(resolvedPath || importPath)
-          .slice(1) as FileExtension
+        const extension = path.extname(resolvedPath || importPath).slice(1)
 
         // determine if this is a module
         const isPackage =
@@ -213,24 +343,62 @@ export = createRule<Options[], MessageId>({
         if (!extension || !importPath.endsWith(`.${extension}`)) {
           // ignore type-only imports and exports
           if (
-            ('importKind' in node && node.importKind === 'type') ||
-            ('exportKind' in node && node.exportKind === 'type')
+            !props.checkTypeImports &&
+            (('importKind' in node && node.importKind === 'type') ||
+              ('exportKind' in node && node.exportKind === 'type'))
           ) {
             return
           }
           const extensionRequired = isUseOfExtensionRequired(
             extension,
-            isPackage,
+            !overrideAction && isPackage,
           )
           const extensionForbidden = isUseOfExtensionForbidden(extension)
           if (extensionRequired && !extensionForbidden) {
+            const fixedImportPath = stringifyPath({
+              pathname: `${
+                /([\\/]|[\\/]?\.?\.)$/.test(importPath)
+                  ? `${
+                      importPath.endsWith('/')
+                        ? importPath.slice(0, -1)
+                        : importPath
+                    }/index.${extension}`
+                  : `${importPath}.${extension}`
+              }`,
+              query,
+              hash,
+            })
+            const fixOrSuggest = {
+              fix(fixer: TSESLint.RuleFixer) {
+                return fixer.replaceText(
+                  source,
+                  replaceImportPath(source.raw, fixedImportPath),
+                )
+              },
+            }
             context.report({
               node: source,
-              messageId: 'missing',
+              messageId: extension ? 'missingKnown' : 'missing',
               data: {
-                extension: extension ? `"${extension}" ` : '',
+                extension,
                 importPath: importPathWithQueryString,
               },
+              ...(extension &&
+                (props.fix
+                  ? fixOrSuggest
+                  : {
+                      suggest: [
+                        {
+                          ...fixOrSuggest,
+                          messageId: 'addMissing',
+                          data: {
+                            extension,
+                            importPath: importPathWithQueryString,
+                            fixedImportPath,
+                          },
+                        },
+                      ],
+                    })),
             })
           }
         } else if (
@@ -238,6 +406,30 @@ export = createRule<Options[], MessageId>({
           isUseOfExtensionForbidden(extension) &&
           isResolvableWithoutExtension(importPath)
         ) {
+          const fixedPathname = importPath.slice(0, -(extension.length + 1))
+          const isIndex = fixedPathname.endsWith('/index')
+          const fixedImportPath = stringifyPath({
+            pathname: isIndex ? fixedPathname.slice(0, -6) : fixedPathname,
+            query,
+            hash,
+          })
+          const fixOrSuggest = {
+            fix(fixer: TSESLint.RuleFixer) {
+              return fixer.replaceText(
+                source,
+                replaceImportPath(source.raw, fixedImportPath),
+              )
+            },
+          }
+          const commonSuggestion = {
+            ...fixOrSuggest,
+            messageId: 'removeUnexpected' as const,
+            data: {
+              extension,
+              importPath: importPathWithQueryString,
+              fixedImportPath,
+            },
+          }
           context.report({
             node: source,
             messageId: 'unexpected',
@@ -245,6 +437,37 @@ export = createRule<Options[], MessageId>({
               extension,
               importPath: importPathWithQueryString,
             },
+            ...(props.fix
+              ? fixOrSuggest
+              : {
+                  suggest: [
+                    commonSuggestion,
+                    isIndex && {
+                      ...commonSuggestion,
+                      fix(fixer: TSESLint.RuleFixer) {
+                        return fixer.replaceText(
+                          source,
+                          replaceImportPath(
+                            source.raw,
+                            stringifyPath({
+                              pathname: fixedPathname,
+                              query,
+                              hash,
+                            }),
+                          ),
+                        )
+                      },
+                      data: {
+                        ...commonSuggestion.data,
+                        fixedImportPath: stringifyPath({
+                          pathname: fixedPathname,
+                          query,
+                          hash,
+                        }),
+                      },
+                    },
+                  ].filter(Boolean),
+                }),
           })
         }
       },

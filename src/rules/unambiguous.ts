@@ -1,10 +1,8 @@
-/**
- * Report modules that could parse incorrectly as scripts.
- */
+/** Report modules that could parse incorrectly as scripts. */
 
-import { createRule, isUnambiguousModule } from '../utils'
+import { createRule, isUnambiguousModule, sourceType } from '../utils/index.js'
 
-export = createRule({
+export default createRule({
   name: 'unambiguous',
   meta: {
     type: 'suggestion',
@@ -21,7 +19,7 @@ export = createRule({
   defaultOptions: [],
   create(context) {
     // ignore non-modules
-    if (context.parserOptions.sourceType !== 'module') {
+    if (sourceType(context) !== 'module') {
       return {}
     }
 
