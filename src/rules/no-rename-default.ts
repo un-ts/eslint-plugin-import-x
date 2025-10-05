@@ -148,7 +148,7 @@ export default createRule<[Options?], MessageId>({
       const defaultExportNameTrimmed = defaultExportName.replace(/^_+/, '') // Trim leading underscores.
       if (
         defaultExportNameTrimmed === 'default' ||
-        defaultExportNameTrimmed == 'index'
+        defaultExportNameTrimmed === 'index'
       ) {
         return
       }
