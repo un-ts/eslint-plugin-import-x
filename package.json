@@ -83,6 +83,7 @@
     "minimatch": "^9.0.3 || ^10.0.1",
     "semver": "^7.7.2",
     "stable-hash-x": "^0.2.0",
+    "type-fest": "^4.41.0",
     "unrs-resolver": "^1.9.2"
   },
   "devDependencies": {
@@ -160,7 +161,6 @@
     "tmp": "^0.2.3",
     "ts-node": "^10.9.2",
     "tsdown": "^0.12.9",
-    "type-fest": "^4.41.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.0",
     "yarn-berry-deduplicate": "^6.1.3"
