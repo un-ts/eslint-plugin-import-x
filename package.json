@@ -75,6 +75,7 @@
     }
   },
   "dependencies": {
+    "@package-json/types": "^0.0.12",
     "@typescript-eslint/types": "^8.35.0",
     "comment-parser": "^1.4.1",
     "debug": "^4.4.1",
@@ -83,7 +84,6 @@
     "minimatch": "^9.0.3 || ^10.0.1",
     "semver": "^7.7.2",
     "stable-hash-x": "^0.2.0",
-    "type-fest": "^4.41.0",
     "unrs-resolver": "^1.9.2"
   },
   "devDependencies": {
