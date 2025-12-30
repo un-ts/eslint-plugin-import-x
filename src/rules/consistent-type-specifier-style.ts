@@ -44,6 +44,17 @@ function getImportText(
   return `import ${kind} {${names.join(', ')}} from ${sourceString};`
 }
 
+// https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-3.html#stable-support-resolution-mode-in-import-types
+function hasResolutionModeAttribute(node: TSESTree.ImportDeclaration) {
+  return (
+    node.attributes &&
+    node.attributes.some(
+      attr =>
+        attr.key.type === 'Literal' && attr.key.value === 'resolution-mode',
+    )
+  )
+}
+
 export type Options = 'prefer-inline' | 'prefer-top-level'
 
 type MessageId = 'inline' | 'topLevel'
@@ -81,6 +92,10 @@ export default createRule<[Options?], MessageId>({
         ImportDeclaration(node) {
           if (node.importKind === 'value' || node.importKind == null) {
             // top-level value / unknown is valid
+            return
+          }
+
+          if (hasResolutionModeAttribute(node)) {
             return
           }
 
