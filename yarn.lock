@@ -6006,7 +6006,7 @@ __metadata:
     is-glob: "npm:^4.0.3"
     jest: "npm:^30.0.3"
     klaw-sync: "npm:^7.0.0"
-    minimatch: "npm:^9.0.3 || ^10.0.1"
+    minimatch: "npm:^9.0.3 || ^10.1.2"
     nano-staged: "npm:^0.8.0"
     npm-run-all2: "npm:^8.0.4"
     path-serializer: "npm:^0.5.0"
@@ -9412,7 +9412,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:10.0.1, minimatch@npm:^9.0.3 || ^10.0.1":
+"minimatch@npm:10.0.1":
   version: 10.0.1
   resolution: "minimatch@npm:10.0.1"
   dependencies:
@@ -9430,7 +9430,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^9.0.0, minimatch@npm:^9.0.4, minimatch@npm:^9.0.5":
+"minimatch@npm:^9.0.0, minimatch@npm:^9.0.3 || ^10.1.2, minimatch@npm:^9.0.4, minimatch@npm:^9.0.5":
   version: 9.0.5
   resolution: "minimatch@npm:9.0.5"
   dependencies:
