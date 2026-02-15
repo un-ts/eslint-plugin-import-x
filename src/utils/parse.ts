@@ -1,4 +1,4 @@
-import path from 'node:path'
+import nodePath from 'node:path'
 
 // import { withoutProjectParserOptions } from '@typescript-eslint/typescript-estree'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
@@ -81,7 +81,7 @@ export function parse(
   let parserOptions =
     context.languageOptions?.parserOptions || context.parserOptions
 
-  const parserOrPath = getParser(path, context)
+  const parserOrPath = getParserOrPath(path, context)
 
   if (!parserOrPath) {
     throw new Error('parserPath or languageOptions.parser is required!')
@@ -165,11 +165,22 @@ export function parse(
   throw new Error('Parser must expose a `parse` or `parseForESLint` method')
 }
 
-function getParser(path: string, context: ChildContext | RuleContext) {
-  const parserPath = getParserPath(path, context)
-
-  if (parserPath) {
-    return parserPath
+function getParserOrPath(path: string, context: ChildContext | RuleContext) {
+  const parsers = context.settings['import-x/parsers']
+  if (parsers != null) {
+    const extension = nodePath.extname(path) as FileExtension
+    for (const parserPath in parsers) {
+      if (parsers[parserPath].includes(extension)) {
+        // use this alternate parser
+        log('using alt parser:', parserPath)
+        return parserPath
+      }
+    }
+  }
+  // default to use ESLint parser, only exists in eslintrc
+  if ('parserPath' in context && context.parserPath) {
+    log('using context.parserPath:', context.parserPath)
+    return context.parserPath
   }
 
   const parser = 'languageOptions' in context && context.languageOptions?.parser
@@ -185,20 +196,4 @@ function getParser(path: string, context: ChildContext | RuleContext) {
   }
 
   return null
-}
-
-function getParserPath(filepath: string, context: ChildContext | RuleContext) {
-  const parsers = context.settings['import-x/parsers']
-  if (parsers != null) {
-    const extension = path.extname(filepath) as FileExtension
-    for (const parserPath in parsers) {
-      if (parsers[parserPath].includes(extension)) {
-        // use this alternate parser
-        log('using alt parser:', parserPath)
-        return parserPath
-      }
-    }
-  }
-  // default to use ESLint parser
-  return context.parserPath
 }
