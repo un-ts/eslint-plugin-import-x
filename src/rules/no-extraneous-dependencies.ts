@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import type { PackageJson } from '@package-json/types'
 import type { TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
-import type { PackageJson } from 'type-fest'
 
 import type { RuleContext } from '../types.js'
 import {

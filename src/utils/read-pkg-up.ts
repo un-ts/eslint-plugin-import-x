@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 
-import type { PackageJson } from 'type-fest'
+import type { PackageJson } from '@package-json/types'
 
 import { pkgUp } from './pkg-up.js'
 

@@ -1,6 +1,6 @@
+import type { PackageJson } from '@package-json/types'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import * as semver from 'semver'
-import type { PackageJson } from 'type-fest'
 
 import { cjsRequire } from '../require.js'
 import type { RuleContext } from '../types.js'
