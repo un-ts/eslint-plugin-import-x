@@ -188,7 +188,7 @@ function getParserOrPath(path: string, context: ChildContext | RuleContext) {
   if (
     parser &&
     typeof parser !== 'string' &&
-    (('parse' in parser && typeof parse === 'function') ||
+    (('parse' in parser && typeof parser.parse === 'function') ||
       ('parseForESLint' in parser &&
         typeof parser.parseForESLint === 'function'))
   ) {
