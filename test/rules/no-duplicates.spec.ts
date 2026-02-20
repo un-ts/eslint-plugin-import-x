@@ -87,8 +87,8 @@ ruleTester.run('no-duplicates', rule, {
 
     // ensure resolved path results in warnings
     tInvalid({
-      code: "import { x } from './bar'; import { y } from 'bar';",
-      output: "import { x, y  } from './bar'; ",
+      code: "import { x } from './deprecated'; import { y } from 'deprecated';",
+      output: "import { x, y  } from './deprecated'; ",
       settings: {
         'import-x/resolve': {
           paths: [path.resolve('test/fixtures')],

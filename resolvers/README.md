@@ -104,14 +104,14 @@ the resolver name used in logs/debug output
 
 ### Example
 
-Here is most of the [New Node resolver] at the time of this writing. It is just a wrapper around [`unrs-resolver`][unrs-resolver]:
+Here is most of the [New Node resolver] at the time of this writing. It is just a wrapper around [`oxc-resolver`][oxc-resolver]:
 
 ```js
 import module from 'node:module'
 import path from 'node:path'
 
-import { ResolverFactory } from 'unrs-resolver'
-import type { NapiResolveOptions } from 'unrs-resolver'
+import { ResolverFactory } from 'oxc-resolver'
+import type { NapiResolveOptions } from 'oxc-resolver'
 
 import type { NewResolver } from './types.js'
 
@@ -254,4 +254,4 @@ If the resolver cannot resolve `source` relative to `file`, it should just retur
 [eslint-plugin-import]: https://github.com/import-js/eslint-plugin-import
 [eslint-plugin-import-x]: https://github.com/un-ts/eslint-plugin-import-x
 [resolve]: https://github.com/browserify/resolve
-[unrs-resolver]: https://github.com/unrs/unrs-resolver
+[oxc-resolver]: https://github.com/oxc-project/oxc-resolver

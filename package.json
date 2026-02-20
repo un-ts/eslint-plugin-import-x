@@ -79,12 +79,12 @@
     "@typescript-eslint/types": "^8.35.0",
     "comment-parser": "^1.4.1",
     "debug": "^4.4.1",
-    "eslint-import-context": "^0.1.9",
+    "eslint-import-context": "^0.2.0",
     "is-glob": "^4.0.3",
     "minimatch": "^9.0.3 || ^10.0.1",
+    "oxc-resolver": "^11.0.0",
     "semver": "^7.7.2",
-    "stable-hash-x": "^0.2.0",
-    "unrs-resolver": "^1.9.2"
+    "stable-hash-x": "^0.2.0"
   },
   "devDependencies": {
     "@1stg/commitlint-config": "^5.1.0",
