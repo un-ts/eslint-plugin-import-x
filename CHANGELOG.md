@@ -1,5 +1,20 @@
 # eslint-plugin-import-x
 
+## 4.16.2
+
+### Patch Changes
+
+- [#434](https://github.com/un-ts/eslint-plugin-import-x/pull/434) [`a3aae61`](https://github.com/un-ts/eslint-plugin-import-x/commit/a3aae6179f0a3417b46066dfe59b388865d1a2eb) Thanks [@stepankuzmin](https://github.com/stepankuzmin)! - fix(deps): replace type-fest with @package-json/types
+
+  PackageJson types are imported in published declaration files (lib/rules/no-extraneous-dependencies.d.ts and lib/utils/read-pkg-up.d.ts), which causes TypeScript compilation errors for consumers who don't have skipLibCheck enabled. Replacing type-fest with the smaller @package-json/types package ensures the types are available to all consumers while reducing bundle size.
+
+- [#454](https://github.com/un-ts/eslint-plugin-import-x/pull/454) [`d3f8d67`](https://github.com/un-ts/eslint-plugin-import-x/commit/d3f8d67781d17ebe2edfdab4014754fe2df5eede) Thanks [@SukkaW](https://github.com/SukkaW)! - First step toward ESLint 10 support:
+  - `sourceType` determination now prefers `context.languageOptions` when possible
+  - Ensure `context.parserOptions` no longer results in crashes with ESLint 10
+  - Merge `getParser` and `getParserPath` implementations into one `getParserOrPath`
+
+- [#406](https://github.com/un-ts/eslint-plugin-import-x/pull/406) [`d0a7816`](https://github.com/un-ts/eslint-plugin-import-x/commit/d0a78167791f41804e880356c9c69d7a45c4b45d) Thanks [@marcalexiei](https://github.com/marcalexiei)! - fix(package): remove config and rules exports pointing to empty files
+
 ## 4.16.1
 
 ### Patch Changes
