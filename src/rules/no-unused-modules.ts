@@ -29,7 +29,7 @@ function listFilesUsingFileEnumerator(
   // Only read FileEnumerator and shouldUseFlatConfig within the function instead of top-level
   // This allows us to avoid access the removed APIs as long as the function is not invoked.
   // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
-  const { FileEnumerator, shouldUseFlatConfig } = eslintUnsupportedApi
+  const { shouldUseFlatConfig } = eslintUnsupportedApi
 
   // We need to know whether this is being run with flat config in order to
   // determine how to report errors if FileEnumerator throws due to a lack of eslintrc.
@@ -52,7 +52,10 @@ function listFilesUsingFileEnumerator(
       !!ESLINT_USE_FLAT_CONFIG && ESLINT_USE_FLAT_CONFIG !== 'false'
   }
 
-  const enumerator = new FileEnumerator({ extensions })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Compatible with ESLint 10 types
+  const enumerator = new (eslintUnsupportedApi as any).FileEnumerator({
+    extensions,
+  })
 
   try {
     return Array.from(
