@@ -18,8 +18,6 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
 
 [`eslint-plugin-i` is now `eslint-plugin-import-x`](https://github.com/un-ts/eslint-plugin-import-x/issues/24#issuecomment-1991605123)
 
-**IF YOU ARE USING THIS WITH SUBLIME**: see the [bottom section](#sublimelinter-eslint) for important info.
-
 ## TOC <!-- omit in toc -->
 
 - [Why](#why)
@@ -49,7 +47,6 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
   - [`import-x/resolver` and `import-x/resolver-next`](#import-xresolver-and-import-xresolver-next)
   - [`import-x/cache`](#import-xcache)
   - [`import-x/internal-regex`](#import-xinternal-regex)
-- [SublimeLinter-eslint](#sublimelinter-eslint)
 - [Sponsors and Backers](#sponsors-and-backers)
   - [Sponsors](#sponsors)
   - [Backers](#backers)
@@ -642,78 +639,6 @@ For example, if your packages in a monorepo are all in `@scope`, you can configu
 settings:
   import-x/internal-regex: ^@scope/
 ```
-
-## SublimeLinter-eslint
-
-SublimeLinter-eslint introduced a change to support `.eslintignore` files
-which altered the way file paths are passed to ESLint when linting during editing.
-This change sends a relative path instead of the absolute path to the file (as ESLint
-normally provides), which can make it impossible for this plugin to resolve dependencies
-on the filesystem.
-
-This workaround should no longer be necessary with the release of ESLint 2.0, when
-`.eslintignore` will be updated to work more like a `.gitignore`, which should
-support proper ignoring of absolute paths via `--stdin-filename`.
-
-In the meantime, see [roadhump/SublimeLinter-eslint#58](https://github.com/roadhump/SublimeLinter-eslint/issues/58)
-for more details and discussion, but essentially, you may find you need to add the following
-`SublimeLinter` config to your Sublime project file:
-
-```json
-{
-  "folders": [
-    {
-      "path": "code"
-    }
-  ],
-  "SublimeLinter": {
-    "linters": {
-      "eslint": {
-        "chdir": "${project}/code"
-      }
-    }
-  }
-}
-```
-
-Note that `${project}/code` matches the `code` provided at `folders[0].path`.
-
-The purpose of the `chdir` setting, in this case, is to set the working directory
-from which ESLint is executed to be the same as the directory on which SublimeLinter-eslint
-bases the relative path it provides.
-
-See the SublimeLinter docs on [`chdir`](https://www.sublimelinter.com/en/latest/linter_settings.html#chdir)
-for more information, in case this does not work with your project.
-
-If you are not using `.eslintignore`, or don't have a Sublime project file, you can also
-do the following via a `.sublimelinterrc` file in some ancestor directory of your
-code:
-
-```json
-{
-  "linters": {
-    "eslint": {
-      "args": ["--stdin-filename", "@"]
-    }
-  }
-}
-```
-
-I also found that I needed to set `rc_search_limit` to `null`, which removes the file
-hierarchy search limit when looking up the directory tree for `.sublimelinterrc`:
-
-In Package Settings / SublimeLinter / User Settings:
-
-```json
-{
-  "user": {
-    "rc_search_limit": null
-  }
-}
-```
-
-I believe this defaults to `3`, so you may not need to alter it depending on your
-project folder max depth.
 
 ## Sponsors and Backers
 
