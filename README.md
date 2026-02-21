@@ -35,6 +35,7 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
 - [Rules](#rules)
   - [Helpful warnings](#helpful-warnings)
   - [Module systems](#module-systems)
+  - [Performance](#performance)
   - [Static analysis](#static-analysis)
   - [Style guide](#style-guide)
 - [Resolvers](#resolvers)
@@ -276,6 +277,15 @@ settings:
 | [no-import-module-exports](docs/rules/no-import-module-exports.md) | Forbid import statements with CommonJS module.exports.               |     |     |     | 🔧  |     |     |
 | [no-nodejs-modules](docs/rules/no-nodejs-modules.md)               | Forbid Node.js builtin modules.                                      |     |     |     |     |     |     |
 | [unambiguous](docs/rules/unambiguous.md)                           | Forbid potentially ambiguous parse goal (`script` vs. `module`).     |     |     |     |     |     |     |
+
+### Performance
+
+| Name                                                                       | Description                           | 💼  | ⚠️  | 🚫  | 🔧  | 💡  | ❌  |
+| :------------------------------------------------------------------------- | :------------------------------------ | :-- | :-- | :-- | :-- | :-- | :-- |
+| [avoid-barrel-files](docs/rules/avoid-barrel-files.md)                     | Forbid authoring of barrel files.     |     |     |     |     |     |     |
+| [avoid-importing-barrel-files](docs/rules/avoid-importing-barrel-files.md) | Forbid importing barrel files.        |     |     |     |     |     |     |
+| [avoid-namespace-import](docs/rules/avoid-namespace-import.md)             | Forbid namespace imports.             |     |     |     |     |     |     |
+| [avoid-re-export-all](docs/rules/avoid-re-export-all.md)                   | Forbid re-exporting \* from a module. |     |     |     |     |     |     |
 
 ### Static analysis
 
