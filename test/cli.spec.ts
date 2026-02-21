@@ -8,15 +8,16 @@ import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 
 import importPlugin from 'eslint-plugin-import-x'
 
-// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
-const { LegacyESLint } = eslintUnsupportedApi
+const describeSkipIfESLintV10 =
+  'LegacyESLint' in eslintUnsupportedApi ? describe.skip : describe
 
-describe('CLI regression tests', () => {
+describeSkipIfESLintV10('CLI regression tests', () => {
   const testDir = path.resolve(fileURLToPath(import.meta.url), '..')
 
   describe('issue #210', () => {
     it("doesn't throw an error on gratuitous, erroneous self-reference", () => {
-      const eslint = new LegacyESLint({
+      // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+      const eslint = new eslintUnsupportedApi.LegacyESLint({
         cwd: testDir,
         overrideConfigFile: 'fixtures/issue210.config.js',
         overrideConfig: {
@@ -36,7 +37,8 @@ describe('CLI regression tests', () => {
   describe('issue #1645', () => {
     it('throws an error on invalid JSON', async () => {
       const invalidJSON = 'fixtures/just-json-files/invalid.json'
-      const eslint = new LegacyESLint({
+      // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+      const eslint = new eslintUnsupportedApi.LegacyESLint({
         cwd: testDir,
         overrideConfigFile: 'fixtures/just-json-files/.eslintrc.json',
         ignore: false,
