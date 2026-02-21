@@ -5043,6 +5043,11 @@ describe('TypeScript', () => {
             import type { G, L } from "./Z";
           `,
           ...parserConfig,
+          languageOptions: {
+            ...parserConfig.languageOptions,
+            // TS Parse Error: A type-only import can specify a default import or named bindings, but not both.
+            parser: require(parsers.BABEL),
+          },
           options: [
             {
               named: true,
