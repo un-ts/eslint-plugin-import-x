@@ -142,7 +142,7 @@ export default createRule<[Options?], MessageId>({
         'The imported module "{{specifier}}" is a barrel file, which leads to importing a module graph of {{amount}} modules, which exceeds the maximum allowed size of {{maxModuleGraphSizeAllowed}} modules',
     },
   },
-  defaultOptions: [],
+  defaultOptions: [defaultOptions],
   create(context) {
     const options = context.options[0] || defaultOptions
     const maxModuleGraphSizeAllowed = options.maxModuleGraphSizeAllowed
