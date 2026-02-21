@@ -50,8 +50,11 @@ ruleTester.run('no-empty-named-blocks', rule, {
     tValid({
       code: `import type { Named } from 'mod';`,
     }),
+
     tValid({
       code: `import type Default, { Named } from 'mod';`,
+      // TS Parse Error: A type-only import can specify a default import or named bindings, but not both.
+      languageOptions: { parser: require(parsers.BABEL) },
     }),
     tValid({
       code: `import type * as Namespace from 'mod';`,
@@ -112,6 +115,9 @@ ruleTester.run('no-empty-named-blocks', rule, {
     tInvalid({
       code: `import type Default, {} from 'mod';`,
       output: `import type Default from 'mod';`,
+
+      // TS Parse Error: A type-only import can specify a default import or named bindings, but not both.
+      languageOptions: { parser: require(parsers.BABEL) },
 
       errors: [{ messageId: 'emptyNamed' }],
     }),
