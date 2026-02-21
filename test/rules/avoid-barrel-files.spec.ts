@@ -72,6 +72,20 @@ ruleTester.run('avoid-barrel-files', rule, {
         },
       ],
     }),
+    tValid({
+      code: `
+        class Foo {}
+        export { Foo };
+      `,
+      options: [
+        {
+          amountOfExportsToConsiderModuleAsBarrel: 0,
+        },
+      ],
+    }),
+    tValid({
+      code: `export default foo;`,
+    }),
   ],
 
   invalid: [
@@ -104,6 +118,24 @@ ruleTester.run('avoid-barrel-files', rule, {
     tInvalid({
       code: 'export default { var1, var2, var3, var4 };',
       errors: [{ messageId: 'avoidBarrel' }],
+    }),
+    tInvalid({
+      code: `
+        class Foo {}
+        class Bar {}
+        class Baz {}
+        export { Foo, Bar, Baz, Qux };
+      `,
+      errors: [{ messageId: 'avoidBarrel' }],
+    }),
+    tInvalid({
+      code: `export default foo;`,
+      errors: [{ messageId: 'avoidBarrel' }],
+      options: [
+        {
+          amountOfExportsToConsiderModuleAsBarrel: 0,
+        },
+      ],
     }),
   ],
 })
