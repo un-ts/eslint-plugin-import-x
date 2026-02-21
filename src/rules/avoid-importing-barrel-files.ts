@@ -5,7 +5,7 @@ import {
   is_barrel_file,
 } from 'eslint-barrel-file-utils/index.cjs'
 
-import { createRule, resolve } from '../utils/index.js'
+import { createRule, resolve, lazy } from '../utils/index.js'
 
 export interface Options {
   allowList: string[]
@@ -183,13 +183,13 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        let fileContent: string
-        try {
-          fileContent = readFileSync(resolvedPath, 'utf8')
-        } catch {
-          // do nothing since we couldn't read the file
-          return
-        }
+        const getFileContent = lazy(() => {
+          try {
+            return readFileSync(resolvedPath, 'utf8')
+          } catch {
+            return null
+          }
+        })
         let isBarrelFile: boolean
 
         /** Only cache bare module specifiers, as local files can change */
@@ -199,6 +199,11 @@ export default createRule<[Options?], MessageId>({
            * cache it
            */
           if (cache[moduleSpecifier] === undefined) {
+            const fileContent = getFileContent()
+            if (!fileContent) {
+              // do nothing since we couldn't read the file
+              return
+            }
             isBarrelFile = is_barrel_file(
               fileContent,
               amountOfExportsToConsiderModuleAsBarrel,
@@ -244,6 +249,11 @@ export default createRule<[Options?], MessageId>({
             }
           }
         } else {
+          const fileContent = getFileContent()
+          if (!fileContent) {
+            // do nothing since we couldn't read the file
+            return
+          }
           /**
            * Its not a bare module specifier, but local module, so we need to
            * analyze it
