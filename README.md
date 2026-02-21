@@ -35,6 +35,7 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
 - [Rules](#rules)
   - [Helpful warnings](#helpful-warnings)
   - [Module systems](#module-systems)
+  - [Performance](#performance)
   - [Static analysis](#static-analysis)
   - [Style guide](#style-guide)
 - [Resolvers](#resolvers)
