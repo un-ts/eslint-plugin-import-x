@@ -1,15 +1,11 @@
 import { readFileSync } from 'node:fs'
-import { builtinModules } from 'node:module'
-import path from 'node:path'
 
 import {
   count_module_graph_size,
   is_barrel_file,
 } from 'eslint-barrel-file-utils/index.cjs'
-import { ResolverFactory } from 'unrs-resolver'
-import type { ResolveResult } from 'unrs-resolver'
 
-import { createRule } from '../utils/index.js'
+import { createRule, resolve } from '../utils/index.js'
 
 export interface Options {
   allowList: string[]
@@ -52,18 +48,6 @@ const isBareModuleSpecifier = (specifier: string): boolean => {
     return /[@a-zA-Z]/.test(specifier.replaceAll("'", '')[0])
   }
   return false
-}
-
-// custom error class to emulate oxc_resolver ResolveError enum.
-// `errorVariant` can be equal to a `ResolveError` enum variant.
-class ResolveError extends Error {
-  public errorVariant: string | null
-
-  constructor(errorVariant: string | null = null, message: string = '') {
-    super(message)
-    this.errorVariant = errorVariant
-    this.message = message
-  }
 }
 
 export default createRule<[Options?], MessageId>({
@@ -177,54 +161,30 @@ export default createRule<[Options?], MessageId>({
       alias,
     }
 
-    const resolver = new ResolverFactory({
-      tsconfig,
-      alias,
-      conditionNames: exportConditions,
-      mainFields,
-      extensions,
-    })
+    const allowList = new Set(options?.allowList)
 
     return {
       ImportDeclaration(node) {
-        const moduleSpecifier = node.source.value
-        const currentFileName = context.filename
-
-        if (options?.allowList?.includes(moduleSpecifier)) {
-          return
-        }
-
         if (node?.importKind === 'type') {
           return
         }
 
-        if (builtinModules.includes(moduleSpecifier.replace('node:', ''))) {
+        const moduleSpecifier = node.source.value
+
+        if (allowList.has(moduleSpecifier)) {
           return
         }
 
-        let resolvedPath: ResolveResult
-        try {
-          resolvedPath = resolver.sync(
-            path.dirname(currentFileName),
-            moduleSpecifier,
-          )
+        const resolvedPath = resolve(moduleSpecifier, context)
 
-          if (!resolvedPath.path) {
-            // assuming ResolveError::NotFound if ResolveResult's path value is None
-            throw new ResolveError('NotFound', resolvedPath.error)
-          }
-
-          if (resolvedPath.error) {
-            throw new ResolveError(null, resolvedPath.error)
-          }
-        } catch {
+        if (!resolvedPath) {
           // do nothing since we couldn't resolve it
           return
         }
 
         let fileContent: string
         try {
-          fileContent = readFileSync(resolvedPath.path, 'utf8')
+          fileContent = readFileSync(resolvedPath, 'utf8')
         } catch {
           // do nothing since we couldn't read the file
           return
@@ -243,7 +203,7 @@ export default createRule<[Options?], MessageId>({
               amountOfExportsToConsiderModuleAsBarrel,
             )
             const moduleGraphSize = isBarrelFile
-              ? count_module_graph_size(resolvedPath.path, resolutionOptions)
+              ? count_module_graph_size(resolvedPath, resolutionOptions)
               : -1
 
             cache[moduleSpecifier] = {
@@ -292,7 +252,7 @@ export default createRule<[Options?], MessageId>({
             amountOfExportsToConsiderModuleAsBarrel,
           )
           const moduleGraphSize = isBarrelFile
-            ? count_module_graph_size(resolvedPath.path, resolutionOptions)
+            ? count_module_graph_size(resolvedPath, resolutionOptions)
             : -1
           if (moduleGraphSize > maxModuleGraphSizeAllowed) {
             context.report({
