@@ -250,10 +250,6 @@ settings:
 💡 Manually fixable by [editor suggestions](https://eslint.org/docs/latest/use/core-concepts#rule-suggestions).\
 ❌ Deprecated.
 
-| Name                                                                       | Description                    | 💼  | ⚠️  | 🚫  | 🔧  | 💡  | ❌  |
-| :------------------------------------------------------------------------- | :----------------------------- | :-- | :-- | :-- | :-- | :-- | :-- |
-| [avoid-importing-barrel-files](docs/rules/avoid-importing-barrel-files.md) | Forbid importing barrel files. |     |     |     |     |     |     |
-
 ### Helpful warnings
 
 | Name                                                                   | Description                                                                           | 💼          | ⚠️          | 🚫  | 🔧  | 💡  | ❌  |
@@ -280,11 +276,12 @@ settings:
 
 ### Performance
 
-| Name                                                           | Description                           | 💼  | ⚠️  | 🚫  | 🔧  | 💡  | ❌  |
-| :------------------------------------------------------------- | :------------------------------------ | :-- | :-- | :-- | :-- | :-- | :-- |
-| [avoid-barrel-files](docs/rules/avoid-barrel-files.md)         | Forbid authoring of barrel files.     |     |     |     |     |     |     |
-| [avoid-namespace-import](docs/rules/avoid-namespace-import.md) | Forbid namespace imports.             |     |     |     |     |     |     |
-| [avoid-re-export-all](docs/rules/avoid-re-export-all.md)       | Forbid re-exporting \* from a module. |     |     |     |     |     |     |
+| Name                                                                       | Description                           | 💼  | ⚠️  | 🚫  | 🔧  | 💡  | ❌  |
+| :------------------------------------------------------------------------- | :------------------------------------ | :-- | :-- | :-- | :-- | :-- | :-- |
+| [avoid-barrel-files](docs/rules/avoid-barrel-files.md)                     | Forbid authoring of barrel files.     |     |     |     |     |     |     |
+| [avoid-importing-barrel-files](docs/rules/avoid-importing-barrel-files.md) | Forbid importing barrel files.        |     |     |     |     |     |     |
+| [avoid-namespace-import](docs/rules/avoid-namespace-import.md)             | Forbid namespace imports.             |     |     |     |     |     |     |
+| [avoid-re-export-all](docs/rules/avoid-re-export-all.md)                   | Forbid re-exporting \* from a module. |     |     |     |     |     |     |
 
 ### Static analysis
 

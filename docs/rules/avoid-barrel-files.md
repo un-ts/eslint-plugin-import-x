@@ -20,7 +20,7 @@ This rule has the following options, with these defaults:
 
 ```js
 "import-x/avoid-barrel-files": ["error", {
-  "amountOfExportsToConsiderModuleAsBarrel": 5
+  "amountOfExportsToConsiderModuleAsBarrel": 3
 }]
 ```
 
