@@ -55,6 +55,7 @@ export default createRule<[Options?], MessageId>({
   meta: {
     type: 'problem',
     docs: {
+      category: 'Performance',
       description: 'Forbid importing barrel files.',
       recommended: true,
     },
