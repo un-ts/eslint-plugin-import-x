@@ -209,12 +209,12 @@ export default createRule<[Options?], MessageId>({
             moduleSpecifier,
           )
 
-          if (resolvedPath.error) {
+          if (!resolvedPath.path) {
             // assuming ResolveError::NotFound if ResolveResult's path value is None
-            if (!resolvedPath.path) {
-              throw new ResolveError('NotFound', resolvedPath.error)
-            }
+            throw new ResolveError('NotFound', resolvedPath.error)
+          }
 
+          if (resolvedPath.error) {
             throw new ResolveError(null, resolvedPath.error)
           }
         } catch {
@@ -222,11 +222,13 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        if (!resolvedPath.path) {
-          throw new ResolveError('NotFound', resolvedPath.error)
+        let fileContent: string
+        try {
+          fileContent = readFileSync(resolvedPath.path, 'utf8')
+        } catch {
+          // do nothing since we couldn't read the file
+          return
         }
-
-        const fileContent = readFileSync(resolvedPath.path, 'utf8')
         let isBarrelFile: boolean
 
         /** Only cache bare module specifiers, as local files can change */
