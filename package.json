@@ -95,7 +95,7 @@
     "@1stg/tsconfig": "^3.0.3",
     "@angular-eslint/template-parser": "^20.1.1",
     "@babel/core": "^7.27.4",
-    "@babel/eslint-parser": "^7.27.5",
+    "@babel/eslint-parser": "^7.28.6",
     "@babel/plugin-proposal-decorators": "^7.27.1",
     "@babel/plugin-proposal-export-default-from": "^7.27.1",
     "@babel/preset-env": "^7.27.2",
