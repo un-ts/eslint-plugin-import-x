@@ -27,7 +27,7 @@ import rule from 'eslint-plugin-import-x/rules/no-unused-modules'
 const ruleTester = new TSESLintRuleTester({
   dependencyConstraints: {
     eslint: {
-      range: '<=10.0.0',
+      range: '<10.0.0',
     },
   },
 })
