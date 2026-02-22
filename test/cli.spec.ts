@@ -8,35 +8,39 @@ import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 
 import importPlugin from 'eslint-plugin-import-x'
 
-// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
-const { LegacyESLint } = eslintUnsupportedApi
+const itOnlyLegacyESLint = 'LegacyESLint' in eslintUnsupportedApi ? it.skip : it
 
 describe('CLI regression tests', () => {
   const testDir = path.resolve(fileURLToPath(import.meta.url), '..')
 
   describe('issue #210', () => {
-    it("doesn't throw an error on gratuitous, erroneous self-reference", () => {
-      const eslint = new LegacyESLint({
-        cwd: testDir,
-        overrideConfigFile: 'fixtures/issue210.config.js',
-        overrideConfig: {
-          rules: {
-            named: 2,
+    itOnlyLegacyESLint(
+      'does not throw an error on gratuitous, erroneous self-reference',
+      () => {
+        // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+        const eslint = new eslintUnsupportedApi.LegacyESLint({
+          cwd: testDir,
+          overrideConfigFile: 'fixtures/issue210.config.js',
+          overrideConfig: {
+            rules: {
+              named: 2,
+            },
           },
-        },
-        plugins: {
-          // @ts-expect-error - incompatible types
-          'eslint-plugin-import-x': importPlugin,
-        },
-      })
-      return eslint.lintFiles(['fixtures/issue210.js'])
-    })
+          plugins: {
+            // @ts-expect-error - incompatible types
+            'eslint-plugin-import-x': importPlugin,
+          },
+        })
+        return eslint.lintFiles(['fixtures/issue210.js'])
+      },
+    )
   })
 
   describe('issue #1645', () => {
-    it('throws an error on invalid JSON', async () => {
+    itOnlyLegacyESLint('throws an error on invalid JSON', async () => {
       const invalidJSON = 'fixtures/just-json-files/invalid.json'
-      const eslint = new LegacyESLint({
+      // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+      const eslint = new eslintUnsupportedApi.LegacyESLint({
         cwd: testDir,
         overrideConfigFile: 'fixtures/just-json-files/.eslintrc.json',
         ignore: false,

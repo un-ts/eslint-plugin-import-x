@@ -27,6 +27,7 @@ jobs:
           - 8.56
           - 8
           - 9
+          - 10
 
         include:
           - executeLint: true
