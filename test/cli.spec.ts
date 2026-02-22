@@ -4,7 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
-import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
+import eslintUnsupportedApi from 'eslint9/use-at-your-own-risk'
 
 import importPlugin from 'eslint-plugin-import-x'
 
