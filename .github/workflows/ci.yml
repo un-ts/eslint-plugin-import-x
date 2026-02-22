@@ -19,7 +19,7 @@ jobs:
           - windows-latest
         node:
           - 18
-          - 20
+          - 20.19
           - 22
           # https://github.com/nodejs/node/issues/59480
           - 24.5
@@ -38,6 +38,9 @@ jobs:
             node: lts/*
             eslint: 9
             os: ubuntu-latest
+        exclude:
+          - eslint: 10
+            node: 18 # ESLint 10 drops Node.js 18 support
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -55,6 +58,12 @@ jobs:
         if: ${{ matrix.eslint != 9 }}
         run: |
           yarn add -D eslint@${{ matrix.eslint }} eslint-plugin-unicorn@56
+          yarn --no-immutable
+
+      - name: Install Babel RC Parser for ESLint 10
+        if: ${{ matrix.eslint == 10 }}
+        run: |
+          yarn add -D @babel/eslint-parser@8.0.0-rc.2
           yarn --no-immutable
 
       - name: Install Dependencies
