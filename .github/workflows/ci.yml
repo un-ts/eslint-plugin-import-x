@@ -21,8 +21,7 @@ jobs:
           - 18
           - 20.19
           - 22
-          # https://github.com/nodejs/node/issues/59480
-          - 24.5
+          - 24
         eslint:
           - 8.56
           - 8
