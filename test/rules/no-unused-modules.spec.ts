@@ -24,7 +24,13 @@ import jsxConfig from 'eslint-plugin-import-x/config/flat/react'
 import typescriptConfig from 'eslint-plugin-import-x/config/flat/typescript'
 import rule from 'eslint-plugin-import-x/rules/no-unused-modules'
 
-const ruleTester = new TSESLintRuleTester()
+const ruleTester = new TSESLintRuleTester({
+  dependencyConstraints: {
+    eslint: {
+      range: '<=10.0.0',
+    },
+  },
+})
 const typescriptRuleTester = new TSESLintRuleTester(typescriptConfig)
 const jsxRuleTester = new TSESLintRuleTester(jsxConfig)
 
