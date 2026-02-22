@@ -8,34 +8,36 @@ import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 
 import importPlugin from 'eslint-plugin-import-x'
 
-const describeSkipIfESLintV10 =
-  'LegacyESLint' in eslintUnsupportedApi ? describe.skip : describe
+const itOnlyLegacyESLint = 'LegacyESLint' in eslintUnsupportedApi ? it.skip : it
 
-describeSkipIfESLintV10('CLI regression tests', () => {
+describe('CLI regression tests', () => {
   const testDir = path.resolve(fileURLToPath(import.meta.url), '..')
 
   describe('issue #210', () => {
-    it("doesn't throw an error on gratuitous, erroneous self-reference", () => {
-      // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
-      const eslint = new eslintUnsupportedApi.LegacyESLint({
-        cwd: testDir,
-        overrideConfigFile: 'fixtures/issue210.config.js',
-        overrideConfig: {
-          rules: {
-            named: 2,
+    itOnlyLegacyESLint(
+      'does not throw an error on gratuitous, erroneous self-reference',
+      () => {
+        // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+        const eslint = new eslintUnsupportedApi.LegacyESLint({
+          cwd: testDir,
+          overrideConfigFile: 'fixtures/issue210.config.js',
+          overrideConfig: {
+            rules: {
+              named: 2,
+            },
           },
-        },
-        plugins: {
-          // @ts-expect-error - incompatible types
-          'eslint-plugin-import-x': importPlugin,
-        },
-      })
-      return eslint.lintFiles(['fixtures/issue210.js'])
-    })
+          plugins: {
+            // @ts-expect-error - incompatible types
+            'eslint-plugin-import-x': importPlugin,
+          },
+        })
+        return eslint.lintFiles(['fixtures/issue210.js'])
+      },
+    )
   })
 
   describe('issue #1645', () => {
-    it('throws an error on invalid JSON', async () => {
+    itOnlyLegacyESLint('throws an error on invalid JSON', async () => {
       const invalidJSON = 'fixtures/just-json-files/invalid.json'
       // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
       const eslint = new eslintUnsupportedApi.LegacyESLint({
