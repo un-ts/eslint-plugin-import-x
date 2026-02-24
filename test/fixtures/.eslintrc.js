@@ -5,10 +5,11 @@ const supportsArbitraryModuleNamespaceIdentifierNames = semver.satisfies(
   eslintPkg.version,
   '>= 8.7',
 )
+const isESLint10 = semver.satisfies(eslintPkg.version, '>=10')
 
 const config = {
   root: true,
-  parser: '@babel/eslint-parser',
+  parser: isESLint10 ? 'babel-eslint-parser-8-cjs' : '@babel/eslint-parser',
   parserOptions: {
     sourceType: 'module',
     ecmaVersion: 8,

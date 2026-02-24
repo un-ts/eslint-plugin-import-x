@@ -60,12 +60,6 @@ jobs:
           yarn add -D eslint@${{ matrix.eslint }} eslint-plugin-unicorn@56
           yarn --no-immutable
 
-      - name: Install Babel RC Parser for ESLint 10
-        if: ${{ matrix.eslint == 10 }}
-        run: |
-          yarn add -D @babel/eslint-parser@8.0.0-rc.2
-          yarn --no-immutable
-
       - name: Install Dependencies
         run: yarn --immutable
 

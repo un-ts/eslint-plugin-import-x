@@ -13,17 +13,19 @@ import typescriptPkg from 'typescript/package.json'
 import { cjsRequire as require } from 'eslint-plugin-import-x'
 import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x'
 
-// warms up the module cache. this import takes a while (>500ms)
-import '@babel/eslint-parser'
+export const isESLint9 =
+  semver.satisfies(eslintPkg.version, '>=9') &&
+  semver.satisfies(eslintPkg.version, '<10')
+export const isESLint10 = semver.satisfies(eslintPkg.version, '>=10')
 
 export const parsers = {
   ESPREE: require.resolve('espree'),
   TS: require.resolve('@typescript-eslint/parser'),
-  BABEL: require.resolve('@babel/eslint-parser'),
+  BABEL: require.resolve(
+    isESLint10 ? 'babel-eslint-parser-8-cjs' : '@babel/eslint-parser',
+  ),
   HERMES: require.resolve('hermes-eslint'),
 }
-
-export const isESLint9 = semver.satisfies(eslintPkg.version, '>=9')
 
 export function tsVersionSatisfies(specifier: string) {
   return semver.satisfies(typescriptPkg.version, specifier)
