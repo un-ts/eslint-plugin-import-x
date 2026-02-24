@@ -16,9 +16,7 @@ export function applyDefault<
   userOptions: Readonly<User> | null,
 ): Default {
   // clone defaults
-  const options = defaultOptions
-    ? (structuredClone(defaultOptions) as AsMutable<Default>)
-    : ([] as AsMutable<Default>)
+  const options = structuredClone(defaultOptions ?? []) as AsMutable<Default>
 
   if (userOptions == null) {
     return options
