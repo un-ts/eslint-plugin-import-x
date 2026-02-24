@@ -148,7 +148,7 @@
     "eslint8.56": "npm:eslint@~8.56.0",
     "eslint9": "npm:eslint@^9.28.0",
     "globals": "^16.2.0",
-    "hermes-eslint": "^0.29.0",
+    "hermes-eslint": "^0.33.3",
     "jest": "^30.0.3",
     "klaw-sync": "^7.0.0",
     "nano-staged": "^0.8.0",

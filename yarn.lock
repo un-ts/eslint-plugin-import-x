@@ -6117,7 +6117,7 @@ __metadata:
     eslint8.56: "npm:eslint@~8.56.0"
     eslint9: "npm:eslint@^9.28.0"
     globals: "npm:^16.2.0"
-    hermes-eslint: "npm:^0.29.0"
+    hermes-eslint: "npm:^0.33.3"
     is-glob: "npm:^4.0.3"
     jest: "npm:^30.0.3"
     klaw-sync: "npm:^7.0.0"
@@ -7317,30 +7317,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hermes-eslint@npm:^0.29.0":
-  version: 0.29.0
-  resolution: "hermes-eslint@npm:0.29.0"
+"hermes-eslint@npm:^0.33.3":
+  version: 0.33.3
+  resolution: "hermes-eslint@npm:0.33.3"
   dependencies:
     esrecurse: "npm:^4.3.0"
-    hermes-estree: "npm:0.29.0"
-    hermes-parser: "npm:0.29.0"
-  checksum: 10c0/a6bb59eaadbe1ec0b9e8f5027411ed6fe14c7e336865249353c0a77c5046a4c998efd7a5b2e21df2f7767797abafc52b92972fed28f017f1c3fcbc3b4a608a0c
+    hermes-estree: "npm:0.33.3"
+    hermes-parser: "npm:0.33.3"
+  checksum: 10c0/5894dbe52f5de698934d7cba0fda512d685651763df0e436cbe7e354ca3dff19bf57d1738b7a86d29f7482cfaac9791ed77d96f81150a74518ff7370da257bd2
   languageName: node
   linkType: hard
 
-"hermes-estree@npm:0.29.0":
-  version: 0.29.0
-  resolution: "hermes-estree@npm:0.29.0"
-  checksum: 10c0/5cb8537b6807372b8685409728977d1c1e89f65a40b7cdfbfeb1157421d0bd05da14e716a25e3311b222f00581b7b2d119bd4b61a1b268ca1f14b84ba1c5d11c
+"hermes-estree@npm:0.33.3":
+  version: 0.33.3
+  resolution: "hermes-estree@npm:0.33.3"
+  checksum: 10c0/4e04e767a706a93c59d64ef3f114075aeb93b08433655d4f11d310f0785c2a74d5b5041b80bc34d22630dece54865dd93a53fde160d48b8369cfef10dbd0520b
   languageName: node
   linkType: hard
 
-"hermes-parser@npm:0.29.0":
-  version: 0.29.0
-  resolution: "hermes-parser@npm:0.29.0"
+"hermes-parser@npm:0.33.3":
+  version: 0.33.3
+  resolution: "hermes-parser@npm:0.33.3"
   dependencies:
-    hermes-estree: "npm:0.29.0"
-  checksum: 10c0/e37bf7b8cdd8b3598e1c71799cdb9db2196fde5574941c05e90db43d2a1b4dd8f7df733136f217da62bf38b37cbd795260fab29cb2e4180e1b6c608e44d14df0
+    hermes-estree: "npm:0.33.3"
+  checksum: 10c0/f7d69de54c77321d8481e37a323bbac01d180ec982275ef8925ceaaf7e501fc3062593e84cf5da50852f36daffb34d0f5d6cbbef079fd0125a7b91c1fe84f225
   languageName: node
   linkType: hard
 
