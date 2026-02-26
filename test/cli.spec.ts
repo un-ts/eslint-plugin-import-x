@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 // eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
 import eslintUnsupportedApi from 'eslint9/use-at-your-own-risk'
 
-import { isESLint10 } from './utils.ts'
+import { isESLint10 } from './utils.js'
 
 import importPlugin from 'eslint-plugin-import-x'
 ;(isESLint10 ? describe.skip : describe)('CLI regression tests', () => {
