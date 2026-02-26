@@ -48,7 +48,7 @@ function getImportText(
 function hasResolutionModeAttribute(node: TSESTree.ImportDeclaration) {
   return (
     node.attributes &&
-    node.attributes.some(
+    node.attributes?.some(
       attr =>
         attr.key.type === 'Literal' && attr.key.value === 'resolution-mode',
     )
