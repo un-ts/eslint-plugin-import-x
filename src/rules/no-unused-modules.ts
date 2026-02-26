@@ -27,7 +27,7 @@ function listFilesUsingFileEnumerator(
   extensions: FileExtension[],
 ) {
   // Only read FileEnumerator and shouldUseFlatConfig within the function instead of top-level
-  // This allows us to avoid access the removed APIs as long as the function is not invoked.
+  // This allows us to avoid accessing the removed APIs as long as the function is not invoked.
   // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
   const { shouldUseFlatConfig } = eslintUnsupportedApi
 
@@ -503,7 +503,7 @@ export default createRule<Options[], MessageId>({
           },
           suppressMissingFileEnumeratorAPIWarning: {
             description:
-              'ESLint 10 and later version removes the FileEnumerator API, which is required by the "no-unused-modules" rule. Therefore a warning message will be logged before an alternative is implemented. You can suppress the warning with this option',
+              'ESLint 10 and later versions remove the FileEnumerator API, which is required by the "no-unused-modules" rule. Therefore a warning message will be logged before an alternative is implemented. You can suppress the warning with this option',
             type: 'boolean',
           },
         },
