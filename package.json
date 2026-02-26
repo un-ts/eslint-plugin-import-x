@@ -81,7 +81,7 @@
     "debug": "^4.4.1",
     "eslint-import-context": "^0.1.9",
     "is-glob": "^4.0.3",
-    "minimatch": "^9.0.3 || ^10.0.1",
+    "minimatch": "^9.0.3 || ^10.1.2",
     "semver": "^7.7.2",
     "stable-hash-x": "^0.2.0",
     "unrs-resolver": "^1.9.2"
