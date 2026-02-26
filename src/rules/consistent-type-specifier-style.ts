@@ -46,11 +46,8 @@ function getImportText(
 
 // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-3.html#stable-support-resolution-mode-in-import-types
 function hasResolutionModeAttribute(node: TSESTree.ImportDeclaration) {
-  return (
-    node.attributes?.some(
-      attr =>
-        attr.key.type === 'Literal' && attr.key.value === 'resolution-mode',
-    )
+  return node.attributes?.some(
+    attr => attr.key.type === 'Literal' && attr.key.value === 'resolution-mode',
   )
 }
 
