@@ -222,6 +222,15 @@ const TS_ONLY: RuleRunTests<typeof rule> = {
     // always valid
     //
     tValid({ code: "import type * as Foo from 'Foo';" }),
+    // https://github.com/un-ts/eslint-plugin-import-x/issues/233
+    tValid({
+      code: "import type {Foo} from 'some-package' with {'resolution-mode': 'import'};",
+      options: ['prefer-inline'],
+    }),
+    tValid({
+      code: "import type {Foo} from 'some-package' with {'resolution-mode': 'import'};",
+      options: ['prefer-top-level'],
+    }),
   ],
   invalid: [],
 }
