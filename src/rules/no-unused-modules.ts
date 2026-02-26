@@ -556,7 +556,7 @@ export default createRule<Options[], MessageId>({
       if (!suppressMissingFileEnumeratorAPIWarning) {
         console.warn(`
 ESLint removes the FileEnumerator API since ESLint 10, which is required by the "no-unused-modules" rule. Therefore, the "no-unused-modules" rule is no-op for now before we can implement an alternative.
-In the meantime, if you want to keep this rule enabled, you can suppress this warning with the "suppressMissingFileEnumeratorAPIWarning" rule option: \`import-x/no-unused-modules: ['error', { suppressMissingFileEnumeratorAPIWarning: true }']\`
+In the meantime, if you want to keep this rule enabled, you can suppress this warning with the "suppressMissingFileEnumeratorAPIWarning" rule option: \`import-x/no-unused-modules: ['error', { suppressMissingFileEnumeratorAPIWarning: true }]\`
 `)
       }
       return {}
