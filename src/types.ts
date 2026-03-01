@@ -70,15 +70,16 @@ export interface ParseError extends Error {
   column: number
 }
 
-export interface CustomESTreeNode<Type extends string>
-  extends Omit<TSESTree.BaseNode, 'type'> {
+export interface CustomESTreeNode<Type extends string> extends Omit<
+  TSESTree.BaseNode,
+  'type'
+> {
   type: Type
 }
 
 export type ExportDefaultSpecifier = CustomESTreeNode<'ExportDefaultSpecifier'>
 
-export interface ExportNamespaceSpecifier
-  extends CustomESTreeNode<'ExportNamespaceSpecifier'> {
+export interface ExportNamespaceSpecifier extends CustomESTreeNode<'ExportNamespaceSpecifier'> {
   exported: TSESTree.Identifier
 }
 
@@ -164,7 +165,8 @@ export interface CjsRequire extends NodeJS.Require {
 export type SetValue<T extends Set<unknown>> =
   T extends Set<infer U> ? U : never
 
-export interface NormalizedCacheSettings
-  extends NonNullable<ImportSettings['cache']> {
+export interface NormalizedCacheSettings extends NonNullable<
+  ImportSettings['cache']
+> {
   lifetime: number
 }
