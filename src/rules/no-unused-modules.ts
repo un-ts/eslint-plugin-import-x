@@ -457,6 +457,8 @@ export interface Options {
 
 type MessageId = 'notFound' | 'unused'
 
+let eslint10WarningEmitted = false
+
 export default createRule<Options[], MessageId>({
   name: 'no-unused-modules',
   meta: {
@@ -553,7 +555,9 @@ export default createRule<Options[], MessageId>({
 
     // ESLint 10 removes shouldUseFlatConfig and FileEnumerator
     if (!('FileEnumerator' in eslintUnsupportedApi)) {
-      if (!suppressMissingFileEnumeratorAPIWarning) {
+      if (!suppressMissingFileEnumeratorAPIWarning && !eslint10WarningEmitted) {
+        eslint10WarningEmitted = true
+
         console.warn(`
 ESLint removes the FileEnumerator API since ESLint 10, which is required by the "no-unused-modules" rule. Therefore, the "no-unused-modules" rule is no-op for now before we can implement an alternative.
 In the meantime, if you want to keep this rule enabled, you can suppress this warning with the "suppressMissingFileEnumeratorAPIWarning" rule option: \`import-x/no-unused-modules: ['error', { suppressMissingFileEnumeratorAPIWarning: true }]\`
