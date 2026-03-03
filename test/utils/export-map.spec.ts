@@ -441,9 +441,8 @@ describe('ExportMap', () => {
       it.skip('should cache tsconfig until tsconfigRootDir parser option changes', async () => {
         jest.resetModules()
 
-        const { ExportMap: FreshNewExportMap } = await import(
-          'eslint-plugin-import-x/utils'
-        )
+        const { ExportMap: FreshNewExportMap } =
+          await import('eslint-plugin-import-x/utils')
 
         expect(FreshNewExportMap).not.toBe(ExportMap)
         expect(spied).toHaveBeenCalledTimes(0)

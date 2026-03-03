@@ -9,9 +9,8 @@ describe('npm-client', () => {
   beforeEach(async () => {
     delete process.env.npm_config_user_agent
     jest.resetModules()
-    ;({ getNpmClient, getNpmInstallCommand } = await import(
-      'eslint-plugin-import-x/utils'
-    ))
+    ;({ getNpmClient, getNpmInstallCommand } =
+      await import('eslint-plugin-import-x/utils'))
   })
 
   it('should return npm as default client', () => {
