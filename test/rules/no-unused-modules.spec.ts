@@ -1593,7 +1593,8 @@ function createUnusedError(
     })
   }
 
-  ;(isESLint9 ? describe : describe.skip)('with eslint 9+', () => {
+  // no-unused-module doesn't work on ESLint 10, the error we are testing are specific to ESLint 9
+  ;(isESLint9 ? describe : describe.skip)('with eslint 9 only', () => {
     it('provides meaningful error when eslintrc is not present', () => {
       // Create temp directory outside of project root
       const { name: tempDir, removeCallback } = dirSync({
