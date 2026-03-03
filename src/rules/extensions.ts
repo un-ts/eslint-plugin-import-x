@@ -370,10 +370,13 @@ export default createRule<Options, MessageId>({
             })
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
-                return fixer.replaceText(
-                  source,
-                  replaceImportPath(source.raw, fixedImportPath),
+                const newImportPath = replaceImportPath(
+                  source.raw,
+                  fixedImportPath,
                 )
+                return source.raw === newImportPath
+                  ? null // Surface that something has gone wrong with extension detection.
+                  : fixer.replaceText(source, newImportPath)
               },
             }
             context.report({
