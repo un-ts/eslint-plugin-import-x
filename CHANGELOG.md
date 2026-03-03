@@ -1,5 +1,28 @@
 # eslint-plugin-import-x
 
+## 4.16.2
+
+### Patch Changes
+
+- [#457](https://github.com/un-ts/eslint-plugin-import-x/pull/457) [`1da4043`](https://github.com/un-ts/eslint-plugin-import-x/commit/1da40431d2f0e53e2821d141b4be57a7b124f8d8) Thanks [@SukkaW](https://github.com/SukkaW)! - Make the `no-unused-modules` rule no-op on ESLint 10 or later for now before we can implement an alternative. A warning message about this behavior is added, and can be suppressed with the new `suppressMissingFileEnumeratorAPIWarning` rule option (`import-x/no-unused-modules: ['error', { suppressMissingFileEnumeratorAPIWarning: true }]`).
+
+- [#450](https://github.com/un-ts/eslint-plugin-import-x/pull/450) [`a51be0f`](https://github.com/un-ts/eslint-plugin-import-x/commit/a51be0f1a5e3f72eed8fa33d409da51b2ac68932) Thanks [@andrewgaun](https://github.com/andrewgaun)! - fix(deps): Bumping minimatch _10_ version to avoid dependency with a critical vulnerability
+
+  Updating the minimum `minimatch` _10_ version to _10.1.2_ which updates a dependency (@isaacs/brace-expansion) with a critical vulnerability. See <https://github.com/advisories/GHSA-7h2j-956f-4vf2>
+
+- [#434](https://github.com/un-ts/eslint-plugin-import-x/pull/434) [`a3aae61`](https://github.com/un-ts/eslint-plugin-import-x/commit/a3aae6179f0a3417b46066dfe59b388865d1a2eb) Thanks [@stepankuzmin](https://github.com/stepankuzmin)! - fix(deps): replace type-fest with @package-json/types
+
+  PackageJson types are imported in published declaration files (lib/rules/no-extraneous-dependencies.d.ts and lib/utils/read-pkg-up.d.ts), which causes TypeScript compilation errors for consumers who don't have skipLibCheck enabled. Replacing type-fest with the smaller @package-json/types package ensures the types are available to all consumers while reducing bundle size.
+
+- [#443](https://github.com/un-ts/eslint-plugin-import-x/pull/443) [`b416a8a`](https://github.com/un-ts/eslint-plugin-import-x/commit/b416a8ac4efdef68e75dbf7dae8d3adbcb117d60) Thanks [@baevm](https://github.com/baevm)! - consistent-type-specifier-style: Add exception for TS resolution-mode import attributes
+
+- [#454](https://github.com/un-ts/eslint-plugin-import-x/pull/454) [`d3f8d67`](https://github.com/un-ts/eslint-plugin-import-x/commit/d3f8d67781d17ebe2edfdab4014754fe2df5eede) Thanks [@SukkaW](https://github.com/SukkaW)! - First step toward ESLint 10 support:
+  - `sourceType` determination now prefers `context.languageOptions` when possible
+  - Ensure `context.parserOptions` no longer results in crashes with ESLint 10
+  - Merge `getParser` and `getParserPath` implementations into one `getParserOrPath`
+
+- [#406](https://github.com/un-ts/eslint-plugin-import-x/pull/406) [`d0a7816`](https://github.com/un-ts/eslint-plugin-import-x/commit/d0a78167791f41804e880356c9c69d7a45c4b45d) Thanks [@marcalexiei](https://github.com/marcalexiei)! - fix(package): remove config and rules exports pointing to empty files
+
 ## 4.16.1
 
 ### Patch Changes
