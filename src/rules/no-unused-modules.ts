@@ -9,6 +9,29 @@ import { TSESTree } from '@typescript-eslint/types'
 import type { TSESLint } from '@typescript-eslint/utils'
 // eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
 import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
+import type * as ESLint9UnsupportedApi from 'eslint9/use-at-your-own-risk'
+
+function isESLint9UnsupportedApi(
+  input: unknown,
+): input is typeof ESLint9UnsupportedApi {
+  return (
+    typeof input === 'object' &&
+    input !== null &&
+    'shouldUseFlatConfig' in input &&
+    'FileEnumerator' in eslintUnsupportedApi
+  )
+}
+
+function ensureESLint9UnsupportedApi(
+  input: unknown,
+): typeof ESLint9UnsupportedApi {
+  if (!isESLint9UnsupportedApi(input)) {
+    throw new TypeError(
+      'ESLint 10 and later versions remove the FileEnumerator API, which is required by the "no-unused-modules" rule.',
+    )
+  }
+  return input
+}
 
 import type { FileExtension, RuleContext } from '../types.js'
 import {
@@ -26,10 +49,8 @@ function listFilesUsingFileEnumerator(
   src: string[],
   extensions: FileExtension[],
 ) {
-  // Only read FileEnumerator and shouldUseFlatConfig within the function instead of top-level
-  // This allows us to avoid accessing the removed APIs as long as the function is not invoked.
-  // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
-  const { shouldUseFlatConfig } = eslintUnsupportedApi
+  const { FileEnumerator, shouldUseFlatConfig } =
+    ensureESLint9UnsupportedApi(eslintUnsupportedApi)
 
   // We need to know whether this is being run with flat config in order to
   // determine how to report errors if FileEnumerator throws due to a lack of eslintrc.
@@ -43,7 +64,8 @@ function listFilesUsingFileEnumerator(
   // If this function is present, then we assume it's v9
   try {
     isUsingFlatConfig =
-      // @ts-expect-error -- only available in ESLint v9
+      // This allows us to avoid accessing the removed APIs as long as the function is not invoked.
+      // @ts-expect-error -- only exists in ESLint 9, and we only try to ensure this function exists
       shouldUseFlatConfig && ESLINT_USE_FLAT_CONFIG !== 'false'
   } catch {
     // We don't want to throw here, since we only want to init the
@@ -52,8 +74,7 @@ function listFilesUsingFileEnumerator(
       !!ESLINT_USE_FLAT_CONFIG && ESLINT_USE_FLAT_CONFIG !== 'false'
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Compatible with ESLint 10 types
-  const enumerator = new (eslintUnsupportedApi as any).FileEnumerator({
+  const enumerator = new FileEnumerator({
     extensions,
   })
 
@@ -554,7 +575,7 @@ export default createRule<Options[], MessageId>({
     } = context.options[0] || {}
 
     // ESLint 10 removes shouldUseFlatConfig and FileEnumerator
-    if (!('FileEnumerator' in eslintUnsupportedApi)) {
+    if (!isESLint9UnsupportedApi(eslintUnsupportedApi)) {
       if (!suppressMissingFileEnumeratorAPIWarning && !eslint10WarningEmitted) {
         eslint10WarningEmitted = true
 
