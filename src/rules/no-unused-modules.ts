@@ -9,6 +9,29 @@ import { TSESTree } from '@typescript-eslint/types'
 import type { TSESLint } from '@typescript-eslint/utils'
 // eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
 import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
+import type * as ESLint9UnsupportedApi from 'eslint9/use-at-your-own-risk'
+
+function isESLint9UnsupportedApi(
+  input: unknown,
+): input is typeof ESLint9UnsupportedApi {
+  return (
+    typeof input === 'object' &&
+    input !== null &&
+    'shouldUseFlatConfig' in input &&
+    'FileEnumerator' in eslintUnsupportedApi
+  )
+}
+
+function ensureESLint9UnsupportedApi(
+  input: unknown,
+): typeof ESLint9UnsupportedApi {
+  if (!isESLint9UnsupportedApi(input)) {
+    throw new TypeError(
+      'ESLint 10 and later versions remove the FileEnumerator API, which is required by the "no-unused-modules" rule.',
+    )
+  }
+  return input
+}
 
 import type { FileExtension, RuleContext } from '../types.js'
 import {
@@ -22,13 +45,13 @@ import {
   getValue,
 } from '../utils/index.js'
 
-// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
-const { FileEnumerator, shouldUseFlatConfig } = eslintUnsupportedApi
-
 function listFilesUsingFileEnumerator(
   src: string[],
   extensions: FileExtension[],
 ) {
+  const { FileEnumerator, shouldUseFlatConfig } =
+    ensureESLint9UnsupportedApi(eslintUnsupportedApi)
+
   // We need to know whether this is being run with flat config in order to
   // determine how to report errors if FileEnumerator throws due to a lack of eslintrc.
 
@@ -41,7 +64,8 @@ function listFilesUsingFileEnumerator(
   // If this function is present, then we assume it's v9
   try {
     isUsingFlatConfig =
-      // @ts-expect-error -- only available in ESLint v9
+      // This allows us to avoid accessing the removed APIs as long as the function is not invoked.
+      // @ts-expect-error -- only exists in ESLint 9, and we only try to ensure this function exists
       shouldUseFlatConfig && ESLINT_USE_FLAT_CONFIG !== 'false'
   } catch {
     // We don't want to throw here, since we only want to init the
@@ -50,7 +74,9 @@ function listFilesUsingFileEnumerator(
       !!ESLINT_USE_FLAT_CONFIG && ESLINT_USE_FLAT_CONFIG !== 'false'
   }
 
-  const enumerator = new FileEnumerator({ extensions })
+  const enumerator = new FileEnumerator({
+    extensions,
+  })
 
   try {
     return Array.from(
@@ -447,9 +473,12 @@ export interface Options {
   missingExports?: true
   unusedExports?: boolean
   ignoreUnusedTypeExports?: boolean
+  suppressMissingFileEnumeratorAPIWarning?: boolean
 }
 
 type MessageId = 'notFound' | 'unused'
+
+let eslint10WarningEmitted = false
 
 export default createRule<Options[], MessageId>({
   name: 'no-unused-modules',
@@ -495,6 +524,11 @@ export default createRule<Options[], MessageId>({
             description: 'ignore type exports without any usage',
             type: 'boolean',
           },
+          suppressMissingFileEnumeratorAPIWarning: {
+            description:
+              'ESLint 10 and later versions remove the FileEnumerator API, which is required by the "no-unused-modules" rule. Therefore a warning message will be logged before an alternative is implemented. You can suppress the warning with this option',
+            type: 'boolean',
+          },
         },
         anyOf: [
           {
@@ -537,7 +571,21 @@ export default createRule<Options[], MessageId>({
       missingExports,
       unusedExports,
       ignoreUnusedTypeExports,
+      suppressMissingFileEnumeratorAPIWarning,
     } = context.options[0] || {}
+
+    // ESLint 10 removes shouldUseFlatConfig and FileEnumerator
+    if (!isESLint9UnsupportedApi(eslintUnsupportedApi)) {
+      if (!suppressMissingFileEnumeratorAPIWarning && !eslint10WarningEmitted) {
+        eslint10WarningEmitted = true
+
+        console.warn(`
+ESLint removes the FileEnumerator API since ESLint 10, which is required by the "no-unused-modules" rule. Therefore, the "no-unused-modules" rule is no-op for now before we can implement an alternative.
+In the meantime, if you want to keep this rule enabled, you can suppress this warning with the "suppressMissingFileEnumeratorAPIWarning" rule option: \`import-x/no-unused-modules: ['error', { suppressMissingFileEnumeratorAPIWarning: true }]\`
+`)
+      }
+      return {}
+    }
 
     if (unusedExports) {
       doPreparation(src, ignoreExports, context)
