@@ -7,6 +7,7 @@ import {
   parsers,
   getNonDefaultParsers,
   testFilePath,
+  isESLint10,
 } from '../utils.js'
 import type { GetRuleModuleMessageIds } from '../utils.js'
 
@@ -5043,6 +5044,11 @@ describe('TypeScript', () => {
             import type { G, L } from "./Z";
           `,
           ...parserConfig,
+          languageOptions: {
+            ...parserConfig.languageOptions,
+            // TS Parse Error: A type-only import can specify a default import or named bindings, but not both.
+            parser: require(parsers.BABEL),
+          },
           options: [
             {
               named: true,
@@ -5197,191 +5203,194 @@ describe('TypeScript', () => {
   }
 })
 
-flowRuleTester.run('order', rule, {
-  valid: [
-    tValid({
-      options: [
-        {
-          alphabetize: { order: 'asc', orderImportKind: 'asc' },
-        },
-      ],
-      code: `
-        import type {Bar} from 'common';
-        import typeof {foo} from 'common';
-        import {bar} from 'common';
-      `,
-    }),
-  ],
-  invalid: [
-    tInvalid({
-      options: [
-        {
-          alphabetize: { order: 'asc', orderImportKind: 'asc' },
-        },
-      ],
-      code: `
-        import type {Bar} from 'common';
-        import {bar} from 'common';
-        import typeof {foo} from 'common';
-      `,
-      output: `
-        import type {Bar} from 'common';
-        import typeof {foo} from 'common';
-        import {bar} from 'common';
-      `,
-      errors: [
-        createOrderError([
-          '`common` typeof import',
-          'before',
-          'import of `common`',
-        ]),
-      ],
-    }),
-    tInvalid({
-      options: [
-        {
-          alphabetize: { order: 'asc', orderImportKind: 'desc' },
-        },
-      ],
-      code: `
-        import type {Bar} from 'common';
-        import {bar} from 'common';
-        import typeof {foo} from 'common';
-      `,
-      output: `
-        import {bar} from 'common';
-        import typeof {foo} from 'common';
-        import type {Bar} from 'common';
-      `,
-      errors: [
-        createOrderError([
-          '`common` type import',
-          'after',
-          'typeof import of `common`',
-        ]),
-      ],
-    }),
-    tInvalid({
-      options: [
-        {
-          alphabetize: { order: 'asc', orderImportKind: 'asc' },
-        },
-      ],
-      code: `
-        import type {Bar} from './local/sub';
-        import {bar} from './local/sub';
-        import {baz} from './local-sub';
-        import typeof {foo} from './local/sub';
-      `,
-      output: `
-        import type {Bar} from './local/sub';
-        import typeof {foo} from './local/sub';
-        import {bar} from './local/sub';
-        import {baz} from './local-sub';
-      `,
-      errors: [
-        createOrderError([
-          '`./local/sub` typeof import',
-          'before',
-          'import of `./local/sub`',
-        ]),
-      ],
-    }),
-    tInvalid({
-      code: `
-        import { cfg } from 'path/path/path/src/Cfg';
-        import { l10n } from 'path/src/l10n';
-        import { helpers } from 'path/path/path/helpers';
-        import { tip } from 'path/path/tip';
-
-        import { controller } from '../../../../path/path/path/controller';
-        import { component } from '../../../../path/path/path/component';
-      `,
-      output: [
-        `
-        import { helpers } from 'path/path/path/helpers';
-        import { cfg } from 'path/path/path/src/Cfg';
-        import { l10n } from 'path/src/l10n';
-        import { tip } from 'path/path/tip';
-
-        import { component } from '../../../../path/path/path/component';
-        import { controller } from '../../../../path/path/path/controller';
-      `,
-        `
-        import { helpers } from 'path/path/path/helpers';
-        import { cfg } from 'path/path/path/src/Cfg';
-        import { tip } from 'path/path/tip';
-        import { l10n } from 'path/src/l10n';
-
-        import { component } from '../../../../path/path/path/component';
-        import { controller } from '../../../../path/path/path/controller';
-      `,
-      ],
-      languageOptions: { parser: require(parsers.ESPREE) },
-      options: [
-        {
-          groups: [
-            ['builtin', 'external'],
-            'internal',
-            ['sibling', 'parent'],
-            'object',
-            'type',
-          ],
-          pathGroups: [
-            {
-              pattern: 'react',
-              group: 'builtin',
-              position: 'before',
-              patternOptions: {
-                matchBase: true,
-              },
-            },
-            {
-              pattern: '*.+(css|svg)',
-              group: 'type',
-              position: 'after',
-              patternOptions: {
-                matchBase: true,
-              },
-            },
-          ],
-          // @ts-expect-error testing options
-          pathGroupsExcludedImportTypes: ['react'],
-          alphabetize: {
-            order: 'asc',
+// ESLint 10 & Babel 8 breaks a few Flow legacy syntax
+;(isESLint10 ? describe.skip : describe)('order: flow', () => {
+  flowRuleTester.run('order', rule, {
+    valid: [
+      tValid({
+        options: [
+          {
+            alphabetize: { order: 'asc', orderImportKind: 'asc' },
           },
-          'newlines-between': 'always',
-        },
-      ],
-      errors: [
-        {
-          ...createOrderError([
-            '`path/path/path/helpers` import',
+        ],
+        code: `
+        import type {Bar} from 'common';
+        import typeof {foo} from 'common';
+        import {bar} from 'common';
+      `,
+      }),
+    ],
+    invalid: [
+      tInvalid({
+        options: [
+          {
+            alphabetize: { order: 'asc', orderImportKind: 'asc' },
+          },
+        ],
+        code: `
+        import type {Bar} from 'common';
+        import {bar} from 'common';
+        import typeof {foo} from 'common';
+      `,
+        output: `
+        import type {Bar} from 'common';
+        import typeof {foo} from 'common';
+        import {bar} from 'common';
+      `,
+        errors: [
+          createOrderError([
+            '`common` typeof import',
             'before',
-            'import of `path/path/path/src/Cfg`',
+            'import of `common`',
           ]),
-          line: 4,
-          column: 9,
-        },
-        {
-          ...createOrderError([
-            '`path/path/tip` import',
+        ],
+      }),
+      tInvalid({
+        options: [
+          {
+            alphabetize: { order: 'asc', orderImportKind: 'desc' },
+          },
+        ],
+        code: `
+        import type {Bar} from 'common';
+        import {bar} from 'common';
+        import typeof {foo} from 'common';
+      `,
+        output: `
+        import {bar} from 'common';
+        import typeof {foo} from 'common';
+        import type {Bar} from 'common';
+      `,
+        errors: [
+          createOrderError([
+            '`common` type import',
+            'after',
+            'typeof import of `common`',
+          ]),
+        ],
+      }),
+      tInvalid({
+        options: [
+          {
+            alphabetize: { order: 'asc', orderImportKind: 'asc' },
+          },
+        ],
+        code: `
+        import type {Bar} from './local/sub';
+        import {bar} from './local/sub';
+        import {baz} from './local-sub';
+        import typeof {foo} from './local/sub';
+      `,
+        output: `
+        import type {Bar} from './local/sub';
+        import typeof {foo} from './local/sub';
+        import {bar} from './local/sub';
+        import {baz} from './local-sub';
+      `,
+        errors: [
+          createOrderError([
+            '`./local/sub` typeof import',
             'before',
-            'import of `path/src/l10n`',
+            'import of `./local/sub`',
           ]),
-          line: 5,
-          column: 9,
-        },
-        {
-          ...createOrderError([
-            '`../../../../path/path/path/component` import',
-            'before',
-            'import of `../../../../path/path/path/controller`',
-          ]),
-          line: 8,
-          column: 9,
-        },
-      ],
-    }),
-  ],
+        ],
+      }),
+      tInvalid({
+        code: `
+        import { cfg } from 'path/path/path/src/Cfg';
+        import { l10n } from 'path/src/l10n';
+        import { helpers } from 'path/path/path/helpers';
+        import { tip } from 'path/path/tip';
+
+        import { controller } from '../../../../path/path/path/controller';
+        import { component } from '../../../../path/path/path/component';
+      `,
+        output: [
+          `
+        import { helpers } from 'path/path/path/helpers';
+        import { cfg } from 'path/path/path/src/Cfg';
+        import { l10n } from 'path/src/l10n';
+        import { tip } from 'path/path/tip';
+
+        import { component } from '../../../../path/path/path/component';
+        import { controller } from '../../../../path/path/path/controller';
+      `,
+          `
+        import { helpers } from 'path/path/path/helpers';
+        import { cfg } from 'path/path/path/src/Cfg';
+        import { tip } from 'path/path/tip';
+        import { l10n } from 'path/src/l10n';
+
+        import { component } from '../../../../path/path/path/component';
+        import { controller } from '../../../../path/path/path/controller';
+      `,
+        ],
+        languageOptions: { parser: require(parsers.ESPREE) },
+        options: [
+          {
+            groups: [
+              ['builtin', 'external'],
+              'internal',
+              ['sibling', 'parent'],
+              'object',
+              'type',
+            ],
+            pathGroups: [
+              {
+                pattern: 'react',
+                group: 'builtin',
+                position: 'before',
+                patternOptions: {
+                  matchBase: true,
+                },
+              },
+              {
+                pattern: '*.+(css|svg)',
+                group: 'type',
+                position: 'after',
+                patternOptions: {
+                  matchBase: true,
+                },
+              },
+            ],
+            // @ts-expect-error testing options
+            pathGroupsExcludedImportTypes: ['react'],
+            alphabetize: {
+              order: 'asc',
+            },
+            'newlines-between': 'always',
+          },
+        ],
+        errors: [
+          {
+            ...createOrderError([
+              '`path/path/path/helpers` import',
+              'before',
+              'import of `path/path/path/src/Cfg`',
+            ]),
+            line: 4,
+            column: 9,
+          },
+          {
+            ...createOrderError([
+              '`path/path/tip` import',
+              'before',
+              'import of `path/src/l10n`',
+            ]),
+            line: 5,
+            column: 9,
+          },
+          {
+            ...createOrderError([
+              '`../../../../path/path/path/component` import',
+              'before',
+              'import of `../../../../path/path/path/controller`',
+            ]),
+            line: 8,
+            column: 9,
+          },
+        ],
+      }),
+    ],
+  })
 })

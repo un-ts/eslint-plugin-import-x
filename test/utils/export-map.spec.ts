@@ -4,7 +4,7 @@ import { setTimeout } from 'node:timers/promises'
 import { jest } from '@jest/globals'
 import * as getTsconfig from 'get-tsconfig'
 
-import { testContext, testFilePath } from '../utils.js'
+import { isESLint10, testContext, testFilePath } from '../utils.js'
 
 import type { ChildContext } from 'eslint-plugin-import-x'
 import {
@@ -110,10 +110,14 @@ function jsdocTests(parseContext: ChildContext, lineEnding: string) {
   })
 }
 
+const parserPath = isESLint10
+  ? 'babel-eslint-parser-8-cjs'
+  : '@babel/eslint-parser'
+
 describe('ExportMap', () => {
   const fakeContext = {
     ...testContext(),
-    parserPath: '@babel/eslint-parser',
+    parserPath,
   }
 
   it('handles ExportAllDeclaration', () => {
@@ -185,7 +189,7 @@ describe('ExportMap', () => {
     const path = testFilePath('jsx/FooES7.js')
     const contents = fs.readFileSync(path, { encoding: 'utf8' })
     const imports = ExportMap.parse(path, contents, {
-      parserPath: '@babel/eslint-parser',
+      parserPath,
       settings: {},
     } as ChildContext)!
 
@@ -228,7 +232,7 @@ describe('ExportMap', () => {
     describe('@babel/eslint-parser', () => {
       jsdocTests(
         {
-          parserPath: '@babel/eslint-parser',
+          parserPath,
           parserOptions: {
             ecmaVersion: 2015,
             sourceType: 'module',
@@ -240,7 +244,7 @@ describe('ExportMap', () => {
       )
       jsdocTests(
         {
-          parserPath: '@babel/eslint-parser',
+          parserPath,
           parserOptions: {
             ecmaVersion: 2015,
             sourceType: 'module',
@@ -263,7 +267,7 @@ describe('ExportMap', () => {
     } as ChildContext
 
     const babelContext = {
-      parserPath: '@babel/eslint-parser',
+      parserPath,
       parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       settings: {},
     } as ChildContext
