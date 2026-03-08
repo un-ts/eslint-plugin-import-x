@@ -2,12 +2,7 @@ import fs from 'node:fs'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import {
-  createRuleTestCaseFunctions,
-  isESLint10,
-  parsers,
-  testFilePath,
-} from '../utils.js'
+import { createRuleTestCaseFunctions, parsers, testFilePath } from '../utils.js'
 
 import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/first'
@@ -33,7 +28,6 @@ ruleTester.run('first', rule, {
             import { x } from 'foo';",
     }),
     tValid({
-      skip: isESLint10, // @angular-eslint/template-parser doesn't support ESLint 10 yet
       name: '...component.html (issue #2210)',
       code: fs.readFileSync(testFilePath('component.html'), 'utf8'),
       languageOptions: {
