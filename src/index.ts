@@ -69,7 +69,7 @@ import preferDefaultExport from './rules/prefer-default-export.js'
 import preferNamespaceImport from './rules/prefer-namespace-import.js'
 import unambiguous from './rules/unambiguous.js'
 // configs
-import type { PluginConfig, PluginFlatBaseConfig } from './types.js'
+import type { PluginFlatBaseConfig } from './types.js'
 import { importXResolverCompat } from './utils/index.js'
 
 const rules = {
@@ -192,12 +192,13 @@ const configs = {
   'flat/react-native': flatConfigs['react-native'],
   'flat/electron': flatConfigs.electron,
   'flat/typescript': flatConfigs.typescript,
-} satisfies Record<string, PluginConfig | Linter.Config>
+} satisfies Record<string, Linter.LegacyConfig | Linter.Config>
 
-const plugin = plugin_ as typeof plugin_ & {
-  flatConfigs: typeof flatConfigs
-  configs: typeof configs
-}
+const plugin = plugin_ as typeof plugin_ &
+  ESLint.Plugin & {
+    flatConfigs: typeof flatConfigs
+    configs: typeof configs
+  }
 
 plugin.flatConfigs = flatConfigs
 plugin.configs = configs

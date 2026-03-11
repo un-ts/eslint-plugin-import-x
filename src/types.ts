@@ -1,4 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { Linter } from 'eslint'
 import type {
   ImportSettings,
   PluginName,
@@ -50,7 +51,7 @@ export type ImportType = ImportType_ | 'object' | 'type'
 
 export type Arrayable<T> = T | readonly T[]
 
-export interface PluginConfig extends TSESLint.ClassicConfig.Config {
+export interface PluginConfig extends Linter.LegacyConfig {
   plugins?: [PluginName]
   settings?: PluginSettings
   rules?: Record<`${PluginName}/${string}`, TSESLint.ClassicConfig.RuleEntry>
