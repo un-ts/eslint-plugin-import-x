@@ -1,6 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunctions, parsers } from '../utils.js'
+import { createRuleTestCaseFunctions, isESLint10, parsers } from '../utils.js'
 
 import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/group-exports'
@@ -13,7 +13,7 @@ const ruleTester = new TSESLintRuleTester({
       babelOptions: {
         configFile: false,
         babelrc: false,
-        presets: ['@babel/flow'],
+        presets: ['@babel/preset-flow'],
       },
     },
   },
@@ -153,6 +153,7 @@ ruleTester.run('group-exports', rule, {
     `,
     }),
     tValid({
+      skip: isESLint10,
       code: `
       type firstType = {
         propType: string
@@ -163,6 +164,7 @@ ruleTester.run('group-exports', rule, {
     `,
     }),
     tValid({
+      skip: isESLint10,
       code: `
       type firstType = {
         propType: string
@@ -174,6 +176,7 @@ ruleTester.run('group-exports', rule, {
     `,
     }),
     tValid({
+      skip: isESLint10,
       code: `
       export type { type1A, type1B } from './module-1'
       export { method1 } from './module-1'
@@ -308,6 +311,7 @@ ruleTester.run('group-exports', rule, {
       ],
     }),
     tInvalid({
+      skip: isESLint10,
       code: `
         type firstType = {
           propType: string
@@ -326,6 +330,7 @@ ruleTester.run('group-exports', rule, {
       ],
     }),
     tInvalid({
+      skip: isESLint10,
       code: `
         export type { type1 } from './module-1'
         export type { type2 } from './module-1'

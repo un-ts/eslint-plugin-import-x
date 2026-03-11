@@ -4,14 +4,15 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
-import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
+import eslintUnsupportedApi from 'eslint9/use-at-your-own-risk'
+
+import { isESLint10 } from './utils.js'
 
 import importPlugin from 'eslint-plugin-import-x'
+;(isESLint10 ? describe.skip : describe)('CLI regression tests', () => {
+  // eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
+  const { LegacyESLint } = eslintUnsupportedApi
 
-// eslint-disable-next-line import-x/no-named-as-default-member -- incorrect types , commonjs actually
-const { LegacyESLint } = eslintUnsupportedApi
-
-describe('CLI regression tests', () => {
   const testDir = path.resolve(fileURLToPath(import.meta.url), '..')
 
   describe('issue #210', () => {

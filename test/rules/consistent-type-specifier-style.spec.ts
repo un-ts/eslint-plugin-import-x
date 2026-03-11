@@ -1,7 +1,7 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import { AST_NODE_TYPES } from '@typescript-eslint/utils'
 
-import { parsers, createRuleTestCaseFunctions } from '../utils.js'
+import { parsers, createRuleTestCaseFunctions, isESLint10 } from '../utils.js'
 import type { RuleRunTests } from '../utils.js'
 
 import { cjsRequire } from 'eslint-plugin-import-x'
@@ -406,7 +406,8 @@ describe('TypeScript', () => {
   })
 })
 
-describe('Babel/Flow', () => {
+// TODO: babel 8 appears to remove import typeof support
+;(isESLint10 ? describe.skip : describe)('Babel/Flow', () => {
   const ruleTester = new TSESLintRuleTester({
     languageOptions: {
       parser: cjsRequire(parsers.BABEL),
@@ -428,7 +429,8 @@ describe('Babel/Flow', () => {
   })
 })
 
-describe('Hermes/Flow', () => {
+// TODO: hermes-eslint doesn't support ESLint 10 yet
+;(isESLint10 ? describe.skip : describe)('Hermes/Flow', () => {
   const ruleTester = new TSESLintRuleTester({
     languageOptions: {
       parser: cjsRequire(parsers.HERMES),
