@@ -1,4 +1,5 @@
 import type { TSESLint } from '@typescript-eslint/utils'
+import type { ESLint, Linter } from 'eslint'
 
 import electron from './config/electron.js'
 import errors from './config/errors.js'
@@ -68,11 +69,7 @@ import preferDefaultExport from './rules/prefer-default-export.js'
 import preferNamespaceImport from './rules/prefer-namespace-import.js'
 import unambiguous from './rules/unambiguous.js'
 // configs
-import type {
-  PluginConfig,
-  PluginFlatBaseConfig,
-  PluginFlatConfig,
-} from './types.js'
+import type { PluginConfig, PluginFlatBaseConfig } from './types.js'
 import { importXResolverCompat } from './utils/index.js'
 
 const rules = {
@@ -143,14 +140,18 @@ const plugin_ = {
 }
 
 // Create flat configs (Only ones that declare plugins and parser options need to be different from the legacy config)
-const createFlatConfig = (
-  baseConfig: PluginFlatBaseConfig,
+const createFlatConfig = <T extends PluginFlatBaseConfig>(
+  baseConfig: T,
   configName: string,
-): PluginFlatConfig => ({
-  ...baseConfig,
-  name: `import-x/${configName}`,
-  plugins: { 'import-x': plugin_ },
-})
+): Linter.Config<T['rules'] & {}> =>
+  ({
+    ...baseConfig,
+    name: `import-x/${configName}`,
+    plugins: { 'import-x': plugin_ } as unknown as Record<
+      string,
+      ESLint.Plugin
+    >,
+  }) as Linter.Config<T['rules'] & {}>
 
 const flatConfigs = {
   recommended: createFlatConfig(recommendedFlat, 'recommended'),
@@ -166,7 +167,7 @@ const flatConfigs = {
   'react-native': createFlatConfig(reactNativeFlat, 'react-native'),
   electron: createFlatConfig(electronFlat, 'electron'),
   typescript: createFlatConfig(typescriptFlat, 'typescript'),
-} satisfies Record<string, PluginFlatConfig>
+} satisfies Record<string, Linter.Config>
 
 const configs = {
   recommended,
@@ -191,7 +192,7 @@ const configs = {
   'flat/react-native': flatConfigs['react-native'],
   'flat/electron': flatConfigs.electron,
   'flat/typescript': flatConfigs.typescript,
-} satisfies Record<string, PluginConfig | PluginFlatConfig>
+} satisfies Record<string, PluginConfig | Linter.Config>
 
 const plugin = plugin_ as typeof plugin_ & {
   flatConfigs: typeof flatConfigs
