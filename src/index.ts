@@ -143,7 +143,7 @@ const plugin_ = {
 const createFlatConfig = <T extends PluginFlatBaseConfig>(
   baseConfig: T,
   configName: string,
-): Linter.Config<T['rules'] & {}> =>
+): Linter.Config<NonNullable<T['rules']>> =>
   ({
     ...baseConfig,
     name: `import-x/${configName}`,
@@ -151,7 +151,7 @@ const createFlatConfig = <T extends PluginFlatBaseConfig>(
       string,
       ESLint.Plugin
     >,
-  }) as Linter.Config<T['rules'] & {}>
+  }) as Linter.Config<NonNullable<T['rules']>>
 
 const flatConfigs = {
   recommended: createFlatConfig(recommendedFlat, 'recommended'),
