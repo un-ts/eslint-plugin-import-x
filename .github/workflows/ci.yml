@@ -19,7 +19,7 @@ jobs:
           - windows-latest
         node:
           - 18
-          - 20.19
+          - 20
           - 22
           - 24
         eslint:
