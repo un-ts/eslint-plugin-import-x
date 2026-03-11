@@ -12,11 +12,11 @@ export function applyDefault<
   User extends readonly unknown[],
   Default extends User,
 >(
-  defaultOptions: Readonly<Default>,
+  defaultOptions: Readonly<Default> | undefined,
   userOptions: Readonly<User> | null,
 ): Default {
   // clone defaults
-  const options = structuredClone(defaultOptions) as AsMutable<Default>
+  const options = structuredClone(defaultOptions ?? []) as AsMutable<Default>
 
   if (userOptions == null) {
     return options
