@@ -75,7 +75,6 @@
     }
   },
   "dependencies": {
-    "@package-json/types": "^0.0.12",
     "@typescript-eslint/types": "^8.56.0",
     "comment-parser": "^1.4.1",
     "debug": "^4.4.1",
@@ -108,6 +107,7 @@
     "@commitlint/cli": "^19.8.1",
     "@eslint/import-test-order-redirect-scoped": "link:./test/fixtures/order-redirect-scoped",
     "@eslint/js": "^9.29.0",
+    "@package-json/types": "^0.0.12",
     "@swc-node/jest": "^1.8.13",
     "@swc/core": "^1.12.7",
     "@swc/helpers": "^0.5.17",
