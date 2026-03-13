@@ -16,6 +16,8 @@ import {
   stringifyPath,
 } from '../utils/index.js'
 
+const dtsRe = /\.d\.[cm]?ts$/
+
 const modifierValues = ['always', 'ignorePackages', 'never'] as const
 
 const modifierSchema = {
@@ -332,7 +334,7 @@ export default createRule<Options, MessageId>({
         // for .d.ts/.d.mts/.d.cts, use the import path extension instead.
         const extension = path
           .extname(
-            resolvedPath && /\.d\.[cm]?ts$/.test(resolvedPath)
+            resolvedPath && dtsRe.test(resolvedPath)
               ? importPath
               : resolvedPath || importPath,
           )
