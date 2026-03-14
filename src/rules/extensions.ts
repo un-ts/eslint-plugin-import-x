@@ -16,6 +16,8 @@ import {
   stringifyPath,
 } from '../utils/index.js'
 
+const dtsRe = /\.d\.[cm]?ts$/
+
 const modifierValues = ['always', 'ignorePackages', 'never'] as const
 
 const modifierSchema = {
@@ -328,9 +330,15 @@ export default createRule<Options, MessageId>({
 
         const resolvedPath = resolve(importPath, context)
 
-        // get extension from resolved path, if possible.
-        // for unresolved, use source value.
-        const extension = path.extname(resolvedPath || importPath).slice(1)
+        // get extension from resolved path, or source value if unresolved.
+        // for .d.ts/.d.mts/.d.cts, use the import path extension instead.
+        const extension = path
+          .extname(
+            resolvedPath && dtsRe.test(resolvedPath)
+              ? importPath
+              : resolvedPath || importPath,
+          )
+          .slice(1)
 
         // determine if this is a module
         const isPackage =
