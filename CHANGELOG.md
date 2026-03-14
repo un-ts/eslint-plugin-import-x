@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.16.3
+
+### Patch Changes
+
+- [#468](https://github.com/un-ts/eslint-plugin-import-x/pull/468) [`240ed58`](https://github.com/un-ts/eslint-plugin-import-x/commit/240ed58cb3d699c5107af065d8482a5c902a2f95) Thanks [@silverwind](https://github.com/silverwind)! - Make `extensions` handle `.d.ts` correctly
+
 ## 4.16.2
 
 ### Patch Changes
