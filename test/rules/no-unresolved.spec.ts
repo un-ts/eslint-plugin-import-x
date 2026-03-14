@@ -155,6 +155,11 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         settings: { 'import-x/ignore': [String.raw`^\./fake/`] },
         errors: [createError('unresolved', './reallyfake/module')],
       }),
+      tInvalid({
+        code: 'import ReallyFake from "./ReallyFake/module"',
+        settings: { 'import-x/ignore': /^\.\/fake/i },
+        errors: [createError('unresolved', './ReallyFake/module')],
+      }),
 
       tInvalid({
         code: "import bar from './baz';",
@@ -407,10 +412,18 @@ ruleTester.run('no-unresolved ignore list', rule, {
       code: 'import "./test.gif"',
       options: [{ ignore: ['.png$', '.gif$'] }],
     }),
+    tValid({
+      code: 'import "./test.GIF"',
+      options: [{ ignore: [/\.png$/i, /\.gif$/i] }],
+    }),
 
     tValid({
       code: 'import "./test.png"',
       options: [{ ignore: ['.png$', '.gif$'] }],
+    }),
+    tValid({
+      code: 'import "./test.png"',
+      options: [{ ignore: [/\.(png|gif)$/] }],
     }),
   ],
 
@@ -420,10 +433,20 @@ ruleTester.run('no-unresolved ignore list', rule, {
       options: [{ ignore: ['.png$'] }],
       errors: [createError('unresolved', './test.gif')],
     }),
+    tInvalid({
+      code: 'import "./test.gif"',
+      options: [{ ignore: [/\.png$/] }],
+      errors: [createError('unresolved', './test.gif')],
+    }),
 
     tInvalid({
       code: 'import "./test.png"',
       options: [{ ignore: ['.gif$'] }],
+      errors: [createError('unresolved', './test.png')],
+    }),
+    tInvalid({
+      code: 'import "./test.png"',
+      options: [{ ignore: [/\.gif$/] }],
       errors: [createError('unresolved', './test.png')],
     }),
   ],
