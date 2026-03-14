@@ -251,6 +251,18 @@ ruleTester.run('extensions', rule, {
       output: null,
     }),
     tInvalid({
+      name: 'extensions should not autofix when the fix is identical',
+      code: 'import foo from "./unresolved"',
+      options: ['always', { fix: true }],
+      errors: [
+        {
+          messageId: 'missing',
+          data: { extension: 'js', importPath: './unresolved' },
+        },
+      ],
+      output: null,
+    }),
+    tInvalid({
       code: 'import a from "a/index.js"',
       errors: [
         {
