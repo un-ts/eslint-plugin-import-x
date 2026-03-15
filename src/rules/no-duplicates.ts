@@ -1,4 +1,4 @@
-import type { PackageJson } from '@package-json/types'
+import type { PackageJson } from '../utils/package-json.js'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import * as semver from 'semver'
 
