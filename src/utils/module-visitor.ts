@@ -15,7 +15,7 @@ export interface ModuleOptions {
   amd?: boolean
   commonjs?: boolean
   esmodule?: boolean
-  ignore?: string[]
+  ignore?: Array<RegExp | string>
 }
 
 /**
@@ -203,7 +203,6 @@ export function makeOptionsSchema(
       ignore: {
         type: 'array',
         minItems: 1,
-        items: { type: 'string' },
         uniqueItems: true,
       },
     },
