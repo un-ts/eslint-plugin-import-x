@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 4.17.0
+
+### Minor Changes
+
+- [#474](https://github.com/un-ts/eslint-plugin-import-x/pull/474) [`4b2c0c5`](https://github.com/un-ts/eslint-plugin-import-x/commit/4b2c0c50577ba5b38823fb6d2b1f7e0e2cb9b760) Thanks [@regseb](https://github.com/regseb)! - Support `RegExp` in the `import-x/ignore` setting and the `ignore` option of the `no-unresolved` rule.
+
+### Patch Changes
+
+- [#468](https://github.com/un-ts/eslint-plugin-import-x/pull/468) [`240ed58`](https://github.com/un-ts/eslint-plugin-import-x/commit/240ed58cb3d699c5107af065d8482a5c902a2f95) Thanks [@silverwind](https://github.com/silverwind)! - Make `extensions` handle `.d.ts` correctly
+
 ## 4.16.2
 
 ### Patch Changes
