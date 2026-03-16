@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 
-import type { PackageJson } from '@package-json/types'
-
+import type { PackageJson } from './package-json.js'
 import { pkgUp } from './pkg-up.js'
 
 function stripBOM(str: string) {

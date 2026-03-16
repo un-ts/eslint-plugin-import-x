@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type { PackageJson } from '@package-json/types'
 import type { TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
@@ -15,6 +14,7 @@ import {
   getFilePackageName,
   getNpmInstallCommand,
 } from '../utils/index.js'
+import type { PackageJson } from '../utils/package-json.js'
 
 export type PackageDeps = ReturnType<typeof extractDepFields>
 
