@@ -1249,6 +1249,12 @@ describe('TypeScript', () => {
         options: ['always', { checkTypeImports: true }],
       }),
 
+      // .js import that resolves to .d.ts should not demand .ts extension
+      tValid({
+        code: 'import { foo } from "./dist-import/index.js";',
+        options: ['always'],
+      }),
+
       // pathGroupOverrides: no patterns match good bespoke specifiers
       tValid({
         code: `
