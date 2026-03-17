@@ -72,7 +72,7 @@ require(['./foo'], function (foo) {
 
 This rule has its own ignore list, separate from [`import-x/ignore`]. This is because you may want to know whether a module can be located, regardless of whether it can be parsed for exports: `node_modules`, CoffeeScript files, etc. are all good to resolve properly, but will not be parsed if configured as such via [`import-x/ignore`].
 
-To suppress errors from files that may not be properly resolved by your [resolver settings](../../README.md#resolver-plugins), you may add an `ignore` key with an array of `RegExp` pattern strings:
+To suppress errors from files that may not be properly resolved by your [resolver settings](../../README.md#resolver-plugins), you may add an `ignore` key with an array of `RegExp` or `RegExp` pattern strings:
 
 ```js
 /*eslint import-x/no-unresolved: [2, { ignore: ['\\.img$'] }]*/

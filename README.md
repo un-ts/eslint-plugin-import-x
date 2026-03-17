@@ -510,7 +510,7 @@ Also, the following `import-x/ignore` patterns will overrule this list.
 
 ### `import-x/ignore`
 
-A list of regex strings that, if matched by a path, will
+A list of `RegExp` or `RegExp` pattern strings that, if matched by a path, will
 not report the matching module if no `export`s are found.
 In practice, this means rules other than [`no-unresolved`](./docs/rules/no-unresolved.md#ignore) will not report on any
 `import`s with (absolute filesystem) paths matching this pattern.
