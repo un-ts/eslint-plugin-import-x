@@ -3224,13 +3224,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@package-json/types@npm:^0.0.12":
-  version: 0.0.12
-  resolution: "@package-json/types@npm:0.0.12"
-  checksum: 10c0/d9bba086efe7b9901f02f1cff7a68ab23269aeddfb7ee92a16930e219f705bfc188b9fec2dd47265033dbda45ed1514d8a46f46363f38f1ad56bc993754126da
-  languageName: node
-  linkType: hard
-
 "@pkgjs/parseargs@npm:^0.11.0":
   version: 0.11.0
   resolution: "@pkgjs/parseargs@npm:0.11.0"
@@ -6073,7 +6066,6 @@ __metadata:
     "@commitlint/cli": "npm:^19.8.1"
     "@eslint/import-test-order-redirect-scoped": "link:./test/fixtures/order-redirect-scoped"
     "@eslint/js": "npm:^9.29.0"
-    "@package-json/types": "npm:^0.0.12"
     "@swc-node/jest": "npm:^1.8.13"
     "@swc/core": "npm:^1.12.7"
     "@swc/helpers": "npm:^0.5.17"
