@@ -13,7 +13,7 @@ export interface PackageJson {
   devDependencies?: Record<string, string>
   optionalDependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
-  /** Array of package names, or true to bundle all dependencies (per npm spec) */
-  bundleDependencies?: string[] | boolean
-  bundledDependencies?: string[] | boolean
+  /** Array form per npm spec; object form is non-standard but intentionally supported by this rule */
+  bundleDependencies?: string[] | Record<string, string>
+  bundledDependencies?: string[] | Record<string, string>
 }

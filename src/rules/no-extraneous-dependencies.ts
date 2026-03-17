@@ -41,15 +41,15 @@ function readJSON<T>(jsonPath: string, throwException: boolean) {
 }
 
 function extractDepFields(pkg: PackageJson) {
-  const bundle = pkg.bundleDependencies || pkg.bundledDependencies
   return {
     dependencies: pkg.dependencies || {},
     devDependencies: pkg.devDependencies || {},
     optionalDependencies: pkg.optionalDependencies || {},
     peerDependencies: pkg.peerDependencies || {},
-    // bundleDependencies can be an array of names or true (bundle all); boolean is ignored here
-    bundledDependencies:
-      !bundle || typeof bundle === 'boolean' ? [] : arrayOrKeys(bundle),
+    // bundleDependencies is an array per npm spec, but object form is also supported non-standardly
+    bundledDependencies: arrayOrKeys(
+      pkg.bundleDependencies || pkg.bundledDependencies || [],
+    ),
   }
 }
 
