@@ -13,7 +13,7 @@ export interface PackageJson {
   devDependencies?: Record<string, string>
   optionalDependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
-  /** Array form (spec) or object form (supported by npm) */
+  /** Array of package names per npm spec; object form handled leniently by arrayOrKeys() */
   bundleDependencies?: string[] | Record<string, string>
   bundledDependencies?: string[] | Record<string, string>
 }
