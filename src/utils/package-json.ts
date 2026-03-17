@@ -5,6 +5,10 @@
 export interface PackageJson {
   name?: string
   version?: string
+  private?: boolean
+  main?: string
+  bin?: string | Record<string, string>
+  browser?: string | Record<string, string>
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
   optionalDependencies?: Record<string, string>
