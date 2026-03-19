@@ -1,9 +1,8 @@
-import type { PackageJson } from '@package-json/types'
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import * as semver from 'semver'
 
 import { cjsRequire } from '../require.js'
-import type { RuleContext } from '../types.js'
+import type { PackageJson, RuleContext } from '../types.js'
 import { createRule, lazy, resolve } from '../utils/index.js'
 
 // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
