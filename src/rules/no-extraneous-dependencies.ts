@@ -4,7 +4,7 @@ import path from 'node:path'
 import type { TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
-import type { RuleContext } from '../types.js'
+import type { PackageJson, RuleContext } from '../types.js'
 import {
   createRule,
   moduleVisitor,
@@ -14,7 +14,6 @@ import {
   getFilePackageName,
   getNpmInstallCommand,
 } from '../utils/index.js'
-import type { PackageJson } from '../utils/package-json.js'
 
 export type PackageDeps = ReturnType<typeof extractDepFields>
 
