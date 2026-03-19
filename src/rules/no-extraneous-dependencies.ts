@@ -45,7 +45,7 @@ function extractDepFields(pkg: PackageJson) {
     devDependencies: pkg.devDependencies || {},
     optionalDependencies: pkg.optionalDependencies || {},
     peerDependencies: pkg.peerDependencies || {},
-    // bundleDependencies is an array per npm spec, but object form is also supported non-standardly
+    // bundleDependencies is an array per npm spec; this rule also accepts an object form for backward compatibility, which is not part of the npm spec
     bundledDependencies: arrayOrKeys(
       pkg.bundleDependencies || pkg.bundledDependencies || [],
     ),
