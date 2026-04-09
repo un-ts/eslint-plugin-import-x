@@ -125,6 +125,36 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
   return true
 }
 
+// Memoize resolver instances by their option signature.
+//
+// `createNodeResolver` constructs a fresh `unrs-resolver` `ResolverFactory` on
+// every call. `unrs-resolver` is a Rust binding that allocates native memory
+// not visible to V8's heap limits, so creating one per import resolution
+// causes RSS to grow without bound over a lint run and eventually OOMs the
+// worker — observed on a large lerna monorepo where a single ESLint worker
+// peaked at >19 GB before the OOM killer fired. Bumping `--max-old-space-size`
+// does not help because the leak is in native memory, not the JS heap.
+//
+// In practice the resolver options are constant across calls within a single
+// lint run, so the cache is effectively a singleton. The JSON-stringified key
+// is small and cheap to compute relative to constructing a new resolver.
+const cachedNodeResolvers = new Map<
+  string,
+  ReturnType<typeof createNodeResolver>
+>()
+
+function getCachedNodeResolver(
+  opts: Parameters<typeof createNodeResolver>[0],
+) {
+  const key = JSON.stringify(opts)
+  let resolver = cachedNodeResolvers.get(key)
+  if (!resolver) {
+    resolver = createNodeResolver(opts)
+    cachedNodeResolvers.set(key, resolver)
+  }
+  return resolver
+}
+
 function legacyNodeResolve(
   resolverOptions: NodeResolverOptions,
   context: ChildContext | RuleContext,
@@ -151,7 +181,7 @@ function legacyNodeResolve(
   // TODO: change the default behavior to align node itself
   const symlinks = preserveSymlinks === false
 
-  const resolver = createNodeResolver({
+  const resolver = getCachedNodeResolver({
     extensions: normalizedExtensions,
     builtinModules: includeCoreModules !== false,
     modules,
@@ -175,7 +205,7 @@ function legacyNodeResolve(
       : normalizedPaths
 
     if (paths.length > 0) {
-      const resolver = createNodeResolver({
+      const resolver = getCachedNodeResolver({
         extensions: normalizedExtensions,
         builtinModules: includeCoreModules !== false,
         modules: paths,
