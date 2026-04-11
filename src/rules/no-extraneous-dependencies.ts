@@ -69,12 +69,37 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
   let paths: string[] = []
 
   try {
-    let packageContent: PackageDeps = {
+    const packageContent: PackageDeps = {
       dependencies: {},
       devDependencies: {},
       optionalDependencies: {},
       peerDependencies: {},
       bundledDependencies: [],
+    }
+
+    // Always merge in deps from the closest `package.json` relative to the
+    // linted file. Without this, setting `packageDir` to point at a root
+    // (shared) `package.json` in a monorepo makes the rule ignore the
+    // workspace package's own deps — every dep declared in the workspace
+    // package's `package.json` gets flagged as "should be listed in the
+    // project's dependencies". Checking the closest package.json first
+    // restores the expected behavior in lerna / npm-workspaces / pnpm-
+    // workspaces layouts.
+    const closestPackageJsonPath = pkgUp({
+      cwd: context.physicalFilename,
+    })
+
+    if (closestPackageJsonPath) {
+      const closestPackageContent = getPackageDepFields(
+        closestPackageJsonPath,
+        false,
+      )
+      if (closestPackageContent) {
+        for (const depsKey of Object.keys(packageContent)) {
+          const key = depsKey as keyof PackageDeps
+          Object.assign(packageContent[key], closestPackageContent[key])
+        }
+      }
     }
 
     if (packageDir && packageDir.length > 0) {
@@ -83,31 +108,18 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
         : [path.resolve(packageDir)]
     }
 
-    if (paths.length > 0) {
-      // use rule config to find package.json
-      for (const dir of paths) {
-        const packageJsonPath = path.resolve(dir, 'package.json')
-        const packageContent_ = getPackageDepFields(
-          packageJsonPath,
-          paths.length === 1,
-        )
-        if (packageContent_) {
-          for (const depsKey of Object.keys(packageContent)) {
-            const key = depsKey as keyof PackageDeps
-            Object.assign(packageContent[key], packageContent_[key])
-          }
-        }
-      }
-    } else {
-      // use closest package.json
-      const packageJsonPath = pkgUp({
-        cwd: context.physicalFilename,
-      })!
-
-      const packageContent_ = getPackageDepFields(packageJsonPath, false)
-
+    // Layer in any deps from `packageDir` on top of the closest match.
+    for (const dir of paths) {
+      const packageJsonPath = path.resolve(dir, 'package.json')
+      const packageContent_ = getPackageDepFields(
+        packageJsonPath,
+        paths.length === 1,
+      )
       if (packageContent_) {
-        packageContent = packageContent_
+        for (const depsKey of Object.keys(packageContent)) {
+          const key = depsKey as keyof PackageDeps
+          Object.assign(packageContent[key], packageContent_[key])
+        }
       }
     }
 
