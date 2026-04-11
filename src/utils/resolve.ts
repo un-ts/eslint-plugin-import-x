@@ -136,8 +136,10 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
 // does not help because the leak is in native memory, not the JS heap.
 //
 // In practice the resolver options are constant across calls within a single
-// lint run, so the cache is effectively a singleton. The JSON-stringified key
-// is small and cheap to compute relative to constructing a new resolver.
+// lint run, so the cache is effectively a singleton. The `stable-hash-x` key
+// is small and cheap to compute relative to constructing a new resolver, and
+// matches the hashing already used for `fileExistsCache` elsewhere in this
+// file.
 const cachedNodeResolvers = new Map<
   string,
   ReturnType<typeof createNodeResolver>
@@ -146,7 +148,7 @@ const cachedNodeResolvers = new Map<
 function getCachedNodeResolver(
   opts: Parameters<typeof createNodeResolver>[0],
 ) {
-  const key = JSON.stringify(opts)
+  const key = stableHash(opts)
   let resolver = cachedNodeResolvers.get(key)
   if (!resolver) {
     resolver = createNodeResolver(opts)
