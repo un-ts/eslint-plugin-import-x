@@ -145,9 +145,7 @@ const cachedNodeResolvers = new Map<
   ReturnType<typeof createNodeResolver>
 >()
 
-function getCachedNodeResolver(
-  opts: Parameters<typeof createNodeResolver>[0],
-) {
+function getCachedNodeResolver(opts: Parameters<typeof createNodeResolver>[0]) {
   const key = stableHash(opts)
   let resolver = cachedNodeResolvers.get(key)
   if (!resolver) {
