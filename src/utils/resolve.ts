@@ -6,6 +6,7 @@ import { setRuleContext } from 'eslint-import-context'
 import { stableHash } from 'stable-hash-x'
 
 import { createNodeResolver } from '../node-resolver.js'
+import type { NodeResolver } from '../node-resolver.js'
 import { cjsRequire } from '../require.js'
 import type {
   ChildContext,
@@ -125,6 +126,47 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
   return true
 }
 
+// Memoize resolver instances by their option signature.
+//
+// `createNodeResolver` constructs a fresh `unrs-resolver` `ResolverFactory` on
+// every call. `unrs-resolver` is a Rust binding that allocates native memory
+// not visible to V8's heap limits, so creating one per import resolution
+// causes RSS to grow without bound over a lint run and eventually OOMs the
+// worker — observed on a large lerna monorepo where a single ESLint worker
+// peaked at >19 GB before the OOM killer fired. Bumping `--max-old-space-size`
+// does not help because the leak is in native memory, not the JS heap.
+//
+// In practice the resolver options are constant across calls within a single
+// lint run, so the cache is effectively a singleton. The `stable-hash-x` key
+// is small and cheap to compute relative to constructing a new resolver, and
+// matches the hashing already used for `fileExistsCache` elsewhere in this
+// file.
+const cachedNodeResolvers = new Map<string, NodeResolver>()
+
+function getCachedNodeResolver(opts: Parameters<typeof createNodeResolver>[0]) {
+  const key = stableHash(opts)
+  let resolver = cachedNodeResolvers.get(key)
+  if (!resolver) {
+    resolver = createNodeResolver(opts)
+    cachedNodeResolvers.set(key, resolver)
+  }
+  return resolver
+}
+
+/**
+ * Clear all memoized `unrs-resolver` instances and their internal FS caches.
+ *
+ * This is primarily useful in tests where files are created, renamed, or
+ * deleted between resolve calls. In production lint runs files don't change
+ * mid-run, so the cache is safe to keep for the lifetime of the process.
+ */
+export function clearCachedNodeResolvers() {
+  for (const resolver of cachedNodeResolvers.values()) {
+    resolver.clearCache()
+  }
+  cachedNodeResolvers.clear()
+}
+
 function legacyNodeResolve(
   resolverOptions: NodeResolverOptions,
   context: ChildContext | RuleContext,
@@ -151,7 +193,7 @@ function legacyNodeResolve(
   // TODO: change the default behavior to align node itself
   const symlinks = preserveSymlinks === false
 
-  const resolver = createNodeResolver({
+  const resolver = getCachedNodeResolver({
     extensions: normalizedExtensions,
     builtinModules: includeCoreModules !== false,
     modules,
@@ -175,7 +217,7 @@ function legacyNodeResolve(
       : normalizedPaths
 
     if (paths.length > 0) {
-      const resolver = createNodeResolver({
+      const resolver = getCachedNodeResolver({
         extensions: normalizedExtensions,
         builtinModules: includeCoreModules !== false,
         modules: paths,
