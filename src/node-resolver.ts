@@ -6,12 +6,16 @@ import type { NapiResolveOptions } from 'unrs-resolver'
 
 import type { NewResolver } from './types.js'
 
+export type NodeResolver = NewResolver & {
+  clearCache: () => void
+}
+
 export function createNodeResolver({
   extensions = ['.mjs', '.cjs', '.js', '.json', '.node'],
   conditionNames = ['import', 'require', 'default'],
   mainFields = ['module', 'main'],
   ...restOptions
-}: NapiResolveOptions = {}): NewResolver {
+}: NapiResolveOptions = {}): NodeResolver {
   const resolver = new ResolverFactory({
     extensions,
     conditionNames,
@@ -38,6 +42,9 @@ export function createNodeResolver({
         //
       }
       return { found: false }
+    },
+    clearCache() {
+      resolver.clearCache()
     },
   }
 }

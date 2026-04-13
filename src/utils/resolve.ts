@@ -6,6 +6,7 @@ import { setRuleContext } from 'eslint-import-context'
 import { stableHash } from 'stable-hash-x'
 
 import { createNodeResolver } from '../node-resolver.js'
+import type { NodeResolver } from '../node-resolver.js'
 import { cjsRequire } from '../require.js'
 import type {
   ChildContext,
@@ -140,10 +141,7 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
 // is small and cheap to compute relative to constructing a new resolver, and
 // matches the hashing already used for `fileExistsCache` elsewhere in this
 // file.
-const cachedNodeResolvers = new Map<
-  string,
-  ReturnType<typeof createNodeResolver>
->()
+const cachedNodeResolvers = new Map<string, NodeResolver>()
 
 function getCachedNodeResolver(opts: Parameters<typeof createNodeResolver>[0]) {
   const key = stableHash(opts)
@@ -153,6 +151,20 @@ function getCachedNodeResolver(opts: Parameters<typeof createNodeResolver>[0]) {
     cachedNodeResolvers.set(key, resolver)
   }
   return resolver
+}
+
+/**
+ * Clear all memoized `unrs-resolver` instances and their internal FS caches.
+ *
+ * This is primarily useful in tests where files are created, renamed, or
+ * deleted between resolve calls. In production lint runs files don't change
+ * mid-run, so the cache is safe to keep for the lifetime of the process.
+ */
+export function clearCachedNodeResolvers() {
+  for (const resolver of cachedNodeResolvers.values()) {
+    resolver.clearCache()
+  }
+  cachedNodeResolvers.clear()
 }
 
 function legacyNodeResolve(
