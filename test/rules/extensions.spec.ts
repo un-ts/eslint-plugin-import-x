@@ -76,6 +76,19 @@ ruleTester.run('extensions', rule, {
     tValid({ code: 'import thing from "./fake-file.js"', options: ['always'] }),
     tValid({ code: 'import thing from "non-package"', options: ['never'] }),
 
+    // Node.js subpath imports (#437)
+    tValid({
+      code: 'import { helper } from "#utils/helper.js"',
+      options: ['always'],
+    }),
+    tValid({
+      code: 'import { helper } from "#utils/helper"',
+      options: ['never'],
+    }),
+    // single-segment subpath imports (e.g. `#dep`) are skipped by the
+    // existing external-root-module classification; deferred (see #437)
+    tValid({ code: 'import dep from "#dep"', options: ['always'] }),
+
     tValid({
       code: `
         import foo from './foo.js'
@@ -655,6 +668,20 @@ ruleTester.run('extensions', rule, {
           data: { importPath: '@name/pkg/test' },
           line: 1,
           column: 19,
+        },
+      ],
+    }),
+
+    // Node.js subpath imports (#437)
+    tInvalid({
+      code: 'import { helper } from "#utils/helper"',
+      options: ['always'],
+      errors: [
+        {
+          messageId: 'missing',
+          data: { importPath: '#utils/helper' },
+          line: 1,
+          column: 24,
         },
       ],
     }),

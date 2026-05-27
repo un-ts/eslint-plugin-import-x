@@ -1,4 +1,36 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`parse-path should parse and stringify path expectedly: #utils/helper 1`] = `
+{
+  "hash": "",
+  "pathname": "#utils/helper",
+  "query": "",
+}
+`;
+
+exports[`parse-path should parse and stringify path expectedly: #utils/helper.js 1`] = `
+{
+  "hash": "",
+  "pathname": "#utils/helper.js",
+  "query": "",
+}
+`;
+
+exports[`parse-path should parse and stringify path expectedly: #utils/helper.js?query 1`] = `
+{
+  "hash": "",
+  "pathname": "#utils/helper.js",
+  "query": "?query",
+}
+`;
+
+exports[`parse-path should parse and stringify path expectedly: #utils/helper?query 1`] = `
+{
+  "hash": "",
+  "pathname": "#utils/helper",
+  "query": "?query",
+}
+`;
 
 exports[`parse-path should parse and stringify path expectedly: foo 1`] = `
 {
