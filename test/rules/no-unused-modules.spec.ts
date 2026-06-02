@@ -1,6 +1,8 @@
 import { execSync } from 'node:child_process'
 import type { ChildProcess } from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 
 import { jest } from '@jest/globals'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
@@ -9,7 +11,6 @@ import type { TSESLint } from '@typescript-eslint/utils'
 // eslint-disable-next-line import-x/default -- incorrect types
 import eslint8UnsupportedApi from 'eslint8.56/use-at-your-own-risk'
 import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
-import { dirSync } from 'tmp'
 
 import {
   createRuleTestCaseFunctions,
@@ -1597,9 +1598,7 @@ function createUnusedError(
   ;(isESLint9 ? describe : describe.skip)('with eslint 9 only', () => {
     it('provides meaningful error when eslintrc is not present', () => {
       // Create temp directory outside of project root
-      const { name: tempDir, removeCallback } = dirSync({
-        unsafeCleanup: true,
-      })
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'import-x-test-'))
 
       // Copy example project to temp directory
       // eslint-disable-next-line n/no-unsupported-features/node-builtins -- false positive
@@ -1627,7 +1626,7 @@ function createUnusedError(
       )
 
       // Cleanup
-      removeCallback()
+      fs.rmSync(tempDir, { recursive: true, force: true })
     }, 100_000)
   })
 })
