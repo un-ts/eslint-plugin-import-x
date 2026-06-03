@@ -161,7 +161,6 @@
     "redux": "^5.0.1",
     "simple-git-hooks": "^2.13.0",
     "tinyexec": "^1.0.1",
-    "tmp": "^0.2.3",
     "ts-node": "^10.9.2",
     "tsdown": "^0.12.9",
     "typescript": "^5.8.3",

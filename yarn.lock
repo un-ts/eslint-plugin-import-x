@@ -6135,7 +6135,6 @@ __metadata:
     simple-git-hooks: "npm:^2.13.0"
     stable-hash-x: "npm:^0.2.0"
     tinyexec: "npm:^1.0.1"
-    tmp: "npm:^0.2.3"
     ts-node: "npm:^10.9.2"
     tsdown: "npm:^0.12.9"
     typescript: "npm:^5.8.3"
@@ -12578,13 +12577,6 @@ __metadata:
   dependencies:
     os-tmpdir: "npm:~1.0.2"
   checksum: 10c0/69863947b8c29cabad43fe0ce65cec5bb4b481d15d4b4b21e036b060b3edbf3bc7a5541de1bacb437bb3f7c4538f669752627fdf9b4aaf034cebd172ba373408
-  languageName: node
-  linkType: hard
-
-"tmp@npm:^0.2.3":
-  version: 0.2.5
-  resolution: "tmp@npm:0.2.5"
-  checksum: 10c0/cee5bb7d674bb4ba3ab3f3841c2ca7e46daeb2109eec395c1ec7329a91d52fcb21032b79ac25161a37b2565c4858fefab927af9735926a113ef7bac9091a6e0e
   languageName: node
   linkType: hard
 
