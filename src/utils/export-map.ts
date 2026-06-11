@@ -518,6 +518,8 @@ export class ExportMap {
 
       // This doesn't declare anything, but changes what's being exported.
       if (n.type === 'TSExportAssignment') {
+        m.hasExportAssignment = true
+
         const exportedName =
           ('expression' in n &&
             n.expression &&
@@ -698,6 +700,9 @@ export class ExportMap {
   /** Dependencies of this module that are not explicitly re-exported */
   imports = new Map<string, ModuleImport>()
   exports = new Map<string, TSESTree.Identifier | TSESTree.ProgramStatement>()
+
+  /** Whether this module has an `export = ns` assignment */
+  hasExportAssignment = false
 
   errors: ParseError[] = []
 
