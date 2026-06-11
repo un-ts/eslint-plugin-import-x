@@ -245,12 +245,6 @@ export function analyzeAstModule(
         handleTsExportAssignment(walk, n)
         break
       }
-      case 'TSNamespaceExportDeclaration': {
-        if (walk.isEsModuleInteropTrue()) {
-          handleTsExportAssignment(walk, n)
-        }
-        break
-      }
       // No default — every other statement kind is irrelevant here
     }
   }
@@ -401,30 +395,21 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
 }
 
 /**
- * TS `export = X` (and, under `esModuleInterop`, `export as namespace X`) —
- * doesn't declare anything itself, but changes what's being exported: the
- * referenced declarations become the exports, and every member of a
- * referenced `namespace`/`module` block is exported whether or not it is
- * individually marked.
+ * TS `export = X` — doesn't declare anything itself, but changes what's
+ * being exported: the referenced declarations become the exports, and every
+ * member of a referenced `namespace`/`module` block is exported whether or
+ * not it is individually marked.
  */
 function handleTsExportAssignment(
   walk: Walk,
-  n: TSESTree.ProgramStatement,
+  n: TSESTree.TSExportAssignment,
 ): void {
   const exportedName =
-    n.type === 'TSNamespaceExportDeclaration'
-      ? (
-          n.id ||
-          // @ts-expect-error - legacy parser type
-          n.name
-        ).name
-      : ('expression' in n &&
-          n.expression &&
-          (('name' in n.expression && n.expression.name) ||
-            ('id' in n.expression &&
-              n.expression.id &&
-              n.expression.id.name))) ||
-        null
+    ('expression' in n &&
+      n.expression &&
+      (('name' in n.expression && n.expression.name) ||
+        ('id' in n.expression && n.expression.id && n.expression.id.name))) ||
+    null
 
   const exportedDecls = walk.ast.body.filter(
     node =>
