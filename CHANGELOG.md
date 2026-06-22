@@ -1,5 +1,27 @@
 # eslint-plugin-import-x
 
+## 4.17.0
+
+### Minor Changes
+
+- [#474](https://github.com/un-ts/eslint-plugin-import-x/pull/474) [`4b2c0c5`](https://github.com/un-ts/eslint-plugin-import-x/commit/4b2c0c50577ba5b38823fb6d2b1f7e0e2cb9b760) Thanks [@regseb](https://github.com/regseb)! - Support `RegExp` in the `import-x/ignore` setting and the `ignore` option of the `no-unresolved` rule.
+
+### Patch Changes
+
+- [#494](https://github.com/un-ts/eslint-plugin-import-x/pull/494) [`1c84235`](https://github.com/un-ts/eslint-plugin-import-x/commit/1c84235057e693f107352b2874c5e9bc6d974e75) Thanks [@morgan-coded](https://github.com/morgan-coded)! - Fixed `no-unresolved` crashing when case-sensitive path checks encounter `EACCES` or `EPERM` on an ancestor directory.
+
+- [#481](https://github.com/un-ts/eslint-plugin-import-x/pull/481) [`3e13121`](https://github.com/un-ts/eslint-plugin-import-x/commit/3e131214f1a027858ce87d146576b243f6acad0c) Thanks [@B4nan](https://github.com/B4nan)! - fix: memoize legacyNodeResolve resolver to avoid native memory leak
+
+- [#484](https://github.com/un-ts/eslint-plugin-import-x/pull/484) [`9a07009`](https://github.com/un-ts/eslint-plugin-import-x/commit/9a070094ac6e3c5891762acebe882281b022501d) Thanks [@sairus2k](https://github.com/sairus2k)! - Make the `extensions` rule check Node.js subpath imports (specifiers starting with `#`, e.g. `#utils/helper`). Previously `parsePath` treated a leading `#` as a URL hash fragment, so the rule skipped extension validation for these imports.
+
+  Note: single-segment subpath imports without a slash (e.g. `#dep`) are still skipped by the existing external-root-module classification; fixing that is deferred to avoid expanding scope.
+
+- [#468](https://github.com/un-ts/eslint-plugin-import-x/pull/468) [`240ed58`](https://github.com/un-ts/eslint-plugin-import-x/commit/240ed58cb3d699c5107af065d8482a5c902a2f95) Thanks [@silverwind](https://github.com/silverwind)! - Make `extensions` handle `.d.ts` correctly
+
+- [#479](https://github.com/un-ts/eslint-plugin-import-x/pull/479) [`e3cc7e4`](https://github.com/un-ts/eslint-plugin-import-x/commit/e3cc7e458fe8440fdac291beba9f09ab216ec682) Thanks [@mrginglymus](https://github.com/mrginglymus)! - fix: strip querystrings and hash fragments when checking for file existence
+
+- [#476](https://github.com/un-ts/eslint-plugin-import-x/pull/476) [`fce29b1`](https://github.com/un-ts/eslint-plugin-import-x/commit/fce29b1bb7c1f57f18beb5f0ac5636b14ab848dc) Thanks [@nbouvrette](https://github.com/nbouvrette)! - fix(deps): replace @package-json/types with an inline minimal type
+
 ## 4.16.2
 
 ### Patch Changes
