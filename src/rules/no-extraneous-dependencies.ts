@@ -1,11 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type { PackageJson } from '@package-json/types'
 import type { TSESTree } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 
-import type { RuleContext } from '../types.js'
+import type { PackageJson, RuleContext } from '../types.js'
 import {
   createRule,
   moduleVisitor,
@@ -46,8 +45,7 @@ function extractDepFields(pkg: PackageJson) {
     devDependencies: pkg.devDependencies || {},
     optionalDependencies: pkg.optionalDependencies || {},
     peerDependencies: pkg.peerDependencies || {},
-    // BundledDeps should be in the form of an array, but object notation is also supported by
-    // `npm`, so we convert it to an array if it is an object
+    // bundleDependencies is an array per npm spec; this rule also accepts an object form for backward compatibility, which is not part of the npm spec
     bundledDependencies: arrayOrKeys(
       pkg.bundleDependencies || pkg.bundledDependencies || [],
     ),

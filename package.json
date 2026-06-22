@@ -75,7 +75,6 @@
     }
   },
   "dependencies": {
-    "@package-json/types": "^0.0.12",
     "@typescript-eslint/types": "^8.56.0",
     "comment-parser": "^1.4.1",
     "debug": "^4.4.1",
