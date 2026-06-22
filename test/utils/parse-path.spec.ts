@@ -8,6 +8,10 @@ describe('parse-path', () => {
       'foo#hash',
       'foo?query#hash',
       'foo#hash?query',
+      '#utils/helper',
+      '#utils/helper.js',
+      '#utils/helper?query',
+      '#utils/helper.js?query',
     ]
 
     for (const input of cases) {
