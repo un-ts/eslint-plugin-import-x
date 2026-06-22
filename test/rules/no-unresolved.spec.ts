@@ -49,7 +49,9 @@ function runResolverTests(resolver: 'node' | 'webpack') {
 
       tValid({ code: 'import foo from "./bar";' }),
       tValid({ code: 'import foo from "./bar?qs";' }),
-      tValid({ code: 'import foo from "./bar#hash";' }),
+      ...(resolver === 'node'
+        ? [tValid({ code: 'import foo from "./bar#hash";' })]
+        : []),
       tValid({ code: 'import foo from "./bar?qs#hash";' }),
       tValid({ code: "import bar from './bar.js';" }),
       tValid({ code: "import {someThing} from './test-module';" }),

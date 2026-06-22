@@ -477,6 +477,13 @@ describe('resolve', () => {
       expect(fileExistsWithCaseSync(file, cacheSettings)).toBe(false)
     })
 
+    it.each(['?qs', '#hash', '?qs#hash'])(
+      'falls back from %s when detecting case mismatch',
+      suffix => {
+        expect(fileExistsWithCaseSync(file + suffix, cacheSettings)).toBe(false)
+      },
+    )
+
     it('detecting case does not include parent folder path (issue #720)', () => {
       const f = path.resolve(
         process.cwd().toUpperCase(),
