@@ -45,6 +45,15 @@ export const IMPORT_RESOLVE_ERROR_NAME = 'EslintPluginImportResolveError'
 
 export const fileExistsCache = new ModuleCache()
 
+function isDirectoryAccessError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error != null &&
+    'code' in error &&
+    (error.code === 'EACCES' || error.code === 'EPERM')
+  )
+}
+
 // https://stackoverflow.com/a/27382838
 export function fileExistsWithCaseSync(
   filepath: string | null,
@@ -76,14 +85,24 @@ export function fileExistsWithCaseSync(
   if (dir === '' || parsedPath.root === filepath) {
     result = true
   } else {
-    const filenames = fs.readdirSync(dir)
-    result = filenames.includes(parsedPath.base)
-      ? fileExistsWithCaseSync(dir, cacheSettings, strict, false)
-      : !leaf &&
-        // We tolerate case-insensitive matches if there are no case-insensitive matches.
-        // It'll fail anyway on the leaf node if the file truly doesn't exist (if it doesn't
-        // fail it's that we're probably working with a virtual in-memory filesystem).
-        !filenames.some(p => p.toLowerCase() === parsedPath.base.toLowerCase())
+    try {
+      const filenames = fs.readdirSync(dir)
+      result = filenames.includes(parsedPath.base)
+        ? fileExistsWithCaseSync(dir, cacheSettings, strict, false)
+        : !leaf &&
+          // We tolerate case-insensitive matches if there are no case-insensitive matches.
+          // It'll fail anyway on the leaf node if the file truly doesn't exist (if it doesn't
+          // fail it's that we're probably working with a virtual in-memory filesystem).
+          !filenames.some(
+            p => p.toLowerCase() === parsedPath.base.toLowerCase(),
+          )
+    } catch (error) {
+      if (isDirectoryAccessError(error)) {
+        result = true
+      } else {
+        throw error
+      }
+    }
   }
   fileExistsCache.set(filepath, result)
   return result
