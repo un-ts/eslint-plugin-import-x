@@ -18,6 +18,7 @@ import type {
 } from 'eslint-plugin-import-x'
 import {
   CASE_SENSITIVE_FS,
+  clearCachedNodeResolvers,
   fileExistsWithCaseSync,
   relative,
   resolve,
@@ -559,6 +560,10 @@ describe('resolve', () => {
         beforeAll(() =>
           fs.promises.rename(testFilePath(original), testFilePath(changed)),
         )
+
+        // The memoized unrs-resolver instances cache FS lookups internally.
+        // After a rename we must clear them so the resolver sees the new state.
+        beforeAll(() => clearCachedNodeResolvers())
 
         beforeAll(() => {
           const exists = fs.existsSync(testFilePath(changed))
