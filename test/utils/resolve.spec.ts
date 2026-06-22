@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
+import os from 'node:os'
 import path from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
@@ -490,6 +491,40 @@ describe('resolve', () => {
       )
       expect(fileExistsWithCaseSync(f, cacheSettings, true)).toBe(false)
     })
+
+    for (const code of ['EACCES', 'EPERM'] as const) {
+      it(`does not throw when ancestor directory access is denied outside cwd (${code})`, () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'import-x-case-'))
+        const blockedDir = path.join(root, 'source')
+        const sharedDir = path.join(blockedDir, 'shared')
+        const file = path.join(sharedDir, 'account.db.ts')
+
+        fs.mkdirSync(sharedDir, { recursive: true })
+        fs.writeFileSync(file, 'export {}\n')
+
+        const originalReaddirSync = fs.readdirSync
+        const readdirSpy = jest.spyOn(fs, 'readdirSync').mockImplementation(((
+          dir: Parameters<typeof fs.readdirSync>[0],
+        ) => {
+          if (path.resolve(String(dir)) === blockedDir) {
+            const error = new Error(`${code}: permission denied`) as Error & {
+              code: string
+            }
+            error.code = code
+            throw error
+          }
+
+          return originalReaddirSync(dir)
+        }) as typeof fs.readdirSync)
+
+        try {
+          expect(fileExistsWithCaseSync(file, cacheSettings)).toBe(true)
+        } finally {
+          readdirSpy.mockRestore()
+          fs.rmSync(root, { recursive: true, force: true })
+        }
+      })
+    }
   })
 
   describe('rename cache correctness', () => {
