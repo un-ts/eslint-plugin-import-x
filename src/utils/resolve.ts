@@ -72,8 +72,8 @@ export function fileExistsWithCaseSync(
     return true
   }
 
-  // Remove any querystrings from the import path
-  filepath = filepath.split('?')[0]
+  // Remove any querystrings and hash fragments from the import path
+  filepath = filepath.split(/[?#]/)[0]
 
   if (filepath.toLowerCase() === process.cwd().toLowerCase() && !strict) {
     return true
