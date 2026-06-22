@@ -43,6 +43,7 @@
 - [#443](https://github.com/un-ts/eslint-plugin-import-x/pull/443) [`b416a8a`](https://github.com/un-ts/eslint-plugin-import-x/commit/b416a8ac4efdef68e75dbf7dae8d3adbcb117d60) Thanks [@baevm](https://github.com/baevm)! - consistent-type-specifier-style: Add exception for TS resolution-mode import attributes
 
 - [#454](https://github.com/un-ts/eslint-plugin-import-x/pull/454) [`d3f8d67`](https://github.com/un-ts/eslint-plugin-import-x/commit/d3f8d67781d17ebe2edfdab4014754fe2df5eede) Thanks [@SukkaW](https://github.com/SukkaW)! - First step toward ESLint 10 support:
+
   - `sourceType` determination now prefers `context.languageOptions` when possible
   - Ensure `context.parserOptions` no longer results in crashes with ESLint 10
   - Merge `getParser` and `getParserPath` implementations into one `getParserOrPath`
