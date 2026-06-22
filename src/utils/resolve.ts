@@ -71,9 +71,11 @@ export function fileExistsWithCaseSync(
   if (filepath === null) {
     return true
   }
+
   if (filepath.toLowerCase() === process.cwd().toLowerCase() && !strict) {
     return true
   }
+
   const parsedPath = path.parse(filepath)
   const dir = parsedPath.dir
 
@@ -88,15 +90,36 @@ export function fileExistsWithCaseSync(
   } else {
     try {
       const filenames = fs.readdirSync(dir)
-      result = filenames.includes(parsedPath.base)
-        ? fileExistsWithCaseSync(dir, cacheSettings, strict, false)
-        : !leaf &&
+      if (filenames.includes(parsedPath.base)) {
+        result = fileExistsWithCaseSync(dir, cacheSettings, strict, false)
+      } else {
+        const baseLowerCase = parsedPath.base.toLowerCase()
+        const hasCaseInsensitiveMatch = filenames.some(
+          p => p.toLowerCase() === baseLowerCase,
+        )
+
+        const isMissing = !hasCaseInsensitiveMatch
+
+        if (isMissing && leaf) {
+          const queryIndex = filepath.lastIndexOf('?')
+          const hashIndex = filepath.lastIndexOf('#')
+          const index = Math.max(queryIndex, hashIndex)
+
+          result =
+            index > 0
+              ? fileExistsWithCaseSync(
+                  filepath.slice(0, index),
+                  cacheSettings,
+                  strict,
+                )
+              : false
+        } else {
           // We tolerate case-insensitive matches if there are no case-insensitive matches.
           // It'll fail anyway on the leaf node if the file truly doesn't exist (if it doesn't
           // fail it's that we're probably working with a virtual in-memory filesystem).
-          !filenames.some(
-            p => p.toLowerCase() === parsedPath.base.toLowerCase(),
-          )
+          result = isMissing && !leaf
+        }
+      }
     } catch (error) {
       if (isDirectoryAccessError(error)) {
         result = true
