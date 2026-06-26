@@ -6,7 +6,7 @@
 import path from 'node:path'
 
 import { TSESTree } from '@typescript-eslint/types'
-import type { TSESLint } from '@typescript-eslint/utils'
+import type { JSONSchema, TSESLint } from '@typescript-eslint/utils'
 // eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
 import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 import type * as ESLint9UnsupportedApi from 'eslint9/use-at-your-own-risk'
@@ -470,7 +470,7 @@ const fileIsInPkg = (file: string) => {
 export interface Options {
   src?: string[]
   ignoreExports?: string[]
-  missingExports?: true
+  missingExports?: boolean
   unusedExports?: boolean
   ignoreUnusedTypeExports?: boolean
   suppressMissingFileEnumeratorAPIWarning?: boolean
@@ -479,6 +479,45 @@ export interface Options {
 type MessageId = 'notFound' | 'unused'
 
 let eslint10WarningEmitted = false
+
+const SHARED_OPTIONS_SCHEMA_PROPERTIES = {
+  src: {
+    description: 'files/paths to be analyzed (only for unused exports)',
+    type: 'array',
+    uniqueItems: true,
+    items: {
+      type: 'string',
+      minLength: 1,
+    },
+  },
+  ignoreExports: {
+    description:
+      'files/paths for which unused exports will not be reported (e.g module entry points)',
+    type: 'array',
+    uniqueItems: true,
+    items: {
+      type: 'string',
+      minLength: 1,
+    },
+  },
+  missingExports: {
+    description: 'report modules without any exports',
+    type: 'boolean',
+  },
+  unusedExports: {
+    description: 'report exports without any usage',
+    type: 'boolean',
+  },
+  ignoreUnusedTypeExports: {
+    description: 'ignore type exports without any usage',
+    type: 'boolean',
+  },
+  suppressMissingFileEnumeratorAPIWarning: {
+    description:
+      'ESLint 10 and later versions remove the FileEnumerator API, which is required by the "no-unused-modules" rule. Therefore a warning message will be logged before an alternative is implemented. You can suppress the warning with this option',
+    type: 'boolean',
+  },
+} satisfies JSONSchema.JSONSchema4ObjectSchema['properties']
 
 export default createRule<Options[], MessageId>({
   name: 'no-unused-modules',
@@ -491,52 +530,15 @@ export default createRule<Options[], MessageId>({
     },
     schema: [
       {
-        type: 'object',
-        properties: {
-          src: {
-            description: 'files/paths to be analyzed (only for unused exports)',
-            type: 'array',
-            uniqueItems: true,
-            items: {
-              type: 'string',
-              minLength: 1,
-            },
-          },
-          ignoreExports: {
-            description:
-              'files/paths for which unused exports will not be reported (e.g module entry points)',
-            type: 'array',
-            uniqueItems: true,
-            items: {
-              type: 'string',
-              minLength: 1,
-            },
-          },
-          missingExports: {
-            description: 'report modules without any exports',
-            type: 'boolean',
-          },
-          unusedExports: {
-            description: 'report exports without any usage',
-            type: 'boolean',
-          },
-          ignoreUnusedTypeExports: {
-            description: 'ignore type exports without any usage',
-            type: 'boolean',
-          },
-          suppressMissingFileEnumeratorAPIWarning: {
-            description:
-              'ESLint 10 and later versions remove the FileEnumerator API, which is required by the "no-unused-modules" rule. Therefore a warning message will be logged before an alternative is implemented. You can suppress the warning with this option',
-            type: 'boolean',
-          },
-        },
         anyOf: [
           {
             type: 'object',
             properties: {
+              ...SHARED_OPTIONS_SCHEMA_PROPERTIES,
               unusedExports: {
+                description:
+                  SHARED_OPTIONS_SCHEMA_PROPERTIES.unusedExports.description,
                 type: 'boolean',
-                enum: [true],
               },
               src: {
                 type: 'array',
@@ -544,16 +546,20 @@ export default createRule<Options[], MessageId>({
               },
             },
             required: ['unusedExports'],
+            additionalProperties: false,
           },
           {
             type: 'object',
             properties: {
+              ...SHARED_OPTIONS_SCHEMA_PROPERTIES,
               missingExports: {
+                description:
+                  SHARED_OPTIONS_SCHEMA_PROPERTIES.missingExports.description,
                 type: 'boolean',
-                enum: [true],
               },
             },
             required: ['missingExports'],
+            additionalProperties: false,
           },
         ],
       },

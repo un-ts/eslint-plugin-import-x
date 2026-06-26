@@ -60,6 +60,7 @@ const properties = {
       type: 'boolean',
     },
   },
+  additionalProperties: false,
 } satisfies JSONSchema.JSONSchema4
 
 export type Modifier = (typeof modifierValues)[number]
