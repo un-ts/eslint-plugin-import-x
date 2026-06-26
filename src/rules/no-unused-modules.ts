@@ -535,13 +535,8 @@ export default createRule<Options[], MessageId>({
             type: 'object',
             properties: {
               ...SHARED_OPTIONS_SCHEMA_PROPERTIES,
-              unusedExports: {
-                description:
-                  SHARED_OPTIONS_SCHEMA_PROPERTIES.unusedExports.description,
-                type: 'boolean',
-              },
               src: {
-                type: 'array',
+                ...SHARED_OPTIONS_SCHEMA_PROPERTIES.src,
                 minItems: 1,
               },
             },
@@ -550,14 +545,7 @@ export default createRule<Options[], MessageId>({
           },
           {
             type: 'object',
-            properties: {
-              ...SHARED_OPTIONS_SCHEMA_PROPERTIES,
-              missingExports: {
-                description:
-                  SHARED_OPTIONS_SCHEMA_PROPERTIES.missingExports.description,
-                type: 'boolean',
-              },
-            },
+            properties: SHARED_OPTIONS_SCHEMA_PROPERTIES,
             required: ['missingExports'],
             additionalProperties: false,
           },
