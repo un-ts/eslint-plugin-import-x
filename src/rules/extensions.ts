@@ -329,15 +329,12 @@ export default createRule<Options, MessageId>({
         }
 
         const resolvedPath = resolve(importPath, context)
+        const resolvedToDts = !!resolvedPath && dtsRe.test(resolvedPath)
 
         // get extension from resolved path, or source value if unresolved.
         // for .d.ts/.d.mts/.d.cts, use the import path extension instead.
         const extension = path
-          .extname(
-            resolvedPath && dtsRe.test(resolvedPath)
-              ? importPath
-              : resolvedPath || importPath,
-          )
+          .extname(resolvedToDts ? importPath : resolvedPath || importPath)
           .slice(1)
 
         // determine if this is a module
@@ -349,6 +346,13 @@ export default createRule<Options, MessageId>({
           ) || isScoped(importPath)
 
         if (!extension || !importPath.endsWith(`.${extension}`)) {
+          // A package subpath that resolves to a type declaration
+          // (.d.ts/.d.mts/.d.cts) has no runtime extension to enforce — the
+          // entry point is governed by the package's "exports" map
+          // (e.g. `vitest/config`, `eslint/config`).
+          if (resolvedToDts && !extension && isPackage) {
+            return
+          }
           // ignore type-only imports and exports
           if (
             !props.checkTypeImports &&
