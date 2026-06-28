@@ -1282,6 +1282,24 @@ describe('TypeScript', () => {
         options: ['always'],
       }),
 
+      // an extensionless package subpath that resolves to a `.d.ts` declaration
+      // (via the TypeScript resolver's types-first conditions) has no runtime
+      // extension to enforce (e.g. `vitest/config`) — #468 regression
+      tValid({
+        code: 'import { defineConfig } from "dts-subpath-package/config";',
+        options: ['always'],
+        settings: {
+          'import-x/resolver': { typescript: { alwaysTryTypes: true } },
+        },
+      }),
+      tValid({
+        code: 'import { defineConfig } from "dts-subpath-package/config";',
+        options: ['always', { ts: 'never' }],
+        settings: {
+          'import-x/resolver': { typescript: { alwaysTryTypes: true } },
+        },
+      }),
+
       // pathGroupOverrides: no patterns match good bespoke specifiers
       tValid({
         code: `
