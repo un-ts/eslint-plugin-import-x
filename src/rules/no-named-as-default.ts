@@ -61,6 +61,13 @@ export default createRule<[], MessageId>({
           return
         }
 
+        if (exportMapOfImported.hasExportAssignment) {
+          // A member of an `export = ns` assignment cannot be consumed via
+          // named import at runtime (unless the consumer is transpiled to
+          // CommonJS), so importing the default by that name is not a mistake.
+          return
+        }
+
         if (
           exportMapOfImported.exports.has('default') &&
           exportMapOfImported.exports.has(nameValue)
