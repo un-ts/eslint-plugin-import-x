@@ -48,6 +48,7 @@ export default createRule<[Options?], MessageId>({
             type: 'string',
           },
         },
+        additionalProperties: false,
       },
     ],
     messages: {
