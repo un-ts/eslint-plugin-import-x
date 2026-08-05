@@ -180,7 +180,7 @@ const availableDocStyleParsers = {
  * comments (memoized — the comments are parsed at most once).
  */
 export function captureDoc(
-  source: SourceCode,
+  getSource: () => SourceCode,
   settings: PluginSettings,
   ...nodes: Array<TSESTree.Node | undefined>
 ): () => DocCommentBlock | undefined {
@@ -199,7 +199,7 @@ export function captureDoc(
           leadingComments = n.leadingComments as TSESTree.Comment[]
         } else if (n.range) {
           leadingComments = (
-            source as unknown as TSESLint.SourceCode
+            getSource() as unknown as TSESLint.SourceCode
           ).getCommentsBefore(n)
         }
 

@@ -119,8 +119,9 @@ export function getReexports(
 /**
  * The name the module's default export is declared under inside the module
  * (e.g. `Foo` for `export default class Foo {}`) — needed only by
- * `no-rename-default`, and expensive: it requires parse-derived data, so on
- * a lexer-analyzed module the first call runs (and memoizes) the AST route.
+ * `no-rename-default`. Both routes derive it during analysis; the lexer's
+ * verdict is deliberately final (no AST escalation — see the fail-open
+ * corners documented on `LexedEsModule#defaultExportSourceName`).
  *
  * @returns `undefined` when there is no default export or no name can be
  *   determined (anonymous declarations, unhandled expressions, ...).

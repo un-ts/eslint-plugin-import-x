@@ -75,8 +75,8 @@ export interface AstModuleFacts {
 /** Shared state threaded through the per-statement handlers. */
 interface Walk {
   facts: AstModuleFacts
-  /** For `getCommentsBefore` in doc capture. */
-  source: SourceCode
+  /** For `getCommentsBefore` in doc capture — built only if a doc is read. */
+  getSource: () => SourceCode
   settings: PluginSettings
   /**
    * `import * as ns from 'x'` / `export * as ns from 'x'` identifiers →
@@ -125,7 +125,9 @@ export function analyzeAstModule(
   const tsconfig = lazy(() => getTsconfigWithContext(context))
   const walk: Walk = {
     facts,
-    source: new SourceCode({ text: content, ast: ast as AST.Program }),
+    getSource: lazy(
+      () => new SourceCode({ text: content, ast: ast as AST.Program }),
+    ),
     settings: context.settings,
     namespaces: new Map(),
     remotePath: specifier =>
@@ -211,7 +213,7 @@ function handleImport(walk: Walk, n: TSESTree.ImportDeclaration) {
 /** `export default …` */
 function handleExportDefault(walk: Walk, n: TSESTree.ExportDefaultDeclaration) {
   addOwnExport(walk, 'default', {
-    getDoc: captureDoc(walk.source, walk.settings, n),
+    getDoc: captureDoc(walk.getSource, walk.settings, n),
     ...(n.declaration.type === 'Identifier' && {
       namespaceTargetPath: namespaceTargetOf(walk, n.declaration.name),
     }),
@@ -223,7 +225,7 @@ function handleExportDefault(walk: Walk, n: TSESTree.ExportDefaultDeclaration) {
 function handleExportAll(walk: Walk, n: TSESTree.ExportAllDeclaration) {
   if (n.exported) {
     // the namespace object is an own export of this module
-    walk.namespaces.set(n.exported.name, n.source.value)
+    walk.namespaces.set(getValue(n.exported), n.source.value)
     addOwnExport(walk, getValue(n.exported), {
       namespaceTargetPath: walk.remotePath(n.source.value),
     })
@@ -258,7 +260,7 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
       case 'TSAbstractClassDeclaration':
       case 'TSModuleDeclaration': {
         addOwnExport(walk, (n.declaration.id as TSESTree.Identifier).name, {
-          getDoc: captureDoc(walk.source, walk.settings, n),
+          getDoc: captureDoc(walk.getSource, walk.settings, n),
         })
         break
       }
@@ -268,7 +270,7 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
         for (const decl of n.declaration.declarations) {
           recursivePatternCapture(decl.id, id => {
             addOwnExport(walk, (id as TSESTree.Identifier).name, {
-              getDoc: captureDoc(walk.source, walk.settings, decl, n),
+              getDoc: captureDoc(walk.getSource, walk.settings, decl, n),
             })
           })
         }
@@ -358,7 +360,7 @@ function handleTsExportAssignment(
   if (exportedDecls.length === 0) {
     // not referencing any local declaration, must be re-exporting
     addOwnExport(walk, 'default', {
-      getDoc: captureDoc(walk.source, walk.settings, n),
+      getDoc: captureDoc(walk.getSource, walk.settings, n),
     })
     return
   }
@@ -373,7 +375,7 @@ function handleTsExportAssignment(
     } else {
       // export as default
       addOwnExport(walk, 'default', {
-        getDoc: captureDoc(walk.source, walk.settings, decl),
+        getDoc: captureDoc(walk.getSource, walk.settings, decl),
       })
     }
   }
@@ -390,11 +392,11 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
   if (type === 'TSModuleDeclaration') {
     // @ts-expect-error - legacy parser type
     addOwnExport(walk, (decl.body.id as TSESTree.Identifier).name, {
-      getDoc: captureDoc(walk.source, walk.settings, decl.body),
+      getDoc: captureDoc(walk.getSource, walk.settings, decl.body),
     })
     return
   } else if (type === 'TSModuleBlock' && decl.kind === 'namespace') {
-    const getDoc = captureDoc(walk.source, walk.settings, decl.body)
+    const getDoc = captureDoc(walk.getSource, walk.settings, decl.body)
     // the namespace name itself is inferred — `hasExplicitExport` skips it
     if ('name' in decl.id) {
       addOwnExport(walk, decl.id.name, { getDoc, inferred: true })
@@ -420,7 +422,7 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
         recursivePatternCapture(d.id, id => {
           addOwnExport(walk, (id as TSESTree.Identifier).name, {
             getDoc: captureDoc(
-              walk.source,
+              walk.getSource,
               walk.settings,
               decl,
               namespaceDecl,
@@ -431,7 +433,7 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
       }
     } else if ('id' in namespaceDecl) {
       addOwnExport(walk, (namespaceDecl.id as TSESTree.Identifier).name, {
-        getDoc: captureDoc(walk.source, walk.settings, moduleBlockNode),
+        getDoc: captureDoc(walk.getSource, walk.settings, moduleBlockNode),
       })
     }
   }
