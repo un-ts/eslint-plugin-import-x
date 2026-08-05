@@ -6,8 +6,14 @@ const log = debug('eslint-plugin-import-x:utils:ModuleCache')
 
 export interface CacheObject {
   result: unknown
-  lastSeen: ReturnType<typeof process.hrtime>
+  /** `performance.now()` timestamp of the last write. */
+  lastSeen: number
 }
+
+const settingsCache = new WeakMap<
+  NonNullable<PluginSettings['import-x/cache']> | PluginSettings,
+  NormalizedCacheSettings
+>()
 
 export class ModuleCache {
   constructor(public map: Map<string, CacheObject> = new Map()) {}
@@ -15,7 +21,7 @@ export class ModuleCache {
   set(cacheKey: string, result: unknown) {
     this.map.set(cacheKey, {
       result,
-      lastSeen: process.hrtime(),
+      lastSeen: performance.now(),
     })
     log('setting entry for', cacheKey)
     return result
@@ -25,7 +31,7 @@ export class ModuleCache {
     const cache = this.map.get(cacheKey)
     if (cache) {
       // check freshness
-      if (process.hrtime(cache.lastSeen)[0] < settings.lifetime) {
+      if (performance.now() - cache.lastSeen < settings.lifetime * 1000) {
         return cache.result as T
       }
     } else {
@@ -34,7 +40,14 @@ export class ModuleCache {
     // cache miss
   }
 
+  /** Parsed (and memoized per settings object) `import-x/cache` settings. */
   static getSettings(settings: PluginSettings) {
+    const memoKey = settings['import-x/cache'] ?? settings
+    const cached = settingsCache.get(memoKey)
+    if (cached) {
+      return cached
+    }
+
     const cacheSettings = {
       lifetime: 30, // seconds
       ...settings['import-x/cache'],
@@ -48,6 +61,7 @@ export class ModuleCache {
       cacheSettings.lifetime = Number.POSITIVE_INFINITY
     }
 
+    settingsCache.set(memoKey, cacheSettings as NormalizedCacheSettings)
     return cacheSettings as NormalizedCacheSettings
   }
 }
