@@ -453,7 +453,7 @@ export class ModuleInfo {
       return this.exportInfoCache.get(name)
     }
     const found = lookupExport(this, name)
-    const meta = found == null ? (found as null | undefined) : found.meta
+    const meta = found == null ? found : found.meta
     this.exportInfoCache.set(name, meta)
     return meta
   }

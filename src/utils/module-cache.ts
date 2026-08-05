@@ -48,20 +48,17 @@ export class ModuleCache {
       return cached
     }
 
-    const cacheSettings = {
-      lifetime: 30, // seconds
-      ...settings['import-x/cache'],
+    const { lifetime = 30 /* seconds */ } = settings['import-x/cache'] ?? {}
+
+    const normalized: NormalizedCacheSettings = {
+      lifetime:
+        // parse infinity
+        lifetime === '∞' || lifetime === 'Infinity'
+          ? Number.POSITIVE_INFINITY
+          : lifetime,
     }
 
-    // parse infinity
-    if (
-      typeof cacheSettings.lifetime === 'string' &&
-      (['∞', 'Infinity'] as const).includes(cacheSettings.lifetime)
-    ) {
-      cacheSettings.lifetime = Number.POSITIVE_INFINITY
-    }
-
-    settingsCache.set(memoKey, cacheSettings as NormalizedCacheSettings)
-    return cacheSettings as NormalizedCacheSettings
+    settingsCache.set(memoKey, normalized)
+    return normalized
   }
 }

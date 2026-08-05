@@ -1,10 +1,10 @@
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
-import type { AST } from 'eslint'
-import { SourceCode } from 'eslint'
+import type { TSESTree } from '@typescript-eslint/utils'
+import { TSESLint } from '@typescript-eslint/utils'
 import { getTsconfigWithContext } from 'eslint-import-context'
 
 import type {
   ChildContext,
+  ExportDefaultSpecifier,
   ExportNamespaceSpecifier,
   ParseError,
   PluginSettings,
@@ -76,7 +76,7 @@ export interface AstModuleFacts {
 interface Walk {
   facts: AstModuleFacts
   /** For `getCommentsBefore` in doc capture — built only if a doc is read. */
-  getSource: () => SourceCode
+  getSource: () => TSESLint.SourceCode
   settings: PluginSettings
   /**
    * `import * as ns from 'x'` / `export * as ns from 'x'` identifiers →
@@ -126,7 +126,16 @@ export function analyzeAstModule(
   const walk: Walk = {
     facts,
     getSource: lazy(
-      () => new SourceCode({ text: content, ast: ast as AST.Program }),
+      () =>
+        new TSESLint.SourceCode({
+          text: content,
+          // parse() forces comments/tokens/loc/range onto the parser options,
+          // so the AST carries what SourceCode requires at runtime
+          ast: ast as TSESLint.SourceCode.Program,
+          parserServices: null,
+          scopeManager: null,
+          visitorKeys: null,
+        }),
     ),
     settings: context.settings,
     namespaces: new Map(),
@@ -237,6 +246,16 @@ function handleExportAll(walk: Walk, n: TSESTree.ExportAllDeclaration) {
   }
 }
 
+/**
+ * Standard TSESTree only knows `ExportSpecifier`, but legacy
+ * `@babel/eslint-parser` also emits the stage-1 export-extensions proposal
+ * nodes at runtime — widened once here so the switch discriminates properly.
+ */
+type MaybeLegacyExportSpecifier =
+  | TSESTree.ExportSpecifier
+  | ExportDefaultSpecifier
+  | ExportNamespaceSpecifier
+
 /** `export const/function/class …` / `export { a as b } [from './x']` */
 function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
   captureEdge(walk, n)
@@ -281,8 +300,8 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
   }
 
   const source = n.source ? n.source.value : undefined
-  for (const s of n.specifiers) {
-    switch ((s as { type: string }).type) {
+  for (const s of n.specifiers as readonly MaybeLegacyExportSpecifier[]) {
+    switch (s.type) {
       case 'ExportSpecifier': {
         processExportSpecifier(walk, s, source)
         if (source === undefined && getValue(s.exported) === 'default') {
@@ -296,23 +315,22 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
       case 'ExportDefaultSpecifier': {
         // `export bar from './x'` — re-exports './x'’s default as `bar`
         if (source !== undefined) {
-          walk.facts.reexports.set(
-            getValue((s as unknown as ExportNamespaceSpecifier).exported),
-            { local: 'default', targetPath: walk.remotePath(source) },
-          )
+          walk.facts.reexports.set(getValue(s.exported), {
+            local: 'default',
+            targetPath: walk.remotePath(source),
+          })
         }
         break
       }
       case 'ExportNamespaceSpecifier': {
         // `export * as ns from './x'` — the namespace object is an own export
-        addOwnExport(
-          walk,
-          (s as unknown as ExportNamespaceSpecifier).exported.name,
-          { namespaceTargetPath: walk.remotePath(source!) },
-        )
+        if (source !== undefined) {
+          addOwnExport(walk, getValue(s.exported), {
+            namespaceTargetPath: walk.remotePath(source),
+          })
+        }
         break
       }
-      default:
     }
   }
 }
@@ -593,10 +611,12 @@ function scanDynamicImports(
 
   function processDynamicImport(source: TSESTree.CallExpressionArgument) {
     hasDynamicImports = true
-    if (source.type !== 'Literal') {
+    // only a plain string specifier can be resolved: `import(42)`,
+    // `import(tpl)` and friends carry no path
+    if (source.type !== 'Literal' || typeof source.value !== 'string') {
       return
     }
-    const p = walk.remotePath(source.value as string)
+    const p = walk.remotePath(source.value)
     if (p == null) {
       return
     }
