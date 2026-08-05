@@ -1,10 +1,21 @@
 import { testContext } from '../utils.js'
 
-import { ModuleInfo } from 'eslint-plugin-import-x/core/index'
+import {
+  getDefaultExportSourceName,
+  getExportDoc,
+  getModuleDoc,
+  getModuleFormat,
+  getOwnExportNames,
+  getStarExportPaths,
+  hasDefaultExport,
+  hasExplicitExport,
+  hasOwnExport,
+  ModuleInfo,
+  resolveDeepExport,
+} from 'eslint-plugin-import-x/core/index'
 import type { LexedEsModule } from 'eslint-plugin-import-x/core/module-lexer'
 import { lexModule } from 'eslint-plugin-import-x/core/module-lexer'
 import type { RuleContext } from 'eslint-plugin-import-x/types'
-import { ExportMap } from 'eslint-plugin-import-x/utils'
 
 describe('lexModule', () => {
   it('classifies an ES module and extracts its shape', () => {
@@ -107,16 +118,14 @@ describe('core lexer fast path for external modules', () => {
   it('analyzes external ES modules without a parser', () => {
     const moduleInfo = ModuleInfo.get('lexed-esm', fakeContext)!
     expect(moduleInfo).toBeDefined()
-    expect(moduleInfo.parseGoal).toBe('Module')
-    // lexed analyses carry no parse artifacts
-    expect(moduleInfo.visitorKeys).toBeNull()
-    expect(moduleInfo.errors).toHaveLength(0)
+    expect(getModuleFormat(moduleInfo)).toBe('Module')
+    expect(moduleInfo.parseError).toBeUndefined()
 
     // own exports
     expect(moduleInfo.hasExport('foo')).toBe(true)
-    expect(moduleInfo.hasDefaultExport).toBe(true)
-    expect(moduleInfo.hasOwnExport('foo')).toBe(true)
-    expect(moduleInfo.hasExplicitExport('foo')).toBe(true)
+    expect(hasDefaultExport(moduleInfo)).toBe(true)
+    expect(hasOwnExport(moduleInfo, 'foo')).toBe(true)
+    expect(hasExplicitExport(moduleInfo, 'foo')).toBe(true)
     // named re-exports (with alias recovery)
     expect(moduleInfo.hasExport('renamedHelper')).toBe(true)
     expect(moduleInfo.hasExport('plain')).toBe(true)
@@ -130,7 +139,7 @@ describe('core lexer fast path for external modules', () => {
 
   it('resolves deep re-export chains through lexed modules', () => {
     const moduleInfo = ModuleInfo.get('lexed-esm', fakeContext)!
-    const deep = moduleInfo.resolveDeepExport('renamedHelper')
+    const deep = resolveDeepExport(moduleInfo, 'renamedHelper')
     expect(deep.found).toBe(true)
     expect(deep.path).toEqual([
       expect.stringContaining('lexed-esm/index.js'),
@@ -142,11 +151,9 @@ describe('core lexer fast path for external modules', () => {
     const moduleInfo = ModuleInfo.get('lexed-esm', fakeContext)!
     const ns = moduleInfo.getExport('ns')!
     expect(ns).toBeDefined()
-    const nsModule = ns.namespace!
+    const nsModule = ns.getNamespace?.()
     expect(nsModule).toBeDefined()
-    expect(nsModule.hasExport('helper')).toBe(true)
-    // the namespace target was itself analyzed by the lexer
-    expect(nsModule.visitorKeys).toBeNull()
+    expect(nsModule!.hasExport('helper')).toBe(true)
   })
 
   it('records import edges with locations and star-export targets', () => {
@@ -161,7 +168,7 @@ describe('core lexer fast path for external modules', () => {
     expect(declarations[0].source.loc.start.line).toBeGreaterThan(0)
     expect(imports.get(utilPath)!.resolve()!.hasExport('helper')).toBe(true)
 
-    const starPaths = moduleInfo.getStarExportPaths()
+    const starPaths = getStarExportPaths(moduleInfo)
     expect(starPaths).toEqual([expect.stringContaining('star.js')])
   })
 
@@ -172,8 +179,8 @@ describe('core lexer fast path for external modules', () => {
   it('marks dynamic-import-only modules as ambiguous', () => {
     const moduleInfo = ModuleInfo.get('lexed-dynamic', fakeContext)!
     expect(moduleInfo).toBeDefined()
-    expect(moduleInfo.parseGoal).toBe('ambiguous')
-    expect(moduleInfo.getOwnExportNames()).toEqual([])
+    expect(getModuleFormat(moduleInfo)).toBe('ambiguous')
+    expect(getOwnExportNames(moduleInfo)).toEqual([])
     const declarations = [...moduleInfo.getImports().values()].flatMap(v => [
       ...v.declarations,
     ])
@@ -186,12 +193,37 @@ describe('core lexer fast path for external modules', () => {
     )
   })
 
-  it('leaves ExportMap untouched — direct consumers still get a full parse', () => {
-    const exportMap = ExportMap.get('lexed-esm', fakeContext)!
-    expect(exportMap).toBeDefined()
-    // a real parse happened: parse artifacts exist
-    expect(exportMap.visitorKeys).not.toBeNull()
-    expect(exportMap.has('foo')).toBe(true)
+  it('derives the default export source name without a parser', () => {
+    const moduleInfo = ModuleInfo.get('lexed-esm', fakeContext)!
+    expect(getDefaultExportSourceName(moduleInfo)).toEqual({
+      name: 'mainThing',
+      isBoundName: false,
+    })
+  })
+
+  it('derives bound and unnameable default exports like the AST route', () => {
+    const cases: Array<[string, unknown]> = [
+      ['export default function foo() {}', { name: 'foo', isBoundName: false }],
+      ['export default class Foo {}', { name: 'Foo', isBoundName: false }],
+      [
+        'const x = 1; export { x as default }',
+        { name: 'x', isBoundName: false },
+      ],
+      ['const foo = 1; export default foo', { name: 'foo', isBoundName: true }],
+      ['export default Foo = 1', { name: 'Foo', isBoundName: true }],
+      [
+        'const F = 1; export default withHoc(F)',
+        { name: 'F', isBoundName: true },
+      ],
+      ['export default { a: 1 }', undefined],
+      ['export default () => {}', undefined],
+      ['export default foo => foo', undefined],
+      ['export default new Foo()', undefined],
+    ]
+    for (const [source, expected] of cases) {
+      const result = lexModule(source, 'test.js') as LexedEsModule
+      expect(result.defaultExportSourceName).toEqual(expected)
+    }
   })
 })
 
@@ -207,10 +239,8 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
 
   it('escalates doc queries to a full parse', () => {
     const moduleInfo = ModuleInfo.get('lexed-esm', fakeContext)!
-    // tier 1 is lexed
-    expect(moduleInfo.visitorKeys).toBeNull()
 
-    const moduleDoc = moduleInfo.getModuleDoc()
+    const moduleDoc = getModuleDoc(moduleInfo)
     expect(moduleDoc).toBeDefined()
     expect(moduleDoc!.tags).toEqual(
       expect.arrayContaining([
@@ -219,7 +249,7 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       ]),
     )
 
-    const exportDoc = moduleInfo.getExportDoc('foo')
+    const exportDoc = getExportDoc(moduleInfo, 'foo')
     expect(exportDoc).toBeDefined()
     expect(exportDoc!.tags[0]).toMatchObject({
       tag: 'deprecated',
@@ -227,7 +257,7 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
     })
 
     // names without docs stay undefined
-    expect(moduleInfo.getExportDoc('nonexistent')).toBeUndefined()
+    expect(getExportDoc(moduleInfo, 'nonexistent')).toBeUndefined()
 
     // escalation does not change tier-1 behavior
     expect(moduleInfo.hasExport('starExported')).toBe(true)

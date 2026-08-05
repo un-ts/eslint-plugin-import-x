@@ -150,13 +150,16 @@ export class ModuleInfo {
     const filepath = context.path
     const cacheKey = context.cacheKey
 
+    let mtime: number | undefined
+    const statMtime = () => (mtime ??= fs.statSync(filepath).mtime.valueOf())
+
     const cached = moduleInfoCache.get(cacheKey)
     if (cached) {
       // negative results are sticky
       if (cached.value === null) {
         return null
       }
-      if (cached.mtime === fs.statSync(filepath).mtime.valueOf()) {
+      if (cached.mtime === statMtime()) {
         return cached.value
       }
     }
@@ -191,10 +194,7 @@ export class ModuleInfo {
           content,
           context.settings,
         )
-        moduleInfoCache.set(cacheKey, {
-          mtime: fs.statSync(filepath).mtime.valueOf(),
-          value: info,
-        })
+        moduleInfoCache.set(cacheKey, { mtime: statMtime(), value: info })
         return info
       }
       // the lexers could not handle the file — fall back to the AST route
@@ -222,10 +222,7 @@ export class ModuleInfo {
     )
     // an unreliable parse (no visitor keys) must not be cached
     if (facts.cacheable) {
-      moduleInfoCache.set(cacheKey, {
-        mtime: fs.statSync(filepath).mtime.valueOf(),
-        value: info,
-      })
+      moduleInfoCache.set(cacheKey, { mtime: statMtime(), value: info })
     }
     return info
   }
