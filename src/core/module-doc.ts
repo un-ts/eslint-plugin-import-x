@@ -1,6 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type * as commentParser from 'comment-parser'
-import type { SourceCode } from 'eslint'
 
 import { cjsRequire } from '../require.js'
 import type { PluginSettings, DocStyle } from '../types.js'
@@ -88,10 +87,9 @@ export function getExportDoc(
   return found.declaring.astAnalysis()?.ownExports.get(found.local)?.getDoc?.()
 }
 
-type DocStyleParsers = Record<
-  DocStyle,
-  (comments: TSESTree.Comment[]) => DocCommentBlock | undefined
->
+type DocStyleParser = (
+  comments: TSESTree.Comment[],
+) => DocCommentBlock | undefined
 
 // https://github.com/syavorsky/comment-parser/issues/172
 const fixup = new Set(['deprecated', 'module'])
@@ -161,18 +159,15 @@ function captureTomDoc(
   }
 }
 
-function selectDocStyleParsers(settings: PluginSettings): DocStyleParsers {
-  const docStyles = settings['import-x/docstyle'] || ['jsdoc']
-  const parsers = {} as DocStyleParsers
-  for (const style of docStyles) {
-    parsers[style] = availableDocStyleParsers[style]
-  }
-  return parsers
-}
-
-const availableDocStyleParsers = {
+const availableDocStyleParsers: Record<DocStyle, DocStyleParser> = {
   jsdoc: captureJsDoc,
   tomdoc: captureTomDoc,
+}
+
+/** The parsers for the configured `import-x/docstyle`, in order. */
+function selectDocStyleParsers(settings: PluginSettings): DocStyleParser[] {
+  const docStyles = settings['import-x/docstyle'] || ['jsdoc']
+  return docStyles.map(style => availableDocStyleParsers[style])
 }
 
 /**
@@ -180,7 +175,7 @@ const availableDocStyleParsers = {
  * comments (memoized — the comments are parsed at most once).
  */
 export function captureDoc(
-  getSource: () => SourceCode,
+  getSource: () => TSESLint.SourceCode,
   settings: PluginSettings,
   ...nodes: Array<TSESTree.Node | undefined>
 ): () => DocCommentBlock | undefined {
@@ -198,16 +193,14 @@ export function captureDoc(
         if ('leadingComments' in n && Array.isArray(n.leadingComments)) {
           leadingComments = n.leadingComments as TSESTree.Comment[]
         } else if (n.range) {
-          leadingComments = (
-            getSource() as unknown as TSESLint.SourceCode
-          ).getCommentsBefore(n)
+          leadingComments = getSource().getCommentsBefore(n)
         }
 
         if (!leadingComments || leadingComments.length === 0) {
           continue
         }
 
-        for (const parser of Object.values(docStyleParsers)) {
+        for (const parser of docStyleParsers) {
           const doc = parser(leadingComments)
           if (doc) {
             return doc

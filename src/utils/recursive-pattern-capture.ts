@@ -21,7 +21,9 @@ export function recursivePatternCapture(
           p.type === 'ExperimentalRestProperty' ||
           p.type === 'RestElement'
         ) {
-          callback(p.argument)
+          // object rest targets are identifiers per spec; recurse
+          // defensively so a non-standard parser can't leak a pattern
+          recursivePatternCapture(p.argument, callback)
           continue
         }
         recursivePatternCapture(p.value, callback)
@@ -38,7 +40,8 @@ export function recursivePatternCapture(
           element.type === 'ExperimentalRestProperty' ||
           element.type === 'RestElement'
         ) {
-          callback(element.argument)
+          // an array rest target may itself destructure: `[...[a, b]]`
+          recursivePatternCapture(element.argument, callback)
           continue
         }
         recursivePatternCapture(element, callback)
