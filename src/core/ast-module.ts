@@ -1,0 +1,715 @@
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { AST } from 'eslint'
+import { SourceCode } from 'eslint'
+import { getTsconfigWithContext } from 'eslint-import-context'
+
+import type {
+  ChildContext,
+  ExportNamespaceSpecifier,
+  ParseError,
+  PluginSettings,
+} from '../types.js'
+import { getValue } from '../utils/get-value.js'
+import { lazy } from '../utils/lazy-value.js'
+import { parse } from '../utils/parse.js'
+import { recursivePatternCapture } from '../utils/recursive-pattern-capture.js'
+import { relative } from '../utils/resolve.js'
+import { isUnambiguousModule } from '../utils/unambiguous.js'
+import { visit } from '../utils/visit.js'
+
+import type { DocCommentBlock } from './module-doc.js'
+import { captureDoc, parseComment } from './module-doc.js'
+import type { ModuleImportDeclaration } from './module-info.js'
+import type { DefaultExportSourceName } from './module-lexer.js'
+
+/**
+ * @file The AST-based module analysis — the fallback for what the lexers
+ *   can't parse (TS/TSX/Flow, custom parsers, rejected files). The file is
+ *   parsed with the configured ESLint parser and its AST walked once by
+ *   {@link analyzeAstModule}, which dispatches each top-level statement to a
+ *   named handler below. The output is plain {@link AstModuleFacts} — the
+ *   same shape the lexer route produces — plus lazy doc-comment closures,
+ *   the one thing only this route can provide.
+ */
+
+export type { DefaultExportSourceName } from './module-lexer.js'
+
+/** One name exported by the module's own code. */
+export interface AstOwnExport {
+  /**
+   * Resolved path of the module this export refers to, when the export is a
+   * namespace object (`export * as ns from`, or a re-exported namespace
+   * import). `null` when the target specifier does not resolve; absent when
+   * the export is not a namespace object.
+   */
+  namespaceTargetPath?: string | null
+  /** Lazily parse the doc comment block attached to the declaration. */
+  getDoc?: () => DocCommentBlock | undefined
+  /**
+   * The name is only inferred from TS `export =` namespace analysis, not
+   * written in an explicit export statement.
+   */
+  inferred?: boolean
+}
+
+export interface AstModuleFacts {
+  format: 'ambiguous' | 'Module'
+  /** The parse error the analysis died on, if any. */
+  parseError?: ParseError
+  /**
+   * Whether the parse produced reliable results (the parser exposed visitor
+   * keys) — unreliable results must not be cached.
+   */
+  cacheable: boolean
+  ownExports: Map<string, AstOwnExport>
+  reexports: Map<string, { local: string; targetPath: string | null }>
+  /** Resolved paths of `export * from '...'` targets. */
+  starExportPaths: string[]
+  /** Import declarations, keyed by resolved path. */
+  imports: Map<string, ModuleImportDeclaration[]>
+  defaultExportSourceName?: DefaultExportSourceName
+  /** Lazily parse the module-level doc block (carrying an `@module` tag). */
+  getModuleDoc?: () => DocCommentBlock | undefined
+}
+
+/** Shared state threaded through the per-statement handlers. */
+interface Walk {
+  facts: AstModuleFacts
+  /** For `getCommentsBefore` in doc capture. */
+  source: SourceCode
+  settings: PluginSettings
+  /**
+   * `import * as ns from 'x'` / `export * as ns from 'x'` identifiers →
+   * source specifier, for when a later statement exports the namespace
+   * object.
+   */
+  namespaces: Map<string, string>
+  remotePath(specifier: string): string | null
+  isEsModuleInteropTrue(): boolean
+  ast: TSESTree.Program
+}
+
+/**
+ * Parse `content` with the configured ESLint parser and extract the module's
+ * facts from its AST.
+ *
+ * @returns `null` when the file is not unambiguously a module (and has no
+ *   dynamic imports) — CommonJS territory, unanalyzable to rules. Parse
+ *   failures return facts carrying `errors` and no exports.
+ */
+export function analyzeAstModule(
+  filepath: string,
+  content: string,
+  context: ChildContext,
+): AstModuleFacts | null {
+  const facts: AstModuleFacts = {
+    format: 'ambiguous',
+    cacheable: false,
+    ownExports: new Map(),
+    reexports: new Map(),
+    starExportPaths: [],
+    imports: new Map(),
+  }
+
+  let ast: TSESTree.Program
+  let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
+  try {
+    ;({ ast, visitorKeys } = parse(filepath, content, context))
+  } catch (error) {
+    facts.parseError = error as ParseError
+    return facts // can't continue
+  }
+
+  facts.cacheable = !!visitorKeys
+
+  const tsconfig = lazy(() => getTsconfigWithContext(context))
+  const walk: Walk = {
+    facts,
+    source: new SourceCode({ text: content, ast: ast as AST.Program }),
+    settings: context.settings,
+    namespaces: new Map(),
+    remotePath: specifier =>
+      relative(specifier, filepath, context.settings, context) ?? null,
+    isEsModuleInteropTrue: lazy(
+      () => tsconfig()?.compilerOptions?.esModuleInterop ?? false,
+    ),
+    ast,
+  }
+
+  // dynamic `import()` anywhere makes an otherwise-CJS file analyzable
+  const hasDynamicImports = scanDynamicImports(walk, visitorKeys)
+
+  const unambiguouslyESM = lazy(() => isUnambiguousModule(ast))
+  if (!hasDynamicImports && !unambiguouslyESM()) {
+    return null
+  }
+
+  for (const n of ast.body) {
+    switch (n.type) {
+      case 'ImportDeclaration': {
+        handleImport(walk, n)
+        break
+      }
+      case 'ExportDefaultDeclaration': {
+        handleExportDefault(walk, n)
+        break
+      }
+      case 'ExportAllDeclaration': {
+        handleExportAll(walk, n)
+        break
+      }
+      case 'ExportNamedDeclaration': {
+        handleExportNamed(walk, n)
+        break
+      }
+      case 'TSExportAssignment': {
+        handleTsExportAssignment(walk, n)
+        break
+      }
+      case 'TSNamespaceExportDeclaration': {
+        if (walk.isEsModuleInteropTrue()) {
+          handleTsExportAssignment(walk, n)
+        }
+        break
+      }
+      default:
+    }
+  }
+
+  facts.getModuleDoc = lazy(() => collectModuleDoc(ast))
+
+  // tsconfig `esModuleInterop` synthesizes a default export when anything is
+  // exported and no default exists yet
+  if (
+    walk.isEsModuleInteropTrue() &&
+    facts.ownExports.size > 0 &&
+    !facts.ownExports.has('default')
+  ) {
+    addOwnExport(walk, 'default', {})
+  }
+
+  if (unambiguouslyESM()) {
+    facts.format = 'Module'
+  }
+
+  return facts
+}
+
+// ─── statement handlers ────────────────────────────────────────────────────
+
+/** `import a, { b, c as d } from './x'` — also tracks `import * as ns`. */
+function handleImport(walk: Walk, n: TSESTree.ImportDeclaration) {
+  captureEdge(walk, n)
+
+  // remember the namespace object in case a later statement exports it
+  const ns = n.specifiers.find(s => s.type === 'ImportNamespaceSpecifier')
+  if (ns) {
+    walk.namespaces.set(ns.local.name, n.source.value)
+  }
+}
+
+/** `export default …` */
+function handleExportDefault(walk: Walk, n: TSESTree.ExportDefaultDeclaration) {
+  addOwnExport(walk, 'default', {
+    getDoc: captureDoc(walk.source, walk.settings, n),
+    ...(n.declaration.type === 'Identifier' && {
+      namespaceTargetPath: namespaceTargetOf(walk, n.declaration.name),
+    }),
+  })
+  walk.facts.defaultExportSourceName ??= resolveDefaultName(n.declaration)
+}
+
+/** `export * from './x'` / `export * as ns from './x'` */
+function handleExportAll(walk: Walk, n: TSESTree.ExportAllDeclaration) {
+  if (n.exported) {
+    // the namespace object is an own export of this module
+    walk.namespaces.set(n.exported.name, n.source.value)
+    addOwnExport(walk, getValue(n.exported), {
+      namespaceTargetPath: walk.remotePath(n.source.value),
+    })
+    return
+  }
+  const p = captureDependency(walk, n, n.exportKind === 'type')
+  if (p != null) {
+    walk.facts.starExportPaths.push(p)
+  }
+}
+
+/** `export const/function/class …` / `export { a as b } [from './x']` */
+function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
+  captureEdge(walk, n)
+
+  if (n.declaration != null) {
+    switch (n.declaration.type) {
+      case 'FunctionDeclaration':
+      case 'ClassDeclaration':
+      /* eslint-disable no-fallthrough */
+      // @ts-expect-error - flowtype with @babel/eslint-parser
+      case 'TypeAlias':
+      // @ts-expect-error - legacy parser type
+      case 'InterfaceDeclaration':
+      // @ts-expect-error - legacy parser type
+      case 'DeclareFunction':
+      case 'TSDeclareFunction':
+      case 'TSEnumDeclaration':
+      case 'TSTypeAliasDeclaration':
+      case 'TSInterfaceDeclaration':
+      // @ts-expect-error - legacy parser type
+      case 'TSAbstractClassDeclaration':
+      case 'TSModuleDeclaration': {
+        addOwnExport(walk, (n.declaration.id as TSESTree.Identifier).name, {
+          getDoc: captureDoc(walk.source, walk.settings, n),
+        })
+        break
+      }
+      /* eslint-enable no-fallthrough */
+      case 'VariableDeclaration': {
+        // `export const { a, b: [c] } = …` — every bound name is an export
+        for (const decl of n.declaration.declarations) {
+          recursivePatternCapture(decl.id, id => {
+            addOwnExport(walk, (id as TSESTree.Identifier).name, {
+              getDoc: captureDoc(walk.source, walk.settings, decl, n),
+            })
+          })
+        }
+        break
+      }
+      default:
+    }
+  }
+
+  const source = n.source ? n.source.value : undefined
+  for (const s of n.specifiers) {
+    switch ((s as { type: string }).type) {
+      case 'ExportSpecifier': {
+        processExportSpecifier(walk, s, source)
+        if (source === undefined && getValue(s.exported) === 'default') {
+          // export { foo as default }
+          walk.facts.defaultExportSourceName ??= resolveDefaultName(s)
+        }
+        break
+      }
+      // legacy @babel/eslint-parser nodes for the stage-1 export-extensions
+      // proposal syntax:
+      case 'ExportDefaultSpecifier': {
+        // `export bar from './x'` — re-exports './x'’s default as `bar`
+        if (source !== undefined) {
+          walk.facts.reexports.set(
+            getValue((s as unknown as ExportNamespaceSpecifier).exported),
+            { local: 'default', targetPath: walk.remotePath(source) },
+          )
+        }
+        break
+      }
+      case 'ExportNamespaceSpecifier': {
+        // `export * as ns from './x'` — the namespace object is an own export
+        addOwnExport(
+          walk,
+          (s as unknown as ExportNamespaceSpecifier).exported.name,
+          { namespaceTargetPath: walk.remotePath(source!) },
+        )
+        break
+      }
+      default:
+    }
+  }
+}
+
+/**
+ * TS `export = X` (and, under `esModuleInterop`, `export as namespace X`) —
+ * doesn't declare anything itself, but changes what's being exported: the
+ * referenced declarations become the exports, and every member of a
+ * referenced `namespace`/`module` block is exported whether or not it is
+ * individually marked.
+ */
+function handleTsExportAssignment(
+  walk: Walk,
+  n: TSESTree.ProgramStatement,
+): void {
+  const exportedName =
+    n.type === 'TSNamespaceExportDeclaration'
+      ? (
+          n.id ||
+          // @ts-expect-error - legacy parser type
+          n.name
+        ).name
+      : ('expression' in n &&
+          n.expression &&
+          (('name' in n.expression && n.expression.name) ||
+            ('id' in n.expression &&
+              n.expression.id &&
+              n.expression.id.name))) ||
+        null
+
+  const exportedDecls = walk.ast.body.filter(
+    node =>
+      declTypes.has(node.type) &&
+      (('id' in node &&
+        node.id &&
+        ('name' in node.id
+          ? node.id.name === exportedName
+          : 'left' in node.id && getRoot(node.id).name === exportedName)) ||
+        ('declarations' in node &&
+          node.declarations.some(
+            d => 'name' in d.id && d.id.name === exportedName,
+          ))),
+  )
+
+  if (exportedDecls.length === 0) {
+    // not referencing any local declaration, must be re-exporting
+    addOwnExport(walk, 'default', {
+      getDoc: captureDoc(walk.source, walk.settings, n),
+    })
+    return
+  }
+
+  if (walk.isEsModuleInteropTrue() && !walk.facts.ownExports.has('default')) {
+    addOwnExport(walk, 'default', {})
+  }
+
+  for (const decl of exportedDecls) {
+    if (decl.type === 'TSModuleDeclaration') {
+      inferNamespaceMembers(walk, decl)
+    } else {
+      // export as default
+      addOwnExport(walk, 'default', {
+        getDoc: captureDoc(walk.source, walk.settings, decl),
+      })
+    }
+  }
+}
+
+/**
+ * Every member of an `export =`-referenced `namespace N { … }` block is an
+ * export, explicitly marked or not.
+ */
+function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
+  const type = decl.body?.type
+
+  // @ts-expect-error - legacy parser type
+  if (type === 'TSModuleDeclaration') {
+    // @ts-expect-error - legacy parser type
+    addOwnExport(walk, (decl.body.id as TSESTree.Identifier).name, {
+      getDoc: captureDoc(walk.source, walk.settings, decl.body),
+    })
+    return
+  } else if (type === 'TSModuleBlock' && decl.kind === 'namespace') {
+    const getDoc = captureDoc(walk.source, walk.settings, decl.body)
+    // the namespace name itself is inferred — `hasExplicitExport` skips it
+    if ('name' in decl.id) {
+      addOwnExport(walk, decl.id.name, { getDoc, inferred: true })
+    } else {
+      // TODO: handle left TSQualifiedName: `declare module foo.bar.baz`
+      addOwnExport(walk, decl.id.right.name, { getDoc, inferred: true })
+    }
+  }
+
+  if (!decl.body?.body) {
+    return
+  }
+  for (const moduleBlockNode of decl.body.body) {
+    const namespaceDecl =
+      moduleBlockNode.type === 'ExportNamedDeclaration'
+        ? moduleBlockNode.declaration
+        : moduleBlockNode
+
+    if (!namespaceDecl) {
+      // TypeScript can check this for us; we needn't
+    } else if (namespaceDecl.type === 'VariableDeclaration') {
+      for (const d of namespaceDecl.declarations) {
+        recursivePatternCapture(d.id, id => {
+          addOwnExport(walk, (id as TSESTree.Identifier).name, {
+            getDoc: captureDoc(
+              walk.source,
+              walk.settings,
+              decl,
+              namespaceDecl,
+              moduleBlockNode,
+            ),
+          })
+        })
+      }
+    } else if ('id' in namespaceDecl) {
+      addOwnExport(walk, (namespaceDecl.id as TSESTree.Identifier).name, {
+        getDoc: captureDoc(walk.source, walk.settings, moduleBlockNode),
+      })
+    }
+  }
+}
+
+// ─── shared capture helpers ────────────────────────────────────────────────
+
+/**
+ * `export { a, b as c }` — own exports (a name may be a tracked namespace
+ * object); `export { a as b } from './x'` — re-export records.
+ */
+function processExportSpecifier(
+  walk: Walk,
+  s: TSESTree.ExportSpecifier,
+  source: string | undefined,
+) {
+  const exported = getValue(s.exported)
+  if (source === undefined) {
+    addOwnExport(walk, exported, {
+      namespaceTargetPath: namespaceTargetOf(walk, getValue(s.local)),
+    })
+  } else {
+    walk.facts.reexports.set(exported, {
+      local: getValue(s.local),
+      targetPath: walk.remotePath(source),
+    })
+  }
+}
+
+/**
+ * Record an import edge for a statement with specifiers, deriving the
+ * imported names and type-only-ness (`import type { Foo }`,
+ * `import { type Foo }`, Flow's `typeof`).
+ */
+function captureEdge(
+  walk: Walk,
+  n: TSESTree.ImportDeclaration | TSESTree.ExportNamedDeclaration,
+) {
+  const declarationIsType =
+    'importKind' in n &&
+    (n.importKind === 'type' ||
+      // @ts-expect-error - flow type
+      n.importKind === 'typeof')
+  // import './foo' or import {} from './foo' (both 0 specifiers) is a side
+  // effect and shouldn't be considered to be just importing types
+  let specifiersOnlyImportingTypes = n.specifiers.length > 0
+  const imported = {
+    names: new Set<string>(),
+    default: false,
+    namespace: false,
+  }
+  for (const specifier of n.specifiers) {
+    switch (specifier.type) {
+      case 'ImportSpecifier': {
+        imported.names.add(getValue(specifier.imported))
+
+        break
+      }
+      case 'ImportDefaultSpecifier': {
+        imported.default = true
+
+        break
+      }
+      case 'ImportNamespaceSpecifier': {
+        imported.namespace = true
+
+        break
+      }
+      // No default
+    }
+
+    specifiersOnlyImportingTypes =
+      specifiersOnlyImportingTypes &&
+      'importKind' in specifier &&
+      (specifier.importKind === 'type' ||
+        // @ts-expect-error - flow type
+        specifier.importKind === 'typeof')
+  }
+  return captureDependency(
+    walk,
+    n,
+    declarationIsType || specifiersOnlyImportingTypes,
+    imported,
+  )
+}
+
+/** Record an import edge, keyed by resolved path. */
+function captureDependency(
+  walk: Walk,
+  {
+    source,
+  }:
+    | TSESTree.ExportAllDeclaration
+    | TSESTree.ImportDeclaration
+    | TSESTree.ExportNamedDeclaration,
+  isOnlyImportingTypes: boolean,
+  imported?: ModuleImportDeclaration['imported'],
+): string | null {
+  if (source == null) {
+    return null
+  }
+
+  const p = walk.remotePath(source.value)
+  if (p == null) {
+    return null
+  }
+
+  addImportDeclaration(walk, p, {
+    source: {
+      // capturing actual node reference holds full AST in memory!
+      value: source.value,
+      loc: source.loc,
+    },
+    isOnlyImportingTypes,
+    imported,
+  })
+  return p
+}
+
+function addImportDeclaration(
+  walk: Walk,
+  path: string,
+  declaration: ModuleImportDeclaration,
+) {
+  const existing = walk.facts.imports.get(path)
+  if (existing) {
+    existing.push(declaration)
+  } else {
+    walk.facts.imports.set(path, [declaration])
+  }
+}
+
+function addOwnExport(walk: Walk, name: string, meta: AstOwnExport): void {
+  walk.facts.ownExports.set(name, meta)
+}
+
+/** The re-export target when `identifier` is a tracked namespace object. */
+function namespaceTargetOf(
+  walk: Walk,
+  identifier: string,
+): string | null | undefined {
+  const specifier = walk.namespaces.get(identifier)
+  if (specifier === undefined) {
+    return undefined
+  }
+  return walk.remotePath(specifier)
+}
+
+// ─── everything below is statement-independent ─────────────────────────────
+
+/** Record `import('…')` edges anywhere in the AST. */
+function scanDynamicImports(
+  walk: Walk,
+  visitorKeys: TSESLint.SourceCode.VisitorKeys | null,
+): boolean {
+  let hasDynamicImports = false
+
+  function processDynamicImport(source: TSESTree.CallExpressionArgument) {
+    hasDynamicImports = true
+    if (source.type !== 'Literal') {
+      return
+    }
+    const p = walk.remotePath(source.value as string)
+    if (p == null) {
+      return
+    }
+    addImportDeclaration(walk, p, {
+      source: {
+        // capturing actual node reference holds full AST in memory!
+        value: source.value,
+        loc: source.loc,
+      },
+      // a dynamic import binds the whole namespace
+      imported: { names: new Set(), default: false, namespace: true },
+      dynamic: true,
+    })
+  }
+
+  visit(walk.ast, visitorKeys, {
+    ImportExpression(node) {
+      processDynamicImport((node as TSESTree.ImportExpression).source)
+    },
+    CallExpression(_node) {
+      const node = _node as TSESTree.CallExpression
+      // @ts-expect-error - legacy parser type
+      if (node.callee.type === 'Import') {
+        processDynamicImport(node.arguments[0])
+      }
+    },
+  })
+
+  return hasDynamicImports
+}
+
+/** The AST-route counterpart of the lexer's `deriveDefaultExportSourceName`. */
+function resolveDefaultName(
+  node:
+    | TSESTree.ExportSpecifier
+    | TSESTree.DefaultExportDeclarations
+    | TSESTree.CallExpressionArgument
+    | undefined,
+): DefaultExportSourceName | undefined {
+  if (node == null) {
+    return
+  }
+  switch (node.type) {
+    case 'AssignmentExpression': {
+      // export default Foo = 1;
+      if (node.left.type !== 'Identifier') {
+        return
+      }
+      return { name: node.left.name, isBoundName: true }
+    }
+    case 'CallExpression': {
+      // export default withHoc(Foo)
+      return resolveDefaultName(node.arguments[0])
+    }
+    case 'ClassDeclaration': {
+      // anonymous classes have no name to preserve
+      return node.id && typeof node.id.name === 'string'
+        ? { name: node.id.name, isBoundName: false }
+        : undefined
+    }
+    case 'ExportSpecifier': {
+      // export { foo as default }
+      return { name: getValue(node.local), isBoundName: false }
+    }
+    case 'FunctionDeclaration': {
+      const name = node.id?.name
+      return name == null ? undefined : { name, isBoundName: false }
+    }
+    case 'Identifier': {
+      // const foo = 'foo'; export default foo;
+      return { name: node.name, isBoundName: true }
+    }
+    default: {
+      // unhandled node type: no name can be determined
+      return
+    }
+  }
+}
+
+/** The first block comment carrying an `@module` tag. */
+function collectModuleDoc(ast: TSESTree.Program): DocCommentBlock | undefined {
+  if (!ast.comments?.length) {
+    return
+  }
+  for (const c of ast.comments) {
+    if (c.type !== 'Block') {
+      continue
+    }
+    try {
+      const doc = parseComment(c.value)
+      if (doc.tags.some(t => t.tag === 'module')) {
+        return doc
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** Statement kinds a TS `export =` may reference. */
+const declTypes = new Set([
+  'VariableDeclaration',
+  'ClassDeclaration',
+  'TSDeclareFunction',
+  'TSEnumDeclaration',
+  'TSTypeAliasDeclaration',
+  'TSInterfaceDeclaration',
+  'TSAbstractClassDeclaration',
+  'TSModuleDeclaration',
+])
+
+/** `A.B.C` → `A` */
+function getRoot(node: TSESTree.TSQualifiedName): TSESTree.Identifier {
+  if (node.left.type === 'TSQualifiedName') {
+    return getRoot(node.left)
+  }
+  return node.left as TSESTree.Identifier
+}

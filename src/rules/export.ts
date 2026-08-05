@@ -1,12 +1,13 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/types'
 import type { TSESTree } from '@typescript-eslint/utils'
 
+import { getExportNames, ModuleInfo } from '../core/index.js'
 import {
-  ExportMap,
   recursivePatternCapture,
   createRule,
   getValue,
 } from '../utils/index.js'
+import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
 /*
 Notes on TypeScript namespaces aka TSModuleDeclaration:
@@ -235,13 +236,13 @@ export default createRule<[], MessageId>({
           return
         }
 
-        const remoteExports = ExportMap.get(node.source.value, context)
+        const remoteExports = ModuleInfo.get(node.source.value, context)
         if (remoteExports == null) {
           return
         }
 
-        if (remoteExports.errors.length > 0) {
-          remoteExports.reportErrors(context, node)
+        if (remoteExports.parseError) {
+          reportModuleParseErrors(context, remoteExports, node)
           return
         }
 
@@ -249,12 +250,12 @@ export default createRule<[], MessageId>({
 
         let any = false
 
-        remoteExports.$forEach((_, name) => {
+        for (const name of getExportNames(remoteExports)) {
           if (name !== 'default') {
             any = true // poor man's filter
             addNamed(name, node, parent)
           }
-        })
+        }
 
         if (!any) {
           context.report({
