@@ -383,7 +383,11 @@ export class ModuleInfo {
   declare private hasExportsCache?: boolean
 
   private constructor(
-    /** Absolute path of the analyzed module. */
+    /**
+     * Absolute path of the analyzed module, with native path separators —
+     * the same convention as `context.physicalFilename` and the resolvers,
+     * so rules can compare and combine paths without normalization.
+     */
     readonly path: string,
     /** @internal The context this analysis was built under. */
     readonly context: ChildContext,

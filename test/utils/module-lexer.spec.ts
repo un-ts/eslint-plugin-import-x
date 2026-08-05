@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import { testContext } from '../utils.js'
 
 import {
@@ -142,8 +144,8 @@ describe('core lexer fast path for external modules', () => {
     const deep = resolveDeepExport(moduleInfo, 'renamedHelper')
     expect(deep.found).toBe(true)
     expect(deep.path).toEqual([
-      expect.stringContaining('lexed-esm/index.js'),
-      expect.stringContaining('lexed-esm/util.js'),
+      expect.stringContaining(path.join('lexed-esm', 'index.js')),
+      expect.stringContaining(path.join('lexed-esm', 'util.js')),
     ])
   })
 

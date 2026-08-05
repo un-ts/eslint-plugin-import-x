@@ -69,7 +69,8 @@ export function hasExplicitExport(
  * Ensure that an imported name fully resolves through re-export chains.
  *
  * @returns `found`, plus the chain of module file paths that was followed
- *   (starting with this module).
+ *   (starting with this module). Paths use native separators, like
+ *   `ModuleInfo#path`.
  */
 export function resolveDeepExport(
   moduleInfo: ModuleInfo,
