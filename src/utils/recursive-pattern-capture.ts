@@ -46,7 +46,8 @@ export function recursivePatternCapture(
       break
     }
     case 'AssignmentPattern': {
-      callback(pattern.left)
+      // a default value wraps another pattern: `[{ a } = {}]`
+      recursivePatternCapture(pattern.left, callback)
       break
     }
     default:

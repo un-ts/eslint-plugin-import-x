@@ -151,7 +151,16 @@ export class ModuleInfo {
     const cacheKey = context.cacheKey
 
     let mtime: number | undefined
-    const statMtime = () => (mtime ??= fs.statSync(filepath).mtime.valueOf())
+    const statMtime = () => {
+      if (mtime === undefined) {
+        try {
+          mtime = fs.statSync(filepath).mtime.valueOf()
+        } catch {
+          // unreadable — treated as unanalyzable below
+        }
+      }
+      return mtime
+    }
 
     const cached = moduleInfoCache.get(cacheKey)
     if (cached) {
@@ -172,7 +181,14 @@ export class ModuleInfo {
       return null
     }
 
-    const content = fs.readFileSync(filepath, { encoding: 'utf8' })
+    let content: string
+    try {
+      content = fs.readFileSync(filepath, { encoding: 'utf8' })
+    } catch {
+      // the file vanished (or became unreadable) between resolution and
+      // analysis — unanalyzable, and not cached: the failure may be transient
+      return null
+    }
 
     if (isLexableExternalModule(filepath)) {
       const lexed = lexModule(content, filepath)
@@ -194,7 +210,10 @@ export class ModuleInfo {
           content,
           context.settings,
         )
-        moduleInfoCache.set(cacheKey, { mtime: statMtime(), value: info })
+        const stamp = statMtime()
+        if (stamp !== undefined) {
+          moduleInfoCache.set(cacheKey, { mtime: stamp, value: info })
+        }
         return info
       }
       // the lexers could not handle the file — fall back to the AST route
@@ -221,8 +240,9 @@ export class ModuleInfo {
       context.settings,
     )
     // an unreliable parse (no visitor keys) must not be cached
-    if (facts.cacheable) {
-      moduleInfoCache.set(cacheKey, { mtime: statMtime(), value: info })
+    const stamp = statMtime()
+    if (facts.cacheable && stamp !== undefined) {
+      moduleInfoCache.set(cacheKey, { mtime: stamp, value: info })
     }
     return info
   }
