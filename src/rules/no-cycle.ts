@@ -1,8 +1,9 @@
 /** Ensures that no imported module imports the linted module. */
 
-import type { DeclarationMetadata, ModuleOptions } from '../utils/index.js'
+import type { ModuleImportDeclaration } from '../core/index.js'
+import { ModuleInfo } from '../core/index.js'
+import type { ModuleOptions } from '../utils/index.js'
 import {
-  ExportMap,
   isExternalModule,
   createRule,
   moduleVisitor,
@@ -19,8 +20,8 @@ export interface Options extends ModuleOptions {
 export type MessageId = 'cycle' | 'cycleSource'
 
 export interface Traverser {
-  mget(): ExportMap | null
-  route: Array<DeclarationMetadata['source']>
+  mget(): ModuleInfo | null
+  route: Array<ModuleImportDeclaration['source']>
 }
 
 const traversed = new Set<string>()
@@ -116,7 +117,7 @@ export default createRule<[Options?], MessageId>({
           return // ignore type imports
         }
 
-        const imported = ExportMap.get(sourceNode.value, context)
+        const imported = ModuleInfo.get(sourceNode.value, context)
 
         if (imported == null) {
           return // no-unresolved territory
@@ -141,7 +142,10 @@ export default createRule<[Options?], MessageId>({
 
           traversed.add(m.path)
 
-          for (const [path, { getter, declarations }] of m.imports) {
+          for (const [
+            path,
+            { resolve: mget, declarations },
+          ] of m.getImports()) {
             if (traversed.has(path)) {
               continue
             }
@@ -178,7 +182,7 @@ export default createRule<[Options?], MessageId>({
             }
             if (route.length + 1 < maxDepth) {
               for (const { source } of toTraverse) {
-                untraversed.push({ mget: getter, route: [...route, source] })
+                untraversed.push({ mget, route: [...route, source] })
               }
             }
           }
@@ -212,6 +216,6 @@ export default createRule<[Options?], MessageId>({
   },
 })
 
-function routeString(route: Array<DeclarationMetadata['source']>) {
+function routeString(route: Array<ModuleImportDeclaration['source']>) {
   return route.map(s => `${s.value}:${s.loc.start.line}`).join('=>')
 }

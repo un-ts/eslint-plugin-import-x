@@ -1,6 +1,8 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { ExportMap, createRule } from '../utils/index.js'
+import { ModuleInfo } from '../core/index.js'
+import { createRule } from '../utils/index.js'
+import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
 export type MessageId = 'noDefaultExport'
 
@@ -34,14 +36,14 @@ export default createRule<[], MessageId>({
       if (!defaultSpecifier) {
         return
       }
-      const imports = ExportMap.get(node.source!.value, context)
+      const imports = ModuleInfo.get(node.source!.value, context)
       if (imports == null) {
         return
       }
 
-      if (imports.errors.length > 0) {
-        imports.reportErrors(context, node)
-      } else if (imports.get('default') === undefined) {
+      if (imports.parseError) {
+        reportModuleParseErrors(context, imports, node)
+      } else if (imports.getExport('default') === undefined) {
         context.report({
           node: defaultSpecifier,
           messageId: 'noDefaultExport',

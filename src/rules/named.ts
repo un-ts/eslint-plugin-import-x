@@ -2,8 +2,14 @@ import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { ExportMap, createRule } from '../utils/index.js'
+import {
+  getModuleFormat,
+  ModuleInfo,
+  resolveDeepExport,
+} from '../core/index.js'
+import { createRule } from '../utils/index.js'
 import type { ModuleOptions } from '../utils/index.js'
+import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
 export type MessageId = 'notFound' | 'notFoundDeep'
 
@@ -57,13 +63,13 @@ export default createRule<[ModuleOptions?], MessageId>({
         return // no named imports/exports
       }
 
-      const imports = ExportMap.get(node.source.value, context)
-      if (imports == null || imports.parseGoal === 'ambiguous') {
+      const imports = ModuleInfo.get(node.source.value, context)
+      if (imports == null || getModuleFormat(imports) === 'ambiguous') {
         return
       }
 
-      if (imports.errors.length > 0) {
-        imports.reportErrors(context, node)
+      if (imports.parseError) {
+        reportModuleParseErrors(context, imports, node)
         return
       }
 
@@ -88,13 +94,13 @@ export default createRule<[ModuleOptions?], MessageId>({
           // @ts-expect-error - old version ast
           (imNode.value as string)
 
-        const deepLookup = imports.hasDeep(name)
+        const deepLookup = resolveDeepExport(imports, name)
 
         if (!deepLookup.found) {
           if (deepLookup.path.length > 1) {
             const deepPath = deepLookup.path
               .map(i =>
-                path.relative(path.dirname(context.physicalFilename), i.path),
+                path.relative(path.dirname(context.physicalFilename), i),
               )
               .join(' -> ')
 
@@ -152,7 +158,7 @@ export default createRule<[ModuleOptions?], MessageId>({
         const source = call.arguments[0] as TSESTree.StringLiteral
 
         const variableImports = node.id.properties
-        const variableExports = ExportMap.get(source.value, context)
+        const variableExports = ModuleInfo.get(source.value, context)
 
         if (
           // return if it's not a commonjs require statement
@@ -162,14 +168,15 @@ export default createRule<[ModuleOptions?], MessageId>({
           // return if it's not a string source
           source.type !== 'Literal' ||
           variableExports == null ||
-          variableExports.parseGoal === 'ambiguous'
+          getModuleFormat(variableExports) === 'ambiguous'
         ) {
           return
         }
 
-        if (variableExports.errors.length > 0) {
-          variableExports.reportErrors(
+        if (variableExports.parseError) {
+          reportModuleParseErrors(
             context,
+            variableExports,
             // @ts-expect-error - FIXME: no idea yet
             node,
           )
@@ -185,12 +192,12 @@ export default createRule<[ModuleOptions?], MessageId>({
             continue
           }
 
-          const deepLookup = variableExports.hasDeep(im.key.name)
+          const deepLookup = resolveDeepExport(variableExports, im.key.name)
 
           if (!deepLookup.found) {
             if (deepLookup.path.length > 1) {
               const deepPath = deepLookup.path
-                .map(i => path.relative(path.dirname(context.filename), i.path))
+                .map(i => path.relative(path.dirname(context.filename), i))
                 .join(' -> ')
 
               context.report({

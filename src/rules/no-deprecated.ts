@@ -1,15 +1,35 @@
 import type { TSESTree } from '@typescript-eslint/utils'
-import type { Spec } from 'comment-parser'
 
-import type { ModuleNamespace } from '../utils/index.js'
-import {
-  ExportMap,
-  createRule,
-  declaredScope,
-  getValue,
-} from '../utils/index.js'
+import type { DocCommentBlock } from '../core/index.js'
+import { getExportDoc, getModuleDoc, ModuleInfo } from '../core/index.js'
+import { createRule, declaredScope, getValue } from '../utils/index.js'
+import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
-function message(deprecation: Spec) {
+/**
+ * This rule is the only consumer of doc comments, so `@deprecated` handling
+ * lives here — the core only hands over raw doc blocks via its tier-2
+ * `getModuleDoc()`/`getExportDoc()` accessors.
+ */
+interface DeprecationInfo {
+  description: string
+}
+
+function findDeprecationTag(
+  doc: DocCommentBlock | undefined,
+): DeprecationInfo | undefined {
+  const tag = doc?.tags.find(t => t.tag === 'deprecated')
+  return tag ? { description: tag.description } : undefined
+}
+
+function getModuleDeprecation(moduleInfo: ModuleInfo) {
+  return findDeprecationTag(getModuleDoc(moduleInfo))
+}
+
+function getExportDeprecation(moduleInfo: ModuleInfo, name: string) {
+  return findDeprecationTag(getExportDoc(moduleInfo, name))
+}
+
+function message(deprecation: DeprecationInfo) {
   if (deprecation.description) {
     return {
       messageId: 'deprecatedDesc',
@@ -18,14 +38,6 @@ function message(deprecation: Spec) {
   }
 
   return { messageId: 'deprecated' } as const
-}
-
-function getDeprecation(metadata?: ModuleNamespace | null) {
-  if (!metadata || !metadata.doc) {
-    return
-  }
-
-  return metadata.doc.tags.find(t => t.tag === 'deprecated')
 }
 
 export default createRule({
@@ -45,8 +57,8 @@ export default createRule({
   },
   defaultOptions: [],
   create(context) {
-    const deprecated = new Map<string, Spec>()
-    const namespaces = new Map<string, ExportMap | null>()
+    const deprecated = new Map<string, DeprecationInfo>()
+    const namespaces = new Map<string, ModuleInfo | null>()
 
     return {
       Program({ body }) {
@@ -59,15 +71,13 @@ export default createRule({
             continue
           } // local export, ignore
 
-          const imports = ExportMap.get(node.source.value, context)
+          const imports = ModuleInfo.get(node.source.value, context)
 
           if (imports == null) {
             continue
           }
 
-          const moduleDeprecation = imports.doc?.tags.find(
-            t => t.tag === 'deprecated',
-          )
+          const moduleDeprecation = getModuleDeprecation(imports)
           if (moduleDeprecation) {
             context.report({
               node,
@@ -75,8 +85,8 @@ export default createRule({
             })
           }
 
-          if (imports.errors.length > 0) {
-            imports.reportErrors(context, node)
+          if (imports.parseError) {
+            reportModuleParseErrors(context, imports, node)
             continue
           }
 
@@ -85,7 +95,7 @@ export default createRule({
             let local: string
             switch (im.type) {
               case 'ImportNamespaceSpecifier': {
-                if (imports.size === 0) {
+                if (!imports.hasExports) {
                   continue
                 }
                 namespaces.set(im.local.name, imports)
@@ -110,17 +120,18 @@ export default createRule({
             }
 
             // unknown thing can't be deprecated
-            const exported = imports.get(imported)
+            const exported = imports.getExport(imported)
             if (exported == null) {
               continue
             }
 
             // capture import of deep namespace
-            if (exported.namespace) {
-              namespaces.set(local, exported.namespace)
+            const exportedNamespace = exported.getNamespace?.()
+            if (exportedNamespace) {
+              namespaces.set(local, exportedNamespace)
             }
 
-            const deprecation = getDeprecation(imports.get(imported))
+            const deprecation = getExportDeprecation(imports, imported)
 
             if (!deprecation) {
               continue
@@ -186,7 +197,7 @@ export default createRule({
 
         // while property is namespace and parent is member expression, keep validating
         while (
-          namespace instanceof ExportMap &&
+          namespace instanceof ModuleInfo &&
           node?.type === 'MemberExpression'
         ) {
           // ignore computed parts for now
@@ -194,13 +205,16 @@ export default createRule({
             return
           }
 
-          const metadata = namespace.get(node.property.name)
+          const metadata = namespace.getExport(node.property.name)
 
           if (!metadata) {
             break
           }
 
-          const deprecation = getDeprecation(metadata)
+          const deprecation = getExportDeprecation(
+            namespace,
+            node.property.name,
+          )
 
           if (deprecation) {
             context.report({
@@ -211,7 +225,7 @@ export default createRule({
 
           // stash and pop
           namepath.push(node.property.name)
-          namespace = metadata.namespace
+          namespace = metadata.getNamespace?.()
           node = node.parent
         }
       },
