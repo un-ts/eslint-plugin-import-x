@@ -120,6 +120,28 @@ describe('ModuleInfo', () => {
     })
   })
 
+  it('re-analyzes a file that becomes a module', () => {
+    const filepath = testFilePath('becomes-module.js')
+    try {
+      // a CommonJS script is unanalyzable to rules
+      fs.writeFileSync(filepath, 'module.exports = 1\n')
+      expect(ModuleInfo.get('./becomes-module', fakeContext)).toBeNull()
+
+      // rewritten as ESM — the negative result must not stick, or a
+      // long-running process (an editor server) would never see the change
+      fs.writeFileSync(filepath, 'export const nowExported = 1\n')
+      // bump the mtime explicitly: both writes can land in the same
+      // millisecond, which would make the change invisible to the cache
+      const later = new Date(Date.now() + 1000)
+      fs.utimesSync(filepath, later, later)
+      const reanalyzed = ModuleInfo.get('./becomes-module', fakeContext)
+      expect(reanalyzed).not.toBeNull()
+      expect(reanalyzed!.hasExport('nowExported')).toBe(true)
+    } finally {
+      fs.rmSync(filepath, { force: true })
+    }
+  })
+
   it('does not return a cached copy with different settings', () => {
     const firstAccess = ModuleInfo.get('./named-exports', fakeContext)
     expect(firstAccess).toBeDefined()
