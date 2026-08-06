@@ -168,6 +168,11 @@ describe('core lexer fast path for external modules', () => {
     // `export * as ns from './util.js'` adds no edge
     expect(declarations).toHaveLength(2)
     expect(declarations[0].source.loc.start.line).toBeGreaterThan(0)
+
+    // the lexer route reports links but not what each statement binds —
+    // `undefined` means "unknown", and consumers must not read it as
+    // "imports nothing"
+    expect(declarations.every(d => d.imported === undefined)).toBe(true)
     expect(imports.get(utilPath)!.resolve()!.hasExport('helper')).toBe(true)
 
     const starPaths = getStarExportPaths(moduleInfo)

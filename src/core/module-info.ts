@@ -52,7 +52,12 @@ function isLexableExternalModule(filepath: string) {
  */
 export interface ModuleImportDeclaration {
   source: Pick<TSESTree.Literal, 'value' | 'loc'>
-  /** What the declaration imports from the target. */
+  /**
+   * What the declaration imports from the target. Absent when the analysis
+   * did not determine bindings — the lexer route reports module links but
+   * not what each statement binds, so consumers must treat `undefined` as
+   * "unknown", never as "imports nothing".
+   */
   imported?: {
     names: ReadonlySet<string>
     default: boolean
@@ -101,7 +106,12 @@ export interface ModuleInfoImport {
 }
 
 interface CacheEntry {
-  mtime: number
+  /**
+   * The file mtime the result was derived from, or `null` when the result
+   * does not depend on file content at all (it follows from settings, which
+   * are part of the cache key) and therefore never needs revalidating.
+   */
+  mtime: number | null
   value: ModuleInfo | null
 }
 
@@ -122,7 +132,8 @@ const moduleInfoCache = new Map<string, CacheEntry>()
  *
  * Contract: accessing a member may trigger computation; results are cached
  * for the lifetime of the instance, and instances are cached per
- * settings-context and invalidated by file mtime.
+ * settings-context and invalidated by file mtime — including negative
+ * results, so a file that becomes analyzable is picked up.
  *
  * This class carries only the queries shared by several rules. Everything
  * needed by a single rule is a standalone function instead (see
@@ -163,21 +174,31 @@ export class ModuleInfo {
     }
 
     const cached = moduleInfoCache.get(cacheKey)
-    if (cached) {
-      // negative results are sticky
-      if (cached.value === null) {
-        return null
+    if (cached && (cached.mtime === null || cached.mtime === statMtime())) {
+      return cached.value
+    }
+
+    /**
+     * Cache a content-derived result — including a negative one, so a file
+     * that becomes analyzable (CommonJS rewritten as ESM, a syntax error
+     * fixed) is picked up on its next mtime change instead of staying
+     * unanalyzable for the life of the process. Skipped when the file
+     * cannot be stat'd, since there is nothing to revalidate against.
+     */
+    const remember = (value: ModuleInfo | null) => {
+      const stamp = statMtime()
+      if (stamp !== undefined) {
+        moduleInfoCache.set(cacheKey, { mtime: stamp, value })
       }
-      if (cached.mtime === statMtime()) {
-        return cached.value
-      }
+      return value
     }
 
     if (
       !hasValidExtension(filepath, context) ||
       ignore(filepath, context, true)
     ) {
-      moduleInfoCache.set(cacheKey, { mtime: 0, value: null })
+      // settings-derived, and settings are part of the cache key
+      moduleInfoCache.set(cacheKey, { mtime: null, value: null })
       return null
     }
 
@@ -196,8 +217,7 @@ export class ModuleInfo {
         if (lexed.format === 'script') {
           // CommonJS is unanalyzable to rules — same as the AST route below
           log('lexed as non-module script:', filepath)
-          moduleInfoCache.set(cacheKey, { mtime: 0, value: null })
-          return null
+          return remember(null)
         }
         log('lexed external module:', filepath)
         const info = ModuleInfo.fromFacts(
@@ -210,11 +230,7 @@ export class ModuleInfo {
           content,
           context.settings,
         )
-        const stamp = statMtime()
-        if (stamp !== undefined) {
-          moduleInfoCache.set(cacheKey, { mtime: stamp, value: info })
-        }
-        return info
+        return remember(info)
       }
       // the lexers could not handle the file — fall back to the AST route
       log('lexer fallback to AST parse:', filepath)
@@ -223,15 +239,13 @@ export class ModuleInfo {
     // cheap prefilter: don't parse large CJS files that can't be modules
     if (!isMaybeUnambiguousModule(content)) {
       log('ignored path due to unambiguous regex:', filepath)
-      moduleInfoCache.set(cacheKey, { mtime: 0, value: null })
-      return null
+      return remember(null)
     }
 
     const facts = analyzeAstModule(filepath, content, context)
     if (facts == null) {
       log('ignored path due to ambiguous parse:', filepath)
-      moduleInfoCache.set(cacheKey, { mtime: 0, value: null })
-      return null
+      return remember(null)
     }
 
     const info = ModuleInfo.fromFacts(filepath, context, facts, true)
@@ -240,11 +254,7 @@ export class ModuleInfo {
       context.settings,
     )
     // an unreliable parse (no visitor keys) must not be cached
-    const stamp = statMtime()
-    if (facts.cacheable && stamp !== undefined) {
-      moduleInfoCache.set(cacheKey, { mtime: stamp, value: info })
-    }
-    return info
+    return facts.cacheable ? remember(info) : info
   }
 
   /** Normalize lexer output to the facts shape the AST route produces. */
@@ -282,8 +292,6 @@ export class ModuleInfo {
       const declaration: ModuleImportDeclaration = {
         source: { value: imp.specifier, loc: imp.loc },
         isOnlyImportingTypes: false,
-        // a dynamic import binds the whole namespace
-        imported: { names: new Set(), default: false, namespace: imp.dynamic },
         ...(imp.dynamic && { dynamic: true }),
       }
       const list = imports.get(p)
