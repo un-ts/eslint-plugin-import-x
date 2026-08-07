@@ -1,10 +1,6 @@
 import type { DefaultExportSourceName } from './ast-module.js'
 import type { ModuleInfo } from './module-info.js'
-import {
-  collectExportNames,
-  deepResolveExport,
-  lookupExport,
-} from './resolve-exports.js'
+import { collectExportNames, deepResolveExport } from './resolve-exports.js'
 
 export type { DefaultExportSourceName } from './ast-module.js'
 
@@ -25,6 +21,14 @@ const reexportsViewCache = new WeakMap<
   ModuleInfo,
   ReadonlyMap<string, ModuleReexportView>
 >()
+const starExportPathsCache = new WeakMap<ModuleInfo, readonly string[]>()
+const deepExportCache = new WeakMap<ModuleInfo, Map<string, DeepExportResult>>()
+
+/** The outcome of {@link resolveDeepExport}; treat as read-only. */
+export interface DeepExportResult {
+  found: boolean
+  path: readonly string[]
+}
 
 /**
  * Module format of the analyzed file — `named` bails out on `'ambiguous'`
@@ -38,7 +42,10 @@ export function getModuleFormat(
 
 /** Whether the module has a default export (including re-exported ones). */
 export function hasDefaultExport(moduleInfo: ModuleInfo): boolean {
-  return lookupExport(moduleInfo, 'default') != null
+  // through `getExport`, not `lookupExport` directly: it memoizes per name,
+  // and `no-named-as-default` asks once per default-import specifier — each
+  // miss walking the whole re-export and `export *` graph
+  return moduleInfo.getExport('default') != null
 }
 
 /**
@@ -68,6 +75,10 @@ export function hasExplicitExport(
 /**
  * Ensure that an imported name fully resolves through re-export chains.
  *
+ * Memoized per name: `named` asks once per import specifier, and each miss
+ * walks the re-export and `export *` graph. The result is shared, so callers
+ * must only read it.
+ *
  * @returns `found`, plus the chain of module file paths that was followed
  *   (starting with this module). Paths use native separators, like
  *   `ModuleInfo#path`.
@@ -75,8 +86,18 @@ export function hasExplicitExport(
 export function resolveDeepExport(
   moduleInfo: ModuleInfo,
   name: string,
-): { found: boolean; path: string[] } {
-  return deepResolveExport(moduleInfo, name)
+): DeepExportResult {
+  let perName = deepExportCache.get(moduleInfo)
+  if (perName === undefined) {
+    perName = new Map()
+    deepExportCache.set(moduleInfo, perName)
+  }
+  let result = perName.get(name)
+  if (result === undefined) {
+    result = deepResolveExport(moduleInfo, name)
+    perName.set(name, result)
+  }
+  return result
 }
 
 /**
@@ -132,14 +153,22 @@ export function getDefaultExportSourceName(
   return moduleInfo.defaultExportSourceName
 }
 
-/** Resolved paths of `export * from '...'` targets that could be analyzed. */
-export function getStarExportPaths(moduleInfo: ModuleInfo): string[] {
-  const paths: string[] = []
-  for (const resolveStar of moduleInfo.starExports) {
-    const target = resolveStar()
-    if (target != null) {
-      paths.push(target.path)
+/**
+ * Resolved paths of `export * from '...'` targets that could be analyzed.
+ * Cached: each call resolves every star target, which analyzes those modules.
+ */
+export function getStarExportPaths(moduleInfo: ModuleInfo): readonly string[] {
+  let paths = starExportPathsCache.get(moduleInfo)
+  if (paths === undefined) {
+    const built: string[] = []
+    for (const resolveStar of moduleInfo.starExports) {
+      const target = resolveStar()
+      if (target != null) {
+        built.push(target.path)
+      }
     }
+    paths = built
+    starExportPathsCache.set(moduleInfo, paths)
   }
   return paths
 }

@@ -126,6 +126,44 @@ describe('ModuleInfo', () => {
     )
   })
 
+  it('finds a dynamic import separated from its keyword by a comment', () => {
+    // Guards the dynamic-import content prefilter in `ast-module.ts`. Only
+    // trivia may sit between `import` and `(`, so the prefilter must tolerate
+    // it — narrowing that regex to `/import\s*\(/` would silently make this
+    // CommonJS file unanalyzable, losing the edge with no test failing.
+    const filepath = testFilePath('dynamic-with-comment.js')
+    const astRouteContext = {
+      ...fakeContext,
+      // an alternate parser for `.js` keeps this off the lexer route, so the
+      // AST route (and its prefilter) is what runs
+      settings: {
+        ...fakeContext.settings,
+        'import-x/parsers': { [parserPath]: ['.js'] },
+      },
+    } as RuleContext
+    try {
+      // static ESM syntax gets it past `isMaybeUnambiguousModule` (whose own
+      // `import\(` alternative does *not* tolerate the comment), so what is
+      // under test here is purely the dynamic-import prefilter
+      fs.writeFileSync(
+        filepath,
+        'export const own = 1\nconst a = import /* c */ ("./named-exports")\n',
+      )
+      const moduleInfo = ModuleInfo.get(
+        './dynamic-with-comment',
+        astRouteContext,
+      )
+      expect(moduleInfo).not.toBeNull()
+      expect(
+        [...moduleInfo!.getImports().keys()].some(k =>
+          k.endsWith(`named-exports.js`),
+        ),
+      ).toBe(true)
+    } finally {
+      fs.rmSync(filepath, { force: true })
+    }
+  })
+
   it('does not return a cached copy after modification', done => {
     const firstAccess = ModuleInfo.get('./mutator', fakeContext)
     expect(firstAccess).toBeDefined()
