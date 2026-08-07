@@ -41,7 +41,7 @@ const p = import('./dyn.js')
       { exported: 'renamed', local: 'helper', specifier: './b.js' },
       { exported: 'plain', local: 'plain', specifier: './b.js' },
     ])
-    expect(result.namespaceReexports).toEqual([
+    expect(result.namespaceExports).toEqual([
       { exported: 'ns', specifier: './d.js' },
     ])
 
@@ -59,9 +59,82 @@ const p = import('./dyn.js')
     expect(bySpecifier.get('./b.js')).toMatchObject({ starReexport: false })
     expect(bySpecifier.get('./c.js')).toMatchObject({ starReexport: true })
     expect(bySpecifier.get('./dyn.js')).toMatchObject({ dynamic: true })
-    // 1-based line of the specifier string literal
-    expect(bySpecifier.get('./a.js')!.loc.start.line).toBe(2)
-    expect(bySpecifier.get('./dyn.js')!.loc.start.line).toBe(9)
+    // 1-based line, 0-based column of the specifier string literal, quotes
+    // included — exactly the range a `Literal` node's own `loc` covers
+    expect(bySpecifier.get('./a.js')!.loc).toEqual({
+      start: { line: 2, column: 14 },
+      end: { line: 2, column: 22 },
+    })
+    // `const p = import('./dyn.js')` — the opening quote is column 17, not
+    // the `(` at 16: a dynamic specifier's offsets already include quotes
+    expect(bySpecifier.get('./dyn.js')!.loc).toEqual({
+      start: { line: 9, column: 17 },
+      end: { line: 9, column: 27 },
+    })
+  })
+
+  it('recognizes a re-exported namespace import as a namespace export', () => {
+    const result = lexModule(
+      `
+import * as b from './b.js'
+import d, * as combined from './d.js'
+import plainDefault from './p.js'
+export { b, combined as renamedNs, plainDefault }
+export default b
+`,
+      'test.js',
+    ) as LexedEsModule
+
+    // es-module-lexer reports these as ordinary own exports; only the join
+    // against `import * as` bindings reveals they are namespace objects
+    expect(result.namespaceExports).toEqual(
+      expect.arrayContaining([
+        { exported: 'b', specifier: './b.js' },
+        { exported: 'renamedNs', specifier: './d.js' },
+        { exported: 'default', specifier: './b.js' },
+      ]),
+    )
+    // a non-namespace binding stays an ordinary own export
+    expect(result.ownExports).toEqual(['plainDefault'])
+  })
+
+  it('falls back to the AST route for type-only imports', () => {
+    // es-module-lexer accepts all three without complaint, but they bind
+    // nothing at runtime — treating them as value imports invents edges
+    expect(
+      lexModule(`import type { T } from './t.js'\nexport const x = 1`, 'f.js'),
+    ).toBeNull()
+    expect(
+      lexModule(`import typeof T from './t.js'\nexport const x = 1`, 'f.js'),
+    ).toBeNull()
+    expect(
+      lexModule(
+        `import { type T, v } from './t.js'\nexport const x = 1`,
+        'f.js',
+      ),
+    ).toBeNull()
+  })
+
+  it('falls back to the AST route for stage-1 export-from syntax', () => {
+    // es-module-lexer reports no import edge at all for these, so the module
+    // link would silently vanish
+    expect(
+      lexModule(`export default from './named-exports.js'`, 'f.js'),
+    ).toBeNull()
+    expect(lexModule(`export baz from './named-exports.js'`, 'f.js')).toBeNull()
+  })
+
+  it('keeps standard export-from syntax on the lexer route', () => {
+    // guards the stage-1 detector against over-matching
+    expect(lexModule(`export { baz } from './x.js'`, 'f.js')).toMatchObject({
+      format: 'module',
+    })
+    expect(lexModule(`export * from './x.js'`, 'f.js')).toMatchObject({
+      format: 'module',
+    })
+    expect(
+      lexModule(`const from = 1\nexport default from`, 'f.js'),
+    ).toMatchObject({ format: 'module' })
   })
 
   it('classifies star exports with comments in the statement', () => {
@@ -169,10 +242,22 @@ describe('core lexer fast path for external modules', () => {
     expect(declarations).toHaveLength(2)
     expect(declarations[0].source.loc.start.line).toBeGreaterThan(0)
 
-    // the lexer route reports links but not what each statement binds —
-    // `undefined` means "unknown", and consumers must not read it as
-    // "imports nothing"
-    expect(declarations.every(d => d.imported === undefined)).toBe(true)
+    // No lexer reports what a statement binds, so reading `imported`
+    // escalates to a one-off AST parse of this file, joined on specifier
+    // location. Keyed by line: `import util from './util.js'` is line 5,
+    // `export { helper as renamedHelper, plain } from './util.js'` is line 14.
+    const byLine = new Map(declarations.map(d => [d.source.loc.start.line, d]))
+    expect([...byLine.keys()].sort((a, b) => a - b)).toEqual([5, 14])
+    expect(byLine.get(5)!.imported).toEqual({
+      names: new Set(),
+      default: true,
+      namespace: false,
+    })
+    expect(byLine.get(14)!.imported).toEqual({
+      names: new Set(),
+      default: false,
+      namespace: false,
+    })
     expect(imports.get(utilPath)!.resolve()!.hasExport('helper')).toBe(true)
 
     const starPaths = getStarExportPaths(moduleInfo)

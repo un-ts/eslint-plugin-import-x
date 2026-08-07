@@ -9,12 +9,18 @@
  */
 
 import fs from 'node:fs'
+import nodePath from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 import { getTsconfigWithContext } from 'eslint-import-context'
 
-import type { ChildContext, ParseError, RuleContext } from '../types.js'
+import type {
+  ChildContext,
+  FileExtension,
+  ParseError,
+  RuleContext,
+} from '../types.js'
 import { childContext } from '../utils/child-context.js'
 import { hasValidExtension, ignore } from '../utils/ignore.js'
 import { relative, resolve } from '../utils/resolve.js'
@@ -30,20 +36,65 @@ import { hasAnyExports, hasExport, lookupExport } from './resolve-exports.js'
 
 const log = debug('eslint-plugin-import-x:core:module-info')
 
-/** A path segment named `node_modules` marks third-party code. */
-const NODE_MODULES_PATTERN = /[/\\]node_modules[/\\]/
+/**
+ * Whether the lexers should be tried on the file: plain JavaScript, whether
+ * third-party or project-internal. Everything the lexers cannot faithfully
+ * read still reaches the AST route — TS and JSX by extension, Flow and
+ * TS-in-JS type imports by detection inside {@link lexModule}, and any lexer
+ * error by its `null` return.
+ *
+ * An alternate parser configured for the extension also opts the file out: the
+ * user is declaring that these files are not plain JavaScript (Flow,
+ * decorators, `@babel/eslint-parser`'s stage-1 export proposals), and the
+ * lexers would read them under ordinary ESM rules.
+ */
+function isLexableModule(filepath: string, context: ChildContext) {
+  if (!LEXABLE_EXTENSIONS_PATTERN.test(filepath)) {
+    return false
+  }
+  const parsers = context.settings['import-x/parsers']
+  if (parsers != null) {
+    const extension = nodePath.extname(filepath) as FileExtension
+    for (const parserPath in parsers) {
+      if (parsers[parserPath].includes(extension)) {
+        return false
+      }
+    }
+  }
+  return true
+}
 
 /**
- * Whether the lexers can analyze the file: plain JavaScript living under a
- * `node_modules` directory. Project-internal modules (and anything the
- * lexers can't handle: TS, JSX, Flow, custom parsers) go through the
- * AST-parse route.
+ * Wrap a lexed import declaration so that `imported` — which bindings the
+ * statement introduces — is recovered on first access by escalating to the AST
+ * route. No lexer reports it, and only `no-unused-modules` reads it, so a run
+ * without that rule never pays for the parse.
+ *
+ * The twin's declarations are joined on specifier location, which is exact by
+ * construction: the lexer builds `loc` from the specifier offsets *including
+ * the quotes*, precisely a string-literal node's own `loc`. Joining on
+ * position within the list would not work — `scanDynamicImports` is a pre-pass,
+ * so the AST route lists a path's dynamic edges ahead of its static ones.
  */
-function isLexableExternalModule(filepath: string) {
-  return (
-    LEXABLE_EXTENSIONS_PATTERN.test(filepath) &&
-    NODE_MODULES_PATTERN.test(filepath)
-  )
+function withLazyImported(
+  info: ModuleInfo,
+  path: string,
+  declaration: ModuleImportDeclaration,
+): ModuleImportDeclaration {
+  let imported: ModuleImportDeclaration['imported']
+  let escalated = false
+  return {
+    ...declaration,
+    get imported() {
+      if (!escalated) {
+        escalated = true
+        imported = info
+          .astAnalysis()
+          ?.findImportDeclaration(path, declaration.source.loc)?.imported
+      }
+      return imported
+    },
+  }
 }
 
 /**
@@ -211,7 +262,7 @@ export class ModuleInfo {
       return null
     }
 
-    if (isLexableExternalModule(filepath)) {
+    if (isLexableModule(filepath, context)) {
       const lexed = lexModule(content, filepath)
       if (lexed != null) {
         if (lexed.format === 'script') {
@@ -281,7 +332,7 @@ export class ModuleInfo {
     for (const name of lexed.ownExports) {
       ownExports.set(name, {})
     }
-    for (const { exported, specifier } of lexed.namespaceReexports) {
+    for (const { exported, specifier } of lexed.namespaceExports) {
       ownExports.set(exported, { namespaceTargetPath: resolvePath(specifier) })
     }
 
@@ -382,7 +433,12 @@ export class ModuleInfo {
     for (const [p, declarations] of facts.imports) {
       info.imports.set(p, {
         resolve: () => info.resolvePath(p),
-        declarations: new Set(declarations),
+        declarations: new Set(
+          // the lexer route cannot report bindings; recover them on demand
+          builtFromAst
+            ? declarations
+            : declarations.map(d => withLazyImported(info, p, d)),
+        ),
       })
     }
 
@@ -496,18 +552,38 @@ export class ModuleInfo {
     return this.imports
   }
 
+  /**
+   * @internal The declaration importing `path` whose specifier sits at `loc`.
+   *   Used to join a lexed declaration to its AST twin — see
+   *   {@link withLazyImported} for why location is the right key.
+   */
+  findImportDeclaration(
+    path: string,
+    loc: TSESTree.SourceLocation,
+  ): ModuleImportDeclaration | undefined {
+    const edge = this.imports.get(path)
+    if (edge === undefined) {
+      return
+    }
+    for (const declaration of edge.declarations) {
+      const { start } = declaration.source.loc
+      if (start.line === loc.start.line && start.column === loc.start.column) {
+        return declaration
+      }
+    }
+  }
+
   /** Analyze the module at an already-resolved path, under this context. */
   private resolvePath(path: string): ModuleInfo | null {
     return ModuleInfo.for(childContext(path, this.context))
   }
 
   /**
-   * @internal For `module-doc.ts` / `module-exports.ts` only — queries that
-   *   need parse-derived data (doc comments, the default export's declared
-   *   name): a lexed module carries none, so the first call runs (and
-   *   memoizes) the AST route for the same file.
+   * @internal Escalation to the AST route for data no lexer can produce: doc
+   *   comments (`module-doc.ts`) and per-declaration import bindings
+   *   ({@link withLazyImported}). Runs and memoizes one parse of this file.
    *
-   *   Callers must check {@link maybeHasDeprecationDoc} first, as
+   *   Doc callers must check {@link maybeHasDeprecationDoc} first, as
    *   `module-doc.ts` does. An AST-built module without a marker returns
    *   itself carrying no doc getters — the analysis skipped them precisely
    *   because no doc can exist — so calling this unguarded would silently
@@ -517,28 +593,41 @@ export class ModuleInfo {
     if (this.builtFromAst) {
       return this
     }
-    if (this.astTwin === undefined) {
-      let facts = null
-      try {
-        const content = fs.readFileSync(this.path, { encoding: 'utf8' })
-        // reached only for a module that carries a deprecation marker, and
-        // reached *because* a doc is being read — so docs are the point here
-        facts = analyzeAstModule(this.path, content, this.context, true)
-      } catch {
-        // unreadable file — nothing more to know
-      }
-      if (facts == null) {
-        this.astTwin = null
-      } else {
-        this.astTwin = ModuleInfo.fromFacts(
-          this.path,
-          this.context,
-          facts,
-          true,
-        )
-        this.astTwin.maybeHasDeprecationDoc = this.maybeHasDeprecationDoc
-      }
+    if (this.astTwin !== undefined) {
+      return this.astTwin
     }
-    return this.astTwin
+
+    let facts = null
+    try {
+      const content = fs.readFileSync(this.path, { encoding: 'utf8' })
+      // the same rule `for` applies: only a module carrying a marker can
+      // answer a doc query. A doc caller has already checked the marker, so
+      // this is `true` for them; an `imported` escalation needs no comments
+      // at all and must not pin the AST for them either.
+      facts = analyzeAstModule(
+        this.path,
+        content,
+        this.context,
+        this.maybeHasDeprecationDoc,
+      )
+    } catch {
+      // unreadable file — nothing more to know
+    }
+    if (facts == null) {
+      this.astTwin = null
+      return null
+    }
+
+    const twin = ModuleInfo.fromFacts(this.path, this.context, facts, true)
+    twin.maybeHasDeprecationDoc = this.maybeHasDeprecationDoc
+    // An unreliable parse (no visitor keys) must not be memoized — the same
+    // rule `for` applies to its own result. It matters more here: this
+    // instance came from the lexer, so it *is* in `moduleInfoCache`, and a
+    // twin pinned to it would outlive the parser problem for the whole
+    // process instead of being retried on the next mtime change.
+    if (facts.cacheable) {
+      this.astTwin = twin
+    }
+    return twin
   }
 }

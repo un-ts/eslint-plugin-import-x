@@ -100,9 +100,28 @@ describe('ModuleInfo', () => {
     const mockContext = {
       ...fakeContext,
       parserPath: 'not-real',
-    }
+      // an alternate parser declared for `.js` opts the file out of the
+      // lexers, so this reaches the AST route — where an unusable parser
+      // yields no visitor keys, and an unreliable parse must not be cached
+      settings: {
+        ...fakeContext.settings,
+        'import-x/parsers': { 'not-real': ['.js'] },
+      },
+    } as RuleContext
     expect(ModuleInfo.get('./named-exports', mockContext)).toBeDefined()
     expect(ModuleInfo.get('./named-exports', mockContext)).not.toBe(
+      ModuleInfo.get('./named-exports', mockContext),
+    )
+  })
+
+  it('caches a lexable module even when the parser is unusable', () => {
+    const mockContext = {
+      ...fakeContext,
+      parserPath: 'not-real',
+    } as RuleContext
+    // plain JS never reaches the parser, so the analysis does not depend on
+    // one being loadable — unlike the AST route above, this is cacheable
+    expect(ModuleInfo.get('./named-exports', mockContext)).toBe(
       ModuleInfo.get('./named-exports', mockContext),
     )
   })
