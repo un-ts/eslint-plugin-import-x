@@ -101,6 +101,24 @@ interface Walk {
 function noDocCapture(): undefined {}
 
 /**
+ * A necessary condition for a dynamic `import()` anywhere in the file: the
+ * `import` keyword followed by `(`, with only trivia between.
+ *
+ * {@link scanDynamicImports} is the one part of extraction that walks the
+ * *whole* AST rather than just `Program.body`, and it costs about half of all
+ * extraction work (~9% of this route) while almost always finding nothing —
+ * only `no-cycle` and `no-unused-modules` ever read import edges at all. This
+ * decides whether the traversal is worth running.
+ *
+ * False positives are harmless: `import('x')` inside a string or comment just
+ * means the traversal runs and finds nothing. False negatives are impossible —
+ * nothing but whitespace and comments may sit between the keyword and its
+ * parenthesis. (`import.meta` has a `.`, and is not a dynamic import.)
+ */
+const DYNAMIC_IMPORT_HINT_PATTERN =
+  /\bimport\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\n\s*)*\(/
+
+/**
  * Parse `content` with the configured ESLint parser and extract the module's
  * facts from its AST.
  *
@@ -172,7 +190,9 @@ export function analyzeAstModule(
   }
 
   // dynamic `import()` anywhere makes an otherwise-CJS file analyzable
-  const hasDynamicImports = scanDynamicImports(walk, visitorKeys)
+  const hasDynamicImports =
+    DYNAMIC_IMPORT_HINT_PATTERN.test(content) &&
+    scanDynamicImports(walk, visitorKeys)
 
   const unambiguouslyESM = lazy(() => isUnambiguousModule(ast))
   if (!hasDynamicImports && !unambiguouslyESM()) {
