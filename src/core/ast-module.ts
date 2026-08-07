@@ -7,7 +7,6 @@ import type {
   ExportDefaultSpecifier,
   ExportNamespaceSpecifier,
   ParseError,
-  PluginSettings,
 } from '../types.js'
 import { getValue } from '../utils/get-value.js'
 import { lazy } from '../utils/lazy-value.js'
@@ -75,9 +74,15 @@ export interface AstModuleFacts {
 /** Shared state threaded through the per-statement handlers. */
 interface Walk {
   facts: AstModuleFacts
-  /** For `getCommentsBefore` in doc capture — built only if a doc is read. */
-  getSource: () => TSESLint.SourceCode
-  settings: PluginSettings
+  /**
+   * Lazily capture the doc comment block attached to the first of `nodes`
+   * that has leading comments — or `undefined` when the module cannot carry
+   * a deprecation doc at all (see `needDocs` on {@link analyzeAstModule}), in
+   * which case no closure is created and the AST stays collectable.
+   */
+  captureDoc(
+    ...nodes: Array<TSESTree.Node | undefined>
+  ): (() => DocCommentBlock | undefined) | undefined
   /**
    * `import * as ns from 'x'` / `export * as ns from 'x'` identifiers →
    * source specifier, for when a later statement exports the namespace
@@ -90,9 +95,22 @@ interface Walk {
 }
 
 /**
+ * Produce no doc getter — deliberately not a closure over the AST, which is
+ * the entire point of `needDocs === false`.
+ */
+function noDocCapture(): undefined {}
+
+/**
  * Parse `content` with the configured ESLint parser and extract the module's
  * facts from its AST.
  *
+ * @param needDocs Whether doc-comment getters are worth producing. They are
+ *   the only facts that must hold on to the AST, and `module-doc.ts` answers
+ *   `undefined` for any module whose raw content carries no deprecation
+ *   marker — so for those modules the getters can never be read, and building
+ *   them would pin the whole AST (plus its tokens and source text) in
+ *   `moduleInfoCache` for the life of the process. Pass `false` and the
+ *   analysis retains nothing but its own extracted facts.
  * @returns `null` when the file is not unambiguously a module (and has no
  *   dynamic imports) — CommonJS territory, unanalyzable to rules. Parse
  *   failures return facts carrying `errors` and no exports.
@@ -101,6 +119,7 @@ export function analyzeAstModule(
   filepath: string,
   content: string,
   context: ChildContext,
+  needDocs: boolean,
 ): AstModuleFacts | null {
   const facts: AstModuleFacts = {
     format: 'ambiguous',
@@ -114,7 +133,7 @@ export function analyzeAstModule(
   let ast: TSESTree.Program
   let visitorKeys: TSESLint.SourceCode.VisitorKeys | null
   try {
-    ;({ ast, visitorKeys } = parse(filepath, content, context))
+    ;({ ast, visitorKeys } = parse(filepath, content, context, needDocs))
   } catch (error) {
     facts.parseError = error as ParseError
     return facts // can't continue
@@ -122,22 +141,27 @@ export function analyzeAstModule(
 
   facts.cacheable = !!visitorKeys
 
+  /** For `getCommentsBefore` in doc capture — built only if a doc is read. */
+  const getSource = lazy(
+    () =>
+      new TSESLint.SourceCode({
+        text: content,
+        // parse() forces comments/tokens/loc/range onto the parser options
+        // when `needDocs`, so the AST carries what SourceCode requires at
+        // runtime — which is exactly when this is reachable
+        ast: ast as TSESLint.SourceCode.Program,
+        parserServices: null,
+        scopeManager: null,
+        visitorKeys: null,
+      }),
+  )
+
   const tsconfig = lazy(() => getTsconfigWithContext(context))
   const walk: Walk = {
     facts,
-    getSource: lazy(
-      () =>
-        new TSESLint.SourceCode({
-          text: content,
-          // parse() forces comments/tokens/loc/range onto the parser options,
-          // so the AST carries what SourceCode requires at runtime
-          ast: ast as TSESLint.SourceCode.Program,
-          parserServices: null,
-          scopeManager: null,
-          visitorKeys: null,
-        }),
-    ),
-    settings: context.settings,
+    captureDoc: needDocs
+      ? (...nodes) => captureDoc(getSource, context.settings, ...nodes)
+      : noDocCapture,
     namespaces: new Map(),
     remotePath: specifier =>
       relative(specifier, filepath, context.settings, context) ?? null,
@@ -187,7 +211,9 @@ export function analyzeAstModule(
     }
   }
 
-  facts.getModuleDoc = lazy(() => collectModuleDoc(ast))
+  if (needDocs) {
+    facts.getModuleDoc = lazy(() => collectModuleDoc(ast))
+  }
 
   // tsconfig `esModuleInterop` synthesizes a default export when anything is
   // exported and no default exists yet
@@ -222,7 +248,7 @@ function handleImport(walk: Walk, n: TSESTree.ImportDeclaration) {
 /** `export default …` */
 function handleExportDefault(walk: Walk, n: TSESTree.ExportDefaultDeclaration) {
   addOwnExport(walk, 'default', {
-    getDoc: captureDoc(walk.getSource, walk.settings, n),
+    getDoc: walk.captureDoc(n),
     ...(n.declaration.type === 'Identifier' && {
       namespaceTargetPath: namespaceTargetOf(walk, n.declaration.name),
     }),
@@ -279,7 +305,7 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
       case 'TSAbstractClassDeclaration':
       case 'TSModuleDeclaration': {
         addOwnExport(walk, (n.declaration.id as TSESTree.Identifier).name, {
-          getDoc: captureDoc(walk.getSource, walk.settings, n),
+          getDoc: walk.captureDoc(n),
         })
         break
       }
@@ -289,7 +315,7 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
         for (const decl of n.declaration.declarations) {
           recursivePatternCapture(decl.id, id => {
             addOwnExport(walk, (id as TSESTree.Identifier).name, {
-              getDoc: captureDoc(walk.getSource, walk.settings, decl, n),
+              getDoc: walk.captureDoc(decl, n),
             })
           })
         }
@@ -378,7 +404,7 @@ function handleTsExportAssignment(
   if (exportedDecls.length === 0) {
     // not referencing any local declaration, must be re-exporting
     addOwnExport(walk, 'default', {
-      getDoc: captureDoc(walk.getSource, walk.settings, n),
+      getDoc: walk.captureDoc(n),
     })
     return
   }
@@ -393,7 +419,7 @@ function handleTsExportAssignment(
     } else {
       // export as default
       addOwnExport(walk, 'default', {
-        getDoc: captureDoc(walk.getSource, walk.settings, decl),
+        getDoc: walk.captureDoc(decl),
       })
     }
   }
@@ -410,11 +436,11 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
   if (type === 'TSModuleDeclaration') {
     // @ts-expect-error - legacy parser type
     addOwnExport(walk, (decl.body.id as TSESTree.Identifier).name, {
-      getDoc: captureDoc(walk.getSource, walk.settings, decl.body),
+      getDoc: walk.captureDoc(decl.body),
     })
     return
   } else if (type === 'TSModuleBlock' && decl.kind === 'namespace') {
-    const getDoc = captureDoc(walk.getSource, walk.settings, decl.body)
+    const getDoc = walk.captureDoc(decl.body)
     // the namespace name itself is inferred — `hasExplicitExport` skips it
     if ('name' in decl.id) {
       addOwnExport(walk, decl.id.name, { getDoc, inferred: true })
@@ -439,19 +465,13 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
       for (const d of namespaceDecl.declarations) {
         recursivePatternCapture(d.id, id => {
           addOwnExport(walk, (id as TSESTree.Identifier).name, {
-            getDoc: captureDoc(
-              walk.getSource,
-              walk.settings,
-              decl,
-              namespaceDecl,
-              moduleBlockNode,
-            ),
+            getDoc: walk.captureDoc(decl, namespaceDecl, moduleBlockNode),
           })
         })
       }
     } else if ('id' in namespaceDecl) {
       addOwnExport(walk, (namespaceDecl.id as TSESTree.Identifier).name, {
-        getDoc: captureDoc(walk.getSource, walk.settings, moduleBlockNode),
+        getDoc: walk.captureDoc(moduleBlockNode),
       })
     }
   }

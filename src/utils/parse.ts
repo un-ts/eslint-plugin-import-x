@@ -68,10 +68,19 @@ function transformHashbang(text: string) {
   return text.replace(/^#!([^\r\n]+)/u, (_, captured) => `//${captured}`)
 }
 
+/**
+ * @param needDocs Whether the caller will read doc comments. Comments and
+ *   tokens are needed only for that (`ast.comments`, and `SourceCode` refuses
+ *   to construct without `ast.tokens`), and asking for them is not free —
+ *   espree spends roughly a third of its time building them. Parsers that
+ *   always produce them (`@typescript-eslint/parser`) are unaffected either
+ *   way.
+ */
 export function parse(
   path: string,
   content: string,
   context: ChildContext | RuleContext,
+  needDocs = true,
 ) {
   if (context == null) {
     throw new Error('need context to parse properly')
@@ -91,10 +100,10 @@ export function parse(
   parserOptions = { ...parserOptions }
   parserOptions.ecmaFeatures = { ...parserOptions.ecmaFeatures }
 
-  // always include comments and tokens (for doc parsing)
-  parserOptions.comment = true
-  parserOptions.attachComment = true // keeping this for backward-compat with  older parsers
-  parserOptions.tokens = true
+  // include comments and tokens only when docs will actually be read
+  parserOptions.comment = needDocs
+  parserOptions.attachComment = needDocs // keeping this for backward-compat with  older parsers
+  parserOptions.tokens = needDocs
 
   // attach node locations
   parserOptions.loc = true
