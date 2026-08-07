@@ -242,17 +242,28 @@ export class ModuleInfo {
       return remember(null)
     }
 
-    const facts = analyzeAstModule(filepath, content, context)
+    // Decided before parsing: a module with no deprecation marker can never
+    // answer a doc query, so the analysis must not build the doc getters that
+    // would pin its AST in this cache — nor ask the parser for the comments
+    // and tokens they need. See `needDocs` on `analyzeAstModule`.
+    const maybeHasDeprecationDoc = hasDeprecationMarker(
+      content,
+      context.settings,
+    )
+
+    const facts = analyzeAstModule(
+      filepath,
+      content,
+      context,
+      maybeHasDeprecationDoc,
+    )
     if (facts == null) {
       log('ignored path due to ambiguous parse:', filepath)
       return remember(null)
     }
 
     const info = ModuleInfo.fromFacts(filepath, context, facts, true)
-    info.maybeHasDeprecationDoc = hasDeprecationMarker(
-      content,
-      context.settings,
-    )
+    info.maybeHasDeprecationDoc = maybeHasDeprecationDoc
     // an unreliable parse (no visitor keys) must not be cached
     return facts.cacheable ? remember(info) : info
   }
@@ -408,6 +419,7 @@ export class ModuleInfo {
 
   // Lazily initialized memo caches.
   declare private exportInfoCache?: Map<string, ExportMeta | null | undefined>
+  declare private hasExportCache?: Map<string, boolean>
   declare private hasExportsCache?: boolean
 
   private constructor(
@@ -443,9 +455,19 @@ export class ModuleInfo {
   /**
    * True if `name` is exported by this module, expanding `export * from`
    * (but default exports must be explicitly re-exported).
+   *
+   * Memoized per name: `namespace` asks once per member access and
+   * `no-named-as-default` once per specifier, and each miss walks the whole
+   * `export *` graph.
    */
   hasExport(name: string): boolean {
-    return hasExport(this, name)
+    this.hasExportCache ??= new Map()
+    let answer = this.hasExportCache.get(name)
+    if (answer === undefined) {
+      answer = hasExport(this, name)
+      this.hasExportCache.set(name, answer)
+    }
+    return answer
   }
 
   /**
@@ -484,6 +506,12 @@ export class ModuleInfo {
    *   need parse-derived data (doc comments, the default export's declared
    *   name): a lexed module carries none, so the first call runs (and
    *   memoizes) the AST route for the same file.
+   *
+   *   Callers must check {@link maybeHasDeprecationDoc} first, as
+   *   `module-doc.ts` does. An AST-built module without a marker returns
+   *   itself carrying no doc getters — the analysis skipped them precisely
+   *   because no doc can exist — so calling this unguarded would silently
+   *   answer `undefined` rather than escalate.
    */
   astAnalysis(): ModuleInfo | null {
     if (this.builtFromAst) {
@@ -493,7 +521,9 @@ export class ModuleInfo {
       let facts = null
       try {
         const content = fs.readFileSync(this.path, { encoding: 'utf8' })
-        facts = analyzeAstModule(this.path, content, this.context)
+        // reached only for a module that carries a deprecation marker, and
+        // reached *because* a doc is being read — so docs are the point here
+        facts = analyzeAstModule(this.path, content, this.context, true)
       } catch {
         // unreadable file — nothing more to know
       }

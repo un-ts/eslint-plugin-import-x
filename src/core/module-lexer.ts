@@ -113,6 +113,23 @@ function stripComments(statement: string) {
     .trimStart()
 }
 
+/**
+ * Comment-stripped source text of a statement, memoized by its start offset —
+ * both the export-from scan and the import-edge scan need the same slices, and
+ * stripping allocates two intermediate strings each time.
+ */
+function createStatementReader(content: string) {
+  const cache = new Map<number, string>()
+  return (imp: esModuleLexer.ImportSpecifier) => {
+    let statement = cache.get(imp.ss)
+    if (statement === undefined) {
+      statement = stripComments(content.slice(imp.ss, imp.se))
+      cache.set(imp.ss, statement)
+    }
+    return statement
+  }
+}
+
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
 const CALL_HEAD_PATTERN = /^[A-Za-z_$][\w$]*\s*\(\s*/
 const PAREN_HEAD_PATTERN = /^\(\s*/
@@ -235,16 +252,26 @@ function parseReexportLocals(statement: string) {
   return locals
 }
 
+/**
+ * Offsets → `{ line, column }`, resolved eagerly by the caller so that
+ * nothing downstream keeps `content` alive: a cached `ModuleInfo` must not
+ * retain the source text of a bundled dependency (see `needDocs` on
+ * `analyzeAstModule` for the same concern on the AST route).
+ */
 function createOffsetToLoc(content: string) {
   let lineStarts: number[] | undefined
 
   function position(offset: number): TSESTree.Position {
     if (!lineStarts) {
+      // native search beats a per-character scan: one step per line, not
+      // one per byte
       lineStarts = [0]
-      for (let i = 0; i < content.length; i++) {
-        if (content.codePointAt(i) === 10 /* \n */) {
-          lineStarts.push(i + 1)
-        }
+      for (
+        let i = content.indexOf('\n');
+        i !== -1;
+        i = content.indexOf('\n', i + 1)
+      ) {
+        lineStarts.push(i + 1)
       }
     }
     let low = 0
@@ -317,7 +344,14 @@ export function lexModule(
         ownExports: [],
         reexports: [],
         namespaceReexports: [],
-        imports: collectImportEdges(content, imports, new Set()),
+        // no static import declarations can exist here (see `isModule`), so
+        // no statement text is ever read
+        imports: collectImportEdges(
+          content,
+          imports,
+          new Set(),
+          createStatementReader(content),
+        ),
       }
     }
 
@@ -330,6 +364,8 @@ export function lexModule(
       return null
     }
   }
+
+  const readStatement = createStatementReader(content)
 
   const ownExports: string[] = []
   const reexports: LexedReexport[] = []
@@ -346,7 +382,7 @@ export function lexModule(
     if (imp.d !== -1 || imp.n == null) {
       continue
     }
-    const statement = stripComments(content.slice(imp.ss, imp.se))
+    const statement = readStatement(imp)
     if (!statement.startsWith('export')) {
       continue
     }
@@ -393,7 +429,12 @@ export function lexModule(
     ownExports,
     reexports,
     namespaceReexports,
-    imports: collectImportEdges(content, imports, skippedImportEdges),
+    imports: collectImportEdges(
+      content,
+      imports,
+      skippedImportEdges,
+      readStatement,
+    ),
     ...(defaultExportSourceName && { defaultExportSourceName }),
   }
 }
@@ -402,6 +443,7 @@ function collectImportEdges(
   content: string,
   imports: readonly esModuleLexer.ImportSpecifier[],
   skippedStatements: ReadonlySet<number>,
+  readStatement: (imp: esModuleLexer.ImportSpecifier) => string,
 ): LexedImport[] {
   const offsetToLoc = createOffsetToLoc(content)
   const edges: LexedImport[] = []
@@ -414,7 +456,7 @@ function collectImportEdges(
     const dynamic = imp.d >= 0
     let starReexport = false
     if (!dynamic) {
-      const statement = stripComments(content.slice(imp.ss, imp.se))
+      const statement = readStatement(imp)
       starReexport =
         statement.startsWith('export') &&
         EXPORT_STAR_PATTERN.test(statement) &&
