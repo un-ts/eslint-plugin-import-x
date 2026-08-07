@@ -4,9 +4,16 @@ import * as cjsModuleLexer from 'cjs-module-lexer'
 import * as esModuleLexer from 'es-module-lexer'
 
 /**
- * Lexer-based analysis of external (`node_modules`) JavaScript modules — the
- * fast path that avoids running a full ESLint parser on third-party code.
+ * Lexer-based analysis of plain JavaScript modules, third-party or
+ * project-internal — the fast path that avoids running a full ESLint parser.
  * Pure lexing only: this module knows nothing about `ModuleInfo`.
+ *
+ * Correctness rule for everything here: es-module-lexer is permissive, and
+ * syntax it accepts but reads differently than a real parser would must send
+ * the file back to the AST route via a `null` return, never produce a
+ * best-effort answer. See `TYPE_MODIFIER_PATTERN` and
+ * `NON_STANDARD_EXPORT_FROM_PATTERN` for the two cases that need detecting;
+ * anything the lexer outright rejects (JSX) falls back on its own.
  *
  * ESLint rules are synchronous, so both lexers are initialized with their
  * Node.js-specific `initSync()` (synchronous WebAssembly compilation).
@@ -29,8 +36,11 @@ export interface LexedReexport {
   specifier: string
 }
 
-/** One `export * as ns from '...'`. */
-export interface LexedNamespaceReexport {
+/**
+ * An own export that is a namespace object: `export * as ns from '...'`, or a
+ * re-exported `import * as ns` binding (`export { ns }`, `export default ns`).
+ */
+export interface LexedNamespaceExport {
   exported: string
   specifier: string
 }
@@ -55,7 +65,7 @@ export interface LexedEsModule {
   /** Names exported by the module's own code (including `default`). */
   ownExports: string[]
   reexports: LexedReexport[]
-  namespaceReexports: LexedNamespaceReexport[]
+  namespaceExports: LexedNamespaceExport[]
   imports: LexedImport[]
   /**
    * Derived without a parser and definitive for lexable JavaScript:
@@ -114,21 +124,56 @@ function stripComments(statement: string) {
 }
 
 /**
- * Comment-stripped source text of a statement, memoized by its start offset —
- * both the export-from scan and the import-edge scan need the same slices, and
- * stripping allocates two intermediate strings each time.
+ * Comment-stripped text of a statement up to (not including) the opening quote
+ * of its specifier — i.e. the whole import/export clause, which is all any
+ * caller here inspects. Memoized by statement start offset: three passes want
+ * the same slices, and stripping allocates two intermediate strings each time.
+ *
+ * Cutting at the specifier offset rather than searching for `from` matters:
+ * `import * as ns from './from'` would otherwise be split on the wrong token.
  */
-function createStatementReader(content: string) {
+function createClauseReader(content: string) {
   const cache = new Map<number, string>()
   return (imp: esModuleLexer.ImportSpecifier) => {
-    let statement = cache.get(imp.ss)
-    if (statement === undefined) {
-      statement = stripComments(content.slice(imp.ss, imp.se))
-      cache.set(imp.ss, statement)
+    let clause = cache.get(imp.ss)
+    if (clause === undefined) {
+      clause = stripComments(content.slice(imp.ss, Math.max(imp.ss, imp.s - 1)))
+      cache.set(imp.ss, clause)
     }
-    return statement
+    return clause
   }
 }
+
+/**
+ * A `type`/`typeof` modifier in an import clause. es-module-lexer happily
+ * accepts Flow's `import type { T } from '...'`, `import typeof T from '...'`
+ * and TS's inline `import { type T, v }` — but those bind nothing at runtime,
+ * so treating them as value imports would report edges that do not exist. A
+ * file using them is not the plain JavaScript this route assumes and belongs
+ * to the AST parser.
+ *
+ * Deliberately broad: a binding merely *named* `type` (`import { type as t }`)
+ * also falls back, which costs a parse but is never wrong. Under-matching
+ * here would produce false reports, so the bias is intentional.
+ */
+const TYPE_MODIFIER_PATTERN = /\b(?:type|typeof)\b/
+
+/** The `ns` of `import * as ns from '...'` / `import d, * as ns from '...'`. */
+const NAMESPACE_CLAUSE_PATTERN = /\*\s*as\s+([A-Za-z_$][\w$]*)/
+
+/**
+ * `export default from './x'` / `export baz from './x'` — the stage-1
+ * export-extensions proposal that `@babel/eslint-parser` accepts and the AST
+ * route models as `ExportDefaultSpecifier`. es-module-lexer does not merely
+ * mis-read these: it reports **no import edge at all**, and for the named form
+ * no export either, so the module link disappears without a trace. Nothing in
+ * the lexer's output can betray them, which is why this has to scan content.
+ *
+ * Standard export-from syntax never matches — `{` and `*` are not identifiers,
+ * and `export default <expr>` has no following `from '`.
+ */
+const NON_STANDARD_EXPORT_FROM_PATTERN =
+  /^\s*export\s+[A-Za-z_$][\w$]*\s+from\s*['"]/m
 
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
 const CALL_HEAD_PATTERN = /^[A-Za-z_$][\w$]*\s*\(\s*/
@@ -335,6 +380,10 @@ export function lexModule(
       imports.some(i => i.d === -1) ||
       !imports.some(i => i.d === -2))
 
+  if (isModule && NON_STANDARD_EXPORT_FROM_PATTERN.test(content)) {
+    return null // see NON_STANDARD_EXPORT_FROM_PATTERN
+  }
+
   if (!isModule) {
     if (imports.some(i => i.d >= 0)) {
       // dynamic `import()` only — same as the AST path's dynamic-import scan:
@@ -343,14 +392,14 @@ export function lexModule(
         format: 'ambiguous',
         ownExports: [],
         reexports: [],
-        namespaceReexports: [],
+        namespaceExports: [],
         // no static import declarations can exist here (see `isModule`), so
-        // no statement text is ever read
+        // no clause text is ever read
         imports: collectImportEdges(
           content,
           imports,
           new Set(),
-          createStatementReader(content),
+          createClauseReader(content),
         ),
       }
     }
@@ -365,16 +414,24 @@ export function lexModule(
     }
   }
 
-  const readStatement = createStatementReader(content)
+  const readClause = createClauseReader(content)
 
   const ownExports: string[] = []
   const reexports: LexedReexport[] = []
-  const namespaceReexports: LexedNamespaceReexport[] = []
+  const namespaceExports: LexedNamespaceExport[] = []
+
+  /**
+   * `import * as ns from '...'` bindings — the AST route's `walk.namespaces`,
+   * so that a later `export { ns }` is recognized as a namespace object rather
+   * than an opaque own export. Import bindings are module-scoped and neither
+   * shadowable nor reassignable, so joining exports to them by name is sound.
+   */
+  const namespaceBindings = new Map<string, string>()
 
   // export-from statements, keyed by statement start offset
   const exportFromStatements = new Map<
     number,
-    { specifier: string; statement: string; starAs: boolean }
+    { specifier: string; clause: string; starAs: boolean }
   >()
   const skippedImportEdges = new Set<number>()
 
@@ -382,17 +439,24 @@ export function lexModule(
     if (imp.d !== -1 || imp.n == null) {
       continue
     }
-    const statement = readStatement(imp)
-    if (!statement.startsWith('export')) {
+    const clause = readClause(imp)
+    if (TYPE_MODIFIER_PATTERN.test(clause)) {
+      return null // not plain JavaScript — see TYPE_MODIFIER_PATTERN
+    }
+    if (!clause.startsWith('export')) {
+      const namespace = NAMESPACE_CLAUSE_PATTERN.exec(clause)
+      if (namespace) {
+        namespaceBindings.set(namespace[1], imp.n)
+      }
       continue
     }
-    const starAs = EXPORT_STAR_AS_PATTERN.test(statement)
+    const starAs = EXPORT_STAR_AS_PATTERN.test(clause)
     if (starAs) {
       // parity with the AST path: `export * as ns from` gets a lazy
       // namespace, not an import edge
       skippedImportEdges.add(imp.ss)
     }
-    exportFromStatements.set(imp.ss, { specifier: imp.n, statement, starAs })
+    exportFromStatements.set(imp.ss, { specifier: imp.n, clause, starAs })
   }
 
   let defaultExportSourceName: DefaultExportSourceName | undefined
@@ -400,21 +464,37 @@ export function lexModule(
   for (const exp of exports) {
     const stmt = exportFromStatements.get(exp.ss)
     if (!stmt) {
-      ownExports.push(exp.n)
+      let localName = exp.ln
       if (exp.n === 'default') {
         defaultExportSourceName = deriveDefaultExportSourceName(
           stripComments(content.slice(exp.ss, exp.ss + 512)),
           exp.ln,
         )
+        // `export default ns` — es-module-lexer reports no local name for an
+        // expression default, but a name derived from a bare binding
+        // reference is exactly the one to look up
+        localName ??= defaultExportSourceName?.isBoundName
+          ? defaultExportSourceName.name
+          : undefined
+      }
+      // `export { ns }` / `export { ns as x }` / `export default ns`, where
+      // `ns` is an `import * as ns` binding: an own export that *is* a
+      // namespace object, matching the AST route's `namespaceTargetOf`
+      const namespaceTarget =
+        localName == null ? undefined : namespaceBindings.get(localName)
+      if (namespaceTarget === undefined) {
+        ownExports.push(exp.n)
+      } else {
+        namespaceExports.push({ exported: exp.n, specifier: namespaceTarget })
       }
       continue
     }
     if (stmt.starAs) {
-      namespaceReexports.push({ exported: exp.n, specifier: stmt.specifier })
+      namespaceExports.push({ exported: exp.n, specifier: stmt.specifier })
       continue
     }
     // `export { a, b as c } from '...'` — recover the local name
-    const local = exp.ln ?? parseReexportLocals(stmt.statement).get(exp.n)
+    const local = exp.ln ?? parseReexportLocals(stmt.clause).get(exp.n)
     if (local == null) {
       // exotic syntax (e.g. string export names): model as an own export so
       // lookups still succeed (fails open, no deep verification)
@@ -428,12 +508,12 @@ export function lexModule(
     format: 'module',
     ownExports,
     reexports,
-    namespaceReexports,
+    namespaceExports,
     imports: collectImportEdges(
       content,
       imports,
       skippedImportEdges,
-      readStatement,
+      readClause,
     ),
     ...(defaultExportSourceName && { defaultExportSourceName }),
   }
@@ -443,7 +523,7 @@ function collectImportEdges(
   content: string,
   imports: readonly esModuleLexer.ImportSpecifier[],
   skippedStatements: ReadonlySet<number>,
-  readStatement: (imp: esModuleLexer.ImportSpecifier) => string,
+  readClause: (imp: esModuleLexer.ImportSpecifier) => string,
 ): LexedImport[] {
   const offsetToLoc = createOffsetToLoc(content)
   const edges: LexedImport[] = []
@@ -456,16 +536,21 @@ function collectImportEdges(
     const dynamic = imp.d >= 0
     let starReexport = false
     if (!dynamic) {
-      const statement = readStatement(imp)
+      const clause = readClause(imp)
       starReexport =
-        statement.startsWith('export') &&
-        EXPORT_STAR_PATTERN.test(statement) &&
-        !EXPORT_STAR_AS_PATTERN.test(statement)
+        clause.startsWith('export') &&
+        EXPORT_STAR_PATTERN.test(clause) &&
+        !EXPORT_STAR_AS_PATTERN.test(clause)
     }
     edges.push({
       specifier: imp.n,
-      // include the quotes, like a string literal AST node's loc
-      loc: offsetToLoc(imp.s - 1, imp.e + 1),
+      // Include the quotes, like a string literal AST node's loc. A dynamic
+      // import's offsets already cover them (es-module-lexer reports the
+      // specifier *expression* there), while a static import's do not —
+      // widening both alike would span the `import(...)` parentheses.
+      loc: dynamic
+        ? offsetToLoc(imp.s, imp.e)
+        : offsetToLoc(imp.s - 1, imp.e + 1),
       dynamic,
       starReexport,
     })
