@@ -124,6 +124,61 @@ export default b
     expect(lexModule(`export baz from './named-exports.js'`, 'f.js')).toBeNull()
   })
 
+  it('falls back to the AST route for U+2028/U+2029 line separators', () => {
+    // ECMAScript treats both as line terminators; es-module-lexer does not, and
+    // silently drops every import edge after one
+    for (const separator of ['\u2028', '\u2029']) {
+      expect(
+        lexModule(
+          `import a from './a.js'${separator}import b from './b.js'`,
+          'f.js',
+        ),
+      ).toBeNull()
+    }
+  })
+
+  it('locates specifiers across every line terminator', () => {
+    // a lone `\r` is a line terminator to ECMAScript and to espree, so getting
+    // it wrong misplaces every later position — which silently breaks the
+    // loc-based join that recovers `imported` from the AST twin
+    const lexed = lexModule(
+      `import a from './a.js'\rimport b from './b.js'\r\nimport c from './c.js'\nimport d from './d.js'`,
+      'f.js',
+    ) as LexedEsModule
+
+    expect(
+      lexed.imports.map(i => `${i.specifier}@${i.loc.start.line}`),
+    ).toEqual(['./a.js@1', './b.js@2', './c.js@3', './d.js@4'])
+  })
+
+  it('finds no default export name when a keyword operator continues it', () => {
+    // `instanceof`/`in` are the only binary operators spelled as words, so a
+    // punctuation-only continuation check read these as the bare name `Foo`.
+    // The AST route sees a BinaryExpression and finds no name.
+    for (const operator of ['instanceof', 'in']) {
+      const lexed = lexModule(
+        `export default Foo ${operator} Bar`,
+        'f.js',
+      ) as LexedEsModule
+      expect(lexed.defaultExportSourceName).toBeUndefined()
+    }
+  })
+
+  it('still names a bare default export followed by other statements', () => {
+    // guards the keyword-continuation check against over-matching: `inx` and
+    // `instances` merely start with those keywords
+    for (const next of ['const z = 1', 'let inx = 1', 'let instances = []']) {
+      const lexed = lexModule(
+        `export default Foo\n${next}`,
+        'f.js',
+      ) as LexedEsModule
+      expect(lexed.defaultExportSourceName).toEqual({
+        name: 'Foo',
+        isBoundName: true,
+      })
+    }
+  })
+
   it('keeps standard export-from syntax on the lexer route', () => {
     // guards the stage-1 detector against over-matching
     expect(lexModule(`export { baz } from './x.js'`, 'f.js')).toMatchObject({

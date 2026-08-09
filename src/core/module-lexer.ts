@@ -11,9 +11,13 @@ import * as esModuleLexer from 'es-module-lexer'
  * Correctness rule for everything here: es-module-lexer is permissive, and
  * syntax it accepts but reads differently than a real parser would must send
  * the file back to the AST route via a `null` return, never produce a
- * best-effort answer. See `TYPE_MODIFIER_PATTERN` and
- * `NON_STANDARD_EXPORT_FROM_PATTERN` for the two cases that need detecting;
- * anything the lexer outright rejects (JSX) falls back on its own.
+ * best-effort answer. See `TYPE_MODIFIER_PATTERN`,
+ * `NON_STANDARD_EXPORT_FROM_PATTERN` and `LINE_SEPARATOR_PATTERN` for the cases
+ * that need detecting; anything the lexer outright rejects (JSX) falls back on
+ * its own.
+ *
+ * Callers must pass BOM-free content — `ModuleInfo.for` strips it, matching what
+ * `parse` and ESLint itself do, so that offsets from both routes agree.
  *
  * ESLint rules are synchronous, so both lexers are initialized with their
  * Node.js-specific `initSync()` (synchronous WebAssembly compilation).
@@ -175,6 +179,20 @@ const NAMESPACE_CLAUSE_PATTERN = /\*\s*as\s+([A-Za-z_$][\w$]*)/
 const NON_STANDARD_EXPORT_FROM_PATTERN =
   /^\s*export\s+[A-Za-z_$][\w$]*\s+from\s*['"]/m
 
+/**
+ * U+2028 LINE SEPARATOR / U+2029 PARAGRAPH SEPARATOR. ECMAScript counts both as
+ * line terminators; es-module-lexer does not, and silently **drops every
+ * import edge after one** (verified: the second of two imports disappears from
+ * its output entirely). Nothing in the result betrays the loss, so the only
+ * safe move is to hand the file to the AST parser.
+ *
+ * Deliberately checked against the whole file rather than just code: these
+ * characters are legal inside string literals, so a data-heavy module can fall
+ * back needlessly. That costs a parse; guessing which occurrences are code
+ * would cost correctness.
+ */
+const LINE_SEPARATOR_PATTERN = /[\u2028\u2029]/
+
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
 const CALL_HEAD_PATTERN = /^[A-Za-z_$][\w$]*\s*\(\s*/
 const PAREN_HEAD_PATTERN = /^\(\s*/
@@ -185,6 +203,16 @@ const IDENTIFIER_HEAD_PATTERN = /^[A-Za-z_$][\w$]*/
  * a remaining `=` is an arrow (`=>`) or comparison (`==`).
  */
 const EXPRESSION_CONTINUATION_PATTERN = /^[.([`+\-*/%<>&|^?,:!~=]/
+/**
+ * The same thing, for the two binary operators that are *words* rather than
+ * punctuation. Without this, `export default Foo instanceof Bar` read as the
+ * bare identifier `Foo` and reported it as the default's declared name, while
+ * the AST route sees a `BinaryExpression` and correctly finds no name — a
+ * `no-rename-default` false positive on valid code. `NON_NAME_KEYWORDS` already
+ * lists both, but is only consulted for the identifier itself, never for what
+ * follows it.
+ */
+const KEYWORD_CONTINUATION_PATTERN = /^(?:instanceof|in)\b/
 /** Words the identifier pattern matches that can never be a default's name. */
 const NON_NAME_KEYWORDS = new Set([
   'async',
@@ -265,7 +293,11 @@ function deriveDefaultExportSourceName(
     return { name, isBoundName: true }
   }
   // a bare identifier: nothing may continue the expression
-  return rest === '' || !EXPRESSION_CONTINUATION_PATTERN.test(rest)
+  return rest === '' ||
+    !(
+      EXPRESSION_CONTINUATION_PATTERN.test(rest) ||
+      KEYWORD_CONTINUATION_PATTERN.test(rest)
+    )
     ? { name, isBoundName: true }
     : undefined
 }
@@ -308,15 +340,34 @@ function createOffsetToLoc(content: string) {
 
   function position(offset: number): TSESTree.Position {
     if (!lineStarts) {
-      // native search beats a per-character scan: one step per line, not
-      // one per byte
       lineStarts = [0]
-      for (
-        let i = content.indexOf('\n');
-        i !== -1;
-        i = content.indexOf('\n', i + 1)
-      ) {
-        lineStarts.push(i + 1)
+      if (content.includes('\r')) {
+        // `\r\n` and lone `\r` both have to be recognized — ECMAScript counts
+        // each as one line terminator, and espree agrees. Splitting on `\n`
+        // alone put every position after a lone `\r` on the wrong line, which
+        // silently broke the loc join in `withLazyImported`.
+        // (U+2028/U+2029 cannot reach here; see LINE_SEPARATOR_PATTERN.)
+        for (let i = 0; i < content.length; i++) {
+          const code = content.codePointAt(i)
+          if (code === 13 /* \r */) {
+            if (content.codePointAt(i + 1) === 10 /* \n */) {
+              i++ // CRLF is a single terminator
+            }
+            lineStarts.push(i + 1)
+          } else if (code === 10 /* \n */) {
+            lineStarts.push(i + 1)
+          }
+        }
+      } else {
+        // LF only — the overwhelmingly common case. Native search beats a
+        // per-character scan: one step per line, not one per byte.
+        for (
+          let i = content.indexOf('\n');
+          i !== -1;
+          i = content.indexOf('\n', i + 1)
+        ) {
+          lineStarts.push(i + 1)
+        }
       }
     }
     let low = 0
@@ -357,6 +408,10 @@ export function lexModule(
 ): LexedModule | null {
   if (!ensureLexersInitialized()) {
     return null
+  }
+
+  if (LINE_SEPARATOR_PATTERN.test(content)) {
+    return null // edges would vanish — see LINE_SEPARATOR_PATTERN
   }
 
   let imports: readonly esModuleLexer.ImportSpecifier[]

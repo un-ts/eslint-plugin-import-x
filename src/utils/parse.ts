@@ -60,7 +60,13 @@ function makeParseReturn(
   }
 }
 
-function stripUnicodeBOM(text: string) {
+/**
+ * ESLint strips a leading BOM before parsing, so every offset a rule sees is
+ * BOM-free. Exported because the core must apply it to file content it reads
+ * itself: the lexer route would otherwise read a different string than this
+ * one parses, and their offsets would disagree by one.
+ */
+export function stripUnicodeBOM(text: string) {
   return text.codePointAt(0) === 0xfe_ff ? text.slice(1) : text
 }
 
