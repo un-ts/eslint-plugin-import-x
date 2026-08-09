@@ -23,6 +23,7 @@ import type {
 } from '../types.js'
 import { childContext } from '../utils/child-context.js'
 import { hasValidExtension, ignore } from '../utils/ignore.js'
+import { stripUnicodeBOM } from '../utils/parse.js'
 import { relative, resolve } from '../utils/resolve.js'
 import { isMaybeUnambiguousModule } from '../utils/unambiguous.js'
 
@@ -261,6 +262,13 @@ export class ModuleInfo {
       // analysis — unanalyzable, and not cached: the failure may be transient
       return null
     }
+
+    // Normalize once, above the route split, so both routes and every content
+    // scan below see the same string ESLint would. `parse` strips the BOM
+    // before parsing, so leaving it on shifted every lexer offset by one
+    // against the AST's — which silently broke the `withLazyImported` join —
+    // and made es-module-lexer misread the first statement outright.
+    content = stripUnicodeBOM(content)
 
     if (isLexableModule(filepath, context)) {
       const lexed = lexModule(content, filepath)

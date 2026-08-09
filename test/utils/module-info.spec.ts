@@ -199,6 +199,36 @@ describe('ModuleInfo', () => {
     }
   })
 
+  it('analyzes a file with a leading BOM identically to one without', () => {
+    const plain = testFilePath('bom-plain.js')
+    const withBom = testFilePath('bom-marked.js')
+    const body = "import { a } from './named-exports.js'\nexport const y = a\n"
+    try {
+      fs.writeFileSync(plain, body)
+      // ESLint strips the BOM before parsing, so leaving it on shifted every
+      // lexer offset by one against the AST's and made es-module-lexer misread
+      // the first statement — classifying the file as a script, or dropping its
+      // import edge without a trace
+      fs.writeFileSync(withBom, `\uFEFF${body}`)
+
+      const shape = (source: string) => {
+        const info = ModuleInfo.get(source, fakeContext)
+        expect(info).not.toBeNull()
+        return {
+          exports: [...info!.ownExports.keys()],
+          edges: [...info!.getImports()].map(([, imported]) =>
+            [...imported.declarations].map(d => d.source.loc.start),
+          ),
+        }
+      }
+
+      expect(shape('./bom-marked')).toEqual(shape('./bom-plain'))
+    } finally {
+      fs.rmSync(plain, { force: true })
+      fs.rmSync(withBom, { force: true })
+    }
+  })
+
   it('does not return a cached copy with different settings', () => {
     const firstAccess = ModuleInfo.get('./named-exports', fakeContext)
     expect(firstAccess).toBeDefined()
