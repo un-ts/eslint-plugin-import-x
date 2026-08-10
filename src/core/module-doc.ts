@@ -35,6 +35,17 @@ export interface DocCommentBlock {
 }
 
 /**
+ * The configured docstyles, defaulted. Shared so that the marker fast path and
+ * the parser selection can never disagree about which styles are in play — if
+ * they did, the fast path would suppress docs the parsers could have read.
+ */
+function getDocStyles(settings: PluginSettings) {
+  return settings['import-x/docstyle'] || DEFAULT_DOC_STYLES
+}
+
+const DEFAULT_DOC_STYLES = ['jsdoc'] as const
+
+/**
  * @internal Whether the raw module content mentions a deprecation marker of
  *   any configured docstyle — the short-circuit that makes doc queries free
  *   for the overwhelming majority of modules.
@@ -43,8 +54,7 @@ export function hasDeprecationMarker(
   content: string,
   settings: PluginSettings,
 ): boolean {
-  const docStyles = settings['import-x/docstyle'] || ['jsdoc']
-  for (const style of docStyles) {
+  for (const style of getDocStyles(settings)) {
     if (
       style === 'jsdoc'
         ? content.includes('@deprecated')
@@ -166,8 +176,7 @@ const availableDocStyleParsers: Record<DocStyle, DocStyleParser> = {
 
 /** The parsers for the configured `import-x/docstyle`, in order. */
 function selectDocStyleParsers(settings: PluginSettings): DocStyleParser[] {
-  const docStyles = settings['import-x/docstyle'] || ['jsdoc']
-  return docStyles.map(style => availableDocStyleParsers[style])
+  return getDocStyles(settings).map(style => availableDocStyleParsers[style])
 }
 
 /**

@@ -244,14 +244,7 @@ const NON_NAME_KEYWORDS = new Set([
  */
 function deriveDefaultExportSourceName(
   head: string,
-  localName: string | undefined,
 ): DefaultExportSourceName | undefined {
-  // es-module-lexer reports the local name for every *declared* form:
-  // `export default function foo` / `class Foo` / `export { x as default }`
-  if (localName != null) {
-    return { name: localName, isBoundName: false }
-  }
-
   const statement = EXPORT_DEFAULT_PATTERN.exec(head)
   if (!statement) {
     return
@@ -449,13 +442,8 @@ export function lexModule(
         reexports: [],
         namespaceExports: [],
         // no static import declarations can exist here (see `isModule`), so
-        // no clause text is ever read
-        imports: collectImportEdges(
-          content,
-          imports,
-          new Set(),
-          createClauseReader(content),
-        ),
+        // neither statement set can have members
+        imports: collectImportEdges(content, imports, new Set(), new Set()),
       }
     }
 
@@ -489,6 +477,8 @@ export function lexModule(
     { specifier: string; clause: string; starAs: boolean }
   >()
   const skippedImportEdges = new Set<number>()
+  /** Statement offsets of plain `export * from '...'` edges. */
+  const starReexportEdges = new Set<number>()
 
   for (const imp of imports) {
     if (imp.d !== -1 || imp.n == null) {
@@ -510,6 +500,10 @@ export function lexModule(
       // parity with the AST path: `export * as ns from` gets a lazy
       // namespace, not an import edge
       skippedImportEdges.add(imp.ss)
+    } else if (EXPORT_STAR_PATTERN.test(clause)) {
+      // classify the edge here, while the clause is in hand — the edge pass
+      // would otherwise re-run all three patterns over the same string
+      starReexportEdges.add(imp.ss)
     }
     exportFromStatements.set(imp.ss, { specifier: imp.n, clause, starAs })
   }
@@ -521,16 +515,22 @@ export function lexModule(
     if (!stmt) {
       let localName = exp.ln
       if (exp.n === 'default') {
-        defaultExportSourceName = deriveDefaultExportSourceName(
-          stripComments(content.slice(exp.ss, exp.ss + 512)),
-          exp.ln,
-        )
-        // `export default ns` — es-module-lexer reports no local name for an
-        // expression default, but a name derived from a bare binding
-        // reference is exactly the one to look up
-        localName ??= defaultExportSourceName?.isBoundName
-          ? defaultExportSourceName.name
-          : undefined
+        if (exp.ln == null) {
+          // an expression default: only the statement text can name it, and
+          // a name derived from a bare binding reference is exactly the one to
+          // look up below for `export default ns`
+          defaultExportSourceName = deriveDefaultExportSourceName(
+            stripComments(content.slice(exp.ss, exp.ss + 512)),
+          )
+          if (defaultExportSourceName?.isBoundName) {
+            localName = defaultExportSourceName.name
+          }
+        } else {
+          // es-module-lexer reports the local name for every *declared* form —
+          // `export default function foo` / `class Foo` / `export { x as default }`
+          // — so no statement text needs slicing or comment-stripping
+          defaultExportSourceName = { name: exp.ln, isBoundName: false }
+        }
       }
       // `export { ns }` / `export { ns as x }` / `export default ns`, where
       // `ns` is an `import * as ns` binding: an own export that *is* a
@@ -568,7 +568,7 @@ export function lexModule(
       content,
       imports,
       skippedImportEdges,
-      readClause,
+      starReexportEdges,
     ),
     ...(defaultExportSourceName && { defaultExportSourceName }),
   }
@@ -578,7 +578,7 @@ function collectImportEdges(
   content: string,
   imports: readonly esModuleLexer.ImportSpecifier[],
   skippedStatements: ReadonlySet<number>,
-  readClause: (imp: esModuleLexer.ImportSpecifier) => string,
+  starReexportStatements: ReadonlySet<number>,
 ): LexedImport[] {
   const offsetToLoc = createOffsetToLoc(content)
   const edges: LexedImport[] = []
@@ -589,14 +589,7 @@ function collectImportEdges(
       continue
     }
     const dynamic = imp.d >= 0
-    let starReexport = false
-    if (!dynamic) {
-      const clause = readClause(imp)
-      starReexport =
-        clause.startsWith('export') &&
-        EXPORT_STAR_PATTERN.test(clause) &&
-        !EXPORT_STAR_AS_PATTERN.test(clause)
-    }
+    const starReexport = !dynamic && starReexportStatements.has(imp.ss)
     edges.push({
       specifier: imp.n,
       // Include the quotes, like a string literal AST node's loc. A dynamic
