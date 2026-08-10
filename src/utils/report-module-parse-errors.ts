@@ -16,11 +16,9 @@ export function reportModuleParseErrors(
   moduleInfo: { parseError: ParseError | undefined },
   declaration: { source: TSESTree.Literal | null },
 ) {
-  if (!declaration.source) {
-    throw new Error('declaration.source is null')
-  }
   const err = moduleInfo.parseError
-  if (!err) {
+  // nothing to report, or nowhere to report it — a rule must never throw
+  if (!err || !declaration.source) {
     return
   }
   const msg = `${err.message} (${err.lineNumber}:${err.column})`

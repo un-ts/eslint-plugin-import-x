@@ -9,21 +9,15 @@
  */
 
 import fs from 'node:fs'
-import nodePath from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 import { getTsconfigWithContext } from 'eslint-import-context'
 
-import type {
-  ChildContext,
-  FileExtension,
-  ParseError,
-  RuleContext,
-} from '../types.js'
+import type { ChildContext, ParseError, RuleContext } from '../types.js'
 import { childContext } from '../utils/child-context.js'
 import { hasValidExtension, ignore } from '../utils/ignore.js'
-import { stripUnicodeBOM } from '../utils/parse.js'
+import { getAlternateParserPath, stripUnicodeBOM } from '../utils/parse.js'
 import { relative, resolve } from '../utils/resolve.js'
 import { isMaybeUnambiguousModule } from '../utils/unambiguous.js'
 
@@ -50,19 +44,13 @@ const log = debug('eslint-plugin-import-x:core:module-info')
  * lexers would read them under ordinary ESM rules.
  */
 function isLexableModule(filepath: string, context: ChildContext) {
-  if (!LEXABLE_EXTENSIONS_PATTERN.test(filepath)) {
-    return false
-  }
-  const parsers = context.settings['import-x/parsers']
-  if (parsers != null) {
-    const extension = nodePath.extname(filepath) as FileExtension
-    for (const parserPath in parsers) {
-      if (parsers[parserPath].includes(extension)) {
-        return false
-      }
-    }
-  }
-  return true
+  return (
+    LEXABLE_EXTENSIONS_PATTERN.test(filepath) &&
+    // ask `parse` itself what it would pick, rather than re-reading the
+    // setting: this gate exists to predict that answer, so a second copy of
+    // the lookup drifting would silently lex the very files it must not
+    getAlternateParserPath(filepath, context) === undefined
+  )
 }
 
 /**
@@ -387,7 +375,6 @@ export class ModuleInfo {
 
     return {
       format: lexed.format === 'module' ? 'Module' : 'ambiguous',
-      parseError: undefined,
       cacheable: true,
       ownExports,
       reexports,
@@ -608,10 +595,12 @@ export class ModuleInfo {
     let facts = null
     try {
       const content = fs.readFileSync(this.path, { encoding: 'utf8' })
-      // the same rule `for` applies: only a module carrying a marker can
-      // answer a doc query. A doc caller has already checked the marker, so
-      // this is `true` for them; an `imported` escalation needs no comments
-      // at all and must not pin the AST for them either.
+      // The same rule `for` applies: only a module carrying a marker can
+      // answer a doc query. Note this is deliberately *not* narrowed to the
+      // caller's needs — an `imported` escalation wants no docs, but the twin
+      // is memoized and shared, so building it docless would silently starve a
+      // later doc query on the same module. One twin, with docs iff docs are
+      // possible; the marker keeps that rare.
       facts = analyzeAstModule(
         this.path,
         content,

@@ -180,17 +180,34 @@ export function parse(
   throw new Error('Parser must expose a `parse` or `parseForESLint` method')
 }
 
-function getParserOrPath(path: string, context: ChildContext | RuleContext) {
+/**
+ * The parser `settings['import-x/parsers']` declares for this file's extension,
+ * if any. This is the authority on that mapping — anything that needs to predict
+ * which parser a file would get must ask here rather than re-walking the
+ * setting, or the two copies drift the moment extension matching gains
+ * normalization or glob support.
+ */
+export function getAlternateParserPath(
+  path: string,
+  context: ChildContext | RuleContext,
+) {
   const parsers = context.settings['import-x/parsers']
-  if (parsers != null) {
-    const extension = nodePath.extname(path) as FileExtension
-    for (const parserPath in parsers) {
-      if (parsers[parserPath].includes(extension)) {
-        // use this alternate parser
-        log('using alt parser:', parserPath)
-        return parserPath
-      }
+  if (parsers == null) {
+    return
+  }
+  const extension = nodePath.extname(path) as FileExtension
+  for (const parserPath in parsers) {
+    if (parsers[parserPath].includes(extension)) {
+      return parserPath
     }
+  }
+}
+
+function getParserOrPath(path: string, context: ChildContext | RuleContext) {
+  const alternate = getAlternateParserPath(path, context)
+  if (alternate !== undefined) {
+    log('using alt parser:', alternate)
+    return alternate
   }
   // default to use ESLint parser, only exists in eslintrc
   if ('parserPath' in context && context.parserPath) {

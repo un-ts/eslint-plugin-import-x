@@ -174,7 +174,6 @@ export function analyzeAstModule(
       }),
   )
 
-  const tsconfig = lazy(() => getTsconfigWithContext(context))
   const walk: Walk = {
     facts,
     captureDoc: needDocs
@@ -184,7 +183,9 @@ export function analyzeAstModule(
     remotePath: specifier =>
       relative(specifier, filepath, context.settings, context) ?? null,
     isEsModuleInteropTrue: lazy(
-      () => tsconfig()?.compilerOptions?.esModuleInterop ?? false,
+      () =>
+        getTsconfigWithContext(context)?.compilerOptions?.esModuleInterop ??
+        false,
     ),
     ast,
   }
@@ -227,7 +228,7 @@ export function analyzeAstModule(
         }
         break
       }
-      default:
+      // No default — every other statement kind is irrelevant here
     }
   }
 
@@ -341,11 +342,11 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
         }
         break
       }
-      default:
+      // No default — other declaration kinds export no names
     }
   }
 
-  const source = n.source ? n.source.value : undefined
+  const source = n.source?.value
   for (const s of n.specifiers as readonly MaybeLegacyExportSpecifier[]) {
     switch (s.type) {
       case 'ExportSpecifier': {
