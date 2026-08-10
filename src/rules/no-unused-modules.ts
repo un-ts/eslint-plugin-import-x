@@ -258,7 +258,7 @@ const prepareImportsAndExports = (
         } else {
           exports.set(key, { whereUsed: new Set() })
         }
-        const reexportPath = value.getTargetPath()
+        const reexportPath = value.resolveTarget()?.path
         if (!reexportPath) {
           continue
         }

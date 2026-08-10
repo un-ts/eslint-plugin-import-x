@@ -1,5 +1,5 @@
 import type { DefaultExportSourceName } from './ast-module.js'
-import type { ModuleInfo } from './module-info.js'
+import type { ModuleInfo, ModuleReexportRecord } from './module-info.js'
 import { collectExportNames, deepResolveExport } from './resolve-exports.js'
 
 export type { DefaultExportSourceName } from './ast-module.js'
@@ -10,17 +10,7 @@ export type { DefaultExportSourceName } from './ast-module.js'
  * it depends on by importing it.
  */
 
-/** One re-exported name, as consumed by `no-unused-modules`. */
-export interface ModuleReexportView {
-  local: string
-  getTargetPath(): string | null
-}
-
 const exportNamesCache = new WeakMap<ModuleInfo, ReadonlySet<string>>()
-const reexportsViewCache = new WeakMap<
-  ModuleInfo,
-  ReadonlyMap<string, ModuleReexportView>
->()
 const starExportPathsCache = new WeakMap<ModuleInfo, readonly string[]>()
 const deepExportCache = new WeakMap<ModuleInfo, Map<string, DeepExportResult>>()
 
@@ -121,20 +111,8 @@ export function getOwnExportNames(moduleInfo: ModuleInfo): string[] {
 /** Re-exported names, keyed by the exported name. */
 export function getReexports(
   moduleInfo: ModuleInfo,
-): ReadonlyMap<string, ModuleReexportView> {
-  let view = reexportsViewCache.get(moduleInfo)
-  if (view === undefined) {
-    const built = new Map<string, ModuleReexportView>()
-    for (const [name, { local, resolveTarget }] of moduleInfo.reexports) {
-      built.set(name, {
-        local,
-        getTargetPath: () => resolveTarget()?.path ?? null,
-      })
-    }
-    view = built
-    reexportsViewCache.set(moduleInfo, view)
-  }
-  return view
+): ReadonlyMap<string, ModuleReexportRecord> {
+  return moduleInfo.reexports
 }
 
 /**
