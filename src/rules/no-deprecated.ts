@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import type { DocCommentBlock } from '../core/index.js'
+import type { DocCommentBlock, DocCommentTag } from '../core/index.js'
 import { getExportDoc, getModuleDoc, ModuleInfo } from '../core/index.js'
 import { createRule, declaredScope, getValue } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
@@ -10,15 +10,10 @@ import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
  * lives here — the core only hands over raw doc blocks via its tier-2
  * `getModuleDoc()`/`getExportDoc()` accessors.
  */
-interface DeprecationInfo {
-  description: string
-}
-
 function findDeprecationTag(
   doc: DocCommentBlock | undefined,
-): DeprecationInfo | undefined {
-  const tag = doc?.tags.find(t => t.tag === 'deprecated')
-  return tag ? { description: tag.description } : undefined
+): DocCommentTag | undefined {
+  return doc?.tags.find(t => t.tag === 'deprecated')
 }
 
 function getModuleDeprecation(moduleInfo: ModuleInfo) {
@@ -29,7 +24,7 @@ function getExportDeprecation(moduleInfo: ModuleInfo, name: string) {
   return findDeprecationTag(getExportDoc(moduleInfo, name))
 }
 
-function message(deprecation: DeprecationInfo) {
+function message(deprecation: DocCommentTag) {
   if (deprecation.description) {
     return {
       messageId: 'deprecatedDesc',
@@ -57,7 +52,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context) {
-    const deprecated = new Map<string, DeprecationInfo>()
+    const deprecated = new Map<string, DocCommentTag>()
     const namespaces = new Map<string, ModuleInfo | null>()
 
     return {
