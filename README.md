@@ -666,11 +666,11 @@ Detailed changes for each release are documented in [CHANGELOG.md](./CHANGELOG.m
 
 ## Star History
 
-<a href="https://www.star-history.com/#un-ts/eslint-plugin-import-x&Date">
+<a href="https://star-history.dera.page/#un-ts/eslint-plugin-import-x&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=un-ts/eslint-plugin-import-x&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=un-ts/eslint-plugin-import-x&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=un-ts/eslint-plugin-import-x&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=un-ts/eslint-plugin-import-x&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=un-ts/eslint-plugin-import-x&type=Date" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=un-ts/eslint-plugin-import-x&type=Date" />
  </picture>
 </a>
 
