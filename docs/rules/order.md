@@ -515,11 +515,14 @@ import { apply, compose } from 'xcompose'
 
 ### `warnOnUnassignedImports`
 
-Valid values: `boolean` \
+Valid values: `boolean | "top"` \
 Default: `false`
 
-Warn when "unassigned" imports are out of order.
+When set to `true`, warn when "unassigned" imports are out of order.
 Unassigned imports are imports with no corresponding identifiers (e.g. `import './my/thing.js'` or `require('./side-effects.js')`).
+
+When set to `"top"`, no-specifier ESM imports (e.g. `import './my/thing.js'`) must come before every assigned import.
+Their relative order is preserved, they are not alphabetized, and bare `require()` calls are unaffected.
 
 > [!NOTE]
 >
@@ -555,6 +558,35 @@ While this will pass:
 import fs from 'fs'
 import path from 'path'
 import './styles.css'
+```
+
+#### `"top"` mode
+
+Given the following settings:
+
+```jsonc
+{
+  "import-x/order": [
+    "error",
+    {
+      "warnOnUnassignedImports": "top",
+    },
+  ],
+}
+```
+
+This will fail the rule check:
+
+```ts
+import fs from 'fs'
+import './styles.css'
+```
+
+While this will pass:
+
+```ts
+import './styles.css'
+import fs from 'fs'
 ```
 
 ### `sortTypesGroup`
