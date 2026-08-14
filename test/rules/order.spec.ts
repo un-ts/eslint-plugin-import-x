@@ -169,6 +169,41 @@ ruleTester.run('order', rule, {
         import path from 'path';
     `,
     }),
+    // Place unassigned ESM imports before assigned imports in top mode
+    tValid({
+      code: `
+        import './z-side';
+        import './a-side';
+        import fs from 'node:fs';
+        import external from 'external';
+      `,
+      options: [{ warnOnUnassignedImports: 'top' }],
+    }),
+    // Do not alphabetize unassigned ESM imports in top mode
+    tValid({
+      code: `
+        import './z-side';
+        import './a-side';
+        import a from 'a';
+        import z from 'z';
+      `,
+      options: [
+        {
+          alphabetize: { order: 'asc' },
+          warnOnUnassignedImports: 'top',
+        },
+      ],
+    }),
+    // Keep bare require calls outside top mode
+    tValid({
+      code: `
+        const fs = require('node:fs');
+        require('./z-side');
+        const path = require('node:path');
+        require('./a-side');
+      `,
+      options: [{ warnOnUnassignedImports: 'top' }],
+    }),
     // No imports
     tValid({
       code: `
@@ -3144,6 +3179,56 @@ ruleTester.run('order', rule, {
         createOrderError(['`b` export', 'before', 'export of `o`']),
       ],
     }),
+    // Report without fixing when an unassigned ESM import is below an assigned import
+    tInvalid({
+      code: `
+        import fs from 'node:fs';
+        import './side.js';
+        import path from 'node:path';
+      `,
+      options: [{ warnOnUnassignedImports: 'top' }],
+      errors: [
+        createOrderError([
+          '`./side.js` import',
+          'before',
+          'import of `node:fs`',
+        ]),
+      ],
+      output: null,
+    }),
+    // Preserve comments and relative order when multiple unassigned imports are below an assigned import
+    tInvalid({
+      code: `
+        import external from 'external';
+        // first side effect
+        import './z-side';
+        import './a-side'; // second side effect
+      `,
+      options: [{ warnOnUnassignedImports: 'top' }],
+      errors: [
+        createOrderError([
+          '`external` import',
+          'after',
+          'import of `./a-side`',
+        ]),
+      ],
+      output: null,
+    }),
+    // Report but do not fix newline separation involving top-mode unassigned imports
+    tInvalid({
+      code: `
+        import './side.js';
+        import fs from 'node:fs';
+      `,
+      options: [
+        {
+          'newlines-between': 'always',
+          warnOnUnassignedImports: 'top',
+        },
+      ],
+      errors: [{ messageId: 'oneLineBetweenGroups', line: 2 }],
+      output: null,
+    }),
   ],
 })
 
@@ -3832,6 +3917,22 @@ describe('TypeScript', () => {
               groups: ['builtin', 'type', 'unknown', 'external'],
               sortTypesGroup: true,
               'newlines-between': 'always',
+            },
+          ],
+        }),
+        // Keep top-mode unassigned imports before custom groups and type-only imports
+        tValid({
+          code: `
+            import './side.js';
+            import type { Config } from 'types';
+            import fs from 'node:fs';
+            import external from 'external';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['type', 'builtin', 'external'],
+              warnOnUnassignedImports: 'top',
             },
           ],
         }),
