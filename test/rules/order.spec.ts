@@ -3229,6 +3229,23 @@ ruleTester.run('order', rule, {
       errors: [{ messageId: 'oneLineBetweenGroups', line: 2 }],
       output: null,
     }),
+    // Treat adjacent top-mode unassigned imports as one group for newline validation
+    tInvalid({
+      code: `
+        import './a-side.js';
+
+        import './b-side.js';
+      `,
+      options: [
+        {
+          'newlines-between': 'always',
+          distinctGroup: false,
+          warnOnUnassignedImports: 'top',
+        },
+      ],
+      errors: [{ messageId: 'noLineWithinGroup', line: 2 }],
+      output: null,
+    }),
   ],
 })
 
