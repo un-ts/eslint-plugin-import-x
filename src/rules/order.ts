@@ -982,7 +982,9 @@ function makeNewlinesBetweenReport(
   const getIsStartOfDistinctGroup = (
     currentImport: ImportEntryWithRank,
     previousImport: ImportEntryWithRank,
-  ) => currentImport.rank - 1 >= previousImport.rank
+  ) =>
+    currentImport.rank !== previousImport.rank &&
+    currentImport.rank - 1 >= previousImport.rank
   let previousImport = imported[0]
 
   for (const currentImport of imported.slice(1)) {
