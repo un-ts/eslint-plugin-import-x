@@ -1,8 +1,8 @@
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
 
-import { ResolverFactory } from 'unrs-resolver'
-import type { NapiResolveOptions } from 'unrs-resolver'
+import { ResolverFactory } from 'oxc-resolver'
+import type { NapiResolveOptions } from 'oxc-resolver'
 
 import type { NewResolver } from './types.js'
 
