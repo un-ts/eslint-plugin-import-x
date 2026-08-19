@@ -516,27 +516,18 @@ export class ExportMap {
         }
       }
 
-      const exports = ['TSExportAssignment']
-      if (isEsModuleInteropTrue()) {
-        exports.push('TSNamespaceExportDeclaration')
-      }
-
       // This doesn't declare anything, but changes what's being exported.
-      if (exports.includes(n.type)) {
+      if (n.type === 'TSExportAssignment') {
+        m.hasExportAssignment = true
+
         const exportedName =
-          n.type === 'TSNamespaceExportDeclaration'
-            ? (
-                n.id ||
-                // @ts-expect-error - legacy parser type
-                n.name
-              ).name
-            : ('expression' in n &&
-                n.expression &&
-                (('name' in n.expression && n.expression.name) ||
-                  ('id' in n.expression &&
-                    n.expression.id &&
-                    n.expression.id.name))) ||
-              null
+          ('expression' in n &&
+            n.expression &&
+            (('name' in n.expression && n.expression.name) ||
+              ('id' in n.expression &&
+                n.expression.id &&
+                n.expression.id.name))) ||
+          null
 
         const getRoot = (
           node: TSESTree.TSQualifiedName,
@@ -709,6 +700,9 @@ export class ExportMap {
   /** Dependencies of this module that are not explicitly re-exported */
   imports = new Map<string, ModuleImport>()
   exports = new Map<string, TSESTree.Identifier | TSESTree.ProgramStatement>()
+
+  /** Whether this module has an `export = ns` assignment */
+  hasExportAssignment = false
 
   errors: ParseError[] = []
 
