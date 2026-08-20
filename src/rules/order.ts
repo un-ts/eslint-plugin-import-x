@@ -52,6 +52,7 @@ const defaultGroups = [
   'sibling',
   'index',
 ] as const
+const unassignedImportsTopRank = Number.NEGATIVE_INFINITY
 
 // REPORTING AND FIXING
 
@@ -286,6 +287,12 @@ function isPlainImportModule(
     node.type === 'ImportDeclaration' &&
     node.specifiers != null &&
     node.specifiers.length > 0
+  )
+}
+
+function isUnassignedImport(node: ImportEntry) {
+  return (
+    node.node.type === 'ImportDeclaration' && node.node.specifiers.length === 0
   )
 }
 
@@ -776,14 +783,17 @@ function registerNode(
   imported: ImportEntryWithRank[],
   excludedImportTypes: Set<ImportType>,
   isSortingTypesGroup?: boolean,
+  rankOverride?: number,
 ) {
-  const rank = computeRank(
-    context,
-    ranks,
-    importEntry,
-    excludedImportTypes,
-    isSortingTypesGroup,
-  )
+  const rank =
+    rankOverride ??
+    computeRank(
+      context,
+      ranks,
+      importEntry,
+      excludedImportTypes,
+      isSortingTypesGroup,
+    )
   if (rank !== -1) {
     let importNode = importEntry.node
 
@@ -956,6 +966,7 @@ function makeNewlinesBetweenReport(
   distinctGroup: boolean,
   isSortingTypesGroup?: boolean,
   isConsolidatingSpaceBetweenImports?: boolean,
+  disableUnassignedImportFixes?: boolean,
 ) {
   const getNumberOfEmptyLinesBetween = (
     currentImport: ImportEntry,
@@ -971,10 +982,15 @@ function makeNewlinesBetweenReport(
   const getIsStartOfDistinctGroup = (
     currentImport: ImportEntryWithRank,
     previousImport: ImportEntryWithRank,
-  ) => currentImport.rank - 1 >= previousImport.rank
+  ) =>
+    currentImport.rank !== previousImport.rank &&
+    currentImport.rank - 1 >= previousImport.rank
   let previousImport = imported[0]
 
   for (const currentImport of imported.slice(1)) {
+    const shouldDisableFix =
+      disableUnassignedImportFixes &&
+      (isUnassignedImport(previousImport) || isUnassignedImport(currentImport))
     const emptyLinesBetween = getNumberOfEmptyLinesBetween(
       currentImport,
       previousImport,
@@ -1062,7 +1078,9 @@ function makeNewlinesBetweenReport(
             context.report({
               node: previousImport.node,
               messageId: 'oneLineBetweenGroups',
-              fix: fixNewLineAfterImport(context, previousImport),
+              fix: shouldDisableFix
+                ? null
+                : fixNewLineAfterImport(context, previousImport),
             })
           }
         } else if (
@@ -1074,11 +1092,13 @@ function makeNewlinesBetweenReport(
           context.report({
             node: previousImport.node,
             messageId: 'noLineWithinGroup',
-            fix: removeNewLineAfterImport(
-              context,
-              currentImport,
-              previousImport,
-            ),
+            fix: shouldDisableFix
+              ? null
+              : removeNewLineAfterImport(
+                  context,
+                  currentImport,
+                  previousImport,
+                ),
           })
         }
       } else if (emptyLinesBetween > 0 && shouldAssertNoNewlineBetweenGroup) {
@@ -1086,7 +1106,9 @@ function makeNewlinesBetweenReport(
         context.report({
           node: previousImport.node,
           messageId: 'noLineBetweenGroups',
-          fix: removeNewLineAfterImport(context, currentImport, previousImport),
+          fix: shouldDisableFix
+            ? null
+            : removeNewLineAfterImport(context, currentImport, previousImport),
         })
       }
 
@@ -1095,13 +1117,17 @@ function makeNewlinesBetweenReport(
           context.report({
             node: previousImport.node,
             messageId: 'oneLineBetweenTheMultiLineImport',
-            fix: fixNewLineAfterImport(context, previousImport),
+            fix: shouldDisableFix
+              ? null
+              : fixNewLineAfterImport(context, previousImport),
           })
         } else if (emptyLinesBetween === 0 && previousImport.isMultiline) {
           context.report({
             node: previousImport.node,
             messageId: 'oneLineBetweenThisMultiLineImport',
-            fix: fixNewLineAfterImport(context, previousImport),
+            fix: shouldDisableFix
+              ? null
+              : fixNewLineAfterImport(context, previousImport),
           })
         } else if (
           emptyLinesBetween > 0 &&
@@ -1112,11 +1138,13 @@ function makeNewlinesBetweenReport(
           context.report({
             node: previousImport.node,
             messageId: 'noLineBetweenSingleLineImport',
-            fix: removeNewLineAfterImport(
-              context,
-              currentImport,
-              previousImport,
-            ),
+            fix: shouldDisableFix
+              ? null
+              : removeNewLineAfterImport(
+                  context,
+                  currentImport,
+                  previousImport,
+                ),
           })
         }
       }
@@ -1148,7 +1176,7 @@ export interface Options {
   pathGroupsExcludedImportTypes?: ImportType[]
   pathGroups?: PathGroup[]
   sortTypesGroup?: boolean
-  warnOnUnassignedImports?: boolean
+  warnOnUnassignedImports?: boolean | 'top'
 }
 
 type MessageId =
@@ -1268,7 +1296,7 @@ export default createRule<[Options?], MessageId>({
             additionalProperties: false,
           },
           warnOnUnassignedImports: {
-            type: 'boolean',
+            oneOf: [{ type: 'boolean' }, { type: 'string', enum: ['top'] }],
             default: false,
           },
         },
@@ -1475,6 +1503,10 @@ export default createRule<[Options?], MessageId>({
             getBlockImports(node.parent),
             pathGroupsExcludedImportTypes,
             isSortingTypesGroup,
+            node.specifiers.length === 0 &&
+              options.warnOnUnassignedImports === 'top'
+              ? unassignedImportsTopRank
+              : undefined,
           )
 
           if (named.import) {
@@ -1672,11 +1704,17 @@ export default createRule<[Options?], MessageId>({
                 (newlinesBetweenImports === 'always-and-inside-groups' ||
                   newlinesBetweenTypeOnlyImports ===
                     'always-and-inside-groups'),
+              options.warnOnUnassignedImports === 'top',
             )
           }
 
           if (alphabetize.order !== 'ignore') {
-            mutateRanksToAlphabetize(imported, alphabetize)
+            mutateRanksToAlphabetize(
+              options.warnOnUnassignedImports === 'top'
+                ? imported.filter(node => !isUnassignedImport(node))
+                : imported,
+              alphabetize,
+            )
           }
 
           makeOutOfOrderReport(context, imported, categories.import)
