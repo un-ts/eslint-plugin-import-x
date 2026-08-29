@@ -1,5 +1,4 @@
 import type { TSESTree } from '@typescript-eslint/utils'
-// eslint-disable-next-line import-x/no-unresolved -- cjs-module-lexer@2.2.0 declares `types: ./lexer.d.mts` in its exports map but does not publish the file; runtime (`default` condition) and tsc both resolve fine
 import * as cjsModuleLexer from 'cjs-module-lexer'
 import * as esModuleLexer from 'es-module-lexer'
 
