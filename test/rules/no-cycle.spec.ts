@@ -269,5 +269,16 @@ ruleTester.run('no-cycle', rule, {
       code: 'import { foo } from "./ignore"',
       errors: [{ messageId: 'cycle', line: 1 }],
     }),
+    tInvalid({
+      code: [
+        'import first from "./siblings/first"',
+        'import second from "./siblings/second"',
+        'import firstAgain from "./siblings/first"',
+      ].join('\n'),
+      errors: [
+        { ...createCycleSourceError('./first-cycle:1'), line: 1 },
+        { messageId: 'cycle', line: 2 },
+      ],
+    }),
   ],
 })
