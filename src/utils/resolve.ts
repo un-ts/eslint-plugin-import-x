@@ -19,7 +19,7 @@ import type {
 } from '../types.js'
 
 import { arraify } from './arraify.js'
-import { makeContextCacheKey } from './export-map.js'
+import { makeContextCacheKey } from './child-context.js'
 import { isExternalLookingName } from './import-type.js'
 import {
   LEGACY_NODE_RESOLVERS,

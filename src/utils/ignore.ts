@@ -45,7 +45,7 @@ export function getFileExtensions(settings: PluginSettings) {
   return exts
 }
 
-// In ExportMap.for, ignore() is called after hasValidExtension() check.
+// In ModuleInfo.for, ignore() is called after hasValidExtension() check.
 // Add an argument to skip the check
 export function ignore(
   filepath: string,

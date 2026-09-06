@@ -2,7 +2,9 @@
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { importDeclaration, ExportMap, createRule } from '../utils/index.js'
+import { hasOwnExport, ModuleInfo } from '../core/index.js'
+import { importDeclaration, createRule } from '../utils/index.js'
+import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
 type MessageId = 'member'
 
@@ -24,7 +26,7 @@ export default createRule<[], MessageId>({
   create(context) {
     const fileImports = new Map<
       string,
-      { exportMap: ExportMap; sourcePath: string }
+      { moduleInfo: ModuleInfo; sourcePath: string }
     >()
     const allPropertyLookups = new Map<
       string,
@@ -44,18 +46,18 @@ export default createRule<[], MessageId>({
     return {
       ImportDefaultSpecifier(node) {
         const declaration = importDeclaration(context, node)
-        const exportMap = ExportMap.get(declaration.source.value, context)
-        if (exportMap == null) {
+        const moduleInfo = ModuleInfo.get(declaration.source.value, context)
+        if (moduleInfo == null) {
           return
         }
 
-        if (exportMap.errors.length > 0) {
-          exportMap.reportErrors(context, declaration)
+        if (moduleInfo.parseError) {
+          reportModuleParseErrors(context, moduleInfo, declaration)
           return
         }
 
         fileImports.set(node.local.name, {
-          exportMap,
+          moduleInfo,
           sourcePath: declaration.source.value,
         })
       },
@@ -101,7 +103,7 @@ export default createRule<[], MessageId>({
             if (propName === 'default') {
               continue
             }
-            if (!fileImport.exportMap.namespace.has(propName)) {
+            if (!hasOwnExport(fileImport.moduleInfo, propName)) {
               continue
             }
 
