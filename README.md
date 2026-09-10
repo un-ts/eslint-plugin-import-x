@@ -90,21 +90,7 @@ The list could be longer in the future, but we don't want to make it too long he
 npm install eslint-plugin-import-x --save-dev
 ```
 
-If you are checking the config file with TypeScript, but aren't already using [typescript-eslint](https://typescript-eslint.io/) for some reason (you really should consider it), you need to at minimum install `@typescript-eslint/utils`, because the type definitions depend on it.
-
-```sh
-# inside your project's working tree
-npm install @typescript-eslint/utils --save-dev
-```
-
-If you're migrating an older config, using the default resolver, and need to use any of the legacy options `package`, `packageFilter`, `pathFilter`, or `packageIterator` with the `import-x/resolver` setting, you'll need to also install `eslint-import-resolver-node`.
-
-> Note: these options will be removed in the next major version, as stated in the [v4.6.0 release notes](https://github.com/un-ts/eslint-plugin-import-x/releases/tag/v4.6.0).
-
-```sh
-# inside your project's working tree
-npm install eslint-import-resolver-node --save-dev
-```
+If you're type-checking your `eslint.config.js`, but you aren't using [typescript-eslint](https://typescript-eslint.io/) for some reason (you really should consider it), you need to also install `@typescript-eslint/utils`, because the type definitions depend on it.
 
 ## Configuration (new: `eslint.config.*`)
 
