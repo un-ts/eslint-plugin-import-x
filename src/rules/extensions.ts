@@ -143,7 +143,8 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
     if (
       (!('pattern' in obj) || obj.pattern == null) &&
       obj.ignorePackages == null &&
-      obj.checkTypeImports == null
+      obj.checkTypeImports == null &&
+      !Array.isArray(obj.pathGroupOverrides)
     ) {
       Object.assign(result.pattern, obj)
       continue

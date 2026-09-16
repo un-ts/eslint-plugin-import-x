@@ -1175,6 +1175,140 @@ ruleTester.run('extensions', rule, {
   ],
 })
 
+ruleTester.run('extensions - pathGroupOverrides', rule, {
+  valid: [
+    tValid({
+      name: 'ignores matching imports with object-only options',
+      code: 'import bar from "./bar.js";',
+      options: [
+        {
+          pathGroupOverrides: [{ pattern: './*', action: 'ignore' }],
+        },
+      ],
+    }),
+    tValid({
+      name: 'ignores matching imports without a pattern property',
+      code: 'import bar from "./bar";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [{ pattern: './*', action: 'ignore' }],
+        },
+      ],
+    }),
+    tValid({
+      name: 'preserves overrides alongside a nested extension pattern',
+      code: 'import foo from "./foo.js"; import bar from "./bar";',
+      options: [
+        'always',
+        {
+          pattern: { js: 'never' },
+          pathGroupOverrides: [{ pattern: './foo.js', action: 'ignore' }],
+        },
+      ],
+    }),
+    tValid({
+      name: 'preserves legacy extension maps with an option-like extension name',
+      code: 'import bar from "./bar";',
+      options: ['always', { js: 'never', pathGroupOverrides: 'always' }],
+    }),
+    tValid({
+      name: 'uses the first matching ignore override',
+      code: 'import bar from "./bar";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [
+            { pattern: './*', action: 'ignore' },
+            { pattern: './bar', action: 'enforce' },
+          ],
+        },
+      ],
+    }),
+    tValid({
+      name: 'treats hash-prefixed override patterns literally by default',
+      code: 'import { helper } from "#utils/helper";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [{ pattern: '#utils/*', action: 'ignore' }],
+        },
+      ],
+    }),
+  ],
+  invalid: [
+    tInvalid({
+      name: 'uses the first matching enforce override for a built-in module',
+      code: 'import path from "path";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [
+            { pattern: 'path', action: 'enforce' },
+            { pattern: '*', action: 'ignore' },
+          ],
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { importPath: 'path' } }],
+      output: null,
+    }),
+    tInvalid({
+      name: 'preserves explicit minimatch options instead of the default options',
+      code: 'import { helper } from "#utils/helper";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [
+            {
+              pattern: '#utils/*',
+              patternOptions: {},
+              action: 'ignore',
+            },
+          ],
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { importPath: '#utils/helper' } }],
+      output: null,
+    }),
+    ...[false, true].map(fix =>
+      tInvalid({
+        name: `preserves ${fix ? 'autofixes' : 'suggestions'} for unmatched imports`,
+        code: 'import foo from "./foo"; import bar from "./bar";',
+        options: [
+          'always',
+          {
+            fix,
+            pathGroupOverrides: [{ pattern: './foo', action: 'ignore' }],
+          },
+        ],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: { extension: 'js', importPath: './bar' },
+            suggestions: fix
+              ? undefined
+              : [
+                  {
+                    messageId: 'addMissing',
+                    data: {
+                      extension: 'js',
+                      importPath: './bar',
+                      fixedImportPath: './bar.js',
+                    },
+                    output:
+                      'import foo from "./foo"; import bar from "./bar.js";',
+                  },
+                ],
+          },
+        ],
+        output: fix
+          ? 'import foo from "./foo"; import bar from "./bar.js";'
+          : null,
+      }),
+    ),
+  ],
+})
+
 describe('TypeScript', () => {
   ruleTester.run(`typescript - extensions ignore type-only`, rule, {
     valid: [

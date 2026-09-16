@@ -72,6 +72,22 @@ Default value of `ignorePackages` is `false`.
 
 By default, `import type` and `export type` style imports/exports are ignored. If you want to check them as well, you can set the `checkTypeImports` option to `true`.
 
+### Path group overrides
+
+Use `pathGroupOverrides` to ignore matching import paths or enforce the configured extension policy for them. Each override has a minimatch `pattern`, an `action` of `"ignore"` or `"enforce"`, and optional `patternOptions`. The first matching override wins.
+
+This option does not require `pattern`, `ignorePackages`, or `checkTypeImports`:
+
+```json
+"import-x/extensions": ["error", "always", {
+  "pathGroupOverrides": [
+    { "pattern": "./generated/**", "action": "ignore" }
+  ]
+}]
+```
+
+When combining `pathGroupOverrides` with per-extension settings, put those settings inside `pattern` rather than at the top level of the options object.
+
 ### Exception
 
 When disallowing the use of certain extensions this rule makes an exception and allows the use of extension when the file would not be resolvable without extension.
