@@ -146,21 +146,26 @@ export default createRule<[Options?], MessageId>({
               continue
             }
             const toTraverse = [...declarations].filter(
-              ({ source, isOnlyImportingTypes }) =>
+              ({ source, isOnlyImportingTypes, dynamic }) =>
                 !ignoreModule(source.value as string) &&
                 // Ignore only type imports
-                !isOnlyImportingTypes,
+                !isOnlyImportingTypes &&
+                /**
+                 * If cyclic dependency is allowed via dynamic import, drop
+                 * only the dynamic declarations for this path rather than the
+                 * whole path: a path can be imported both statically and
+                 * dynamically, and the static import alone can still close a
+                 * real, static-only cycle back to `filename`. Bailing out of
+                 * the entire module here (as this used to) also skipped every
+                 * *other*, unrelated path still left to check on `m`, hiding
+                 * static cycles declared after some unrelated dynamic import
+                 * earlier in the same file.
+                 */
+                !(options.allowUnsafeDynamicCyclicDependency && dynamic),
             )
 
-            /**
-             * If cyclic dependency is allowed via dynamic import, skip checking
-             * if any module is imported dynamically
-             */
-            if (
-              options.allowUnsafeDynamicCyclicDependency &&
-              toTraverse.some(d => d.dynamic)
-            ) {
-              return
+            if (toTraverse.length === 0) {
+              continue // nothing left to traverse via this path
             }
 
             /**
