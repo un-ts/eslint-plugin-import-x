@@ -107,7 +107,20 @@ try {
   // ignore
 }
 
-function requireResolver(name: string, sourceFile: string) {
+const resolverCache = new Map<string, LegacyResolver>()
+
+// Loading walks node_modules for several candidate names on every call; cwd is keyed because package-less files resolve relative paths from it
+function requireResolver(name: string, sourceFile: string): LegacyResolver {
+  const cacheKey = `${name}\0${path.dirname(path.resolve(sourceFile))}\0${process.cwd()}`
+  if (resolverCache.has(cacheKey)) {
+    return resolverCache.get(cacheKey)!
+  }
+  const resolver = loadResolver(name, sourceFile)
+  resolverCache.set(cacheKey, resolver)
+  return resolver
+}
+
+function loadResolver(name: string, sourceFile: string) {
   // Try to resolve package with conventional name
   const resolver =
     tryRequire(`eslint-import-resolver-${name}`, sourceFile) ||

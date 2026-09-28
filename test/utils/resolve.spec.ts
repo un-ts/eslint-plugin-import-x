@@ -230,6 +230,21 @@ describe('resolve', () => {
     )
   })
 
+  it('loads a relative resolver from each source file directory', () => {
+    const context = testContext({ 'import-x/resolver': './resolver' })
+
+    for (const directory of ['a', 'b']) {
+      expect(
+        resolve('./target', {
+          ...context,
+          physicalFilename: testFilePath(
+            `per-directory-resolver/${directory}/index.js`,
+          ),
+        }),
+      ).toBe(testFilePath(`per-directory-resolver/${directory}/target`))
+    }
+  })
+
   it('reports load exception in a user resolver', () => {
     const context = testContext({
       'import-x/resolver': './load-error-resolver',
