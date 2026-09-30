@@ -1,0 +1,8 @@
+{
+  "name": "package-self-reference",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./sub": "./dist/sub.js"
+  }
+}
