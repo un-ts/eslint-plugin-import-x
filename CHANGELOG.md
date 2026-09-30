@@ -1,5 +1,23 @@
 # eslint-plugin-import-x
 
+## 4.18.0
+
+### Minor Changes
+
+- [#504](https://github.com/un-ts/eslint-plugin-import-x/pull/504) [`f10dcc4`](https://github.com/un-ts/eslint-plugin-import-x/commit/f10dcc4a8250d432b47453cabe1f28af60a4c298) Thanks [@morgan-coded](https://github.com/morgan-coded)! - Add a `"top"` mode to the `order` rule's `warnOnUnassignedImports` option for requiring no-specifier ESM imports before assigned imports.
+
+### Patch Changes
+
+- [#512](https://github.com/un-ts/eslint-plugin-import-x/pull/512) [`42dba04`](https://github.com/un-ts/eslint-plugin-import-x/commit/42dba0465ff440f1d1660608af322c390d0dcc0b) Thanks [@LeulTew](https://github.com/LeulTew)! - fix(extensions): honor `pathGroupOverrides` when no `pattern`, `ignorePackages`, or `checkTypeImports` option is provided.
+
+- [#518](https://github.com/un-ts/eslint-plugin-import-x/pull/518) [`c45cfb9`](https://github.com/un-ts/eslint-plugin-import-x/commit/c45cfb9757c19e7e38dfeb40d1b4b701b22378b5) Thanks [@wimvanschandevijl](https://github.com/wimvanschandevijl)! - fix(no-cycle): `allowUnsafeDynamicCyclicDependency` no longer hides static-only cycles that happen to sit in the same module as an unrelated dynamic import
+
+  Previously, `no-cycle`'s traversal bailed out of a module's **entire** remaining import list as soon as it found one path where any declaration was dynamic - `return` rather than `continue` inside the loop over `m.imports`. That meant:
+  - a purely static cycle declared _after_ an unrelated dynamic import earlier in the same file went unreported, and
+  - a path imported both statically and dynamically (the static declaration on its own closing a real cycle) was skipped entirely, because "any declaration to this path is dynamic" discarded the static declaration too.
+
+  Both are now handled per-declaration: only the dynamic declarations for a path are dropped when `allowUnsafeDynamicCyclicDependency` is set, and only that one path is skipped when nothing traversable remains - the module's other, unrelated import paths (and any static declaration to the very same path) are still checked. See [#515](https://github.com/un-ts/eslint-plugin-import-x/issues/515) for the repro that found this.
+
 ## 4.17.1
 
 ### Patch Changes
