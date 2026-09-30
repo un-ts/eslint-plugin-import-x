@@ -6,6 +6,7 @@ import type { MinimatchOptions } from 'minimatch'
 
 import type { RuleContext } from '../types.js'
 import {
+  getFilePackageName,
   isBuiltIn,
   isExternalModule,
   isScoped,
@@ -281,6 +282,21 @@ export default createRule<Options, MessageId>({
       return getModifier(extension) === 'never'
     }
 
+    let ownPackageName: string | null | undefined
+
+    // A package importing its own subpath export (`pkg/sub` from inside `pkg`)
+    // resolves through its `exports` map without a `node_modules` hop, so it
+    // is not classified as external.
+    function isSelfReference(importPath: string) {
+      if (!/^\w/.test(importPath)) {
+        return false
+      }
+      if (ownPackageName === undefined) {
+        ownPackageName = getFilePackageName(context.physicalFilename)
+      }
+      return importPath.split('/')[0] === ownPackageName
+    }
+
     function isResolvableWithoutExtension(file: string) {
       const extension = path.extname(file)
       const fileWithoutExtension = file.slice(0, -extension.length)
@@ -345,7 +361,9 @@ export default createRule<Options, MessageId>({
             importPath,
             resolve(importPath, context)!,
             context,
-          ) || isScoped(importPath)
+          ) ||
+          isScoped(importPath) ||
+          isSelfReference(importPath)
 
         if (!extension || !importPath.endsWith(`.${extension}`)) {
           // A package subpath that resolves to a type declaration

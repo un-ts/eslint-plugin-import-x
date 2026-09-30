@@ -119,6 +119,20 @@ ruleTester.run('extensions', rule, {
       options: ['never', { ignorePackages: true }],
     }),
 
+    // a package importing its own subpath export resolves through its
+    // `exports` map without a `node_modules` hop, but is still a package
+    tValid({
+      code: 'import { a } from "package-self-reference/sub"',
+      options: ['ignorePackages', { js: 'always' }],
+      filename: testFilePath('./package-self-reference/src/main.js'),
+    }),
+
+    tValid({
+      code: 'import { a } from "package-self-reference/sub"',
+      options: ['always', { ignorePackages: true }],
+      filename: testFilePath('./package-self-reference/src/main.js'),
+    }),
+
     tValid({
       code: 'import exceljs from "exceljs"',
       options: ['always', { js: 'never', jsx: 'never' }],
