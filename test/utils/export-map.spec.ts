@@ -10,6 +10,7 @@ import type { ChildContext } from 'eslint-plugin-import-x'
 import {
   ExportMap,
   isMaybeUnambiguousModule,
+  makeContextCacheKey,
 } from 'eslint-plugin-import-x/utils'
 
 function jsdocTests(parseContext: ChildContext, lineEnding: string) {
@@ -124,6 +125,96 @@ describe('ExportMap', () => {
     const imports = ExportMap.get('./export-all', fakeContext)!
     expect(imports).toBeDefined()
     expect(imports.has('foo')).toBe(true)
+  })
+
+  describe('export namespaces', () => {
+    const context = {
+      ...fakeContext,
+      settings: {
+        'import-x/parsers': { '@typescript-eslint/parser': ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+    }
+
+    it.each([
+      {
+        source: 'mixed',
+        kinds: {
+          foo: 'value',
+          fn: 'value',
+          T: 'type',
+          I: 'type',
+          C: 'both',
+          E: 'both',
+          N: 'both',
+          default: 'both',
+        },
+      },
+      {
+        source: 'aliases',
+        kinds: {
+          RenamedValue: 'value',
+          RenamedType: 'type',
+          RenamedClass: 'both',
+          RenamedEnum: 'both',
+          RenamedDefault: 'both',
+          TypeValue: 'none',
+          TypeClass: 'type',
+          ImportedValue: 'value',
+          ImportedType: 'type',
+          ImportedClass: 'both',
+          LocalType: 'type',
+          LocalClass: 'both',
+        },
+      },
+      {
+        source: 'type-star',
+        kinds: {
+          foo: 'none',
+          fn: 'none',
+          T: 'type',
+          C: 'type',
+          E: 'type',
+          ImportedValue: 'none',
+          ImportedClass: 'type',
+          TypeValue: 'none',
+          default: 'none',
+        },
+      },
+    ])('resolves $source', ({ source, kinds }) => {
+      const map = ExportMap.get(`./export-type-star/${source}`, context)!
+      expect(map.errors).toHaveLength(0)
+      for (const [name, kind] of Object.entries(kinds)) {
+        expect(map.getExportKind(name)).toBe(kind)
+      }
+    })
+
+    it.each([
+      'export type * from "./mixed"; export * from "./mixed";',
+      'export * from "./type-star"; export * from "./mixed";',
+    ])('retains values through mixed paths: %s', code => {
+      const path = testFilePath('export-type-star/paths.ts')
+      const map = ExportMap.parse(path, code, {
+        ...context,
+        path,
+        cacheKey: `${makeContextCacheKey(context)}\0${path}`,
+      })!
+      expect(map.errors).toHaveLength(0)
+      expect(map.getExportKind('foo')).toBe('value')
+      expect(map.getExportKind('C')).toBe('both')
+    })
+
+    it('terminates wildcard and named reexport cycles', () => {
+      const map = ExportMap.get('./export-type-star/cycle-a', context)!
+      const names = new Set<string>()
+      map.$forEach((_, name) => names.add(name))
+      expect(names).toEqual(new Set(['foo', 'Loop', 'CycleType']))
+      expect(map.getExportKind('foo')).toBe('value')
+      expect(map.getExportKind('CycleType')).toBe('type')
+      expect(map.getExportKind('Loop')).toBe('none')
+      expect(map.getExportKind('missing')).toBe('none')
+      expect(map.get('Loop')).toBeUndefined()
+    })
   })
 
   it('returns a cached copy on subsequent requests', () => {
