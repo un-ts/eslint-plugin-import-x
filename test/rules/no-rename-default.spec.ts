@@ -37,6 +37,12 @@ ruleTester.run('no-rename-default', rule, {
     `import _ from './no-rename-default/anonymous-class'`,
     `import _ from './no-rename-default/anonymous-object'`,
     `import _ from './no-rename-default/anonymous-primitive'`,
+    // a binary expression has no name to preserve, so renaming is not a rename.
+    // `instanceof` and `in` are the only binary operators spelled as words, and
+    // the lexer's continuation check was punctuation-only — so it read these as
+    // the bare identifier `Foo` and reported against valid code.
+    `import _ from './no-rename-default/binary-instanceof'`,
+    `import _ from './no-rename-default/binary-in'`,
   ],
   invalid: [],
 })
