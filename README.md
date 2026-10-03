@@ -90,6 +90,8 @@ The list could be longer in the future, but we don't want to make it too long he
 npm install eslint-plugin-import-x --save-dev
 ```
 
+If you're type-checking your `eslint.config.js`, but you aren't using [typescript-eslint](https://typescript-eslint.io/) for some reason (you really should consider it), you need to also install `@typescript-eslint/utils`, because the type definitions depend on it.
+
 ## Configuration (new: `eslint.config.*`)
 
 From [`v8.21.0`](https://github.com/eslint/eslint/releases/tag/v8.21.0), ESLint announced a new config system.
