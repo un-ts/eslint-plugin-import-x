@@ -101,6 +101,15 @@ export default createRule<[], MessageId>({
             if (propName === 'default') {
               continue
             }
+
+            if (fileImport.exportMap.hasExportAssignment) {
+              // A member of an `export = ns` assignment cannot be consumed via
+              // named import at runtime (unless the consumer is transpiled to
+              // CommonJS), so consuming it via the default import is not a
+              // mistake.
+              continue
+            }
+
             if (!fileImport.exportMap.namespace.has(propName)) {
               continue
             }
