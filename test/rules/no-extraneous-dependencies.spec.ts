@@ -238,6 +238,31 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         { packageDir: packageDirMonoRepoRoot, whitelist: ['not-a-dependency'] },
       ],
     }),
+
+    // Closest package.json is always merged when packageDir is set.
+    // File is inside nested-package/ which has react, so react is found
+    // even though packageDir only points to monorepo root (which lacks react).
+    tValid({
+      code: 'import react from "react";',
+      filename: path.join(packageDirMonoRepoWithNested, 'foo.js'),
+      options: [{ packageDir: packageDirMonoRepoRoot }],
+    }),
+
+    // Deps from both the closest package.json AND packageDir are merged.
+    // right-pad is only in monorepo root, react is only in nested-package.
+    // File is in nested-package, packageDir points to root — both should be found.
+    tValid({
+      code: 'import rightpad from "right-pad";',
+      filename: path.join(packageDirMonoRepoWithNested, 'foo.js'),
+      options: [{ packageDir: packageDirMonoRepoRoot }],
+    }),
+
+    // When closest package.json IS the packageDir, behavior is unchanged.
+    tValid({
+      code: 'import rightpad from "right-pad";',
+      filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
+      options: [{ packageDir: packageDirMonoRepoRoot }],
+    }),
   ],
   invalid: [
     tInvalid({
@@ -368,12 +393,6 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     tInvalid({
       code: 'import react from "react";',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
-      errors: [{ messageId: 'missing', data: { packageName: 'react' } }],
-    }),
-    tInvalid({
-      code: 'import react from "react";',
-      filename: path.join(packageDirMonoRepoWithNested, 'foo.js'),
-      options: [{ packageDir: packageDirMonoRepoRoot }],
       errors: [{ messageId: 'missing', data: { packageName: 'react' } }],
     }),
     tInvalid({
