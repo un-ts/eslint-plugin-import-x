@@ -634,9 +634,9 @@ function getSorter(alphabetizeOptions: AlphabetizeOptions) {
         const x = A[i]
         const y = B[i]
         if (i === 0 && RELATIVE_DOTS.has(x) && RELATIVE_DOTS.has(y)) {
-          // Sibling and parent imports can share a group, so sort siblings first to keep the comparator transitive
+          // Sibling and parent imports can share a group, so compare full paths to keep the comparator transitive (matches upstream)
           if (x !== y) {
-            result = x === '.' ? -1 : 1
+            result = compareString(importA, importB)
             break
           }
           continue
