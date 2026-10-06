@@ -404,7 +404,10 @@ function getSubpath(name?: string | null): string {
   }
   const cleanName = name.split('?')[0].replace(/\/+$/, '')
   const match = PACKAGE_SUBPATH_REGEX.exec(cleanName)
-  return match ? match[1] : ''
+  if (match) {
+    return match[1]
+  }
+  return ''
 }
 
 function getImportCacheKey(
@@ -422,7 +425,10 @@ function getImportCacheKey(
   const isExternal =
     NODE_MODULES_REGEX.test(resolvedPath) ||
     isExternalModule(sourceValue, resolvedPath, context)
-  return isExternal ? resolvedPath + '#subpath:' + subpath : resolvedPath
+  if (isExternal) {
+    return resolvedPath + '#subpath:' + subpath
+  }
+  return resolvedPath
 }
 
 export interface ModuleMap {
