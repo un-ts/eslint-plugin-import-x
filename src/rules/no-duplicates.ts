@@ -396,6 +396,8 @@ function hasCommentInsideNonSpecifiers(
 const PACKAGE_SUBPATH_REGEX =
   /^(?:@[^/\\~#$:]+\/[^/\\~#$:]+|[^./\\~#$@:][^/\\~#$:]*)\/(.+)$/
 
+const NODE_MODULES_REGEX = /[/\\]node_modules[/\\]/i
+
 function getSubpath(name?: string | null): string {
   if (!name) {
     return ''
@@ -418,9 +420,9 @@ function getImportCacheKey(
     return resolvedPath
   }
   const isExternal =
-    /[/\\]node_modules[/\\]/i.test(resolvedPath) ||
+    NODE_MODULES_REGEX.test(resolvedPath) ||
     isExternalModule(sourceValue, resolvedPath, context)
-  return isExternal ? `${resolvedPath}#subpath:${subpath}` : resolvedPath
+  return isExternal ? resolvedPath + '#subpath:' + subpath : resolvedPath
 }
 
 export interface ModuleMap {
