@@ -69,11 +69,6 @@ function getFix(
     return null
   }
 
-  const firstSubpath = getSubpath(first.source.value)
-  if (nodes.some(node => getSubpath(node.source.value) !== firstSubpath)) {
-    return null
-  }
-
   const defaultImportNames = new Set(
     nodes.flatMap(x => getDefaultImportName(x) || []),
   )
@@ -398,35 +393,34 @@ function hasCommentInsideNonSpecifiers(
   )
 }
 
+const PACKAGE_SUBPATH_REGEX =
+  /^(?:@[^/\\~#$:]+\/[^/\\~#$:]+|[^./\\~#$@:][^/\\~#$:]*)\/(.+)$/
+
 function getSubpath(name?: string | null): string {
   if (!name) {
     return ''
   }
-  const cleanName = name.split('?')[0]
-  if (
-    cleanName.startsWith('.') ||
-    cleanName.startsWith('/') ||
-    cleanName.startsWith('\\') ||
-    /^[A-Za-z]:[/\\]/.test(cleanName) ||
-    cleanName.startsWith('@/') ||
-    cleanName.startsWith('~/') ||
-    cleanName.startsWith('#') ||
-    cleanName.startsWith('$')
-  ) {
-    return ''
-  }
+  const cleanName = name.split('?')[0].replace(/\/+$/, '')
+  const match = PACKAGE_SUBPATH_REGEX.exec(cleanName)
+  return match ? match[1] : ''
+}
 
-  if (cleanName.startsWith('@')) {
-    const match = cleanName.match(/^@[^/]+\/[^/]+(?:\/(.+))?$/)
-    return match?.[1]?.replace(/\/+$/, '') || ''
+function getImportCacheKey(
+  sourceValue: string,
+  resolvedPath: string,
+  context: RuleContext<MessageId, [Options?]>,
+): string {
+  if (!resolvedPath) {
+    return resolvedPath
   }
-
-  const slashIndex = cleanName.indexOf('/')
-  if (slashIndex !== -1) {
-    return cleanName.slice(slashIndex + 1).replace(/\/+$/, '')
+  const subpath = getSubpath(sourceValue)
+  if (!subpath) {
+    return resolvedPath
   }
-
-  return ''
+  const isExternal =
+    /[/\\]node_modules[/\\]/i.test(resolvedPath) ||
+    isExternalModule(sourceValue, resolvedPath, context)
+  return isExternal ? `${resolvedPath}#subpath:${subpath}` : resolvedPath
 }
 
 export interface ModuleMap {
@@ -536,15 +530,11 @@ export default createRule<[Options?], MessageId>({
       ImportDeclaration(n) {
         // resolved path will cover aliased duplicates
         const resolvedPath = resolver(n.source.value)
-        const subpath = getSubpath(n.source.value)
-        const isExternal =
-          /[/\\]node_modules[/\\]/i.test(resolvedPath) ||
-          (Boolean(resolvedPath) &&
-            isExternalModule(n.source.value, resolvedPath, context))
-        const cacheKey =
-          isExternal && subpath
-            ? `${resolvedPath}#subpath:${subpath}`
-            : resolvedPath
+        const cacheKey = getImportCacheKey(
+          n.source.value,
+          resolvedPath,
+          context,
+        )
         const importMap = getImportMap(n)
 
         if (importMap.has(cacheKey)) {

@@ -191,6 +191,36 @@ ruleTester.run('no-duplicates', rule, {
       ],
     }),
 
+    // #449: bare-specifier aliases and relative paths resolving to the same local file merge correctly
+    tInvalid({
+      code: "import { a } from 'components/button'; import { b } from './components/button';",
+      output: "import { a, b  } from 'components/button'; ",
+      settings: {
+        'import-x/resolver-next': [
+          {
+            name: 'alias-resolver',
+            interfaceVersion: 3,
+            resolve(modulePath: string) {
+              if (
+                modulePath === 'components/button' ||
+                modulePath === './components/button'
+              ) {
+                return {
+                  found: true,
+                  path: path.resolve('test/fixtures/bar.js'),
+                }
+              }
+              return { found: false }
+            },
+          },
+        ],
+      },
+      errors: [
+        createDuplicatedError(path.resolve('test/fixtures/bar.js')),
+        createDuplicatedError(path.resolve('test/fixtures/bar.js')),
+      ],
+    }),
+
     tInvalid({
       code: "import { x } from './foo'; import { y } from './foo'",
       output: "import { x, y  } from './foo'; ",
