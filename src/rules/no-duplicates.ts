@@ -3,7 +3,7 @@ import * as semver from 'semver'
 
 import { cjsRequire } from '../require.js'
 import type { PackageJson, RuleContext } from '../types.js'
-import { createRule, lazy, resolve } from '../utils/index.js'
+import { createRule, isExternalModule, lazy, resolve } from '../utils/index.js'
 
 // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
 // pre-calculate if the TypeScript version is supported
@@ -37,13 +37,15 @@ function checkImports(
       return
     }
 
+    const displayModule = module.split('#subpath:')[0]
+
     for (let i = 0, len = nodes.length; i < len; i++) {
       const node = nodes[i]
       context.report({
         node: node.source,
         messageId: 'duplicate',
         data: {
-          module,
+          module: displayModule,
         },
         // Attach the autofix (if any) to the first import only
         fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
@@ -64,6 +66,11 @@ function getFix(
   // import has comments. Also, if the first import is `import * as ns from
   // './foo'` there's nothing we can do.
   if (hasProblematicComments(first, sourceCode) || hasNamespace(first)) {
+    return null
+  }
+
+  const firstSubpath = getSubpath(first.source.value)
+  if (nodes.some(node => getSubpath(node.source.value) !== firstSubpath)) {
     return null
   }
 
@@ -391,6 +398,37 @@ function hasCommentInsideNonSpecifiers(
   )
 }
 
+function getSubpath(name?: string | null): string {
+  if (!name) {
+    return ''
+  }
+  const cleanName = name.split('?')[0]
+  if (
+    cleanName.startsWith('.') ||
+    cleanName.startsWith('/') ||
+    cleanName.startsWith('\\') ||
+    /^[A-Za-z]:[/\\]/.test(cleanName) ||
+    cleanName.startsWith('@/') ||
+    cleanName.startsWith('~/') ||
+    cleanName.startsWith('#') ||
+    cleanName.startsWith('$')
+  ) {
+    return ''
+  }
+
+  if (cleanName.startsWith('@')) {
+    const match = cleanName.match(/^@[^/]+\/[^/]+(?:\/(.+))?$/)
+    return match?.[1]?.replace(/\/+$/, '') || ''
+  }
+
+  const slashIndex = cleanName.indexOf('/')
+  if (slashIndex !== -1) {
+    return cleanName.slice(slashIndex + 1).replace(/\/+$/, '')
+  }
+
+  return ''
+}
+
 export interface ModuleMap {
   imported: Map<string, TSESTree.ImportDeclaration[]>
   nsImported: Map<string, TSESTree.ImportDeclaration[]>
@@ -498,12 +536,21 @@ export default createRule<[Options?], MessageId>({
       ImportDeclaration(n) {
         // resolved path will cover aliased duplicates
         const resolvedPath = resolver(n.source.value)
+        const subpath = getSubpath(n.source.value)
+        const isExternal =
+          /[/\\]node_modules[/\\]/i.test(resolvedPath) ||
+          (Boolean(resolvedPath) &&
+            isExternalModule(n.source.value, resolvedPath, context))
+        const cacheKey =
+          isExternal && subpath
+            ? `${resolvedPath}#subpath:${subpath}`
+            : resolvedPath
         const importMap = getImportMap(n)
 
-        if (importMap.has(resolvedPath)) {
-          importMap.get(resolvedPath)!.push(n)
+        if (importMap.has(cacheKey)) {
+          importMap.get(cacheKey)!.push(n)
         } else {
-          importMap.set(resolvedPath, [n])
+          importMap.set(cacheKey, [n])
         }
       },
 
