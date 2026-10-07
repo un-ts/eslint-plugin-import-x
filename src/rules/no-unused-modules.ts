@@ -602,7 +602,12 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
 
       exportCount.delete(AST_NODE_TYPES.ExportAllDeclaration)
       exportCount.delete(AST_NODE_TYPES.ImportNamespaceSpecifier)
-      if (exportCount.size === 0) {
+      if (
+        exportCount.size === 0 &&
+        // the `ExportAllDeclaration` key tracks who re-exports this file, so check
+        // for this file's own `export * from` statements separately
+        !node.body.some(s => s.type === AST_NODE_TYPES.ExportAllDeclaration)
+      ) {
         // node.body[0] === 'undefined' only happens, if everything is commented out in the file
         // being linted
         context.report({

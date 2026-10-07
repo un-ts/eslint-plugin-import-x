@@ -133,6 +133,18 @@ function createUnusedError(
         `,
         options: missingExportsOptions,
       }),
+      tValid({
+        code: "export * from 'a'",
+        options: missingExportsOptions,
+      }),
+      tValid({
+        code: "export * as a from 'a'",
+        options: missingExportsOptions,
+      }),
+      tValid({
+        code: "export type * from 'a'",
+        options: missingExportsOptions,
+      }),
     ],
     invalid: [
       tInvalid({
@@ -142,6 +154,11 @@ function createUnusedError(
       }),
       tInvalid({
         code: '/* const a = 1 */',
+        options: missingExportsOptions,
+        errors: [{ messageId: 'notFound' }],
+      }),
+      tInvalid({
+        code: "import * as a from 'a'",
         options: missingExportsOptions,
         errors: [{ messageId: 'notFound' }],
       }),
