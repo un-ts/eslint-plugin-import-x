@@ -179,6 +179,100 @@ export default b
     }
   })
 
+  it('derives the same default export name as the AST route', () => {
+    // every wrapper opened before the name must be closed right after it, and
+    // nothing may continue the expression past them. A call applied to the
+    // result names its own first argument, as the AST reads the outermost call.
+    const cases: Array<[string, string | undefined]> = [
+      ['Foo', 'Foo'],
+      ['(Foo)', 'Foo'],
+      ['withHoc(Foo)', 'Foo'],
+      ['withHoc(hoc2(Foo))', 'Foo'],
+      ['withHoc(Foo, bar)', 'Foo'],
+      ['withHoc(Foo, { a: [1] })', 'Foo'],
+      ['(withHoc(Foo))', 'Foo'],
+      ['withHoc((Foo))', 'Foo'],
+      ['connect(mapState)(Comp)', 'Comp'],
+      ['connect(a, b)(Comp)', 'Comp'],
+      ['connect(a)(withRouter(Comp))', 'Comp'],
+      ['connect(a)(b)(Comp)', 'Comp'],
+      ['(foo) => {}', undefined],
+      ['(Foo) + 1', undefined],
+      ['(Foo).bar', undefined],
+      ['withHoc(Foo) + 1', undefined],
+      ['withHoc(Foo)()', undefined],
+      ['withHoc(Foo).bar', undefined],
+      ['(a, b)', undefined],
+      // documented fail-open corners: the AST names these, the lexer gives up
+      ['connect(() => x)(Comp)', undefined],
+      ['withHoc((Foo), b)', undefined],
+      ["withHoc(Foo, 'x')", undefined],
+    ]
+    for (const [expression, expected] of cases) {
+      const lexed = lexModule(
+        `export default ${expression}`,
+        'f.js',
+      ) as LexedEsModule
+      expect([expression, lexed.defaultExportSourceName?.name]).toEqual([
+        expression,
+        expected,
+      ])
+    }
+  })
+
+  it('falls back to the AST route for inline type exports', () => {
+    // es-module-lexer reports `export { type T }` as two exports, `type` and
+    // `T`, inventing an export named `type`
+    for (const source of [
+      'export { type T }',
+      'export { type T, v }',
+      'export { type T as default }',
+    ]) {
+      expect(lexModule(`const T = 1, v = 1\n${source}`, 'f.js')).toBeNull()
+    }
+    // a binding merely named `type` is plain JavaScript
+    for (const source of [
+      'const type = 1\nexport { type }',
+      'export const type = 1',
+    ]) {
+      expect(lexModule(source, 'f.js')).toMatchObject({ ownExports: ['type'] })
+    }
+  })
+
+  it('falls back to the AST route for `export type`', () => {
+    // es-module-lexer reports nothing at all for these: the edge or the
+    // exported name would vanish without a trace
+    for (const source of [
+      `export type { T } from './x.js'\nexport const v = 1`,
+      `export type * from './x.js'\nconst p = import('./y.js')`,
+      `export type T = 1\nexport const v = 1`,
+    ]) {
+      expect(lexModule(source, 'f.js')).toBeNull()
+    }
+    // guards against over-matching
+    for (const source of [
+      `export { T } from './x.js'`,
+      `export * from './x.js'`,
+      'export const typeName = 1',
+    ]) {
+      expect(lexModule(source, 'f.js')).toMatchObject({ format: 'module' })
+    }
+  })
+
+  it('records no edge for a template-literal dynamic import', () => {
+    // parity with the AST route, which only records string literals
+    const template = lexModule(
+      'const p = import(`./x.js`)',
+      'f.js',
+    ) as LexedEsModule
+    expect(template.imports).toEqual([])
+    const literal = lexModule(
+      `const p = import('./x.js')`,
+      'f.js',
+    ) as LexedEsModule
+    expect(literal.imports.map(i => i.specifier)).toEqual(['./x.js'])
+  })
+
   it('keeps standard export-from syntax on the lexer route', () => {
     // guards the stage-1 detector against over-matching
     expect(lexModule(`export { baz } from './x.js'`, 'f.js')).toMatchObject({

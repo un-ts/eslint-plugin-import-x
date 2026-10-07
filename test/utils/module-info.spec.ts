@@ -7,8 +7,10 @@ import { isESLint10, testContext, testFilePath } from '../utils.js'
 
 import {
   getExportDoc,
+  getExportNames,
   getModuleDoc,
   ModuleInfo,
+  resolveDeepExport,
 } from 'eslint-plugin-import-x/core/index'
 import type { RuleContext } from 'eslint-plugin-import-x/types'
 import { isMaybeUnambiguousModule } from 'eslint-plugin-import-x/utils'
@@ -377,6 +379,42 @@ describe('ModuleInfo', () => {
     })
 
     afterAll(done => fs.unlink(testFilePath('deep/cache-2.js'), done))
+  })
+
+  describe('`export *` cycles', () => {
+    // a.js and b.js `export *` from each other; self.js from itself
+    it('finds names across the cycle', () => {
+      const a = ModuleInfo.get('./cycles/star/a', fakeContext)!
+      expect(a.hasExport('fromB')).toBe(true)
+      expect(a.getExport('fromB')).toBeDefined()
+      expect(resolveDeepExport(a, 'fromB').found).toBe(true)
+    })
+
+    it('terminates on a name the cycle does not export', () => {
+      const a = ModuleInfo.get('./cycles/star/a', fakeContext)!
+      expect(a.hasExport('missing')).toBe(false)
+      expect(a.getExport('missing')).toBeUndefined()
+      expect(resolveDeepExport(a, 'missing').found).toBe(false)
+    })
+
+    it('terminates when nothing in the cycle exports anything', () => {
+      // empty-a.js and empty-b.js only `export *` from each other
+      const empty = ModuleInfo.get('./cycles/star/empty-a', fakeContext)!
+      expect(empty.hasExports).toBe(false)
+    })
+
+    it('collects each name once', () => {
+      const a = ModuleInfo.get('./cycles/star/a', fakeContext)!
+      expect([...getExportNames(a)].sort()).toEqual(['fromA', 'fromB'])
+    })
+
+    it('skips a module that `export *`s itself', () => {
+      const self = ModuleInfo.get('./cycles/star/self', fakeContext)!
+      expect(self.hasExport('own')).toBe(true)
+      expect(self.getExport('missing')).toBeUndefined()
+      expect(resolveDeepExport(self, 'missing').found).toBe(false)
+      expect([...getExportNames(self)]).toEqual(['own'])
+    })
   })
 
   describe('issue #210: self-reference', () => {

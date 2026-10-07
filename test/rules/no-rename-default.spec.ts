@@ -41,8 +41,10 @@ ruleTester.run('no-rename-default', rule, {
     // `instanceof` and `in` are the only binary operators spelled as words, and
     // the lexer's continuation check was punctuation-only — so it read these as
     // the bare identifier `Foo` and reported against valid code.
-    `import _ from './no-rename-default/binary-instanceof'`,
-    `import _ from './no-rename-default/binary-in'`,
+    tValid({ code: `import _ from './no-rename-default/binary-instanceof'` }),
+    tValid({ code: `import _ from './no-rename-default/binary-in'` }),
+    // an arrow function's parameter is not the default's name
+    tValid({ code: `import _ from './no-rename-default/paren-arrow'` }),
   ],
   invalid: [],
 })
@@ -88,6 +90,7 @@ ruleTester.run('no-rename-default', rule, {
 // assign-fn-named.js
 // assign-generator.js
 // assign-generator-named.js
+// curried-hoc.js
 ruleTester.run('no-rename-default', rule, {
   valid: [
     `import arrow from './no-rename-default/assign-arrow'`,
@@ -98,6 +101,7 @@ ruleTester.run('no-rename-default', rule, {
     `import fn from './no-rename-default/assign-fn-named'`,
     `import generator from './no-rename-default/assign-generator'`,
     `import generator from './no-rename-default/assign-generator-named'`,
+    tValid({ code: `import Comp from './no-rename-default/curried-hoc'` }),
   ],
   invalid: [
     tInvalid({
@@ -219,6 +223,22 @@ ruleTester.run('no-rename-default', rule, {
             importName: 'myGenerator',
             suggestion:
               "import generator from './no-rename-default/assign-generator-named'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    // `connect(mapState)(Comp)` is named after the outer call's argument
+    tInvalid({
+      code: `import Other from './no-rename-default/curried-hoc'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'curried-hoc.js',
+            defaultExportName: 'Comp',
+            requiresOrImports: 'imports',
+            importName: 'Other',
+            suggestion: "import Comp from './no-rename-default/curried-hoc'",
           },
           'ImportDefaultSpecifier',
         ),

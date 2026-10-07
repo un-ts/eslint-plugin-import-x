@@ -10,7 +10,7 @@ import * as esModuleLexer from 'es-module-lexer'
  * Correctness rule for everything here: es-module-lexer is permissive, and
  * syntax it accepts but reads differently than a real parser would must send
  * the file back to the AST route via a `null` return, never produce a
- * best-effort answer. See `TYPE_MODIFIER_PATTERN`,
+ * best-effort answer. See `TYPE_MODIFIER_PATTERN`, `TYPE_EXPORT_PATTERN`,
  * `NON_STANDARD_EXPORT_FROM_PATTERN` and `LINE_SEPARATOR_PATTERN` for the cases
  * that need detecting; anything the lexer outright rejects (JSX) falls back on
  * its own.
@@ -74,9 +74,12 @@ export interface LexedEsModule {
    * Derived without a parser and definitive for lexable JavaScript:
    * `undefined` means the module has no (nameable) default export, matching
    * what the AST route would answer — do not escalate. Known fail-open
-   * corners (both yield `undefined` where the AST finds a name):
-   * assignments as call arguments (`withHoc(Foo = 1)`) and ASI-continued
-   * default expressions.
+   * corners (all yield `undefined` where the AST finds a name):
+   * assignments as call arguments (`withHoc(Foo = 1)`), ASI-continued
+   * default expressions, a curried call whose inner call does not start with
+   * a name (`connect(() => x)(Comp)`), parenthesized names followed by more
+   * arguments (`withHoc((Foo), b)`), and further arguments containing
+   * strings, templates or `/`.
    */
   defaultExportSourceName?: DefaultExportSourceName
 }
@@ -148,9 +151,10 @@ function createClauseReader(content: string) {
 }
 
 /**
- * A `type`/`typeof` modifier in an import clause. es-module-lexer happily
- * accepts Flow's `import type { T } from '...'`, `import typeof T from '...'`
- * and TS's inline `import { type T, v }` — but those bind nothing at runtime,
+ * A `type`/`typeof` modifier in an import or export clause. es-module-lexer
+ * happily accepts Flow's `import type { T } from '...'`, `import typeof T from
+ * '...'` and TS's inline `import { type T, v }` / `export { type T }` — but
+ * those bind nothing at runtime,
  * so treating them as value imports would report edges that do not exist. A
  * file using them is not the plain JavaScript this route assumes and belongs
  * to the AST parser.
@@ -191,6 +195,15 @@ const NON_STANDARD_EXPORT_FROM_PATTERN =
  * would cost correctness.
  */
 const LINE_SEPARATOR_PATTERN = /[\u2028\u2029]/
+
+/**
+ * `export type …` in any form: `export type { T } from '...'`,
+ * `export type * from '...'`, Flow's `export type T = …`. es-module-lexer
+ * reports **nothing** for these (no import edge, no export, not even module
+ * syntax), so the edge or the exported name disappears without a trace and no
+ * per-statement check can catch it. Belongs to the AST parser.
+ */
+const TYPE_EXPORT_PATTERN = /\bexport\s+(?:type|typeof)\b/
 
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
 const CALL_HEAD_PATTERN = /^[A-Za-z_$][\w$]*\s*\(\s*/
@@ -234,12 +247,64 @@ const NON_NAME_KEYWORDS = new Set([
   'yield',
 ] as const)
 
+/** Nothing continues the expression past this point. */
+function isExpressionEnd(rest: string) {
+  return (
+    rest === '' ||
+    !(
+      EXPRESSION_CONTINUATION_PATTERN.test(rest) ||
+      KEYWORD_CONTINUATION_PATTERN.test(rest)
+    )
+  )
+}
+
+/**
+ * `text` starts at the `,` after a call's first argument: skip the remaining
+ * arguments and return the text from the call's closing `)`. Gives up on
+ * strings, templates and `/` (regex or division), whose contents can't be
+ * balanced without a tokenizer.
+ */
+function skipToCallClose(text: string): string | undefined {
+  let depth = 0
+  for (let i = 0; i < text.length; i++) {
+    switch (text[i]) {
+      case '(':
+      case '[':
+      case '{': {
+        depth++
+        break
+      }
+      case ')':
+      case ']':
+      case '}': {
+        if (depth === 0) {
+          return text[i] === ')' ? text.slice(i) : undefined
+        }
+        depth--
+        break
+      }
+      case "'":
+      case '"':
+      case '`':
+      case '/': {
+        return
+      }
+    }
+  }
+}
+
 /**
  * Derive the default export's declared name from the statement text —
  * mirroring the AST route's `resolveDefaultName` for the `ln`-less shapes:
  * a bare identifier, an assignment, or an identifier threaded through call
  * wrappers (`withHoc(Foo)`). Anything else (objects, literals, anonymous
  * functions/classes, arrows) has no name on the AST route either.
+ *
+ * Every wrapper opened before the name must be closed by exactly one `)`
+ * right after it (plus any further call arguments), and nothing may continue
+ * the expression past them: `(foo) => {}` and `withHoc(Foo).bar` have no
+ * name. A call applied to the result — the curried `connect(mapState)(Comp)`
+ * — names its own first argument, as the AST reads the outermost call.
  */
 function deriveDefaultExportSourceName(
   head: string,
@@ -250,48 +315,66 @@ function deriveDefaultExportSourceName(
   }
   let expression = head.slice(statement[0].length)
 
-  // unwrap call wrappers and parentheses: `withHoc(hoc2(Foo))` → `Foo`
-  let insideCall = false
-  for (let depth = 0; depth < 8; depth++) {
+  // wrappers opened so far, each needing one `)` after the name
+  let opened = 0
+  let innermostIsCall = false
+  for (let step = 0; step < 8; step++) {
+    // unwrap call wrappers and parentheses: `withHoc(hoc2(Foo))` → `Foo`
     const call = CALL_HEAD_PATTERN.exec(expression)
     if (call && !NON_NAME_KEYWORDS.has(call[0].replace(/\s*\(\s*$/, ''))) {
       expression = expression.slice(call[0].length)
-      insideCall = true
+      opened++
+      innermostIsCall = true
       continue
     }
     const paren = PAREN_HEAD_PATTERN.exec(expression)
     if (paren) {
       expression = expression.slice(paren[0].length)
+      opened++
+      innermostIsCall = false
       continue
     }
-    break
-  }
 
-  const identifier = IDENTIFIER_HEAD_PATTERN.exec(expression)
-  if (!identifier || NON_NAME_KEYWORDS.has(identifier[0])) {
-    return
-  }
-  const name = identifier[0]
-  const rest = expression.slice(name.length).replace(/^\s+/, '')
+    const identifier = IDENTIFIER_HEAD_PATTERN.exec(expression)
+    if (!identifier || NON_NAME_KEYWORDS.has(identifier[0])) {
+      return
+    }
+    const name = identifier[0]
+    let rest = expression.slice(name.length).trimStart()
 
-  if (insideCall) {
-    // the identifier must be a plain call argument
-    return rest.startsWith(')') || rest.startsWith(',')
-      ? { name, isBoundName: true }
-      : undefined
+    if (opened === 0) {
+      // `export default Foo = 1` (but not `==` comparison or `=>` arrow)
+      if (/^=(?![=>])/.test(rest)) {
+        return { name, isBoundName: true }
+      }
+      // a bare identifier: nothing may continue the expression
+      return isExpressionEnd(rest) ? { name, isBoundName: true } : undefined
+    }
+
+    if (rest.startsWith(',')) {
+      // more call arguments: `withHoc(Foo, options)`. Inside bare parentheses
+      // this is a sequence expression `(a, b)`, which has no name.
+      const close = innermostIsCall ? skipToCallClose(rest) : undefined
+      if (close === undefined) {
+        return
+      }
+      rest = close
+    }
+    for (; opened > 0; opened--) {
+      if (!rest.startsWith(')')) {
+        return
+      }
+      rest = rest.slice(1).trimStart()
+    }
+    if (rest.startsWith('(')) {
+      // curried `connect(mapState)(Comp)`: start over on this call's argument
+      expression = rest.slice(1).trimStart()
+      opened = 1
+      innermostIsCall = true
+      continue
+    }
+    return isExpressionEnd(rest) ? { name, isBoundName: true } : undefined
   }
-  // `export default Foo = 1` (but not `==` comparison or `=>` arrow)
-  if (/^=(?![=>])/.test(rest)) {
-    return { name, isBoundName: true }
-  }
-  // a bare identifier: nothing may continue the expression
-  return rest === '' ||
-    !(
-      EXPRESSION_CONTINUATION_PATTERN.test(rest) ||
-      KEYWORD_CONTINUATION_PATTERN.test(rest)
-    )
-    ? { name, isBoundName: true }
-    : undefined
 }
 
 /**
@@ -406,6 +489,10 @@ export function lexModule(
     return null // edges would vanish — see LINE_SEPARATOR_PATTERN
   }
 
+  if (TYPE_EXPORT_PATTERN.test(content)) {
+    return null // invisible to the lexer — see TYPE_EXPORT_PATTERN
+  }
+
   let imports: readonly esModuleLexer.ImportSpecifier[]
   let exports: readonly esModuleLexer.ExportSpecifier[]
   let hasModuleSyntax: boolean
@@ -512,6 +599,10 @@ export function lexModule(
   for (const exp of exports) {
     const stmt = exportFromStatements.get(exp.ss)
     if (!stmt) {
+      // `export { type T }`: the lexer reports `type` and `T` as two exports
+      if (TYPE_MODIFIER_PATTERN.test(content.slice(exp.ss, exp.s))) {
+        return null // not plain JavaScript — see TYPE_MODIFIER_PATTERN
+      }
       let localName = exp.ln
       if (exp.n === 'default') {
         if (exp.ln == null) {
@@ -583,8 +674,15 @@ function collectImportEdges(
   const edges: LexedImport[] = []
   for (const imp of imports) {
     // skip `import.meta` (d === -2) and dynamic imports whose specifier is
-    // not a plain string (n == null) — matching the AST path
-    if (imp.d < -1 || imp.n == null || skippedStatements.has(imp.ss)) {
+    // not a plain string (n == null, or a template literal: a dynamic import's
+    // offsets include the quote) — matching the AST path, which only records
+    // string `Literal` specifiers
+    if (
+      imp.d < -1 ||
+      imp.n == null ||
+      skippedStatements.has(imp.ss) ||
+      (imp.d >= 0 && content.codePointAt(imp.s) === 96) /* ` */
+    ) {
       continue
     }
     const dynamic = imp.d >= 0
