@@ -29,6 +29,7 @@ ambient namespaces:
 
 const rootProgram = 'root'
 const tsTypePrefix = 'type:'
+const valuePrefix = 'value:'
 
 /**
  * Remove function overloads like:
@@ -42,14 +43,41 @@ const tsTypePrefix = 'type:'
  * ```
  */
 function removeTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
+  let overload: TSESTree.Node | undefined
+  let hasImplementation = false
   for (const node of nodes) {
     const declType =
       node.type === AST_NODE_TYPES.ExportDefaultDeclaration
         ? node.declaration.type
         : node.parent?.type
     if (declType === AST_NODE_TYPES.TSDeclareFunction) {
+      overload ??= node
       nodes.delete(node)
+    } else if (declType === AST_NODE_TYPES.FunctionDeclaration) {
+      hasImplementation = true
     }
+  }
+
+  if (
+    overload &&
+    !hasImplementation &&
+    [...nodes].some(node => {
+      if (
+        node.parent?.type === AST_NODE_TYPES.TSModuleDeclaration ||
+        ('exportKind' in node && node.exportKind === 'type')
+      ) {
+        return false
+      }
+      const specifier = node.parent
+      return (
+        specifier?.type !== AST_NODE_TYPES.ExportSpecifier ||
+        (specifier.exportKind !== 'type' &&
+          specifier.parent?.exportKind !== 'type')
+      )
+    })
+  ) {
+    // Ambient type aliases can merge with signatures, but distinct values cannot.
+    nodes.add(overload)
   }
 }
 
@@ -149,7 +177,9 @@ export default createRule<[], MessageId>({
 
       const named = namespace.get(parent)!
 
-      const key = isType ? `${tsTypePrefix}${name}` : name
+      // Type-only exports still share the module's single default export.
+      const prefix = isType && name !== 'default' ? tsTypePrefix : valuePrefix
+      const key = `${prefix}${name}`
 
       let nodes = named.get(key)
 
@@ -181,6 +211,7 @@ export default createRule<[], MessageId>({
           getValue(node.exported),
           node.exported,
           getParent(node.parent!),
+          node.exportKind === 'type' || node.parent!.exportKind === 'type',
         )
       },
 
@@ -252,7 +283,14 @@ export default createRule<[], MessageId>({
         remoteExports.$forEach((_, name) => {
           if (name !== 'default') {
             any = true // poor man's filter
-            addNamed(name, node, parent)
+            const kind = remoteExports.getExportKind(name)
+            const isType = node.exportKind === 'type'
+            if (kind !== 'none' && (!isType || kind !== 'value')) {
+              addNamed(name, node, parent, isType || kind === 'type')
+              if (!isType && kind === 'both') {
+                addNamed(name, node, parent, true)
+              }
+            }
           }
         })
 
@@ -267,6 +305,31 @@ export default createRule<[], MessageId>({
 
       'Program:exit'() {
         for (const [, named] of namespace) {
+          // Type-only specifiers cannot redeclare other explicit exports.
+          for (const [name, nodes] of named) {
+            if (!name.startsWith(tsTypePrefix)) {
+              continue
+            }
+            const valueNodes = named.get(
+              `${valuePrefix}${name.slice(tsTypePrefix.length)}`,
+            )
+            if (
+              !valueNodes ||
+              [...valueNodes].every(
+                node => node.type === AST_NODE_TYPES.ExportAllDeclaration,
+              )
+            ) {
+              continue
+            }
+            for (const node of nodes) {
+              if (node.parent?.type === AST_NODE_TYPES.ExportSpecifier) {
+                valueNodes.add(node)
+              }
+            }
+          }
+
+          const reported = new Map<string, Set<TSESTree.Node>>()
+
           for (const [name, nodes] of named) {
             if (nodes.size === 0) {
               continue
@@ -282,12 +345,24 @@ export default createRule<[], MessageId>({
               continue
             }
 
+            const exportedName = name.slice(
+              name.startsWith(tsTypePrefix)
+                ? tsTypePrefix.length
+                : valuePrefix.length,
+            )
+            const reportedNodes =
+              reported.get(exportedName) || new Set<TSESTree.Node>()
+            reported.set(exportedName, reportedNodes)
+
             for (const node of nodes) {
-              if (shouldSkipTypescriptNamespace(node, nodes)) {
+              if (
+                reportedNodes.has(node) ||
+                shouldSkipTypescriptNamespace(node, nodes)
+              ) {
                 continue
               }
 
-              if (name === 'default') {
+              if (exportedName === 'default') {
                 context.report({
                   node,
                   messageId: 'multiDefault',
@@ -297,10 +372,12 @@ export default createRule<[], MessageId>({
                   node,
                   messageId: 'multiNamed',
                   data: {
-                    name: name.replace(tsTypePrefix, ''),
+                    name: exportedName,
                   },
                 })
               }
+
+              reportedNodes.add(node)
             }
           }
         }

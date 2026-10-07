@@ -52,6 +52,46 @@ export interface ModuleImport {
   declarations: Set<DeclarationMetadata>
 }
 
+export type ExportNamespaceKind = 'none' | 'type' | 'value' | 'both' | 'unknown'
+
+interface ModuleReexport {
+  local: string
+  getImport(): ExportMap | null
+  isTypeOnly?: boolean
+}
+
+const declarationKinds = new Map<string, ExportNamespaceKind>([
+  ['TSTypeAliasDeclaration', 'type'],
+  ['TSInterfaceDeclaration', 'type'],
+  ['TypeAlias', 'type'],
+  ['InterfaceDeclaration', 'type'],
+  ['ClassDeclaration', 'both'],
+  ['TSAbstractClassDeclaration', 'both'],
+  ['TSEnumDeclaration', 'both'],
+  ['TSModuleDeclaration', 'both'],
+])
+
+function declarationExportKind(node: TSESTree.Node): ExportNamespaceKind {
+  return declarationKinds.get(node.type) ?? 'value'
+}
+
+function typeOnlyKind(kind: ExportNamespaceKind): ExportNamespaceKind {
+  return kind === 'none' || kind === 'value' ? 'none' : 'type'
+}
+
+function mergeExportKinds(
+  left: ExportNamespaceKind,
+  right: ExportNamespaceKind,
+): ExportNamespaceKind {
+  if (left === 'none') {
+    return right
+  }
+  if (left === 'unknown' || right === 'unknown') {
+    return 'unknown'
+  }
+  return right === 'none' || left === right ? left : 'both'
+}
+
 const declTypes = new Set([
   'VariableDeclaration',
   'ClassDeclaration',
@@ -304,6 +344,10 @@ export class ExportMap {
         }
         case 'ExportNamespaceSpecifier': {
           m.exports.set(s.exported.name, n)
+          m.locals.set(
+            s.exported.name,
+            'exportKind' in n && n.exportKind === 'type' ? 'type' : 'both',
+          )
           m.namespace.set(
             s.exported.name,
             Object.defineProperty(exportMeta, 'namespace', {
@@ -316,6 +360,10 @@ export class ExportMap {
         }
         case 'ExportAllDeclaration': {
           m.exports.set(getValue(s.exported!), n)
+          m.locals.set(
+            getValue(s.exported!),
+            s.exportKind === 'type' ? 'type' : 'both',
+          )
           m.namespace.set(
             getValue(s.exported!),
             addNamespace(exportMeta, s.exported!),
@@ -349,6 +397,9 @@ export class ExportMap {
         m.reexports.set(getValue(s.exported), {
           local,
           getImport: () => resolveImport(nsource),
+          isTypeOnly:
+            ('exportKind' in n && n.exportKind === 'type') ||
+            ('exportKind' in s && s.exportKind === 'type'),
         })
       }
     }
@@ -381,7 +432,7 @@ export class ExportMap {
             // @ts-expect-error - flow type
             specifier.importKind === 'typeof')
       }
-      captureDependency(
+      return captureDependency(
         n,
         declarationIsType || specifiersOnlyImportingTypes,
         importedSpecifiers,
@@ -430,7 +481,36 @@ export class ExportMap {
 
     const source = new SourceCode({ text: content, ast: ast as AST.Program })
 
+    function captureLocal(name: string, kind: ExportNamespaceKind) {
+      const previous = m.locals.get(name)
+      m.locals.set(
+        name,
+        typeof previous === 'string' ? mergeExportKinds(previous, kind) : kind,
+      )
+    }
+
     for (const n of ast.body) {
+      const declaration =
+        n.type === 'ExportNamedDeclaration' ||
+        n.type === 'ExportDefaultDeclaration'
+          ? n.declaration
+          : n
+      if (declaration?.type === 'VariableDeclaration') {
+        for (const d of declaration.declarations) {
+          recursivePatternCapture(d.id, id => {
+            if (id.type === 'Identifier') {
+              captureLocal(id.name, 'value')
+            }
+          })
+        }
+      } else if (
+        declaration &&
+        'id' in declaration &&
+        declaration.id?.type === 'Identifier'
+      ) {
+        captureLocal(declaration.id.name, declarationExportKind(declaration))
+      }
+
       if (n.type === 'ExportDefaultDeclaration') {
         const exportMeta = captureDoc(source, docStyleParsers, n)
         if (n.declaration.type === 'Identifier') {
@@ -448,6 +528,11 @@ export class ExportMap {
         } else {
           const getter = captureDependency(n, n.exportKind === 'type')
           if (getter) {
+            if (n.exportKind !== 'type') {
+              m.typeOnlyDependencies.delete(getter)
+            } else if (!m.dependencies.has(getter)) {
+              m.typeOnlyDependencies.add(getter)
+            }
             m.dependencies.add(getter)
           }
         }
@@ -456,11 +541,28 @@ export class ExportMap {
 
       // capture namespaces in case of later export
       if (n.type === 'ImportDeclaration') {
-        captureDependencyWithSpecifiers(n)
+        const getImport = captureDependencyWithSpecifiers(n)
 
         const ns = n.specifiers.find(s => s.type === 'ImportNamespaceSpecifier')
         if (ns) {
           namespaces.set(ns.local.name, n.source.value)
+          m.locals.set(ns.local.name, n.importKind === 'type' ? 'type' : 'both')
+        }
+        if (getImport) {
+          for (const s of n.specifiers) {
+            if (s.type !== 'ImportNamespaceSpecifier') {
+              m.locals.set(s.local.name, {
+                local:
+                  s.type === 'ImportDefaultSpecifier'
+                    ? 'default'
+                    : getValue(s.imported),
+                getImport,
+                isTypeOnly:
+                  n.importKind === 'type' ||
+                  (s.type === 'ImportSpecifier' && s.importKind === 'type'),
+              })
+            }
+          }
         }
         continue
       }
@@ -616,6 +718,9 @@ export class ExportMap {
                 } else if (namespaceDecl.type === 'VariableDeclaration') {
                   for (const d of namespaceDecl.declarations)
                     recursivePatternCapture(d.id, id => {
+                      if (id.type === 'Identifier') {
+                        captureLocal(id.name, 'value')
+                      }
                       m.exports.set((id as TSESTree.Identifier).name, n)
                       m.namespace.set(
                         (id as TSESTree.Identifier).name,
@@ -629,6 +734,12 @@ export class ExportMap {
                       )
                     })
                 } else if ('id' in namespaceDecl) {
+                  if (namespaceDecl.id?.type === 'Identifier') {
+                    captureLocal(
+                      namespaceDecl.id.name,
+                      declarationExportKind(namespaceDecl),
+                    )
+                  }
                   m.exports.set(
                     (namespaceDecl.id as TSESTree.Identifier).name,
                     n,
@@ -695,16 +806,13 @@ export class ExportMap {
   namespace = new Map<string, ModuleNamespace>()
 
   // todo: restructure to key on path, value is resolver + map of names
-  reexports = new Map<
-    string,
-    {
-      local: string
-      getImport(): ExportMap | null
-    }
-  >()
+  reexports = new Map<string, ModuleReexport>()
 
   /** Star-exports */
   dependencies = new Set<() => ExportMap | null>()
+
+  private typeOnlyDependencies = new Set<() => ExportMap | null>()
+  private locals = new Map<string, ExportNamespaceKind | ModuleReexport>()
 
   /** Dependencies of this module that are not explicitly re-exported */
   imports = new Map<string, ModuleImport>()
@@ -828,7 +936,107 @@ export class ExportMap {
     return { found: false, path: [this] }
   }
 
-  get(name: string): ModuleNamespace | null | undefined {
+  private markVisited(name: string, visited: Map<ExportMap, Set<string>>) {
+    const names = visited.get(this) || new Set<string>()
+    if (names.has(name)) {
+      return false
+    }
+    names.add(name)
+    visited.set(this, names)
+    return true
+  }
+
+  private localExportKind(
+    name: string,
+    visited: Map<ExportMap, Set<string>>,
+  ): ExportNamespaceKind {
+    const local = this.locals.get(name)
+    if (typeof local === 'string') {
+      return local
+    }
+    if (!local) {
+      return 'unknown'
+    }
+    const kind =
+      local.getImport()?.getExportKind(local.local, visited) || 'unknown'
+    return local.isTypeOnly ? typeOnlyKind(kind) : kind
+  }
+
+  /** Resolve declaration namespaces without reparsing cached modules. */
+  getExportKind(
+    name: string,
+    visited = new Map<ExportMap, Set<string>>(),
+  ): ExportNamespaceKind {
+    if (!this.markVisited(name, visited)) {
+      return 'none'
+    }
+
+    try {
+      const node = this.exports.get(name)
+      if (node) {
+        if (node.type === 'ExportDefaultDeclaration') {
+          return node.declaration.type === 'Identifier'
+            ? this.localExportKind(node.declaration.name, visited)
+            : declarationExportKind(node.declaration)
+        }
+        if (node.type === 'ExportNamedDeclaration' && !node.declaration) {
+          const specifier = node.specifiers.find(
+            s => getValue(s.exported) === name,
+          )
+          if (!specifier) {
+            return 'none'
+          }
+          const kind = specifier.local
+            ? this.localExportKind(getValue(specifier.local), visited)
+            : 'both'
+          return node.exportKind === 'type' || specifier.exportKind === 'type'
+            ? typeOnlyKind(kind)
+            : kind
+        }
+        if (
+          name === 'default' &&
+          node.type === 'TSExportAssignment' &&
+          node.expression.type === 'Identifier'
+        ) {
+          return this.localExportKind(node.expression.name, visited)
+        }
+        return this.localExportKind(name, visited)
+      }
+
+      const reexport = this.reexports.get(name)
+      if (reexport) {
+        const kind =
+          reexport.getImport()?.getExportKind(reexport.local, visited) ||
+          'unknown'
+        return reexport.isTypeOnly ? typeOnlyKind(kind) : kind
+      }
+
+      let kind: ExportNamespaceKind = 'none'
+      if (name !== 'default') {
+        for (const dep of this.dependencies) {
+          const dependencyKind = dep()?.getExportKind(name, visited) || 'none'
+          kind = mergeExportKinds(
+            kind,
+            this.typeOnlyDependencies.has(dep)
+              ? typeOnlyKind(dependencyKind)
+              : dependencyKind,
+          )
+        }
+      }
+      return kind
+    } finally {
+      // Revisit shared dependencies through other type/value paths.
+      visited.get(this)!.delete(name)
+    }
+  }
+
+  get(
+    name: string,
+    visited = new Map<ExportMap, Set<string>>(),
+  ): ModuleNamespace | null | undefined {
+    if (!this.markVisited(name, visited)) {
+      return
+    }
     if (this.namespace.has(name)) {
       return this.namespace.get(name)
     }
@@ -847,7 +1055,7 @@ export class ExportMap {
         return undefined
       }
 
-      return imported.get(reexports.local)
+      return imported.get(reexports.local, visited)
     }
 
     // default exports must be explicitly re-exported (#328)
@@ -864,7 +1072,7 @@ export class ExportMap {
           continue
         }
 
-        const innerValue = innerMap.get(name)
+        const innerValue = innerMap.get(name, visited)
         if (innerValue !== undefined) {
           return innerValue
         }
@@ -880,7 +1088,13 @@ export class ExportMap {
       map: ExportMap,
     ) => void,
     thisArg?: unknown,
+    visited = new Set<ExportMap>(),
   ) {
+    if (visited.has(this)) {
+      return
+    }
+    visited.add(this)
+
     for (const [n, v] of this.namespace.entries()) {
       callback.call(thisArg, v, n, this)
     }
@@ -899,11 +1113,15 @@ export class ExportMap {
         return
       }
 
-      d.$forEach((v, n) => {
-        if (n !== 'default') {
-          callback.call(thisArg, v, n, this)
-        }
-      })
+      d.$forEach(
+        (v, n) => {
+          if (n !== 'default') {
+            callback.call(thisArg, v, n, this)
+          }
+        },
+        undefined,
+        visited,
+      )
     })
   }
 
