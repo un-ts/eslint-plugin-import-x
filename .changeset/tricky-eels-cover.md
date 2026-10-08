@@ -1,5 +1,5 @@
 ---
-"eslint-plugin-import-x": major
+"eslint-plugin-import-x": minor
 ---
 
 Rewrite the module analysis core for performance boosts. The speedup depends on your project, and we expect no performance regression in any setup — if you measure one, please report it.
