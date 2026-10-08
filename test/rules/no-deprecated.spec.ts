@@ -215,6 +215,18 @@ ruleTester.run('no-deprecated', rule, {
       ],
     }),
 
+    // module-level docs are JSDoc `@module` blocks whatever the docstyle
+    tInvalid({
+      code: "import Thing from './deprecated-file'",
+      settings: { 'import-x/docstyle': ['tomdoc'] },
+      errors: [
+        createDeprecatedDescError(
+          'This module is the worst.',
+          'ImportDeclaration',
+        ),
+      ],
+    }),
+
     // don't flag as part of other member expressions
     tInvalid({
       code: "import Thing from './deprecated-file'; console.log(other.Thing)",

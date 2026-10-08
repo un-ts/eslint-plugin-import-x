@@ -203,10 +203,16 @@ export default b
       ['withHoc(Foo)()', undefined],
       ['withHoc(Foo).bar', undefined],
       ['(a, b)', undefined],
+      ['Café', 'Café'],
+      ['créerHoc(Foo)', 'Foo'],
+      ['React.memo(Foo)', 'Foo'],
+      ['this.wrap(Foo)', 'Foo'],
+      ['a?.b(Foo)', undefined],
       // documented fail-open corners: the AST names these, the lexer gives up
       ['connect(() => x)(Comp)', undefined],
       ['withHoc((Foo), b)', undefined],
       ["withHoc(Foo, 'x')", undefined],
+      [String.raw`Foo\u0041`, undefined],
     ]
     for (const [expression, expected] of cases) {
       const lexed = lexModule(
@@ -218,6 +224,51 @@ export default b
         expected,
       ])
     }
+  })
+
+  it('treats only a bare namespace binding as a namespace default', () => {
+    // the AST route resolves a namespace only for an `Identifier` declaration;
+    // `withRetry(api)` is whatever the call returns
+    const wrapped = lexModule(
+      `import * as api from './api.js'\nexport default withRetry(api)`,
+      'f.js',
+    ) as LexedEsModule
+    expect(wrapped.namespaceExports).toEqual([])
+    expect(wrapped.ownExports).toEqual(['default'])
+
+    const parenthesized = lexModule(
+      `import * as api from './api.js'\nexport default (api)`,
+      'f.js',
+    ) as LexedEsModule
+    expect(parenthesized.namespaceExports).toEqual([
+      { exported: 'default', specifier: './api.js' },
+    ])
+  })
+
+  it('reads non-ASCII names in export and import clauses', () => {
+    expect(
+      (
+        lexModule(
+          `export { café as renamed } from './m.js'`,
+          'f.js',
+        ) as LexedEsModule
+      ).reexports,
+    ).toEqual([{ exported: 'renamed', local: 'café', specifier: './m.js' }])
+    expect(
+      (
+        lexModule(
+          `import * as café from './m.js'\nexport { café }`,
+          'f.js',
+        ) as LexedEsModule
+      ).namespaceExports,
+    ).toEqual([{ exported: 'café', specifier: './m.js' }])
+  })
+
+  it('stays linear on long runs of blank lines', () => {
+    // a `^\s*` stage-1 check rescanned the run from every line start: ~6 s
+    const start = performance.now()
+    lexModule(`export const a = 1${'\n'.repeat(100_000)}x`, 'f.js')
+    expect(performance.now() - start).toBeLessThan(1000)
   })
 
   it('falls back to the AST route for inline type exports', () => {

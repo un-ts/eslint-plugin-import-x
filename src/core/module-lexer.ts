@@ -78,8 +78,8 @@ export interface LexedEsModule {
    * assignments as call arguments (`withHoc(Foo = 1)`), ASI-continued
    * default expressions, a curried call whose inner call does not start with
    * a name (`connect(() => x)(Comp)`), parenthesized names followed by more
-   * arguments (`withHoc((Foo), b)`), and further arguments containing
-   * strings, templates or `/`.
+   * arguments (`withHoc((Foo), b)`), further arguments containing
+   * strings, templates or `/`, and names written with escape sequences.
    */
   defaultExportSourceName?: DefaultExportSourceName
 }
@@ -116,11 +116,20 @@ function ensureLexersInitialized(): boolean {
   return lexersReady
 }
 
+/**
+ * An ECMAScript identifier, non-ASCII letters included (`Café`). Escape
+ * sequences (`Foo\u0041`) are not matched; see `EXPRESSION_CONTINUATION_PATTERN`.
+ */
+const IDENTIFIER = String.raw`[\p{ID_Start}$_][\p{ID_Continue}$\u200C\u200D]*`
+
 const BLOCK_COMMENT_PATTERN = /\/\*[\s\S]*?\*\//g
 const LINE_COMMENT_PATTERN = /\/\/.*$/gm
 const EXPORT_STAR_AS_PATTERN = /^export\s*\*\s*as\s/
 const EXPORT_STAR_PATTERN = /^export\s*\*/
-const REEXPORT_ENTRY_PATTERN = /^(?:([\w$]+)\s+as\s+)?([\w$]+)$/
+const REEXPORT_ENTRY_PATTERN = new RegExp(
+  String.raw`^(?:(${IDENTIFIER})\s+as\s+)?(${IDENTIFIER})$`,
+  'u',
+)
 
 function stripComments(statement: string) {
   return statement
@@ -132,22 +141,13 @@ function stripComments(statement: string) {
 /**
  * Comment-stripped text of a statement up to (not including) the opening quote
  * of its specifier — i.e. the whole import/export clause, which is all any
- * caller here inspects. Memoized by statement start offset: three passes want
- * the same slices, and stripping allocates two intermediate strings each time.
+ * caller here inspects.
  *
  * Cutting at the specifier offset rather than searching for `from` matters:
  * `import * as ns from './from'` would otherwise be split on the wrong token.
  */
-function createClauseReader(content: string) {
-  const cache = new Map<number, string>()
-  return (imp: esModuleLexer.ImportSpecifier) => {
-    let clause = cache.get(imp.ss)
-    if (clause === undefined) {
-      clause = stripComments(content.slice(imp.ss, Math.max(imp.ss, imp.s - 1)))
-      cache.set(imp.ss, clause)
-    }
-    return clause
-  }
+function readClause(content: string, imp: esModuleLexer.ImportSpecifier) {
+  return stripComments(content.slice(imp.ss, Math.max(imp.ss, imp.s - 1)))
 }
 
 /**
@@ -166,7 +166,10 @@ function createClauseReader(content: string) {
 const TYPE_MODIFIER_PATTERN = /\b(?:type|typeof)\b/
 
 /** The `ns` of `import * as ns from '...'` / `import d, * as ns from '...'`. */
-const NAMESPACE_CLAUSE_PATTERN = /\*\s*as\s+([A-Za-z_$][\w$]*)/
+const NAMESPACE_CLAUSE_PATTERN = new RegExp(
+  String.raw`\*\s*as\s+(${IDENTIFIER})`,
+  'u',
+)
 
 /**
  * `export default from './x'` / `export baz from './x'` — the stage-1
@@ -178,9 +181,15 @@ const NAMESPACE_CLAUSE_PATTERN = /\*\s*as\s+([A-Za-z_$][\w$]*)/
  *
  * Standard export-from syntax never matches — `{` and `*` are not identifiers,
  * and `export default <expr>` has no following `from '`.
+ *
+ * The indent is `[ \t]*`, not `\s*`: with the `m` flag every line start is a
+ * candidate, and `\s` would let each one rescan the blank lines after it —
+ * quadratic on a long blank run (6 s at 100k blank lines).
  */
-const NON_STANDARD_EXPORT_FROM_PATTERN =
-  /^\s*export\s+[A-Za-z_$][\w$]*\s+from\s*['"]/m
+const NON_STANDARD_EXPORT_FROM_PATTERN = new RegExp(
+  String.raw`^[ \t]*export\s+${IDENTIFIER}\s+from\s*['"]`,
+  'mu',
+)
 
 /**
  * U+2028 LINE SEPARATOR / U+2029 PARAGRAPH SEPARATOR. ECMAScript counts both as
@@ -206,15 +215,20 @@ const LINE_SEPARATOR_PATTERN = /[\u2028\u2029]/
 const TYPE_EXPORT_PATTERN = /\bexport\s+(?:type|typeof)\b/
 
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
-const CALL_HEAD_PATTERN = /^[A-Za-z_$][\w$]*\s*\(\s*/
+/** A call head, member callees included: `withHoc(`, `React.memo(`. */
+const CALL_HEAD_PATTERN = new RegExp(
+  String.raw`^${IDENTIFIER}(?:\s*\.\s*${IDENTIFIER})*\s*\(\s*`,
+  'u',
+)
 const PAREN_HEAD_PATTERN = /^\(\s*/
-const IDENTIFIER_HEAD_PATTERN = /^[A-Za-z_$][\w$]*/
+const IDENTIFIER_HEAD_PATTERN = new RegExp(`^${IDENTIFIER}`, 'u')
 /**
  * Tokens that continue an expression after an identifier — not a bare name.
  * `=` is included: plain assignment is recognized explicitly beforehand, so
- * a remaining `=` is an arrow (`=>`) or comparison (`==`).
+ * a remaining `=` is an arrow (`=>`) or comparison (`==`). `\` is included
+ * because outside a string it can only be an escape continuing the identifier.
  */
-const EXPRESSION_CONTINUATION_PATTERN = /^[.([`+\-*/%<>&|^?,:!~=]/
+const EXPRESSION_CONTINUATION_PATTERN = /^[.([`+\-*/%<>&|^?,:!~=\\]/
 /**
  * The same thing, for the two binary operators that are *words* rather than
  * punctuation. Without this, `export default Foo instanceof Bar` read as the
@@ -293,6 +307,16 @@ function skipToCallClose(text: string): string | undefined {
   }
 }
 
+/** A derived default name, plus whether the expression *is* that name. */
+interface DerivedDefaultName extends DefaultExportSourceName {
+  /**
+   * The whole default expression is the identifier, parentheses aside — what
+   * the AST route sees as an `Identifier` declaration. Only then can it be a
+   * re-exported `import * as ns` binding; `withRetry(ns)` is a call result.
+   */
+  isIdentifier: boolean
+}
+
 /**
  * Derive the default export's declared name from the statement text —
  * mirroring the AST route's `resolveDefaultName` for the `ln`-less shapes:
@@ -308,7 +332,7 @@ function skipToCallClose(text: string): string | undefined {
  */
 function deriveDefaultExportSourceName(
   head: string,
-): DefaultExportSourceName | undefined {
+): DerivedDefaultName | undefined {
   const statement = EXPORT_DEFAULT_PATTERN.exec(head)
   if (!statement) {
     return
@@ -318,6 +342,7 @@ function deriveDefaultExportSourceName(
   // wrappers opened so far, each needing one `)` after the name
   let opened = 0
   let innermostIsCall = false
+  let sawCall = false
   for (let step = 0; step < 8; step++) {
     // unwrap call wrappers and parentheses: `withHoc(hoc2(Foo))` → `Foo`
     const call = CALL_HEAD_PATTERN.exec(expression)
@@ -325,6 +350,7 @@ function deriveDefaultExportSourceName(
       expression = expression.slice(call[0].length)
       opened++
       innermostIsCall = true
+      sawCall = true
       continue
     }
     const paren = PAREN_HEAD_PATTERN.exec(expression)
@@ -345,10 +371,12 @@ function deriveDefaultExportSourceName(
     if (opened === 0) {
       // `export default Foo = 1` (but not `==` comparison or `=>` arrow)
       if (/^=(?![=>])/.test(rest)) {
-        return { name, isBoundName: true }
+        return { name, isBoundName: true, isIdentifier: false }
       }
       // a bare identifier: nothing may continue the expression
-      return isExpressionEnd(rest) ? { name, isBoundName: true } : undefined
+      return isExpressionEnd(rest)
+        ? { name, isBoundName: true, isIdentifier: true }
+        : undefined
     }
 
     if (rest.startsWith(',')) {
@@ -373,7 +401,9 @@ function deriveDefaultExportSourceName(
       innermostIsCall = true
       continue
     }
-    return isExpressionEnd(rest) ? { name, isBoundName: true } : undefined
+    return isExpressionEnd(rest)
+      ? { name, isBoundName: true, isIdentifier: !sawCall }
+      : undefined
   }
 }
 
@@ -467,11 +497,11 @@ function createOffsetToLoc(content: string) {
 /**
  * Lex a JavaScript module.
  *
- * Caveat: es-module-lexer is permissive about some invalid-ESM syntax — e.g.
- * Flow's `import type { x } from '...'` does NOT throw — so uncompiled
- * Flow-typed files may be lexed as ESM with type imports treated as value
- * imports. Rare for published packages, and failures lean open (missed
- * reports, not false ones).
+ * Caveat: es-module-lexer is permissive and does not report syntax errors in
+ * general (`export const a = ;` lexes fine), so a broken file is analyzed as
+ * far as its import/export statements go instead of producing a parse error.
+ * Syntax it accepts but reads differently than a parser (Flow and TS type
+ * syntax, stage-1 export-from) is detected and sent back to the AST route.
  *
  * @returns The lexed shape, or `null` when the lexers cannot handle the file
  *   (initialization failure or a lexer parse error, e.g. JSX) — the caller
@@ -543,8 +573,6 @@ export function lexModule(
     }
   }
 
-  const readClause = createClauseReader(content)
-
   const ownExports: string[] = []
   const reexports: LexedReexport[] = []
   const namespaceExports: LexedNamespaceExport[] = []
@@ -560,7 +588,13 @@ export function lexModule(
   // export-from statements, keyed by statement start offset
   const exportFromStatements = new Map<
     number,
-    { specifier: string; clause: string; starAs: boolean }
+    {
+      specifier: string
+      clause: string
+      starAs: boolean
+      /** `exported → local`, parsed on first need and shared by every name */
+      locals?: Map<string, string>
+    }
   >()
   const skippedImportEdges = new Set<number>()
   /** Statement offsets of plain `export * from '...'` edges. */
@@ -570,7 +604,7 @@ export function lexModule(
     if (imp.d !== -1 || imp.n == null) {
       continue
     }
-    const clause = readClause(imp)
+    const clause = readClause(content, imp)
     if (TYPE_MODIFIER_PATTERN.test(clause)) {
       return null // not plain JavaScript — see TYPE_MODIFIER_PATTERN
     }
@@ -606,14 +640,18 @@ export function lexModule(
       let localName = exp.ln
       if (exp.n === 'default') {
         if (exp.ln == null) {
-          // an expression default: only the statement text can name it, and
-          // a name derived from a bare binding reference is exactly the one to
-          // look up below for `export default ns`
-          defaultExportSourceName = deriveDefaultExportSourceName(
+          // an expression default: only the statement text can name it
+          const derived = deriveDefaultExportSourceName(
             stripComments(content.slice(exp.ss, exp.ss + 512)),
           )
-          if (defaultExportSourceName?.isBoundName) {
-            localName = defaultExportSourceName.name
+          if (derived) {
+            const { name, isBoundName, isIdentifier } = derived
+            defaultExportSourceName = { name, isBoundName }
+            // `export default ns` is looked up below; `withRetry(ns)` is not
+            // — the AST route only does so for an `Identifier` declaration
+            if (isIdentifier) {
+              localName = name
+            }
           }
         } else {
           // es-module-lexer reports the local name for every *declared* form —
@@ -639,7 +677,8 @@ export function lexModule(
       continue
     }
     // `export { a, b as c } from '...'` — recover the local name
-    const local = exp.ln ?? parseReexportLocals(stmt.clause).get(exp.n)
+    const local =
+      exp.ln ?? (stmt.locals ??= parseReexportLocals(stmt.clause)).get(exp.n)
     if (local == null) {
       // exotic syntax (e.g. string export names): model as an own export so
       // lookups still succeed (fails open, no deep verification)

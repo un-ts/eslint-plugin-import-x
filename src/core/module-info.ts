@@ -1,9 +1,9 @@
 /**
  * @file `ModuleInfo` — the module analysis core: rules talk to it and to
- *   nothing else for module analysis. It is lexer-based (plain-JS modules
- *   under `node_modules` need no parser; see `module-lexer.ts`) and falls
- *   back to parsing with the configured ESLint parser and walking the AST
- *   itself (see `ast-module.ts`). Queries needed by a single rule are
+ *   nothing else for module analysis. It is lexer-based (plain-JS modules,
+ *   third-party or project-internal, need no parser; see `module-lexer.ts`)
+ *   and falls back to parsing with the configured ESLint parser and walking
+ *   the AST itself (see `ast-module.ts`). Queries needed by a single rule are
  *   standalone functions in `module-exports.ts`/`module-doc.ts` instead of
  *   members here.
  */
@@ -161,10 +161,11 @@ const moduleInfoCache = new Map<string, CacheEntry>()
  * The module analysis core — what a rule may ask about another module, and
  * the only thing rules talk to.
  *
- * A `ModuleInfo` is lexer-based: for plain-JS modules under `node_modules`
- * it extracts its data with `es-module-lexer`/`cjs-module-lexer` and no
- * parser ever runs. Everything else (project-internal modules, TS, JSX,
- * Flow, custom parsers, files the lexers reject) falls back to the AST
+ * A `ModuleInfo` is lexer-based: for plain-JS modules (`.js`/`.mjs`/`.cjs`,
+ * third-party or project-internal) it extracts its data with
+ * `es-module-lexer`/`cjs-module-lexer` and no parser ever runs. Everything
+ * else (TS, JSX, Flow, extensions with an alternate parser configured, files
+ * the lexers reject or detect as non-plain JS) falls back to the AST
  * route: the file is parsed with the configured ESLint parser and its AST
  * walked once (`ast-module.ts`), producing the same fields. All
  * cross-module links resolve `ModuleInfo → ModuleInfo` by re-entering
@@ -266,7 +267,7 @@ export class ModuleInfo {
           log('lexed as non-module script:', filepath)
           return remember(null)
         }
-        log('lexed external module:', filepath)
+        log('lexed module:', filepath)
         const info = ModuleInfo.fromFacts(
           filepath,
           context,
@@ -363,16 +364,6 @@ export class ModuleInfo {
       }
     }
 
-    // the AST walk synthesizes this itself; mirror it for lexed modules
-    if (
-      ownExports.size > 0 &&
-      !ownExports.has('default') &&
-      (getTsconfigWithContext(context)?.compilerOptions?.esModuleInterop ??
-        false)
-    ) {
-      ownExports.set('default', {})
-    }
-
     return {
       format: lexed.format === 'module' ? 'Module' : 'ambiguous',
       cacheable: true,
@@ -411,6 +402,17 @@ export class ModuleInfo {
             targetPath == null ? null : info.resolvePath(targetPath),
         }),
       })
+    }
+
+    // tsconfig `esModuleInterop` synthesizes a default export when anything is
+    // exported and no default exists yet — applied here, once, for both routes
+    if (
+      info.ownExports.size > 0 &&
+      !info.ownExports.has('default') &&
+      (getTsconfigWithContext(context)?.compilerOptions?.esModuleInterop ??
+        false)
+    ) {
+      info.ownExports.set('default', {})
     }
 
     for (const [name, { local, targetPath }] of facts.reexports) {

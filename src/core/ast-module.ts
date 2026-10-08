@@ -114,9 +114,14 @@ function noDocCapture(): undefined {}
  * means the traversal runs and finds nothing. False negatives are impossible —
  * nothing but whitespace and comments may sit between the keyword and its
  * parenthesis. (`import.meta` has a `.`, and is not a dynamic import.)
+ *
+ * The block-comment branch must end at the *first* `*\/`. A lazy
+ * `[\s\S]*?\*\/` can stretch over later comments too, and on a failed match
+ * every way of splitting a run of adjacent comments is retried: exponential,
+ * about 0.3 s for one `import /* c *\/ './x'` plus 24 comment blocks below.
  */
 const DYNAMIC_IMPORT_HINT_PATTERN =
-  /\bimport\s*(?:\/\*[\s\S]*?\*\/\s*|\/\/[^\n]*\n\s*)*\(/
+  /\bimport\s*(?:\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\/\s*|\/\/[^\n]*\n\s*)*\(/
 
 /**
  * Parse `content` with the configured ESLint parser and extract the module's
@@ -234,16 +239,6 @@ export function analyzeAstModule(
 
   if (needDocs) {
     facts.getModuleDoc = lazy(() => collectModuleDoc(ast))
-  }
-
-  // tsconfig `esModuleInterop` synthesizes a default export when anything is
-  // exported and no default exists yet
-  if (
-    walk.isEsModuleInteropTrue() &&
-    facts.ownExports.size > 0 &&
-    !facts.ownExports.has('default')
-  ) {
-    addOwnExport(walk, 'default', {})
   }
 
   if (unambiguouslyESM()) {

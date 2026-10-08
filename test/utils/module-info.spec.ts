@@ -5,6 +5,7 @@ import { jest } from '@jest/globals'
 
 import { isESLint10, testContext, testFilePath } from '../utils.js'
 
+import { analyzeAstModule } from 'eslint-plugin-import-x/core/ast-module'
 import {
   getExportDoc,
   getExportNames,
@@ -13,7 +14,10 @@ import {
   resolveDeepExport,
 } from 'eslint-plugin-import-x/core/index'
 import type { RuleContext } from 'eslint-plugin-import-x/types'
-import { isMaybeUnambiguousModule } from 'eslint-plugin-import-x/utils'
+import {
+  childContext,
+  isMaybeUnambiguousModule,
+} from 'eslint-plugin-import-x/utils'
 
 const parserPath = isESLint10
   ? 'babel-eslint-parser-8-cjs'
@@ -68,6 +72,24 @@ function deprecationDocTests(
         tag: 'deprecated',
         description: 'Please stop sending/handling this action type.',
       })
+    })
+
+    describe('multi-line variables', () => {
+      // `export const A = …, /** @deprecated */ B = …`: each declarator
+      // carries its own doc
+      for (const [name, description] of [
+        ['CHAIN_A', 'This chain is awful'],
+        ['CHAIN_B', 'So awful'],
+        ['CHAIN_C', 'Still terrible'],
+      ]) {
+        it(`works for ${name}`, () => {
+          expect(moduleInfo.hasExport(name)).toBe(true)
+          expect(getExportDoc(moduleInfo, name)?.tags[0]).toMatchObject({
+            tag: 'deprecated',
+            description,
+          })
+        })
+      }
     })
 
     it('has no deprecation for undocumented exports', () => {
@@ -379,6 +401,21 @@ describe('ModuleInfo', () => {
     })
 
     afterAll(done => fs.unlink(testFilePath('deep/cache-2.js'), done))
+  })
+
+  it('scans for dynamic imports in linear time', () => {
+    // a lazy block-comment pattern could stretch over later comments and, on
+    // a failed match, retry every split of a comment run: ~4 s for 28 blocks
+    const filepath = testFilePath('dynamic-import-hint.js')
+    const content = `import /* polyfill */ './foo'\nfunction f() {}\n${'/** a */\n'.repeat(28)}export const z = 1\n`
+    const start = performance.now()
+    analyzeAstModule(
+      filepath,
+      content,
+      childContext(filepath, fakeContext),
+      false,
+    )
+    expect(performance.now() - start).toBeLessThan(1000)
   })
 
   describe('`export *` cycles', () => {

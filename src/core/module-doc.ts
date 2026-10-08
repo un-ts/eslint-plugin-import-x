@@ -46,24 +46,20 @@ function getDocStyles(settings: PluginSettings) {
 const DEFAULT_DOC_STYLES = ['jsdoc'] as const
 
 /**
- * @internal Whether the raw module content mentions a deprecation marker of
- *   any configured docstyle — the short-circuit that makes doc queries free
- *   for the overwhelming majority of modules.
+ * @internal Whether the raw module content mentions a deprecation marker —
+ *   the short-circuit that makes doc queries free for the overwhelming
+ *   majority of modules. `@deprecated` is checked whatever the docstyle:
+ *   module-level docs are always JSDoc `@module` blocks.
  */
 export function hasDeprecationMarker(
   content: string,
   settings: PluginSettings,
 ): boolean {
-  for (const style of getDocStyles(settings)) {
-    if (
-      style === 'jsdoc'
-        ? content.includes('@deprecated')
-        : content.includes('Deprecated:')
-    ) {
-      return true
-    }
-  }
-  return false
+  return (
+    content.includes('@deprecated') ||
+    (getDocStyles(settings).includes('tomdoc') &&
+      content.includes('Deprecated:'))
+  )
 }
 
 /**

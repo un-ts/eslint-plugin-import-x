@@ -42,13 +42,20 @@ export class ModuleCache {
 
   /** Parsed (and memoized per settings object) `import-x/cache` settings. */
   static getSettings(settings: PluginSettings) {
-    const memoKey = settings['import-x/cache'] ?? settings
+    // only an object is a valid setting; anything else (`false`, a bare
+    // `Infinity`) falls back to the defaults — and can't be a WeakMap key
+    const cacheSetting: unknown = settings['import-x/cache']
+    const userSettings =
+      typeof cacheSetting === 'object' && cacheSetting !== null
+        ? (cacheSetting as NonNullable<PluginSettings['import-x/cache']>)
+        : undefined
+    const memoKey = userSettings ?? settings
     const cached = settingsCache.get(memoKey)
     if (cached) {
       return cached
     }
 
-    const { lifetime = 30 /* seconds */ } = settings['import-x/cache'] ?? {}
+    const { lifetime = 30 /* seconds */ } = userSettings ?? {}
 
     const normalized: NormalizedCacheSettings = {
       lifetime:
