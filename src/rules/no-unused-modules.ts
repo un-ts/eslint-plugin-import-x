@@ -114,6 +114,10 @@ for additional context.
 
 const DEFAULT = 'default'
 
+// `AST_NODE_TYPES.ExportAllDeclaration` records which files `export * from` this
+// one, so the file's own star exports are tracked under a separate key
+const OWN_EXPORT_ALL_DECLARATION = 'OwnExportAllDeclaration'
+
 const { AST_NODE_TYPES } = TSESTree
 
 function forEachDeclarationIdentifier(
@@ -602,12 +606,7 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
 
       exportCount.delete(AST_NODE_TYPES.ExportAllDeclaration)
       exportCount.delete(AST_NODE_TYPES.ImportNamespaceSpecifier)
-      if (
-        exportCount.size === 0 &&
-        // the `ExportAllDeclaration` key tracks who re-exports this file, so check
-        // for this file's own `export * from` statements separately
-        !node.body.some(s => s.type === AST_NODE_TYPES.ExportAllDeclaration)
-      ) {
+      if (exportCount.size === 0) {
         // node.body[0] === 'undefined' only happens, if everything is commented out in the file
         // being linted
         context.report({
@@ -751,6 +750,9 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
           forEachDeclarationIdentifier(s.declaration!, name => {
             newExportIdentifiers.add(name)
           })
+        }
+        if (s.type === AST_NODE_TYPES.ExportAllDeclaration) {
+          newExportIdentifiers.add(OWN_EXPORT_ALL_DECLARATION)
         }
       }
 
