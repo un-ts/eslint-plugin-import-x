@@ -41,6 +41,9 @@ const properties = {
     checkTypeImports: {
       type: 'boolean',
     },
+    checkSelfReference: {
+      type: 'boolean',
+    },
     pathGroupOverrides: {
       type: 'array',
       items: {
@@ -71,6 +74,7 @@ export type ModifierByFileExtension = Partial<Record<string, Modifier>>
 export interface OptionsItemWithPatternProperty {
   ignorePackages?: boolean
   checkTypeImports?: boolean
+  checkSelfReference?: boolean
   pattern: ModifierByFileExtension
   pathGroupOverrides?: PathGroupOverride[]
   fix?: boolean
@@ -85,6 +89,7 @@ export interface PathGroupOverride {
 export interface OptionsItemWithoutPatternProperty {
   ignorePackages?: boolean
   checkTypeImports?: boolean
+  checkSelfReference?: boolean
   pathGroupOverrides?: PathGroupOverride[]
   fix?: boolean
 }
@@ -104,6 +109,7 @@ export interface NormalizedOptions {
   pattern?: Record<string, Modifier>
   ignorePackages?: boolean
   checkTypeImports?: boolean
+  checkSelfReference?: boolean
   pathGroupOverrides?: PathGroupOverride[]
   fix?: boolean
 }
@@ -121,6 +127,7 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
     pattern: {},
     ignorePackages: false,
     checkTypeImports: false,
+    checkSelfReference: false,
     pathGroupOverrides: [],
     fix: false,
   }
@@ -145,6 +152,7 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
       (!('pattern' in obj) || obj.pattern == null) &&
       obj.ignorePackages == null &&
       obj.checkTypeImports == null &&
+      obj.checkSelfReference == null &&
       !Array.isArray(obj.pathGroupOverrides)
     ) {
       Object.assign(result.pattern, obj)
@@ -163,6 +171,10 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
 
     if (typeof obj.checkTypeImports === 'boolean') {
       result.checkTypeImports = obj.checkTypeImports
+    }
+
+    if (typeof obj.checkSelfReference === 'boolean') {
+      result.checkSelfReference = obj.checkSelfReference
     }
 
     if (Array.isArray(obj.pathGroupOverrides)) {
@@ -363,7 +375,7 @@ export default createRule<Options, MessageId>({
             context,
           ) ||
           isScoped(importPath) ||
-          isSelfReference(importPath)
+          (props.checkSelfReference && isSelfReference(importPath))
 
         if (!extension || !importPath.endsWith(`.${extension}`)) {
           // A package subpath that resolves to a type declaration
