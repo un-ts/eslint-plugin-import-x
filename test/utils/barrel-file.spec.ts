@@ -110,9 +110,9 @@ describe(countModuleSurface, () => {
     ).toEqual({ exports: 4, declarations: 4 })
   })
 
-  it('counts nothing for an export-import alias it cannot attribute', () => {
+  it('counts an export-import alias as a re-export', () => {
     expect(surfaceOf('export import Foo = require("foo")', tsContext)).toEqual({
-      exports: 0,
+      exports: 1,
       declarations: 0,
     })
   })

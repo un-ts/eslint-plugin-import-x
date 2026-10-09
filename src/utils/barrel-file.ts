@@ -25,28 +25,28 @@ export interface ModuleSurface {
 /**
  * Counts a single declaration both as a declaration and as the exports it
  * introduces (`export const a = 1, b = 2` declares and exports two names).
+ *
+ * Takes the closed union an `export` declaration can be. Everything that is
+ * not a variable statement or an import-equals alias introduces exactly one
+ * exported declaration.
  */
-function countDeclaration(declaration: TSESTree.Node): ModuleSurface {
-  switch (declaration.type) {
-    case 'VariableDeclaration': {
-      return {
-        exports: declaration.declarations.length,
-        declarations: declaration.declarations.length,
-      }
-    }
-    case 'FunctionDeclaration':
-    case 'TSDeclareFunction':
-    case 'ClassDeclaration':
-    case 'TSEnumDeclaration':
-    case 'TSModuleDeclaration':
-    case 'TSTypeAliasDeclaration':
-    case 'TSInterfaceDeclaration': {
-      return { exports: 1, declarations: 1 }
-    }
-    default: {
-      return { exports: 0, declarations: 0 }
+function countDeclaration(
+  declaration: TSESTree.NamedExportDeclarations,
+): ModuleSurface {
+  if (declaration.type === 'VariableDeclaration') {
+    return {
+      exports: declaration.declarations.length,
+      declarations: declaration.declarations.length,
     }
   }
+
+  if (declaration.type === 'TSImportEqualsDeclaration') {
+    // `export import Foo = require('foo')` re-exports another module's
+    // binding — an export, but no declaration of this module's own
+    return { exports: 1, declarations: 0 }
+  }
+
+  return { exports: 1, declarations: 1 }
 }
 
 /**
