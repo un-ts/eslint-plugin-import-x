@@ -1,7 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import type { ModuleImportDeclaration } from '../core/index.js'
-import { getOwnExportNames, getReexports, ModuleInfo } from '../core/index.js'
+import { getOwnExportNames, ModuleInfo } from '../core/index.js'
 import type { Visitor } from '../utils/index.js'
 import {
   createRule,
@@ -43,29 +43,24 @@ function isRuntimeEdge(
 }
 
 /**
- * A cheap necessary condition for the import target to be a barrel at
- * `amount`: when it returns `false`, the module provably is not one, so the
- * exact surface — and the parse a lexer-analyzed module needs for it — can be
- * skipped.
+ * Whether the target provably is not a barrel at `amount` without producing a
+ * surface for it — only a lexer-analyzed module can be answered this way, so
+ * `false` for anything else.
  *
- * The bound is the module's own export names plus its re-exports plus one per
- * plain `export * from` statement, all known without reading or parsing the
- * file. `starReexportCount` has to come from the analyzer: an unresolvable
- * `export *` target still exports, and `getStarExportPaths` would both miss it
- * and analyze the resolvable targets to find them. A default export always
- * answers `true`: the properties of `export default { … }` are exports no
- * name-based bound can see.
+ * The AST route counted an exact surface during its walk, which the caller
+ * reads instead; a lexer-analyzed module has none yet and would need a parse.
+ * `exportCount` is what the analyzer saw before its name map deduped it, so a
+ * file that exports the same name from several statements (TypeScript syntax
+ * parsed as `.js`, overloads, declaration merging) cannot hide exports from
+ * this bound. A module with a default export is never ruled out: the
+ * properties of `export default { … }` are exports no statement count sees.
  */
-function couldBeBarrel(moduleInfo: ModuleInfo, amount: number): boolean {
-  const ownExports = getOwnExportNames(moduleInfo)
-  if (ownExports.includes('default')) {
-    return true
-  }
+function cannotBeBarrel(moduleInfo: ModuleInfo, amount: number): boolean {
+  const count = moduleInfo.exportCount
   return (
-    ownExports.length +
-      getReexports(moduleInfo).size +
-      moduleInfo.starReexportCount >
-    amount
+    count !== undefined &&
+    count <= amount &&
+    !getOwnExportNames(moduleInfo).includes('default')
   )
 }
 
@@ -258,10 +253,11 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        // rule out what cannot be a barrel from its names alone, so a module
-        // the lexer could handle is never parsed just to be counted
+        // A lexer-analyzed module would need a parse to produce its surface;
+        // rule it out first from the export statements the lexer counted before
+        // deduplicating names. The AST route already has the exact surface.
         if (
-          !couldBeBarrel(moduleInfo, amountOfExportsToConsiderModuleAsBarrel)
+          cannotBeBarrel(moduleInfo, amountOfExportsToConsiderModuleAsBarrel)
         ) {
           return
         }

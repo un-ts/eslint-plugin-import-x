@@ -351,6 +351,41 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
         },
       ],
     }),
+    // three `export function f` overloads + two `export * from`: the name map
+    // would see one `f` and the guard used to skip this barrel
+    tInvalid({
+      code: "import { f } from './overload-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 3 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 4,
+            specifier: './overload-barrel.js',
+            maxModuleGraphSizeAllowed: 3,
+          },
+        },
+      ],
+    }),
+    // ...and the same target on the AST route, where the guard does not apply
+    // because the walk already counted an exact surface
+    tInvalid({
+      code: "import { f } from './overload-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 3 }],
+      settings: { 'import-x/parsers': { [parsers.TS]: ['.js'] } },
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 4,
+            specifier: './overload-barrel.js',
+            maxModuleGraphSizeAllowed: 3,
+          },
+        },
+      ],
+    }),
   ],
 })
 

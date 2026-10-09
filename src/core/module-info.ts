@@ -376,7 +376,14 @@ export class ModuleInfo {
       ownExports,
       reexports,
       starExportPaths,
-      starReexportCount,
+      // counted before the maps above dedup them: a lexable file can still
+      // export the same name from several statements (TypeScript syntax parsed
+      // as `.js`), and the guard's bound needs every one
+      exportCount:
+        lexed.ownExports.length +
+        lexed.namespaceExports.length +
+        lexed.reexports.length +
+        starReexportCount,
       imports,
       defaultExportSourceName: lexed.defaultExportSourceName,
     }
@@ -399,7 +406,7 @@ export class ModuleInfo {
     info.moduleDocGetter = facts.getModuleDoc
     info.defaultExportSourceName = facts.defaultExportSourceName
     info.surface = facts.surface
-    info.starReexportCount = facts.starReexportCount
+    info.exportCount = facts.exportCount
 
     for (const [name, own] of facts.ownExports) {
       const targetPath = own.namespaceTargetPath
@@ -463,16 +470,13 @@ export class ModuleInfo {
   /** @internal `export * from '...'` targets, lazily resolved. */
   readonly starExports: Array<() => ModuleInfo | null> = []
   /**
-   * @internal Plain `export * from` statements, counted before resolution.
-   *
-   *   It has to be carried on the module and read from here, because a rule
-   *   cannot recover the unresolvable ones: `starExportPaths` drops them, and
-   *   `getStarExportPaths` would analyze the targets just to resolve them —
-   *   yet they still export (`countModuleSurface` counts every statement). The
-   *   barrel guard in `rules/avoid-importing-barrel-files.ts` is its only
-   *   reader.
+   * @internal Export statements/names the lexer saw, counted before the name
+   *   map dedups them — set only for a lexer-analyzed module, because only
+   *   there is it the one datum the exact surface would otherwise cost a parse
+   *   to produce. Read by the barrel guard in
+   *   `rules/avoid-importing-barrel-files.ts`.
    */
-  declare starReexportCount: number
+  declare exportCount?: number
   /** @internal Imported modules, keyed by resolved path. */
   readonly imports = new Map<string, ModuleInfoImport>()
 

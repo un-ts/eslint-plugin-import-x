@@ -163,58 +163,66 @@ describe(isBarrelFileSurface, () => {
   })
 })
 
-describe(`ModuleInfo.starReexportCount`, () => {
+describe(`ModuleInfo.exportCount`, () => {
   const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
   const jsParserContext = {
     ...testContext(),
     parserPath: parsers.ESPREE,
     parserOptions,
   } as RuleContext
+  // the overload fixture needs a parser that can read it when the surface is
+  // escalated to, but stays on the lexer route
+  const tsParserContext = {
+    ...testContext(),
+    parserPath: parsers.TS,
+    parserOptions,
+  } as RuleContext
   // forcing `.js` through an alternate parser keeps it off the lexer route
   const astRouteContext = {
-    ...jsParserContext,
+    ...tsParserContext,
     settings: {
-      ...jsParserContext.settings,
-      'import-x/parsers': { [parsers.ESPREE]: ['.js'] },
+      ...tsParserContext.settings,
+      'import-x/parsers': { [parsers.TS]: ['.js'] },
     },
   } as RuleContext
 
-  it('counts resolved `export * from` statements', () => {
-    const moduleInfo = ModuleInfo.get(
-      './barrel-files/star-barrel.js',
-      jsParserContext,
-    )!
-    expect(moduleInfo.starReexportCount).toBe(4)
-  })
-
-  it('counts statements whose target never resolves', () => {
-    // `countModuleSurface` counts them too, so the guard's bound has to
-    const moduleInfo = ModuleInfo.get(
-      './barrel-files/unresolved-star.js',
-      jsParserContext,
-    )!
-    expect(moduleInfo.starReexportCount).toBe(1)
-  })
-
-  it('is zero when the module has no `export *`', () => {
-    const moduleInfo = ModuleInfo.get(
-      './barrel-files/barrel.js',
-      jsParserContext,
-    )!
-    expect(moduleInfo.starReexportCount).toBe(0)
-  })
-
-  it('counts them the same way on the AST route', () => {
+  it('adds up every export the lexer saw', () => {
     for (const [fixture, count] of [
+      // 4 named re-exports
+      ['barrel.js', 4],
+      // 4 `export * from`
       ['star-barrel.js', 4],
+      // one `export * from` whose target does not resolve
       ['unresolved-star.js', 1],
+      // 4 `export * as ns from`
+      ['ns-barrel.js', 4],
     ] as const) {
       const moduleInfo = ModuleInfo.get(
         `./barrel-files/${fixture}`,
-        astRouteContext,
+        jsParserContext,
       )!
-      expect(moduleInfo.starReexportCount).toBe(count)
+      expect(moduleInfo.exportCount).toBe(count)
     }
+  })
+
+  it('counts before the name map dedups, so overloads are not lost', () => {
+    // three `export function f` overloads + two `export * from`: the surface
+    // counts 5 exports, while the name map alone would see 3
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/overload-barrel.js',
+      tsParserContext,
+    )!
+    expect(moduleInfo.exportCount).toBe(5)
+    expect(moduleInfo.getSurface()).toEqual({ exports: 5, declarations: 3 })
+  })
+
+  it('is not set for an AST-analyzed module, which has the surface', () => {
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/overload-barrel.js',
+      astRouteContext,
+    )!
+    expect(moduleInfo.exportCount).toBeUndefined()
+    expect(moduleInfo.getSurface()).toEqual({ exports: 5, declarations: 3 })
   })
 })
 
