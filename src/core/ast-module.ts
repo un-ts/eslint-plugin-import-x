@@ -8,6 +8,8 @@ import type {
   ExportNamespaceSpecifier,
   ParseError,
 } from '../types.js'
+import { countModuleSurface } from '../utils/barrel-file.js'
+import type { ModuleSurface } from '../utils/barrel-file.js'
 import { getValue } from '../utils/get-value.js'
 import { lazy } from '../utils/lazy-value.js'
 import { parse } from '../utils/parse.js'
@@ -69,6 +71,22 @@ export interface AstModuleFacts {
   defaultExportSourceName?: DefaultExportSourceName
   /** Lazily parse the module-level doc block (carrying an `@module` tag). */
   getModuleDoc?: () => DocCommentBlock | undefined
+  /**
+   * Exports and declarations counted over the top-level statements — the shape
+   * `isBarrelFileSurface` reads (see `utils/barrel-file.ts`).
+   *
+   * It has to be recorded here, while the statements are in hand. The analysis
+   * deliberately drops the AST once the walk is done so that no syntax tree is
+   * pinned in the cache, which leaves a later consumer no way to count them
+   * without reading and parsing the file again — the second parse the core
+   * exists to avoid (`ModuleInfo.getSurface` returns this for the AST route and
+   * escalates a lexer-analyzed module to its AST twin). Counting is nearly
+   * free: one pass over `ast.body` that the walk already visits, and a
+   * two-number result.
+   *
+   * Absent when the parse failed.
+   */
+  surface?: ModuleSurface
 }
 
 /** Shared state threaded through the per-statement handlers. */
@@ -244,6 +262,10 @@ export function analyzeAstModule(
   if (unambiguouslyESM()) {
     facts.format = 'Module'
   }
+
+  // counted from the same AST walk every rule already pays for, so a barrel
+  // check never needs to re-read and re-parse the file
+  facts.surface = countModuleSurface(ast.body)
 
   return facts
 }
@@ -527,11 +549,14 @@ function captureEdge(
   walk: Walk,
   n: TSESTree.ImportDeclaration | TSESTree.ExportNamedDeclaration,
 ) {
+  // statement-level `import type` / Flow's `import typeof`, or
+  // `export type { … } from` on a named re-export
   const declarationIsType =
-    'importKind' in n &&
-    (n.importKind === 'type' ||
-      // @ts-expect-error - flow type
-      n.importKind === 'typeof')
+    ('importKind' in n &&
+      (n.importKind === 'type' ||
+        // @ts-expect-error - flow type
+        n.importKind === 'typeof')) ||
+    ('exportKind' in n && n.exportKind === 'type')
   // import './foo' or import {} from './foo' (both 0 specifiers) is a side
   // effect and shouldn't be considered to be just importing types
   let specifiersOnlyImportingTypes = n.specifiers.length > 0
@@ -562,10 +587,11 @@ function captureEdge(
 
     specifiersOnlyImportingTypes =
       specifiersOnlyImportingTypes &&
-      'importKind' in specifier &&
-      (specifier.importKind === 'type' ||
-        // @ts-expect-error - flow type
-        specifier.importKind === 'typeof')
+      (('importKind' in specifier &&
+        (specifier.importKind === 'type' ||
+          // @ts-expect-error - flow type
+          specifier.importKind === 'typeof')) ||
+        ('exportKind' in specifier && specifier.exportKind === 'type'))
   }
   return captureDependency(
     walk,

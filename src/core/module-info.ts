@@ -15,6 +15,7 @@ import debug from 'debug'
 import { getTsconfigWithContext } from 'eslint-import-context'
 
 import type { ChildContext, ParseError, RuleContext } from '../types.js'
+import type { ModuleSurface } from '../utils/barrel-file.js'
 import { childContext } from '../utils/child-context.js'
 import { hasValidExtension, ignore } from '../utils/ignore.js'
 import { getAlternateParserPath, stripUnicodeBOM } from '../utils/parse.js'
@@ -391,6 +392,7 @@ export class ModuleInfo {
     info.builtFromAst = builtFromAst
     info.moduleDocGetter = facts.getModuleDoc
     info.defaultExportSourceName = facts.defaultExportSourceName
+    info.surface = facts.surface
 
     for (const [name, own] of facts.ownExports) {
       const targetPath = own.namespaceTargetPath
@@ -460,6 +462,8 @@ export class ModuleInfo {
   declare moduleDocGetter?: () => DocCommentBlock | undefined
   /** @internal The default export's declared name (both routes). */
   declare defaultExportSourceName?: DefaultExportSourceName
+  /** @internal The barrel heuristic's surface (AST route only). */
+  declare private surface?: ModuleSurface
   /**
    * @internal Fast path for `module-doc.ts`: whether the raw content
    *   mentions a deprecation marker at all — when it doesn't, doc queries
@@ -549,6 +553,24 @@ export class ModuleInfo {
    */
   getImports(): ReadonlyMap<string, ModuleInfoImport> {
     return this.imports
+  }
+
+  /**
+   * The module's export/declaration surface — the shape the barrel heuristic
+   * reads (`isBarrelFileSurface` in `utils/barrel-file.ts`).
+   *
+   * The AST route counted it during the walk it already performed, so no file
+   * is read or parsed a second time. A lexer-analyzed module escalates to
+   * {@link astAnalysis}, which parses the file once and memoizes the twin, so
+   * repeated queries never re-parse.
+   *
+   * @returns `null` when the module could not be parsed.
+   */
+  getSurface(): ModuleSurface | null {
+    if (this.builtFromAst) {
+      return this.surface ?? null
+    }
+    return this.astAnalysis()?.surface ?? null
   }
 
   /**
