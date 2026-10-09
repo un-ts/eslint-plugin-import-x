@@ -54,14 +54,33 @@ describe(countModuleSurface, () => {
       exports: 1,
       declarations: 1,
     })
+    // type-only declarations are erased, so they add no runtime export
     expect(surfaceOf('export type Foo = string', tsContext)).toEqual({
-      exports: 1,
+      exports: 0,
       declarations: 1,
     })
     expect(surfaceOf('export interface Foo {}', tsContext)).toEqual({
-      exports: 1,
+      exports: 0,
       declarations: 1,
     })
+  })
+
+  it('ignores type-only named re-exports', () => {
+    expect(surfaceOf("export type { A, B } from 'foo'", tsContext)).toEqual({
+      exports: 0,
+      declarations: 0,
+    })
+    // mixed: only the value specifier survives
+    expect(surfaceOf("export { type A, B } from 'foo'", tsContext)).toEqual({
+      exports: 1,
+      declarations: 0,
+    })
+  })
+
+  it('counts `export =` as an export', () => {
+    expect(surfaceOf('import x = require("x")\nexport = x', tsContext)).toEqual(
+      { exports: 1, declarations: 0 },
+    )
   })
 
   it('ignores type-only export-all declarations', () => {
@@ -71,14 +90,18 @@ describe(countModuleSurface, () => {
     })
   })
 
-  it('treats default-exported classes as declarations', () => {
+  it('counts a named default export as both a declaration and an export', () => {
     expect(surfaceOf('export default class Foo {}')).toEqual({
-      exports: 0,
+      exports: 1,
+      declarations: 1,
+    })
+    expect(surfaceOf('export default function foo() {}')).toEqual({
+      exports: 1,
       declarations: 1,
     })
   })
 
-  it('counts TypeScript enum, namespace and declare-function declarations', () => {
+  it('counts TypeScript enums and namespaces as runtime declarations', () => {
     expect(surfaceOf('export enum Foo { A, B }', tsContext)).toEqual({
       exports: 1,
       declarations: 1,
@@ -87,9 +110,13 @@ describe(countModuleSurface, () => {
       exports: 1,
       declarations: 1,
     })
+  })
+
+  it('treats declared functions as declarations only', () => {
+    // `export declare function` is erased, so it exports nothing at runtime
     expect(surfaceOf('export declare function foo(): void', tsContext)).toEqual(
       {
-        exports: 1,
+        exports: 0,
         declarations: 1,
       },
     )
@@ -154,5 +181,17 @@ describe(getModuleSurface, () => {
 
     expect(first).toEqual({ exports: 4, declarations: 0 })
     expect(getModuleSurface(path, jsContext)).toBe(first)
+  })
+
+  it('keys the cache by parser context, not just path', () => {
+    const path = testFilePath('barrel-files/types.js')
+
+    // espree cannot read the TypeScript in it, so this records a negative...
+    expect(getModuleSurface(path, jsContext)).toBeNull()
+    // ...which must not be served to the TypeScript parser
+    expect(getModuleSurface(path, tsContext)).toEqual({
+      exports: 1,
+      declarations: 2,
+    })
   })
 })

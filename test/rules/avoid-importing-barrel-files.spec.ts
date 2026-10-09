@@ -1,7 +1,13 @@
 import { RuleTester } from '@typescript-eslint/rule-tester'
 
-import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
+import {
+  parsers,
+  createRuleTestCaseFunctions,
+  isESLint10,
+  testFilePath,
+} from '../utils.js'
 
+import { cjsRequire } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/avoid-importing-barrel-files'
 
 const ruleTester = new RuleTester()
@@ -42,6 +48,11 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       filename,
       options: [{ maxModuleGraphSizeAllowed: 0 }],
     }),
+    // a leading default specifier keeps a mixed import at runtime
+    tValid({
+      code: "import Foo, { type A } from './barrel.js';",
+      filename,
+    }),
     // the export threshold is above what the module exports
     tValid({
       code: "import { a } from './barrel.js';",
@@ -64,6 +75,12 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       code: "import { a } from './dup-barrel.js';",
       filename,
       options: [{ maxModuleGraphSizeAllowed: 10 }],
+    }),
+    // a graph exactly at the limit is allowed
+    tValid({
+      code: "import { a } from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 6 }],
     }),
   ],
 
@@ -162,5 +179,52 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
         },
       ],
     }),
+    // side-effect-only imports load the graph too
+    tInvalid({
+      code: "import './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: './barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
   ],
+})
+
+// TODO: babel 8 appears to remove import typeof support
+;(isESLint10 ? describe.skip : describe)('Flow', () => {
+  const flowRuleTester = new RuleTester({
+    languageOptions: {
+      parser: cjsRequire(parsers.BABEL),
+      parserOptions: {
+        ecmaVersion: 6,
+        sourceType: 'module',
+        requireConfigFile: false,
+        babelOptions: {
+          configFile: false,
+          babelrc: false,
+          presets: ['@babel/flow'],
+        },
+      },
+    },
+  })
+
+  flowRuleTester.run('avoid-importing-barrel-files', rule, {
+    valid: [
+      // `import typeof` is erased at runtime, like `import type`
+      tValid({
+        code: "import typeof { a } from './barrel.js';",
+        filename,
+        options: [{ maxModuleGraphSizeAllowed: 0 }],
+      }),
+    ],
+    invalid: [],
+  })
 })

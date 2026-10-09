@@ -52,6 +52,12 @@ ruleTester.run('avoid-barrel-files ts', rule, {
         export { A, B, C, D };
       `,
     }),
+    // type-only exports are erased, so they never make a barrel
+    tValid({
+      code: `
+        export type { Money, Country, Person, State } from 'geo';
+      `,
+    }),
   ],
 
   invalid: [
@@ -63,7 +69,7 @@ ruleTester.run('avoid-barrel-files ts', rule, {
           name: string;
         };
         interface Person { name: string; age: number; }
-        export type { Money, Country, Person, State };
+        export { Money, Country, Person, State };
       `,
       errors: [{ messageId: 'avoidBarrel' }],
     }),

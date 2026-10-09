@@ -158,17 +158,22 @@ export default createRule<[Options?], MessageId>({
 
     return {
       ImportDeclaration(node) {
-        if (node.importKind === 'type') {
+        // `import type` and Flow's runtime-erased `import typeof`
+        const importKind: string | undefined = node.importKind
+        if (importKind === 'type' || importKind === 'typeof') {
           return
         }
         // `import { type A, type B } from '...'` is erased as well
         if (
           node.specifiers.length > 0 &&
-          node.specifiers.every(
-            specifier =>
+          node.specifiers.every(specifier => {
+            const kind: string | undefined =
+              'importKind' in specifier ? specifier.importKind : undefined
+            return (
               specifier.type === 'ImportSpecifier' &&
-              specifier.importKind === 'type',
-          )
+              (kind === 'type' || kind === 'typeof')
+            )
+          })
         ) {
           return
         }

@@ -158,5 +158,15 @@ ruleTester.run('avoid-barrel-files', rule, {
         },
       ],
     }),
+    tInvalid({
+      // a named default export counts as an export alongside three re-exports
+      code: `
+        export default class Foo {}
+        export { x } from 'x';
+        export { y } from 'y';
+        export { z } from 'z';
+      `,
+      errors: [{ messageId: 'avoidBarrel' }],
+    }),
   ],
 })

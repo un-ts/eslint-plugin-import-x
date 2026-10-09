@@ -32,11 +32,18 @@ List of module specifiers from which importing barrel files is allowed.
 ### `maxModuleGraphSizeAllowed`
 
 Maximum allowed module graph size. When a barrel file would pull in more
-modules than this, importing it is reported.
+modules than this, importing it is reported. The walk stops as soon as the
+limit is exceeded, so the module count in the report is a lower bound.
 
 ### `amountOfExportsToConsiderModuleAsBarrel`
 
-Number of exports after which a module is considered a barrel file.
+Number of exports after which a module is considered a barrel file. Type-only
+exports and declarations do not count, since they are erased at runtime.
+
+## Notes
+
+Type-only imports — `import type`, Flow's `import typeof`, and inline
+`import { type A }` specifiers — are erased at runtime and are not checked.
 
 ## Resolution
 

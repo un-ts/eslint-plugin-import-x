@@ -4,6 +4,7 @@ import type { TSESTree } from '@typescript-eslint/utils'
 
 import type { ChildContext, RuleContext } from '../types.js'
 
+import { makeContextCacheKey } from './child-context.js'
 import { parse } from './parse.js'
 
 /**
@@ -74,13 +75,27 @@ export function countModuleSurface(
         break
       }
       case 'ExportNamedDeclaration': {
+        // `export type { ... }` is erased wholesale, and mixed
+        // `export { type A, B }` keeps only the value specifiers — neither
+        // contributes to the runtime module graph. Type declarations still
+        // count as declarations, so a module of type exports never looks like
+        // a barrel.
+        const typeOnly = statement.exportKind === 'type'
         if (statement.declaration) {
           const surface = countDeclaration(statement.declaration)
-          exports += surface.exports
           declarations += surface.declarations
+          if (!typeOnly) {
+            exports += surface.exports
+          }
         }
-        // re-exports and `export { local as exported }` bindings
-        exports += statement.specifiers.length
+        if (!typeOnly) {
+          for (const specifier of statement.specifiers) {
+            if ('exportKind' in specifier && specifier.exportKind === 'type') {
+              continue
+            }
+            exports += 1
+          }
+        }
         break
       }
       case 'ExportAllDeclaration': {
@@ -89,18 +104,36 @@ export function countModuleSurface(
         }
         break
       }
+      case 'TSExportAssignment': {
+        // `export = x` re-exports another module wholesale (CommonJS/TS)
+        exports += 1
+        break
+      }
       case 'ExportDefaultDeclaration': {
         const declaration = statement.declaration
-        if (
-          declaration.type === 'FunctionDeclaration' ||
-          declaration.type === 'ClassDeclaration' ||
-          declaration.type === 'CallExpression'
-        ) {
-          declarations += 1
-        } else if (declaration.type === 'ObjectExpression') {
-          exports += declaration.properties.length
-        } else {
-          exports += 1
+        switch (declaration.type) {
+          case 'FunctionDeclaration':
+          case 'ClassDeclaration': {
+            // a named default export is both a declaration and the export
+            exports += 1
+            declarations += 1
+
+            break
+          }
+          case 'CallExpression': {
+            // HOC-wrapped definitions are treated as declarations, not exports
+            declarations += 1
+
+            break
+          }
+          case 'ObjectExpression': {
+            exports += declaration.properties.length
+
+            break
+          }
+          default: {
+            exports += 1
+          }
         }
         break
       }
@@ -124,12 +157,32 @@ interface SurfaceCacheEntry {
 }
 
 /**
- * Surfaces of already-analyzed files, keyed by absolute path and invalidated
- * by mtime — the same contract `ModuleInfo` uses, so a dependency that changes
- * (a package reinstalled, a file edited in an IDE) is re-read instead of
- * serving a stale answer for the life of the process.
+ * Surfaces of already-analyzed files, keyed by the settings/parser context and
+ * absolute path and invalidated by mtime — the same contract `ModuleInfo` uses.
+ * A dependency that changes (a package reinstalled, a file edited in an IDE) is
+ * re-read instead of serving a stale answer for the life of the process, and a
+ * file that one parser cannot read is not assumed unreadable by another.
  */
 const surfaceCache = new Map<string, SurfaceCacheEntry>()
+
+/**
+ * The context's settings/parser signature, memoized per context object so the
+ * (comparatively expensive) hash is computed once per file rather than once per
+ * resolved dependency.
+ */
+const contextKeys = new WeakMap<RuleContext | ChildContext, string>()
+
+function surfaceCacheKey(
+  context: RuleContext | ChildContext,
+  path: string,
+): string {
+  let contextKey = contextKeys.get(context)
+  if (contextKey === undefined) {
+    contextKey = makeContextCacheKey(context)
+    contextKeys.set(context, contextKey)
+  }
+  return contextKey + '\0' + path
+}
 
 /**
  * Analyzes a module on disk and returns its {@link ModuleSurface}, or `null`
@@ -148,7 +201,8 @@ export function getModuleSurface(
     return null
   }
 
-  const cached = surfaceCache.get(path)
+  const key = surfaceCacheKey(context, path)
+  const cached = surfaceCache.get(key)
   if (cached && cached.mtime === mtime) {
     return cached.surface
   }
@@ -162,6 +216,6 @@ export function getModuleSurface(
     surface = null
   }
 
-  surfaceCache.set(path, { mtime, surface })
+  surfaceCache.set(key, { mtime, surface })
   return surface
 }

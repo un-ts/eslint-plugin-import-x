@@ -130,14 +130,14 @@ const rules = {
   // metadata-based
   'no-deprecated': noDeprecated,
 
-  // deprecated aliases to rules
-  'imports-first': importsFirst,
-
   // barrel files
   'avoid-barrel-files': avoidBarrelFiles,
   'avoid-importing-barrel-files': avoidImportingBarrelFiles,
   'avoid-namespace-import': avoidNamespaceImport,
   'avoid-re-export-all': avoidReExportAll,
+
+  // deprecated aliases to rules
+  'imports-first': importsFirst,
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>
 
 // Base Plugin Object
