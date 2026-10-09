@@ -12,3 +12,8 @@ Examples of **incorrect** code for this rule:
 export * from 'foo'
 export * as foo from 'foo'
 ```
+
+## Notes
+
+Type-only re-exports — `export type * from 'foo'` and
+`export type * as foo from 'foo'` — are erased at runtime and are not reported.
