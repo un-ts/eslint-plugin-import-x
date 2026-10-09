@@ -6,6 +6,38 @@ The `require` method from CommonJS is used to import modules from different file
 
 This rule forbids every call to `require()` that uses expressions for the module name argument.
 
+## Options
+
+This rule supports the following options:
+
+### `esmodule`
+
+By default, this rule does not report dynamic `import()` expressions.
+
+Given `{ "esmodule": true }`:
+
+<!-- lint disable no-duplicate-headings-in-section -->
+
+### Fail
+
+```js
+import(name)
+import('../' + name)
+import(`../${name}`)
+import(name())
+```
+
+<!-- lint disable no-duplicate-headings-in-section -->
+
+### Pass
+
+```js
+import('foo')
+import(`foo`)
+import('./foo')
+import('@scope/foo')
+```
+
 ## Rule Details
 
 ### Fail

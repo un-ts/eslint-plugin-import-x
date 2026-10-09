@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-import-x",
-  "version": "4.17.0",
+  "version": "4.17.1",
   "type": "module",
   "description": "Import with sanity.",
   "repository": "https://github.com/un-ts/eslint-plugin-import-x",
@@ -76,8 +76,10 @@
   },
   "dependencies": {
     "@typescript-eslint/types": "^8.56.0",
+    "cjs-module-lexer": "^2.2.1",
     "comment-parser": "^1.4.1",
     "debug": "^4.4.1",
+    "es-module-lexer": "^2.3.2",
     "eslint-barrel-file-utils": "^0.0.15",
     "eslint-import-context": "^0.1.9",
     "is-glob": "^4.0.3",

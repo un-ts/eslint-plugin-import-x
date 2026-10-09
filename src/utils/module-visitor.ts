@@ -203,6 +203,7 @@ export function makeOptionsSchema(
       ignore: {
         type: 'array',
         minItems: 1,
+        items: { type: ['string', 'object'] }, // `object` is for `RegExp`s
         uniqueItems: true,
       },
     },

@@ -230,6 +230,20 @@ describe('resolve', () => {
     )
   })
 
+  it('ignores an import-x/cache setting that is not an object', () => {
+    // not a valid setting, but it must fall back to the defaults rather than
+    // break resolution for every import
+    for (const cache of [false, Infinity]) {
+      const context = testContext({
+        'import-x/resolve': { extensions: ['.jsx'] },
+        'import-x/cache': cache,
+      } as never)
+      expect(resolve('./jsx/MyCoolComponent', context)).toBe(
+        testFilePath('./jsx/MyCoolComponent.jsx'),
+      )
+    }
+  })
+
   it('reports load exception in a user resolver', () => {
     const context = testContext({
       'import-x/resolver': './load-error-resolver',

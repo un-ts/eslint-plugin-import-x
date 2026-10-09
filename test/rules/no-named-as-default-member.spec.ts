@@ -34,6 +34,10 @@ ruleTester.run('no-named-as-default-member', rule, {
     tValid({
       code: 'import foo from "./default-export-default-property"; const a = foo.default',
     }),
+    // `export { type T }` must not read as an export named `type`
+    tValid({
+      code: 'import foo from "./inline-type-export"; const a = foo.type',
+    }),
     tValid({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
       languageOptions: {

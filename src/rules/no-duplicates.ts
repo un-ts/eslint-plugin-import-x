@@ -150,7 +150,7 @@ function getFix(
           sourceCode.text
             .slice(openBrace.range[1], closeBrace.range[0])
             .split(',')
-            .map(x => x.split(' as ')[0].trim()),
+            .map(normalizeSpecifier),
         )
 
     const [specifiersText] = specifiers.reduce(
@@ -169,7 +169,7 @@ function getFix(
         const [specifierText, updatedExistingIdentifiers] =
           specifier.identifiers.reduce(
             ([text, set], cur) => {
-              const trimmed = cur.trim() // Trim whitespace before/after to compare to our set of existing identifiers
+              const trimmed = normalizeSpecifier(cur) // Normalize to compare to our set of existing identifiers
               if (trimmed.length === 0 || existingIdentifiers.has(trimmed)) {
                 return [text, set]
               }
@@ -214,15 +214,8 @@ function getFix(
         )
       }
 
-      for (const identifier of tokens.filter(token =>
-        firstExistingIdentifiers.has(token.value),
-      )) {
-        fixes.push(
-          fixer.replaceTextRange(
-            [identifier.range[0], identifier.range[1]],
-            `type ${identifier.value}`,
-          ),
-        )
+      for (const specifier of first.specifiers) {
+        fixes.push(fixer.insertTextBefore(specifier, 'type '))
       }
     }
 
@@ -308,6 +301,11 @@ function getFix(
 
     return fixes
   }
+}
+
+// `x as x` binds the same name as `x`, so compare them as equal.
+function normalizeSpecifier(text: string) {
+  return text.trim().replace(/^((?:type\s+)?)(\S+)\s+as\s+\2$/, '$1$2')
 }
 
 function isPunctuator(node: TSESTree.Token, value: '{' | '}' | ',') {

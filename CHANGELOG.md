@@ -1,5 +1,11 @@
 # eslint-plugin-import-x
 
+## 4.17.1
+
+### Patch Changes
+
+- [#498](https://github.com/un-ts/eslint-plugin-import-x/pull/498) [`cf25a01`](https://github.com/un-ts/eslint-plugin-import-x/commit/cf25a01c08d75449aeae6c6b4ee2e2c9af774462) Thanks [@marcalexiei](https://github.com/marcalexiei)! - fix(extensions): don't require an extension for package subpaths that resolve to a `.d.ts` (e.g. `vitest/config`)
+
 ## 4.17.0
 
 ### Minor Changes

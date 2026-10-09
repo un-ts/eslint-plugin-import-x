@@ -32,6 +32,7 @@ export default createRule<[Options?], MessageId>({
             uniqueItems: true,
           },
         },
+        additionalProperties: false,
       },
     ],
     messages: {

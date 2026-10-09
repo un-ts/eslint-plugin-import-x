@@ -6,6 +6,7 @@ import type { MinimatchOptions } from 'minimatch'
 
 import type { RuleContext } from '../types.js'
 import {
+  getFilePackageName,
   isBuiltIn,
   isExternalModule,
   isScoped,
@@ -40,6 +41,9 @@ const properties = {
     checkTypeImports: {
       type: 'boolean',
     },
+    checkSelfReference: {
+      type: 'boolean',
+    },
     pathGroupOverrides: {
       type: 'array',
       items: {
@@ -60,6 +64,7 @@ const properties = {
       type: 'boolean',
     },
   },
+  additionalProperties: false,
 } satisfies JSONSchema.JSONSchema4
 
 export type Modifier = (typeof modifierValues)[number]
@@ -69,6 +74,7 @@ export type ModifierByFileExtension = Partial<Record<string, Modifier>>
 export interface OptionsItemWithPatternProperty {
   ignorePackages?: boolean
   checkTypeImports?: boolean
+  checkSelfReference?: boolean
   pattern: ModifierByFileExtension
   pathGroupOverrides?: PathGroupOverride[]
   fix?: boolean
@@ -83,6 +89,7 @@ export interface PathGroupOverride {
 export interface OptionsItemWithoutPatternProperty {
   ignorePackages?: boolean
   checkTypeImports?: boolean
+  checkSelfReference?: boolean
   pathGroupOverrides?: PathGroupOverride[]
   fix?: boolean
 }
@@ -102,6 +109,7 @@ export interface NormalizedOptions {
   pattern?: Record<string, Modifier>
   ignorePackages?: boolean
   checkTypeImports?: boolean
+  checkSelfReference?: boolean
   pathGroupOverrides?: PathGroupOverride[]
   fix?: boolean
 }
@@ -119,6 +127,7 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
     pattern: {},
     ignorePackages: false,
     checkTypeImports: false,
+    checkSelfReference: false,
     pathGroupOverrides: [],
     fix: false,
   }
@@ -142,7 +151,9 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
     if (
       (!('pattern' in obj) || obj.pattern == null) &&
       obj.ignorePackages == null &&
-      obj.checkTypeImports == null
+      obj.checkTypeImports == null &&
+      obj.checkSelfReference == null &&
+      !Array.isArray(obj.pathGroupOverrides)
     ) {
       Object.assign(result.pattern, obj)
       continue
@@ -160,6 +171,10 @@ function buildProperties(context: RuleContext<MessageId, Options>) {
 
     if (typeof obj.checkTypeImports === 'boolean') {
       result.checkTypeImports = obj.checkTypeImports
+    }
+
+    if (typeof obj.checkSelfReference === 'boolean') {
+      result.checkSelfReference = obj.checkSelfReference
     }
 
     if (Array.isArray(obj.pathGroupOverrides)) {
@@ -279,6 +294,21 @@ export default createRule<Options, MessageId>({
       return getModifier(extension) === 'never'
     }
 
+    let ownPackageName: string | null | undefined
+
+    // A package importing its own subpath export (`pkg/sub` from inside `pkg`)
+    // resolves through its `exports` map without a `node_modules` hop, so it
+    // is not classified as external.
+    function isSelfReference(importPath: string) {
+      if (!/^\w/.test(importPath)) {
+        return false
+      }
+      if (ownPackageName === undefined) {
+        ownPackageName = getFilePackageName(context.physicalFilename)
+      }
+      return importPath.split('/')[0] === ownPackageName
+    }
+
     function isResolvableWithoutExtension(file: string) {
       const extension = path.extname(file)
       const fileWithoutExtension = file.slice(0, -extension.length)
@@ -329,15 +359,12 @@ export default createRule<Options, MessageId>({
         }
 
         const resolvedPath = resolve(importPath, context)
+        const resolvedToDts = !!resolvedPath && dtsRe.test(resolvedPath)
 
         // get extension from resolved path, or source value if unresolved.
         // for .d.ts/.d.mts/.d.cts, use the import path extension instead.
         const extension = path
-          .extname(
-            resolvedPath && dtsRe.test(resolvedPath)
-              ? importPath
-              : resolvedPath || importPath,
-          )
+          .extname(resolvedToDts ? importPath : resolvedPath || importPath)
           .slice(1)
 
         // determine if this is a module
@@ -346,9 +373,18 @@ export default createRule<Options, MessageId>({
             importPath,
             resolve(importPath, context)!,
             context,
-          ) || isScoped(importPath)
+          ) ||
+          isScoped(importPath) ||
+          (props.checkSelfReference && isSelfReference(importPath))
 
         if (!extension || !importPath.endsWith(`.${extension}`)) {
+          // A package subpath that resolves to a type declaration
+          // (.d.ts/.d.mts/.d.cts) has no runtime extension to enforce — the
+          // entry point is governed by the package's "exports" map
+          // (e.g. `vitest/config`, `eslint/config`).
+          if (resolvedToDts && !extension && isPackage) {
+            return
+          }
           // ignore type-only imports and exports
           if (
             !props.checkTypeImports &&
