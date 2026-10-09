@@ -119,6 +119,24 @@ ruleTester.run('extensions', rule, {
       options: ['never', { ignorePackages: true }],
     }),
 
+    // a package importing its own subpath export resolves through its
+    // `exports` map without a `node_modules` hop; `checkSelfReference`
+    // treats it as a package
+    tValid({
+      code: 'import { a } from "package-self-reference/sub"',
+      options: [
+        'ignorePackages',
+        { pattern: { js: 'always' }, checkSelfReference: true },
+      ],
+      filename: testFilePath('./package-self-reference/src/main.js'),
+    }),
+
+    tValid({
+      code: 'import { a } from "package-self-reference/sub"',
+      options: ['always', { ignorePackages: true, checkSelfReference: true }],
+      filename: testFilePath('./package-self-reference/src/main.js'),
+    }),
+
     tValid({
       code: 'import exceljs from "exceljs"',
       options: ['always', { js: 'never', jsx: 'never' }],
@@ -186,6 +204,31 @@ ruleTester.run('extensions', rule, {
   ],
 
   invalid: [
+    tInvalid({
+      name: 'self-reference subpath imports are not packages unless checkSelfReference is set',
+      code: 'import { a } from "package-self-reference/sub"',
+      options: ['always', { ignorePackages: true }],
+      filename: testFilePath('./package-self-reference/src/main.js'),
+      errors: [
+        {
+          messageId: 'missingKnown',
+          data: { extension: 'js', importPath: 'package-self-reference/sub' },
+          line: 1,
+          column: 19,
+          suggestions: [
+            {
+              messageId: 'addMissing',
+              data: {
+                extension: 'js',
+                importPath: 'package-self-reference/sub',
+                fixedImportPath: 'package-self-reference/sub.js',
+              },
+              output: 'import { a } from "package-self-reference/sub.js"',
+            },
+          ],
+        },
+      ],
+    }),
     tInvalid({
       name: 'extensions should provide suggestions by default',
       code: 'import a from "./foo.js"',

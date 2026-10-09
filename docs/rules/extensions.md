@@ -72,6 +72,17 @@ Default value of `ignorePackages` is `false`.
 
 By default, `import type` and `export type` style imports/exports are ignored. If you want to check them as well, you can set the `checkTypeImports` option to `true`.
 
+### Self-reference imports
+
+A package can import its own subpath exports by name (`my-pkg/sub` from a file inside `my-pkg`). Node resolves these through the package's `exports` map without going through `node_modules`, so by default they are not treated as package imports and `ignorePackages` does not apply to them. Set `checkSelfReference` to `true` to treat them as package imports. Default value of `checkSelfReference` is `false`.
+
+```json
+"import-x/extensions": ["error", "always", {
+  "ignorePackages": true,
+  "checkSelfReference": true
+}]
+```
+
 ### Path group overrides
 
 Use `pathGroupOverrides` to ignore matching import paths or enforce the configured extension policy for them. Each override has a minimatch `pattern`, an `action` of `"ignore"` or `"enforce"`, and optional `patternOptions`. The first matching override wins.
