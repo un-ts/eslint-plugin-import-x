@@ -224,9 +224,9 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        // The surface is the cheap filter, and reading it does not analyze the
-        // module: resolve the path first, and only hand the specifier to
-        // `ModuleInfo.get` — which analyzes the target — once it is a barrel.
+        // Resolve and read the surface first — one parse — and only ask
+        // `ModuleInfo.get`, which additionally analyzes the target, once the
+        // module actually is a barrel.
         const path = resolve(moduleSpecifier, context)
 
         if (path == null) {

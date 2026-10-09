@@ -110,6 +110,13 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       filename,
       options: [{ allowList: ['barrel-pkg'], maxModuleGraphSizeAllowed: 0 }],
     }),
+    // a barrel the core ignores is never analyzed, and so cannot be reported
+    tValid({
+      code: "import { a } from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+      settings: { 'import-x/ignore': [String.raw`barrel-files/barrel\.js$`] },
+    }),
   ],
 
   invalid: [
