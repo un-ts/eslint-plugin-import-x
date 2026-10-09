@@ -43,8 +43,13 @@ count as the module's own declarations.
 
 ## Notes
 
-Type-only imports — `import type`, Flow's `import typeof`, and inline
-`import { type A }` specifiers — are erased at runtime and are not checked.
+Every runtime way of referencing a module is checked: static imports,
+re-exports (`export … from`, `export * from`, `export * as ns from`), dynamic
+`import()` and CommonJS `require()`.
+
+Type-only statements — `import type`, Flow's `import typeof`, inline
+`import { type A }` and `export { type A }` specifiers, and `export type *` —
+are erased at runtime and are not checked.
 
 ## Resolution
 

@@ -2,10 +2,12 @@ import type { TSESTree } from '@typescript-eslint/utils'
 
 import type { ModuleImportDeclaration } from '../core/index.js'
 import { ModuleInfo } from '../core/index.js'
+import type { Visitor } from '../utils/index.js'
 import {
   createRule,
   getModuleSurface,
   isBarrelFileSurface,
+  moduleVisitor,
 } from '../utils/index.js'
 
 export interface Options {
@@ -22,6 +24,9 @@ const defaultOptions: Required<Options> = {
   amountOfExportsToConsiderModuleAsBarrel: 3,
 }
 
+/** The node that referenced a module — `moduleVisitor`'s second argument. */
+type Importer = Parameters<Visitor>[1]
+
 /**
  * Whether an edge into a dependency loads it at runtime. Type-only imports are
  * erased by the compiler and so contribute nothing to the graph the rule is
@@ -36,6 +41,63 @@ function isRuntimeEdge(
     }
   }
   return false
+}
+
+/** `type`/`typeof` modifiers, which only Flow and TS parsers emit. */
+function isTypeKind(kind: string | undefined): boolean {
+  return kind === 'type' || kind === 'typeof'
+}
+
+/** `import type …` and `import { type A, type B } from '…'` are erased. */
+function isTypeOnlyImport(node: TSESTree.ImportDeclaration): boolean {
+  if (isTypeKind(node.importKind)) {
+    return true
+  }
+  return (
+    node.specifiers.length > 0 &&
+    node.specifiers.every(
+      specifier =>
+        specifier.type === 'ImportSpecifier' &&
+        isTypeKind(specifier.importKind),
+    )
+  )
+}
+
+/** `export type … from` and `export { type A } from '…'` are erased. */
+function isTypeOnlyNamedExport(node: TSESTree.ExportNamedDeclaration): boolean {
+  if (node.exportKind === 'type') {
+    return true
+  }
+  return (
+    node.specifiers.length > 0 &&
+    node.specifiers.every(
+      specifier => 'exportKind' in specifier && specifier.exportKind === 'type',
+    )
+  )
+}
+
+/**
+ * Whether the statement referencing a module is erased before runtime:
+ * `import type`, Flow's `import typeof`, `export type … from`, and specifier
+ * lists whose members are all types. Dynamic `import()` and `require()` always
+ * load the target.
+ */
+function isTypeOnly(importer: Importer): boolean {
+  switch (importer.type) {
+    case 'ImportDeclaration': {
+      return isTypeOnlyImport(importer)
+    }
+    case 'ExportNamedDeclaration': {
+      return isTypeOnlyNamedExport(importer)
+    }
+    case 'ExportAllDeclaration': {
+      return importer.exportKind === 'type'
+    }
+    default: {
+      // dynamic `import()`, `require()`, and AMD array elements are values
+      return false
+    }
+  }
 }
 
 /**
@@ -126,7 +188,7 @@ export default createRule<[Options?], MessageId>({
 
     const checkBarrelFile = (
       moduleInfo: ModuleInfo,
-      reportNode: TSESTree.Node,
+      reportNode: TSESTree.StringLiteral,
       specifier: string,
     ) => {
       const surface = getModuleSurface(moduleInfo.path, context)
@@ -156,29 +218,15 @@ export default createRule<[Options?], MessageId>({
       }
     }
 
-    return {
-      ImportDeclaration(node) {
-        // `import type` and Flow's runtime-erased `import typeof`
-        const importKind: string | undefined = node.importKind
-        if (importKind === 'type' || importKind === 'typeof') {
-          return
-        }
-        // `import { type A, type B } from '...'` is erased as well
-        if (
-          node.specifiers.length > 0 &&
-          node.specifiers.every(specifier => {
-            const kind: string | undefined =
-              'importKind' in specifier ? specifier.importKind : undefined
-            return (
-              specifier.type === 'ImportSpecifier' &&
-              (kind === 'type' || kind === 'typeof')
-            )
-          })
-        ) {
+    // every way a module can be pulled in: static imports, re-exports
+    // (`export … from`), dynamic `import()` and CommonJS `require()`
+    return moduleVisitor(
+      (source, importer) => {
+        if (isTypeOnly(importer)) {
           return
         }
 
-        const moduleSpecifier = node.source.value
+        const moduleSpecifier = source.value
 
         if (allowed.has(moduleSpecifier)) {
           return
@@ -192,8 +240,9 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        checkBarrelFile(moduleInfo, node.source, moduleSpecifier)
+        checkBarrelFile(moduleInfo, source, moduleSpecifier)
       },
-    }
+      { commonjs: true },
+    )
   },
 })

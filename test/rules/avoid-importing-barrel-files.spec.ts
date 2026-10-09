@@ -82,6 +82,34 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       filename,
       options: [{ maxModuleGraphSizeAllowed: 6 }],
     }),
+    // type-only re-exports are erased and never load the module graph
+    tValid({
+      code: "export type { a } from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+    }),
+    // inline type specifiers are erased as well
+    tValid({
+      code: "export { type A } from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+    }),
+    tValid({
+      code: "export type * from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+    }),
+    tValid({
+      code: "export type * as ns from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+    }),
+    // a barrel in node_modules is allowed when allow-listed
+    tValid({
+      code: "import { a } from 'barrel-pkg';",
+      filename,
+      options: [{ allowList: ['barrel-pkg'], maxModuleGraphSizeAllowed: 0 }],
+    }),
   ],
 
   invalid: [
@@ -190,6 +218,116 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
           data: {
             amount: 6,
             specifier: './barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    // dynamic `import()` loads the graph
+    tInvalid({
+      code: "import('./barrel.js');",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: './barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    // CommonJS `require()` loads the graph
+    tInvalid({
+      code: "require('./barrel.js');",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: './barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    // re-exporting from a barrel loads the graph
+    tInvalid({
+      code: "export { a } from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: './barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    tInvalid({
+      code: "export * from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: './barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    tInvalid({
+      code: "export * as ns from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: './barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    // a barrel assembled from `export * as ns from` edges reaches its targets
+    tInvalid({
+      code: "import { a } from './ns-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: './ns-barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    // a bare specifier resolving into node_modules
+    tInvalid({
+      code: "import { a } from 'barrel-pkg';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: 'barrel-pkg',
             maxModuleGraphSizeAllowed: 5,
           },
         },

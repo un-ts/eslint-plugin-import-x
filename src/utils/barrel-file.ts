@@ -50,6 +50,111 @@ function countDeclaration(
   return { exports: 1, declarations: 1 }
 }
 
+/** A top-level statement, as the configured parser produced it. */
+type Statement = TSESTree.Program['body'][number]
+
+/** Statement kinds that declare exactly one binding when not exported. */
+const SINGLE_DECLARATION_TYPES = new Set<string>([
+  'FunctionDeclaration',
+  'TSDeclareFunction',
+  'ClassDeclaration',
+  'TSEnumDeclaration',
+  'TSModuleDeclaration',
+  'TSTypeAliasDeclaration',
+  'TSInterfaceDeclaration',
+])
+
+/** Declarations a bare (non-exported) top-level statement introduces. */
+function countOwnDeclaration(statement: Statement): number {
+  if (statement.type === 'VariableDeclaration') {
+    return statement.declarations.length
+  }
+  return SINGLE_DECLARATION_TYPES.has(statement.type) ? 1 : 0
+}
+
+/**
+ * `export { … }` / `export const …`: the inline declaration, if any, plus every
+ * value specifier. `export type { … }` is erased wholesale and mixed
+ * `export { type A, B }` keeps only the value specifiers — neither contributes
+ * to the runtime module graph. Type declarations still count as declarations,
+ * so a module of type exports never looks like a barrel.
+ */
+function countNamedExport(
+  statement: TSESTree.ExportNamedDeclaration,
+): ModuleSurface {
+  const typeOnly = statement.exportKind === 'type'
+  let exports = 0
+  let declarations = 0
+
+  if (statement.declaration) {
+    const surface = countDeclaration(statement.declaration)
+    declarations += surface.declarations
+    if (!typeOnly) {
+      exports += surface.exports
+    }
+  }
+
+  if (!typeOnly) {
+    for (const specifier of statement.specifiers) {
+      if ('exportKind' in specifier && specifier.exportKind === 'type') {
+        continue
+      }
+      exports += 1
+    }
+  }
+
+  return { exports, declarations }
+}
+
+/** `export default …`: a declaration, an object literal, or an expression. */
+function countDefaultExport(
+  declaration: TSESTree.ExportDefaultDeclaration['declaration'],
+): ModuleSurface {
+  switch (declaration.type) {
+    case 'FunctionDeclaration':
+    case 'ClassDeclaration': {
+      // a named default export is both a declaration and the export
+      return { exports: 1, declarations: 1 }
+    }
+    case 'CallExpression': {
+      // HOC-wrapped definitions are treated as declarations, not exports
+      return { exports: 0, declarations: 1 }
+    }
+    case 'ObjectExpression': {
+      // the object's properties become the module's named exports
+      return { exports: declaration.properties.length, declarations: 0 }
+    }
+    default: {
+      return { exports: 1, declarations: 0 }
+    }
+  }
+}
+
+/** Exports and declarations a single top-level statement contributes. */
+function countStatement(statement: Statement): ModuleSurface {
+  switch (statement.type) {
+    case 'ExportNamedDeclaration': {
+      return countNamedExport(statement)
+    }
+    case 'ExportAllDeclaration': {
+      return {
+        exports: statement.exportKind === 'type' ? 0 : 1,
+        declarations: 0,
+      }
+    }
+    case 'TSExportAssignment': {
+      // `export = x` re-exports another module wholesale (CommonJS/TS)
+      return { exports: 1, declarations: 0 }
+    }
+    case 'ExportDefaultDeclaration': {
+      return countDefaultExport(statement.declaration)
+    }
+    default: {
+      return { exports: 0, declarations: countOwnDeclaration(statement) }
+    }
+  }
+}
+
 /**
  * Counts the exports and own top-level declarations of a parsed module. The
  * AST is whatever the configured parser produced, so TypeScript declarations
@@ -62,82 +167,9 @@ export function countModuleSurface(
   let declarations = 0
 
   for (const statement of body) {
-    switch (statement.type) {
-      case 'VariableDeclaration':
-      case 'FunctionDeclaration':
-      case 'TSDeclareFunction':
-      case 'ClassDeclaration':
-      case 'TSEnumDeclaration':
-      case 'TSModuleDeclaration':
-      case 'TSTypeAliasDeclaration':
-      case 'TSInterfaceDeclaration': {
-        declarations += countDeclaration(statement).declarations
-        break
-      }
-      case 'ExportNamedDeclaration': {
-        // `export type { ... }` is erased wholesale, and mixed
-        // `export { type A, B }` keeps only the value specifiers — neither
-        // contributes to the runtime module graph. Type declarations still
-        // count as declarations, so a module of type exports never looks like
-        // a barrel.
-        const typeOnly = statement.exportKind === 'type'
-        if (statement.declaration) {
-          const surface = countDeclaration(statement.declaration)
-          declarations += surface.declarations
-          if (!typeOnly) {
-            exports += surface.exports
-          }
-        }
-        if (!typeOnly) {
-          for (const specifier of statement.specifiers) {
-            if ('exportKind' in specifier && specifier.exportKind === 'type') {
-              continue
-            }
-            exports += 1
-          }
-        }
-        break
-      }
-      case 'ExportAllDeclaration': {
-        if (statement.exportKind !== 'type') {
-          exports += 1
-        }
-        break
-      }
-      case 'TSExportAssignment': {
-        // `export = x` re-exports another module wholesale (CommonJS/TS)
-        exports += 1
-        break
-      }
-      case 'ExportDefaultDeclaration': {
-        const declaration = statement.declaration
-        switch (declaration.type) {
-          case 'FunctionDeclaration':
-          case 'ClassDeclaration': {
-            // a named default export is both a declaration and the export
-            exports += 1
-            declarations += 1
-
-            break
-          }
-          case 'CallExpression': {
-            // HOC-wrapped definitions are treated as declarations, not exports
-            declarations += 1
-
-            break
-          }
-          case 'ObjectExpression': {
-            exports += declaration.properties.length
-
-            break
-          }
-          default: {
-            exports += 1
-          }
-        }
-        break
-      }
-    }
+    const surface = countStatement(statement)
+    exports += surface.exports
+    declarations += surface.declarations
   }
 
   return { exports, declarations }
