@@ -190,6 +190,43 @@ describe('ModuleInfo', () => {
     }
   })
 
+  it('marks type-only named re-exports as type-only on the AST route', () => {
+    const filepath = testFilePath('type-only-reexports.js')
+    const tsParserPath = '@typescript-eslint/parser'
+    const astRouteContext = {
+      ...fakeContext,
+      parserPath: tsParserPath,
+      settings: {
+        ...fakeContext.settings,
+        'import-x/parsers': { [tsParserPath]: ['.js'] },
+      },
+    } as RuleContext
+    try {
+      fs.writeFileSync(
+        filepath,
+        [
+          "export type { A } from './named-exports'",
+          "export { type B, C } from './named-exports'",
+          "export { type E } from './named-exports'",
+          "export { D } from './named-exports'",
+        ].join('\n'),
+      )
+      const moduleInfo = ModuleInfo.get(
+        './type-only-reexports',
+        astRouteContext,
+      )!
+      const edge = [...moduleInfo.getImports()].find(([p]) =>
+        p.endsWith('named-exports.js'),
+      )
+      expect(edge).toBeDefined()
+      expect(
+        [...edge![1].declarations].map(d => d.isOnlyImportingTypes),
+      ).toEqual([true, false, true, false])
+    } finally {
+      fs.rmSync(filepath, { force: true })
+    }
+  })
+
   it('returns a cached copy on subsequent requests', () => {
     expect(ModuleInfo.get('./named-exports', fakeContext)).toBe(
       ModuleInfo.get('./named-exports', fakeContext),

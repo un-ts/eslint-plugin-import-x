@@ -527,11 +527,14 @@ function captureEdge(
   walk: Walk,
   n: TSESTree.ImportDeclaration | TSESTree.ExportNamedDeclaration,
 ) {
+  // statement-level `import type` / Flow's `import typeof`, or
+  // `export type { … } from` on a named re-export
   const declarationIsType =
-    'importKind' in n &&
-    (n.importKind === 'type' ||
-      // @ts-expect-error - flow type
-      n.importKind === 'typeof')
+    ('importKind' in n &&
+      (n.importKind === 'type' ||
+        // @ts-expect-error - flow type
+        n.importKind === 'typeof')) ||
+    ('exportKind' in n && n.exportKind === 'type')
   // import './foo' or import {} from './foo' (both 0 specifiers) is a side
   // effect and shouldn't be considered to be just importing types
   let specifiersOnlyImportingTypes = n.specifiers.length > 0
@@ -562,10 +565,11 @@ function captureEdge(
 
     specifiersOnlyImportingTypes =
       specifiersOnlyImportingTypes &&
-      'importKind' in specifier &&
-      (specifier.importKind === 'type' ||
-        // @ts-expect-error - flow type
-        specifier.importKind === 'typeof')
+      (('importKind' in specifier &&
+        (specifier.importKind === 'type' ||
+          // @ts-expect-error - flow type
+          specifier.importKind === 'typeof')) ||
+        ('exportKind' in specifier && specifier.exportKind === 'type'))
   }
   return captureDependency(
     walk,
