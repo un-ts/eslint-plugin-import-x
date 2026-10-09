@@ -42,11 +42,8 @@ export default createRule<[Options?], MessageId>({
     },
   },
   defaultOptions: [defaultOptions],
-  create(context, [options]) {
-    // `createRule` deep-merges `defaultOptions` before calling `create`, so
-    // every field is present at runtime; spreading here keeps that true if the
-    // rule is ever invoked directly.
-    const { allowList } = { ...defaultOptions, ...options } as Required<Options>
+  create(context) {
+    const { allowList = defaultOptions.allowList } = context.options[0] || {}
     // `allowList` is consulted once per namespace import and may hold many
     // entries; a Set keeps the lookup O(1).
     const allowed = new Set(allowList)

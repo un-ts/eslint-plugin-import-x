@@ -111,15 +111,12 @@ export default createRule<[Options?], MessageId>({
     },
   },
   defaultOptions: [defaultOptions],
-  create(context, [options]) {
-    // `createRule` deep-merges `defaultOptions` before calling `create`, so
-    // every field is present at runtime; spreading here keeps that true if the
-    // rule is ever invoked directly.
+  create(context) {
     const {
-      maxModuleGraphSizeAllowed,
-      amountOfExportsToConsiderModuleAsBarrel,
-      allowList,
-    } = { ...defaultOptions, ...options } as Required<Options>
+      maxModuleGraphSizeAllowed = defaultOptions.maxModuleGraphSizeAllowed,
+      amountOfExportsToConsiderModuleAsBarrel = defaultOptions.amountOfExportsToConsiderModuleAsBarrel,
+      allowList = defaultOptions.allowList,
+    } = context.options[0] || {}
     // consulted once per import and possibly long; a Set keeps the lookup O(1)
     const allowed = new Set(allowList)
 

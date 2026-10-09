@@ -107,9 +107,12 @@ describe(getModuleSurface, () => {
     ).toBeNull()
   })
 
-  it('returns null when the configured parser cannot parse the file', () => {
+  it('returns null when the file cannot be parsed', () => {
     expect(
-      getModuleSurface(testFilePath('barrel-files/ts-syntax.ts'), jsContext),
+      getModuleSurface(
+        testFilePath('barrel-files/invalid-syntax.js'),
+        jsContext,
+      ),
     ).toBeNull()
   })
 

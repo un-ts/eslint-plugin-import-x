@@ -43,14 +43,10 @@ export default createRule<[Options?], MessageId>({
     },
   },
   defaultOptions: [defaultOptions],
-  create(context, [options]) {
-    // `createRule` deep-merges `defaultOptions` before calling `create`, so
-    // every field is present at runtime; spreading here keeps that true if the
-    // rule is ever invoked directly.
-    const { amountOfExportsToConsiderModuleAsBarrel } = {
-      ...defaultOptions,
-      ...options,
-    } as Required<Options>
+  create(context) {
+    const {
+      amountOfExportsToConsiderModuleAsBarrel = defaultOptions.amountOfExportsToConsiderModuleAsBarrel,
+    } = context.options[0] || {}
 
     return {
       Program(node) {
