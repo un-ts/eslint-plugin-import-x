@@ -66,6 +66,18 @@ export interface AstModuleFacts {
   reexports: Map<string, { local: string; targetPath: string | null }>
   /** Resolved paths of `export * from '...'` targets. */
   starExportPaths: string[]
+  /**
+   * Number of plain `export * from '...'` statements, counted before
+   * resolution.
+   *
+   * It has to be recorded here: `countModuleSurface` counts *every* plain
+   * `export *` statement, so a sound bound over a module's exports includes the
+   * ones whose target never resolves — and this walk is the only place that
+   * sees the statements before resolution (`starExportPaths` drops the
+   * unresolvable ones). `export * as ns from` is not one of these; it is an own
+   * namespace export.
+   */
+  starReexportCount: number
   /** Import declarations, keyed by resolved path. */
   imports: Map<string, ModuleImportDeclaration[]>
   defaultExportSourceName?: DefaultExportSourceName
@@ -168,6 +180,7 @@ export function analyzeAstModule(
     ownExports: new Map(),
     reexports: new Map(),
     starExportPaths: [],
+    starReexportCount: 0,
     imports: new Map(),
   }
 
@@ -308,6 +321,9 @@ function handleExportAll(walk: Walk, n: TSESTree.ExportAllDeclaration) {
   }
   if (p != null) {
     walk.facts.starExportPaths.push(p)
+  }
+  if (n.exportKind !== 'type') {
+    walk.facts.starReexportCount += 1
   }
 }
 

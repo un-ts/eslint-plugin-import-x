@@ -121,6 +121,13 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
         'import-x/ignore': [String.raw`barrel-files[\\/]barrel\.js$`],
       },
     }),
+    // a default export may hide `export default { … }` properties, so the
+    // cheap name bound never rules it out — the exact surface decides
+    tValid({
+      code: "import { foo } from '../default-export.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+    }),
   ],
 
   invalid: [

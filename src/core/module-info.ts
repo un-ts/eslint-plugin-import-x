@@ -344,7 +344,12 @@ export class ModuleInfo {
 
     const imports = new Map<string, ModuleImportDeclaration[]>()
     const starExportPaths: string[] = []
+    let starReexportCount = 0
     for (const imp of lexed.imports) {
+      if (imp.starReexport) {
+        // counted before resolution: an unresolvable target still exports
+        starReexportCount += 1
+      }
       const p = resolvePath(imp.specifier)
       if (p == null) {
         continue
@@ -371,6 +376,7 @@ export class ModuleInfo {
       ownExports,
       reexports,
       starExportPaths,
+      starReexportCount,
       imports,
       defaultExportSourceName: lexed.defaultExportSourceName,
     }
@@ -393,6 +399,7 @@ export class ModuleInfo {
     info.moduleDocGetter = facts.getModuleDoc
     info.defaultExportSourceName = facts.defaultExportSourceName
     info.surface = facts.surface
+    info.starReexportCount = facts.starReexportCount
 
     for (const [name, own] of facts.ownExports) {
       const targetPath = own.namespaceTargetPath
@@ -455,6 +462,17 @@ export class ModuleInfo {
   readonly reexports = new Map<string, ModuleReexportRecord>()
   /** @internal `export * from '...'` targets, lazily resolved. */
   readonly starExports: Array<() => ModuleInfo | null> = []
+  /**
+   * @internal Plain `export * from` statements, counted before resolution.
+   *
+   *   It has to be carried on the module and read from here, because a rule
+   *   cannot recover the unresolvable ones: `starExportPaths` drops them, and
+   *   `getStarExportPaths` would analyze the targets just to resolve them —
+   *   yet they still export (`countModuleSurface` counts every statement). The
+   *   barrel guard in `rules/avoid-importing-barrel-files.ts` is its only
+   *   reader.
+   */
+  declare starReexportCount: number
   /** @internal Imported modules, keyed by resolved path. */
   readonly imports = new Map<string, ModuleInfoImport>()
 

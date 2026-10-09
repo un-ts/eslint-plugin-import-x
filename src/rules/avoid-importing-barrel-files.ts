@@ -1,7 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import type { ModuleImportDeclaration } from '../core/index.js'
-import { ModuleInfo } from '../core/index.js'
+import { getOwnExportNames, getReexports, ModuleInfo } from '../core/index.js'
 import type { Visitor } from '../utils/index.js'
 import {
   createRule,
@@ -40,6 +40,33 @@ function isRuntimeEdge(
     }
   }
   return false
+}
+
+/**
+ * A cheap necessary condition for the import target to be a barrel at
+ * `amount`: when it returns `false`, the module provably is not one, so the
+ * exact surface — and the parse a lexer-analyzed module needs for it — can be
+ * skipped.
+ *
+ * The bound is the module's own export names plus its re-exports plus one per
+ * plain `export * from` statement, all known without reading or parsing the
+ * file. `starReexportCount` has to come from the analyzer: an unresolvable
+ * `export *` target still exports, and `getStarExportPaths` would both miss it
+ * and analyze the resolvable targets to find them. A default export always
+ * answers `true`: the properties of `export default { … }` are exports no
+ * name-based bound can see.
+ */
+function couldBeBarrel(moduleInfo: ModuleInfo, amount: number): boolean {
+  const ownExports = getOwnExportNames(moduleInfo)
+  if (ownExports.includes('default')) {
+    return true
+  }
+  return (
+    ownExports.length +
+      getReexports(moduleInfo).size +
+      moduleInfo.starReexportCount >
+    amount
+  )
 }
 
 /** `type`/`typeof` modifiers, which only Flow and TS parsers emit. */
@@ -228,6 +255,14 @@ export default createRule<[Options?], MessageId>({
         const moduleInfo = ModuleInfo.get(moduleSpecifier, context)
 
         if (moduleInfo == null) {
+          return
+        }
+
+        // rule out what cannot be a barrel from its names alone, so a module
+        // the lexer could handle is never parsed just to be counted
+        if (
+          !couldBeBarrel(moduleInfo, amountOfExportsToConsiderModuleAsBarrel)
+        ) {
           return
         }
 

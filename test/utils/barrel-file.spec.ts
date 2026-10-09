@@ -163,6 +163,61 @@ describe(isBarrelFileSurface, () => {
   })
 })
 
+describe(`ModuleInfo.starReexportCount`, () => {
+  const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
+  const jsParserContext = {
+    ...testContext(),
+    parserPath: parsers.ESPREE,
+    parserOptions,
+  } as RuleContext
+  // forcing `.js` through an alternate parser keeps it off the lexer route
+  const astRouteContext = {
+    ...jsParserContext,
+    settings: {
+      ...jsParserContext.settings,
+      'import-x/parsers': { [parsers.ESPREE]: ['.js'] },
+    },
+  } as RuleContext
+
+  it('counts resolved `export * from` statements', () => {
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/star-barrel.js',
+      jsParserContext,
+    )!
+    expect(moduleInfo.starReexportCount).toBe(4)
+  })
+
+  it('counts statements whose target never resolves', () => {
+    // `countModuleSurface` counts them too, so the guard's bound has to
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/unresolved-star.js',
+      jsParserContext,
+    )!
+    expect(moduleInfo.starReexportCount).toBe(1)
+  })
+
+  it('is zero when the module has no `export *`', () => {
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/barrel.js',
+      jsParserContext,
+    )!
+    expect(moduleInfo.starReexportCount).toBe(0)
+  })
+
+  it('counts them the same way on the AST route', () => {
+    for (const [fixture, count] of [
+      ['star-barrel.js', 4],
+      ['unresolved-star.js', 1],
+    ] as const) {
+      const moduleInfo = ModuleInfo.get(
+        `./barrel-files/${fixture}`,
+        astRouteContext,
+      )!
+      expect(moduleInfo.starReexportCount).toBe(count)
+    }
+  })
+})
+
 describe('ModuleInfo.getSurface', () => {
   const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
   const jsParserContext = {
