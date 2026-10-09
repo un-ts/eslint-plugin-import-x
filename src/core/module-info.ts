@@ -542,8 +542,10 @@ export class ModuleInfo {
   }
 
   /**
-   * Modules imported by this module (dependencies not re-exported), keyed by
-   * resolved path.
+   * The module's dependencies, keyed by resolved path: direct imports *and*
+   * re-exports (`export * from`, `export { … } from`, `export * as ns from`).
+   * Each entry is plain edge data — the target module is analyzed only when
+   * {@link ModuleInfoImport.resolve} is called.
    */
   getImports(): ReadonlyMap<string, ModuleInfoImport> {
     return this.imports

@@ -112,6 +112,82 @@ describe('ModuleInfo', () => {
     expect(moduleInfo).toBeDefined()
     expect(moduleInfo.hasExport('foo')).toBe(true)
     expect(moduleInfo.hasExports).toBe(true)
+
+    // a re-export is a dependency too: the edge carries the direct import and
+    // the `export * from` as two declarations of the same resolved path
+    const edge = [...moduleInfo.getImports()].find(([p]) =>
+      p.endsWith('sibling-with-names.js'),
+    )
+    expect(edge).toBeDefined()
+    expect(edge![1].declarations.size).toBe(2)
+  })
+
+  it('records `export * as ns from` as a dependency on the AST route', () => {
+    const filepath = testFilePath('namespace-reexport-ast.js')
+    const astRouteContext = {
+      ...fakeContext,
+      // an alternate parser for `.js` keeps this off the lexer route, so the
+      // AST route is what runs
+      settings: {
+        ...fakeContext.settings,
+        'import-x/parsers': { [parserPath]: ['.js'] },
+      },
+    } as RuleContext
+    try {
+      fs.writeFileSync(filepath, "export * as ns from './named-exports'\n")
+      const moduleInfo = ModuleInfo.get(
+        './namespace-reexport-ast',
+        astRouteContext,
+      )!
+
+      // the namespace export is retained, and its resolver is present and
+      // still resolves the target (optional chaining alone would let a lost
+      // `getNamespace` pass the not-null check)
+      expect(moduleInfo.hasExport('ns')).toBe(true)
+      const namespaceExport = moduleInfo.getExport('ns')
+      expect(namespaceExport?.getNamespace).toBeInstanceOf(Function)
+      expect(namespaceExport?.getNamespace?.()).not.toBeNull()
+
+      // ...and the source module is an ordinary runtime dependency
+      const edge = [...moduleInfo.getImports()].find(([p]) =>
+        p.endsWith('named-exports.js'),
+      )
+      expect(edge).toBeDefined()
+      const [declaration] = [...edge![1].declarations]
+      expect(declaration.isOnlyImportingTypes).toBe(false)
+    } finally {
+      fs.rmSync(filepath, { force: true })
+    }
+  })
+
+  it('keeps `export type * as ns from` type-only on the AST route', () => {
+    const filepath = testFilePath('namespace-reexport-type.js')
+    const tsParserPath = '@typescript-eslint/parser'
+    const astRouteContext = {
+      ...fakeContext,
+      parserPath: tsParserPath,
+      settings: {
+        ...fakeContext.settings,
+        'import-x/parsers': { [tsParserPath]: ['.js'] },
+      },
+    } as RuleContext
+    try {
+      fs.writeFileSync(filepath, "export type * as ns from './named-exports'\n")
+      const moduleInfo = ModuleInfo.get(
+        './namespace-reexport-type',
+        astRouteContext,
+      )!
+
+      expect(moduleInfo.hasExport('ns')).toBe(true)
+      const edge = [...moduleInfo.getImports()].find(([p]) =>
+        p.endsWith('named-exports.js'),
+      )
+      expect(edge).toBeDefined()
+      const [declaration] = [...edge![1].declarations]
+      expect(declaration.isOnlyImportingTypes).toBe(true)
+    } finally {
+      fs.rmSync(filepath, { force: true })
+    }
   })
 
   it('returns a cached copy on subsequent requests', () => {

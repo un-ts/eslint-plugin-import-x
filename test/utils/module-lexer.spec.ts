@@ -46,9 +46,12 @@ const p = import('./dyn.js')
     ])
 
     const bySpecifier = new Map(result.imports.map(i => [i.specifier, i]))
-    // `export * as ns from './d.js'` must NOT produce an import edge (parity
-    // with the AST path)
-    expect(bySpecifier.has('./d.js')).toBe(false)
+    // `export * as ns from './d.js'` is a runtime dependency like any other,
+    // but it is not a `export * from` star edge
+    expect(bySpecifier.get('./d.js')).toMatchObject({
+      dynamic: false,
+      starReexport: false,
+    })
     expect(bySpecifier.get('./a.js')).toMatchObject({
       dynamic: false,
       starReexport: false,
@@ -437,17 +440,18 @@ describe('core lexer fast path for external modules', () => {
     const utilPath = [...imports.keys()].find(p => p.endsWith('util.js'))!
     expect(utilPath).toBeDefined()
     const declarations = [...imports.get(utilPath)!.declarations]
-    // `import util from './util.js'` + `export { ... } from './util.js'`;
-    // `export * as ns from './util.js'` adds no edge
-    expect(declarations).toHaveLength(2)
+    // `import util from './util.js'`, `export { ... } from './util.js'`, and
+    // `export * as ns from './util.js'` all reach the same module
+    expect(declarations).toHaveLength(3)
     expect(declarations[0].source.loc.start.line).toBeGreaterThan(0)
 
     // No lexer reports what a statement binds, so reading `imported`
     // escalates to a one-off AST parse of this file, joined on specifier
     // location. Keyed by line: `import util from './util.js'` is line 5,
-    // `export { helper as renamedHelper, plain } from './util.js'` is line 14.
+    // `export { helper as renamedHelper, plain } from './util.js'` is line 14,
+    // `export * as ns from './util.js'` is line 16.
     const byLine = new Map(declarations.map(d => [d.source.loc.start.line, d]))
-    expect([...byLine.keys()].sort((a, b) => a - b)).toEqual([5, 14])
+    expect([...byLine.keys()].sort((a, b) => a - b)).toEqual([5, 14, 16])
     expect(byLine.get(5)!.imported).toEqual({
       names: new Set(),
       default: true,
