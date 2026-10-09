@@ -1,7 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import type { ModuleImportDeclaration } from '../core/index.js'
-import { getOwnExportNames, ModuleInfo } from '../core/index.js'
+import { ModuleInfo } from '../core/index.js'
 import type { Visitor } from '../utils/index.js'
 import {
   createRule,
@@ -40,28 +40,6 @@ function isRuntimeEdge(
     }
   }
   return false
-}
-
-/**
- * Whether the target provably is not a barrel at `amount` without producing a
- * surface for it — only a lexer-analyzed module can be answered this way, so
- * `false` for anything else.
- *
- * The AST route counted an exact surface during its walk, which the caller
- * reads instead; a lexer-analyzed module has none yet and would need a parse.
- * `exportCount` is what the analyzer saw before its name map deduped it, so a
- * file that exports the same name from several statements (TypeScript syntax
- * parsed as `.js`, overloads, declaration merging) cannot hide exports from
- * this bound. A module with a default export is never ruled out: the
- * properties of `export default { … }` are exports no statement count sees.
- */
-function cannotBeBarrel(moduleInfo: ModuleInfo, amount: number): boolean {
-  const count = moduleInfo.exportCount
-  return (
-    count !== undefined &&
-    count <= amount &&
-    !getOwnExportNames(moduleInfo).includes('default')
-  )
 }
 
 /** `type`/`typeof` modifiers, which only Flow and TS parsers emit. */
@@ -250,15 +228,6 @@ export default createRule<[Options?], MessageId>({
         const moduleInfo = ModuleInfo.get(moduleSpecifier, context)
 
         if (moduleInfo == null) {
-          return
-        }
-
-        // A lexer-analyzed module would need a parse to produce its surface;
-        // rule it out first from the export statements the lexer counted before
-        // deduplicating names. The AST route already has the exact surface.
-        if (
-          cannotBeBarrel(moduleInfo, amountOfExportsToConsiderModuleAsBarrel)
-        ) {
           return
         }
 

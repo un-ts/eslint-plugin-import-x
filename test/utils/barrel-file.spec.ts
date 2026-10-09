@@ -163,69 +163,6 @@ describe(isBarrelFileSurface, () => {
   })
 })
 
-describe(`ModuleInfo.exportCount`, () => {
-  const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
-  const jsParserContext = {
-    ...testContext(),
-    parserPath: parsers.ESPREE,
-    parserOptions,
-  } as RuleContext
-  // the overload fixture needs a parser that can read it when the surface is
-  // escalated to, but stays on the lexer route
-  const tsParserContext = {
-    ...testContext(),
-    parserPath: parsers.TS,
-    parserOptions,
-  } as RuleContext
-  // forcing `.js` through an alternate parser keeps it off the lexer route
-  const astRouteContext = {
-    ...tsParserContext,
-    settings: {
-      ...tsParserContext.settings,
-      'import-x/parsers': { [parsers.TS]: ['.js'] },
-    },
-  } as RuleContext
-
-  it('adds up every export the lexer saw', () => {
-    for (const [fixture, count] of [
-      // 4 named re-exports
-      ['barrel.js', 4],
-      // 4 `export * from`
-      ['star-barrel.js', 4],
-      // one `export * from` whose target does not resolve
-      ['unresolved-star.js', 1],
-      // 4 `export * as ns from`
-      ['ns-barrel.js', 4],
-    ] as const) {
-      const moduleInfo = ModuleInfo.get(
-        `./barrel-files/${fixture}`,
-        jsParserContext,
-      )!
-      expect(moduleInfo.exportCount).toBe(count)
-    }
-  })
-
-  it('counts before the name map dedups, so overloads are not lost', () => {
-    // three `export function f` overloads + two `export * from`: the surface
-    // counts 5 exports, while the name map alone would see 3
-    const moduleInfo = ModuleInfo.get(
-      './barrel-files/overload-barrel.js',
-      tsParserContext,
-    )!
-    expect(moduleInfo.exportCount).toBe(5)
-    expect(moduleInfo.getSurface()).toEqual({ exports: 5, declarations: 3 })
-  })
-
-  it('is not set for an AST-analyzed module, which has the surface', () => {
-    const moduleInfo = ModuleInfo.get(
-      './barrel-files/overload-barrel.js',
-      astRouteContext,
-    )!
-    expect(moduleInfo.exportCount).toBeUndefined()
-    expect(moduleInfo.getSurface()).toEqual({ exports: 5, declarations: 3 })
-  })
-})
-
 describe('ModuleInfo.getSurface', () => {
   const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
   const jsParserContext = {

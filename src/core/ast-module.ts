@@ -66,17 +66,6 @@ export interface AstModuleFacts {
   reexports: Map<string, { local: string; targetPath: string | null }>
   /** Resolved paths of `export * from '...'` targets. */
   starExportPaths: string[]
-  /**
-   * Number of export statements/names the lexer saw, counted **before** the
-   * name map dedups them. Set only for a lexer-analyzed module — the AST route
-   * carries an exact {@link surface} instead.
-   *
-   * A bound over a module's exports has to use this rather than
-   * `ownExports.size`: a lexable file can still export the same name from
-   * several statements (TypeScript overloads, declaration merging), which the
-   * name map collapses.
-   */
-  exportCount?: number
   /** Import declarations, keyed by resolved path. */
   imports: Map<string, ModuleImportDeclaration[]>
   defaultExportSourceName?: DefaultExportSourceName
