@@ -112,6 +112,14 @@ describe('ModuleInfo', () => {
     expect(moduleInfo).toBeDefined()
     expect(moduleInfo.hasExport('foo')).toBe(true)
     expect(moduleInfo.hasExports).toBe(true)
+
+    // a re-export is a dependency too: the edge carries the direct import and
+    // the `export * from` as two declarations of the same resolved path
+    const edge = [...moduleInfo.getImports()].find(([p]) =>
+      p.endsWith('sibling-with-names.js'),
+    )
+    expect(edge).toBeDefined()
+    expect(edge![1].declarations.size).toBe(2)
   })
 
   it('records `export * as ns from` as a dependency on the AST route', () => {
