@@ -204,6 +204,20 @@ ruleTester.run('order', rule, {
       `,
       options: [{ warnOnUnassignedImports: 'top' }],
     }),
+    // parents stay ahead of siblings regardless of path depth, so the order can't depend on the sort engine
+    tValid({
+      code: `
+        import p from '../p.js';
+        import a from './a.js';
+        import b from './b/b/b.js';
+      `,
+      options: [
+        {
+          groups: [['parent', 'sibling']],
+          alphabetize: { order: 'asc' },
+        },
+      ],
+    }),
     // No imports
     tValid({
       code: `
@@ -1399,6 +1413,26 @@ ruleTester.run('order', rule, {
         createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
       languageOptions: { parser: require(parsers.ESPREE) },
+    }),
+    // parent before sibling when they share a group, even with equal path depth
+    tInvalid({
+      code: `
+        import a from './foo';
+        import b from '../bar';
+      `,
+      output: `
+        import b from '../bar';
+        import a from './foo';
+      `,
+      options: [
+        {
+          groups: [['parent', 'sibling']],
+          alphabetize: { order: 'asc' },
+        },
+      ],
+      errors: [
+        createOrderError(['`../bar` import', 'before', 'import of `./foo`']),
+      ],
     }),
     // fix order with spaces on the end of line
     tInvalid({
