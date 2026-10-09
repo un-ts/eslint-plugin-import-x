@@ -274,15 +274,16 @@ function handleExportDefault(walk: Walk, n: TSESTree.ExportDefaultDeclaration) {
 
 /** `export * from './x'` / `export * as ns from './x'` */
 function handleExportAll(walk: Walk, n: TSESTree.ExportAllDeclaration) {
+  // both forms load the source module at runtime
+  const p = captureDependency(walk, n, n.exportKind === 'type')
   if (n.exported) {
-    // the namespace object is an own export of this module
-    walk.namespaces.set(getValue(n.exported), n.source.value)
-    addOwnExport(walk, getValue(n.exported), {
-      namespaceTargetPath: walk.remotePath(n.source.value),
-    })
+    // `export * as ns from '...'` is both an own namespace export and an
+    // ordinary runtime dependency on the source module (hence `p` above)
+    const name = getValue(n.exported)
+    walk.namespaces.set(name, n.source.value)
+    addOwnExport(walk, name, { namespaceTargetPath: p })
     return
   }
-  const p = captureDependency(walk, n, n.exportKind === 'type')
   if (p != null) {
     walk.facts.starExportPaths.push(p)
   }
