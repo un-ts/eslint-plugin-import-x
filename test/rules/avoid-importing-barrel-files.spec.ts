@@ -110,12 +110,16 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       filename,
       options: [{ allowList: ['barrel-pkg'], maxModuleGraphSizeAllowed: 0 }],
     }),
-    // a barrel the core ignores is never analyzed, and so cannot be reported
+    // a barrel the core ignores is never analyzed, and so cannot be reported;
+    // the pattern must allow both path separators — `ignore()` matches the
+    // resolved absolute path, which uses `\` on Windows
     tValid({
       code: "import { a } from './barrel.js';",
       filename,
       options: [{ maxModuleGraphSizeAllowed: 0 }],
-      settings: { 'import-x/ignore': [String.raw`barrel-files/barrel\.js$`] },
+      settings: {
+        'import-x/ignore': [String.raw`barrel-files[\\/]barrel\.js$`],
+      },
     }),
   ],
 
