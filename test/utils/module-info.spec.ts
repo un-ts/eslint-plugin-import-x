@@ -132,9 +132,13 @@ describe('ModuleInfo', () => {
         astRouteContext,
       )!
 
-      // the namespace export is retained...
+      // the namespace export is retained, and its resolver is present and
+      // still resolves the target (optional chaining alone would let a lost
+      // `getNamespace` pass the not-null check)
       expect(moduleInfo.hasExport('ns')).toBe(true)
-      expect(moduleInfo.getExport('ns')?.getNamespace?.()).not.toBeNull()
+      const namespaceExport = moduleInfo.getExport('ns')
+      expect(namespaceExport?.getNamespace).toBeInstanceOf(Function)
+      expect(namespaceExport?.getNamespace?.()).not.toBeNull()
 
       // ...and the source module is an ordinary runtime dependency
       const edge = [...moduleInfo.getImports()].find(([p]) =>
