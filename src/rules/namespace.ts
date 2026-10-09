@@ -1,12 +1,13 @@
 import type { TSESTree, TSESLint } from '@typescript-eslint/utils'
 
+import { ModuleInfo } from '../core/index.js'
 import {
   importDeclaration,
-  ExportMap,
   createRule,
   declaredScope,
   getValue,
 } from '../utils/index.js'
+import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
 export type MessageId =
   | 'noNamesFound'
@@ -22,7 +23,7 @@ export interface Options {
 
 function processBodyStatement(
   context: TSESLint.RuleContext<MessageId, [Options]>,
-  namespaces: Map<string, ExportMap | null>,
+  namespaces: Map<string, ModuleInfo | null>,
   declaration: TSESTree.ProgramStatement,
 ) {
   if (declaration.type !== 'ImportDeclaration') {
@@ -33,21 +34,21 @@ function processBodyStatement(
     return
   }
 
-  const imports = ExportMap.get(declaration.source.value, context)
+  const imports = ModuleInfo.get(declaration.source.value, context)
 
   if (imports == null) {
     return
   }
 
-  if (imports.errors.length > 0) {
-    imports.reportErrors(context, declaration)
+  if (imports.parseError) {
+    reportModuleParseErrors(context, imports, declaration)
     return
   }
 
   for (const specifier of declaration.specifiers) {
     switch (specifier.type) {
       case 'ImportNamespaceSpecifier': {
-        if (imports.size === 0) {
+        if (!imports.hasExports) {
           context.report({
             node: specifier,
             messageId: 'noNamesFound',
@@ -61,16 +62,17 @@ function processBodyStatement(
       }
       case 'ImportDefaultSpecifier':
       case 'ImportSpecifier': {
-        const meta = imports.get(
+        const meta = imports.getExport(
           'imported' in specifier
             ? getValue(specifier.imported)
             : // default to 'default' for default
               'default',
         )
-        if (!meta || !meta.namespace) {
+        const metaNamespace = meta?.getNamespace?.()
+        if (!metaNamespace) {
           break
         }
-        namespaces.set(specifier.local.name, meta.namespace)
+        namespaces.set(specifier.local.name, metaNamespace)
         break
       }
       default:
@@ -142,7 +144,7 @@ export default createRule<[Options], MessageId>({
     // read options
     const { allowComputed } = context.options[0] || {}
 
-    const namespaces = new Map<string, ExportMap | null>()
+    const namespaces = new Map<string, ModuleInfo | null>()
 
     return {
       // pick up all imports at body entry time, to properly respect hoisting
@@ -159,17 +161,17 @@ export default createRule<[Options], MessageId>({
           namespace as TSESTree.ImportDefaultSpecifier,
         )
 
-        const imports = ExportMap.get(declaration.source.value, context)
+        const imports = ModuleInfo.get(declaration.source.value, context)
         if (imports == null) {
           return null
         }
 
-        if (imports.errors.length > 0) {
-          imports.reportErrors(context, declaration)
+        if (imports.parseError) {
+          reportModuleParseErrors(context, imports, declaration)
           return
         }
 
-        if (imports.size === 0) {
+        if (!imports.hasExports) {
           context.report({
             node: namespace,
             messageId: 'noNamesFound',
@@ -222,7 +224,7 @@ export default createRule<[Options], MessageId>({
 
         // while property is namespace and parent is member expression, keep validating
         while (
-          namespace instanceof ExportMap &&
+          namespace instanceof ModuleInfo &&
           deref?.type === 'MemberExpression'
         ) {
           if (deref.computed) {
@@ -238,12 +240,12 @@ export default createRule<[Options], MessageId>({
             return
           }
 
-          if (!namespace.has(deref.property.name)) {
+          if (!namespace.hasExport(deref.property.name)) {
             context.report(makeMessage(deref.property, namepath))
             break
           }
 
-          const exported = namespace.get(deref.property.name)
+          const exported = namespace.getExport(deref.property.name)
 
           if (exported == null) {
             return
@@ -251,7 +253,7 @@ export default createRule<[Options], MessageId>({
 
           // stash and pop
           namepath.push(deref.property.name)
-          namespace = exported.namespace
+          namespace = exported.getNamespace?.()
 
           deref = deref.parent
         }
@@ -280,10 +282,10 @@ export default createRule<[Options], MessageId>({
         // DFS traverse child namespaces
         function testKey(
           pattern: TSESTree.Node,
-          namespace?: ExportMap | null,
+          namespace?: ModuleInfo | null,
           path: string[] = [initName],
         ) {
-          if (!(namespace instanceof ExportMap)) {
+          if (!(namespace instanceof ModuleInfo)) {
             return
           }
 
@@ -309,18 +311,18 @@ export default createRule<[Options], MessageId>({
               continue
             }
 
-            if (!namespace.has(property.key.name)) {
+            if (!namespace.hasExport(property.key.name)) {
               context.report(makeMessage(property.key, path, property))
               continue
             }
 
             path.push(property.key.name)
 
-            const dependencyExportMap = namespace.get(property.key.name)
+            const dependencyExport = namespace.getExport(property.key.name)
 
             // could be null when ignored or ambiguous
-            if (dependencyExportMap != null) {
-              testKey(property.value, dependencyExportMap.namespace, path)
+            if (dependencyExport != null) {
+              testKey(property.value, dependencyExport.getNamespace?.(), path)
             }
 
             path.pop()
@@ -341,7 +343,7 @@ export default createRule<[Options], MessageId>({
 
         const namespace = namespaces.get(object.name)!
 
-        if (!namespace.has(property.name)) {
+        if (!namespace.hasExport(property.name)) {
           context.report(makeMessage(property, [object.name]))
         }
       },

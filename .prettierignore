@@ -3,3 +3,5 @@
 test/fixtures/just-json-files/invalid.json
 test/fixtures/malformed.js
 test/fixtures/with-syntax-error/package.json
+test/fixtures/inline-type-export.js
+test/fixtures/no-rename-default/paren-arrow.js

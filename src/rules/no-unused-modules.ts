@@ -6,7 +6,7 @@
 import path from 'node:path'
 
 import { TSESTree } from '@typescript-eslint/types'
-import type { JSONSchema, TSESLint } from '@typescript-eslint/utils'
+import type { JSONSchema } from '@typescript-eslint/utils'
 // eslint-disable-next-line import-x/default -- incorrect types , commonjs actually
 import eslintUnsupportedApi from 'eslint/use-at-your-own-risk'
 import type * as ESLint9UnsupportedApi from 'eslint9/use-at-your-own-risk'
@@ -33,9 +33,14 @@ function ensureESLint9UnsupportedApi(
   return input
 }
 
+import {
+  getOwnExportNames,
+  getReexports,
+  getStarExportPaths,
+  ModuleInfo,
+} from '../core/index.js'
 import type { FileExtension, RuleContext } from '../types.js'
 import {
-  ExportMap,
   recursivePatternCapture,
   createRule,
   resolve,
@@ -192,8 +197,6 @@ const importList = new Map<string, Map<string, Set<string>>>()
  */
 const exportList = new Map<string, Map<string, { whereUsed: Set<string> }>>()
 
-const visitorKeyMap = new Map<string, TSESLint.SourceCode.VisitorKeys | null>()
-
 const ignoredFiles = new Set()
 const filesOutsideSrc = new Set()
 
@@ -242,30 +245,12 @@ const prepareImportsAndExports = (
   for (const file of srcFiles) {
     const exports = new Map<string, { whereUsed: Set<string> }>()
     const imports = new Map<string, Set<string>>()
-    const currentExports = ExportMap.get(file, context)
+    const currentExports = ModuleInfo.get(file, context)
     if (currentExports) {
-      const {
-        dependencies,
-        reexports,
-        imports: localImportList,
-        namespace,
-        visitorKeys,
-      } = currentExports
+      // star-export paths === export * from
+      exportAll.set(file, new Set(getStarExportPaths(currentExports)))
 
-      visitorKeyMap.set(file, visitorKeys)
-      // dependencies === export * from
-      const currentExportAll = new Set<string>()
-      for (const getDependency of dependencies) {
-        const dependency = getDependency()
-        if (dependency === null) {
-          continue
-        }
-
-        currentExportAll.add(dependency.path)
-      }
-      exportAll.set(file, currentExportAll)
-
-      for (const [key, value] of reexports.entries()) {
+      for (const [key, value] of getReexports(currentExports)) {
         if (key === DEFAULT) {
           exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
             whereUsed: new Set(),
@@ -273,11 +258,11 @@ const prepareImportsAndExports = (
         } else {
           exports.set(key, { whereUsed: new Set() })
         }
-        const reexport = value.getImport()
-        if (!reexport) {
+        const reexportPath = value.resolveTarget()?.path
+        if (!reexportPath) {
           continue
         }
-        let localImport = imports.get(reexport.path)
+        let localImport = imports.get(reexportPath)
         const currentValue =
           value.local === DEFAULT
             ? AST_NODE_TYPES.ImportDefaultSpecifier
@@ -286,17 +271,26 @@ const prepareImportsAndExports = (
           localImport === undefined
             ? new Set([currentValue])
             : new Set([...localImport, currentValue])
-        imports.set(reexport.path, localImport)
+        imports.set(reexportPath, localImport)
       }
 
-      for (const [key, value] of localImportList.entries()) {
+      for (const [key, value] of currentExports.getImports()) {
         if (isNodeModule(key)) {
           continue
         }
         const localImport = imports.get(key) || new Set()
-        for (const { importedSpecifiers } of value.declarations) {
-          for (const specifier of importedSpecifiers!) {
-            localImport.add(specifier)
+        for (const { imported } of value.declarations) {
+          if (!imported) {
+            continue
+          }
+          for (const name of imported.names) {
+            localImport.add(name)
+          }
+          if (imported.default) {
+            localImport.add(AST_NODE_TYPES.ImportDefaultSpecifier)
+          }
+          if (imported.namespace) {
+            localImport.add(AST_NODE_TYPES.ImportNamespaceSpecifier)
           }
         }
         imports.set(key, localImport)
@@ -307,7 +301,7 @@ const prepareImportsAndExports = (
       if (ignoredFiles.has(file)) {
         continue
       }
-      for (const [key, _value] of namespace.entries()) {
+      for (const key of getOwnExportNames(currentExports)) {
         if (key === DEFAULT) {
           exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
             whereUsed: new Set(),
@@ -835,7 +829,9 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
         newNamespaceImports.add(p)
       }
 
-      visit(node, visitorKeyMap.get(filename), {
+      // `node` is the current file's Program as parsed by ESLint itself, so
+      // ESLint's own visitor keys are the matching ones
+      visit(node, context.sourceCode.visitorKeys, {
         ImportExpression(child) {
           processDynamicImport((child as TSESTree.ImportExpression).source)
         },
