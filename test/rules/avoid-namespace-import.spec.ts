@@ -11,8 +11,8 @@ const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 ruleTester.run('avoid-namespace-import', rule, {
   valid: [
     tValid({ code: 'import { foo } from "foo";' }),
-    // 'import type { foo } from "foo";',
-    // 'import type * as foo from "foo";'
+    tValid({ code: 'import type { foo } from "foo";' }),
+    tValid({ code: 'import type * as foo from "foo";' }),
     tValid({
       code: 'import * as foo from "foo";',
       options: [

@@ -36,6 +36,12 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       filename,
       options: [{ maxModuleGraphSizeAllowed: 0 }],
     }),
+    // inline type specifiers are erased as well
+    tValid({
+      code: "import { type A } from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+    }),
     // the export threshold is above what the module exports
     tValid({
       code: "import { a } from './barrel.js';",
@@ -97,6 +103,38 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
           data: {
             amount: 6,
             specifier: './passthrough-barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    // a dependency reached through two paths is only counted once
+    tInvalid({
+      code: "import { a } from './dup-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: './dup-barrel.js',
+            maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    // type-only edges are skipped when sizing the graph
+    tInvalid({
+      code: "import { a } from './type-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 6,
+            specifier: './type-barrel.js',
             maxModuleGraphSizeAllowed: 5,
           },
         },

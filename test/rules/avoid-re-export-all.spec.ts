@@ -10,10 +10,11 @@ const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
 ruleTester.run('avoid-re-export-all', rule, {
   valid: [
-    // 'export type { foo } from "foo";',
-    // 'export type * as foo from "foo";',
     tValid({ code: 'export { foo } from "foo";' }),
     tValid({ code: 'export { foo as bar } from "foo";' }),
+    tValid({ code: 'export type { foo } from "foo";' }),
+    tValid({ code: 'export type * from "foo";' }),
+    tValid({ code: 'export type * as foo from "foo";' }),
   ],
 
   invalid: [

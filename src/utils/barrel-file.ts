@@ -151,7 +151,7 @@ export function getModuleSurface(
   try {
     const content = fs.readFileSync(path, 'utf8')
     const { ast } = parse(path, content, context, false)
-    surface = ast == null ? null : countModuleSurface(ast.body)
+    surface = countModuleSurface(ast.body)
   } catch {
     surface = null
   }

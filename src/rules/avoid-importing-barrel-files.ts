@@ -111,15 +111,17 @@ export default createRule<[Options?], MessageId>({
     },
   },
   defaultOptions: [defaultOptions],
-  create(context, [options = defaultOptions]) {
-    const maxModuleGraphSizeAllowed =
-      options.maxModuleGraphSizeAllowed ??
-      defaultOptions.maxModuleGraphSizeAllowed
-    const amountOfExportsToConsiderModuleAsBarrel =
-      options.amountOfExportsToConsiderModuleAsBarrel ??
-      defaultOptions.amountOfExportsToConsiderModuleAsBarrel
+  create(context, [options]) {
+    // `createRule` deep-merges `defaultOptions` before calling `create`, so
+    // every field is present at runtime; spreading here keeps that true if the
+    // rule is ever invoked directly.
+    const {
+      maxModuleGraphSizeAllowed,
+      amountOfExportsToConsiderModuleAsBarrel,
+      allowList,
+    } = { ...defaultOptions, ...options } as Required<Options>
     // consulted once per import and possibly long; a Set keeps the lookup O(1)
-    const allowList = new Set(options.allowList ?? defaultOptions.allowList)
+    const allowed = new Set(allowList)
 
     const checkBarrelFile = (
       moduleInfo: ModuleInfo,
@@ -169,7 +171,7 @@ export default createRule<[Options?], MessageId>({
 
         const moduleSpecifier = node.source.value
 
-        if (allowList.has(moduleSpecifier)) {
+        if (allowed.has(moduleSpecifier)) {
           return
         }
 

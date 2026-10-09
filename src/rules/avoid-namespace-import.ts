@@ -42,16 +42,20 @@ export default createRule<[Options?], MessageId>({
     },
   },
   defaultOptions: [defaultOptions],
-  create(context, [options = defaultOptions]) {
+  create(context, [options]) {
+    // `createRule` deep-merges `defaultOptions` before calling `create`, so
+    // every field is present at runtime; spreading here keeps that true if the
+    // rule is ever invoked directly.
+    const { allowList } = { ...defaultOptions, ...options } as Required<Options>
     // `allowList` is consulted once per namespace import and may hold many
     // entries; a Set keeps the lookup O(1).
-    const allowList = new Set(options.allowList ?? defaultOptions.allowList)
+    const allowed = new Set(allowList)
 
     return {
       ImportNamespaceSpecifier(node) {
         if (
           node.parent.importKind !== 'type' &&
-          !allowList.has(node.parent.source.value)
+          !allowed.has(node.parent.source.value)
         ) {
           context.report({
             node,
