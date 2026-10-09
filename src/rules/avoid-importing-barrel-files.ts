@@ -8,6 +8,7 @@ import {
   getModuleSurface,
   isBarrelFileSurface,
   moduleVisitor,
+  resolve,
 } from '../utils/index.js'
 
 export interface Options {
@@ -186,20 +187,11 @@ export default createRule<[Options?], MessageId>({
     // consulted once per import and possibly long; a Set keeps the lookup O(1)
     const allowed = new Set(allowList)
 
-    const checkBarrelFile = (
+    const reportBarrelFile = (
       moduleInfo: ModuleInfo,
       reportNode: TSESTree.StringLiteral,
       specifier: string,
     ) => {
-      const surface = getModuleSurface(moduleInfo.path, context)
-
-      if (
-        surface == null ||
-        !isBarrelFileSurface(surface, amountOfExportsToConsiderModuleAsBarrel)
-      ) {
-        return
-      }
-
       const moduleGraphSize = countModuleGraphSize(
         moduleInfo,
         maxModuleGraphSizeAllowed,
@@ -232,15 +224,31 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        // `ModuleInfo.get` resolves with the plugin's resolver and applies the
-        // user's settings, and analyzes the target through its own cache.
+        // The surface is the cheap filter, and reading it does not analyze the
+        // module: resolve the path first, and only hand the specifier to
+        // `ModuleInfo.get` — which analyzes the target — once it is a barrel.
+        const path = resolve(moduleSpecifier, context)
+
+        if (path == null) {
+          return
+        }
+
+        const surface = getModuleSurface(path, context)
+
+        if (
+          surface == null ||
+          !isBarrelFileSurface(surface, amountOfExportsToConsiderModuleAsBarrel)
+        ) {
+          return
+        }
+
         const moduleInfo = ModuleInfo.get(moduleSpecifier, context)
 
         if (moduleInfo == null) {
           return
         }
 
-        checkBarrelFile(moduleInfo, source, moduleSpecifier)
+        reportBarrelFile(moduleInfo, source, moduleSpecifier)
       },
       { commonjs: true },
     )
