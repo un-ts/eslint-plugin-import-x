@@ -38,7 +38,8 @@ limit is exceeded, so the module count in the report is a lower bound.
 ### `amountOfExportsToConsiderModuleAsBarrel`
 
 Number of exports after which a module is considered a barrel file. Type-only
-exports and declarations do not count, since they are erased at runtime.
+exports do not count, since they are erased at runtime; type declarations still
+count as the module's own declarations.
 
 ## Notes
 

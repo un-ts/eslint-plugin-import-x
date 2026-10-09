@@ -30,4 +30,5 @@ This rule has the following options, with these defaults:
 This option sets the number of exports a module may have before it is
 considered a barrel file. A module is reported only when it exports **more
 than** this many names _and_ exports more names than it declares. Type-only
-exports and declarations are ignored, since they are erased at runtime.
+exports are ignored, since they are erased at runtime; type declarations still
+count as the module's own declarations.
