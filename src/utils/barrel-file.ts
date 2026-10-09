@@ -1,11 +1,4 @@
-import fs from 'node:fs'
-
 import type { TSESTree } from '@typescript-eslint/utils'
-
-import type { ChildContext, RuleContext } from '../types.js'
-
-import { makeContextCacheKey } from './child-context.js'
-import { parse } from './parse.js'
 
 /**
  * Exports and declarations counted over a module's top-level statements.
@@ -181,73 +174,4 @@ export function isBarrelFileSurface(
   amount: number,
 ): boolean {
   return surface.exports > surface.declarations && surface.exports > amount
-}
-
-interface SurfaceCacheEntry {
-  mtime: number
-  surface: ModuleSurface | null
-}
-
-/**
- * Surfaces of already-analyzed files, keyed by the settings/parser context and
- * absolute path and invalidated by mtime — the same contract `ModuleInfo` uses.
- * A dependency that changes (a package reinstalled, a file edited in an IDE) is
- * re-read instead of serving a stale answer for the life of the process, and a
- * file that one parser cannot read is not assumed unreadable by another.
- */
-const surfaceCache = new Map<string, SurfaceCacheEntry>()
-
-/**
- * The context's settings/parser signature, memoized per context object so the
- * (comparatively expensive) hash is computed once per file rather than once per
- * resolved dependency.
- */
-const contextKeys = new WeakMap<RuleContext | ChildContext, string>()
-
-function surfaceCacheKey(
-  context: RuleContext | ChildContext,
-  path: string,
-): string {
-  let contextKey = contextKeys.get(context)
-  if (contextKey === undefined) {
-    contextKey = makeContextCacheKey(context)
-    contextKeys.set(context, contextKey)
-  }
-  return contextKey + '\0' + path
-}
-
-/**
- * Analyzes a module on disk and returns its {@link ModuleSurface}, or `null`
- * when the file can't be read or parsed (a binary, a syntax the configured
- * parser rejects, an extension it doesn't handle). Failures are cached against
- * the file's mtime, so a broken file is not re-parsed on every import.
- */
-export function getModuleSurface(
-  path: string,
-  context: RuleContext | ChildContext,
-): ModuleSurface | null {
-  let mtime: number
-  try {
-    mtime = fs.statSync(path).mtimeMs
-  } catch {
-    return null
-  }
-
-  const key = surfaceCacheKey(context, path)
-  const cached = surfaceCache.get(key)
-  if (cached && cached.mtime === mtime) {
-    return cached.surface
-  }
-
-  let surface: ModuleSurface | null = null
-  try {
-    const content = fs.readFileSync(path, 'utf8')
-    const { ast } = parse(path, content, context, false)
-    surface = countModuleSurface(ast.body)
-  } catch {
-    surface = null
-  }
-
-  surfaceCache.set(key, { mtime, surface })
-  return surface
 }

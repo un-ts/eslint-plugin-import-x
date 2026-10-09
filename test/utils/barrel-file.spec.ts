@@ -1,9 +1,13 @@
-import { testFilePath, parsers } from '../utils.js'
+import fs from 'node:fs'
+
+import { testContext, testFilePath, parsers } from '../utils.js'
 
 import type { ChildContext } from 'eslint-plugin-import-x'
+import { analyzeAstModule } from 'eslint-plugin-import-x/core/ast-module'
+import { ModuleInfo } from 'eslint-plugin-import-x/core/index'
+import type { RuleContext } from 'eslint-plugin-import-x/types'
 import {
   countModuleSurface,
-  getModuleSurface,
   isBarrelFileSurface,
   parse,
 } from 'eslint-plugin-import-x/utils'
@@ -159,39 +163,84 @@ describe(isBarrelFileSurface, () => {
   })
 })
 
-describe(getModuleSurface, () => {
-  it('returns null when the file cannot be statted', () => {
-    expect(
-      getModuleSurface(testFilePath('barrel-files/nope.js'), jsContext),
-    ).toBeNull()
+describe('ModuleInfo.getSurface', () => {
+  const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
+  const jsParserContext = {
+    ...testContext(),
+    parserPath: parsers.ESPREE,
+    parserOptions,
+  } as RuleContext
+  const tsParserContext = {
+    ...testContext(),
+    parserPath: parsers.TS,
+    parserOptions,
+  } as RuleContext
+  // forcing `.js` through an alternate parser keeps it off the lexer route
+  const astRouteContext = {
+    ...jsParserContext,
+    settings: {
+      ...jsParserContext.settings,
+      'import-x/parsers': { [parsers.ESPREE]: ['.js'] },
+    },
+  } as RuleContext
+
+  it('computes the surface during the AST walk', () => {
+    const filepath = testFilePath('barrel-files/barrel.js')
+    const facts = analyzeAstModule(
+      filepath,
+      fs.readFileSync(filepath, 'utf8'),
+      jsContext,
+      false,
+    )!
+    expect(facts.surface).toEqual({ exports: 4, declarations: 0 })
   })
 
-  it('returns null when the file cannot be parsed', () => {
-    expect(
-      getModuleSurface(
-        testFilePath('barrel-files/invalid-syntax.js'),
-        jsContext,
-      ),
-    ).toBeNull()
+  it('serves the AST route the surface it already computed', () => {
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/barrel.js',
+      astRouteContext,
+    )!
+    expect(moduleInfo.getSurface()).toEqual({ exports: 4, declarations: 0 })
+    // the same object on every call — nothing is recomputed
+    expect(moduleInfo.getSurface()).toBe(moduleInfo.getSurface())
   })
 
-  it('returns the surface and serves repeated lookups from cache', () => {
-    const path = testFilePath('barrel-files/barrel.js')
-    const first = getModuleSurface(path, jsContext)
-
-    expect(first).toEqual({ exports: 4, declarations: 0 })
-    expect(getModuleSurface(path, jsContext)).toBe(first)
+  it('escalates a lexer-analyzed module to the AST twin', () => {
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/barrel.js',
+      jsParserContext,
+    )!
+    expect(moduleInfo.getSurface()).toEqual({ exports: 4, declarations: 0 })
+    expect(moduleInfo.getSurface()).toBe(moduleInfo.getSurface())
   })
 
-  it('keys the cache by parser context, not just path', () => {
-    const path = testFilePath('barrel-files/types.js')
+  it('counts TypeScript declarations through the configured parser', () => {
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/types.js',
+      tsParserContext,
+    )!
+    expect(moduleInfo.getSurface()).toEqual({ exports: 1, declarations: 2 })
+  })
 
-    // espree cannot read the TypeScript in it, so this records a negative...
-    expect(getModuleSurface(path, jsContext)).toBeNull()
-    // ...which must not be served to the TypeScript parser
-    expect(getModuleSurface(path, tsContext)).toEqual({
-      exports: 1,
-      declarations: 2,
-    })
+  it('returns null when the module cannot be parsed', () => {
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/invalid-syntax.js',
+      jsParserContext,
+    )!
+    expect(moduleInfo.getSurface()).toBeNull()
+  })
+
+  it('returns null when a lexer-analyzed module cannot be parsed', () => {
+    // the lexer succeeded, so `getSurface` escalates — and the parser is
+    // unusable, so the AST twin carries no surface
+    const unusedParserContext = {
+      ...testContext(),
+      parserPath: 'not-real',
+    } as RuleContext
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/barrel.js',
+      unusedParserContext,
+    )!
+    expect(moduleInfo.getSurface()).toBeNull()
   })
 })

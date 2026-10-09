@@ -5,10 +5,8 @@ import { ModuleInfo } from '../core/index.js'
 import type { Visitor } from '../utils/index.js'
 import {
   createRule,
-  getModuleSurface,
   isBarrelFileSurface,
   moduleVisitor,
-  resolve,
 } from '../utils/index.js'
 
 export interface Options {
@@ -224,27 +222,21 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        // Resolve and read the surface first — one parse — and only ask
-        // `ModuleInfo.get`, which additionally analyzes the target, once the
-        // module actually is a barrel.
-        const path = resolve(moduleSpecifier, context)
+        // `ModuleInfo.get` resolves with the plugin's resolver and applies the
+        // user's settings. The surface was counted during the analysis it
+        // already did, so the file is never read or parsed a second time.
+        const moduleInfo = ModuleInfo.get(moduleSpecifier, context)
 
-        if (path == null) {
+        if (moduleInfo == null) {
           return
         }
 
-        const surface = getModuleSurface(path, context)
+        const surface = moduleInfo.getSurface()
 
         if (
           surface == null ||
           !isBarrelFileSurface(surface, amountOfExportsToConsiderModuleAsBarrel)
         ) {
-          return
-        }
-
-        const moduleInfo = ModuleInfo.get(moduleSpecifier, context)
-
-        if (moduleInfo == null) {
           return
         }
 
