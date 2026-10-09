@@ -114,6 +114,70 @@ describe('ModuleInfo', () => {
     expect(moduleInfo.hasExports).toBe(true)
   })
 
+  it('records `export * as ns from` as a dependency on the AST route', () => {
+    const filepath = testFilePath('namespace-reexport-ast.js')
+    const astRouteContext = {
+      ...fakeContext,
+      // an alternate parser for `.js` keeps this off the lexer route, so the
+      // AST route is what runs
+      settings: {
+        ...fakeContext.settings,
+        'import-x/parsers': { [parserPath]: ['.js'] },
+      },
+    } as RuleContext
+    try {
+      fs.writeFileSync(filepath, "export * as ns from './named-exports'\n")
+      const moduleInfo = ModuleInfo.get(
+        './namespace-reexport-ast',
+        astRouteContext,
+      )!
+
+      // the namespace export is retained...
+      expect(moduleInfo.hasExport('ns')).toBe(true)
+      expect(moduleInfo.getExport('ns')?.getNamespace?.()).not.toBeNull()
+
+      // ...and the source module is an ordinary runtime dependency
+      const edge = [...moduleInfo.getImports()].find(([p]) =>
+        p.endsWith('named-exports.js'),
+      )
+      expect(edge).toBeDefined()
+      const [declaration] = [...edge![1].declarations]
+      expect(declaration.isOnlyImportingTypes).toBe(false)
+    } finally {
+      fs.rmSync(filepath, { force: true })
+    }
+  })
+
+  it('keeps `export type * as ns from` type-only on the AST route', () => {
+    const filepath = testFilePath('namespace-reexport-type.js')
+    const tsParserPath = '@typescript-eslint/parser'
+    const astRouteContext = {
+      ...fakeContext,
+      parserPath: tsParserPath,
+      settings: {
+        ...fakeContext.settings,
+        'import-x/parsers': { [tsParserPath]: ['.js'] },
+      },
+    } as RuleContext
+    try {
+      fs.writeFileSync(filepath, "export type * as ns from './named-exports'\n")
+      const moduleInfo = ModuleInfo.get(
+        './namespace-reexport-type',
+        astRouteContext,
+      )!
+
+      expect(moduleInfo.hasExport('ns')).toBe(true)
+      const edge = [...moduleInfo.getImports()].find(([p]) =>
+        p.endsWith('named-exports.js'),
+      )
+      expect(edge).toBeDefined()
+      const [declaration] = [...edge![1].declarations]
+      expect(declaration.isOnlyImportingTypes).toBe(true)
+    } finally {
+      fs.rmSync(filepath, { force: true })
+    }
+  })
+
   it('returns a cached copy on subsequent requests', () => {
     expect(ModuleInfo.get('./named-exports', fakeContext)).toBe(
       ModuleInfo.get('./named-exports', fakeContext),

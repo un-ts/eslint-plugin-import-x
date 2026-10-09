@@ -558,8 +558,8 @@ export function lexModule(
         reexports: [],
         namespaceExports: [],
         // no static import declarations can exist here (see `isModule`), so
-        // neither statement set can have members
-        imports: collectImportEdges(content, imports, new Set(), new Set()),
+        // the star-reexport set cannot have members
+        imports: collectImportEdges(content, imports, new Set()),
       }
     }
 
@@ -596,7 +596,6 @@ export function lexModule(
       locals?: Map<string, string>
     }
   >()
-  const skippedImportEdges = new Set<number>()
   /** Statement offsets of plain `export * from '...'` edges. */
   const starReexportEdges = new Set<number>()
 
@@ -616,13 +615,11 @@ export function lexModule(
       continue
     }
     const starAs = EXPORT_STAR_AS_PATTERN.test(clause)
-    if (starAs) {
-      // parity with the AST path: `export * as ns from` gets a lazy
-      // namespace, not an import edge
-      skippedImportEdges.add(imp.ss)
-    } else if (EXPORT_STAR_PATTERN.test(clause)) {
+    if (!starAs && EXPORT_STAR_PATTERN.test(clause)) {
       // classify the edge here, while the clause is in hand — the edge pass
-      // would otherwise re-run all three patterns over the same string
+      // would otherwise re-run all three patterns over the same string.
+      // `export * as ns from` deliberately is not classified here: it keeps its
+      // namespace export *and* is an ordinary runtime dependency.
       starReexportEdges.add(imp.ss)
     }
     exportFromStatements.set(imp.ss, { specifier: imp.n, clause, starAs })
@@ -693,12 +690,7 @@ export function lexModule(
     ownExports,
     reexports,
     namespaceExports,
-    imports: collectImportEdges(
-      content,
-      imports,
-      skippedImportEdges,
-      starReexportEdges,
-    ),
+    imports: collectImportEdges(content, imports, starReexportEdges),
     ...(defaultExportSourceName && { defaultExportSourceName }),
   }
 }
@@ -706,7 +698,6 @@ export function lexModule(
 function collectImportEdges(
   content: string,
   imports: readonly esModuleLexer.ImportSpecifier[],
-  skippedStatements: ReadonlySet<number>,
   starReexportStatements: ReadonlySet<number>,
 ): LexedImport[] {
   const offsetToLoc = createOffsetToLoc(content)
@@ -719,7 +710,6 @@ function collectImportEdges(
     if (
       imp.d < -1 ||
       imp.n == null ||
-      skippedStatements.has(imp.ss) ||
       (imp.d >= 0 && content.codePointAt(imp.s) === 96) /* ` */
     ) {
       continue
