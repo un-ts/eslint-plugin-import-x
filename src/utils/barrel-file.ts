@@ -35,7 +35,10 @@ function countDeclaration(declaration: TSESTree.Node): ModuleSurface {
       }
     }
     case 'FunctionDeclaration':
+    case 'TSDeclareFunction':
     case 'ClassDeclaration':
+    case 'TSEnumDeclaration':
+    case 'TSModuleDeclaration':
     case 'TSTypeAliasDeclaration':
     case 'TSInterfaceDeclaration': {
       return { exports: 1, declarations: 1 }
@@ -61,7 +64,10 @@ export function countModuleSurface(
     switch (statement.type) {
       case 'VariableDeclaration':
       case 'FunctionDeclaration':
+      case 'TSDeclareFunction':
       case 'ClassDeclaration':
+      case 'TSEnumDeclaration':
+      case 'TSModuleDeclaration':
       case 'TSTypeAliasDeclaration':
       case 'TSInterfaceDeclaration': {
         declarations += countDeclaration(statement).declarations

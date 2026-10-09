@@ -42,12 +42,16 @@ function isRuntimeEdge(
  * Number of modules reachable from `entry`, `entry` included. Resolution and
  * caching are `ModuleInfo`'s — the same resolver the rest of the plugin uses —
  * so graph traversal here needs no resolver options of its own.
+ *
+ * The walk stops as soon as `limit` modules have been exceeded, so the result
+ * is a lower bound for graphs larger than that: a barrel pulling in thousands
+ * of modules costs `limit + 1` visits, not thousands.
  */
-function countModuleGraphSize(entry: ModuleInfo): number {
+function countModuleGraphSize(entry: ModuleInfo, limit: number): number {
   const visited = new Set<string>()
   const queue: ModuleInfo[] = [entry]
 
-  while (queue.length > 0) {
+  while (queue.length > 0 && visited.size <= limit) {
     const moduleInfo = queue.pop()!
     if (visited.has(moduleInfo.path)) {
       continue
@@ -107,7 +111,7 @@ export default createRule<[Options?], MessageId>({
     ],
     messages: {
       avoidImport:
-        'The imported module "{{specifier}}" is a barrel file, which leads to importing a module graph of {{amount}} modules, which exceeds the maximum allowed size of {{maxModuleGraphSizeAllowed}} modules',
+        'The imported module "{{specifier}}" is a barrel file, which leads to importing a module graph of at least {{amount}} modules, which exceeds the maximum allowed size of {{maxModuleGraphSizeAllowed}} modules',
     },
   },
   defaultOptions: [defaultOptions],
@@ -134,7 +138,10 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
-      const moduleGraphSize = countModuleGraphSize(moduleInfo)
+      const moduleGraphSize = countModuleGraphSize(
+        moduleInfo,
+        maxModuleGraphSizeAllowed,
+      )
 
       if (moduleGraphSize > maxModuleGraphSizeAllowed) {
         context.report({

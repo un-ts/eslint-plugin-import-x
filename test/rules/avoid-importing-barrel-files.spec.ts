@@ -59,6 +59,12 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       filename,
       options: [{ maxModuleGraphSizeAllowed: 0 }],
     }),
+    // a dependency reached twice is only visited once
+    tValid({
+      code: "import { a } from './dup-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 10 }],
+    }),
   ],
 
   invalid: [
@@ -80,14 +86,14 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
     tInvalid({
       code: "import { a } from './star-barrel.js';",
       filename,
-      options: [{ maxModuleGraphSizeAllowed: 0 }],
+      options: [{ maxModuleGraphSizeAllowed: 5 }],
       errors: [
         {
           messageId: 'avoidImport',
           data: {
             amount: 6,
             specifier: './star-barrel.js',
-            maxModuleGraphSizeAllowed: 0,
+            maxModuleGraphSizeAllowed: 5,
           },
         },
       ],
@@ -136,6 +142,22 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
             amount: 6,
             specifier: './type-barrel.js',
             maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    // the walk stops once the limit is exceeded, so `amount` is a lower bound
+    tInvalid({
+      code: "import { a } from './barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 2 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 3,
+            specifier: './barrel.js',
+            maxModuleGraphSizeAllowed: 2,
           },
         },
       ],

@@ -42,6 +42,16 @@ ruleTester.run('avoid-barrel-files ts', rule, {
         export type { Money, Country, State };
       `,
     }),
+    // enums are declarations too, so exporting them is not a barrel
+    tValid({
+      code: `
+        enum A {}
+        enum B {}
+        enum C {}
+        enum D {}
+        export { A, B, C, D };
+      `,
+    }),
   ],
 
   invalid: [

@@ -78,8 +78,40 @@ describe(countModuleSurface, () => {
     })
   })
 
-  it('counts nothing for declaration kinds it does not understand', () => {
+  it('counts TypeScript enum, namespace and declare-function declarations', () => {
     expect(surfaceOf('export enum Foo { A, B }', tsContext)).toEqual({
+      exports: 1,
+      declarations: 1,
+    })
+    expect(surfaceOf('export namespace Foo {}', tsContext)).toEqual({
+      exports: 1,
+      declarations: 1,
+    })
+    expect(surfaceOf('export declare function foo(): void', tsContext)).toEqual(
+      {
+        exports: 1,
+        declarations: 1,
+      },
+    )
+  })
+
+  it('does not mistake a module of TS declarations for a barrel', () => {
+    expect(
+      surfaceOf(
+        `
+          enum A {}
+          enum B {}
+          enum C {}
+          enum D {}
+          export { A, B, C, D }
+        `,
+        tsContext,
+      ),
+    ).toEqual({ exports: 4, declarations: 4 })
+  })
+
+  it('counts nothing for an export-import alias it cannot attribute', () => {
+    expect(surfaceOf('export import Foo = require("foo")', tsContext)).toEqual({
       exports: 0,
       declarations: 0,
     })

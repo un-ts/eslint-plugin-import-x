@@ -50,8 +50,13 @@ export default createRule<[Options?], MessageId>({
 
     return {
       ImportNamespaceSpecifier(node) {
+        // Flow's `import typeof` is erased at runtime, like `import type`.
+        // The AST types only declare `'value' | 'type'`, but Flow emits
+        // `'typeof'`, so widen before comparing.
+        const importKind: string | undefined = node.parent.importKind
         if (
-          node.parent.importKind !== 'type' &&
+          importKind !== 'type' &&
+          importKind !== 'typeof' &&
           !allowed.has(node.parent.source.value)
         ) {
           context.report({
