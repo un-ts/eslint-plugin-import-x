@@ -190,6 +190,32 @@ describe('ModuleInfo', () => {
     }
   })
 
+  it('reads every name of an annotated declarator list', () => {
+    // es-module-lexer 2.x stops at the annotation and would report only `a`,
+    // so the lexer route must bail and let the AST route name all three
+    const filepath = testFilePath('annotated-declarators.js')
+    const lexerContext = {
+      ...fakeContext,
+      parserPath: '@typescript-eslint/parser',
+    } as RuleContext
+    try {
+      fs.writeFileSync(
+        filepath,
+        'export const a: number = 1, b: number = 2, c: number = 3\n',
+      )
+      const moduleInfo = ModuleInfo.get(
+        './annotated-declarators',
+        lexerContext,
+      )!
+
+      expect(moduleInfo.hasExport('a')).toBe(true)
+      expect(moduleInfo.hasExport('b')).toBe(true)
+      expect(moduleInfo.hasExport('c')).toBe(true)
+    } finally {
+      fs.rmSync(filepath, { force: true })
+    }
+  })
+
   it('returns a cached copy on subsequent requests', () => {
     expect(ModuleInfo.get('./named-exports', fakeContext)).toBe(
       ModuleInfo.get('./named-exports', fakeContext),

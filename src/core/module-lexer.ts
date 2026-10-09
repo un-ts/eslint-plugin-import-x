@@ -215,6 +215,21 @@ const LINE_SEPARATOR_PATTERN = /[\u2028\u2029]/
 const TYPE_EXPORT_PATTERN = /\bexport\s+(?:type|typeof)\b/
 
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
+/**
+ * A type annotation directly after a binding name — `export const a: T = …` —
+ * applied to the text following `exportRecord.e`, which is exactly where the
+ * binding name ends.
+ *
+ * This pins the pinned es-module-lexer to a JavaScript-only reading: on
+ * `export const a: T = 1, b: U = 2` it stops at the annotation and reports only
+ * `a`, silently losing `b` and every later declarator (verified against the
+ * 2.3.x we depend on; the 3.x lexer reads these). Annotations are not
+ * JavaScript, so nothing plain-JS can match here: after a binding name a `:`
+ * is only reachable through a type annotation. Destructured bindings are left
+ * alone on purpose — `export const { b, c }: T = obj` reports both names, and
+ * there the annotation follows the closing brace, not a reported name.
+ */
+const ANNOTATED_BINDING_PATTERN = /^\s*:/
 /** A call head, member callees included: `withHoc(`, `React.memo(`. */
 const CALL_HEAD_PATTERN = new RegExp(
   String.raw`^${IDENTIFIER}(?:\s*\.\s*${IDENTIFIER})*\s*\(\s*`,
@@ -633,6 +648,11 @@ export function lexModule(
       // `export { type T }`: the lexer reports `type` and `T` as two exports
       if (TYPE_MODIFIER_PATTERN.test(content.slice(exp.ss, exp.s))) {
         return null // not plain JavaScript — see TYPE_MODIFIER_PATTERN
+      }
+      // `export const a: T = 1, b: U = 2`: the lexer stops at the annotation
+      // and would drop `b` — see ANNOTATED_BINDING_PATTERN
+      if (ANNOTATED_BINDING_PATTERN.test(content.slice(exp.e, exp.e + 64))) {
+        return null // not plain JavaScript — see ANNOTATED_BINDING_PATTERN
       }
       let localName = exp.ln
       if (exp.n === 'default') {

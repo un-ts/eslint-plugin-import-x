@@ -140,6 +140,58 @@ export default b
     }
   })
 
+  it('falls back to the AST route for an annotated binding', () => {
+    // es-module-lexer 2.x stops enumerating a declarator list at a type
+    // annotation, so `b`/`c` would silently not be exports
+    expect(
+      lexModule(
+        `export const a: number = 1, b: number = 2, c: number = 3`,
+        'f.js',
+      ),
+    ).toBeNull()
+    // the annotation need not be on the first declarator
+    expect(
+      lexModule(`export const a = 1, b: number = 2, c = 3`, 'f.js'),
+    ).toBeNull()
+    // nor have an initializer
+    expect(lexModule(`export let a: number, b: number`, 'f.js')).toBeNull()
+    // nor be TypeScript's
+    expect(
+      lexModule(`export const a: MyType = 1, b: MyType = 2`, 'f.js'),
+    ).toBeNull()
+  })
+
+  it('still lexes what a type annotation cannot hide', () => {
+    // a plain declarator list is read in full
+    expect(
+      (lexModule(`export const a = 1, b = 2, c = 3`, 'f.js') as LexedEsModule)
+        .ownExports,
+    ).toEqual(['a', 'b', 'c'])
+    // a ternary's `:` follows the initializer, not a binding name
+    expect(
+      (lexModule(`export const a = x ? y : z, b = 2`, 'f.js') as LexedEsModule)
+        .ownExports,
+    ).toEqual(['a', 'b'])
+    // a parameter, a class property and a destructured binding can all carry
+    // an annotation without losing names, so they must keep the fast path
+    expect(
+      (
+        lexModule(
+          `export function f(a: string): void {}`,
+          'f.js',
+        ) as LexedEsModule
+      ).ownExports,
+    ).toEqual(['f'])
+    expect(
+      (lexModule(`export class A { x: number = 1 }`, 'f.js') as LexedEsModule)
+        .ownExports,
+    ).toEqual(['A'])
+    expect(
+      (lexModule(`export const { b, c }: T = obj`, 'f.js') as LexedEsModule)
+        .ownExports,
+    ).toEqual(['b', 'c'])
+  })
+
   it('locates specifiers across every line terminator', () => {
     // a lone `\r` is a line terminator to ECMAScript and to espree, so getting
     // it wrong misplaces every later position — which silently breaks the
