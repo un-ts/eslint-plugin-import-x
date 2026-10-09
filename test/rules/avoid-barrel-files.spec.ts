@@ -64,6 +64,16 @@ ruleTester.run('avoid-barrel-files', rule, {
     }),
     tValid({
       code: `
+        export default class Foo {}
+      `,
+      options: [
+        {
+          amountOfExportsToConsiderModuleAsBarrel: 0,
+        },
+      ],
+    }),
+    tValid({
+      code: `
         export default defineFoo({});
       `,
       options: [
@@ -94,6 +104,17 @@ ruleTester.run('avoid-barrel-files', rule, {
         import { bar, baz, qux} from 'foo';
         let foo;
         export { foo, bar, baz, qux,  };
+      `,
+      errors: [{ messageId: 'avoidBarrel' }],
+    }),
+    tInvalid({
+      // inline exports count as declarations on both sides, so the one
+      // re-export is what tips this module over the threshold
+      code: `
+        export const a = 1;
+        export const b = 2;
+        export const c = 3;
+        export { d } from 'foo';
       `,
       errors: [{ messageId: 'avoidBarrel' }],
     }),

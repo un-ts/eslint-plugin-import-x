@@ -1,12 +1,12 @@
 import { createRule } from '../utils/index.js'
 
 export interface Options {
-  allowList: string[]
+  allowList?: string[]
 }
 
 export type MessageId = 'avoidNamespace'
 
-const defaultOptions: Options = {
+const defaultOptions: Required<Options> = {
   allowList: [],
 }
 
@@ -26,7 +26,7 @@ export default createRule<[Options?], MessageId>({
           allowList: {
             type: 'array',
             description: 'List of namespace imports to allow',
-            default: [],
+            default: defaultOptions.allowList,
             uniqueItems: true,
             items: {
               type: 'string',
@@ -42,15 +42,16 @@ export default createRule<[Options?], MessageId>({
     },
   },
   defaultOptions: [defaultOptions],
-  create: context => {
-    const options = context.options[0] || defaultOptions
-    const allowList = options.allowList
+  create(context, [options = defaultOptions]) {
+    // `allowList` is consulted once per namespace import and may hold many
+    // entries; a Set keeps the lookup O(1).
+    const allowList = new Set(options.allowList ?? defaultOptions.allowList)
 
     return {
       ImportNamespaceSpecifier(node) {
         if (
           node.parent.importKind !== 'type' &&
-          !allowList.includes(node.parent.source.value)
+          !allowList.has(node.parent.source.value)
         ) {
           context.report({
             node,

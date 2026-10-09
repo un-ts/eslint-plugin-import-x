@@ -80,7 +80,6 @@
     "comment-parser": "^1.4.1",
     "debug": "^4.4.1",
     "es-module-lexer": "^2.3.2",
-    "eslint-barrel-file-utils": "^0.0.15",
     "eslint-import-context": "^0.1.9",
     "is-glob": "^4.0.3",
     "minimatch": "^9.0.3 || ^10.1.2",

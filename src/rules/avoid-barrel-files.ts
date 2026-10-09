@@ -1,12 +1,16 @@
-import { createRule } from '../utils/index.js'
+import {
+  countModuleSurface,
+  createRule,
+  isBarrelFileSurface,
+} from '../utils/index.js'
 
 export interface Options {
-  amountOfExportsToConsiderModuleAsBarrel: number
+  amountOfExportsToConsiderModuleAsBarrel?: number
 }
 
 export type MessageId = 'avoidBarrel'
 
-const defaultOptions: Options = {
+const defaultOptions: Required<Options> = {
   amountOfExportsToConsiderModuleAsBarrel: 3,
 }
 
@@ -27,7 +31,7 @@ export default createRule<[Options?], MessageId>({
             type: 'number',
             description:
               'Minimum amount of exports to consider module as barrelfile',
-            default: 3,
+            default: defaultOptions.amountOfExportsToConsiderModuleAsBarrel,
           },
         },
         additionalProperties: false,
@@ -39,55 +43,17 @@ export default createRule<[Options?], MessageId>({
     },
   },
   defaultOptions: [defaultOptions],
-  create(context) {
-    const options = context.options[0] || defaultOptions
+  create(context, [options = defaultOptions]) {
     const amountOfExportsToConsiderModuleAsBarrel =
-      options.amountOfExportsToConsiderModuleAsBarrel
+      options.amountOfExportsToConsiderModuleAsBarrel ??
+      defaultOptions.amountOfExportsToConsiderModuleAsBarrel
 
     return {
       Program(node) {
-        let declarations = 0
-        let exports = 0
-
-        for (const n of node.body) {
-          if (n.type === 'VariableDeclaration') {
-            declarations += n.declarations.length
-          }
-
-          if (
-            n.type === 'FunctionDeclaration' ||
-            n.type === 'ClassDeclaration' ||
-            n.type === 'TSTypeAliasDeclaration' ||
-            n.type === 'TSInterfaceDeclaration'
-          ) {
-            declarations += 1
-          }
-
-          if (n.type === 'ExportNamedDeclaration') {
-            exports += n.specifiers.length
-          }
-
-          if (n.type === 'ExportAllDeclaration' && n?.exportKind !== 'type') {
-            exports += 1
-          }
-
-          if (n.type === 'ExportDefaultDeclaration') {
-            if (
-              n.declaration.type === 'FunctionDeclaration' ||
-              n.declaration.type === 'CallExpression'
-            ) {
-              declarations += 1
-            } else if (n.declaration.type === 'ObjectExpression') {
-              exports += n.declaration.properties.length
-            } else {
-              exports += 1
-            }
-          }
-        }
+        const surface = countModuleSurface(node.body)
 
         if (
-          exports > declarations &&
-          exports > amountOfExportsToConsiderModuleAsBarrel
+          isBarrelFileSurface(surface, amountOfExportsToConsiderModuleAsBarrel)
         ) {
           context.report({
             node,

@@ -21,7 +21,7 @@ export default createRule<[], MessageId>({
   create(context) {
     return {
       ExportAllDeclaration(node) {
-        if (node?.exportKind !== 'type') {
+        if (node.exportKind !== 'type') {
           context.report({
             node,
             messageId: 'avoidReExport',

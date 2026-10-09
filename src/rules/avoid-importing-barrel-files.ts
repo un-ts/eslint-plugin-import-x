@@ -1,53 +1,71 @@
-import { readFileSync } from 'node:fs'
+import type { TSESTree } from '@typescript-eslint/utils'
 
+import type { ModuleImportDeclaration } from '../core/index.js'
+import { ModuleInfo } from '../core/index.js'
 import {
-  count_module_graph_size,
-  is_barrel_file,
-} from 'eslint-barrel-file-utils/index.cjs'
-
-import { createRule, resolve, lazy } from '../utils/index.js'
+  createRule,
+  getModuleSurface,
+  isBarrelFileSurface,
+} from '../utils/index.js'
 
 export interface Options {
-  allowList: string[]
-  maxModuleGraphSizeAllowed: number
-  amountOfExportsToConsiderModuleAsBarrel: number
-  exportConditions: string[]
-  mainFields: string[]
-  extensions: string[]
-  tsconfig?: {
-    configFile: string
-    references: string[]
-  }
-  alias?: Record<string, Array<string | null | undefined>>
+  allowList?: string[]
+  maxModuleGraphSizeAllowed?: number
+  amountOfExportsToConsiderModuleAsBarrel?: number
 }
 
 export type MessageId = 'avoidImport'
 
-const defaultOptions: Options = {
+const defaultOptions: Required<Options> = {
   allowList: [],
   maxModuleGraphSizeAllowed: 20,
   amountOfExportsToConsiderModuleAsBarrel: 3,
-  exportConditions: ['node', 'import'],
-  mainFields: ['module', 'browser', 'main'],
-  extensions: ['.js', '.ts', '.tsx', '.jsx', '.json', '.node'],
-  tsconfig: undefined,
-  alias: undefined,
 }
 
-const cache: Record<
-  string,
-  { isBarrelFile: boolean; moduleGraphSize: number }
-> = {}
-
 /**
- * @param {string} specifier
- * @returns {boolean}
+ * Whether an edge into a dependency loads it at runtime. Type-only imports are
+ * erased by the compiler and so contribute nothing to the graph the rule is
+ * trying to bound.
  */
-const isBareModuleSpecifier = (specifier: string): boolean => {
-  if (specifier && specifier.length > 0) {
-    return /[@a-zA-Z]/.test(specifier.replaceAll("'", '')[0])
+function isRuntimeEdge(
+  declarations: ReadonlySet<ModuleImportDeclaration>,
+): boolean {
+  for (const declaration of declarations) {
+    if (!declaration.isOnlyImportingTypes) {
+      return true
+    }
   }
   return false
+}
+
+/**
+ * Number of modules reachable from `entry`, `entry` included. Resolution and
+ * caching are `ModuleInfo`'s — the same resolver the rest of the plugin uses —
+ * so graph traversal here needs no resolver options of its own.
+ */
+function countModuleGraphSize(entry: ModuleInfo): number {
+  const visited = new Set<string>()
+  const queue: ModuleInfo[] = [entry]
+
+  while (queue.length > 0) {
+    const moduleInfo = queue.pop()!
+    if (visited.has(moduleInfo.path)) {
+      continue
+    }
+    visited.add(moduleInfo.path)
+
+    for (const imported of moduleInfo.getImports().values()) {
+      if (!isRuntimeEdge(imported.declarations)) {
+        continue
+      }
+      const resolved = imported.resolve()
+      if (resolved != null && !visited.has(resolved.path)) {
+        queue.push(resolved)
+      }
+    }
+  }
+
+  return visited.size
 }
 
 export default createRule<[Options?], MessageId>({
@@ -83,58 +101,8 @@ export default createRule<[Options?], MessageId>({
               'Amount of exports to consider a module as barrel file',
             default: defaultOptions.amountOfExportsToConsiderModuleAsBarrel,
           },
-          exportConditions: {
-            type: 'array',
-            description:
-              'Export conditions to use to resolve bare module specifiers',
-            default: defaultOptions.exportConditions,
-            uniqueItems: true,
-            items: {
-              type: 'string',
-            },
-          },
-          mainFields: {
-            type: 'array',
-            description: 'Main fields to use to resolve modules',
-            default: defaultOptions.mainFields,
-            uniqueItems: true,
-            items: {
-              type: 'string',
-            },
-          },
-          extensions: {
-            type: 'array',
-            description: 'Extensions to use to resolve modules',
-            default: defaultOptions.extensions,
-            uniqueItems: true,
-            items: {
-              type: 'string',
-            },
-          },
-          // schema to match oxc-resolver's TsconfigOptions
-          tsconfig: {
-            type: 'object',
-            description: 'Options to TsconfigOptions',
-            properties: {
-              configFile: {
-                type: 'string',
-                description: 'Relative path to the configuration file',
-              },
-              references: {
-                type: 'array',
-                description: 'Typescript Project References',
-                items: {
-                  type: 'string',
-                },
-              },
-            },
-          },
-          // NapiResolveOptions.alias
-          alias: {
-            type: 'object',
-            description: 'Webpack aliases used in imports or requires',
-          },
         },
+        additionalProperties: false,
       },
     ],
     messages: {
@@ -143,30 +111,59 @@ export default createRule<[Options?], MessageId>({
     },
   },
   defaultOptions: [defaultOptions],
-  create(context) {
-    const options = context.options[0] || defaultOptions
-    const maxModuleGraphSizeAllowed = options.maxModuleGraphSizeAllowed
+  create(context, [options = defaultOptions]) {
+    const maxModuleGraphSizeAllowed =
+      options.maxModuleGraphSizeAllowed ??
+      defaultOptions.maxModuleGraphSizeAllowed
     const amountOfExportsToConsiderModuleAsBarrel =
-      options.amountOfExportsToConsiderModuleAsBarrel
-    const exportConditions = options.exportConditions
-    const mainFields = options.mainFields
-    const extensions = options.extensions
-    const tsconfig = options.tsconfig
-    const alias = options.alias
+      options.amountOfExportsToConsiderModuleAsBarrel ??
+      defaultOptions.amountOfExportsToConsiderModuleAsBarrel
+    // consulted once per import and possibly long; a Set keeps the lookup O(1)
+    const allowList = new Set(options.allowList ?? defaultOptions.allowList)
 
-    const resolutionOptions = {
-      exportConditions,
-      mainFields,
-      extensions,
-      tsconfig,
-      alias,
+    const checkBarrelFile = (
+      moduleInfo: ModuleInfo,
+      reportNode: TSESTree.Node,
+      specifier: string,
+    ) => {
+      const surface = getModuleSurface(moduleInfo.path, context)
+
+      if (
+        surface == null ||
+        !isBarrelFileSurface(surface, amountOfExportsToConsiderModuleAsBarrel)
+      ) {
+        return
+      }
+
+      const moduleGraphSize = countModuleGraphSize(moduleInfo)
+
+      if (moduleGraphSize > maxModuleGraphSizeAllowed) {
+        context.report({
+          node: reportNode,
+          messageId: 'avoidImport',
+          data: {
+            amount: moduleGraphSize,
+            specifier,
+            maxModuleGraphSizeAllowed,
+          },
+        })
+      }
     }
-
-    const allowList = new Set(options?.allowList)
 
     return {
       ImportDeclaration(node) {
-        if (node?.importKind === 'type') {
+        if (node.importKind === 'type') {
+          return
+        }
+        // `import { type A, type B } from '...'` is erased as well
+        if (
+          node.specifiers.length > 0 &&
+          node.specifiers.every(
+            specifier =>
+              specifier.type === 'ImportSpecifier' &&
+              specifier.importKind === 'type',
+          )
+        ) {
           return
         }
 
@@ -176,107 +173,15 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        const resolvedPath = resolve(moduleSpecifier, context)
+        // `ModuleInfo.get` resolves with the plugin's resolver and applies the
+        // user's settings, and analyzes the target through its own cache.
+        const moduleInfo = ModuleInfo.get(moduleSpecifier, context)
 
-        if (!resolvedPath) {
-          // do nothing since we couldn't resolve it
+        if (moduleInfo == null) {
           return
         }
 
-        const getFileContent = lazy(() => {
-          try {
-            return readFileSync(resolvedPath, 'utf8')
-          } catch {
-            return null
-          }
-        })
-        let isBarrelFile: boolean
-
-        /** Only cache bare module specifiers, as local files can change */
-        if (isBareModuleSpecifier(moduleSpecifier)) {
-          /**
-           * The module specifier is not cached yet, so we need to analyze and
-           * cache it
-           */
-          if (cache[moduleSpecifier] === undefined) {
-            const fileContent = getFileContent()
-            if (!fileContent) {
-              // do nothing since we couldn't read the file
-              return
-            }
-            isBarrelFile = is_barrel_file(
-              fileContent,
-              amountOfExportsToConsiderModuleAsBarrel,
-            )
-            const moduleGraphSize = isBarrelFile
-              ? count_module_graph_size(resolvedPath, resolutionOptions)
-              : -1
-
-            cache[moduleSpecifier] = {
-              isBarrelFile,
-              moduleGraphSize,
-            }
-
-            if (moduleGraphSize > maxModuleGraphSizeAllowed) {
-              context.report({
-                node: node.source,
-                messageId: 'avoidImport',
-                data: {
-                  amount: moduleGraphSize,
-                  specifier: moduleSpecifier,
-                  maxModuleGraphSizeAllowed,
-                },
-              })
-            }
-          } else {
-            /**
-             * It is a bare module specifier, but cached, so we can use the
-             * cached value
-             */
-
-            if (
-              cache[moduleSpecifier].moduleGraphSize > maxModuleGraphSizeAllowed
-            ) {
-              context.report({
-                node: node.source,
-                messageId: 'avoidImport',
-                data: {
-                  amount: cache[moduleSpecifier].moduleGraphSize,
-                  specifier: moduleSpecifier,
-                  maxModuleGraphSizeAllowed,
-                },
-              })
-            }
-          }
-        } else {
-          const fileContent = getFileContent()
-          if (!fileContent) {
-            // do nothing since we couldn't read the file
-            return
-          }
-          /**
-           * Its not a bare module specifier, but local module, so we need to
-           * analyze it
-           */
-          const isBarrelFile = is_barrel_file(
-            fileContent,
-            amountOfExportsToConsiderModuleAsBarrel,
-          )
-          const moduleGraphSize = isBarrelFile
-            ? count_module_graph_size(resolvedPath, resolutionOptions)
-            : -1
-          if (moduleGraphSize > maxModuleGraphSizeAllowed) {
-            context.report({
-              node: node.source,
-              messageId: 'avoidImport',
-              data: {
-                amount: moduleGraphSize,
-                specifier: moduleSpecifier,
-                maxModuleGraphSizeAllowed,
-              },
-            })
-          }
-        }
+        checkBarrelFile(moduleInfo, node.source, moduleSpecifier)
       },
     }
   },

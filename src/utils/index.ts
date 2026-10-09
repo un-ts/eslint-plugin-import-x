@@ -12,6 +12,7 @@ export type {
 
 export * from './apply-default.js'
 export * from './arraify.js'
+export * from './barrel-file.js'
 export * from './child-context.js'
 export * from './create-rule.js'
 export * from './declared-scope.js'
