@@ -2,7 +2,7 @@
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { hasOwnExport, ModuleInfo } from '../core/index.js'
+import { hasExplicitExport, ModuleInfo } from '../core/index.js'
 import { importDeclaration, createRule } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
@@ -103,7 +103,7 @@ export default createRule<[], MessageId>({
             if (propName === 'default') {
               continue
             }
-            if (!hasOwnExport(fileImport.moduleInfo, propName)) {
+            if (!hasExplicitExport(fileImport.moduleInfo, propName)) {
               continue
             }
 

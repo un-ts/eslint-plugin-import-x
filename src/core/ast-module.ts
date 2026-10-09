@@ -451,7 +451,8 @@ function handleTsExportAssignment(
 
 /**
  * Every member of an `export =`-referenced `namespace N { … }` block is an
- * export, explicitly marked or not.
+ * export, explicitly marked or not. These names are all inferred —
+ * `hasExplicitExport` skips them.
  */
 function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
   const type = decl.body?.type
@@ -461,11 +462,11 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
     // @ts-expect-error - legacy parser type
     addOwnExport(walk, (decl.body.id as TSESTree.Identifier).name, {
       getDoc: walk.captureDoc(decl.body),
+      inferred: true,
     })
     return
   } else if (type === 'TSModuleBlock' && decl.kind === 'namespace') {
     const getDoc = walk.captureDoc(decl.body)
-    // the namespace name itself is inferred — `hasExplicitExport` skips it
     if ('name' in decl.id) {
       addOwnExport(walk, decl.id.name, { getDoc, inferred: true })
     } else {
@@ -490,12 +491,14 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
         recursivePatternCapture(d.id, id => {
           addOwnExport(walk, (id as TSESTree.Identifier).name, {
             getDoc: walk.captureDoc(decl, namespaceDecl, moduleBlockNode),
+            inferred: true,
           })
         })
       }
     } else if ('id' in namespaceDecl) {
       addOwnExport(walk, (namespaceDecl.id as TSESTree.Identifier).name, {
         getDoc: walk.captureDoc(moduleBlockNode),
+        inferred: true,
       })
     }
   }
