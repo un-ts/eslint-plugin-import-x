@@ -1,5 +1,52 @@
 # eslint-plugin-import-x
 
+## 4.18.0
+
+### Minor Changes
+
+- [#520](https://github.com/un-ts/eslint-plugin-import-x/pull/520) [`802441c`](https://github.com/un-ts/eslint-plugin-import-x/commit/802441c40eb4b630850011390dcc0236e73b1e0d) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - Add a `checkSelfReference` option to the `extensions` rule. When set, a package's import of its own subpath export (e.g. `pkg/sub` from inside `pkg`) is treated as a package import, so `ignorePackages` applies to it.
+
+- [#504](https://github.com/un-ts/eslint-plugin-import-x/pull/504) [`f10dcc4`](https://github.com/un-ts/eslint-plugin-import-x/commit/f10dcc4a8250d432b47453cabe1f28af60a4c298) Thanks [@morgan-coded](https://github.com/morgan-coded)! - Add a `"top"` mode to the `order` rule's `warnOnUnassignedImports` option for requiring no-specifier ESM imports before assigned imports.
+
+- [#502](https://github.com/un-ts/eslint-plugin-import-x/pull/502) [`9c85ced`](https://github.com/un-ts/eslint-plugin-import-x/commit/9c85ced6cb65536a598e3ae4228f4e5b5eb867bf) Thanks [@SukkaW](https://github.com/SukkaW)! - Rewrite the module analysis core for performance boosts. The speedup depends on your project, and we expect no performance regression in any setup — if you measure one, please report it.
+
+  Rules like `named`, `default`, `namespace`, `no-cycle`, `no-deprecated`, and many more, need to know what the modules you import actually export. Until now, answering that meant running the full ESLint parser over every one of those files — including everything you pull in from `node_modules`.
+
+  That core has been rewritten:
+  - Plain JavaScript is now read with [`es-module-lexer`](https://github.com/guybedford/es-module-lexer) instead of being parsed. Anything it can't read faithfully — TypeScript, JSX, Flow — still goes through the ESLint parser exactly as before.
+  - Analysis is lazy. Much of the work now happens when a rule actually asks for it, so enabling one rule no longer pays for what the others would have needed.
+  - Results are cached and shared between rules.
+
+  **There are no breaking changes: no configuration changes are needed, and no behavior changes are intended.** Every rule should report exactly what it reported before, with one known exception: an imported plain JavaScript file that has a syntax error no longer gets a "Parse errors in imported module" report. ESLint still reports the syntax error when it lints that file itself. The full test suite passes, but there could be some edge cases. If a rule starts reporting something it didn't before, or stops reporting something it should, please open an issue with a minimum reproduction — bug reports on this are very welcome.
+
+- [#456](https://github.com/un-ts/eslint-plugin-import-x/pull/456) [`7b78aae`](https://github.com/un-ts/eslint-plugin-import-x/commit/7b78aae85bf85b7bc793a9254166c6cc73fd2e27) Thanks [@43081j](https://github.com/43081j)! - Add four barrel file detection rules ported from `eslint-plugin-barrel-files`: `avoid-barrel-files`, `avoid-importing-barrel-files`, `avoid-namespace-import` and `avoid-re-export-all`.
+
+  `avoid-importing-barrel-files` checks every runtime way a module can be referenced — static imports, re-exports (`export … from`, `export * from`, `export * as ns from`), dynamic `import()` and CommonJS `require()` — with type-only statements exempt.
+
+### Patch Changes
+
+- [#512](https://github.com/un-ts/eslint-plugin-import-x/pull/512) [`42dba04`](https://github.com/un-ts/eslint-plugin-import-x/commit/42dba0465ff440f1d1660608af322c390d0dcc0b) Thanks [@LeulTew](https://github.com/LeulTew)! - fix(extensions): honor `pathGroupOverrides` when no `pattern`, `ignorePackages`, or `checkTypeImports` option is provided.
+
+- [#519](https://github.com/un-ts/eslint-plugin-import-x/pull/519) [`f6a66a0`](https://github.com/un-ts/eslint-plugin-import-x/commit/f6a66a01b56381d2bdf4ba87aba978479d475958) Thanks [@Cherry](https://github.com/Cherry)! - perf: cache legacy resolver lookups per directory instead of re-resolving the resolver package on every import resolution.
+
+- [#526](https://github.com/un-ts/eslint-plugin-import-x/pull/526) [`8f4f6b9`](https://github.com/un-ts/eslint-plugin-import-x/commit/8f4f6b9922146d93168b1d17cd87c767659399f2) Thanks [@JounQin](https://github.com/JounQin)! - fix: count `export * as ns from '…'` as a runtime dependency in the module analysis core
+
+  `export * as ns from 'x'` loads `x` at runtime, but both `ModuleInfo` construction paths omitted the edge, so graph traversal — and `avoid-importing-barrel-files` in particular — could undercount the modules an import pulls in. The namespace export metadata is unchanged, and `export type * as ns from` stays type-only. Fixes [#525](https://github.com/un-ts/eslint-plugin-import-x/issues/525).
+
+- [#518](https://github.com/un-ts/eslint-plugin-import-x/pull/518) [`c45cfb9`](https://github.com/un-ts/eslint-plugin-import-x/commit/c45cfb9757c19e7e38dfeb40d1b4b701b22378b5) Thanks [@wimvanschandevijl](https://github.com/wimvanschandevijl)! - fix(no-cycle): `allowUnsafeDynamicCyclicDependency` no longer hides static-only cycles that happen to sit in the same module as an unrelated dynamic import
+
+  Previously, `no-cycle`'s traversal bailed out of a module's **entire** remaining import list as soon as it found one path where any declaration was dynamic - `return` rather than `continue` inside the loop over `m.imports`. That meant:
+  - a purely static cycle declared _after_ an unrelated dynamic import earlier in the same file went unreported, and
+  - a path imported both statically and dynamically (the static declaration on its own closing a real cycle) was skipped entirely, because "any declaration to this path is dynamic" discarded the static declaration too.
+
+  Both are now handled per-declaration: only the dynamic declarations for a path are dropped when `allowUnsafeDynamicCyclicDependency` is set, and only that one path is skipped when nothing traversable remains - the module's other, unrelated import paths (and any static declaration to the very same path) are still checked. See [#515](https://github.com/un-ts/eslint-plugin-import-x/issues/515) for the repro that found this.
+
+- [#522](https://github.com/un-ts/eslint-plugin-import-x/pull/522) [`56b1c48`](https://github.com/un-ts/eslint-plugin-import-x/commit/56b1c48d4b94bb62c4d2d330b6af53fb5160e67b) Thanks [@giaBaoJS](https://github.com/giaBaoJS)! - fix(no-duplicates): the autofix no longer drops `x` when merging `import { x }` into an import of `x as y`, and `prefer-inline` no longer turns the `from` keyword or an alias into `type ...` when the first import is `import type { ... }`
+
+- [#517](https://github.com/un-ts/eslint-plugin-import-x/pull/517) [`d6808bd`](https://github.com/un-ts/eslint-plugin-import-x/commit/d6808bd4c83d281d748626a1b6aed587f2623040) Thanks [@Cherry](https://github.com/Cherry)! - fix(order): make the alphabetize comparator transitive, so parent imports now consistently sort before sibling imports in the same group (matching `eslint-plugin-import`) and results no longer depend on the Node version
+
+- [#492](https://github.com/un-ts/eslint-plugin-import-x/pull/492) [`9669829`](https://github.com/un-ts/eslint-plugin-import-x/commit/9669829e20b2d87af64359e51a8b28b9a2d4b4ed) Thanks [@andersk](https://github.com/andersk)! - Ignore TypeScript `namespace` members for `no-named-as-default`, `no-named-as-default-member` rules
+
 ## 4.17.1
 
 ### Patch Changes
