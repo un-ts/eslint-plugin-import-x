@@ -230,6 +230,58 @@ describe('resolve', () => {
     )
   })
 
+  it('ignores an import-x/cache setting that is not an object', () => {
+    // not a valid setting, but it must fall back to the defaults rather than
+    // break resolution for every import
+    for (const cache of [false, Infinity]) {
+      const context = testContext({
+        'import-x/resolve': { extensions: ['.jsx'] },
+        'import-x/cache': cache,
+      } as never)
+      expect(resolve('./jsx/MyCoolComponent', context)).toBe(
+        testFilePath('./jsx/MyCoolComponent.jsx'),
+      )
+    }
+  })
+
+  it('loads a relative resolver from each source file directory', () => {
+    const context = testContext({ 'import-x/resolver': './resolver' })
+
+    for (const directory of ['a', 'b']) {
+      expect(
+        resolve('./target', {
+          ...context,
+          physicalFilename: testFilePath(
+            `per-directory-resolver/${directory}/index.js`,
+          ),
+        }),
+      ).toBe(testFilePath(`per-directory-resolver/${directory}/target`))
+    }
+  })
+
+  it('reuses a loaded resolver for the same source file directory', () => {
+    // Shares the plugin's module registry, so this is the instance the first resolve() loads and caches
+    const resolver =
+      require('../fixtures/per-directory-resolver/a/resolver.js') as {
+        resolve: (modulePath: string) => unknown
+      }
+    const resolveSpy = jest.spyOn(resolver, 'resolve')
+    const context = {
+      ...testContext({ 'import-x/resolver': './resolver' }),
+      physicalFilename: testFilePath('per-directory-resolver/a/index.js'),
+    }
+
+    resolve('./one', context)
+    // Without resolverCache, the fresh registry would load a new, unspied copy of the resolver to handle './two'
+    jest.isolateModules(() => resolve('./two', context))
+
+    const handledByFirstInstance = resolveSpy.mock.calls.map(
+      ([modulePath]) => modulePath,
+    )
+    expect(handledByFirstInstance).toEqual(['./one', './two'])
+    resolveSpy.mockRestore()
+  })
+
   it('reports load exception in a user resolver', () => {
     const context = testContext({
       'import-x/resolver': './load-error-resolver',

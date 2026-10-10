@@ -76,7 +76,11 @@ export interface CustomESTreeNode<Type extends string>
   type: Type
 }
 
-export type ExportDefaultSpecifier = CustomESTreeNode<'ExportDefaultSpecifier'>
+/** Legacy `@babel/eslint-parser` node for `export bar from './x'`. */
+export interface ExportDefaultSpecifier
+  extends CustomESTreeNode<'ExportDefaultSpecifier'> {
+  exported: TSESTree.Identifier
+}
 
 export interface ExportNamespaceSpecifier
   extends CustomESTreeNode<'ExportNamespaceSpecifier'> {

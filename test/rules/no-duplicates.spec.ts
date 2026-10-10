@@ -183,6 +183,31 @@ ruleTester.run('no-duplicates', rule, {
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
+    // an aliased specifier must not swallow an unaliased one of the same name
+    tInvalid({
+      code: "import { x as y } from './foo'; import { x } from './foo'",
+      output: "import { x as y, x  } from './foo'; ",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    tInvalid({
+      code: "import { x as y } from './foo'; import { x as y, z } from './foo'",
+      output: "import { x as y, z  } from './foo'; ",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    tInvalid({
+      code: "import { x as x } from './foo'; import { x } from './foo'",
+      output: "import { x as x } from './foo'; ",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    tInvalid({
+      code: "import { x } from './foo'; import { x as x, y } from './foo'",
+      output: "import { x, y  } from './foo'; ",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
     tInvalid({
       code: "import {x} from './foo'; import {} from './foo'; import {/*c*/} from './foo'; import {y} from './foo'",
       output: "import {x/*c*/,y} from './foo';   ",
@@ -834,6 +859,60 @@ describe('TypeScript', () => {
                 ...createDuplicatedError('./foo'),
                 line: 1,
                 column: 69,
+              },
+            ],
+          }),
+          // import-js/eslint-plugin-import#3224
+          tInvalid({
+            code: "import type {Observable} from './foo'; import {from} from './foo'",
+            ...parserConfig,
+            options: [{ 'prefer-inline': true }],
+            output: `import {type Observable,from} from './foo'; `,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 31,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 59,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type { A as B, B as C } from './foo'; import { D } from './foo'",
+            ...parserConfig,
+            options: [{ 'prefer-inline': true }],
+            output: `import { type A as B, type B as C, D  } from './foo'; `,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 37,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 64,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import {type x as x} from './foo'; import {type x} from './foo'",
+            ...parserConfig,
+            output: `import {type x as x} from './foo'; `,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 27,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 57,
               },
             ],
           }),

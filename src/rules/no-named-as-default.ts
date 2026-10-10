@@ -1,6 +1,12 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { importDeclaration, ExportMap, createRule } from '../utils/index.js'
+import {
+  hasDefaultExport,
+  hasExplicitExport,
+  ModuleInfo,
+} from '../core/index.js'
+import { importDeclaration, createRule } from '../utils/index.js'
+import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
 export type MessageId = 'default'
 
@@ -36,34 +42,31 @@ export default createRule<[], MessageId>({
 
         const declaration = importDeclaration(context, defaultSpecifier)
 
-        const exportMapOfImported = ExportMap.get(
-          declaration.source.value,
-          context,
-        )
+        const importedModule = ModuleInfo.get(declaration.source.value, context)
 
-        if (exportMapOfImported == null) {
+        if (importedModule == null) {
           return
         }
 
-        if (exportMapOfImported.errors.length > 0) {
-          exportMapOfImported.reportErrors(context, declaration)
+        if (importedModule.parseError) {
+          reportModuleParseErrors(context, importedModule, declaration)
           return
         }
 
-        if (!exportMapOfImported.hasDefault) {
+        if (!hasDefaultExport(importedModule)) {
           // The rule is triggered for default imports/exports, so if the imported module has no default
           // this means we're dealing with incorrect source code anyway
           return
         }
 
-        if (!exportMapOfImported.has(nameValue)) {
+        if (!importedModule.hasExport(nameValue)) {
           // The name used locally for the default import was not even used in the imported module.
           return
         }
 
         if (
-          exportMapOfImported.exports.has('default') &&
-          exportMapOfImported.exports.has(nameValue)
+          hasExplicitExport(importedModule, 'default') &&
+          hasExplicitExport(importedModule, nameValue)
         ) {
           context.report({
             node: defaultSpecifier,

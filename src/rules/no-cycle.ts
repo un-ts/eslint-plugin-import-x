@@ -1,8 +1,9 @@
 /** Ensures that no imported module imports the linted module. */
 
-import type { DeclarationMetadata, ModuleOptions } from '../utils/index.js'
+import type { ModuleImportDeclaration } from '../core/index.js'
+import { ModuleInfo } from '../core/index.js'
+import type { ModuleOptions } from '../utils/index.js'
 import {
-  ExportMap,
   isExternalModule,
   createRule,
   moduleVisitor,
@@ -19,8 +20,8 @@ export interface Options extends ModuleOptions {
 export type MessageId = 'cycle' | 'cycleSource'
 
 export interface Traverser {
-  mget(): ExportMap | null
-  route: Array<DeclarationMetadata['source']>
+  mget(): ModuleInfo | null
+  route: Array<ModuleImportDeclaration['source']>
 }
 
 interface QueuedTraverser extends Traverser {
@@ -120,7 +121,7 @@ export default createRule<[Options?], MessageId>({
           return // ignore type imports
         }
 
-        const imported = ExportMap.get(sourceNode.value, context)
+        const imported = ModuleInfo.get(sourceNode.value, context)
 
         if (imported == null) {
           return // no-unresolved territory
@@ -147,26 +148,34 @@ export default createRule<[Options?], MessageId>({
             return
           }
 
-          for (const [path, { getter, declarations }] of m.imports) {
+          for (const [
+            path,
+            { resolve: mget, declarations },
+          ] of m.getImports()) {
             if (traversed.has(path)) {
               continue
             }
             const toTraverse = [...declarations].filter(
-              ({ source, isOnlyImportingTypes }) =>
+              ({ source, isOnlyImportingTypes, dynamic }) =>
                 !ignoreModule(source.value as string) &&
                 // Ignore only type imports
-                !isOnlyImportingTypes,
+                !isOnlyImportingTypes &&
+                /**
+                 * If cyclic dependency is allowed via dynamic import, drop
+                 * only the dynamic declarations for this path rather than the
+                 * whole path: a path can be imported both statically and
+                 * dynamically, and the static import alone can still close a
+                 * real, static-only cycle back to `filename`. Bailing out of
+                 * the entire module here (as this used to) also skipped every
+                 * *other*, unrelated path still left to check on `m`, hiding
+                 * static cycles declared after some unrelated dynamic import
+                 * earlier in the same file.
+                 */
+                !(options.allowUnsafeDynamicCyclicDependency && dynamic),
             )
 
-            /**
-             * If cyclic dependency is allowed via dynamic import, skip checking
-             * if any module is imported dynamically
-             */
-            if (
-              options.allowUnsafeDynamicCyclicDependency &&
-              toTraverse.some(d => d.dynamic)
-            ) {
-              return
+            if (toTraverse.length === 0) {
+              continue // nothing left to traverse via this path
             }
 
             /**
@@ -182,10 +191,10 @@ export default createRule<[Options?], MessageId>({
             if (path === filename && toTraverse.length > 0) {
               return true
             }
-            if (route.length + 1 < maxDepth && toTraverse.length > 0) {
+            if (route.length + 1 < maxDepth) {
               traversed.add(path)
               untraversed.push({
-                mget: getter,
+                mget,
                 path,
                 route: [...route, toTraverse[0].source],
               })
@@ -225,6 +234,6 @@ export default createRule<[Options?], MessageId>({
   },
 })
 
-function routeString(route: Array<DeclarationMetadata['source']>) {
+function routeString(route: Array<ModuleImportDeclaration['source']>) {
   return route.map(s => `${s.value}:${s.loc.start.line}`).join('=>')
 }
