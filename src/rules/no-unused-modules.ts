@@ -279,6 +279,18 @@ const prepareImportsAndExports = (
         imports.set(reexportPath, localImport)
       }
 
+      // `export * as ns from` consumes its source like a namespace import
+      for (const key of getOwnExportNames(currentExports)) {
+        const namespacePath = currentExports
+          .getExport(key)
+          ?.getNamespace?.()?.path
+        if (namespacePath) {
+          const localImport = imports.get(namespacePath) ?? new Set()
+          localImport.add(NAMESPACE_KEY)
+          imports.set(namespacePath, localImport)
+        }
+      }
+
       for (const [key, value] of currentExports.getImports()) {
         if (isNodeModule(key)) {
           continue
@@ -718,7 +730,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
           })
         }
         if (s.type === AST_NODE_TYPES.ExportAllDeclaration) {
-          newExportIdentifiers.add(OWN_EXPORT_ALL_KEY)
+          if (s.exported) {
+            newExportIdentifiers.add(toKey(getValue(s.exported)))
+          } else {
+            newExportIdentifiers.add(OWN_EXPORT_ALL_KEY)
+          }
         }
       }
 
@@ -841,7 +857,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
             astNode.source.raw.replaceAll(/('|")/g, ''),
             context,
           )
-          newExportAll.add(resolvedPath!)
+          if (astNode.exported) {
+            newNamespaceImports.add(resolvedPath!)
+          } else {
+            newExportAll.add(resolvedPath!)
+          }
         }
 
         if (astNode.type === AST_NODE_TYPES.ImportDeclaration) {
@@ -1060,6 +1080,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       },
       ExportDefaultDeclaration(node) {
         checkUsage(node, DEFAULT, false)
+      },
+      ExportAllDeclaration(node) {
+        if (node.exported) {
+          checkUsage(node, getValue(node.exported), node.exportKind === 'type')
+        }
       },
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers) {
