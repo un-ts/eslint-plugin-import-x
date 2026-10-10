@@ -3,7 +3,7 @@ import * as semver from 'semver'
 
 import { cjsRequire } from '../require.js'
 import type { PackageJson, RuleContext } from '../types.js'
-import { createRule, lazy, resolve } from '../utils/index.js'
+import { createRule, isExternalModule, lazy, resolve } from '../utils/index.js'
 
 // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
 // pre-calculate if the TypeScript version is supported
@@ -37,13 +37,15 @@ function checkImports(
       return
     }
 
+    const displayModule = module.split('#subpath:')[0]
+
     for (let i = 0, len = nodes.length; i < len; i++) {
       const node = nodes[i]
       context.report({
         node: node.source,
         messageId: 'duplicate',
         data: {
-          module,
+          module: displayModule,
         },
         // Attach the autofix (if any) to the first import only
         fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
@@ -391,6 +393,44 @@ function hasCommentInsideNonSpecifiers(
   )
 }
 
+const PACKAGE_SUBPATH_REGEX =
+  /^(?:@[^/\\~#$:]+\/[^/\\~#$:]+|[^./\\~#$@:][^/\\~#$:]*)\/(.+)$/
+
+const NODE_MODULES_REGEX = /[/\\]node_modules[/\\]/i
+
+function getSubpath(name?: string | null): string {
+  if (!name) {
+    return ''
+  }
+  const cleanName = name.split('?')[0].replace(/\/+$/, '')
+  const match = PACKAGE_SUBPATH_REGEX.exec(cleanName)
+  if (match) {
+    return match[1]
+  }
+  return ''
+}
+
+function getImportCacheKey(
+  sourceValue: string,
+  resolvedPath: string,
+  context: RuleContext<MessageId, [Options?]>,
+): string {
+  if (!resolvedPath) {
+    return resolvedPath
+  }
+  const subpath = getSubpath(sourceValue)
+  if (!subpath) {
+    return resolvedPath
+  }
+  const isExternal =
+    NODE_MODULES_REGEX.test(resolvedPath) ||
+    isExternalModule(sourceValue, resolvedPath, context)
+  if (isExternal) {
+    return resolvedPath + '#subpath:' + subpath
+  }
+  return resolvedPath
+}
+
 export interface ModuleMap {
   imported: Map<string, TSESTree.ImportDeclaration[]>
   nsImported: Map<string, TSESTree.ImportDeclaration[]>
@@ -498,12 +538,17 @@ export default createRule<[Options?], MessageId>({
       ImportDeclaration(n) {
         // resolved path will cover aliased duplicates
         const resolvedPath = resolver(n.source.value)
+        const cacheKey = getImportCacheKey(
+          n.source.value,
+          resolvedPath,
+          context,
+        )
         const importMap = getImportMap(n)
 
-        if (importMap.has(resolvedPath)) {
-          importMap.get(resolvedPath)!.push(n)
+        if (importMap.has(cacheKey)) {
+          importMap.get(cacheKey)!.push(n)
         } else {
-          importMap.set(resolvedPath, [n])
+          importMap.set(cacheKey, [n])
         }
       },
 

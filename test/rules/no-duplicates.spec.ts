@@ -28,6 +28,32 @@ function createDuplicatedError(
   }
 }
 
+const svelteTypesPath = path.resolve(
+  'test/fixtures/node_modules/svelte/types/index.d.ts',
+)
+
+const subpathResolverSettings = {
+  'import-x/resolver-next': [
+    {
+      name: 'subpath-package-resolver',
+      interfaceVersion: 3,
+      resolve(modulePath: string) {
+        if (
+          modulePath === 'svelte' ||
+          modulePath === 'svelte/easing' ||
+          modulePath === 'svelte/transition'
+        ) {
+          return {
+            found: true,
+            path: svelteTypesPath,
+          }
+        }
+        return { found: false }
+      },
+    },
+  ],
+}
+
 ruleTester.run('no-duplicates', rule, {
   valid: [
     tValid({
@@ -67,8 +93,134 @@ ruleTester.run('no-duplicates', rule, {
     tValid({
       code: "import {y} from './foo'; import * as ns from './foo'",
     }),
+
+    // #449: root import and package subpath resolving to the same .d.ts should not be duplicates
+    tValid({
+      code: "import { onDestroy, onMount } from 'svelte'; import { quartIn, quartInOut } from 'svelte/easing';",
+      settings: subpathResolverSettings,
+    }),
+
+    // #449: distinct package subpaths resolving to the same .d.ts should not be duplicates
+    tValid({
+      code: "import { quartIn, quartInOut } from 'svelte/easing'; import { draw, fade } from 'svelte/transition';",
+      settings: subpathResolverSettings,
+    }),
+
+    // #449: root import and multiple distinct subpaths in the same file
+    tValid({
+      code: "import { onMount } from 'svelte'; import { quartIn } from 'svelte/easing'; import { draw } from 'svelte/transition';",
+      settings: subpathResolverSettings,
+    }),
   ],
   invalid: [
+    // #449: duplicate imports of root package still merge correctly
+    tInvalid({
+      code: "import { onMount } from 'svelte'; import { onDestroy } from 'svelte';",
+      output: "import { onMount, onDestroy  } from 'svelte'; ",
+      settings: subpathResolverSettings,
+      errors: [
+        createDuplicatedError(svelteTypesPath),
+        createDuplicatedError(svelteTypesPath),
+      ],
+    }),
+
+    // #449: duplicate imports of the same package subpath still merge correctly
+    tInvalid({
+      code: "import { quartIn } from 'svelte/easing'; import { quartInOut } from 'svelte/easing';",
+      output: "import { quartIn, quartInOut  } from 'svelte/easing'; ",
+      settings: subpathResolverSettings,
+      errors: [
+        createDuplicatedError(svelteTypesPath),
+        createDuplicatedError(svelteTypesPath),
+      ],
+    }),
+
+    // #449: root duplicates and subpath duplicates in the same file merge independently
+    tInvalid({
+      code: "import { onMount } from 'svelte'; import { onDestroy } from 'svelte'; import { quartIn } from 'svelte/easing'; import { quartInOut } from 'svelte/easing';",
+      output:
+        "import { onMount, onDestroy  } from 'svelte';  import { quartIn, quartInOut  } from 'svelte/easing'; ",
+      settings: subpathResolverSettings,
+      errors: [
+        createDuplicatedError(svelteTypesPath),
+        createDuplicatedError(svelteTypesPath),
+        createDuplicatedError(svelteTypesPath),
+        createDuplicatedError(svelteTypesPath),
+      ],
+    }),
+
+    // #449: prefer-inline merges type and value imports of the same package subpath correctly
+    tInvalid({
+      code: "import type { quartIn } from 'svelte/easing'; import { quartInOut } from 'svelte/easing';",
+      output: "import { type quartIn, quartInOut  } from 'svelte/easing'; ",
+      options: [{ 'prefer-inline': true }],
+      settings: subpathResolverSettings,
+      errors: [
+        createDuplicatedError(svelteTypesPath),
+        createDuplicatedError(svelteTypesPath),
+      ],
+    }),
+
+    // #449: path aliases and relative paths resolving to the same local file continue to be recognized as duplicates
+    tInvalid({
+      code: "import { a } from '@/components/button'; import { b } from './components/button';",
+      output: "import { a, b  } from '@/components/button'; ",
+      settings: {
+        'import-x/resolver-next': [
+          {
+            name: 'alias-resolver',
+            interfaceVersion: 3,
+            resolve(modulePath: string) {
+              if (
+                modulePath === '@/components/button' ||
+                modulePath === './components/button'
+              ) {
+                return {
+                  found: true,
+                  path: path.resolve('test/fixtures/bar.js'),
+                }
+              }
+              return { found: false }
+            },
+          },
+        ],
+      },
+      errors: [
+        createDuplicatedError(path.resolve('test/fixtures/bar.js')),
+        createDuplicatedError(path.resolve('test/fixtures/bar.js')),
+      ],
+    }),
+
+    // #449: bare-specifier aliases and relative paths resolving to the same local file merge correctly
+    tInvalid({
+      code: "import { a } from 'components/button'; import { b } from './components/button';",
+      output: "import { a, b  } from 'components/button'; ",
+      settings: {
+        'import-x/resolver-next': [
+          {
+            name: 'alias-resolver',
+            interfaceVersion: 3,
+            resolve(modulePath: string) {
+              if (
+                modulePath === 'components/button' ||
+                modulePath === './components/button'
+              ) {
+                return {
+                  found: true,
+                  path: path.resolve('test/fixtures/bar.js'),
+                }
+              }
+              return { found: false }
+            },
+          },
+        ],
+      },
+      errors: [
+        createDuplicatedError(path.resolve('test/fixtures/bar.js')),
+        createDuplicatedError(path.resolve('test/fixtures/bar.js')),
+      ],
+    }),
+
     tInvalid({
       code: "import { x } from './foo'; import { y } from './foo'",
       output: "import { x, y  } from './foo'; ",
