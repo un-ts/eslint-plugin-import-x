@@ -245,12 +245,6 @@ export function analyzeAstModule(
         handleTsExportAssignment(walk, n)
         break
       }
-      case 'TSNamespaceExportDeclaration': {
-        if (walk.isEsModuleInteropTrue()) {
-          handleTsExportAssignment(walk, n)
-        }
-        break
-      }
       // No default — every other statement kind is irrelevant here
     }
   }
@@ -401,30 +395,21 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
 }
 
 /**
- * TS `export = X` (and, under `esModuleInterop`, `export as namespace X`) —
- * doesn't declare anything itself, but changes what's being exported: the
- * referenced declarations become the exports, and every member of a
- * referenced `namespace`/`module` block is exported whether or not it is
- * individually marked.
+ * TS `export = X` — doesn't declare anything itself, but changes what's
+ * being exported: the referenced declarations become the exports, and every
+ * member of a referenced `namespace`/`module` block is exported whether or
+ * not it is individually marked.
  */
 function handleTsExportAssignment(
   walk: Walk,
-  n: TSESTree.ProgramStatement,
+  n: TSESTree.TSExportAssignment,
 ): void {
   const exportedName =
-    n.type === 'TSNamespaceExportDeclaration'
-      ? (
-          n.id ||
-          // @ts-expect-error - legacy parser type
-          n.name
-        ).name
-      : ('expression' in n &&
-          n.expression &&
-          (('name' in n.expression && n.expression.name) ||
-            ('id' in n.expression &&
-              n.expression.id &&
-              n.expression.id.name))) ||
-        null
+    ('expression' in n &&
+      n.expression &&
+      (('name' in n.expression && n.expression.name) ||
+        ('id' in n.expression && n.expression.id && n.expression.id.name))) ||
+    null
 
   const exportedDecls = walk.ast.body.filter(
     node =>
@@ -466,7 +451,8 @@ function handleTsExportAssignment(
 
 /**
  * Every member of an `export =`-referenced `namespace N { … }` block is an
- * export, explicitly marked or not.
+ * export, explicitly marked or not. These names are all inferred —
+ * `hasExplicitExport` skips them.
  */
 function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
   const type = decl.body?.type
@@ -476,11 +462,11 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
     // @ts-expect-error - legacy parser type
     addOwnExport(walk, (decl.body.id as TSESTree.Identifier).name, {
       getDoc: walk.captureDoc(decl.body),
+      inferred: true,
     })
     return
   } else if (type === 'TSModuleBlock' && decl.kind === 'namespace') {
     const getDoc = walk.captureDoc(decl.body)
-    // the namespace name itself is inferred — `hasExplicitExport` skips it
     if ('name' in decl.id) {
       addOwnExport(walk, decl.id.name, { getDoc, inferred: true })
     } else {
@@ -505,12 +491,14 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
         recursivePatternCapture(d.id, id => {
           addOwnExport(walk, (id as TSESTree.Identifier).name, {
             getDoc: walk.captureDoc(decl, namespaceDecl, moduleBlockNode),
+            inferred: true,
           })
         })
       }
     } else if ('id' in namespaceDecl) {
       addOwnExport(walk, (namespaceDecl.id as TSESTree.Identifier).name, {
         getDoc: walk.captureDoc(moduleBlockNode),
+        inferred: true,
       })
     }
   }

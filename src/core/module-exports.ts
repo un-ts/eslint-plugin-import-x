@@ -51,8 +51,10 @@ export function hasOwnExport(moduleInfo: ModuleInfo, name: string): boolean {
 /**
  * True if `name` is written in an explicit export statement of this module.
  * Unlike {@link hasOwnExport}, names only inferred from TS `export =`
- * namespace analysis do not count — importing such a package's default under
- * its own namespace name is the documented usage, not a mistake.
+ * namespace analysis do not count — they cannot be consumed via named import
+ * at runtime (unless the consumer is transpiled to CommonJS), so importing
+ * such a package's default under one of these names, or accessing them as
+ * members of the default import, is the documented usage, not a mistake.
  */
 export function hasExplicitExport(
   moduleInfo: ModuleInfo,
