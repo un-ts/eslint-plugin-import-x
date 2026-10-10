@@ -24,6 +24,10 @@ export interface Traverser {
   route: Array<ModuleImportDeclaration['source']>
 }
 
+interface QueuedTraverser extends Traverser {
+  path: string
+}
+
 const traversed = new Set<string>()
 
 export default createRule<[Options?], MessageId>({
@@ -127,7 +131,15 @@ export default createRule<[Options?], MessageId>({
           return // no-self-import territory
         }
 
-        const untraversed: Traverser[] = [{ mget: () => imported, route: [] }]
+        if (traversed.has(imported.path)) {
+          return
+        }
+
+        traversed.add(imported.path)
+
+        const untraversed: QueuedTraverser[] = [
+          { mget: () => imported, path: imported.path, route: [] },
+        ]
 
         function detectCycle({ mget, route }: Traverser) {
           const m = mget()
@@ -135,12 +147,6 @@ export default createRule<[Options?], MessageId>({
           if (m == null) {
             return
           }
-
-          if (traversed.has(m.path)) {
-            return
-          }
-
-          traversed.add(m.path)
 
           for (const [
             path,
@@ -186,9 +192,12 @@ export default createRule<[Options?], MessageId>({
               return true
             }
             if (route.length + 1 < maxDepth) {
-              for (const { source } of toTraverse) {
-                untraversed.push({ mget, route: [...route, source] })
-              }
+              traversed.add(path)
+              untraversed.push({
+                mget,
+                path,
+                route: [...route, toTraverse[0].source],
+              })
             }
           }
         }
@@ -196,6 +205,10 @@ export default createRule<[Options?], MessageId>({
         while (untraversed.length > 0) {
           const next = untraversed.shift()! // bfs!
           if (detectCycle(next)) {
+            // Pending modules may still be imported elsewhere in this file.
+            for (const { path } of untraversed) {
+              traversed.delete(path)
+            }
             if (next.route.length > 0) {
               context.report({
                 node: importer,
