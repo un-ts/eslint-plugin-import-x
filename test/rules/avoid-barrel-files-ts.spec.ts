@@ -1,0 +1,77 @@
+import { RuleTester } from '@typescript-eslint/rule-tester'
+
+import { createRuleTestCaseFunctions } from '../utils.js'
+
+import rule from 'eslint-plugin-import-x/rules/avoid-barrel-files'
+
+const ruleTester = new RuleTester()
+
+const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+ruleTester.run('avoid-barrel-files ts', rule, {
+  valid: [
+    tValid({
+      code: `
+        type Money = string;
+        export type { Money };
+      `,
+    }),
+    tValid({
+      code: `
+        type Money = {
+          amount: string;
+          currency: string;
+        };
+        export type { Money };
+      `,
+    }),
+    tValid({
+      code: `
+        interface Money {
+          amount: string;
+          currency: string;
+        };
+        type Country = string;
+        type State = {
+          name: string;
+        };
+        const newSouthWales = {
+          name: "New South Wales"
+        };
+        export { newSouthWales }
+        export type { Money, Country, State };
+      `,
+    }),
+    // enums are declarations too, so exporting them is not a barrel
+    tValid({
+      code: `
+        enum A {}
+        enum B {}
+        enum C {}
+        enum D {}
+        export { A, B, C, D };
+      `,
+    }),
+    // type-only exports are erased, so they never make a barrel
+    tValid({
+      code: `
+        export type { Money, Country, Person, State } from 'geo';
+      `,
+    }),
+  ],
+
+  invalid: [
+    tInvalid({
+      code: `
+        import { Country } from 'geo';
+        type Money = string;
+        type State = {
+          name: string;
+        };
+        interface Person { name: string; age: number; }
+        export { Money, Country, Person, State };
+      `,
+      errors: [{ messageId: 'avoidBarrel' }],
+    }),
+  ],
+})
