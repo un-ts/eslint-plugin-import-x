@@ -60,7 +60,13 @@ function makeParseReturn(
   }
 }
 
-function stripUnicodeBOM(text: string) {
+/**
+ * ESLint strips a leading BOM before parsing, so every offset a rule sees is
+ * BOM-free. Exported because the core must apply it to file content it reads
+ * itself: the lexer route would otherwise read a different string than this
+ * one parses, and their offsets would disagree by one.
+ */
+export function stripUnicodeBOM(text: string) {
   return text.codePointAt(0) === 0xfe_ff ? text.slice(1) : text
 }
 
@@ -68,10 +74,19 @@ function transformHashbang(text: string) {
   return text.replace(/^#!([^\r\n]+)/u, (_, captured) => `//${captured}`)
 }
 
+/**
+ * @param needDocs Whether the caller will read doc comments. Comments and
+ *   tokens are needed only for that (`ast.comments`, and `SourceCode` refuses
+ *   to construct without `ast.tokens`), and asking for them is not free —
+ *   espree spends roughly a third of its time building them. Parsers that
+ *   always produce them (`@typescript-eslint/parser`) are unaffected either
+ *   way.
+ */
 export function parse(
   path: string,
   content: string,
   context: ChildContext | RuleContext,
+  needDocs = true,
 ) {
   if (context == null) {
     throw new Error('need context to parse properly')
@@ -91,10 +106,10 @@ export function parse(
   parserOptions = { ...parserOptions }
   parserOptions.ecmaFeatures = { ...parserOptions.ecmaFeatures }
 
-  // always include comments and tokens (for doc parsing)
-  parserOptions.comment = true
-  parserOptions.attachComment = true // keeping this for backward-compat with  older parsers
-  parserOptions.tokens = true
+  // include comments and tokens only when docs will actually be read
+  parserOptions.comment = needDocs
+  parserOptions.attachComment = needDocs // keeping this for backward-compat with  older parsers
+  parserOptions.tokens = needDocs
 
   // attach node locations
   parserOptions.loc = true
@@ -165,17 +180,34 @@ export function parse(
   throw new Error('Parser must expose a `parse` or `parseForESLint` method')
 }
 
-function getParserOrPath(path: string, context: ChildContext | RuleContext) {
+/**
+ * The parser `settings['import-x/parsers']` declares for this file's extension,
+ * if any. This is the authority on that mapping — anything that needs to predict
+ * which parser a file would get must ask here rather than re-walking the
+ * setting, or the two copies drift the moment extension matching gains
+ * normalization or glob support.
+ */
+export function getAlternateParserPath(
+  path: string,
+  context: ChildContext | RuleContext,
+) {
   const parsers = context.settings['import-x/parsers']
-  if (parsers != null) {
-    const extension = nodePath.extname(path) as FileExtension
-    for (const parserPath in parsers) {
-      if (parsers[parserPath].includes(extension)) {
-        // use this alternate parser
-        log('using alt parser:', parserPath)
-        return parserPath
-      }
+  if (parsers == null) {
+    return
+  }
+  const extension = nodePath.extname(path) as FileExtension
+  for (const parserPath in parsers) {
+    if (parsers[parserPath].includes(extension)) {
+      return parserPath
     }
+  }
+}
+
+function getParserOrPath(path: string, context: ChildContext | RuleContext) {
+  const alternate = getAlternateParserPath(path, context)
+  if (alternate !== undefined) {
+    log('using alt parser:', alternate)
+    return alternate
   }
   // default to use ESLint parser, only exists in eslintrc
   if ('parserPath' in context && context.parserPath) {

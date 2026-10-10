@@ -8,8 +8,10 @@ import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { createRule, ExportMap, getValue } from '../utils/index.js'
+import { getDefaultExportSourceName, ModuleInfo } from '../core/index.js'
+import { createRule, getValue } from '../utils/index.js'
 import type { ModuleOptions } from '../utils/index.js'
+import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
 export type Options = ModuleOptions & {
   preventRenamingBindings?: boolean
@@ -51,99 +53,53 @@ export default createRule<[Options?], MessageId>({
     const { commonjs = false, preventRenamingBindings = true } =
       context.options[0] || {}
 
-    function getDefaultExportName(
-      targetNode:
-        | TSESTree.ExportSpecifier
-        | TSESTree.DefaultExportDeclarations
-        | TSESTree.CallExpressionArgument,
-    ) {
-      if (targetNode == null) {
+    function getDefaultExportName(moduleInfo: ModuleInfo) {
+      const sourceName = getDefaultExportSourceName(moduleInfo)
+      if (sourceName == null) {
         return
       }
-      switch (targetNode.type) {
-        case 'AssignmentExpression': {
-          if (!preventRenamingBindings) {
-            // Allow assignments to be renamed when the `preventRenamingBindings`
-            // option is set to `false`.
-            //
-            // export default Foo = 1;
-            return
-          }
-          if (targetNode.left.type !== 'Identifier') {
-            return
-          }
-          return targetNode.left.name
-        }
-        case 'CallExpression': {
-          const [argumentNode] = targetNode.arguments
-          return getDefaultExportName(argumentNode)
-        }
-        case 'ClassDeclaration': {
-          if (targetNode.id && typeof targetNode.id.name === 'string') {
-            return targetNode.id.name
-          }
-          // Here we have an anonymous class. We can skip here.
-          return
-        }
-        case 'ExportSpecifier': {
-          return getValue(targetNode.local)
-        }
-        case 'FunctionDeclaration': {
-          return targetNode.id?.name
-        }
-        case 'Identifier': {
-          if (!preventRenamingBindings) {
-            // Allow identifier to be renamed when the `preventRenamingBindings`
-            // option is set to `false`.
-            //
-            // const foo = 'foo';
-            // export default foo;
-            return
-          }
-          return targetNode.name
-        }
-        default:
-        // This type of node is not handled.
-        // Returning `undefined` here signifies this and causes the check to
-        // exit early.
+      if (sourceName.isBoundName && !preventRenamingBindings) {
+        // Allow bound names (identifier references and assignments) to be
+        // renamed when the `preventRenamingBindings` option is set to
+        // `false`.
+        //
+        // const foo = 'foo';
+        // export default foo;
+        return
       }
+      return sourceName.name
     }
 
-    function getExportMap(source: TSESTree.StringLiteral | null) {
+    function getModuleInfo(source: TSESTree.StringLiteral | null) {
       if (!source) {
         return
       }
-      const exportMap = ExportMap.get(source.value, context)
-      if (exportMap == null) {
+      const moduleInfo = ModuleInfo.get(source.value, context)
+      if (moduleInfo == null) {
         return
       }
-      if (exportMap.errors.length > 0) {
-        exportMap.reportErrors(context, { source })
+      if (moduleInfo.parseError) {
+        reportModuleParseErrors(context, moduleInfo, { source })
         return
       }
-      return exportMap
+      return moduleInfo
     }
 
     function handleImport(
       node: TSESTree.ImportDefaultSpecifier | TSESTree.ImportSpecifier,
     ) {
-      const exportMap = getExportMap(node.parent.source)
-      if (exportMap == null) {
+      const moduleInfo = getModuleInfo(node.parent.source)
+      if (moduleInfo == null) {
         return
       }
 
-      const defaultExportNode = getDefaultExportNode(exportMap)
-      if (defaultExportNode == null) {
-        return
-      }
-
-      const defaultExportName = getDefaultExportName(defaultExportNode)
+      const defaultExportName = getDefaultExportName(moduleInfo)
       if (defaultExportName === undefined) {
         return
       }
 
       const importTarget = node.parent.source?.value
-      const importBasename = path.basename(exportMap.path)
+      const importBasename = path.basename(moduleInfo.path)
 
       if (node.type === 'ImportDefaultSpecifier') {
         const importName = node.local.name
@@ -227,19 +183,14 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
-      const exportMap = getExportMap(source)
-      if (exportMap == null) {
+      const moduleInfo = getModuleInfo(source)
+      if (moduleInfo == null) {
         return
       }
 
-      const defaultExportNode = getDefaultExportNode(exportMap)
-      if (defaultExportNode == null) {
-        return
-      }
-
-      const defaultExportName = getDefaultExportName(defaultExportNode)
+      const defaultExportName = getDefaultExportName(moduleInfo)
       const requireTarget = source.value
-      const requireBasename = path.basename(exportMap.path)
+      const requireBasename = path.basename(moduleInfo.path)
 
       let requireName
       if (node.id.type === 'Identifier') {
@@ -307,26 +258,4 @@ function findDefaultDestructure(
     }
   })
   return found
-}
-
-function getDefaultExportNode(
-  exportMap: ExportMap,
-): TSESTree.DefaultExportDeclarations | TSESTree.ExportSpecifier | undefined {
-  const defaultExportNode = exportMap.exports.get('default')
-  if (defaultExportNode == null) {
-    return
-  }
-  switch (defaultExportNode.type) {
-    case 'ExportDefaultDeclaration': {
-      return defaultExportNode.declaration
-    }
-    case 'ExportNamedDeclaration': {
-      return defaultExportNode.specifiers.find(
-        specifier => getValue(specifier.exported) === 'default',
-      )
-    }
-    default: {
-      return
-    }
-  }
 }

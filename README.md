@@ -33,6 +33,7 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
 - [Rules](#rules)
   - [Helpful warnings](#helpful-warnings)
   - [Module systems](#module-systems)
+  - [Performance](#performance)
   - [Static analysis](#static-analysis)
   - [Style guide](#style-guide)
 - [Resolvers](#resolvers)
@@ -74,7 +75,7 @@ We haven't resolved all the issues yet, but we are working on them, which could 
 
 So what are the differences from `eslint-plugin-import` exactly?
 
-- we target [Node `^18.18.0 || ^20.9.0 || >=21.1.0`](https://github.com/un-ts/eslint-plugin-import-x/blob/8b2d6d3b612eb57fb68c3fddec25b02fc622df7c/package.json#L12) + [ESLint `^8.57.0 || ^9.0.0`](https://github.com/un-ts/eslint-plugin-import-x/blob/8b2d6d3b612eb57fb68c3fddec25b02fc622df7c/package.json#L71), while `eslint-plugin-import` targets [Node `>=4`](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/package.json#L6) and [ESLint `^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8 || ^9`](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/package.json#L115C16-L115C64)
+- we target [Node `^18.18.0 || ^20.9.0 || >=21.1.0`](https://github.com/un-ts/eslint-plugin-import-x/blob/60312eeb6f9c3ac28a94c5995ed43a95f6e77d2d/package.json#L12) + [ESLint `^8.57.0 || ^9.0.0 || ^10.0.0`](https://github.com/un-ts/eslint-plugin-import-x/blob/60312eeb6f9c3ac28a94c5995ed43a95f6e77d2d/package.json#L66), while `eslint-plugin-import` targets [Node `>=4`](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/package.json#L6) and [ESLint `^2 || ^3 || ^4 || ^5 || ^6 || ^7.2.0 || ^8 || ^9`](https://github.com/import-js/eslint-plugin-import/blob/da5f6ec13160cb288338db0c2a00c34b2d932f0d/package.json#L115C16-L115C64)
 - we don't depend on old and outdated dependencies, so [we have 16 dependencies](https://npmgraph.js.org/?q=eslint-plugin-import-x) compared to [117 dependencies for `eslint-plugin-import`](https://npmgraph.js.org/?q=eslint-plugin-import)
 - `eslint-plugin-import` uses `tsconfig-paths` + `typescript` itself to load `tsconfig`s while we use the single `get-tsconfig` instead, which is much faster and cleaner
 - `eslint-plugin-import` uses [`resolve`] which doesn't support the `exports` field in `package.json` while we build our own rust-based resolver [`unrs-resolver`] instead, which is feature-rich and way more performant.
@@ -275,6 +276,15 @@ settings:
 | [no-import-module-exports](docs/rules/no-import-module-exports.md) | Forbid import statements with CommonJS module.exports.               |     |     |     | 🔧  |     |     |
 | [no-nodejs-modules](docs/rules/no-nodejs-modules.md)               | Forbid Node.js builtin modules.                                      |     |     |     |     |     |     |
 | [unambiguous](docs/rules/unambiguous.md)                           | Forbid potentially ambiguous parse goal (`script` vs. `module`).     |     |     |     |     |     |     |
+
+### Performance
+
+| Name                                                                       | Description                           | 💼  | ⚠️  | 🚫  | 🔧  | 💡  | ❌  |
+| :------------------------------------------------------------------------- | :------------------------------------ | :-- | :-- | :-- | :-- | :-- | :-- |
+| [avoid-barrel-files](docs/rules/avoid-barrel-files.md)                     | Forbid authoring of barrel files.     |     |     |     |     |     |     |
+| [avoid-importing-barrel-files](docs/rules/avoid-importing-barrel-files.md) | Forbid importing barrel files.        |     |     |     |     |     |     |
+| [avoid-namespace-import](docs/rules/avoid-namespace-import.md)             | Forbid namespace imports.             |     |     |     |     |     |     |
+| [avoid-re-export-all](docs/rules/avoid-re-export-all.md)                   | Forbid re-exporting \* from a module. |     |     |     |     |     |     |
 
 ### Static analysis
 

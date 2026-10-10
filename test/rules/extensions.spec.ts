@@ -119,6 +119,24 @@ ruleTester.run('extensions', rule, {
       options: ['never', { ignorePackages: true }],
     }),
 
+    // a package importing its own subpath export resolves through its
+    // `exports` map without a `node_modules` hop; `checkSelfReference`
+    // treats it as a package
+    tValid({
+      code: 'import { a } from "package-self-reference/sub"',
+      options: [
+        'ignorePackages',
+        { pattern: { js: 'always' }, checkSelfReference: true },
+      ],
+      filename: testFilePath('./package-self-reference/src/main.js'),
+    }),
+
+    tValid({
+      code: 'import { a } from "package-self-reference/sub"',
+      options: ['always', { ignorePackages: true, checkSelfReference: true }],
+      filename: testFilePath('./package-self-reference/src/main.js'),
+    }),
+
     tValid({
       code: 'import exceljs from "exceljs"',
       options: ['always', { js: 'never', jsx: 'never' }],
@@ -186,6 +204,31 @@ ruleTester.run('extensions', rule, {
   ],
 
   invalid: [
+    tInvalid({
+      name: 'self-reference subpath imports are not packages unless checkSelfReference is set',
+      code: 'import { a } from "package-self-reference/sub"',
+      options: ['always', { ignorePackages: true }],
+      filename: testFilePath('./package-self-reference/src/main.js'),
+      errors: [
+        {
+          messageId: 'missingKnown',
+          data: { extension: 'js', importPath: 'package-self-reference/sub' },
+          line: 1,
+          column: 19,
+          suggestions: [
+            {
+              messageId: 'addMissing',
+              data: {
+                extension: 'js',
+                importPath: 'package-self-reference/sub',
+                fixedImportPath: 'package-self-reference/sub.js',
+              },
+              output: 'import { a } from "package-self-reference/sub.js"',
+            },
+          ],
+        },
+      ],
+    }),
     tInvalid({
       name: 'extensions should provide suggestions by default',
       code: 'import a from "./foo.js"',
@@ -1172,6 +1215,140 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
+  ],
+})
+
+ruleTester.run('extensions - pathGroupOverrides', rule, {
+  valid: [
+    tValid({
+      name: 'ignores matching imports with object-only options',
+      code: 'import bar from "./bar.js";',
+      options: [
+        {
+          pathGroupOverrides: [{ pattern: './*', action: 'ignore' }],
+        },
+      ],
+    }),
+    tValid({
+      name: 'ignores matching imports without a pattern property',
+      code: 'import bar from "./bar";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [{ pattern: './*', action: 'ignore' }],
+        },
+      ],
+    }),
+    tValid({
+      name: 'preserves overrides alongside a nested extension pattern',
+      code: 'import foo from "./foo.js"; import bar from "./bar";',
+      options: [
+        'always',
+        {
+          pattern: { js: 'never' },
+          pathGroupOverrides: [{ pattern: './foo.js', action: 'ignore' }],
+        },
+      ],
+    }),
+    tValid({
+      name: 'preserves legacy extension maps with an option-like extension name',
+      code: 'import bar from "./bar";',
+      options: ['always', { js: 'never', pathGroupOverrides: 'always' }],
+    }),
+    tValid({
+      name: 'uses the first matching ignore override',
+      code: 'import bar from "./bar";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [
+            { pattern: './*', action: 'ignore' },
+            { pattern: './bar', action: 'enforce' },
+          ],
+        },
+      ],
+    }),
+    tValid({
+      name: 'treats hash-prefixed override patterns literally by default',
+      code: 'import { helper } from "#utils/helper";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [{ pattern: '#utils/*', action: 'ignore' }],
+        },
+      ],
+    }),
+  ],
+  invalid: [
+    tInvalid({
+      name: 'uses the first matching enforce override for a built-in module',
+      code: 'import path from "path";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [
+            { pattern: 'path', action: 'enforce' },
+            { pattern: '*', action: 'ignore' },
+          ],
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { importPath: 'path' } }],
+      output: null,
+    }),
+    tInvalid({
+      name: 'preserves explicit minimatch options instead of the default options',
+      code: 'import { helper } from "#utils/helper";',
+      options: [
+        'always',
+        {
+          pathGroupOverrides: [
+            {
+              pattern: '#utils/*',
+              patternOptions: {},
+              action: 'ignore',
+            },
+          ],
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { importPath: '#utils/helper' } }],
+      output: null,
+    }),
+    ...[false, true].map(fix =>
+      tInvalid({
+        name: `preserves ${fix ? 'autofixes' : 'suggestions'} for unmatched imports`,
+        code: 'import foo from "./foo"; import bar from "./bar";',
+        options: [
+          'always',
+          {
+            fix,
+            pathGroupOverrides: [{ pattern: './foo', action: 'ignore' }],
+          },
+        ],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: { extension: 'js', importPath: './bar' },
+            suggestions: fix
+              ? undefined
+              : [
+                  {
+                    messageId: 'addMissing',
+                    data: {
+                      extension: 'js',
+                      importPath: './bar',
+                      fixedImportPath: './bar.js',
+                    },
+                    output:
+                      'import foo from "./foo"; import bar from "./bar.js";',
+                  },
+                ],
+          },
+        ],
+        output: fix
+          ? 'import foo from "./foo"; import bar from "./bar.js";'
+          : null,
+      }),
+    ),
   ],
 })
 

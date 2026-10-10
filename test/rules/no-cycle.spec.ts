@@ -254,6 +254,25 @@ ruleTester.run('no-cycle', rule, {
       errors: [{ messageId: 'cycle' }],
     }),
 
+    // Regression for #515: allowUnsafeDynamicCyclicDependency used to bail out of the whole
+    // module's traversal on the first dynamic import it found, rather than only ignoring that one
+    // edge - hiding a static-only cycle declared elsewhere in the same file. See
+    // fixtures/cycles/es6/depth-one-mixed.js for the exact shape (a dynamic import to an unrelated,
+    // non-cyclic file, followed by the static import that actually closes the cycle).
+    tInvalid({
+      code: `import { foo } from "./es6/depth-one-mixed"; // #515 1`,
+      options: [{ allowUnsafeDynamicCyclicDependency: true }],
+      errors: [createCycleSourceError('./depth-one:8')],
+    }),
+    // Regression for #515: the same path imported both dynamically and statically must still be
+    // traversed via its static declaration - one dynamic declaration to a path must not license
+    // ignoring a second, static declaration to that very same path.
+    tInvalid({
+      code: `import { foo } from "./es6/depth-one-mixed-same-path"; // #515 2`,
+      options: [{ allowUnsafeDynamicCyclicDependency: true }],
+      errors: [createCycleSourceError('./depth-one:5')],
+    }),
+
     tInvalid({
       code: 'import { bar } from "./flow-types-depth-one"',
       languageOptions: { parser: require(parsers.BABEL) },

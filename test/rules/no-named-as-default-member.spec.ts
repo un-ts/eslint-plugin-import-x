@@ -6,6 +6,7 @@ import {
   createRuleTestCaseFunctions,
   SYNTAX_VALID_CASES,
   parsers,
+  testFilePath,
 } from '../utils.js'
 import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
@@ -34,12 +35,24 @@ ruleTester.run('no-named-as-default-member', rule, {
     tValid({
       code: 'import foo from "./default-export-default-property"; const a = foo.default',
     }),
+    // `export { type T }` must not read as an export named `type`
+    tValid({
+      code: 'import foo from "./inline-type-export"; const a = foo.type',
+    }),
     tValid({
       code: 'import bar, { foo } from "./export-default-string-and-named"',
       languageOptions: {
         parser: require(parsers.ESPREE),
         parserOptions: { ecmaVersion: 2022 },
       },
+    }),
+    tValid({
+      code: `import ns from "./typescript-export-assign-namespace"; ns.getFoo();`,
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+      languageOptions: { parserOptions: { tsconfigRootDir: testFilePath('') } },
     }),
 
     ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
