@@ -114,6 +114,13 @@ for additional context.
 
 const DEFAULT = 'default'
 
+// `AST_NODE_TYPES.ExportAllDeclaration` records which files `export * from` this
+// one, so the file's own star exports are tracked under a key no export name
+// can collide with
+const OWN_EXPORT_ALL_DECLARATION = Symbol('OwnExportAllDeclaration')
+
+type ExportKey = string | typeof OWN_EXPORT_ALL_DECLARATION
+
 const { AST_NODE_TYPES } = TSESTree
 
 function forEachDeclarationIdentifier(
@@ -195,7 +202,7 @@ const importList = new Map<string, Map<string, Set<string>>>()
  *
  * `Map { 'bar.js' => Map { 'o2' => { whereUsed: Set { 'foo.js' } } } }`
  */
-const exportList = new Map<string, Map<string, { whereUsed: Set<string> }>>()
+const exportList = new Map<string, Map<ExportKey, { whereUsed: Set<string> }>>()
 
 const ignoredFiles = new Set()
 const filesOutsideSrc = new Set()
@@ -272,6 +279,18 @@ const prepareImportsAndExports = (
             ? new Set([currentValue])
             : new Set([...localImport, currentValue])
         imports.set(reexportPath, localImport)
+      }
+
+      // `export * as ns from` consumes its source like a namespace import
+      for (const key of getOwnExportNames(currentExports)) {
+        const namespacePath = currentExports
+          .getExport(key)
+          ?.getNamespace?.()?.path
+        if (namespacePath) {
+          const localImport = imports.get(namespacePath) ?? new Set()
+          localImport.add(AST_NODE_TYPES.ImportNamespaceSpecifier)
+          imports.set(namespacePath, localImport)
+        }
       }
 
       for (const [key, value] of currentExports.getImports()) {
@@ -726,10 +745,10 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       // include it in further processing
       const exports =
         exportList.get(filename) ??
-        new Map<string, { whereUsed: Set<string> }>()
+        new Map<ExportKey, { whereUsed: Set<string> }>()
 
-      const newExports = new Map<string, { whereUsed: Set<string> }>()
-      const newExportIdentifiers = new Set<string>()
+      const newExports = new Map<ExportKey, { whereUsed: Set<string> }>()
+      const newExportIdentifiers = new Set<ExportKey>()
 
       for (const s of node.body) {
         if (s.type === AST_NODE_TYPES.ExportDefaultDeclaration) {
@@ -746,6 +765,16 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
           forEachDeclarationIdentifier(s.declaration!, name => {
             newExportIdentifiers.add(name)
           })
+        }
+        if (s.type === AST_NODE_TYPES.ExportAllDeclaration) {
+          if (s.exported) {
+            const name = getValue(s.exported)
+            newExportIdentifiers.add(
+              name === DEFAULT ? AST_NODE_TYPES.ImportDefaultSpecifier : name,
+            )
+          } else {
+            newExportIdentifiers.add(OWN_EXPORT_ALL_DECLARATION)
+          }
         }
       }
 
@@ -871,7 +900,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
             astNode.source.raw.replaceAll(/('|")/g, ''),
             context,
           )
-          newExportAll.add(resolvedPath!)
+          if (astNode.exported) {
+            newNamespaceImports.add(resolvedPath!)
+          } else {
+            newExportAll.add(resolvedPath!)
+          }
         }
 
         if (astNode.type === AST_NODE_TYPES.ImportDeclaration) {
@@ -1097,6 +1130,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       },
       ExportDefaultDeclaration(node) {
         checkUsage(node, AST_NODE_TYPES.ImportDefaultSpecifier, false)
+      },
+      ExportAllDeclaration(node) {
+        if (node.exported) {
+          checkUsage(node, getValue(node.exported), node.exportKind === 'type')
+        }
       },
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers) {

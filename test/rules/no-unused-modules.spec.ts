@@ -133,6 +133,22 @@ function createUnusedError(
         `,
         options: missingExportsOptions,
       }),
+      tValid({
+        code: "export * from 'a'",
+        options: missingExportsOptions,
+      }),
+      tValid({
+        code: "export * as a from 'a'",
+        options: missingExportsOptions,
+      }),
+      tValid({
+        code: "export type * from 'a'",
+        options: missingExportsOptions,
+      }),
+      tValid({
+        code: "export * as default from 'a'",
+        options: missingExportsOptions,
+      }),
     ],
     invalid: [
       tInvalid({
@@ -145,7 +161,219 @@ function createUnusedError(
         options: missingExportsOptions,
         errors: [{ messageId: 'notFound' }],
       }),
+      tInvalid({
+        code: "import * as a from 'a'",
+        options: missingExportsOptions,
+        errors: [{ messageId: 'notFound' }],
+      }),
     ],
+  })
+
+  describe('missingExports with star re-exports', () => {
+    ruleTester.run('no-unused-modules', rule, {
+      // @typescript-eslint/parser is the default and is covered above
+      valid: [parsers.ESPREE, parsers.BABEL, parsers.HERMES].flatMap(parser => [
+        tValid({
+          code: "export * from './source'",
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all.js',
+          ),
+          options: missingExportsOptions,
+          languageOptions: { parser: require(parser) },
+        }),
+        tValid({
+          code: "export * as ns from './source'",
+          filename: testFilePath('./no-unused-modules/export-all-as/ns.js'),
+          options: missingExportsOptions,
+          languageOptions: { parser: require(parser) },
+        }),
+        tValid({
+          code: "export * as default from './source'",
+          filename: testFilePath(
+            './no-unused-modules/export-all-as/default.js',
+          ),
+          options: missingExportsOptions,
+          languageOptions: { parser: require(parser) },
+        }),
+      ]),
+      invalid: [],
+    })
+  })
+
+  describe('missingExports with unusedExports on a star re-exporting file', () => {
+    const options: RuleOptions = [
+      {
+        missingExports: true,
+        unusedExports: true,
+        src: [testFilePath('./no-unused-modules/export-all')],
+      },
+    ]
+
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [
+        tValid({
+          code: "export * from './source'",
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all.js',
+          ),
+          options,
+        }),
+        tValid({
+          code: 'export const a = 1',
+          filename: testFilePath('./no-unused-modules/export-all/source.js'),
+          options,
+        }),
+      ],
+      invalid: [],
+    })
+
+    // the star re-export back-reference must survive the incremental update
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [
+        tValid({
+          code: 'export const a = 1',
+          filename: testFilePath('./no-unused-modules/export-all/source.js'),
+          options,
+        }),
+      ],
+      invalid: [],
+    })
+
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [],
+      invalid: [
+        tInvalid({
+          code: "export * from './source'; export const OwnExportAllDeclaration = 1",
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all.js',
+          ),
+          options,
+          errors: [createUnusedError('OwnExportAllDeclaration')],
+        }),
+        tInvalid({
+          code: "export * from './source'; export const b = 1",
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all.js',
+          ),
+          options,
+          errors: [createUnusedError('b')],
+        }),
+        tInvalid({
+          code: 'const b = 1',
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all.js',
+          ),
+          options,
+          errors: [{ messageId: 'notFound' }],
+        }),
+      ],
+    })
+
+    // with the star re-export removed, `a` is no longer used
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [],
+      invalid: [
+        tInvalid({
+          code: 'export const a = 1',
+          filename: testFilePath('./no-unused-modules/export-all/source.js'),
+          options,
+          errors: [createUnusedError('a')],
+        }),
+      ],
+    })
+  })
+
+  describe('unusedExports with namespace re-exports', () => {
+    const options: RuleOptions = [
+      {
+        unusedExports: true,
+        src: [testFilePath('./no-unused-modules/export-all-as')],
+      },
+    ]
+    // @typescript-eslint/parser is the default
+    const languageOptionsList = [
+      undefined,
+      ...[parsers.ESPREE, parsers.BABEL, parsers.HERMES].map(parser => ({
+        parser: require<TSESLint.Parser.LooseParserModule>(parser),
+      })),
+    ]
+
+    ruleTester.run('no-unused-modules', rule, {
+      valid: languageOptionsList.flatMap(languageOptions => [
+        // `a` and the default export are both consumed through `export * as`
+        tValid({
+          code: 'export const a = 1; export default 2',
+          filename: testFilePath('./no-unused-modules/export-all-as/source.js'),
+          options,
+          languageOptions,
+        }),
+        // both imported by consumer.js, and still so after repeated updates
+        tValid({
+          code: "export * as ns from './source'",
+          filename: testFilePath('./no-unused-modules/export-all-as/ns.js'),
+          options,
+          languageOptions,
+        }),
+        tValid({
+          code: "export * as default from './source'",
+          filename: testFilePath(
+            './no-unused-modules/export-all-as/default.js',
+          ),
+          options,
+          languageOptions,
+        }),
+      ]),
+      invalid: languageOptionsList.flatMap(languageOptions => [
+        tInvalid({
+          code: "export * as unused from './source'; export * as default from './source'",
+          filename: testFilePath('./no-unused-modules/export-all-as/unused.js'),
+          options,
+          languageOptions,
+          errors: [createUnusedError('unused'), createUnusedError('default')],
+        }),
+      ]),
+    })
+
+    // a bare `export *` does not cover the default export
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [],
+      invalid: [
+        tInvalid({
+          code: 'export const a = 1; export default 2',
+          filename: testFilePath(
+            './no-unused-modules/export-all-as/late-source.js',
+          ),
+          options,
+          errors: [createUnusedError('default')],
+        }),
+      ],
+    })
+
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [],
+      invalid: [
+        tInvalid({
+          code: "export * as late from './late-source'",
+          filename: testFilePath('./no-unused-modules/export-all-as/late.js'),
+          options,
+          errors: [createUnusedError('late')],
+        }),
+      ],
+    })
+
+    // the namespace re-export added at runtime now covers it
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [
+        tValid({
+          code: 'export const a = 1; export default 2',
+          filename: testFilePath(
+            './no-unused-modules/export-all-as/late-source.js',
+          ),
+          options,
+        }),
+      ],
+      invalid: [],
+    })
   })
 
   // tests for exports
@@ -1323,6 +1551,13 @@ function createUnusedError(
           code: `export enum e { f };`,
           filename: testFilePath(
             './no-unused-modules/typescript/file-ts-e-unused.ts',
+          ),
+          options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
+        }),
+        tValid({
+          code: `export type * as ns from './file-ts-b';`,
+          filename: testFilePath(
+            './no-unused-modules/typescript/file-ts-ns-unused.ts',
           ),
           options: unusedExportsTypescriptIgnoreUnusedTypesOptions,
         }),
