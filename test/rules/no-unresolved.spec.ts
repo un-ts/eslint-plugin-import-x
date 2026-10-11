@@ -525,6 +525,34 @@ ruleTester.run('import() with built-in parser', rule, {
 })
 
 describe('TypeScript', () => {
+  // https://github.com/un-ts/eslint-plugin-import-x/issues/527
+  ruleTester.run('no-unresolved (import-equals declarations)', rule, {
+    valid: [
+      tValid({ code: "import fs = require('fs');" }),
+      tValid({ code: "export import fs = require('fs');" }),
+      // `import x = N.M` aliases a namespace, so there is no module to resolve
+      tValid({
+        code: 'namespace N { export const M = 1 }\nimport alias = N.M;',
+      }),
+    ],
+    invalid: [
+      tInvalid({
+        code: "import missing = require('./does-not-exist-l0w9ssmcqy9');",
+        errors: [createError('unresolved', './does-not-exist-l0w9ssmcqy9')],
+      }),
+      tInvalid({
+        code: "export import missing = require('./does-not-exist-l0w9ssmcqy9');",
+        errors: [createError('unresolved', './does-not-exist-l0w9ssmcqy9')],
+      }),
+      // import-equals is registered for `commonjs` too, even with `esmodule` off
+      tInvalid({
+        code: "import missing = require('./does-not-exist-l0w9ssmcqy9');",
+        options: [{ commonjs: true, esmodule: false }],
+        errors: [createError('unresolved', './does-not-exist-l0w9ssmcqy9')],
+      }),
+    ],
+  })
+
   // Type-only imports were added in TypeScript ESTree 2.23.0
   ruleTester.run('no-unresolved (ignore type-only)', rule, {
     valid: [

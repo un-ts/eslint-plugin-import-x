@@ -92,6 +92,9 @@ function isTypeOnly(importer: Importer): boolean {
     case 'ExportAllDeclaration': {
       return importer.exportKind === 'type'
     }
+    case 'TSImportEqualsDeclaration': {
+      return importer.importKind === 'type'
+    }
     default: {
       // dynamic `import()`, `require()`, and AMD array elements are values
       return false
