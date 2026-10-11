@@ -114,6 +114,17 @@ for additional context.
 
 const DEFAULT = 'default'
 
+// Internal keys of `exportList` and `importList`. Symbols rather than strings,
+// so that no export name (e.g. `ImportDefaultSpecifier`) can collide with them
+const DEFAULT_KEY = Symbol('default')
+const NAMESPACE_KEY = Symbol('namespace')
+const EXPORT_ALL_KEY = Symbol('export all')
+
+type ExportKey = string | symbol
+
+const toKey = (name: string): ExportKey =>
+  name === DEFAULT ? DEFAULT_KEY : name
+
 const { AST_NODE_TYPES } = TSESTree
 
 function forEachDeclarationIdentifier(
@@ -161,7 +172,7 @@ function forEachDeclarationIdentifier(
  * keys are the paths to the modules containing the imports, while the
  * lower-level Map keys are the paths to the files which are being imported
  * from. Lastly, the Set of identifiers contains either names being imported or
- * a special AST node name listed above (e.g ImportDefaultSpecifier).
+ * one of the symbol keys listed above (e.g DEFAULT_KEY).
  *
  * For example, if we have a file named foo.js containing:
  *
@@ -171,15 +182,15 @@ function forEachDeclarationIdentifier(
  *
  * `Map { 'foo.js' => Map { 'bar.js' => Set { 'o2' } } }`
  */
-const importList = new Map<string, Map<string, Set<string>>>()
+const importList = new Map<string, Map<string, Set<ExportKey>>>()
 
 /**
  * List of exports per file.
  *
  * Represented by a two-level Map to an object of metadata. The upper-level Map
  * keys are the paths to the modules containing the exports, while the
- * lower-level Map keys are the specific identifiers or special AST node names
- * being exported. The leaf-level metadata object at the moment only contains a
+ * lower-level Map keys are the specific identifiers or symbol keys being
+ * exported. The leaf-level metadata object at the moment only contains a
  * `whereUsed` property, which contains a Set of paths to modules that import
  * the name.
  *
@@ -195,7 +206,7 @@ const importList = new Map<string, Map<string, Set<string>>>()
  *
  * `Map { 'bar.js' => Map { 'o2' => { whereUsed: Set { 'foo.js' } } } }`
  */
-const exportList = new Map<string, Map<string, { whereUsed: Set<string> }>>()
+const exportList = new Map<string, Map<ExportKey, { whereUsed: Set<string> }>>()
 
 const ignoredFiles = new Set()
 const filesOutsideSrc = new Set()
@@ -243,30 +254,21 @@ const prepareImportsAndExports = (
 ) => {
   const exportAll = new Map<string, Set<string>>()
   for (const file of srcFiles) {
-    const exports = new Map<string, { whereUsed: Set<string> }>()
-    const imports = new Map<string, Set<string>>()
+    const exports = new Map<ExportKey, { whereUsed: Set<string> }>()
+    const imports = new Map<string, Set<ExportKey>>()
     const currentExports = ModuleInfo.get(file, context)
     if (currentExports) {
       // star-export paths === export * from
       exportAll.set(file, new Set(getStarExportPaths(currentExports)))
 
       for (const [key, value] of getReexports(currentExports)) {
-        if (key === DEFAULT) {
-          exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
-            whereUsed: new Set(),
-          })
-        } else {
-          exports.set(key, { whereUsed: new Set() })
-        }
+        exports.set(toKey(key), { whereUsed: new Set() })
         const reexportPath = value.resolveTarget()?.path
         if (!reexportPath) {
           continue
         }
         let localImport = imports.get(reexportPath)
-        const currentValue =
-          value.local === DEFAULT
-            ? AST_NODE_TYPES.ImportDefaultSpecifier
-            : value.local
+        const currentValue = toKey(value.local)
         localImport =
           localImport === undefined
             ? new Set([currentValue])
@@ -284,13 +286,13 @@ const prepareImportsAndExports = (
             continue
           }
           for (const name of imported.names) {
-            localImport.add(name)
+            localImport.add(toKey(name))
           }
           if (imported.default) {
-            localImport.add(AST_NODE_TYPES.ImportDefaultSpecifier)
+            localImport.add(DEFAULT_KEY)
           }
           if (imported.namespace) {
-            localImport.add(AST_NODE_TYPES.ImportNamespaceSpecifier)
+            localImport.add(NAMESPACE_KEY)
           }
         }
         imports.set(key, localImport)
@@ -302,30 +304,18 @@ const prepareImportsAndExports = (
         continue
       }
       for (const key of getOwnExportNames(currentExports)) {
-        if (key === DEFAULT) {
-          exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
-            whereUsed: new Set(),
-          })
-        } else {
-          exports.set(key, { whereUsed: new Set() })
-        }
+        exports.set(toKey(key), { whereUsed: new Set() })
       }
     }
-    exports.set(AST_NODE_TYPES.ExportAllDeclaration, {
-      whereUsed: new Set(),
-    })
-    exports.set(AST_NODE_TYPES.ImportNamespaceSpecifier, {
-      whereUsed: new Set(),
-    })
+    exports.set(EXPORT_ALL_KEY, { whereUsed: new Set() })
+    exports.set(NAMESPACE_KEY, { whereUsed: new Set() })
     exportList.set(file, exports)
   }
   for (const [key, value] of exportAll.entries()) {
     for (const val of value) {
       const currentExports = exportList.get(val)
       if (currentExports) {
-        const currentExport = currentExports.get(
-          AST_NODE_TYPES.ExportAllDeclaration,
-        )
+        const currentExport = currentExports.get(EXPORT_ALL_KEY)
         currentExport!.whereUsed.add(key)
       }
     }
@@ -342,21 +332,11 @@ const determineUsage = () => {
       const exports = exportList.get(key)
       if (exports !== undefined) {
         for (const currentImport of value) {
-          let specifier: string
-          if (currentImport === AST_NODE_TYPES.ImportNamespaceSpecifier) {
-            specifier = AST_NODE_TYPES.ImportNamespaceSpecifier
-          } else if (currentImport === AST_NODE_TYPES.ImportDefaultSpecifier) {
-            specifier = AST_NODE_TYPES.ImportDefaultSpecifier
-          } else {
-            specifier = currentImport
-          }
-          if (specifier !== undefined) {
-            const exportStatement = exports.get(specifier)
-            if (exportStatement !== undefined) {
-              const { whereUsed } = exportStatement
-              whereUsed.add(listKey)
-              exports.set(specifier, { whereUsed })
-            }
+          const exportStatement = exports.get(currentImport)
+          if (exportStatement !== undefined) {
+            const { whereUsed } = exportStatement
+            whereUsed.add(listKey)
+            exports.set(currentImport, { whereUsed })
           }
         }
       }
@@ -595,13 +575,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       }
 
       const exportCount = exportList.get(filename)!
-      const exportAll = exportCount.get(AST_NODE_TYPES.ExportAllDeclaration)!
-      const namespaceImports = exportCount.get(
-        AST_NODE_TYPES.ImportNamespaceSpecifier,
-      )!
+      const exportAll = exportCount.get(EXPORT_ALL_KEY)!
+      const namespaceImports = exportCount.get(NAMESPACE_KEY)!
 
-      exportCount.delete(AST_NODE_TYPES.ExportAllDeclaration)
-      exportCount.delete(AST_NODE_TYPES.ImportNamespaceSpecifier)
+      exportCount.delete(EXPORT_ALL_KEY)
+      exportCount.delete(NAMESPACE_KEY)
       if (exportCount.size === 0) {
         // node.body[0] === 'undefined' only happens, if everything is commented out in the file
         // being linted
@@ -610,8 +588,8 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
           messageId: 'notFound',
         })
       }
-      exportCount.set(AST_NODE_TYPES.ExportAllDeclaration, exportAll)
-      exportCount.set(AST_NODE_TYPES.ImportNamespaceSpecifier, namespaceImports)
+      exportCount.set(EXPORT_ALL_KEY, exportAll)
+      exportCount.set(NAMESPACE_KEY, namespaceImports)
     }
 
     const checkUsage = (
@@ -657,20 +635,20 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
         return
       }
 
+      const exportsKey = toKey(exportedValue)
+
       // special case: export * from
-      const exportAll = exports.get(AST_NODE_TYPES.ExportAllDeclaration)
+      const exportAll = exports.get(EXPORT_ALL_KEY)
       if (
         exportAll !== undefined &&
-        exportedValue !== AST_NODE_TYPES.ImportDefaultSpecifier &&
+        exportsKey !== DEFAULT_KEY &&
         exportAll.whereUsed.size > 0
       ) {
         return
       }
 
       // special case: namespace import
-      const namespaceImports = exports.get(
-        AST_NODE_TYPES.ImportNamespaceSpecifier,
-      )
+      const namespaceImports = exports.get(NAMESPACE_KEY)
       if (
         namespaceImports !== undefined &&
         namespaceImports.whereUsed.size > 0
@@ -678,25 +656,14 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
         return
       }
 
-      // exportsList will always map any imported value of 'default' to 'ImportDefaultSpecifier'
-      const exportsKey =
-        exportedValue === DEFAULT
-          ? AST_NODE_TYPES.ImportDefaultSpecifier
-          : exportedValue
-
       const exportStatement = exports.get(exportsKey)
-
-      const value =
-        exportsKey === AST_NODE_TYPES.ImportDefaultSpecifier
-          ? DEFAULT
-          : exportsKey
 
       if (exportStatement === undefined) {
         context.report({
           node,
           messageId: 'unused',
           data: {
-            value,
+            value: exportedValue,
           },
         })
       } else {
@@ -705,7 +672,7 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
             node,
             messageId: 'unused',
             data: {
-              value,
+              value: exportedValue,
             },
           })
         }
@@ -726,20 +693,20 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       // include it in further processing
       const exports =
         exportList.get(filename) ??
-        new Map<string, { whereUsed: Set<string> }>()
+        new Map<ExportKey, { whereUsed: Set<string> }>()
 
-      const newExports = new Map<string, { whereUsed: Set<string> }>()
-      const newExportIdentifiers = new Set<string>()
+      const newExports = new Map<ExportKey, { whereUsed: Set<string> }>()
+      const newExportIdentifiers = new Set<ExportKey>()
 
       for (const s of node.body) {
         if (s.type === AST_NODE_TYPES.ExportDefaultDeclaration) {
-          newExportIdentifiers.add(AST_NODE_TYPES.ImportDefaultSpecifier)
+          newExportIdentifiers.add(DEFAULT_KEY)
         }
         if (s.type === AST_NODE_TYPES.ExportNamedDeclaration) {
           if (s.specifiers.length > 0) {
             for (const specifier of s.specifiers) {
               if (specifier.exported) {
-                newExportIdentifiers.add(getValue(specifier.exported))
+                newExportIdentifiers.add(toKey(getValue(specifier.exported)))
               }
             }
           }
@@ -764,13 +731,13 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       }
 
       // preserve information about namespace imports
-      const exportAll = exports.get(AST_NODE_TYPES.ExportAllDeclaration)!
-      const namespaceImports = exports.get(
-        AST_NODE_TYPES.ImportNamespaceSpecifier,
-      ) ?? { whereUsed: new Set() }
+      const exportAll = exports.get(EXPORT_ALL_KEY)!
+      const namespaceImports = exports.get(NAMESPACE_KEY) ?? {
+        whereUsed: new Set(),
+      }
 
-      newExports.set(AST_NODE_TYPES.ExportAllDeclaration, exportAll)
-      newExports.set(AST_NODE_TYPES.ImportNamespaceSpecifier, namespaceImports)
+      newExports.set(EXPORT_ALL_KEY, exportAll)
+      newExports.set(NAMESPACE_KEY, namespaceImports)
       exportList.set(filename, newExports)
     }
 
@@ -785,7 +752,7 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       }
 
       const oldImportPaths =
-        importList.get(filename) ?? new Map<string, Set<string>>()
+        importList.get(filename) ?? new Map<string, Set<ExportKey>>()
 
       const oldNamespaceImports = new Set<string>()
       const newNamespaceImports = new Set<string>()
@@ -799,20 +766,17 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       const oldImports = new Map<string, string>()
       const newImports = new Map<string, string>()
       for (const [key, value] of oldImportPaths.entries()) {
-        if (value.has(AST_NODE_TYPES.ExportAllDeclaration)) {
+        if (value.has(EXPORT_ALL_KEY)) {
           oldExportAll.add(key)
         }
-        if (value.has(AST_NODE_TYPES.ImportNamespaceSpecifier)) {
+        if (value.has(NAMESPACE_KEY)) {
           oldNamespaceImports.add(key)
         }
-        if (value.has(AST_NODE_TYPES.ImportDefaultSpecifier)) {
+        if (value.has(DEFAULT_KEY)) {
           oldDefaultImports.add(key)
         }
         for (const val of value) {
-          if (
-            val !== AST_NODE_TYPES.ImportNamespaceSpecifier &&
-            val !== AST_NODE_TYPES.ImportDefaultSpecifier
-          ) {
+          if (typeof val === 'string') {
             oldImports.set(val, key)
           }
         }
@@ -901,7 +865,12 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
               specifier.type !== AST_NODE_TYPES.ImportNamespaceSpecifier,
           )) {
             if ('imported' in specifier) {
-              newImports.set(getValue(specifier.imported), resolvedPath)
+              const name = getValue(specifier.imported)
+              if (name === DEFAULT) {
+                newDefaultImports.add(resolvedPath)
+              } else {
+                newImports.set(name, resolvedPath)
+              }
             }
           }
         }
@@ -910,7 +879,7 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       for (const value of newExportAll) {
         if (!oldExportAll.has(value)) {
           const imports = oldImportPaths.get(value) ?? new Set()
-          imports.add(AST_NODE_TYPES.ExportAllDeclaration)
+          imports.add(EXPORT_ALL_KEY)
           oldImportPaths.set(value, imports)
 
           let exports = exportList.get(value)
@@ -919,15 +888,13 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
             exports = new Map()
             exportList.set(value, exports)
           } else {
-            currentExport = exports.get(AST_NODE_TYPES.ExportAllDeclaration)
+            currentExport = exports.get(EXPORT_ALL_KEY)
           }
 
           if (currentExport === undefined) {
             const whereUsed = new Set<string>()
             whereUsed.add(filename)
-            exports.set(AST_NODE_TYPES.ExportAllDeclaration, {
-              whereUsed,
-            })
+            exports.set(EXPORT_ALL_KEY, { whereUsed })
           } else {
             currentExport.whereUsed.add(filename)
           }
@@ -937,13 +904,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       for (const value of oldExportAll) {
         if (!newExportAll.has(value)) {
           const imports = oldImportPaths.get(value)!
-          imports.delete(AST_NODE_TYPES.ExportAllDeclaration)
+          imports.delete(EXPORT_ALL_KEY)
 
           const exports = exportList.get(value)
           if (exports !== undefined) {
-            const currentExport = exports.get(
-              AST_NODE_TYPES.ExportAllDeclaration,
-            )
+            const currentExport = exports.get(EXPORT_ALL_KEY)
             if (currentExport !== undefined) {
               currentExport.whereUsed.delete(filename)
             }
@@ -957,7 +922,7 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
           if (imports === undefined) {
             imports = new Set()
           }
-          imports.add(AST_NODE_TYPES.ImportDefaultSpecifier)
+          imports.add(DEFAULT_KEY)
           oldImportPaths.set(value, imports)
 
           let exports = exportList.get(value)
@@ -966,15 +931,13 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
             exports = new Map()
             exportList.set(value, exports)
           } else {
-            currentExport = exports.get(AST_NODE_TYPES.ImportDefaultSpecifier)
+            currentExport = exports.get(DEFAULT_KEY)
           }
 
           if (currentExport === undefined) {
             const whereUsed = new Set<string>()
             whereUsed.add(filename)
-            exports.set(AST_NODE_TYPES.ImportDefaultSpecifier, {
-              whereUsed,
-            })
+            exports.set(DEFAULT_KEY, { whereUsed })
           } else {
             currentExport.whereUsed.add(filename)
           }
@@ -984,13 +947,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       for (const value of oldDefaultImports) {
         if (!newDefaultImports.has(value)) {
           const imports = oldImportPaths.get(value)!
-          imports.delete(AST_NODE_TYPES.ImportDefaultSpecifier)
+          imports.delete(DEFAULT_KEY)
 
           const exports = exportList.get(value)
           if (exports !== undefined) {
-            const currentExport = exports.get(
-              AST_NODE_TYPES.ImportDefaultSpecifier,
-            )
+            const currentExport = exports.get(DEFAULT_KEY)
             if (currentExport !== undefined) {
               currentExport.whereUsed.delete(filename)
             }
@@ -1004,7 +965,7 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
           if (imports === undefined) {
             imports = new Set()
           }
-          imports.add(AST_NODE_TYPES.ImportNamespaceSpecifier)
+          imports.add(NAMESPACE_KEY)
           oldImportPaths.set(value, imports)
 
           let exports = exportList.get(value)
@@ -1013,15 +974,13 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
             exports = new Map()
             exportList.set(value, exports)
           } else {
-            currentExport = exports.get(AST_NODE_TYPES.ImportNamespaceSpecifier)
+            currentExport = exports.get(NAMESPACE_KEY)
           }
 
           if (currentExport === undefined) {
             const whereUsed = new Set<string>()
             whereUsed.add(filename)
-            exports.set(AST_NODE_TYPES.ImportNamespaceSpecifier, {
-              whereUsed,
-            })
+            exports.set(NAMESPACE_KEY, { whereUsed })
           } else {
             currentExport.whereUsed.add(filename)
           }
@@ -1031,13 +990,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       for (const value of oldNamespaceImports) {
         if (!newNamespaceImports.has(value)) {
           const imports = oldImportPaths.get(value)!
-          imports.delete(AST_NODE_TYPES.ImportNamespaceSpecifier)
+          imports.delete(NAMESPACE_KEY)
 
           const exports = exportList.get(value)
           if (exports !== undefined) {
-            const currentExport = exports.get(
-              AST_NODE_TYPES.ImportNamespaceSpecifier,
-            )
+            const currentExport = exports.get(NAMESPACE_KEY)
             if (currentExport !== undefined) {
               currentExport.whereUsed.delete(filename)
             }
@@ -1096,7 +1053,7 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
         checkExportPresence(node)
       },
       ExportDefaultDeclaration(node) {
-        checkUsage(node, AST_NODE_TYPES.ImportDefaultSpecifier, false)
+        checkUsage(node, DEFAULT, false)
       },
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers) {
