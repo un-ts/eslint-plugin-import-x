@@ -48,6 +48,12 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       filename,
       options: [{ maxModuleGraphSizeAllowed: 0 }],
     }),
+    // a type-only import-equals declaration is erased too
+    tValid({
+      code: "import type FooType = require('./barrel.js');",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+    }),
     // a leading default specifier keeps a mixed import at runtime
     tValid({
       code: "import Foo, { type A } from './barrel.js';",

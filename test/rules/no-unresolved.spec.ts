@@ -544,6 +544,12 @@ describe('TypeScript', () => {
         code: "export import missing = require('./does-not-exist-l0w9ssmcqy9');",
         errors: [createError('unresolved', './does-not-exist-l0w9ssmcqy9')],
       }),
+      // import-equals is registered for `commonjs` too, even with `esmodule` off
+      tInvalid({
+        code: "import missing = require('./does-not-exist-l0w9ssmcqy9');",
+        options: [{ commonjs: true, esmodule: false }],
+        errors: [createError('unresolved', './does-not-exist-l0w9ssmcqy9')],
+      }),
     ],
   })
 
