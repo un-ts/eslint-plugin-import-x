@@ -74,6 +74,10 @@ ruleTester.run('no-cycle', rule, {
       code: `import type { FooType, BarType } from "./es6/depth-one"`,
       languageOptions: { parser: require(parsers.BABEL) },
     }),
+    // a type-only import-equals declaration is erased before runtime
+    tValid({
+      code: `import type FooType = require("./es6/depth-one")`,
+    }),
     tValid({
       code: `function bar(){ return import("./es6/depth-one"); } // #2265 1`,
       options: [{ allowUnsafeDynamicCyclicDependency: true }],
@@ -112,6 +116,11 @@ ruleTester.run('no-cycle', rule, {
   ],
 
   invalid: [
+    // a value import-equals declaration still closes the cycle
+    tInvalid({
+      code: 'import depthOne = require("./es6/depth-one")',
+      errors: [{ messageId: 'cycle' }],
+    }),
     tInvalid({
       code: 'import { bar } from "./flow-types-some-type-imports"',
       languageOptions: { parser: require(parsers.BABEL) },
