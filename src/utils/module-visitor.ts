@@ -1,14 +1,17 @@
 import type { JSONSchema, TSESLint, TSESTree } from '@typescript-eslint/utils'
 
+export type Importer =
+  | TSESTree.ImportDeclaration
+  | TSESTree.ExportNamedDeclaration
+  | TSESTree.ExportAllDeclaration
+  | TSESTree.TSImportEqualsDeclaration
+  | TSESTree.CallExpression
+  | TSESTree.ImportExpression
+  | TSESTree.StringLiteral
+
 export type Visitor = (
   source: TSESTree.StringLiteral,
-  importer:
-    | TSESTree.ImportDeclaration
-    | TSESTree.ExportNamedDeclaration
-    | TSESTree.ExportAllDeclaration
-    | TSESTree.CallExpression
-    | TSESTree.ImportExpression
-    | TSESTree.StringLiteral,
+  importer: Importer,
 ) => void
 
 export interface ModuleOptions {
@@ -33,13 +36,7 @@ export function moduleVisitor(visitor: Visitor, options?: ModuleOptions) {
 
   function checkSourceValue(
     source: TSESTree.StringLiteral | null | undefined,
-    importer:
-      | TSESTree.ImportDeclaration
-      | TSESTree.ExportNamedDeclaration
-      | TSESTree.ExportAllDeclaration
-      | TSESTree.CallExpression
-      | TSESTree.ImportExpression
-      | TSESTree.StringLiteral,
+    importer: Importer,
   ) {
     if (source == null) {
       return
@@ -120,6 +117,16 @@ export function moduleVisitor(visitor: Visitor, options?: ModuleOptions) {
     checkSourceValue(modulePath, call)
   }
 
+  // for TypeScript's `import x = require('y')`
+  function checkTsImportEquals(node: TSESTree.TSImportEqualsDeclaration) {
+    const reference = node.moduleReference
+    // `import x = N.M` aliases a namespace, not a module
+    if (reference.type !== 'TSExternalModuleReference') {
+      return
+    }
+    checkSourceValue(reference.expression, node)
+  }
+
   function checkAMD(call: TSESTree.CallExpression) {
     if (call.callee.type !== 'Identifier') {
       return
@@ -167,6 +174,12 @@ export function moduleVisitor(visitor: Visitor, options?: ModuleOptions) {
       CallExpression: checkImportCall,
       ImportExpression: checkImportCall,
     })
+  }
+
+  // `import x = require('y')` is a static import declaration written with
+  // `require`, so it belongs to both worlds
+  if (esmodule || commonjs) {
+    visitors.TSImportEqualsDeclaration = checkTsImportEquals
   }
 
   if (commonjs || amd) {

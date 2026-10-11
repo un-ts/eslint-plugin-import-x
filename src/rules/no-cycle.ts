@@ -110,13 +110,16 @@ export default createRule<[Options?], MessageId>({
         }
 
         if (
-          importer.type === 'ImportDeclaration' &&
-          // import type { Foo } (TS and Flow)
-          (importer.importKind === 'type' ||
-            // import { type Foo } (Flow)
-            importer.specifiers.every(
-              s => 'importKind' in s && s.importKind === 'type',
-            ))
+          // import type x = require('./foo')
+          (importer.type === 'TSImportEqualsDeclaration' &&
+            importer.importKind === 'type') ||
+          (importer.type === 'ImportDeclaration' &&
+            // import type { Foo } (TS and Flow)
+            (importer.importKind === 'type' ||
+              // import { type Foo } (Flow)
+              importer.specifiers.every(
+                s => 'importKind' in s && s.importKind === 'type',
+              )))
         ) {
           return // ignore type imports
         }

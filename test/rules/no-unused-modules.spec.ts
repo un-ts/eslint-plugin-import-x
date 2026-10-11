@@ -1485,6 +1485,110 @@ function createUnusedError(
     })
   })
 
+  describe('export names matching internal keys', () => {
+    const options: RuleOptions = [
+      {
+        unusedExports: true,
+        src: [testFilePath('./no-unused-modules/internal-keys')],
+      },
+    ]
+
+    const filename = (name: string) =>
+      testFilePath(`./no-unused-modules/internal-keys/${name}.js`)
+
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [
+        tValid({
+          code: 'export const ImportNamespaceSpecifier = 1',
+          options: missingExportsOptions,
+        }),
+        tValid({
+          code: 'export const ExportAllDeclaration = 1',
+          options: missingExportsOptions,
+        }),
+        tValid({
+          code: 'export default 1\n',
+          filename: filename('default-as-lib'),
+          options,
+        }),
+        // relinting the importer, as an editor does after an edit
+        tValid({
+          code: '',
+          filename: filename('default-as-user'),
+          options,
+        }),
+        tValid({
+          code: "import { default as d } from './default-as-lib'\n",
+          filename: filename('default-as-user'),
+          options,
+        }),
+        tValid({
+          code: 'export default 1',
+          filename: filename('default-as-lib'),
+          options,
+        }),
+        tValid({
+          code: 'const x = 1\nexport { x as default }\n',
+          filename: filename('renamed-default-lib'),
+          options,
+        }),
+        tValid({
+          code: 'const x = 1\nexport { x as default }',
+          filename: filename('renamed-default-lib'),
+          options,
+        }),
+        tValid({
+          code: "export * from './relint-lib'\n",
+          filename: filename('relint-barrel'),
+          options,
+        }),
+        tValid({
+          code: "export * from './relint-lib'",
+          filename: filename('relint-barrel'),
+          options,
+        }),
+        tValid({
+          code: 'export const a = 1\n',
+          filename: filename('relint-lib'),
+          options,
+        }),
+      ],
+      invalid: [
+        tInvalid({
+          code: 'export default 1\nexport const ImportDefaultSpecifier = 2\n',
+          filename: filename('default-lib'),
+          options,
+          errors: [createUnusedError('ImportDefaultSpecifier')],
+        }),
+        tInvalid({
+          code: 'export default 1\nexport const ImportDefaultSpecifier = 2\n',
+          filename: filename('default-named-lib'),
+          options,
+          errors: [createUnusedError('default')],
+        }),
+        tInvalid({
+          code: 'export const ImportNamespaceSpecifier = 1\nexport const unused = 2\n',
+          filename: filename('namespace-lib'),
+          options,
+          errors: [createUnusedError('unused')],
+        }),
+        tInvalid({
+          code: 'export const ExportAllDeclaration = 1\nexport const unused = 2\n',
+          filename: filename('export-all-lib'),
+          options,
+          errors: [createUnusedError('unused')],
+        }),
+        // `export *` does not re-export the default, however it is declared
+        tInvalid({
+          code: 'const x = 1\nexport { x as default }\nexport const y = 2\n',
+          filename: filename('star-lib'),
+          options,
+          errors: [createUnusedError('default')],
+        }),
+      ],
+    })
+  })
+
   describe('parser ignores prefixes like BOM and hashbang', () => {
     // bom, hashbang
     ruleTester.run('no-unused-modules', rule, {
