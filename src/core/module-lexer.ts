@@ -263,12 +263,13 @@ const TRIVIA_PATTERN = /(?:\s+|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*)+/y
  * stops enumerating a declarator list at the first `:` it meets, so
  * `export const a: number = 1, b = 2` reports `a` alone and `b` is lost.
  *
- * Checked right after a reported name, which is exactly where the lexer stops.
- * Matched across line terminators, so a label on the line below an export
- * (`export let a` / `a: for (;;) {}`) falls back too — a parse, never a wrong
- * answer.
+ * Checked right after a reported name — trivia skipped, since a comment may
+ * sit between the binding and its annotation — which is exactly where the
+ * lexer stops. Trivia spans line terminators, so a label on the line below an
+ * export (`export let a` / `a: for (;;) {}`) falls back too — a parse, never a
+ * wrong answer.
  */
-const BINDING_ANNOTATION_PATTERN = /\s*:/y
+const BINDING_ANNOTATION_PATTERN = /:/y
 
 function skipTrivia(content: string, index: number) {
   TRIVIA_PATTERN.lastIndex = index
@@ -735,7 +736,7 @@ export function lexModule(
       if (TYPE_MODIFIER_PATTERN.test(content.slice(exp.ss, exp.s))) {
         return null // not plain JavaScript — see TYPE_MODIFIER_PATTERN
       }
-      BINDING_ANNOTATION_PATTERN.lastIndex = exp.e
+      BINDING_ANNOTATION_PATTERN.lastIndex = skipTrivia(content, exp.e)
       if (BINDING_ANNOTATION_PATTERN.test(content)) {
         return null // the rest of the list is lost — see BINDING_ANNOTATION_PATTERN
       }
