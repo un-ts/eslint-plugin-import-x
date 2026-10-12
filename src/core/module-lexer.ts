@@ -612,10 +612,6 @@ export function lexModule(
     return null // invisible to the lexer — see TYPE_EXPORT_PATTERN
   }
 
-  if (hasUnlexableExportHead(content)) {
-    return null // dropped or misread — see LEXABLE_EXPORT_HEAD_PATTERN
-  }
-
   let imports: readonly esModuleLexer.ImportSpecifier[]
   let exports: readonly esModuleLexer.ExportSpecifier[]
   let hasModuleSyntax: boolean
@@ -639,6 +635,18 @@ export function lexModule(
 
   if (isModule && NON_STANDARD_EXPORT_FROM_PATTERN.test(content)) {
     return null // see NON_STANDARD_EXPORT_FROM_PATTERN
+  }
+
+  // Only once the lexer has seen import/export syntax: a file whose single
+  // unreadable export leaves no entry at all is not module syntax to the
+  // lexer, so it takes the CommonJS branch below and `cjsModuleLexer.parse`
+  // throws on it. Scanning before this point would also drop plain scripts
+  // that merely mention `export` in a string or comment onto the AST route.
+  if (
+    (exports.length > 0 || imports.length > 0) &&
+    hasUnlexableExportHead(content)
+  ) {
+    return null // dropped or misread — see LEXABLE_EXPORT_HEAD_PATTERN
   }
 
   if (!isModule) {
