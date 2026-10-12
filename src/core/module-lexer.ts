@@ -214,6 +214,95 @@ const LINE_SEPARATOR_PATTERN = /[\u2028\u2029]/
  */
 const TYPE_EXPORT_PATTERN = /\bexport\s+(?:type|typeof)\b/
 
+/**
+ * Declaration heads es-module-lexer 2.x — the pinned line — reads. Everything
+ * else it either reports nothing for (`export enum E {}`, `export namespace N
+ * {}`, `export module M {}`, `export interface I {}`, `export using u = r`,
+ * `export @dec class A {}`) or reads under the wrong name (`export abstract
+ * class A {}` reports `s`, `export declare function f() {}` reports `declare`,
+ * `export const enum E {}` reports `enum`, `export await using b = r` reports
+ * `""`).
+ *
+ * Standalone, such a file bails on its own — the lexer reports no module syntax
+ * at all, the CommonJS attempt throws and `lexModule` returns `null`. Mixed with
+ * one export the lexer *does* read, the file looks like a module, nothing bails
+ * and the name simply vanishes from `ownExports`, so `hasExport` is wrong for
+ * it. A whitelist is the only shape that survives new syntax: an unknown head
+ * falls back instead of being dropped.
+ *
+ * `function` covers `async function` and generators; `{` and `*` need no
+ * separating whitespace (`export{a}`, `export*from'x'`). `const` is matched
+ * here and `const enum` rejected afterwards, so that a comment sitting between
+ * the two words cannot slip past a lookahead.
+ */
+const LEXABLE_EXPORT_HEAD_PATTERN =
+  /[{*]|default\b|(?:async\s+)?function\b|class\b|const\b|let\b|var\b/uy
+const CONST_ENUM_HEAD_PATTERN = /enum\b/y
+
+/**
+ * Where an `export` declaration can start. ASI forbids a statement from
+ * following an expression without a `;` or a line terminator, so a real
+ * `export` statement is always preceded — horizontal whitespace aside — by the
+ * start of the file, a line terminator, `;`, `}` (the end of the declaration
+ * before it) or `/` (the slash that closes a block comment).
+ *
+ * This is about skipping prose: `\bexport\b` alone matches "re-export",
+ * "they export it" and every other mention in a comment or string, and each one
+ * would cost a needless parse. The prefix leaves `// export …` matching — a
+ * comment whose first word is `export` — which is the accepted residue; it is
+ * deliberately never the other way round, since missing a real declaration
+ * would make the lexer's facts wrong rather than merely slower.
+ */
+const EXPORT_STATEMENT_PATTERN = /(?:^|[\n\r;}/])[ \t]*export\b/g
+
+/** Whitespace and comments, as they may sit between `export` and its head. */
+const TRIVIA_PATTERN = /(?:\s+|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*)+/y
+
+/**
+ * A TypeScript/Flow annotation on an exported binding: es-module-lexer 2.x
+ * stops enumerating a declarator list at the first `:` it meets, so
+ * `export const a: number = 1, b = 2` reports `a` alone and `b` is lost.
+ *
+ * Checked right after a reported name, which is exactly where the lexer stops.
+ * Matched across line terminators, so a label on the line below an export
+ * (`export let a` / `a: for (;;) {}`) falls back too — a parse, never a wrong
+ * answer.
+ */
+const BINDING_ANNOTATION_PATTERN = /\s*:/y
+
+function skipTrivia(content: string, index: number) {
+  TRIVIA_PATTERN.lastIndex = index
+  return TRIVIA_PATTERN.test(content) ? TRIVIA_PATTERN.lastIndex : index
+}
+
+/**
+ * Whether the file has an `export` declaration whose head es-module-lexer does
+ * not read faithfully — see {@link LEXABLE_EXPORT_HEAD_PATTERN}.
+ */
+function hasUnlexableExportHead(content: string) {
+  EXPORT_STATEMENT_PATTERN.lastIndex = 0
+  while (EXPORT_STATEMENT_PATTERN.exec(content) !== null) {
+    LEXABLE_EXPORT_HEAD_PATTERN.lastIndex = skipTrivia(
+      content,
+      EXPORT_STATEMENT_PATTERN.lastIndex,
+    )
+    const head = LEXABLE_EXPORT_HEAD_PATTERN.exec(content)
+    if (head === null) {
+      return true
+    }
+    if (head[0] === 'const') {
+      CONST_ENUM_HEAD_PATTERN.lastIndex = skipTrivia(
+        content,
+        LEXABLE_EXPORT_HEAD_PATTERN.lastIndex,
+      )
+      if (CONST_ENUM_HEAD_PATTERN.test(content)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
 /** A call head, member callees included: `withHoc(`, `React.memo(`. */
 const CALL_HEAD_PATTERN = new RegExp(
@@ -523,6 +612,10 @@ export function lexModule(
     return null // invisible to the lexer — see TYPE_EXPORT_PATTERN
   }
 
+  if (hasUnlexableExportHead(content)) {
+    return null // dropped or misread — see LEXABLE_EXPORT_HEAD_PATTERN
+  }
+
   let imports: readonly esModuleLexer.ImportSpecifier[]
   let exports: readonly esModuleLexer.ExportSpecifier[]
   let hasModuleSyntax: boolean
@@ -633,6 +726,10 @@ export function lexModule(
       // `export { type T }`: the lexer reports `type` and `T` as two exports
       if (TYPE_MODIFIER_PATTERN.test(content.slice(exp.ss, exp.s))) {
         return null // not plain JavaScript — see TYPE_MODIFIER_PATTERN
+      }
+      BINDING_ANNOTATION_PATTERN.lastIndex = exp.e
+      if (BINDING_ANNOTATION_PATTERN.test(content)) {
+        return null // the rest of the list is lost — see BINDING_ANNOTATION_PATTERN
       }
       let localName = exp.ln
       if (exp.n === 'default') {
