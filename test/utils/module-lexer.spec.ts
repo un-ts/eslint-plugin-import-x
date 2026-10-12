@@ -584,7 +584,16 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       'const /* c */ enum E { A }',
     ]) {
       expect(lexModule(`export const x = 1\nexport ${head}`, 'f.js')).toBeNull()
+      // reached through an import too, not just a readable export
+      expect(lexModule(`import './a.js'\nexport ${head}`, 'f.js')).toBeNull()
+      // and on its own, where the lexer sees no module syntax at all and the
+      // CommonJS attempt throws
+      expect(lexModule(`export ${head}`, 'f.js')).toBeNull()
     }
+    // a plain script keeps its parse-free route even when it mentions the word
+    expect(
+      lexModule(`const s = ';export enum E'\nmodule.exports = s`, 'f.js'),
+    ).toMatchObject({ format: 'script' })
   })
 
   it('keeps the heads the lexer does read on the lexer route', () => {
