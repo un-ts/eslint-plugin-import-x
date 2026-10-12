@@ -645,6 +645,10 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       'export let a: Foo = 1, b = 2',
       'export const a = 1, b: number = 2',
       'export const a: Record<string, number> = {}, b = 1',
+      // a comment between the binding and its annotation: the lexer still
+      // stops at the `:` and reports `a` alone
+      'export const a /* note */: number = 1, b = 2',
+      'export const a // note\n: number = 1, b = 2',
     ]) {
       expect(lexModule(source, 'f.js')).toBeNull()
     }
@@ -686,6 +690,7 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       'export const a: number = 1, b: number = 2, c: number = 3',
       'export const a = 1, b: number = 2',
       'export let a: Foo = 1, b = 2',
+      'export const a /* note */: number = 1, b = 2',
       'export const a = 1, b = 2, c = 3',
       'export const { a: b, c } = o',
       'export const [p, q] = arr',
