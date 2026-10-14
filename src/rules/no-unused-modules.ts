@@ -119,6 +119,9 @@ const DEFAULT = 'default'
 const DEFAULT_KEY = Symbol('default')
 const NAMESPACE_KEY = Symbol('namespace')
 const EXPORT_ALL_KEY = Symbol('export all')
+// `EXPORT_ALL_KEY` records which files `export * from` this one, so the file's
+// own `export *` statements are tracked under a separate key
+const OWN_EXPORT_ALL_KEY = Symbol('own export all')
 
 type ExportKey = string | symbol
 
@@ -580,12 +583,7 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
 
       exportCount.delete(EXPORT_ALL_KEY)
       exportCount.delete(NAMESPACE_KEY)
-      if (
-        exportCount.size === 0 &&
-        // `EXPORT_ALL_KEY` tracks who re-exports this file, so check for this
-        // file's own `export * from` statements separately
-        !node.body.some(s => s.type === AST_NODE_TYPES.ExportAllDeclaration)
-      ) {
+      if (exportCount.size === 0) {
         // node.body[0] === 'undefined' only happens, if everything is commented out in the file
         // being linted
         context.report({
@@ -718,6 +716,9 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
           forEachDeclarationIdentifier(s.declaration!, name => {
             newExportIdentifiers.add(name)
           })
+        }
+        if (s.type === AST_NODE_TYPES.ExportAllDeclaration) {
+          newExportIdentifiers.add(OWN_EXPORT_ALL_KEY)
         }
       }
 
