@@ -145,6 +145,10 @@ function createUnusedError(
         code: "export type * from 'a'",
         options: missingExportsOptions,
       }),
+      tValid({
+        code: "export * as default from 'a'",
+        options: missingExportsOptions,
+      }),
     ],
     invalid: [
       tInvalid({
@@ -163,6 +167,114 @@ function createUnusedError(
         errors: [{ messageId: 'notFound' }],
       }),
     ],
+  })
+
+  describe('missingExports with star re-exports', () => {
+    ruleTester.run('no-unused-modules', rule, {
+      // @typescript-eslint/parser is the default and is covered above
+      valid: [parsers.ESPREE, parsers.BABEL, parsers.HERMES].flatMap(parser => [
+        tValid({
+          code: "export * from './source'",
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all.js',
+          ),
+          options: missingExportsOptions,
+          languageOptions: { parser: require(parser) },
+        }),
+        tValid({
+          code: "export * as ns from './source'",
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all-as-ns.js',
+          ),
+          options: missingExportsOptions,
+          languageOptions: { parser: require(parser) },
+        }),
+        tValid({
+          code: "export * as default from './source'",
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all-as-default.js',
+          ),
+          options: missingExportsOptions,
+          languageOptions: { parser: require(parser) },
+        }),
+      ]),
+      invalid: [],
+    })
+  })
+
+  describe('missingExports with unusedExports on a star re-exporting file', () => {
+    const options: RuleOptions = [
+      {
+        missingExports: true,
+        unusedExports: true,
+        src: [testFilePath('./no-unused-modules/export-all')],
+      },
+    ]
+
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [
+        tValid({
+          code: "export * from './source'",
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all.js',
+          ),
+          options,
+        }),
+        tValid({
+          code: 'export const a = 1',
+          filename: testFilePath('./no-unused-modules/export-all/source.js'),
+          options,
+        }),
+      ],
+      invalid: [],
+    })
+
+    // the star re-export back-reference must survive the incremental update
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [
+        tValid({
+          code: 'export const a = 1',
+          filename: testFilePath('./no-unused-modules/export-all/source.js'),
+          options,
+        }),
+      ],
+      invalid: [],
+    })
+
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [],
+      invalid: [
+        tInvalid({
+          code: "export * from './source'; export const b = 1",
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all.js',
+          ),
+          options,
+          errors: [createUnusedError('b')],
+        }),
+        tInvalid({
+          code: 'const b = 1',
+          filename: testFilePath(
+            './no-unused-modules/export-all/export-all.js',
+          ),
+          options,
+          errors: [{ messageId: 'notFound' }],
+        }),
+      ],
+    })
+
+    // with the star re-export removed, `a` is no longer used
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [],
+      invalid: [
+        tInvalid({
+          code: 'export const a = 1',
+          filename: testFilePath('./no-unused-modules/export-all/source.js'),
+          options,
+          errors: [createUnusedError('a')],
+        }),
+      ],
+    })
   })
 
   // tests for exports
