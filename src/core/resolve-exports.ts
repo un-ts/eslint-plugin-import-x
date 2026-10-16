@@ -1,4 +1,9 @@
-import type { ExportMeta, ModuleInfo } from './module-info.js'
+import type {
+  ExportKind,
+  ExportMeta,
+  ModuleInfo,
+  ModuleReexportRecord,
+} from './module-info.js'
 
 /**
  * The core's export-resolution algorithms — star expansion, re-export chain
@@ -21,8 +26,8 @@ export function hasAnyExports(
     return false
   }
   seen.add(moduleInfo.path)
-  for (const resolveStar of moduleInfo.starExports) {
-    const inner = resolveStar()
+  for (const star of moduleInfo.starExports) {
+    const inner = star.resolveTarget()
     if (inner != null && hasAnyExports(inner, seen)) {
       return true
     }
@@ -49,8 +54,8 @@ export function hasExport(
   }
   seen.add(moduleInfo.path)
   if (name !== 'default') {
-    for (const resolveStar of moduleInfo.starExports) {
-      const inner = resolveStar()
+    for (const star of moduleInfo.starExports) {
+      const inner = star.resolveTarget()
       if (inner != null && hasExport(inner, name, seen)) {
         return true
       }
@@ -101,8 +106,8 @@ export function lookupExport(
 
   // default exports must be explicitly re-exported
   if (name !== 'default') {
-    for (const resolveStar of moduleInfo.starExports) {
-      const inner = resolveStar()
+    for (const star of moduleInfo.starExports) {
+      const inner = star.resolveTarget()
       if (inner == null || inner.path === moduleInfo.path) {
         continue
       }
@@ -149,8 +154,8 @@ export function deepResolveExport(
   }
 
   if (name !== 'default') {
-    for (const resolveStar of moduleInfo.starExports) {
-      const inner = resolveStar()
+    for (const star of moduleInfo.starExports) {
+      const inner = star.resolveTarget()
       // an unanalyzable star-export target could provide the name
       if (inner == null) {
         return { found: true, path: [moduleInfo.path] }
@@ -195,11 +200,103 @@ export function collectExportNames(
       names.add(name)
     }
   }
-  for (const resolveStar of moduleInfo.starExports) {
-    const inner = resolveStar()
+  for (const star of moduleInfo.starExports) {
+    const inner = star.resolveTarget()
     if (inner != null) {
       collectExportNames(inner, names, seen)
     }
   }
   return names
+}
+
+/**
+ * The declaration spaces `name` occupies, following re-export chains and
+ * import aliases, and merging every `export *` path that provides it.
+ *
+ * A type-only link (`export type`, `import type`, `export type *`) lets only
+ * the type side through: a value exported that way occupies no space, and a
+ * type-only link to what cannot be resolved is taken to carry a type.
+ *
+ * @param typeOnly Whether `name` is reached through a type-only link.
+ * @returns `null` when a link cannot be resolved — its module is unanalyzable
+ *   or does not export the linked name; `undefined` when the name occupies no
+ *   space — not exported, or a value exported type-only.
+ */
+export function resolveExportKind(
+  moduleInfo: ModuleInfo,
+  name: string,
+  typeOnly: boolean,
+  seen = new Set<string>(),
+): ExportKind | null | undefined {
+  // a repeat visit adds nothing to the merge, but the same module reached
+  // through a link of the other kind may
+  const visitKey = `${moduleInfo.path}\0${name}\0${typeOnly}`
+  if (seen.has(visitKey)) {
+    return
+  }
+  seen.add(visitKey)
+
+  const own = moduleInfo.ownExports.get(name)
+  if (own !== undefined) {
+    typeOnly ||= !!own.typeOnly
+    if (own.alias) {
+      return resolveLinkedKind(own.alias, typeOnly, seen)
+    }
+    const kind = own.kind ?? 'value'
+    return typeOnly ? typeSide(kind) : kind
+  }
+
+  const reexport = moduleInfo.reexports.get(name)
+  if (reexport !== undefined) {
+    return resolveLinkedKind(reexport, typeOnly, seen)
+  }
+
+  // default exports must be explicitly re-exported
+  if (name === 'default') {
+    return
+  }
+
+  let kind: ExportKind | null | undefined
+  for (const star of moduleInfo.starExports) {
+    const inner = star.resolveTarget()
+    if (inner == null) {
+      continue
+    }
+    kind = mergeKinds(
+      kind,
+      resolveExportKind(inner, name, typeOnly || !!star.typeOnly, seen),
+    )
+  }
+  return kind
+}
+
+function resolveLinkedKind(
+  link: ModuleReexportRecord,
+  typeOnly: boolean,
+  seen: Set<string>,
+): ExportKind | null | undefined {
+  typeOnly ||= !!link.typeOnly
+  const target = link.resolveTarget()
+  if (target == null || !target.hasExport(link.local)) {
+    return typeOnly ? 'type' : null
+  }
+  return resolveExportKind(target, link.local, typeOnly, seen)
+}
+
+function typeSide(kind: ExportKind): ExportKind | undefined {
+  return kind === 'value' ? undefined : 'type'
+}
+
+/** Two `export *` paths' answers; an unanalyzable one taints the result. */
+function mergeKinds(
+  a: ExportKind | null | undefined,
+  b: ExportKind | null | undefined,
+): ExportKind | null | undefined {
+  if (a === undefined || a === b) {
+    return b
+  }
+  if (b === undefined) {
+    return a
+  }
+  return a === null || b === null ? null : 'both'
 }
