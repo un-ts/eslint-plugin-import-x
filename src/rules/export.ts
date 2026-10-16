@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/types'
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { getExportNames, ModuleInfo } from '../core/index.js'
+import { getExportKind, getExportNames, ModuleInfo } from '../core/index.js'
 import {
   recursivePatternCapture,
   createRule,
@@ -29,7 +29,27 @@ ambient namespaces:
 */
 
 const rootProgram = 'root'
-const tsTypePrefix = 'type:'
+
+/**
+ * The exports of one name in one scope, by the declaration space each
+ * occupies: TypeScript lets a type and a value share one name.
+ */
+interface NamedExports {
+  value: Set<TSESTree.Node>
+  type: Set<TSESTree.Node>
+  /**
+   * `export * from` contributions, placed into their spaces at `Program:exit`:
+   * that takes resolving the name's kind, only worth doing when the name may
+   * collide.
+   */
+  stars: Array<{ node: TSESTree.ExportAllDeclaration; remote: ModuleInfo }>
+}
+
+function declarationType(node: TSESTree.Node) {
+  return node.type === AST_NODE_TYPES.ExportDefaultDeclaration
+    ? node.declaration.type
+    : node.parent?.type
+}
 
 /**
  * Remove function overloads like:
@@ -41,17 +61,31 @@ const tsTypePrefix = 'type:'
  *   return a
  * }
  * ```
+ *
+ * Without an implementation (ambient declarations), the first signature
+ * stands for the function.
  */
 function removeTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
-  for (const node of nodes) {
-    const declType =
-      node.type === AST_NODE_TYPES.ExportDefaultDeclaration
-        ? node.declaration.type
-        : node.parent?.type
-    if (declType === AST_NODE_TYPES.TSDeclareFunction) {
-      nodes.delete(node)
-    }
+  const overloads = [...nodes].filter(
+    node => declarationType(node) === AST_NODE_TYPES.TSDeclareFunction,
+  )
+  const hasImplementation = [...nodes].some(
+    node => declarationType(node) === AST_NODE_TYPES.FunctionDeclaration,
+  )
+  for (const node of hasImplementation ? overloads : overloads.slice(1)) {
+    nodes.delete(node)
   }
+}
+
+/**
+ * An export written out in this scope, other than an overload signature
+ * (overload-only declarations may coexist with a type-only alias).
+ */
+function isExplicitValue(node: TSESTree.Node) {
+  return (
+    node.type !== AST_NODE_TYPES.ExportAllDeclaration &&
+    declarationType(node) !== AST_NODE_TYPES.TSDeclareFunction
+  )
 }
 
 /**
@@ -135,14 +169,12 @@ export default createRule<[], MessageId>({
   create(context) {
     const namespace = new Map<
       'root' | TSESTree.TSModuleDeclaration,
-      Map<string, Set<TSESTree.Node>>
+      Map<string, NamedExports>
     >([[rootProgram, new Map()]])
 
-    function addNamed(
+    function getNamed(
       name: string,
-      node: TSESTree.Node,
       parent: TSESTree.TSModuleDeclaration | 'root',
-      isType?: boolean,
     ) {
       if (!namespace.has(parent)) {
         namespace.set(parent, new Map())
@@ -150,16 +182,47 @@ export default createRule<[], MessageId>({
 
       const named = namespace.get(parent)!
 
-      const key = isType ? `${tsTypePrefix}${name}` : name
+      let exports = named.get(name)
 
-      let nodes = named.get(key)
-
-      if (nodes == null) {
-        nodes = new Set()
-        named.set(key, nodes)
+      if (exports == null) {
+        exports = { value: new Set(), type: new Set(), stars: [] }
+        named.set(name, exports)
       }
 
-      nodes.add(node)
+      return exports
+    }
+
+    function addNamed(
+      name: string,
+      node: TSESTree.Node,
+      parent: TSESTree.TSModuleDeclaration | 'root',
+      isType?: boolean,
+    ) {
+      getNamed(name, parent)[isType ? 'type' : 'value'].add(node)
+    }
+
+    /**
+     * Place each `export *` contribution into the spaces its kind occupies,
+     * resolving the kind only when the name is exported more than once.
+     */
+    function placeStarExports(name: string, exports: NamedExports) {
+      const { value, type, stars } = exports
+      if (stars.length + value.size + type.size <= 1) {
+        return
+      }
+      for (const { node, remote } of stars) {
+        const kind = getExportKind(remote, name, node.exportKind === 'type')
+        if (kind === undefined) {
+          continue
+        }
+        // unresolvable (`null`) counts as a value
+        if (kind !== 'type') {
+          value.add(node)
+        }
+        if (kind === 'type' || kind === 'both') {
+          type.add(node)
+        }
+      }
     }
 
     function getParent(node: TSESTree.Node) {
@@ -182,6 +245,7 @@ export default createRule<[], MessageId>({
           getValue(node.exported),
           node.exported,
           getParent(node.parent!),
+          node.exportKind === 'type' || node.parent!.exportKind === 'type',
         )
       },
 
@@ -253,7 +317,7 @@ export default createRule<[], MessageId>({
         for (const name of getExportNames(remoteExports)) {
           if (name !== 'default') {
             any = true // poor man's filter
-            addNamed(name, node, parent)
+            getNamed(name, parent).stars.push({ node, remote: remoteExports })
           }
         }
 
@@ -268,39 +332,58 @@ export default createRule<[], MessageId>({
 
       'Program:exit'() {
         for (const [, named] of namespace) {
-          for (const [name, nodes] of named) {
-            if (nodes.size === 0) {
-              continue
+          for (const [name, exports] of named) {
+            placeStarExports(name, exports)
+
+            // a type-only specifier is an alias, which also conflicts with an
+            // explicit value export of its name
+            if ([...exports.value].some(isExplicitValue)) {
+              for (const node of exports.type) {
+                if (node.parent?.type === AST_NODE_TYPES.ExportSpecifier) {
+                  exports.value.add(node)
+                }
+              }
             }
 
-            removeTypescriptFunctionOverloads(nodes)
+            // a node in both spaces is still one export
+            const reported = new Set<TSESTree.Node>()
 
-            if (nodes.size <= 1) {
-              continue
-            }
-
-            if (isTypescriptNamespaceMerging(nodes)) {
-              continue
-            }
-
-            for (const node of nodes) {
-              if (shouldSkipTypescriptNamespace(node, nodes)) {
+            for (const nodes of [exports.value, exports.type]) {
+              if (nodes.size === 0) {
                 continue
               }
 
-              if (name === 'default') {
-                context.report({
-                  node,
-                  messageId: 'multiDefault',
-                })
-              } else {
-                context.report({
-                  node,
-                  messageId: 'multiNamed',
-                  data: {
-                    name: name.replace(tsTypePrefix, ''),
-                  },
-                })
+              removeTypescriptFunctionOverloads(nodes)
+
+              if (nodes.size <= 1) {
+                continue
+              }
+
+              if (isTypescriptNamespaceMerging(nodes)) {
+                continue
+              }
+
+              for (const node of nodes) {
+                if (
+                  reported.has(node) ||
+                  shouldSkipTypescriptNamespace(node, nodes)
+                ) {
+                  continue
+                }
+                reported.add(node)
+
+                if (name === 'default') {
+                  context.report({
+                    node,
+                    messageId: 'multiDefault',
+                  })
+                } else {
+                  context.report({
+                    node,
+                    messageId: 'multiNamed',
+                    data: { name },
+                  })
+                }
               }
             }
           }
