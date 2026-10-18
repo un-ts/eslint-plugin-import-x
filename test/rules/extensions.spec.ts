@@ -2,6 +2,7 @@ import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester
 
 import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 
+import { createNodeResolver } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/extensions'
 
 const ruleTester = new TSESLintRuleTester()
@@ -204,6 +205,40 @@ ruleTester.run('extensions', rule, {
   ],
 
   invalid: [
+    ...[false, true].flatMap(fix =>
+      [
+        ['./test-module', './test-module/index.js'],
+        ['@/renamed', '@/renamed/index.js'],
+      ].map(([importPath, fixedImportPath]) => {
+        const output = `import foo from "${fixedImportPath}";`
+        return tInvalid({
+          name: `preserves resolved directory imports: ${importPath} (fix: ${fix})`,
+          code: `import foo from "${importPath}";`,
+          options: ['always', { fix }],
+          settings: {
+            'import-x/resolver-next': createNodeResolver({
+              alias: { '@/renamed': [testFilePath('./test-module')] },
+            }),
+          },
+          errors: [
+            {
+              messageId: 'missingKnown',
+              data: { extension: 'js', importPath },
+              suggestions: fix
+                ? undefined
+                : [
+                    {
+                      messageId: 'addMissing',
+                      data: { extension: 'js', importPath, fixedImportPath },
+                      output,
+                    },
+                  ],
+            },
+          ],
+          output: fix ? output : null,
+        })
+      }),
+    ),
     tInvalid({
       name: 'self-reference subpath imports are not packages unless checkSelfReference is set',
       code: 'import { a } from "package-self-reference/sub"',
