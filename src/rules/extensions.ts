@@ -401,7 +401,10 @@ export default createRule<Options, MessageId>({
           if (extensionRequired && !extensionForbidden) {
             const fixedImportPath = stringifyPath({
               pathname: `${
-                /([\\/]|[\\/]?\.?\.)$/.test(importPath)
+                /([\\/]|[\\/]?\.?\.)$/.test(importPath) ||
+                (resolvedPath &&
+                  resolve(`${importPath}/index.${extension}`, context) ===
+                    resolvedPath)
                   ? `${
                       importPath.endsWith('/')
                         ? importPath.slice(0, -1)
