@@ -522,11 +522,23 @@ export default createRule<Options, MessageId>({
           ) {
             const fixedImportPath = extension
               ? stringifyPath({
-                  pathname: appendExtension(importPath, extension),
+                  pathname:
+                    /([\\/]|[\\/]?\.?\.)$/.test(importPath) ||
+                    (resolvedPath &&
+                      resolve(
+                        `${importPath}/index.${extension}`,
+                        context,
+                      ) === resolvedPath)
+                      ? `${
+                          importPath.endsWith("/")
+                            ? importPath.slice(0, -1)
+                            : importPath
+                        }/index.${extension}`
+                      : appendExtension(importPath, extension),
                   query,
                   hash,
                 })
-              : ''
+              : ""
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
                 return fixer.replaceText(
