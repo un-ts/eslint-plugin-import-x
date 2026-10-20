@@ -651,6 +651,7 @@ describe('ModuleInfo', () => {
       ['bar.js', true],
       ['deep-es7/b.js', true],
       ['cycles/typescript-depth-one-side-effect.ts', true],
+      ['cycles/typescript-depth-one-commented-side-effect.ts', true],
       ['common.js', false],
     ] as const
 

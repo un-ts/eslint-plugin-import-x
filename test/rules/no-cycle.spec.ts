@@ -304,6 +304,14 @@ ruleTester.run('no-cycle', rule, {
         'import-x/resolver': { 'eslint-import-resolver-typescript': true },
       },
     }),
+    tInvalid({
+      code: `import "./typescript-depth-one-commented-side-effect"`,
+      errors: [{ messageId: 'cycle' }],
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+    }),
 
     tInvalid({
       code: 'import { bar } from "./flow-types-depth-one"',
