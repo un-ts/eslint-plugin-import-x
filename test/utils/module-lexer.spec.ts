@@ -88,8 +88,7 @@ export default b
       'test.js',
     ) as LexedEsModule
 
-    // es-module-lexer reports these as ordinary own exports; only the join
-    // against `import * as` bindings reveals they are namespace objects
+    // v3 resolves namespace imports directly to namespace exports
     expect(result.namespaceExports).toEqual(
       expect.arrayContaining([
         { exported: 'b', specifier: './b.js' },
@@ -97,8 +96,12 @@ export default b
         { exported: 'default', specifier: './b.js' },
       ]),
     )
-    // a non-namespace binding stays an ordinary own export
-    expect(result.ownExports).toEqual(['plainDefault'])
+    // v3 resolves non-namespace imports to reexports (importName: 'default')
+    expect(result.reexports).toEqual(
+      expect.arrayContaining([
+        { exported: 'plainDefault', local: 'default', specifier: './p.js' },
+      ]),
+    )
   })
 
   it('falls back to the AST route for type-only imports', () => {
