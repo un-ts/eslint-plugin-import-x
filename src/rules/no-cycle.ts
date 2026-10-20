@@ -117,9 +117,12 @@ export default createRule<[Options?], MessageId>({
             // import type { Foo } (TS and Flow)
             (importer.importKind === 'type' ||
               // import { type Foo } (Flow)
-              importer.specifiers.every(
-                s => 'importKind' in s && s.importKind === 'type',
-              )))
+              // `import './foo'` and `import {} from './foo'` have no
+              // specifiers: they are side-effect imports, not type imports
+              (importer.specifiers.length > 0 &&
+                importer.specifiers.every(
+                  s => 'importKind' in s && s.importKind === 'type',
+                ))))
         ) {
           return // ignore type imports
         }
