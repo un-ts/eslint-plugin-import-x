@@ -282,6 +282,37 @@ ruleTester.run('no-cycle', rule, {
       errors: [createCycleSourceError('./depth-one:5')],
     }),
 
+    // Side-effect imports have no specifiers, but they still load the module,
+    // so they are not type-only imports (#480)
+    tInvalid({
+      code: `import "./es6/depth-one"`,
+      errors: [{ messageId: 'cycle' }],
+    }),
+    tInvalid({
+      code: `import {} from "./es6/depth-one"`,
+      errors: [{ messageId: 'cycle' }],
+    }),
+    tInvalid({
+      code: `import "./es6/depth-one-side-effect"`,
+      errors: [{ messageId: 'cycle' }],
+    }),
+    tInvalid({
+      code: `import "./typescript-depth-one-side-effect"`,
+      errors: [{ messageId: 'cycle' }],
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+    }),
+    tInvalid({
+      code: `import "./typescript-depth-one-commented-side-effect"`,
+      errors: [{ messageId: 'cycle' }],
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+    }),
+
     tInvalid({
       code: 'import { bar } from "./flow-types-depth-one"',
       languageOptions: { parser: require(parsers.BABEL) },
