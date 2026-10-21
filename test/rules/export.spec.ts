@@ -272,6 +272,34 @@ for (const { name, parser } of [
   })
 }
 
+ruleTester.run('export (Flow types)', rule, {
+  valid: [],
+  invalid: [
+    tInvalid({
+      code: `
+        export * from "./flowtypes";
+        export const MyType = 1;
+      `,
+      errors: [
+        { messageId: 'multiNamed', data: { name: 'MyType' }, line: 2 },
+        { messageId: 'multiNamed', data: { name: 'MyType' }, line: 3 },
+      ],
+      languageOptions: { parser: cjsRequire(parsers.BABEL) },
+    }),
+    tInvalid({
+      code: `
+        export * from "./export-type-star/flow-type-barrel";
+        export type MyType = {};
+      `,
+      errors: [
+        { messageId: 'multiNamed', data: { name: 'MyType' }, line: 2 },
+        { messageId: 'multiNamed', data: { name: 'MyType' }, line: 3 },
+      ],
+      languageOptions: { parser: cjsRequire(parsers.BABEL) },
+    }),
+  ],
+})
+
 describe('TypeScript', () => {
   const parserConfig = {
     settings: {
@@ -573,7 +601,52 @@ describe('TypeScript', () => {
         ],
         ...parserConfig,
       }),
+      tInvalid({
+        code: `
+          export * from "./export-type-star/partly-broken";
+          export type missing = string;
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'missing' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'missing' }, line: 3 },
+        ],
+        ...parserConfig,
+      }),
+      ...[
+        { name: 'I', declaration: 'export class I {}' },
+        { name: 'T', declaration: 'export enum T { A }' },
+      ].map(({ name, declaration }) =>
+        tInvalid({
+          code: `
+            ${declaration};
+            export * from "./export-type-star/mixed";
+          `,
+          errors: [
+            { messageId: 'multiNamed', data: { name }, line: 2 },
+            { messageId: 'multiNamed', data: { name }, line: 3 },
+          ],
+          ...parserConfig,
+        }),
+      ),
     ],
+  })
+
+  ruleTester.run('export (esModuleInterop default)', rule, {
+    valid: [
+      tValid({
+        code: `
+          export * from "./export-type-star/assign-type-barrel";
+          export const Options = 1;
+        `,
+        ...parserConfig,
+        languageOptions: {
+          parserOptions: {
+            tsconfigRootDir: testFilePath('typescript-export-assign-type'),
+          },
+        },
+      }),
+    ],
+    invalid: [],
   })
 
   ruleTester.run('export (type-only)', rule, {

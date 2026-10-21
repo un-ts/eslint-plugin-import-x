@@ -48,7 +48,7 @@ export { foo } from './foo'
 ```
 
 A type-only export such as `export type { Foo }` still conflicts with a value
-exported as `Foo`.
+`Foo` exported by name from the same module.
 
 ## Further Reading
 

@@ -218,9 +218,9 @@ export function collectExportNames(
  * type-only link to what cannot be resolved is taken to carry a type.
  *
  * @param typeOnly Whether `name` is reached through a type-only link.
- * @returns `null` when a link cannot be resolved — its module is unanalyzable
- *   or does not export the linked name; `undefined` when the name occupies no
- *   space — not exported, or a value exported type-only.
+ * @returns `null` when no path resolves the name — a link's module is
+ *   unanalyzable or does not export the linked name; `undefined` when the
+ *   name occupies no space — not exported, or a value exported type-only.
  */
 export function resolveExportKind(
   moduleInfo: ModuleInfo,
@@ -287,7 +287,10 @@ function typeSide(kind: ExportKind): ExportKind | undefined {
   return kind === 'value' ? undefined : 'type'
 }
 
-/** Two `export *` paths' answers; an unanalyzable one taints the result. */
+/**
+ * Two `export *` paths' answers. Next to a resolved kind, an unresolvable path
+ * counts as a value, so it adds that side instead of hiding the other.
+ */
 function mergeKinds(
   a: ExportKind | null | undefined,
   b: ExportKind | null | undefined,
@@ -298,5 +301,6 @@ function mergeKinds(
   if (b === undefined) {
     return a
   }
-  return a === null || b === null ? null : 'both'
+  const resolvedA = a ?? 'value'
+  return resolvedA === (b ?? 'value') ? resolvedA : 'both'
 }

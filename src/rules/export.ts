@@ -1,7 +1,12 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/types'
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { getExportKind, getExportNames, ModuleInfo } from '../core/index.js'
+import {
+  declarationKind,
+  getExportKind,
+  getExportNames,
+  ModuleInfo,
+} from '../core/index.js'
 import {
   recursivePatternCapture,
   createRule,
@@ -267,9 +272,7 @@ export default createRule<[], MessageId>({
             id.name,
             id,
             parent,
-            ['TSTypeAliasDeclaration', 'TSInterfaceDeclaration'].includes(
-              node.declaration.type,
-            ) || isTypeVariableDecl,
+            declarationKind(node.declaration) === 'type' || isTypeVariableDecl,
           )
         }
 
@@ -334,6 +337,21 @@ export default createRule<[], MessageId>({
         for (const [, named] of namespace) {
           for (const [name, exports] of named) {
             placeStarExports(name, exports)
+
+            // a local class or enum declares a type as well: it collides with a
+            // type an `export *` brings in, though it merges with a local
+            // interface
+            if (
+              [...exports.type].some(
+                node => node.type === AST_NODE_TYPES.ExportAllDeclaration,
+              )
+            ) {
+              for (const node of exports.value) {
+                if (node.parent && declarationKind(node.parent) === 'both') {
+                  exports.type.add(node)
+                }
+              }
+            }
 
             // a type-only specifier is an alias, which also conflicts with an
             // explicit value export of its name

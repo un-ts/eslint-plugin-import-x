@@ -462,7 +462,13 @@ function handleTsExportAssignment(
     return
   }
 
-  if (walk.isEsModuleInteropTrue() && !walk.facts.ownExports.has('default')) {
+  // any declaration other than a namespace provides the default itself, with
+  // its own kind
+  if (
+    walk.isEsModuleInteropTrue() &&
+    !walk.facts.ownExports.has('default') &&
+    exportedDecls.every(decl => decl.type === 'TSModuleDeclaration')
+  ) {
     addOwnExport(walk, 'default', {})
   }
 
@@ -567,7 +573,10 @@ function collectBindings(
       for (const s of n.specifiers) {
         const typeOnly =
           typeOnlyStatement ||
-          (s.type === 'ImportSpecifier' && s.importKind === 'type')
+          (s.type === 'ImportSpecifier' &&
+            (s.importKind === 'type' ||
+              // @ts-expect-error - flow type
+              s.importKind === 'typeof'))
         bindings.set(
           s.local.name,
           s.type === 'ImportNamespaceSpecifier'
@@ -587,11 +596,25 @@ function collectBindings(
       continue
     }
 
+    if (n.type === 'TSImportEqualsDeclaration') {
+      // `import A = require('./a')`, `import A = N.B`: what `A` names is not
+      // followed, so it counts as a value
+      bindings.set(n.id.name, n.importKind === 'type' ? { typeOnly: true } : {})
+      continue
+    }
+
     const declaration =
       n.type === 'ExportNamedDeclaration' ||
       n.type === 'ExportDefaultDeclaration'
         ? n.declaration
         : n
+    // the name of `export default (class A {})` binds nothing in the module
+    if (
+      declaration?.type === 'ClassExpression' ||
+      declaration?.type === 'FunctionExpression'
+    ) {
+      continue
+    }
     if (declaration?.type === 'VariableDeclaration') {
       for (const d of declaration.declarations) {
         recursivePatternCapture(d.id, id => {
@@ -614,16 +637,17 @@ function collectBindings(
 const declarationKinds = new Map<string, AstOwnExport['kind']>([
   ['TSTypeAliasDeclaration', 'type'],
   ['TSInterfaceDeclaration', 'type'],
-  // flowtype with @babel/eslint-parser
-  ['TypeAlias', 'type'],
-  ['InterfaceDeclaration', 'type'],
+  // flowtype with @babel/eslint-parser: Flow types and values are not told
+  // apart, so a Flow type still collides with a value of the same name
+  ['TypeAlias', 'both'],
+  ['InterfaceDeclaration', 'both'],
   ['ClassDeclaration', 'both'],
   // legacy parser type
   ['TSAbstractClassDeclaration', 'both'],
   ['TSEnumDeclaration', 'both'],
 ])
 
-function declarationKind(node: TSESTree.Node): AstOwnExport['kind'] {
+export function declarationKind(node: TSESTree.Node): AstOwnExport['kind'] {
   return declarationKinds.get(node.type)
 }
 
@@ -784,16 +808,37 @@ function addOwnExport(walk: Walk, name: string, meta: AstOwnExport): void {
   // `export const A = …` + `export type A = …` is one export of both kinds.
   // A declaration may share its name with an alias only when the alias target
   // occupies the other space — TypeScript rejects any overlap — so that pair
-  // spans both kinds too, and neither the alias nor its type-only flag
-  // describes the export. A namespace holding only types is the exception: it
+  // spans both kinds too. A namespace holding only types is the exception: it
   // may share its name with a value alias, which this counts as both.
+  // Neither the alias nor a type-only flag describes the merged export.
   const { alias, typeOnly: _typeOnly, ...declared } = meta
-  walk.facts.ownExports.set(
-    name,
-    previous.alias || alias
-      ? { ...declared, kind: 'both' }
-      : { ...meta, kind: unionKind(previous.kind, meta.kind) },
-  )
+  let kind: AstOwnExport['kind'] = 'both'
+  if (!previous.alias && !alias) {
+    const a = contribution(previous)
+    const b = contribution(meta)
+    if (a === null) {
+      kind = b ?? undefined
+    } else if (b === null) {
+      kind = a
+    } else {
+      kind = unionKind(a, b)
+    }
+  }
+  walk.facts.ownExports.set(name, { ...declared, kind })
+}
+
+/**
+ * What one export statement adds to a merged export: a type-only export only
+ * its type side, so `null` (nothing) for a value exported type-only.
+ */
+function contribution({
+  kind,
+  typeOnly,
+}: AstOwnExport): AstOwnExport['kind'] | null {
+  if (!typeOnly) {
+    return kind
+  }
+  return kind ? 'type' : null
 }
 
 /** The re-export target when `identifier` is a tracked namespace object. */

@@ -669,6 +669,13 @@ describe('ModuleInfo', () => {
       const moduleInfo = ModuleInfo.get('./export-type-star/merged', context)!
       expect(getExportKind(moduleInfo, 'ValueFirst')).toBe('both')
       expect(getExportKind(moduleInfo, 'TypeFirst')).toBe('both')
+
+      const typeOnly = ModuleInfo.get(
+        './export-type-star/local-type-merged',
+        context,
+      )!
+      expect(getExportKind(typeOnly, 'NamespaceFirst')).toBe('both')
+      expect(getExportKind(typeOnly, 'TypeFirst')).toBe('both')
     })
 
     it('spans both kinds when a declaration shares a name with an alias', () => {
@@ -691,6 +698,36 @@ describe('ModuleInfo', () => {
       const moduleInfo = ModuleInfo.get('./export-type-star/broken', context)!
       expect(getExportKind(moduleInfo, 'missing')).toBeNull()
       expect(getExportKind(moduleInfo, 'missing', true)).toBe('type')
+    })
+
+    it('counts an undetermined path as a value next to a resolved one', () => {
+      const moduleInfo = ModuleInfo.get(
+        './export-type-star/partly-broken',
+        context,
+      )!
+      expect(getExportKind(moduleInfo, 'missing')).toBe('both')
+    })
+
+    it('reads import-equals bindings, not expression names', () => {
+      const moduleInfo = ModuleInfo.get(
+        './export-type-star/binding-edges',
+        context,
+      )!
+      expect(getExportKind(moduleInfo, 'Types')).toBeUndefined()
+      expect(getExportKind(moduleInfo, 'Alias')).toBe('type')
+    })
+
+    it('treats Flow `import { typeof … }` as type-only', () => {
+      const flowContext = {
+        ...fakeContext,
+        settings: { 'import-x/parsers': { [parserPath]: ['.js'] } },
+      } as RuleContext
+      const moduleInfo = ModuleInfo.get(
+        './export-type-star/flow-typeof',
+        flowContext,
+      )!
+      expect(moduleInfo.parseError).toBeUndefined()
+      expect(getExportKind(moduleInfo, 'MyClass')).toBe('type')
     })
   })
 
