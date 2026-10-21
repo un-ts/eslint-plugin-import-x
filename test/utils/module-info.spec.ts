@@ -587,8 +587,15 @@ describe('ModuleInfo', () => {
           I: 'type',
           C: 'both',
           E: 'both',
-          N: 'both',
+          N: 'value',
           default: 'both',
+        },
+      },
+      {
+        source: 'namespaces',
+        kinds: {
+          Imported: 'value',
+          Reexported: 'value',
         },
       },
       {
@@ -671,6 +678,13 @@ describe('ModuleInfo', () => {
       )!
       expect(getExportKind(moduleInfo, 'AliasFirst')).toBe('both')
       expect(getExportKind(moduleInfo, 'TypeFirst')).toBe('both')
+
+      const namespaces = ModuleInfo.get(
+        './export-type-star/namespace-merged',
+        context,
+      )!
+      expect(getExportKind(namespaces, 'NamespaceFirst')).toBe('both')
+      expect(getExportKind(namespaces, 'AliasFirst')).toBe('both')
     })
 
     it('leaves a re-export of a name its target lacks undetermined', () => {

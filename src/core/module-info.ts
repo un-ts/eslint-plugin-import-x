@@ -146,8 +146,9 @@ export interface ExportMeta {
 }
 
 /**
- * The declaration spaces a name occupies: `'both'` for classes, enums and
- * namespaces, `'type'` for type aliases and interfaces.
+ * The declaration spaces a name occupies: `'both'` for classes and enums,
+ * `'type'` for type aliases and interfaces. A namespace is a value: TypeScript
+ * rejects a namespace name used as a type.
  */
 export type ExportKind = 'type' | 'value' | 'both'
 

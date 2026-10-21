@@ -321,7 +321,6 @@ function handleExportAll(walk: Walk, n: TSESTree.ExportAllDeclaration) {
     walk.namespaces.set(name, n.source.value)
     addOwnExport(walk, name, {
       namespaceTargetPath: p,
-      kind: 'both',
       ...(n.exportKind === 'type' && { typeOnly: true }),
     })
     return
@@ -416,7 +415,6 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
         if (source !== undefined) {
           addOwnExport(walk, getValue(s.exported), {
             namespaceTargetPath: walk.remotePath(source),
-            kind: 'both',
           })
         }
         break
@@ -495,20 +493,15 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
     addOwnExport(walk, (decl.body.id as TSESTree.Identifier).name, {
       getDoc: walk.captureDoc(decl.body),
       inferred: true,
-      kind: 'both',
     })
     return
   } else if (type === 'TSModuleBlock' && decl.kind === 'namespace') {
     const getDoc = walk.captureDoc(decl.body)
     if ('name' in decl.id) {
-      addOwnExport(walk, decl.id.name, { getDoc, inferred: true, kind: 'both' })
+      addOwnExport(walk, decl.id.name, { getDoc, inferred: true })
     } else {
       // TODO: handle left TSQualifiedName: `declare module foo.bar.baz`
-      addOwnExport(walk, decl.id.right.name, {
-        getDoc,
-        inferred: true,
-        kind: 'both',
-      })
+      addOwnExport(walk, decl.id.right.name, { getDoc, inferred: true })
     }
   }
 
@@ -578,7 +571,7 @@ function collectBindings(
         bindings.set(
           s.local.name,
           s.type === 'ImportNamespaceSpecifier'
-            ? { kind: 'both', ...(typeOnly && { typeOnly: true }) }
+            ? { ...(typeOnly && { typeOnly: true }) }
             : {
                 alias: {
                   local:
@@ -628,7 +621,6 @@ const declarationKinds = new Map<string, AstOwnExport['kind']>([
   // legacy parser type
   ['TSAbstractClassDeclaration', 'both'],
   ['TSEnumDeclaration', 'both'],
-  ['TSModuleDeclaration', 'both'],
 ])
 
 function declarationKind(node: TSESTree.Node): AstOwnExport['kind'] {
@@ -792,8 +784,10 @@ function addOwnExport(walk: Walk, name: string, meta: AstOwnExport): void {
   // `export const A = …` + `export type A = …` is one export of both kinds.
   // A declaration may share its name with an alias only when the alias target
   // occupies the other space — TypeScript rejects any overlap — so that pair
-  // spans both kinds too, and the alias no longer describes the export.
-  const { alias, ...declared } = meta
+  // spans both kinds too, and neither the alias nor its type-only flag
+  // describes the export. A namespace holding only types is the exception: it
+  // may share its name with a value alias, which this counts as both.
+  const { alias, typeOnly: _typeOnly, ...declared } = meta
   walk.facts.ownExports.set(
     name,
     previous.alias || alias

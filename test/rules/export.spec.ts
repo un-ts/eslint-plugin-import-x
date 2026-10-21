@@ -440,6 +440,13 @@ describe('TypeScript', () => {
         `,
         ...parserConfig,
       }),
+      ...[
+        'export * from "./export-type-star/mixed"; export type N = string',
+        'export type * from "./export-type-star/mixed"; export type N = string',
+        'export type * from "./export-type-star/mixed"; export type { N } from "./export-type-star/mixed"',
+        'export type * from "./export-type-star/namespaces"; export type Imported = string',
+        'export type * from "./export-type-star/namespaces"; export type Reexported = string',
+      ].map(code => tValid({ code, ...parserConfig })),
     ],
     invalid: [
       ...[
@@ -471,7 +478,7 @@ describe('TypeScript', () => {
         ],
         ...parserConfig,
       }),
-      ...['T', 'I', 'C', 'E', 'N'].map(name =>
+      ...['T', 'I', 'C', 'E'].map(name =>
         tInvalid({
           code: `
             export type * from "./export-type-star/mixed";
