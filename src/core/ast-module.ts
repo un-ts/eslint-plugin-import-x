@@ -462,12 +462,12 @@ function handleTsExportAssignment(
     return
   }
 
-  // any declaration other than a namespace provides the default itself, with
-  // its own kind
+  // a namespace adds no default of its own, so the synthesized one carries
+  // its value side; any other declaration provides the default itself
   if (
     walk.isEsModuleInteropTrue() &&
     !walk.facts.ownExports.has('default') &&
-    exportedDecls.every(decl => decl.type === 'TSModuleDeclaration')
+    exportedDecls.some(decl => decl.type === 'TSModuleDeclaration')
   ) {
     addOwnExport(walk, 'default', {})
   }

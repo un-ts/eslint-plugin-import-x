@@ -21,10 +21,6 @@ export type { DefaultExportSourceName } from './ast-module.js'
 const exportNamesCache = new WeakMap<ModuleInfo, ReadonlySet<string>>()
 const starExportPathsCache = new WeakMap<ModuleInfo, readonly string[]>()
 const deepExportCache = new WeakMap<ModuleInfo, Map<string, DeepExportResult>>()
-const exportKindCache = new WeakMap<
-  ModuleInfo,
-  Map<string, ExportKind | null | undefined>
->()
 
 /** The outcome of {@link resolveDeepExport}; treat as read-only. */
 export interface DeepExportResult {
@@ -121,9 +117,6 @@ export function getExportNames(moduleInfo: ModuleInfo): ReadonlySet<string> {
  * The declaration spaces an exported name occupies — TypeScript lets a type
  * and a value share one name.
  *
- * Memoized: `export` asks once per `export *` per colliding name, and each
- * ask follows the name's whole re-export graph.
- *
  * @param typeOnly Whether the name is reached through a type-only export
  *   (`export type * from`), which lets only its type side through.
  * @returns `null` when no re-export or import leading to the name can be
@@ -135,19 +128,7 @@ export function getExportKind(
   name: string,
   typeOnly = false,
 ): ExportKind | null | undefined {
-  let perName = exportKindCache.get(moduleInfo)
-  if (perName === undefined) {
-    perName = new Map()
-    exportKindCache.set(moduleInfo, perName)
-  }
-  // the prefixes differ in their first character, so no name collides
-  const key = `${typeOnly}\0${name}`
-  if (perName.has(key)) {
-    return perName.get(key)
-  }
-  const kind = resolveExportKind(moduleInfo, name, typeOnly)
-  perName.set(key, kind)
-  return kind
+  return resolveExportKind(moduleInfo, name, typeOnly)
 }
 
 /** Names exported by this module's own code; see {@link hasOwnExport}. */

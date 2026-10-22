@@ -646,7 +646,24 @@ describe('TypeScript', () => {
         },
       }),
     ],
-    invalid: [],
+    invalid: [
+      tInvalid({
+        code: `
+          export * from "./export-type-star/assign-merged-barrel";
+          export const Options = 1;
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'Options' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'Options' }, line: 3 },
+        ],
+        ...parserConfig,
+        languageOptions: {
+          parserOptions: {
+            tsconfigRootDir: testFilePath('typescript-export-assign-type'),
+          },
+        },
+      }),
+    ],
   })
 
   ruleTester.run('export (type-only)', rule, {
