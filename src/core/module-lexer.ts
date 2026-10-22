@@ -213,13 +213,12 @@ const LINE_SEPARATOR_PATTERN = /[\u2028\u2029]/
 const TYPE_EXPORT_PATTERN = /\bexport\s+(?:type|typeof)\b/
 
 /**
- * Declaration heads es-module-lexer 2.x — the pinned line — reads. Everything
- * else it either reports nothing for (`export enum E {}`, `export namespace N
- * {}`, `export module M {}`, `export interface I {}`, `export using u = r`,
- * `export @dec class A {}`) or reads under the wrong name (`export abstract
- * class A {}` reports `s`, `export declare function f() {}` reports `declare`,
- * `export const enum E {}` reports `enum`, `export await using b = r` reports
- * `""`).
+ * Declaration heads es-module-lexer 3.0.x reads. v3 extended support relative
+ * to v2 to include `enum`, `const enum`, `namespace`, `interface`, and
+ * annotated declarator lists (`export const a: number = 1, b = 2`). Heads it
+ * still reports nothing for or misreads: `export module M {}`, `export using u
+ * = r`, `export await using b = r`, `export @dec class A {}` (reports nothing
+ * or an empty name).
  *
  * Standalone, such a file bails on its own — the lexer reports no module syntax
  * at all, the CommonJS attempt throws and `lexModule` returns `null`. Mixed with
@@ -251,7 +250,7 @@ const CONST_ENUM_HEAD_PATTERN = /enum\b/y
  * deliberately never the other way round, since missing a real declaration
  * would make the lexer's facts wrong rather than merely slower.
  */
-const EXPORT_STATEMENT_PATTERN = /(?:^|[\n\r;}/])[ \t\uFEFF]*export\b/g
+const EXPORT_STATEMENT_PATTERN = /(?:^|[\n\r;}/])[^\S\r\n]*export\b/g
 
 /** Whitespace and comments, as they may sit between `export` and its head. */
 const TRIVIA_PATTERN = /(?:\s+|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*)+/y
@@ -601,10 +600,7 @@ export function lexModule(
   // lexer, so it takes the CommonJS branch below and `cjsModuleLexer.parse`
   // throws on it. Scanning before this point would also drop plain scripts
   // that merely mention `export` in a string or comment onto the AST route.
-  if (
-    (exports.length > 0 || imports.length > 0) &&
-    hasUnlexableExportHead(content)
-  ) {
+  if (hasModuleSyntax && hasUnlexableExportHead(content)) {
     return null // dropped or misread — see LEXABLE_EXPORT_HEAD_PATTERN
   }
 

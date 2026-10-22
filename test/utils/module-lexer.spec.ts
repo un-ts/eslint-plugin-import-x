@@ -596,6 +596,19 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
         lexModule(`export const x = 1\n\uFEFFexport ${head}`, 'f.js'),
       ).toBeNull()
     }
+    // form feed and other ECMAScript whitespace before an unlexable export head
+    for (const head of ['module M {}', 'using u = r', '@dec class A {}']) {
+      expect(
+        lexModule(`export const x = 1\n\fexport ${head}`, 'f.js'),
+      ).toBeNull()
+      expect(
+        lexModule(`export const x = 1\n\u00A0export ${head}`, 'f.js'),
+      ).toBeNull()
+    }
+    // export {} has hasModuleSyntax but no entries; the gate must still check
+    for (const head of ['module M {}', 'using u = r', '@dec class A {}']) {
+      expect(lexModule(`export {}\nexport ${head}`, 'f.js')).toBeNull()
+    }
     // a plain script keeps its parse-free route even when it mentions the word
     expect(
       lexModule(`const s = ';export enum E'\nmodule.exports = s`, 'f.js'),
