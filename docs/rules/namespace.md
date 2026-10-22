@@ -12,6 +12,8 @@ Also, will report for computed references (i.e. `foo["bar"]()`).
 
 Reports on assignment to a member of an imported namespace.
 
+In TypeScript, a name exported only as a type (`export type Foo`, `export interface Foo`, `export type { Foo }`, `export type * from`) is not on the namespace object at runtime, so accessing it as a value (`ns.Foo`) is reported as well. Using it as a type (`let x: ns.Foo`) is fine.
+
 Note: for packages, the plugin will find exported names
 from [`jsnext:main`], if present in `package.json`.
 Redux's npm module includes this key, and thereby is lintable, for example.
