@@ -590,6 +590,12 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       // CommonJS attempt throws
       expect(lexModule(`export ${head}`, 'f.js')).toBeNull()
     }
+    // a BOM immediately after a newline must not hide an unlexable export head
+    for (const head of ['enum E { A }', 'interface I {}', 'namespace N {}']) {
+      expect(
+        lexModule(`export const x = 1\n\uFEFFexport ${head}`, 'f.js'),
+      ).toBeNull()
+    }
     // a plain script keeps its parse-free route even when it mentions the word
     expect(
       lexModule(`const s = ';export enum E'\nmodule.exports = s`, 'f.js'),

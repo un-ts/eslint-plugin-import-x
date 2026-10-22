@@ -251,7 +251,7 @@ const CONST_ENUM_HEAD_PATTERN = /enum\b/y
  * deliberately never the other way round, since missing a real declaration
  * would make the lexer's facts wrong rather than merely slower.
  */
-const EXPORT_STATEMENT_PATTERN = /(?:^|[\n\r;}/])[ \t]*export\b/g
+const EXPORT_STATEMENT_PATTERN = /(?:^|[\n\r;}/])[ \t\uFEFF]*export\b/g
 
 /** Whitespace and comments, as they may sit between `export` and its head. */
 const TRIVIA_PATTERN = /(?:\s+|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*)+/y
