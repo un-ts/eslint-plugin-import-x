@@ -126,13 +126,42 @@ export interface ExportMeta {
    * written in an explicit export statement.
    */
   inferred?: boolean
+  /**
+   * The declaration spaces the exported binding occupies — TypeScript lets a
+   * type and a value share one name. Absent: a value, the only kind plain
+   * JavaScript has. Meaningless when {@link alias} is present.
+   */
+  kind?: Exclude<ExportKind, 'value'>
+  /**
+   * Exported through a type-only form (`export type { a }`,
+   * `export { type a }`), or names a namespace imported through one
+   * (`import type * as ns`).
+   */
+  typeOnly?: true
+  /**
+   * Present when the export names an imported binding
+   * (`import { a } from './x'; export { a }`): where that binding comes from.
+   */
+  alias?: ModuleReexportRecord
 }
+
+/**
+ * The declaration spaces a name occupies: `'both'` for classes and enums,
+ * `'type'` for type aliases and interfaces. A namespace is a value: TypeScript
+ * rejects a namespace name used as a type.
+ */
+export type ExportKind = 'type' | 'value' | 'both'
 
 /** One `export { local as exported } from '...'` record. */
 export interface ModuleReexportRecord {
   local: string
   /** Lazily analyze the source module; `null` when unanalyzable. */
   resolveTarget: () => ModuleInfo | null
+  /**
+   * `export type { a } from`, `export { type a } from`; for an
+   * {@link ExportMeta.alias}, `import type { a }`, `import { type a }`.
+   */
+  typeOnly?: true
 }
 
 /**
@@ -334,16 +363,13 @@ export class ModuleInfo {
       ownExports.set(exported, { namespaceTargetPath: resolvePath(specifier) })
     }
 
-    const reexports = new Map<
-      string,
-      { local: string; targetPath: string | null }
-    >()
+    const reexports: AstModuleFacts['reexports'] = new Map()
     for (const { exported, local, specifier } of lexed.reexports) {
       reexports.set(exported, { local, targetPath: resolvePath(specifier) })
     }
 
     const imports = new Map<string, ModuleImportDeclaration[]>()
-    const starExportPaths: string[] = []
+    const starExports: AstModuleFacts['starExports'] = []
     for (const imp of lexed.imports) {
       const p = resolvePath(imp.specifier)
       if (p == null) {
@@ -361,7 +387,7 @@ export class ModuleInfo {
         imports.set(p, [declaration])
       }
       if (imp.starReexport) {
-        starExportPaths.push(p)
+        starExports.push({ targetPath: p })
       }
     }
 
@@ -370,7 +396,7 @@ export class ModuleInfo {
       cacheable: true,
       ownExports,
       reexports,
-      starExportPaths,
+      starExports,
       imports,
       defaultExportSourceName: lexed.defaultExportSourceName,
     }
@@ -394,14 +420,38 @@ export class ModuleInfo {
     info.defaultExportSourceName = facts.defaultExportSourceName
     info.surface = facts.surface
 
+    const link = (
+      local: string,
+      targetPath: () => string | null | undefined,
+      typeOnly: true | undefined,
+    ): ModuleReexportRecord => ({
+      local,
+      resolveTarget: () => {
+        const path = targetPath()
+        return path == null ? null : info.resolvePath(path)
+      },
+      ...(typeOnly && { typeOnly }),
+    })
+
     for (const [name, own] of facts.ownExports) {
-      const targetPath = own.namespaceTargetPath
+      const { namespaceTargetPath: targetPath, alias } = own
       info.ownExports.set(name, {
         ...(own.getDoc && { getDoc: own.getDoc }),
         ...(own.inferred && { inferred: true }),
         ...(targetPath !== undefined && {
           getNamespace: () =>
             targetPath == null ? null : info.resolvePath(targetPath),
+        }),
+        ...(own.kind && { kind: own.kind }),
+        ...(own.typeOnly && { typeOnly: true }),
+        ...(alias && {
+          // resolved only when followed: just kind lookups do
+          alias: link(
+            alias.local,
+            () =>
+              relative(alias.specifier, filepath, context.settings, context),
+            alias.typeOnly,
+          ),
         }),
       })
     }
@@ -417,16 +467,18 @@ export class ModuleInfo {
       info.ownExports.set('default', {})
     }
 
-    for (const [name, { local, targetPath }] of facts.reexports) {
-      info.reexports.set(name, {
-        local,
-        resolveTarget: () =>
-          targetPath == null ? null : info.resolvePath(targetPath),
-      })
+    for (const [name, { local, targetPath, typeOnly }] of facts.reexports) {
+      info.reexports.set(
+        name,
+        link(local, () => targetPath, typeOnly),
+      )
     }
 
-    for (const p of facts.starExportPaths) {
-      info.starExports.push(() => info.resolvePath(p))
+    for (const { targetPath, typeOnly } of facts.starExports) {
+      info.starExports.push({
+        resolveTarget: () => info.resolvePath(targetPath),
+        ...(typeOnly && { typeOnly }),
+      })
     }
 
     for (const [p, declarations] of facts.imports) {
@@ -453,8 +505,11 @@ export class ModuleInfo {
   readonly ownExports = new Map<string, ExportMeta>()
   /** @internal Re-exported names (`export { local as exported } from`). */
   readonly reexports = new Map<string, ModuleReexportRecord>()
-  /** @internal `export * from '...'` targets, lazily resolved. */
-  readonly starExports: Array<() => ModuleInfo | null> = []
+  /**
+   * @internal `export * from '...'` targets, lazily resolved; `typeOnly` for
+   *   `export type * from`.
+   */
+  readonly starExports: Array<Omit<ModuleReexportRecord, 'local'>> = []
   /** @internal Imported modules, keyed by resolved path. */
   readonly imports = new Map<string, ModuleInfoImport>()
 

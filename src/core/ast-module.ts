@@ -20,7 +20,7 @@ import { visit } from '../utils/visit.js'
 
 import type { DocCommentBlock } from './module-doc.js'
 import { captureDoc, parseComment } from './module-doc.js'
-import type { ModuleImportDeclaration } from './module-info.js'
+import type { ExportMeta, ModuleImportDeclaration } from './module-info.js'
 import type { DefaultExportSourceName } from './module-lexer.js'
 
 /**
@@ -51,6 +51,22 @@ export interface AstOwnExport {
    * written in an explicit export statement.
    */
   inferred?: boolean
+  /** See `ExportMeta#kind`. */
+  kind?: ExportMeta['kind']
+  /** See `ExportMeta#typeOnly`. */
+  typeOnly?: true
+  /**
+   * See `ExportMeta#alias` — by specifier: only resolved when followed.
+   * `typeOnly` for `import type { a }`, `import { type a }`.
+   */
+  alias?: { local: string; specifier: string; typeOnly?: true }
+}
+
+/** A link to what the module at `targetPath` exports as `local`. */
+export interface AstReexport {
+  local: string
+  targetPath: string | null
+  typeOnly?: true
 }
 
 export interface AstModuleFacts {
@@ -63,9 +79,9 @@ export interface AstModuleFacts {
    */
   cacheable: boolean
   ownExports: Map<string, AstOwnExport>
-  reexports: Map<string, { local: string; targetPath: string | null }>
-  /** Resolved paths of `export * from '...'` targets. */
-  starExportPaths: string[]
+  reexports: Map<string, AstReexport>
+  /** `export * from '...'` targets by resolved path. */
+  starExports: Array<{ targetPath: string; typeOnly?: true }>
   /** Import declarations, keyed by resolved path. */
   imports: Map<string, ModuleImportDeclaration[]>
   defaultExportSourceName?: DefaultExportSourceName
@@ -107,6 +123,8 @@ interface Walk {
    * object.
    */
   namespaces: Map<string, string>
+  /** See {@link collectBindings}. */
+  bindings(): Map<string, LocalBinding>
   remotePath(specifier: string): string | null
   isEsModuleInteropTrue(): boolean
   ast: TSESTree.Program
@@ -167,7 +185,7 @@ export function analyzeAstModule(
     cacheable: false,
     ownExports: new Map(),
     reexports: new Map(),
-    starExportPaths: [],
+    starExports: [],
     imports: new Map(),
   }
 
@@ -203,6 +221,7 @@ export function analyzeAstModule(
       ? (...nodes) => captureDoc(getSource, context.settings, ...nodes)
       : noDocCapture,
     namespaces: new Map(),
+    bindings: lazy(() => collectBindings(ast.body)),
     remotePath: specifier =>
       relative(specifier, filepath, context.settings, context) ?? null,
     isEsModuleInteropTrue: lazy(
@@ -281,9 +300,12 @@ function handleImport(walk: Walk, n: TSESTree.ImportDeclaration) {
 function handleExportDefault(walk: Walk, n: TSESTree.ExportDefaultDeclaration) {
   addOwnExport(walk, 'default', {
     getDoc: walk.captureDoc(n),
-    ...(n.declaration.type === 'Identifier' && {
-      namespaceTargetPath: namespaceTargetOf(walk, n.declaration.name),
-    }),
+    ...(n.declaration.type === 'Identifier'
+      ? {
+          namespaceTargetPath: namespaceTargetOf(walk, n.declaration.name),
+          ...walk.bindings().get(n.declaration.name),
+        }
+      : { kind: declarationKind(n.declaration) }),
   })
   walk.facts.defaultExportSourceName ??= resolveDefaultName(n.declaration)
 }
@@ -297,11 +319,17 @@ function handleExportAll(walk: Walk, n: TSESTree.ExportAllDeclaration) {
     // ordinary runtime dependency on the source module (hence `p` above)
     const name = getValue(n.exported)
     walk.namespaces.set(name, n.source.value)
-    addOwnExport(walk, name, { namespaceTargetPath: p })
+    addOwnExport(walk, name, {
+      namespaceTargetPath: p,
+      ...(n.exportKind === 'type' && { typeOnly: true }),
+    })
     return
   }
   if (p != null) {
-    walk.facts.starExportPaths.push(p)
+    walk.facts.starExports.push({
+      targetPath: p,
+      ...(n.exportKind === 'type' && { typeOnly: true }),
+    })
   }
 }
 
@@ -339,6 +367,7 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
       case 'TSModuleDeclaration': {
         addOwnExport(walk, (n.declaration.id as TSESTree.Identifier).name, {
           getDoc: walk.captureDoc(n),
+          kind: declarationKind(n.declaration),
         })
         break
       }
@@ -362,7 +391,7 @@ function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {
   for (const s of n.specifiers as readonly MaybeLegacyExportSpecifier[]) {
     switch (s.type) {
       case 'ExportSpecifier': {
-        processExportSpecifier(walk, s, source)
+        processExportSpecifier(walk, s, source, n.exportKind === 'type')
         if (source === undefined && getValue(s.exported) === 'default') {
           // export { foo as default }
           walk.facts.defaultExportSourceName ??= resolveDefaultName(s)
@@ -433,7 +462,13 @@ function handleTsExportAssignment(
     return
   }
 
-  if (walk.isEsModuleInteropTrue() && !walk.facts.ownExports.has('default')) {
+  // a namespace adds no default of its own, so the synthesized one carries
+  // its value side; any other declaration provides the default itself
+  if (
+    walk.isEsModuleInteropTrue() &&
+    !walk.facts.ownExports.has('default') &&
+    exportedDecls.some(decl => decl.type === 'TSModuleDeclaration')
+  ) {
     addOwnExport(walk, 'default', {})
   }
 
@@ -444,6 +479,7 @@ function handleTsExportAssignment(
       // export as default
       addOwnExport(walk, 'default', {
         getDoc: walk.captureDoc(decl),
+        kind: declarationKind(decl),
       })
     }
   }
@@ -499,9 +535,131 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
       addOwnExport(walk, (namespaceDecl.id as TSESTree.Identifier).name, {
         getDoc: walk.captureDoc(moduleBlockNode),
         inferred: true,
+        kind: declarationKind(namespaceDecl),
       })
     }
   }
+}
+
+/**
+ * What exporting a top-level binding by name exports: a declaration's kind, a
+ * namespace import, or a link to where a named or default import comes from.
+ */
+type LocalBinding = Pick<AstOwnExport, 'kind' | 'typeOnly' | 'alias'>
+
+/**
+ * Top-level bindings by name, for exports that name a binding rather than
+ * declare it. Collected over the whole body up front: `export { a }` may
+ * precede the declaration of `a`.
+ */
+function collectBindings(
+  body: TSESTree.ProgramStatement[],
+): Map<string, LocalBinding> {
+  const bindings = new Map<string, LocalBinding>()
+
+  const declare = (name: string, kind?: AstOwnExport['kind']) => {
+    const previous = bindings.get(name)
+    bindings.set(name, {
+      kind: previous ? unionKind(previous.kind, kind) : kind,
+    })
+  }
+
+  for (const n of body) {
+    if (n.type === 'ImportDeclaration') {
+      const typeOnlyStatement =
+        n.importKind === 'type' ||
+        // @ts-expect-error - flow type
+        n.importKind === 'typeof'
+      for (const s of n.specifiers) {
+        const typeOnly =
+          typeOnlyStatement ||
+          (s.type === 'ImportSpecifier' &&
+            (s.importKind === 'type' ||
+              // @ts-expect-error - flow type
+              s.importKind === 'typeof'))
+        bindings.set(
+          s.local.name,
+          s.type === 'ImportNamespaceSpecifier'
+            ? { ...(typeOnly && { typeOnly: true }) }
+            : {
+                alias: {
+                  local:
+                    s.type === 'ImportDefaultSpecifier'
+                      ? 'default'
+                      : getValue(s.imported),
+                  specifier: n.source.value,
+                  ...(typeOnly && { typeOnly: true }),
+                },
+              },
+        )
+      }
+      continue
+    }
+
+    if (n.type === 'TSImportEqualsDeclaration') {
+      // `import A = require('./a')`, `import A = N.B`: what `A` names is not
+      // followed, so it counts as a value
+      bindings.set(n.id.name, n.importKind === 'type' ? { typeOnly: true } : {})
+      continue
+    }
+
+    const declaration =
+      n.type === 'ExportNamedDeclaration' ||
+      n.type === 'ExportDefaultDeclaration'
+        ? n.declaration
+        : n
+    // the name of `export default (class A {})` binds nothing in the module
+    if (
+      declaration?.type === 'ClassExpression' ||
+      declaration?.type === 'FunctionExpression'
+    ) {
+      continue
+    }
+    if (declaration?.type === 'VariableDeclaration') {
+      for (const d of declaration.declarations) {
+        recursivePatternCapture(d.id, id => {
+          declare((id as TSESTree.Identifier).name)
+        })
+      }
+    } else if (
+      declaration != null &&
+      'id' in declaration &&
+      declaration.id?.type === 'Identifier'
+    ) {
+      declare(declaration.id.name, declarationKind(declaration))
+    }
+  }
+
+  return bindings
+}
+
+/** Declarations occupying more than the value space, by node type. */
+const declarationKinds = new Map<string, AstOwnExport['kind']>([
+  ['TSTypeAliasDeclaration', 'type'],
+  ['TSInterfaceDeclaration', 'type'],
+  // flowtype with @babel/eslint-parser: Flow types and values are not told
+  // apart, so a Flow type still collides with a value of the same name
+  ['TypeAlias', 'both'],
+  ['InterfaceDeclaration', 'both'],
+  ['ClassDeclaration', 'both'],
+  // legacy parser type
+  ['TSAbstractClassDeclaration', 'both'],
+  ['TSEnumDeclaration', 'both'],
+])
+
+export function declarationKind(node: TSESTree.Node): AstOwnExport['kind'] {
+  return declarationKinds.get(node.type)
+}
+
+/**
+ * A name declared twice (`class A {}` + `interface A {}`) spans both kinds;
+ * `undefined` is a value, as everywhere.
+ */
+function unionKind(
+  a: AstOwnExport['kind'],
+  b: AstOwnExport['kind'],
+): AstOwnExport['kind'] {
+  return a === b ? a : 'both'
 }
 
 // ─── shared capture helpers ────────────────────────────────────────────────
@@ -514,16 +672,22 @@ function processExportSpecifier(
   walk: Walk,
   s: TSESTree.ExportSpecifier,
   source: string | undefined,
+  typeOnlyStatement: boolean,
 ) {
   const exported = getValue(s.exported)
+  const local = getValue(s.local)
+  const typeOnly = typeOnlyStatement || s.exportKind === 'type'
   if (source === undefined) {
     addOwnExport(walk, exported, {
-      namespaceTargetPath: namespaceTargetOf(walk, getValue(s.local)),
+      namespaceTargetPath: namespaceTargetOf(walk, local),
+      ...walk.bindings().get(local),
+      ...(typeOnly && { typeOnly: true }),
     })
   } else {
     walk.facts.reexports.set(exported, {
-      local: getValue(s.local),
+      local,
       targetPath: walk.remotePath(source),
+      ...(typeOnly && { typeOnly: true }),
     })
   }
 }
@@ -636,7 +800,45 @@ function addImportDeclaration(
 }
 
 function addOwnExport(walk: Walk, name: string, meta: AstOwnExport): void {
-  walk.facts.ownExports.set(name, meta)
+  const previous = walk.facts.ownExports.get(name)
+  if (previous === undefined) {
+    walk.facts.ownExports.set(name, meta)
+    return
+  }
+  // `export const A = …` + `export type A = …` is one export of both kinds.
+  // A declaration may share its name with an alias only when the alias target
+  // occupies the other space — TypeScript rejects any overlap — so that pair
+  // spans both kinds too. A namespace holding only types is the exception: it
+  // may share its name with a value alias, which this counts as both.
+  // Neither the alias nor a type-only flag describes the merged export.
+  const { alias, typeOnly: _typeOnly, ...declared } = meta
+  let kind: AstOwnExport['kind'] = 'both'
+  if (!previous.alias && !alias) {
+    const a = contribution(previous)
+    const b = contribution(meta)
+    if (a === null) {
+      kind = b ?? undefined
+    } else if (b === null) {
+      kind = a
+    } else {
+      kind = unionKind(a, b)
+    }
+  }
+  walk.facts.ownExports.set(name, { ...declared, kind })
+}
+
+/**
+ * What one export statement adds to a merged export: a type-only export only
+ * its type side, so `null` (nothing) for a value exported type-only.
+ */
+function contribution({
+  kind,
+  typeOnly,
+}: AstOwnExport): AstOwnExport['kind'] | null {
+  if (!typeOnly) {
+    return kind
+  }
+  return kind ? 'type' : null
 }
 
 /** The re-export target when `identifier` is a tracked namespace object. */

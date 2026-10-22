@@ -1,6 +1,14 @@
 import type { DefaultExportSourceName } from './ast-module.js'
-import type { ModuleInfo, ModuleReexportRecord } from './module-info.js'
-import { collectExportNames, deepResolveExport } from './resolve-exports.js'
+import type {
+  ExportKind,
+  ModuleInfo,
+  ModuleReexportRecord,
+} from './module-info.js'
+import {
+  collectExportNames,
+  deepResolveExport,
+  resolveExportKind,
+} from './resolve-exports.js'
 
 export type { DefaultExportSourceName } from './ast-module.js'
 
@@ -105,6 +113,24 @@ export function getExportNames(moduleInfo: ModuleInfo): ReadonlySet<string> {
   return names
 }
 
+/**
+ * The declaration spaces an exported name occupies — TypeScript lets a type
+ * and a value share one name.
+ *
+ * @param typeOnly Whether the name is reached through a type-only export
+ *   (`export type * from`), which lets only its type side through.
+ * @returns `null` when no re-export or import leading to the name can be
+ *   resolved; `undefined` when the name occupies no space — not exported, or
+ *   a value exported type-only.
+ */
+export function getExportKind(
+  moduleInfo: ModuleInfo,
+  name: string,
+  typeOnly = false,
+): ExportKind | null | undefined {
+  return resolveExportKind(moduleInfo, name, typeOnly)
+}
+
 /** Names exported by this module's own code; see {@link hasOwnExport}. */
 export function getOwnExportNames(moduleInfo: ModuleInfo): string[] {
   return [...moduleInfo.ownExports.keys()]
@@ -141,8 +167,8 @@ export function getStarExportPaths(moduleInfo: ModuleInfo): readonly string[] {
   let paths = starExportPathsCache.get(moduleInfo)
   if (paths === undefined) {
     const built: string[] = []
-    for (const resolveStar of moduleInfo.starExports) {
-      const target = resolveStar()
+    for (const star of moduleInfo.starExports) {
+      const target = star.resolveTarget()
       if (target != null) {
         built.push(target.path)
       }
