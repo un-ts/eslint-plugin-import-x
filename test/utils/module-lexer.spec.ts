@@ -637,26 +637,20 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
     }
   })
 
-  it('falls back to the AST route for an annotated exported binding', () => {
-    // es-module-lexer stops enumerating a declarator list at the first `:`,
-    // reporting `a` alone for all of these
-    for (const source of [
-      'export const a: number = 1, b: number = 2, c: number = 3',
-      'export let a: Foo = 1, b = 2',
-      'export const a = 1, b: number = 2',
-      'export const a: Record<string, number> = {}, b = 1',
-      // a comment between the binding and its annotation: the lexer still
-      // stops at the `:` and reports `a` alone
-      'export const a /* note */: number = 1, b = 2',
-      'export const a // note\n: number = 1, b = 2',
-    ]) {
-      expect(lexModule(source, 'f.js')).toBeNull()
-    }
-    // a single annotated binding is read correctly, but falling back is still
-    // the honest answer — nothing in the output says the list ended there
-    expect(lexModule('export const a: number = 1', 'f.js')).toBeNull()
-    // guards against over-matching: `:` that is not an annotation
+  it('reads annotated exported bindings correctly (es-module-lexer v3+)', () => {
+    // es-module-lexer v3 correctly enumerates declarator lists with TypeScript
+    // annotations — all bindings are reported, not just the first
     for (const [source, ownExports] of [
+      [
+        'export const a: number = 1, b: number = 2, c: number = 3',
+        ['a', 'b', 'c'],
+      ],
+      ['export let a: Foo = 1, b = 2', ['a', 'b']],
+      ['export const a = 1, b: number = 2', ['a', 'b']],
+      ['export const a: Record<string, number> = {}, b = 1', ['a', 'b']],
+      ['export const a /* note */: number = 1, b = 2', ['a', 'b']],
+      ['export const a // note\n: number = 1, b = 2', ['a', 'b']],
+      ['export const a: number = 1', ['a']],
       ['export const a = 1, b = 2', ['a', 'b']],
       ['export const { a: b, c } = o', ['b', 'c']],
       ['export default { a: 1 }', ['default']],

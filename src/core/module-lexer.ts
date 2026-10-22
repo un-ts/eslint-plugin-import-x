@@ -256,19 +256,6 @@ const EXPORT_STATEMENT_PATTERN = /(?:^|[\n\r;}/])[ \t]*export\b/g
 /** Whitespace and comments, as they may sit between `export` and its head. */
 const TRIVIA_PATTERN = /(?:\s+|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*)+/y
 
-/**
- * A TypeScript/Flow annotation on an exported binding: es-module-lexer 2.x
- * stops enumerating a declarator list at the first `:` it meets, so
- * `export const a: number = 1, b = 2` reports `a` alone and `b` is lost.
- *
- * Checked right after a reported name — trivia skipped, since a comment may
- * sit between the binding and its annotation — which is exactly where the
- * lexer stops. Trivia spans line terminators, so a label on the line below an
- * export (`export let a` / `a: for (;;) {}`) falls back too — a parse, never a
- * wrong answer.
- */
-const BINDING_ANNOTATION_PATTERN = /:/y
-
 function skipTrivia(content: string, index: number) {
   TRIVIA_PATTERN.lastIndex = index
   return TRIVIA_PATTERN.test(content) ? TRIVIA_PATTERN.lastIndex : index
