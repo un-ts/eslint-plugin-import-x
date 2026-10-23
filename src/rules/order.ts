@@ -369,7 +369,7 @@ function canReorderItems(firstNode: TSESTree.Node, secondNode: TSESTree.Node) {
   const [firstIndex, secondIndex] = [
     body.indexOf(firstNode),
     body.indexOf(secondNode),
-  ].sort()
+  ].sort((a, b) => a - b)
   const nodesBetween = parent.body.slice(firstIndex, secondIndex + 1)
   for (const nodeBetween of nodesBetween) {
     if (!canCrossNodeWhileReorder(nodeBetween)) {
