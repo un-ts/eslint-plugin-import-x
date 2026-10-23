@@ -2387,6 +2387,23 @@ ruleTester.run('order', rule, {
         createOrderError(['`./local2` import', 'after', 'import of `global4`']),
       ],
     }),
+    // reorder fix cannot cross non import on moving above when indexes are 2 and 10
+    tInvalid({
+      code: `
+        const a = require('a');
+        const b = require('b');
+        const s = require('./s');
+        process.env.MODE = 'test';
+        const s0 = require('./s0');
+        const s1 = require('./s1');
+        const s2 = require('./s2');
+        const s3 = require('./s3');
+        const s4 = require('./s4');
+        const s5 = require('./s5');
+        const c = require('c');
+      `,
+      errors: [createOrderError(['`c` import', 'before', 'import of `./s`'])],
+    }),
     // pathGroup with position 'after'
     tInvalid({
       code: `
