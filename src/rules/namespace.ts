@@ -91,7 +91,45 @@ function hasValueExport(namespace: ModuleInfo, name: string) {
     return false
   }
   const kind = getExportKind(namespace, name)
-  return kind === null || kind === 'value' || kind === 'both'
+  return (
+    kind === null ||
+    kind === 'value' ||
+    kind === 'both' ||
+    mayReachUnresolvedStar(namespace, name)
+  )
+}
+
+/**
+ * Whether an `export *` that could not be resolved may still provide `name`.
+ * `getExportKind` skips such paths, so a type found through another path
+ * would hide a value the unresolved one might export.
+ */
+function mayReachUnresolvedStar(
+  moduleInfo: ModuleInfo,
+  name: string,
+  seen = new Set<string>(),
+): boolean {
+  if (
+    name === 'default' ||
+    seen.has(moduleInfo.path) ||
+    // an explicit export shadows every `export *`
+    moduleInfo.ownExports.has(name) ||
+    moduleInfo.reexports.has(name)
+  ) {
+    return false
+  }
+  seen.add(moduleInfo.path)
+  for (const star of moduleInfo.starExports) {
+    // `export type *` lets no value through
+    if (star.typeOnly) {
+      continue
+    }
+    const target = star.resolveTarget()
+    if (target == null || mayReachUnresolvedStar(target, name, seen)) {
+      return true
+    }
+  }
+  return false
 }
 
 function makeMessage(

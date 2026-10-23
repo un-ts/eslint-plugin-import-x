@@ -548,6 +548,11 @@ describe('TypeScript type-only exports', () => {
         code: 'import * as ns from "./export-type-star/type-and-value-paths"; console.log(ns.foo)',
         settings,
       }),
+      // an unresolved `export *` may provide a value of the same name
+      tValid({
+        code: 'import * as ns from "./export-type-star/unresolved-star"; console.log(ns.missing)',
+        settings,
+      }),
       // used as types only
       tValid({
         code: 'import * as ns from "./export-type-star/types"; let x: ns.MyType',
@@ -591,6 +596,12 @@ describe('TypeScript type-only exports', () => {
           createNotFoundInNamespaceError('foo', 'ns'),
           createNotFoundInNamespaceError('C', 'ns'),
         ],
+      }),
+      // an unresolved `export type *` provides no value
+      tInvalid({
+        code: 'import * as ns from "./export-type-star/unresolved-type-star"; console.log(ns.missing)',
+        settings,
+        errors: [createNotFoundInNamespaceError('missing', 'ns')],
       }),
       // destructuring
       tInvalid({
