@@ -251,15 +251,19 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
+      if (
+        nextNode &&
+        (nextNode.type === 'ImportDeclaration' ||
+          (nextNode.type === 'TSImportEqualsDeclaration' &&
+            // @ts-expect-error - legacy parser type
+            !nextNode.isExport))
+      ) {
+        return
+      }
+
       if (nextComment) {
         commentAfterImport(node, nextComment, 'import')
-      } else if (
-        nextNode &&
-        nextNode.type !== 'ImportDeclaration' &&
-        (nextNode.type !== 'TSImportEqualsDeclaration' ||
-          // @ts-expect-error - legacy parser type
-          nextNode.isExport)
-      ) {
+      } else if (nextNode) {
         checkForNewLine(node, nextNode, 'import')
       }
     }
