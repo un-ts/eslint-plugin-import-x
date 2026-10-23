@@ -399,9 +399,15 @@ export default createRule<Options, MessageId>({
           )
           const extensionForbidden = isUseOfExtensionForbidden(extension)
           if (extensionRequired && !extensionForbidden) {
+            // `foo` resolving to `foo/index.js` is a directory import, while
+            // `foo.js` wins over `foo/index.js` when both exist
+            const isDirectoryImport =
+              !!resolvedPath &&
+              path.basename(resolvedPath, `.${extension}`) === 'index' &&
+              path.basename(importPath) !== 'index'
             const fixedImportPath = stringifyPath({
               pathname: `${
-                /([\\/]|[\\/]?\.?\.)$/.test(importPath)
+                /([\\/]|[\\/]?\.?\.)$/.test(importPath) || isDirectoryImport
                   ? `${
                       importPath.endsWith('/')
                         ? importPath.slice(0, -1)
