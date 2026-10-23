@@ -227,6 +227,11 @@ const TYPE_EXPORT_PATTERN = /\bexport\s+(?:type|typeof)\b/
  * it. A whitelist is the only shape that survives new syntax: an unknown head
  * falls back instead of being dropped.
  *
+ * The whitelist below is deliberately narrower than what v3 reads: `enum`,
+ * `const enum`, `namespace`, and `interface` are read by v3 but are not yet
+ * included here, so those heads fall back to the AST route as a conservative
+ * choice until there is test coverage for all their edge cases.
+ *
  * `function` covers `async function` and generators; `{` and `*` need no
  * separating whitespace (`export{a}`, `export*from'x'`). `const` is matched
  * here and `const enum` rejected afterwards, so that a comment sitting between
