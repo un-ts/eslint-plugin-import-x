@@ -760,7 +760,7 @@ import d from './bar.js'
 import e from './'
 ```
 
-While the following fails due to the new line between the last type import and the first normal import:
+The following passes because `newlines-between: "always"` requires the new line between the last type import and the first normal import, even when `newlines-between-types` is `"never"`:
 
 ```jsonc
 {

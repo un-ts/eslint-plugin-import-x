@@ -3778,7 +3778,9 @@ describe('TypeScript', () => {
             },
           ],
         }),
-        // Option: sortTypesGroup: true and newlines-between-types: 'never' (takes precedence over newlines-between between type-only and normal imports)
+        // Option: sortTypesGroup: true and newlines-between-types: 'never'
+        // (newlines-between-types: never only suppresses blank lines *within* the
+        // type group; the type-group boundary still follows newlines-between: always)
         tValid({
           code: `
             import c from 'Bar';
@@ -3787,6 +3789,7 @@ describe('TypeScript', () => {
             import b from 'dirA/bar';
 
             import index from './';
+
             import type { AA } from 'abc';
             import type { A } from 'foo';
             import type { C } from 'dirA/Bar';
@@ -4736,6 +4739,47 @@ describe('TypeScript', () => {
               sortTypesGroup: true,
               'newlines-between': 'never',
               'newlines-between-types': 'always',
+            },
+          ],
+        }),
+        // The boundary between the last value group and the type group should
+        // respect newlines-between, not newlines-between-types (#542)
+        tValid({
+          code: `
+            import fs from "node:fs";
+
+            import x from "x";
+
+            import type { Stats } from "node:fs";
+            import type { X } from "x";
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['builtin', 'external', 'type'],
+              sortTypesGroup: true,
+              'newlines-between': 'always',
+              'newlines-between-types': 'never',
+            },
+          ],
+        }),
+        // With newlines-between-types: 'ignore' the type-group boundary is not
+        // governed by newlines-between, so no blank line is required or forbidden (#542)
+        tValid({
+          code: `
+            import fs from "node:fs";
+
+            import x from "x";
+            import type { Stats } from "node:fs";
+            import type { X } from "x";
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['builtin', 'external', 'type'],
+              sortTypesGroup: true,
+              'newlines-between': 'always',
+              'newlines-between-types': 'ignore',
             },
           ],
         }),
