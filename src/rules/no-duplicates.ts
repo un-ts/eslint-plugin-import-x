@@ -512,6 +512,7 @@ export default createRule<[Options?], MessageId>({
           checkImports(map.imported, context)
           checkImports(map.nsImported, context)
           checkImports(map.defaultTypesImported, context)
+          checkImports(map.namespaceTypesImported, context)
           checkImports(map.namedTypesImported, context)
         }
       },
