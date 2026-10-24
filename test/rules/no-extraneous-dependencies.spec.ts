@@ -45,6 +45,9 @@ const packageDirWithTypescriptDevDependencies = testFilePath(
   'with-typescript-dev-dependencies',
 )
 const packageDirMonoRepoRoot = testFilePath('monorepo')
+const packageDirWithResolvedTypesDependencies = testFilePath(
+  'with-resolved-types-dependencies',
+)
 const packageDirMonoRepoWithNested = testFilePath(
   'monorepo/packages/nested-package',
 )
@@ -265,8 +268,41 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         },
       ],
     }),
+    tValid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesDependencies,
+          devDependencies: false,
+          whitelist: ['qs'],
+        },
+      ],
+    }),
   ],
   invalid: [
+    tInvalid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesDependencies,
+          devDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { packageName: 'qs' } }],
+    }),
+    tInvalid({
+      code: 'import babel from "@babel/core";',
+      filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesDependencies,
+          devDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { packageName: '@babel/core' } }],
+    }),
     tInvalid({
       code: 'import "not-a-dependency"',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
