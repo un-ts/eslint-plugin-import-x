@@ -133,6 +133,11 @@ function getFix(
   // pre-caculate preferInline before actual fix function
   const preferInline = context.options[0] && context.options[0]['prefer-inline']
 
+  // Without `prefer-inline`, `import type {a}` and `import {type b, c}` share a
+  // group. Only inline `type` keeps `a` type-only and `c` a value after merging.
+  const inlineTypes =
+    preferInline || nodes.some(node => node.importKind !== 'type')
+
   return (fixer: TSESLint.RuleFixer) => {
     const tokens = sourceCode.getTokens(first)
     const openBrace = tokens.find(token => isPunctuator(token, '{'))!
@@ -175,7 +180,7 @@ function getFix(
               }
 
               const curWithType =
-                preferInline && isTypeSpecifier
+                inlineTypes && isTypeSpecifier
                   ? cur.replace(/^(\s*)/, '$1type ')
                   : cur
 
@@ -200,7 +205,7 @@ function getFix(
 
     const fixes = []
 
-    if (shouldAddSpecifiers && preferInline && first.importKind === 'type') {
+    if (shouldAddSpecifiers && inlineTypes && first.importKind === 'type') {
       // `import type {a} from './foo'` → `import {type a} from './foo'`
       const typeIdentifierToken = tokens.find(
         token => token.type === 'Identifier' && token.value === 'type',
