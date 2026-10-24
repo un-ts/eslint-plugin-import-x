@@ -4763,6 +4763,26 @@ describe('TypeScript', () => {
             },
           ],
         }),
+        // With newlines-between-types: 'ignore' the type-group boundary is not
+        // governed by newlines-between, so no blank line is required or forbidden (#542)
+        tValid({
+          code: `
+            import fs from "node:fs";
+
+            import x from "x";
+            import type { Stats } from "node:fs";
+            import type { X } from "x";
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['builtin', 'external', 'type'],
+              sortTypesGroup: true,
+              'newlines-between': 'always',
+              'newlines-between-types': 'ignore',
+            },
+          ],
+        }),
         // Documentation passing example #1 for consolidateIslands
         tValid({
           code: `
