@@ -1,7 +1,7 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
-import { parsers } from '../utils.js'
+import { getNonDefaultParsers, parsers, testFilePath } from '../utils.js'
 import type { GetRuleModuleMessageIds } from '../utils.js'
 
 import { cjsRequire as require } from 'eslint-plugin-import-x'
@@ -500,6 +500,34 @@ ruleTester.run('newline-after-import', rule, {
       languageOptions: {
         parserOptions: { ecmaVersion: 2015 },
       },
+    },
+    {
+      code: `import foo from 'foo';\n// Bar.\n// Baz.\nimport qux from 'qux';\n\nconst quux = 'quux';`,
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+      options: [{ considerComments: true }],
+    },
+    {
+      code: `import foo from 'foo';\n/**\n * Bar.\n */\nimport qux from 'qux';\n\nconst quux = 'quux';`,
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+      options: [{ considerComments: true }],
+    },
+    {
+      code: `import { ExecaReturnValue } from 'execa';\n// intermediate comment\nimport execa = require('execa');\n\nconst foo = 1;`,
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+      options: [{ considerComments: true }],
+    },
+    {
+      code: `import './index.scss';\n\n// other imports\nimport { ErrorBoundary } from 'react-error-boundary';`,
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+      options: [{ count: 2, exactCount: true, considerComments: true }],
     },
   ],
 
@@ -1110,5 +1138,16 @@ ruleTester.run('newline-after-import', rule, {
       },
       options: [{ considerComments: true, count: 2 }],
     },
+    // an `export import` following a TS import-equals must still require a newline
+    ...getNonDefaultParsers().map(parser => ({
+      code: `import { ns } from 'namespace';\nimport Bar = ns.baz.foo.Bar;\nexport import Foo = ns.baz.bar.Foo;\n`,
+      output: `import { ns } from 'namespace';\nimport Bar = ns.baz.foo.Bar;\n\nexport import Foo = ns.baz.bar.Foo;\n`,
+      errors: [{ ...IMPORT_ERROR, line: 2 }],
+      filename: testFilePath('foo.ts'),
+      languageOptions: {
+        ...(parser === parsers.BABEL && { parser: require(parsers.BABEL) }),
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+    })),
   ],
 })
