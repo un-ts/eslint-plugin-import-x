@@ -711,12 +711,13 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       `const a = 1\nexport { a as b }\nexport * as ns from './x.js'`,
       `export { c } from './x.js'`,
       'export const a = 1\n/* re-export nothing */',
+      "const lazy = () => import('./x.js')\nexport @customElement('my-el') class MyEl {}",
     ]
 
     for (const source of sources) {
       const lexed = lexModule(source, filepath)
-      if (lexed === null || lexed.format !== 'module') {
-        continue // fell back — the AST route answers for this file
+      if (lexed === null || lexed.format === 'script') {
+        continue // fell back or not a module — the AST route answers for this file
       }
       const facts = analyzeAstModule(
         filepath,

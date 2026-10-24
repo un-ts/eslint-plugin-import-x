@@ -600,12 +600,16 @@ export function lexModule(
     return null // see NON_STANDARD_EXPORT_FROM_PATTERN
   }
 
-  // Only once the lexer has seen import/export syntax: a file whose single
-  // unreadable export leaves no entry at all is not module syntax to the
-  // lexer, so it takes the CommonJS branch below and `cjsModuleLexer.parse`
-  // throws on it. Scanning before this point would also drop plain scripts
-  // that merely mention `export` in a string or comment onto the AST route.
-  if (hasModuleSyntax && hasUnlexableExportHead(content)) {
+  // Only once the lexer has seen import/export syntax or an `import()`: a file
+  // whose single unreadable export leaves no entry at all is not module syntax
+  // to the lexer, so it takes the CommonJS branch below and
+  // `cjsModuleLexer.parse` throws on it. Scanning before this point would also
+  // drop plain scripts that merely mention `export` in a string or comment onto
+  // the AST route.
+  if (
+    (hasModuleSyntax || imports.some(i => i.type === 'dynamic')) &&
+    hasUnlexableExportHead(content)
+  ) {
     return null // dropped or misread — see LEXABLE_EXPORT_HEAD_PATTERN
   }
 
