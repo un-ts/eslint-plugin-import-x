@@ -1047,6 +1047,12 @@ function makeNewlinesBetweenReport(
         (!isTypeOnlyImportAndRelevant &&
           !isNormalImportNextToTypeOnlyImportAndRelevant &&
           (newlinesBetweenImports === 'always' ||
+            newlinesBetweenImports === 'always-and-inside-groups')) ||
+        // At the type-group boundary the regular newlines-between rule also applies,
+        // so a `newlines-between: always` requirement is never silenced by
+        // `newlines-between-types: never` (#542).
+        (isNormalImportNextToTypeOnlyImportAndRelevant &&
+          (newlinesBetweenImports === 'always' ||
             newlinesBetweenImports === 'always-and-inside-groups'))
 
       const shouldAssertNoNewlineWithinGroup =
@@ -1060,7 +1066,9 @@ function makeNewlinesBetweenReport(
       const shouldAssertNoNewlineBetweenGroup =
         !isSortingTypesGroup ||
         !isNormalImportNextToTypeOnlyImportAndRelevant ||
-        newlinesBetweenTypeOnlyImports === 'never'
+        (newlinesBetweenTypeOnlyImports === 'never' &&
+          newlinesBetweenImports !== 'always' &&
+          newlinesBetweenImports !== 'always-and-inside-groups')
 
       const isTheNewlineBetweenImportsInTheSameGroup =
         (distinctGroup && currentImport.rank === previousImport.rank) ||
