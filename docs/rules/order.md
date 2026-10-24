@@ -664,7 +664,7 @@ Default: the value of [`newlines-between`][20]
 
 `newlines-between-types` is functionally identical to [`newlines-between`][20] except it only enforces or forbids new lines between _[type-only][6] import groups_, which exist only when [`sortTypesGroup`][7] is enabled.
 
-In addition, when determining if a new line is enforceable or forbidden between the type-only imports and the normal imports, `newlines-between-types` takes precedence over [`newlines-between`][20].
+The boundary between the type-only imports and the normal imports is governed by both settings, except that `newlines-between-types: "ignore"` disables newline enforcement at that boundary.
 
 #### Example
 
@@ -720,7 +720,7 @@ However, if we set `newlines-between-types` to `"ignore"`:
 
 The same example will pass.
 
-Note the new line after `import type E from './';` but before `import a from "fs";`. This new line separates the type-only imports from the normal imports. Its existence is governed by [`newlines-between-types`][27] and _not `newlines-between`_.
+Note the new line after `import type E from './';` but before `import a from "fs";`. This new line separates the type-only imports from the normal imports. Because `newlines-between-types` is `"ignore"`, the boundary is not enforced or forbidden by either setting, so the new line is optional.
 
 > [!IMPORTANT]
 >
