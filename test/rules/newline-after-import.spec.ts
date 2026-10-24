@@ -1,5 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import type { TSESLint } from '@typescript-eslint/utils'
 
 import { getNonDefaultParsers, parsers, testFilePath } from '../utils.js'
 import type { GetRuleModuleMessageIds } from '../utils.js'
@@ -1145,8 +1146,10 @@ ruleTester.run('newline-after-import', rule, {
       errors: [{ ...IMPORT_ERROR, line: 2 }],
       filename: testFilePath('foo.ts'),
       languageOptions: {
-        ...(parser === parsers.BABEL && { parser: require(parsers.BABEL) }),
-        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+        ...(parser === parsers.BABEL && {
+          parser: require<TSESLint.Parser.LooseParserModule>(parsers.BABEL),
+        }),
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' } as const,
       },
     })),
   ],
