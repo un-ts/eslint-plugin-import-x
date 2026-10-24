@@ -580,6 +580,10 @@ describe('TypeScript', () => {
       ...parserConfig,
     }),
     tValid({
+      code: "import type * as x from './foo'; import * as y from './foo'",
+      ...parserConfig,
+    }),
+    tValid({
       code: "import type x from './foo'; import type y from './bar'",
       ...parserConfig,
     }),
@@ -648,6 +652,22 @@ describe('TypeScript', () => {
   ]
 
   const invalid: RuleRunTests<typeof rule>['invalid'] = [
+    tInvalid({
+      code: "import type * as x from './foo'; import type * as y from './foo'",
+      ...parserConfig,
+      errors: [
+        {
+          ...createDuplicatedError('./foo'),
+          line: 1,
+          column: 25,
+        },
+        {
+          ...createDuplicatedError('./foo'),
+          line: 1,
+          column: 58,
+        },
+      ],
+    }),
     tInvalid({
       code: "import type x from './foo'; import type y from './foo'",
       ...parserConfig,
