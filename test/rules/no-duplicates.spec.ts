@@ -706,7 +706,7 @@ describe('TypeScript', () => {
             code: "import {type x} from './foo'; import type {y} from './foo'",
             ...parserConfig,
             options: [{ 'prefer-inline': false }],
-            output: `import {type x,y} from './foo'; `,
+            output: `import {type x,type y} from './foo'; `,
             errors: [
               {
                 ...createDuplicatedError('./foo'),
@@ -759,7 +759,7 @@ describe('TypeScript', () => {
           tInvalid({
             code: "import {type x} from 'foo'; import type {y} from 'foo'",
             ...parserConfig,
-            output: `import {type x,y} from 'foo'; `,
+            output: `import {type x,type y} from 'foo'; `,
             errors: [
               {
                 ...createDuplicatedError('foo'),
@@ -822,6 +822,41 @@ describe('TypeScript', () => {
                 ...createDuplicatedError('./foo'),
                 line: 1,
                 column: 68,
+              },
+            ],
+          }),
+          // #231
+          tInvalid({
+            code: "import type {x} from './foo'; import {type y, z} from './foo'",
+            ...parserConfig,
+            output: `import {type x,type y, z} from './foo'; `,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import {type x, z} from './foo'; import type {y} from './foo'",
+            ...parserConfig,
+            output: `import {type x, z,type y} from './foo'; `,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 25,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
               },
             ],
           }),
