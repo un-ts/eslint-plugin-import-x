@@ -212,6 +212,87 @@ const LINE_SEPARATOR_PATTERN = /[\u2028\u2029]/
  */
 const TYPE_EXPORT_PATTERN = /\bexport\s+(?:type|typeof)\b/
 
+/**
+ * Declaration heads es-module-lexer 3.0.x reads. v3 extended support relative
+ * to v2 to include `enum`, `const enum`, `namespace`, `interface`, and
+ * annotated declarator lists (`export const a: number = 1, b = 2`). Heads it
+ * still reports nothing for or misreads: `export module M {}`, `export using u
+ * = r`, `export await using b = r`, `export @dec class A {}` (reports nothing
+ * or an empty name).
+ *
+ * Standalone, such a file bails on its own — the lexer reports no module syntax
+ * at all, the CommonJS attempt throws and `lexModule` returns `null`. Mixed with
+ * one export the lexer *does* read, the file looks like a module, nothing bails
+ * and the name simply vanishes from `ownExports`, so `hasExport` is wrong for
+ * it. A whitelist is the only shape that survives new syntax: an unknown head
+ * falls back instead of being dropped.
+ *
+ * The whitelist below is deliberately narrower than what v3 reads: `enum`,
+ * `const enum`, `namespace`, and `interface` are read by v3 but are not yet
+ * included here, so those heads fall back to the AST route as a conservative
+ * choice until there is test coverage for all their edge cases.
+ *
+ * `function` covers `async function` and generators; `{` and `*` need no
+ * separating whitespace (`export{a}`, `export*from'x'`). `const` is matched
+ * here and `const enum` rejected afterwards, so that a comment sitting between
+ * the two words cannot slip past a lookahead.
+ */
+const LEXABLE_EXPORT_HEAD_PATTERN =
+  /[{*]|default\b|(?:async\s+)?function\b|class\b|const\b|let\b|var\b/uy
+const CONST_ENUM_HEAD_PATTERN = /enum\b/y
+
+/**
+ * Where an `export` declaration can start. ASI forbids a statement from
+ * following an expression without a `;` or a line terminator, so a real
+ * `export` statement is always preceded — horizontal whitespace aside — by the
+ * start of the file, a line terminator, `;`, `}` (the end of the declaration
+ * before it) or `/` (the slash that closes a block comment).
+ *
+ * This is about skipping prose: `\bexport\b` alone matches "re-export",
+ * "they export it" and every other mention in a comment or string, and each one
+ * would cost a needless parse. The prefix leaves `// export …` matching — a
+ * comment whose first word is `export` — which is the accepted residue; it is
+ * deliberately never the other way round, since missing a real declaration
+ * would make the lexer's facts wrong rather than merely slower.
+ */
+const EXPORT_STATEMENT_PATTERN = /(?:^|[\n\r;}/])[^\S\r\n]*export\b/g
+
+/** Whitespace and comments, as they may sit between `export` and its head. */
+const TRIVIA_PATTERN = /(?:\s+|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*)+/y
+
+function skipTrivia(content: string, index: number) {
+  TRIVIA_PATTERN.lastIndex = index
+  return TRIVIA_PATTERN.test(content) ? TRIVIA_PATTERN.lastIndex : index
+}
+
+/**
+ * Whether the file has an `export` declaration whose head es-module-lexer does
+ * not read faithfully — see {@link LEXABLE_EXPORT_HEAD_PATTERN}.
+ */
+function hasUnlexableExportHead(content: string) {
+  EXPORT_STATEMENT_PATTERN.lastIndex = 0
+  while (EXPORT_STATEMENT_PATTERN.exec(content) !== null) {
+    LEXABLE_EXPORT_HEAD_PATTERN.lastIndex = skipTrivia(
+      content,
+      EXPORT_STATEMENT_PATTERN.lastIndex,
+    )
+    const head = LEXABLE_EXPORT_HEAD_PATTERN.exec(content)
+    if (head === null) {
+      return true
+    }
+    if (head[0] === 'const') {
+      CONST_ENUM_HEAD_PATTERN.lastIndex = skipTrivia(
+        content,
+        LEXABLE_EXPORT_HEAD_PATTERN.lastIndex,
+      )
+      if (CONST_ENUM_HEAD_PATTERN.test(content)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
 /** A call head, member callees included: `withHoc(`, `React.memo(`. */
 const CALL_HEAD_PATTERN = new RegExp(
@@ -517,6 +598,19 @@ export function lexModule(
 
   if (isModule && NON_STANDARD_EXPORT_FROM_PATTERN.test(content)) {
     return null // see NON_STANDARD_EXPORT_FROM_PATTERN
+  }
+
+  // Only once the lexer has seen import/export syntax or an `import()`: a file
+  // whose single unreadable export leaves no entry at all is not module syntax
+  // to the lexer, so it takes the CommonJS branch below and
+  // `cjsModuleLexer.parse` throws on it. Scanning before this point would also
+  // drop plain scripts that merely mention `export` in a string or comment onto
+  // the AST route.
+  if (
+    (hasModuleSyntax || imports.some(i => i.type === 'dynamic')) &&
+    hasUnlexableExportHead(content)
+  ) {
+    return null // dropped or misread — see LEXABLE_EXPORT_HEAD_PATTERN
   }
 
   if (!isModule) {

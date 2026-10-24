@@ -1,7 +1,8 @@
 import path from 'node:path'
 
-import { testContext } from '../utils.js'
+import { testContext, testFilePath } from '../utils.js'
 
+import { analyzeAstModule } from 'eslint-plugin-import-x/core/ast-module'
 import {
   getDefaultExportSourceName,
   getExportDoc,
@@ -18,6 +19,7 @@ import {
 import type { LexedEsModule } from 'eslint-plugin-import-x/core/module-lexer'
 import { lexModule } from 'eslint-plugin-import-x/core/module-lexer'
 import type { RuleContext } from 'eslint-plugin-import-x/types'
+import { childContext } from 'eslint-plugin-import-x/utils/child-context'
 
 describe('lexModule', () => {
   it('classifies an ES module and extracts its shape', () => {
@@ -560,5 +562,183 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
 
     // escalation does not change tier-1 behavior
     expect(moduleInfo.hasExport('starExported')).toBe(true)
+  })
+  it('falls back to the AST route for export heads the lexer cannot read', () => {
+    // es-module-lexer reports nothing for these, or the wrong name, and the
+    // file still looks like a module because of the export it does read — so
+    // the name would silently vanish
+    for (const head of [
+      'enum E { A }',
+      'const enum E { A }',
+      'namespace N {}',
+      'module M {}',
+      'interface I {}',
+      'using u = r',
+      'await using u = r',
+      '@dec class A {}',
+      'abstract class A {}',
+      'declare function f(): void',
+      'declare const d: number',
+      '= legacy',
+      'import Foo = require("./x.js")',
+      'const /* c */ enum E { A }',
+    ]) {
+      expect(lexModule(`export const x = 1\nexport ${head}`, 'f.js')).toBeNull()
+      // reached through an import too, not just a readable export
+      expect(lexModule(`import './a.js'\nexport ${head}`, 'f.js')).toBeNull()
+      // and on its own, where the lexer sees no module syntax at all and the
+      // CommonJS attempt throws
+      expect(lexModule(`export ${head}`, 'f.js')).toBeNull()
+    }
+    // a BOM immediately after a newline must not hide an unlexable export head
+    for (const head of ['enum E { A }', 'interface I {}', 'namespace N {}']) {
+      expect(
+        lexModule(`export const x = 1\n\uFEFFexport ${head}`, 'f.js'),
+      ).toBeNull()
+    }
+    // form feed and other ECMAScript whitespace before an unlexable export head
+    for (const head of ['module M {}', 'using u = r', '@dec class A {}']) {
+      expect(
+        lexModule(`export const x = 1\n\fexport ${head}`, 'f.js'),
+      ).toBeNull()
+      expect(
+        lexModule(`export const x = 1\n\u00A0export ${head}`, 'f.js'),
+      ).toBeNull()
+    }
+    // export {} has hasModuleSyntax but no entries; the gate must still check
+    for (const head of ['module M {}', 'using u = r', '@dec class A {}']) {
+      expect(lexModule(`export {}\nexport ${head}`, 'f.js')).toBeNull()
+    }
+    // a plain script keeps its parse-free route even when it mentions the word
+    expect(
+      lexModule(`const s = ';export enum E'\nmodule.exports = s`, 'f.js'),
+    ).toMatchObject({ format: 'script' })
+  })
+
+  it('keeps the heads the lexer does read on the lexer route', () => {
+    // guards the head whitelist against over-matching
+    for (const [source, ownExports] of [
+      ['export const a = 1', ['a']],
+      ['export const{a}=o', ['a']],
+      ['export let a = 1', ['a']],
+      ['export var a = 1', ['a']],
+      ['export function a() {}', ['a']],
+      ['export async function a() {}', ['a']],
+      ['export function* a() {}', ['a']],
+      ['export class a {}', ['a']],
+      ['export default 1', ['default']],
+      ['const a = 1\nexport { a }', ['a']],
+      ['const a = 1\nexport{a}', ['a']],
+      ['export const constant = 1', ['constant']],
+      ['export const enumerable = 1', ['enumerable']],
+      ['export /* c */ const a = 1', ['a']],
+      ['export function f() {}\nexport const a = 1', ['f', 'a']],
+      ['export function f() {};export const a = 1', ['f', 'a']],
+    ] as Array<[string, string[]]>) {
+      expect(lexModule(source, 'f.js')).toMatchObject({ ownExports })
+    }
+    expect(lexModule(`export * from './x.js'`, 'f.js')).toMatchObject({
+      format: 'module',
+    })
+    expect(lexModule(`export*from'./x.js'`, 'f.js')).toMatchObject({
+      format: 'module',
+    })
+  })
+
+  it('keeps a file that merely mentions the word export on the lexer route', () => {
+    // the statement prefix exists so prose does not cost a parse
+    for (const source of [
+      '/* re-export the helpers */\nexport const a = 1',
+      '/**\n * They export it themselves.\n */\nexport const a = 1',
+      `export const a = 'export enum E'`,
+    ]) {
+      expect(lexModule(source, 'f.js')).toMatchObject({ ownExports: ['a'] })
+    }
+  })
+
+  it('reads annotated exported bindings correctly (es-module-lexer v3+)', () => {
+    // es-module-lexer v3 correctly enumerates declarator lists with TypeScript
+    // annotations — all bindings are reported, not just the first
+    for (const [source, ownExports] of [
+      [
+        'export const a: number = 1, b: number = 2, c: number = 3',
+        ['a', 'b', 'c'],
+      ],
+      ['export let a: Foo = 1, b = 2', ['a', 'b']],
+      ['export const a = 1, b: number = 2', ['a', 'b']],
+      ['export const a: Record<string, number> = {}, b = 1', ['a', 'b']],
+      ['export const a /* note */: number = 1, b = 2', ['a', 'b']],
+      ['export const a // note\n: number = 1, b = 2', ['a', 'b']],
+      ['export const a: number = 1', ['a']],
+      ['export const a = 1, b = 2', ['a', 'b']],
+      ['export const { a: b, c } = o', ['b', 'c']],
+      ['export default { a: 1 }', ['default']],
+      ['export const a = cond ? 1 : 2', ['a']],
+    ] as Array<[string, string[]]>) {
+      expect(lexModule(source, 'f.js')).toMatchObject({ ownExports })
+    }
+  })
+
+  it('reports every export name the AST route finds, or falls back', () => {
+    // the invariant behind both guards above: a module the lexer route accepts
+    // is never missing a name the parser sees. Checked against the AST route
+    // itself rather than a hand-written expectation, so a new unreadable form
+    // fails here even if nobody thought to list it.
+    const tsParserPath = '@typescript-eslint/parser'
+    const filepath = testFilePath('lexer-parity.js')
+    const astContext = {
+      ...testContext(),
+      parserPath: tsParserPath,
+      settings: { 'import-x/parsers': { [tsParserPath]: ['.js'] } },
+    } as RuleContext
+
+    const sources = [
+      'export const x = 1\nexport enum E { A }',
+      'export const x = 1\nexport const enum E { A }',
+      'export const x = 1\nexport namespace N { export const y = 1 }',
+      'export const x = 1\nexport interface I {}',
+      'export const x = 1\nexport abstract class A {}',
+      'export const x = 1\nexport declare function f(): void',
+      'export const x = 1\nexport declare const d: number',
+      'export const a: number = 1, b: number = 2, c: number = 3',
+      'export const a = 1, b: number = 2',
+      'export let a: Foo = 1, b = 2',
+      'export const a /* note */: number = 1, b = 2',
+      'export const a = 1, b = 2, c = 3',
+      'export const { a: b, c } = o',
+      'export const [p, q] = arr',
+      'export function f() {}\nexport default class A {}',
+      `const a = 1\nexport { a as b }\nexport * as ns from './x.js'`,
+      `export { c } from './x.js'`,
+      'export const a = 1\n/* re-export nothing */',
+      "const lazy = () => import('./x.js')\nexport @customElement('my-el') class MyEl {}",
+    ]
+
+    for (const source of sources) {
+      const lexed = lexModule(source, filepath)
+      if (lexed === null || lexed.format === 'script') {
+        continue // fell back or not a module — the AST route answers for this file
+      }
+      const facts = analyzeAstModule(
+        filepath,
+        source,
+        childContext(filepath, astContext),
+        false,
+      )
+      expect(facts?.parseError).toBeUndefined()
+      const astNames = [
+        ...facts!.ownExports.keys(),
+        ...facts!.reexports.keys(),
+      ].sort()
+      const lexedNames = [
+        ...lexed.ownExports,
+        ...lexed.reexports.map(r => r.exported),
+        ...lexed.namespaceExports.map(n => n.exported),
+      ].sort()
+      expect({ source, lexedNames }).toEqual({
+        source,
+        lexedNames: expect.arrayContaining(astNames),
+      })
+    }
   })
 })
