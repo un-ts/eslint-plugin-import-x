@@ -63,6 +63,16 @@ function getPackageDepFields(packageJsonPath: string, throwAtRead: boolean) {
   return depFieldCache.get(packageJsonPath)
 }
 
+function mergeDependencyFields(target: PackageDeps, source: PackageDeps) {
+  Object.assign(target.dependencies, source.dependencies)
+  Object.assign(target.devDependencies, source.devDependencies)
+  Object.assign(target.optionalDependencies, source.optionalDependencies)
+  Object.assign(target.peerDependencies, source.peerDependencies)
+  target.bundledDependencies = [
+    ...new Set([...target.bundledDependencies, ...source.bundledDependencies]),
+  ]
+}
+
 function getDependencies(context: RuleContext, packageDir?: string | string[]) {
   let paths: string[] = []
 
@@ -75,14 +85,9 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
       bundledDependencies: [],
     }
 
-    // Always merge in deps from the closest `package.json` relative to the
-    // linted file. Without this, setting `packageDir` to point at a root
-    // (shared) `package.json` in a monorepo makes the rule ignore the
-    // workspace package's own deps — every dep declared in the workspace
-    // package's `package.json` gets flagged as "should be listed in the
-    // project's dependencies". Checking the closest package.json first
-    // restores the expected behavior in lerna / npm-workspaces / pnpm-
-    // workspaces layouts.
+    // Always merge the closest `package.json` too: in a workspace the linted
+    // file's own manifest declares its dependencies, even when `packageDir`
+    // points at the shared root manifest.
     const closestPackageJsonPath = pkgUp({
       cwd: context.physicalFilename,
     })
@@ -93,10 +98,7 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
         false,
       )
       if (closestPackageContent) {
-        for (const depsKey of Object.keys(packageContent)) {
-          const key = depsKey as keyof PackageDeps
-          Object.assign(packageContent[key], closestPackageContent[key])
-        }
+        mergeDependencyFields(packageContent, closestPackageContent)
       }
     }
 
@@ -114,10 +116,7 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
         paths.length === 1,
       )
       if (packageContent_) {
-        for (const depsKey of Object.keys(packageContent)) {
-          const key = depsKey as keyof PackageDeps
-          Object.assign(packageContent[key], packageContent_[key])
-        }
+        mergeDependencyFields(packageContent, packageContent_)
       }
     }
 
