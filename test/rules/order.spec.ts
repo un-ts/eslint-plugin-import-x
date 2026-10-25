@@ -4783,6 +4783,74 @@ describe('TypeScript', () => {
             },
           ],
         }),
+        // With newlines-between: 'ignore', the type-group boundary is governed by
+        // newlines-between-types symmetrically regardless of which side the type group is on.
+        // type group first, newlines-between-types: 'always' -- blank line required at boundary
+        tValid({
+          code: `
+            import type { A } from 'a';
+
+            import b from 'b';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['type', 'external'],
+              sortTypesGroup: true,
+              'newlines-between': 'ignore',
+              'newlines-between-types': 'always',
+            },
+          ],
+        }),
+        // external group first, newlines-between-types: 'always' -- blank line required at boundary
+        tValid({
+          code: `
+            import b from 'b';
+
+            import type { A } from 'a';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['external', 'type'],
+              sortTypesGroup: true,
+              'newlines-between': 'ignore',
+              'newlines-between-types': 'always',
+            },
+          ],
+        }),
+        // type group first, newlines-between-types: 'never' -- no blank line at boundary
+        tValid({
+          code: `
+            import type { A } from 'a';
+            import b from 'b';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['type', 'external'],
+              sortTypesGroup: true,
+              'newlines-between': 'ignore',
+              'newlines-between-types': 'never',
+            },
+          ],
+        }),
+        // external group first, newlines-between-types: 'never' -- no blank line at boundary
+        tValid({
+          code: `
+            import b from 'b';
+            import type { A } from 'a';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['external', 'type'],
+              sortTypesGroup: true,
+              'newlines-between': 'ignore',
+              'newlines-between-types': 'never',
+            },
+          ],
+        }),
         // Documentation passing example #1 for consolidateIslands
         tValid({
           code: `
@@ -5410,6 +5478,96 @@ describe('TypeScript', () => {
             ]),
             // { message: '`node:fs/promises` import should occur before import of `express`' },
           ],
+        }),
+        // newlines-between: 'ignore' + newlines-between-types: 'always': boundary enforced symmetrically
+        // type group first: missing blank line at type->normal boundary
+        tInvalid({
+          code: `
+            import type { A } from 'a';
+            import b from 'b';
+          `,
+          output: `
+            import type { A } from 'a';
+
+            import b from 'b';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['type', 'external'],
+              sortTypesGroup: true,
+              'newlines-between': 'ignore',
+              'newlines-between-types': 'always',
+            },
+          ],
+          errors: [{ messageId: 'oneLineBetweenGroups', line: 2 }],
+        }),
+        // external group first: missing blank line at normal->type boundary
+        tInvalid({
+          code: `
+            import b from 'b';
+            import type { A } from 'a';
+          `,
+          output: `
+            import b from 'b';
+
+            import type { A } from 'a';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['external', 'type'],
+              sortTypesGroup: true,
+              'newlines-between': 'ignore',
+              'newlines-between-types': 'always',
+            },
+          ],
+          errors: [{ messageId: 'oneLineBetweenGroups', line: 2 }],
+        }),
+        // newlines-between: 'ignore' + newlines-between-types: 'never': no blank line at boundary
+        // type group first: extra blank line at type->normal boundary
+        tInvalid({
+          code: `
+            import type { A } from 'a';
+
+            import b from 'b';
+          `,
+          output: `
+            import type { A } from 'a';
+            import b from 'b';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['type', 'external'],
+              sortTypesGroup: true,
+              'newlines-between': 'ignore',
+              'newlines-between-types': 'never',
+            },
+          ],
+          errors: [{ messageId: 'noLineBetweenGroups', line: 2 }],
+        }),
+        // external group first: extra blank line at normal->type boundary
+        tInvalid({
+          code: `
+            import b from 'b';
+
+            import type { A } from 'a';
+          `,
+          output: `
+            import b from 'b';
+            import type { A } from 'a';
+          `,
+          ...parserConfig,
+          options: [
+            {
+              groups: ['external', 'type'],
+              sortTypesGroup: true,
+              'newlines-between': 'ignore',
+              'newlines-between-types': 'never',
+            },
+          ],
+          errors: [{ messageId: 'noLineBetweenGroups', line: 2 }],
         }),
       ],
     })

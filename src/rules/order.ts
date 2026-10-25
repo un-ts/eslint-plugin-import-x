@@ -1033,10 +1033,13 @@ function makeNewlinesBetweenReport(
         ? 'always-and-inside-groups'
         : newlinesBetweenTypeOnlyImports_
 
-    const isNotIgnored =
-      (isTypeOnlyImportAndRelevant &&
-        newlinesBetweenTypeOnlyImports !== 'ignore') ||
-      (!isTypeOnlyImportAndRelevant && newlinesBetweenImports !== 'ignore')
+    // At a boundary (one side type-only, the other normal) the governing setting
+    // is newlines-between-types regardless of which side the type import is on.
+    const isNotIgnored = isNormalImportNextToTypeOnlyImportAndRelevant
+      ? newlinesBetweenTypeOnlyImports !== 'ignore'
+      : (isTypeOnlyImportAndRelevant &&
+          newlinesBetweenTypeOnlyImports !== 'ignore') ||
+        (!isTypeOnlyImportAndRelevant && newlinesBetweenImports !== 'ignore')
 
     if (isNotIgnored) {
       const shouldAssertNewlineBetweenGroups =
