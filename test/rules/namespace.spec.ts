@@ -511,3 +511,118 @@ for (const [folder, parser] of [['deep'], ['deep-es7', parsers.BABEL]]) {
 }
 
 ruleTester.run('namespace', rule, { valid, invalid })
+
+describe('TypeScript type-only exports', () => {
+  const settings = {
+    'import-x/parsers': { [parsers.TS]: ['.ts'] },
+    'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+  }
+
+  ruleTester.run('namespace', rule, {
+    valid: [
+      // values, and names occupying both spaces (class, enum)
+      ...['foo', 'fn', 'C', 'E', 'N'].map(name =>
+        tValid({
+          code: `import * as ns from "./export-type-star/mixed"; console.log(ns.${name})`,
+          settings,
+        }),
+      ),
+      tValid({
+        code: 'import * as ns from "./export-type-star/mixed"; const { foo, C, E } = ns',
+        settings,
+      }),
+      tValid({
+        code: 'import * as ns from "./export-type-star/mixed"; const el = <ns.C />',
+        languageOptions: {
+          parserOptions: { ecmaFeatures: { jsx: true } },
+        },
+        settings,
+      }),
+      // a type and a value sharing a name
+      tValid({
+        code: 'import * as ns from "./export-type-star/merged"; console.log(ns.ValueFirst, ns.TypeFirst)',
+        settings,
+      }),
+      // a value reached through another path than `export type *`
+      tValid({
+        code: 'import * as ns from "./export-type-star/type-and-value-paths"; console.log(ns.foo)',
+        settings,
+      }),
+      // an unresolved `export *` may provide a value of the same name
+      tValid({
+        code: 'import * as ns from "./export-type-star/unresolved-star"; console.log(ns.missing)',
+        settings,
+      }),
+      // used as types only
+      tValid({
+        code: 'import * as ns from "./export-type-star/types"; let x: ns.MyType',
+        settings,
+      }),
+      tValid({
+        code: 'import * as ns from "./export-type-star/mixed"; let x: ns.T; let y: ns.I',
+        settings,
+      }),
+      // heritage clauses are type positions, so a type-only export is fine
+      tValid({
+        code: 'import * as ns from "./export-type-star/mixed"; interface X extends ns.I {}; class Y implements ns.I { value = 1 }',
+        settings,
+      }),
+    ],
+    invalid: [
+      // `export type Foo`
+      tInvalid({
+        code: 'import * as ns from "./export-type-star/types"; console.log(ns.MyType)',
+        settings,
+        errors: [createNotFoundInNamespaceError('MyType', 'ns')],
+      }),
+      // `export type` and `export interface` next to values
+      tInvalid({
+        code: 'import * as ns from "./export-type-star/mixed"; console.log(ns.T, ns.I)',
+        settings,
+        errors: [
+          createNotFoundInNamespaceError('T', 'ns'),
+          createNotFoundInNamespaceError('I', 'ns'),
+        ],
+      }),
+      // `export type { foo }`: a value exported type-only
+      tInvalid({
+        code: 'import * as ns from "./export-type-star/aliases"; console.log(ns.TypeValue, ns.TypeClass)',
+        settings,
+        errors: [
+          createNotFoundInNamespaceError('TypeValue', 'ns'),
+          createNotFoundInNamespaceError('TypeClass', 'ns'),
+        ],
+      }),
+      // `export type * from`
+      tInvalid({
+        code: 'import * as ns from "./export-type-star/type-star"; console.log(ns.foo, ns.C)',
+        settings,
+        errors: [
+          createNotFoundInNamespaceError('foo', 'ns'),
+          createNotFoundInNamespaceError('C', 'ns'),
+        ],
+      }),
+      // an unresolved `export type *` provides no value
+      tInvalid({
+        code: 'import * as ns from "./export-type-star/unresolved-type-star"; console.log(ns.missing)',
+        settings,
+        errors: [createNotFoundInNamespaceError('missing', 'ns')],
+      }),
+      // destructuring
+      tInvalid({
+        code: 'import * as ns from "./export-type-star/mixed"; const { foo, T } = ns',
+        settings,
+        errors: [createNotFoundInNamespaceError('T', 'ns')],
+      }),
+      // JSX
+      tInvalid({
+        code: 'import * as ns from "./export-type-star/mixed"; const el = <ns.I />',
+        languageOptions: {
+          parserOptions: { ecmaFeatures: { jsx: true } },
+        },
+        settings,
+        errors: [createNotFoundInNamespaceError('I', 'ns')],
+      }),
+    ],
+  })
+})
