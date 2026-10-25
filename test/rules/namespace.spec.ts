@@ -143,6 +143,19 @@ let valid: RuleRunTests<typeof rule>['valid'] = [
     code: `import * as names from './named-exports'; @names.a class X {}`,
     languageOptions: { parser: require(parsers.BABEL) },
   }),
+  tValid({
+    code: `import * as names from './named-exports'; class X { @names.a method() {} }`,
+    languageOptions: { parser: require(parsers.BABEL) },
+  }),
+  tValid({
+    code: `import * as names from './named-exports'; class X { @names.a prop = 1; }`,
+    languageOptions: { parser: require(parsers.BABEL) },
+  }),
+  // a locally shadowed binding is not treated as the module namespace import
+  tValid({
+    code: `import * as names from './named-exports'; function f() { const names = {}; @names.Nope class X {} }`,
+    languageOptions: { parser: require(parsers.BABEL) },
+  }),
 
   tValid({
     code: 'export * as names from "./named-exports"',
@@ -380,6 +393,16 @@ let invalid: RuleRunTests<typeof rule>['invalid'] = [
     languageOptions: { parser: require(parsers.BABEL) },
     errors: [createNotFoundInNamespaceError('Nope', 'names')],
   }),
+  tInvalid({
+    code: `import * as names from './named-exports'; class X { @names.Nope method() {} }`,
+    languageOptions: { parser: require(parsers.BABEL) },
+    errors: [createNotFoundInNamespaceError('Nope', 'names')],
+  }),
+  tInvalid({
+    code: `import * as names from './named-exports'; class X { @names.Nope prop = 1; }`,
+    languageOptions: { parser: require(parsers.BABEL) },
+    errors: [createNotFoundInNamespaceError('Nope', 'names')],
+  }),
 
   tInvalid({
     code: 'import * as Endpoints from "./issue-195/Endpoints"; console.log(Endpoints.Foo)',
@@ -581,6 +604,12 @@ describe('TypeScript type-only exports', () => {
         code: 'import * as ns from "./export-type-star/mixed"; interface X extends ns.I {}; class Y implements ns.I { value = 1 }',
         settings,
       }),
+      // value member used in a decorator is fine
+      tValid({
+        code: `import * as ns from './export-type-star/mixed'; @ns.C class X {}`,
+        languageOptions: { parser: require(parsers.BABEL) },
+        settings,
+      }),
     ],
     invalid: [
       // `export type Foo`
@@ -636,6 +665,13 @@ describe('TypeScript type-only exports', () => {
         },
         settings,
         errors: [createNotFoundInNamespaceError('I', 'ns')],
+      }),
+      // type-only member used in a decorator is reported (erased at runtime)
+      tInvalid({
+        code: `import * as ns from './export-type-star/mixed'; @ns.T class X {}`,
+        languageOptions: { parser: require(parsers.BABEL) },
+        settings,
+        errors: [createNotFoundInNamespaceError('T', 'ns')],
       }),
     ],
   })
