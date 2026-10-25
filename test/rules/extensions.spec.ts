@@ -1,4 +1,6 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import { Linter } from 'eslint'
+import type { Rule } from 'eslint'
 
 import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 
@@ -302,18 +304,6 @@ ruleTester.run('extensions', rule, {
               output: 'import a from "./foo"',
             },
           ],
-        },
-      ],
-      output: null,
-    }),
-    tInvalid({
-      name: 'extensions should not autofix when the fix is identical',
-      code: 'import foo from "./unresolved"',
-      options: ['always', { fix: true }],
-      errors: [
-        {
-          messageId: 'missing',
-          data: { extension: 'js', importPath: './unresolved' },
         },
       ],
       output: null,
@@ -1718,5 +1708,32 @@ describe('TypeScript', () => {
         output: 'import foo from "./index.js?query#hash";',
       }),
     ],
+  })
+})
+
+describe('extensions message for an undeterminable extension', () => {
+  it('explains why it cannot be fixed or suggested automatically', () => {
+    const linter = new Linter()
+    const messages = linter.verify(
+      'import foo from "./unresolved"',
+      {
+        plugins: {
+          'import-x': {
+            rules: { extensions: rule as unknown as Rule.RuleModule },
+          },
+        },
+        rules: {
+          'import-x/extensions': ['error', 'always', { fix: true }],
+        },
+      },
+      { filename: testFilePath() },
+    )
+
+    expect(messages).toHaveLength(1)
+    expect(messages[0].message).toBe(
+      'Missing file extension for "./unresolved", but it cannot be determined automatically. Add the extension manually or configure an import resolver.',
+    )
+    expect(messages[0].fix).toBeUndefined()
+    expect(messages[0].suggestions).toBeUndefined()
   })
 })
