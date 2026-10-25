@@ -137,6 +137,13 @@ let valid: RuleRunTests<typeof rule>['valid'] = [
   /////////
   // es7 //
   /////////
+
+  // decorator expressions with valid namespace members should not be reported
+  tValid({
+    code: `import * as names from './named-exports'; @names.a class X {}`,
+    languageOptions: { parser: require(parsers.BABEL) },
+  }),
+
   tValid({
     code: 'export * as names from "./named-exports"',
     languageOptions: { parser: require(parsers.BABEL) },
@@ -366,6 +373,13 @@ let invalid: RuleRunTests<typeof rule>['invalid'] = [
   /////////
   // es7 //
   /////////
+
+  // decorator expressions must be reported when the member does not exist
+  tInvalid({
+    code: `import * as names from './named-exports'; @names.Nope class X {}`,
+    languageOptions: { parser: require(parsers.BABEL) },
+    errors: [createNotFoundInNamespaceError('Nope', 'names')],
+  }),
 
   tInvalid({
     code: 'import * as Endpoints from "./issue-195/Endpoints"; console.log(Endpoints.Foo)',
