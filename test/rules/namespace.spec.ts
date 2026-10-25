@@ -562,6 +562,11 @@ describe('TypeScript type-only exports', () => {
         code: 'import * as ns from "./export-type-star/mixed"; let x: ns.T; let y: ns.I',
         settings,
       }),
+      // heritage clauses are type positions, so a type-only export is fine
+      tValid({
+        code: 'import * as ns from "./export-type-star/mixed"; interface X extends ns.I {}; class Y implements ns.I { value = 1 }',
+        settings,
+      }),
     ],
     invalid: [
       // `export type Foo`

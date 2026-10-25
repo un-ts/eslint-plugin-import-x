@@ -100,6 +100,30 @@ function hasValueExport(namespace: ModuleInfo, name: string) {
 }
 
 /**
+ * Whether a member expression is a heritage clause (`class X implements ns.I`,
+ * `interface X extends ns.I`). Those are type positions that the parser turns
+ * into a `MemberExpression`, so only the existence of the export matters
+ * there, not whether it survives to runtime.
+ */
+function inTypePosition(node: TSESTree.Node) {
+  let current = node
+
+  while (
+    current.parent?.type === 'MemberExpression' &&
+    current.parent.object === current
+  ) {
+    current = current.parent
+  }
+
+  const { parent } = current
+
+  return (
+    parent?.type === 'TSClassImplements' ||
+    parent?.type === 'TSInterfaceHeritage'
+  )
+}
+
+/**
  * Whether an `export *` that could not be resolved may still provide `name`.
  * `getExportKind` skips such paths, so a type found through another path
  * would hide a value the unresolved one might export.
@@ -274,6 +298,9 @@ export default createRule<[Options], MessageId>({
 
         let deref: TSESTree.Node | undefined = dereference
 
+        // heritage clauses reference types, so a type-only export is fine there
+        const typePosition = inTypePosition(dereference)
+
         // while property is namespace and parent is member expression, keep validating
         while (
           namespace instanceof ModuleInfo &&
@@ -292,7 +319,11 @@ export default createRule<[Options], MessageId>({
             return
           }
 
-          if (!hasValueExport(namespace, deref.property.name)) {
+          if (
+            !(typePosition
+              ? namespace.hasExport(deref.property.name)
+              : hasValueExport(namespace, deref.property.name))
+          ) {
             context.report(makeMessage(deref.property, namepath))
             break
           }
