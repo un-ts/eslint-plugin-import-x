@@ -185,7 +185,10 @@ export interface PackageJson {
   main?: string
   bin?: string | Record<string, string>
   browser?: string | Record<string, string | false>
-  /** Only checked for presence, by `no-extraneous-dependencies` */
+  /**
+   * Only checked for a usable exports map by `no-extraneous-dependencies`:
+   * `null` disables self-references, like a missing field does.
+   */
   exports?: Record<string, unknown> | string | string[] | null
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>

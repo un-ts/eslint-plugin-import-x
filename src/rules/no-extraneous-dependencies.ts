@@ -90,15 +90,9 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
           paths.length === 1,
         )
         if (packageContent_) {
-          const fieldsToMerge = [
-            'dependencies',
-            'devDependencies',
-            'optionalDependencies',
-            'peerDependencies',
-            'bundledDependencies',
-          ] as const
-          for (const field of fieldsToMerge) {
-            Object.assign(packageContent[field], packageContent_[field])
+          for (const depsKey of Object.keys(packageContent)) {
+            const key = depsKey as keyof PackageDeps
+            Object.assign(packageContent[key], packageContent_[key])
           }
         }
       }
