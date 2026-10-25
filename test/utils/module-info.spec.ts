@@ -698,6 +698,9 @@ describe('ModuleInfo', () => {
       const moduleInfo = ModuleInfo.get('./export-type-star/broken', context)!
       expect(getExportKind(moduleInfo, 'missing')).toBeNull()
       expect(getExportKind(moduleInfo, 'missing', true)).toBe('type')
+      // memoized per `typeOnly`: repeating either query keeps its own answer
+      expect(getExportKind(moduleInfo, 'missing')).toBeNull()
+      expect(getExportKind(moduleInfo, 'missing', true)).toBe('type')
     })
 
     it('counts an undetermined path as a value next to a resolved one', () => {

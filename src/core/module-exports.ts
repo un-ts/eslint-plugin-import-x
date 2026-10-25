@@ -113,9 +113,20 @@ export function getExportNames(moduleInfo: ModuleInfo): ReadonlySet<string> {
   return names
 }
 
+const exportKindCache = new WeakMap<
+  ModuleInfo,
+  Map<string, ExportKind | null | undefined>
+>()
+
 /**
  * The declaration spaces an exported name occupies — TypeScript lets a type
  * and a value share one name.
+ *
+ * Memoized per `(moduleInfo, name, typeOnly)`: rules ask once per imported
+ * specifier and once per namespace member access, and a miss walks every
+ * `export *` path, re-resolving each target. Answers (including negatives)
+ * live for the instance's lifetime, like `hasExport`/`getExport`'s caches; a
+ * re-analysis of this module creates a new instance and a fresh cache.
  *
  * @param typeOnly Whether the name is reached through a type-only export
  *   (`export type * from`), which lets only its type side through.
@@ -128,7 +139,18 @@ export function getExportKind(
   name: string,
   typeOnly = false,
 ): ExportKind | null | undefined {
-  return resolveExportKind(moduleInfo, name, typeOnly)
+  let perModule = exportKindCache.get(moduleInfo)
+  if (perModule === undefined) {
+    perModule = new Map()
+    exportKindCache.set(moduleInfo, perModule)
+  }
+  const key = `${name}\0${typeOnly ? 't' : 'v'}`
+  if (perModule.has(key)) {
+    return perModule.get(key)
+  }
+  const kind = resolveExportKind(moduleInfo, name, typeOnly)
+  perModule.set(key, kind)
+  return kind
 }
 
 /** Names exported by this module's own code; see {@link hasOwnExport}. */
