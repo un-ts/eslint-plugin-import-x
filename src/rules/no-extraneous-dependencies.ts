@@ -41,8 +41,6 @@ function readJSON<T>(jsonPath: string, throwException: boolean) {
 
 function extractDepFields(pkg: PackageJson) {
   return {
-    name: pkg.name,
-    exports: pkg.exports,
     dependencies: pkg.dependencies || {},
     devDependencies: pkg.devDependencies || {},
     optionalDependencies: pkg.optionalDependencies || {},
@@ -70,8 +68,6 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
 
   try {
     let packageContent: PackageDeps = {
-      name: undefined,
-      exports: undefined,
       dependencies: {},
       devDependencies: {},
       optionalDependencies: {},
@@ -94,10 +90,6 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
           paths.length === 1,
         )
         if (packageContent_) {
-          if (!packageContent.name) {
-            packageContent.name = packageContent_.name
-            packageContent.exports = packageContent_.exports
-          }
           const fieldsToMerge = [
             'dependencies',
             'devDependencies',
@@ -124,17 +116,13 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
     }
 
     if (
-      !(
-        packageContent.name ||
-        packageContent.exports ||
-        [
-          packageContent.dependencies,
-          packageContent.devDependencies,
-          packageContent.optionalDependencies,
-          packageContent.peerDependencies,
-          packageContent.bundledDependencies,
-        ].some(hasKeys)
-      )
+      ![
+        packageContent.dependencies,
+        packageContent.devDependencies,
+        packageContent.optionalDependencies,
+        packageContent.peerDependencies,
+        packageContent.bundledDependencies,
+      ].some(hasKeys)
     ) {
       return
     }
@@ -162,6 +150,30 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
 function getModuleOriginalName(name: string) {
   const [first, second] = name.split('/')
   return first.startsWith('@') ? `${first}/${second}` : first
+}
+
+interface PackageIdentity {
+  name?: string
+  exports?: PackageJson['exports']
+}
+
+// Node.js resolves a package self-reference through the `exports` field of the
+// package.json closest to the linting file, independently of `packageDir`.
+function getSelfPackage(context: RuleContext): PackageIdentity | undefined {
+  const packageJsonPath = pkgUp({ cwd: context.physicalFilename })
+
+  if (!packageJsonPath) {
+    return
+  }
+
+  const packageJson = readJSON<PackageJson>(packageJsonPath, false)
+
+  return (
+    packageJson && {
+      name: packageJson.name,
+      exports: packageJson.exports,
+    }
+  )
 }
 
 export interface DepDeclaration {
@@ -233,6 +245,7 @@ function reportIfMissing(
   node: TSESTree.Node,
   name: string,
   whitelist: Set<string> | undefined,
+  selfPackage: PackageIdentity | undefined,
 ) {
   // Do not report when importing types unless option is enabled
   if (
@@ -278,11 +291,13 @@ function reportIfMissing(
 
   // A package does not need a `node_modules` entry to import itself, so an
   // unresolved import can still be a self-reference and has to be checked.
+  // A resolver alias can also point the package's own name elsewhere.
   if (
-    importPackageName === deps.name &&
-    (realPackageName === undefined || realPackageName === deps.name)
+    selfPackage &&
+    importPackageName === selfPackage.name &&
+    (realPackageName === undefined || realPackageName === selfPackage.name)
   ) {
-    if (!deps.exports && !whitelist?.has(importPackageName)) {
+    if (!selfPackage.exports && !whitelist?.has(importPackageName)) {
       context.report({
         node,
         messageId: 'selfImport',
@@ -447,6 +462,7 @@ export default createRule<[Options?], MessageId>({
 
     const deps =
       getDependencies(context, options.packageDir) || extractDepFields({})
+    const selfPackage = getSelfPackage(context)
 
     const depsOptions = {
       allowDevDeps: testConfig(options.devDependencies, context) !== false,
@@ -468,6 +484,7 @@ export default createRule<[Options?], MessageId>({
             node,
             source.value,
             options.whitelist ? new Set(options.whitelist) : undefined,
+            selfPackage,
           )
         },
         { commonjs: true },

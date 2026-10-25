@@ -253,6 +253,18 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         },
       ],
     }),
+    tValid({
+      code: 'import "package-named-exports"',
+      filename: testFilePath('package-named-exports/index.js'),
+      options: [
+        {
+          packageDir: [
+            testFilePath('package-named'),
+            testFilePath('package-named-exports'),
+          ],
+        },
+      ],
+    }),
   ],
   invalid: [
     tInvalid({
@@ -477,6 +489,42 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         {
           messageId: 'selfImport',
           data: { packageName: 'package-named-unresolved' },
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'import "package-named-exports"',
+      filename: testFilePath('package-named-imports-other/index.js'),
+      options: [
+        {
+          packageDir: [
+            testFilePath('package-named-exports'),
+            testFilePath('package-named-imports-other'),
+          ],
+        },
+      ],
+      errors: [
+        {
+          messageId: 'missing',
+          data: { packageName: 'package-named-exports' },
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'import "package-named-imports-other"',
+      filename: testFilePath('package-named-imports-other/index.js'),
+      options: [
+        {
+          packageDir: [
+            testFilePath('package-named-exports'),
+            testFilePath('package-named-imports-other'),
+          ],
+        },
+      ],
+      errors: [
+        {
+          messageId: 'selfImport',
+          data: { packageName: 'package-named-imports-other' },
         },
       ],
     }),

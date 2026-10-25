@@ -1,0 +1,5 @@
+{
+  "name": "package-named-imports-other",
+  "description": "Standard, named package without exports",
+  "main": "index.js"
+}
