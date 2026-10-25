@@ -65,6 +65,10 @@ folder layouts:
 "import-x/no-extraneous-dependencies": ["error", {"packageDir": ["./some-dir/", "./root-pkg"]}]
 ```
 
+Dependency fields from the closest `package.json` relative to the linted file are always merged
+in as well; the `packageDir` manifests are merged on top of them. This keeps workspace packages
+aware of the dependencies declared in their own `package.json`.
+
 #### `whitelist`
 
 The `whitelist` option is an optional string array to specify the names of packages that this rule should ignore.
