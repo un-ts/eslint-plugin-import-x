@@ -146,6 +146,30 @@ function getModuleOriginalName(name: string) {
   return first.startsWith('@') ? `${first}/${second}` : first
 }
 
+interface PackageIdentity {
+  name?: string
+  exports?: PackageJson['exports']
+}
+
+// Node.js resolves a package self-reference through the `exports` field of the
+// package.json closest to the linting file, independently of `packageDir`.
+function getSelfPackage(context: RuleContext): PackageIdentity | undefined {
+  const packageJsonPath = pkgUp({ cwd: context.physicalFilename })
+
+  if (!packageJsonPath) {
+    return
+  }
+
+  const packageJson = readJSON<PackageJson>(packageJsonPath, false)
+
+  return (
+    packageJson && {
+      name: packageJson.name,
+      exports: packageJson.exports,
+    }
+  )
+}
+
 export interface DepDeclaration {
   isInDeps: boolean
   isInDevDeps: boolean
@@ -215,6 +239,7 @@ function reportIfMissing(
   node: TSESTree.Node,
   name: string,
   whitelist: Set<string> | undefined,
+  selfPackage: PackageIdentity | undefined,
 ) {
   // Do not report when importing types unless option is enabled
   if (
@@ -251,12 +276,38 @@ function reportIfMissing(
     return
   }
 
+  const importPackageName = getModuleOriginalName(name)
   const resolved = resolve(name, context)
+
+  // test the real name from the resolved package.json
+  // if not aliased imports (alias/react for example), importPackageName can be misinterpreted
+  const realPackageName = resolved ? getFilePackageName(resolved) : undefined
+
+  // A package does not need a `node_modules` entry to import itself, so an
+  // unresolved import can still be a self-reference and has to be checked.
+  // A resolver alias can also point the package's own name elsewhere.
+  if (
+    selfPackage &&
+    importPackageName === selfPackage.name &&
+    (realPackageName === undefined || realPackageName === selfPackage.name)
+  ) {
+    if (!selfPackage.exports && !whitelist?.has(importPackageName)) {
+      context.report({
+        node,
+        messageId: 'selfImport',
+        data: {
+          packageName: importPackageName,
+        },
+      })
+    }
+
+    return
+  }
+
   if (!resolved) {
     return
   }
 
-  const importPackageName = getModuleOriginalName(name)
   let declarationStatus = checkDependencyDeclaration(deps, importPackageName)
 
   if (
@@ -269,9 +320,6 @@ function reportIfMissing(
     return
   }
 
-  // test the real name from the resolved package.json
-  // if not aliased imports (alias/react for example), importPackageName can be misinterpreted
-  const realPackageName = getFilePackageName(resolved)
   if (realPackageName && realPackageName !== importPackageName) {
     declarationStatus = checkDependencyDeclaration(
       deps,
@@ -364,6 +412,7 @@ export type MessageId =
   | 'devDep'
   | 'optDep'
   | 'missing'
+  | 'selfImport'
 
 export default createRule<[Options?], MessageId>({
   name: 'no-extraneous-dependencies',
@@ -397,6 +446,8 @@ export default createRule<[Options?], MessageId>({
       optDep:
         "'{{packageName}}' should be listed in the project's dependencies, not optionalDependencies.",
       missing: `'{{packageName}}' should be listed in the project's dependencies. Run '${getNpmInstallCommand('{{packageName}}')}' to add it`,
+      selfImport:
+        "'{{packageName}}' may only import itself if the exports field is defined in package.json",
     },
   },
   defaultOptions: [],
@@ -405,6 +456,7 @@ export default createRule<[Options?], MessageId>({
 
     const deps =
       getDependencies(context, options.packageDir) || extractDepFields({})
+    const selfPackage = getSelfPackage(context)
 
     const depsOptions = {
       allowDevDeps: testConfig(options.devDependencies, context) !== false,
@@ -426,6 +478,7 @@ export default createRule<[Options?], MessageId>({
             node,
             source.value,
             options.whitelist ? new Set(options.whitelist) : undefined,
+            selfPackage,
           )
         },
         { commonjs: true },

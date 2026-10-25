@@ -5,7 +5,9 @@
 Forbid the import of external modules that are not declared in the `package.json`'s `dependencies`, `devDependencies`, `optionalDependencies`, `peerDependencies`, or `bundledDependencies`.
 The closest parent `package.json` will be used. If no `package.json` is found, the rule will not lint anything. This behavior can be changed with the rule option `packageDir`. Normally ignores imports of modules marked internal, but this can be changed with the rule option `includeInternal`. Type imports can be verified by specifying `includeTypes`.
 
-Modules have to be installed for this rule to work.
+A package may import itself by its own `name` only when the closest `package.json` defines a usable `exports` map — that is how Node.js resolves package self-references, and `main` does not enable them. If the name matches but `exports` is missing or `null`, the rule reports a `selfImport` error instead of `missing`.
+
+Modules have to be installed for this rule to work, except for a package's own self-reference, which is checked against its `package.json`.
 
 ## Options
 

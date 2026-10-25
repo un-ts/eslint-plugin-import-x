@@ -1,0 +1,5 @@
+{
+  "name": "package-named-unresolved",
+  "description": "Standard, named package without a node_modules copy",
+  "main": "index.js"
+}
