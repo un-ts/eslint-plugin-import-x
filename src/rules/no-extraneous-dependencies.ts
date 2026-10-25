@@ -269,12 +269,36 @@ function reportIfMissing(
     return
   }
 
+  const importPackageName = getModuleOriginalName(name)
   const resolved = resolve(name, context)
+
+  // test the real name from the resolved package.json
+  // if not aliased imports (alias/react for example), importPackageName can be misinterpreted
+  const realPackageName = resolved ? getFilePackageName(resolved) : undefined
+
+  // A package does not need a `node_modules` entry to import itself, so an
+  // unresolved import can still be a self-reference and has to be checked.
+  if (
+    importPackageName === deps.name &&
+    (realPackageName === undefined || realPackageName === deps.name)
+  ) {
+    if (!deps.exports && !whitelist?.has(importPackageName)) {
+      context.report({
+        node,
+        messageId: 'selfImport',
+        data: {
+          packageName: importPackageName,
+        },
+      })
+    }
+
+    return
+  }
+
   if (!resolved) {
     return
   }
 
-  const importPackageName = getModuleOriginalName(name)
   let declarationStatus = checkDependencyDeclaration(deps, importPackageName)
 
   if (
@@ -287,9 +311,6 @@ function reportIfMissing(
     return
   }
 
-  // test the real name from the resolved package.json
-  // if not aliased imports (alias/react for example), importPackageName can be misinterpreted
-  const realPackageName = getFilePackageName(resolved)
   if (realPackageName && realPackageName !== importPackageName) {
     declarationStatus = checkDependencyDeclaration(
       deps,
@@ -311,20 +332,6 @@ function reportIfMissing(
   const packageName = realPackageName || importPackageName
 
   if (whitelist?.has(packageName)) {
-    return
-  }
-
-  if (importPackageName === deps.name) {
-    if (!deps.exports) {
-      context.report({
-        node,
-        messageId: 'selfImport',
-        data: {
-          packageName,
-        },
-      })
-    }
-
     return
   }
 

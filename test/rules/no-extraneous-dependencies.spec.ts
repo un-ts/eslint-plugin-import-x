@@ -243,6 +243,16 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       filename: testFilePath('package-named-exports/index.js'),
       options: [{ packageDir: testFilePath('package-named-exports') }],
     }),
+    tValid({
+      code: 'import "package-named-unresolved"',
+      filename: testFilePath('package-named-unresolved/index.js'),
+      options: [
+        {
+          packageDir: testFilePath('package-named-unresolved'),
+          whitelist: ['package-named-unresolved'],
+        },
+      ],
+    }),
   ],
   invalid: [
     tInvalid({
@@ -457,6 +467,17 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       options: [{ packageDir: testFilePath('package-named') }],
       errors: [
         { messageId: 'selfImport', data: { packageName: 'package-named' } },
+      ],
+    }),
+    tInvalid({
+      code: 'import "package-named-unresolved"',
+      filename: testFilePath('package-named-unresolved/index.js'),
+      options: [{ packageDir: testFilePath('package-named-unresolved') }],
+      errors: [
+        {
+          messageId: 'selfImport',
+          data: { packageName: 'package-named-unresolved' },
+        },
       ],
     }),
   ],
