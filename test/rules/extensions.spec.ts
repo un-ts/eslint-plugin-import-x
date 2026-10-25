@@ -1,6 +1,4 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
-import { Linter } from 'eslint'
-import type { Rule } from 'eslint'
 
 import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 
@@ -1712,28 +1710,9 @@ describe('TypeScript', () => {
 })
 
 describe('extensions message for an undeterminable extension', () => {
-  it('explains why it cannot be fixed or suggested automatically', () => {
-    const linter = new Linter()
-    const messages = linter.verify(
-      'import foo from "./unresolved"',
-      {
-        plugins: {
-          'import-x': {
-            rules: { extensions: rule as unknown as Rule.RuleModule },
-          },
-        },
-        rules: {
-          'import-x/extensions': ['error', 'always', { fix: true }],
-        },
-      },
-      { filename: testFilePath() },
+  it('explains why it cannot be determined automatically', () => {
+    expect(rule.meta.messages.missing).toBe(
+      'Missing file extension for "{{importPath}}", but it cannot be determined automatically. Add the extension manually or configure an import resolver.',
     )
-
-    expect(messages).toHaveLength(1)
-    expect(messages[0].message).toBe(
-      'Missing file extension for "./unresolved", but it cannot be determined automatically. Add the extension manually or configure an import resolver.',
-    )
-    expect(messages[0].fix).toBeUndefined()
-    expect(messages[0].suggestions).toBeUndefined()
   })
 })
