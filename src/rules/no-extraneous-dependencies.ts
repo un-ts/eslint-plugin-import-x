@@ -73,7 +73,11 @@ function mergeDependencyFields(target: PackageDeps, source: PackageDeps) {
   ]
 }
 
-function getDependencies(context: RuleContext, packageDir?: string | string[]) {
+function getDependencies(
+  context: RuleContext,
+  closestPackageJsonPath: string | null,
+  packageDir?: string | string[],
+) {
   let paths: string[] = []
 
   try {
@@ -88,10 +92,6 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
     // Always merge the closest `package.json` too: in a workspace the linted
     // file's own manifest declares its dependencies, even when `packageDir`
     // points at the shared root manifest.
-    const closestPackageJsonPath = pkgUp({
-      cwd: context.physicalFilename,
-    })
-
     if (closestPackageJsonPath) {
       const closestPackageContent = getPackageDepFields(
         closestPackageJsonPath,
@@ -164,9 +164,9 @@ interface PackageIdentity {
 
 // Node.js resolves a package self-reference through the `exports` field of the
 // package.json closest to the linting file, independently of `packageDir`.
-function getSelfPackage(context: RuleContext): PackageIdentity | undefined {
-  const packageJsonPath = pkgUp({ cwd: context.physicalFilename })
-
+function getSelfPackage(
+  packageJsonPath: string | null,
+): PackageIdentity | undefined {
   if (!packageJsonPath) {
     return
   }
@@ -496,9 +496,13 @@ export default createRule<[Options?], MessageId>({
   create(context) {
     const options = context.options[0] || {}
 
+    const closestPackageJsonPath = pkgUp({
+      cwd: context.physicalFilename,
+    })
     const deps =
-      getDependencies(context, options.packageDir) || extractDepFields({})
-    const selfPackage = getSelfPackage(context)
+      getDependencies(context, closestPackageJsonPath, options.packageDir) ||
+      extractDepFields({})
+    const selfPackage = getSelfPackage(closestPackageJsonPath)
 
     const depsOptions = {
       allowDevDeps: testConfig(options.devDependencies, context) !== false,
