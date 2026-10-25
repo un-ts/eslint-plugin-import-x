@@ -119,6 +119,9 @@ const DEFAULT = 'default'
 const DEFAULT_KEY = Symbol('default')
 const NAMESPACE_KEY = Symbol('namespace')
 const EXPORT_ALL_KEY = Symbol('export all')
+// `EXPORT_ALL_KEY` records which files `export * from` this one, so the file's
+// own `export *` statements are tracked under a separate key
+const OWN_EXPORT_ALL_KEY = Symbol('own export all')
 
 type ExportKey = string | symbol
 
@@ -274,6 +277,18 @@ const prepareImportsAndExports = (
             ? new Set([currentValue])
             : new Set([...localImport, currentValue])
         imports.set(reexportPath, localImport)
+      }
+
+      // `export * as ns from` consumes its source like a namespace import
+      for (const key of getOwnExportNames(currentExports)) {
+        const namespacePath = currentExports
+          .getExport(key)
+          ?.getNamespace?.()?.path
+        if (namespacePath) {
+          const localImport = imports.get(namespacePath) ?? new Set()
+          localImport.add(NAMESPACE_KEY)
+          imports.set(namespacePath, localImport)
+        }
       }
 
       for (const [key, value] of currentExports.getImports()) {
@@ -714,6 +729,13 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
             newExportIdentifiers.add(name)
           })
         }
+        if (s.type === AST_NODE_TYPES.ExportAllDeclaration) {
+          if (s.exported) {
+            newExportIdentifiers.add(toKey(getValue(s.exported)))
+          } else {
+            newExportIdentifiers.add(OWN_EXPORT_ALL_KEY)
+          }
+        }
       }
 
       // old exports exist within list of new exports identifiers: add to map of new exports
@@ -835,7 +857,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
             astNode.source.raw.replaceAll(/('|")/g, ''),
             context,
           )
-          newExportAll.add(resolvedPath!)
+          if (astNode.exported) {
+            newNamespaceImports.add(resolvedPath!)
+          } else {
+            newExportAll.add(resolvedPath!)
+          }
         }
 
         if (astNode.type === AST_NODE_TYPES.ImportDeclaration) {
@@ -1054,6 +1080,11 @@ In the meantime, if you want to keep this rule enabled, you can suppress this wa
       },
       ExportDefaultDeclaration(node) {
         checkUsage(node, DEFAULT, false)
+      },
+      ExportAllDeclaration(node) {
+        if (node.exported) {
+          checkUsage(node, getValue(node.exported), node.exportKind === 'type')
+        }
       },
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers) {
