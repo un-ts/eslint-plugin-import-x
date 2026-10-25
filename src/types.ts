@@ -185,6 +185,8 @@ export interface PackageJson {
   main?: string
   bin?: string | Record<string, string>
   browser?: string | Record<string, string | false>
+  /** Only checked for presence, by `no-extraneous-dependencies` */
+  exports?: Record<string, unknown> | string | string[] | null
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
   optionalDependencies?: Record<string, string>
