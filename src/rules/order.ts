@@ -1033,10 +1033,13 @@ function makeNewlinesBetweenReport(
         ? 'always-and-inside-groups'
         : newlinesBetweenTypeOnlyImports_
 
-    const isNotIgnored =
-      (isTypeOnlyImportAndRelevant &&
-        newlinesBetweenTypeOnlyImports !== 'ignore') ||
-      (!isTypeOnlyImportAndRelevant && newlinesBetweenImports !== 'ignore')
+    // At a boundary (one side type-only, the other normal) the governing setting
+    // is newlines-between-types regardless of which side the type import is on.
+    const isNotIgnored = isNormalImportNextToTypeOnlyImportAndRelevant
+      ? newlinesBetweenTypeOnlyImports !== 'ignore'
+      : (isTypeOnlyImportAndRelevant &&
+          newlinesBetweenTypeOnlyImports !== 'ignore') ||
+        (!isTypeOnlyImportAndRelevant && newlinesBetweenImports !== 'ignore')
 
     if (isNotIgnored) {
       const shouldAssertNewlineBetweenGroups =
@@ -1046,6 +1049,15 @@ function makeNewlinesBetweenReport(
             newlinesBetweenTypeOnlyImports === 'always-and-inside-groups')) ||
         (!isTypeOnlyImportAndRelevant &&
           !isNormalImportNextToTypeOnlyImportAndRelevant &&
+          (newlinesBetweenImports === 'always' ||
+            newlinesBetweenImports === 'always-and-inside-groups')) ||
+        // At the type-group boundary the regular newlines-between rule also applies,
+        // so a `newlines-between: always` requirement is never silenced by
+        // `newlines-between-types: never` (#542).
+        // When newlines-between-types is 'ignore', the boundary is fully ignored
+        // and no newline is required or forbidden by this clause.
+        (isNormalImportNextToTypeOnlyImportAndRelevant &&
+          newlinesBetweenTypeOnlyImports !== 'ignore' &&
           (newlinesBetweenImports === 'always' ||
             newlinesBetweenImports === 'always-and-inside-groups'))
 
@@ -1060,7 +1072,9 @@ function makeNewlinesBetweenReport(
       const shouldAssertNoNewlineBetweenGroup =
         !isSortingTypesGroup ||
         !isNormalImportNextToTypeOnlyImportAndRelevant ||
-        newlinesBetweenTypeOnlyImports === 'never'
+        (newlinesBetweenTypeOnlyImports === 'never' &&
+          newlinesBetweenImports !== 'always' &&
+          newlinesBetweenImports !== 'always-and-inside-groups')
 
       const isTheNewlineBetweenImportsInTheSameGroup =
         (distinctGroup && currentImport.rank === previousImport.rank) ||
