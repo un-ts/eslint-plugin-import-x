@@ -264,7 +264,8 @@ export default createRule<Options, MessageId>({
       ],
     },
     messages: {
-      missing: 'Missing file extension for "{{importPath}}"',
+      missing:
+        'Missing file extension for "{{importPath}}", but it cannot be determined automatically. Add the extension manually or configure an import resolver.',
       missingKnown:
         'Missing file extension "{{extension}}" for "{{importPath}}"',
       unexpected:
@@ -414,13 +415,10 @@ export default createRule<Options, MessageId>({
             })
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
-                const newImportPath = replaceImportPath(
-                  source.raw,
-                  fixedImportPath,
+                return fixer.replaceText(
+                  source,
+                  replaceImportPath(source.raw, fixedImportPath),
                 )
-                return source.raw === newImportPath
-                  ? null // Surface that something has gone wrong with extension detection.
-                  : fixer.replaceText(source, newImportPath)
               },
             }
             context.report({
