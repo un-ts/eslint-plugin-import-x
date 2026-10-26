@@ -1739,6 +1739,22 @@ describe('TypeScript', () => {
       }),
 
       tInvalid({
+        name: 'extensions should report ambiguous required extensions even when the default is never',
+        code: 'import thing from "./extensions-inference/ambiguous"',
+        options: [
+          'never',
+          { pattern: { one: 'always', two: 'always' }, fix: true },
+        ],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './extensions-inference/ambiguous' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
         name: 'extensions should not infer an extension that does not resolve',
         code: 'import foo from "./unresolved"',
         options: ['always', { pattern: { js: 'always' }, fix: true }],

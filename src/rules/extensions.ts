@@ -383,6 +383,7 @@ export default createRule<Options, MessageId>({
         let extension = path
           .extname(resolvedToDts ? importPath : resolvedPath || importPath)
           .slice(1)
+        let ambiguousExtension = false
 
         // determine if this is a module
         const isPackage =
@@ -412,7 +413,8 @@ export default createRule<Options, MessageId>({
           }
           // The extension of an unresolved import cannot be read from the
           // file system. Try the extensions the rule explicitly requires and
-          // use the one that resolves; leave a missing or ambiguous result to
+          // use the one that resolves; if several resolve, report the missing
+          // extension without guessing, and if none resolve fall through to
           // the message below.
           if (!extension && !resolvedPath) {
             const candidates = Object.keys(props.pattern).filter(candidate =>
@@ -430,6 +432,8 @@ export default createRule<Options, MessageId>({
             })
             if (resolvedCandidates.length === 1) {
               extension = resolvedCandidates[0]!
+            } else if (resolvedCandidates.length > 1) {
+              ambiguousExtension = true
             }
           }
           const extensionRequired = isUseOfExtensionRequired(
@@ -437,12 +441,17 @@ export default createRule<Options, MessageId>({
             !overrideAction && isPackage,
           )
           const extensionForbidden = isUseOfExtensionForbidden(extension)
-          if (extensionRequired && !extensionForbidden) {
-            const fixedImportPath = stringifyPath({
-              pathname: appendExtension(importPath, extension),
-              query,
-              hash,
-            })
+          if (
+            ambiguousExtension ||
+            (extensionRequired && !extensionForbidden)
+          ) {
+            const fixedImportPath = extension
+              ? stringifyPath({
+                  pathname: appendExtension(importPath, extension),
+                  query,
+                  hash,
+                })
+              : ''
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
                 return fixer.replaceText(
