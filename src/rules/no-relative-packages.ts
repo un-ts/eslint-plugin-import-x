@@ -53,14 +53,14 @@ function checkImportForRelativePackage(
     contextPkg.pkg &&
     importPkg.pkg.name !== contextPkg.pkg.name
   ) {
-    const importBaseName = path.basename(importPath)
+    // Keep the import's own path below the package root, so a directory or an
+    // extensionless import keeps pointing at the same module
     const importRoot = path.dirname(importPkg.path)
-    const properPath = path.relative(importRoot, resolvedImport)
-    const properImport = path.join(
-      importPkg.pkg.name,
-      path.dirname(properPath),
-      importBaseName === path.basename(importRoot) ? '' : importBaseName,
+    const properPath = path.relative(
+      importRoot,
+      path.resolve(path.dirname(resolvedContext), importPath),
     )
+    const properImport = path.join(importPkg.pkg.name, properPath)
     context.report({
       node,
       messageId: 'noAllowed',
