@@ -1723,6 +1723,22 @@ describe('TypeScript', () => {
       }),
 
       tInvalid({
+        name: 'extensions should keep the query string when inferring the extension',
+        code: 'import icon from "./extensions-inference/unique?raw"',
+        options: ['always', { pattern: { svg: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'svg',
+              importPath: './extensions-inference/unique?raw',
+            },
+          },
+        ],
+        output: 'import icon from "./extensions-inference/unique.svg?raw"',
+      }),
+
+      tInvalid({
         name: 'extensions should not guess between multiple configured extensions that resolve',
         code: 'import thing from "./extensions-inference/ambiguous"',
         options: [
