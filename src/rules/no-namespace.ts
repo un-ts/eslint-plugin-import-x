@@ -67,7 +67,14 @@ export default createRule<[Options?], MessageId>({
         )
         const canFix =
           namespaceIdentifiers.length > 0 &&
-          !usesNamespaceAsObject(namespaceIdentifiers)
+          !usesNamespaceAsObject(namespaceIdentifiers) &&
+          namespaceIdentifiers.every(identifier =>
+            isBindableName(
+              getMemberPropertyName(
+                identifier.parent as TSESTree.MemberExpression,
+              ),
+            ),
+          )
 
         context.report({
           node,
@@ -87,6 +94,7 @@ export default createRule<[Options?], MessageId>({
                     const localConflicts = getVariableNamesInScope(
                       scopeManager,
                       parent,
+                      namespaceVariable.scope,
                     )
                     if (importNameConflicts[importName]) {
                       for (const c of localConflicts)
@@ -97,11 +105,30 @@ export default createRule<[Options?], MessageId>({
                   }
                 }
 
+                // Names in the module scope and above conflict for every reference, and a
+                // global used anywhere in the module would be shadowed by the new import
+                const outerNames = new Set(
+                  scopeManager.globalScope!.through.map(
+                    reference => reference.identifier.name,
+                  ),
+                )
+                for (
+                  let scope: TSESLint.Scope.Scope | null =
+                    namespaceVariable.scope;
+                  scope;
+                  scope = scope.upper
+                ) {
+                  for (const variable of scope.variables) {
+                    outerNames.add(variable.name)
+                  }
+                }
+
                 // Choose new names for each import
                 const importNames = Object.keys(importNameConflicts)
                 const importLocalNames = generateLocalNames(
                   importNames,
                   importNameConflicts,
+                  outerNames,
                   namespaceVariable.name,
                 )
 
@@ -163,6 +190,7 @@ function getMemberPropertyName(memberExpression: TSESTree.MemberExpression) {
 function getVariableNamesInScope(
   scopeManager: TSESLint.Scope.ScopeManager,
   node: TSESTree.Node,
+  namespaceScope: TSESLint.Scope.Scope,
 ) {
   let currentNode: TSESTree.Node = node
   let scope = scopeManager.acquire(currentNode)
@@ -170,26 +198,93 @@ function getVariableNamesInScope(
     currentNode = currentNode.parent!
     scope = scopeManager.acquire(currentNode, true)
   }
-  return new Set(
-    [...scope.variables, ...scope.upper!.variables].map(
-      variable => variable.name,
-    ),
-  )
+  // A name declared in any scope between this reference and the namespace import
+  // would shadow the new import here
+  const names = new Set<string>()
+  for (
+    let current: TSESLint.Scope.Scope | null = scope;
+    current && current !== namespaceScope;
+    current = current.upper
+  ) {
+    for (const variable of current.variables) {
+      names.add(variable.name)
+    }
+  }
+  return names
+}
+
+const RESERVED_WORDS = new Set([
+  'arguments',
+  'await',
+  'break',
+  'case',
+  'catch',
+  'class',
+  'const',
+  'continue',
+  'debugger',
+  'default',
+  'delete',
+  'do',
+  'else',
+  'enum',
+  'eval',
+  'export',
+  'extends',
+  'false',
+  'finally',
+  'for',
+  'function',
+  'if',
+  'implements',
+  'import',
+  'in',
+  'instanceof',
+  'interface',
+  'let',
+  'new',
+  'null',
+  'package',
+  'private',
+  'protected',
+  'public',
+  'return',
+  'static',
+  'super',
+  'switch',
+  'this',
+  'throw',
+  'true',
+  'try',
+  'typeof',
+  'var',
+  'void',
+  'while',
+  'with',
+  'yield',
+])
+
+// `ns.default` or `ns['some-key']` can't become a plain named import
+function isBindableName(name: string) {
+  return /^[$A-Z_a-z][\w$]*$/.test(name) && !RESERVED_WORDS.has(name)
 }
 
 function generateLocalNames(
   names: string[],
   nameConflicts: Record<string, Set<string>>,
+  outerNames: Set<string>,
   namespaceName: string,
 ) {
   const localNames: Record<string, string> = {}
   for (const name of names) {
+    const isTaken = (localName: string) =>
+      nameConflicts[name].has(localName) || outerNames.has(localName)
     let localName: string
-    if (!nameConflicts[name].has(name)) {
+    if (!isTaken(name)) {
       localName = name
-    } else if (nameConflicts[name].has(`${namespaceName}_${name}`)) {
+    } else if (isTaken(`${namespaceName}_${name}`)) {
       for (let i = 1; i < Number.POSITIVE_INFINITY; i++) {
-        if (!nameConflicts[name].has(`${namespaceName}_${name}_${i}`)) {
+        if (!isTaken(`${namespaceName}_${name}_${i}`)) {
           localName = `${namespaceName}_${name}_${i}`
           break
         }
