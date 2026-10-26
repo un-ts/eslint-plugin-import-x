@@ -1755,6 +1755,22 @@ describe('TypeScript', () => {
       }),
 
       tInvalid({
+        name: 'extensions should not infer an extension when the resolver maps it to another extension',
+        code: 'import alias from "./extensions-inference/alias"',
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        settings: {
+          'import-x/resolver': { typescript: { extensions: ['.js'] } },
+        },
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './extensions-inference/alias' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
         name: 'extensions should not guess between multiple configured extensions that resolve',
         code: 'import thing from "./extensions-inference/ambiguous"',
         options: [
