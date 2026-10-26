@@ -143,5 +143,79 @@ ruleTester.run('no-namespace', rule, {
         },
       ],
     }),
+    tInvalid({
+      code: `
+        import * as foo from './foo';
+        function outer() {
+          const bar = 'name conflict';
+          return function middle() {
+            return function inner() {
+              return foo.bar;
+            };
+          };
+        }
+      `.trim(),
+      output: `
+        import { bar as foo_bar } from './foo';
+        function outer() {
+          const bar = 'name conflict';
+          return function middle() {
+            return function inner() {
+              return foo_bar;
+            };
+          };
+        }
+      `.trim(),
+      errors: [
+        {
+          ...NO_NAMESPACE_ERROR,
+          line: 1,
+          column: 8,
+        },
+      ],
+    }),
+    tInvalid({
+      code: `
+        import * as foo from './foo';
+        florp(foo.bar, bar);
+      `.trim(),
+      output: `
+        import { bar as foo_bar } from './foo';
+        florp(foo_bar, bar);
+      `.trim(),
+      errors: [
+        {
+          ...NO_NAMESPACE_ERROR,
+          line: 1,
+          column: 8,
+        },
+      ],
+    }),
+    tInvalid({
+      code: `
+        import * as foo from './foo';
+        florp(foo.bar, foo.default);
+      `.trim(),
+      errors: [
+        {
+          ...NO_NAMESPACE_ERROR,
+          line: 1,
+          column: 8,
+        },
+      ],
+    }),
+    tInvalid({
+      code: `
+        import * as foo from './foo';
+        florp(foo['some-key']);
+      `.trim(),
+      errors: [
+        {
+          ...NO_NAMESPACE_ERROR,
+          line: 1,
+          column: 8,
+        },
+      ],
+    }),
   ],
 })
