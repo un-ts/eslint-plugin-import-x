@@ -226,6 +226,48 @@ function appendExtension(importPath: string, extension: string) {
 }
 
 /**
+ * Infers the extension of an unresolved import by probing the extensions the
+ * rule explicitly requires.
+ *
+ * @param extension - The extension already derived from the import path.
+ * @param resolvedPath - The result of resolving the import path as-is.
+ * @param candidates - The extensions the rule requires, without leading dots.
+ * @param resolveCandidate - Resolves a candidate import path.
+ * @returns The inferred extension and whether several candidates resolved.
+ */
+function inferExtension(
+  extension: string,
+  resolvedPath: string | null | undefined,
+  candidates: readonly string[],
+  resolveCandidate: (candidate: string) => string | null | undefined,
+) {
+  if (extension || resolvedPath) {
+    return { extension, ambiguous: false }
+  }
+  const resolvedCandidates = candidates.filter(candidate => {
+    const candidateResolved = resolveCandidate(candidate)
+    return (
+      candidateResolved && path.extname(candidateResolved) === `.${candidate}`
+    )
+  })
+  return resolvedCandidates.length > 1
+    ? { extension, ambiguous: true }
+    : { extension: resolvedCandidates[0] || extension, ambiguous: false }
+}
+
+/**
+ * Whether a missing extension should be reported. An ambiguous extension is
+ * always reported, even when the default modifier is `never`.
+ */
+function shouldReportMissing(
+  ambiguous: boolean,
+  extensionRequired: boolean,
+  extensionForbidden: boolean,
+) {
+  return ambiguous || (extensionRequired && !extensionForbidden)
+}
+
+/**
  * Replaces the import path in a source string with a new import path.
  *
  * @param source - The original source string containing the import statement.
@@ -383,7 +425,6 @@ export default createRule<Options, MessageId>({
         let extension = path
           .extname(resolvedToDts ? importPath : resolvedPath || importPath)
           .slice(1)
-        let ambiguousExtension = false
 
         // determine if this is a module
         const isPackage =
@@ -412,38 +453,28 @@ export default createRule<Options, MessageId>({
             return
           }
           // The extension of an unresolved import cannot be read from the
-          // file system. Try the extensions the rule explicitly requires and
-          // use the one that resolves; if several resolve, report the missing
-          // extension without guessing, and if none resolve fall through to
-          // the message below.
-          if (!extension && !resolvedPath) {
-            const candidates = Object.keys(props.pattern).filter(candidate =>
+          // file system: probe the extensions the rule explicitly requires.
+          const inference = inferExtension(
+            extension,
+            resolvedPath,
+            Object.keys(props.pattern).filter(candidate =>
               isUseOfExtensionRequired(candidate, !overrideAction && isPackage),
-            )
-            const resolvedCandidates = candidates.filter(candidate => {
-              const candidateResolved = resolve(
-                appendExtension(importPath, candidate),
-                context,
-              )
-              return (
-                candidateResolved &&
-                path.extname(candidateResolved) === `.${candidate}`
-              )
-            })
-            if (resolvedCandidates.length === 1) {
-              extension = resolvedCandidates[0]!
-            } else if (resolvedCandidates.length > 1) {
-              ambiguousExtension = true
-            }
-          }
+            ),
+            candidate =>
+              resolve(appendExtension(importPath, candidate), context),
+          )
+          extension = inference.extension
           const extensionRequired = isUseOfExtensionRequired(
             extension,
             !overrideAction && isPackage,
           )
           const extensionForbidden = isUseOfExtensionForbidden(extension)
           if (
-            ambiguousExtension ||
-            (extensionRequired && !extensionForbidden)
+            shouldReportMissing(
+              inference.ambiguous,
+              extensionRequired,
+              extensionForbidden,
+            )
           ) {
             const fixedImportPath = extension
               ? stringifyPath({
