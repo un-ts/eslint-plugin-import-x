@@ -247,7 +247,8 @@ function inferExtension(
   const resolvedCandidates = candidates.filter(candidate => {
     const candidateResolved = resolveCandidate(candidate)
     return (
-      candidateResolved && path.extname(candidateResolved) === `.${candidate}`
+      candidateResolved &&
+      path.basename(candidateResolved).endsWith(`.${candidate}`)
     )
   })
   return resolvedCandidates.length > 1

@@ -1739,6 +1739,22 @@ describe('TypeScript', () => {
       }),
 
       tInvalid({
+        name: 'extensions should infer a multi-segment configured extension',
+        code: 'import types from "./extensions-inference/types"',
+        options: ['always', { pattern: { 'd.ts': 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'd.ts',
+              importPath: './extensions-inference/types',
+            },
+          },
+        ],
+        output: 'import types from "./extensions-inference/types.d.ts"',
+      }),
+
+      tInvalid({
         name: 'extensions should not guess between multiple configured extensions that resolve',
         code: 'import thing from "./extensions-inference/ambiguous"',
         options: [
