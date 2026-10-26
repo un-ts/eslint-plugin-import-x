@@ -1705,6 +1705,77 @@ describe('TypeScript', () => {
         ],
         output: 'import foo from "./index.js?query#hash";',
       }),
+
+      tInvalid({
+        name: 'extensions should infer the unique configured extension that resolves',
+        code: 'import icon from "./extensions-inference/unique"',
+        options: ['always', { pattern: { svg: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'svg',
+              importPath: './extensions-inference/unique',
+            },
+          },
+        ],
+        output: 'import icon from "./extensions-inference/unique.svg"',
+      }),
+
+      tInvalid({
+        name: 'extensions should not guess between multiple configured extensions that resolve',
+        code: 'import thing from "./extensions-inference/ambiguous"',
+        options: [
+          'always',
+          { pattern: { one: 'always', two: 'always' }, fix: true },
+        ],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './extensions-inference/ambiguous' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        name: 'extensions should not infer an extension that does not resolve',
+        code: 'import foo from "./unresolved"',
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './unresolved' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        name: 'extensions should suggest the unique configured extension that resolves',
+        code: 'import icon from "./extensions-inference/unique"',
+        options: ['always', { pattern: { svg: 'always' } }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'svg',
+              importPath: './extensions-inference/unique',
+            },
+            suggestions: [
+              {
+                messageId: 'addMissing',
+                data: {
+                  extension: 'svg',
+                  importPath: './extensions-inference/unique',
+                  fixedImportPath: './extensions-inference/unique.svg',
+                },
+                output: 'import icon from "./extensions-inference/unique.svg"',
+              },
+            ],
+          },
+        ],
+      }),
     ],
   })
 })

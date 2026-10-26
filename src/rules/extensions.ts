@@ -210,6 +210,22 @@ function computeOverrideAction(
 }
 
 /**
+ * Appends an extension to an import path, using the directory index form
+ * when the path ends with a slash or dot (e.g. `./dir/` → `./dir/index.js`).
+ *
+ * @param importPath - The import path to append the extension to.
+ * @param extension - The extension without a leading dot.
+ * @returns The import path with the extension appended.
+ */
+function appendExtension(importPath: string, extension: string) {
+  return /([\\/]|[\\/]?\.?\.)$/.test(importPath)
+    ? `${
+        importPath.endsWith('/') ? importPath.slice(0, -1) : importPath
+      }/index.${extension}`
+    : `${importPath}.${extension}`
+}
+
+/**
  * Replaces the import path in a source string with a new import path.
  *
  * @param source - The original source string containing the import statement.
@@ -364,7 +380,7 @@ export default createRule<Options, MessageId>({
 
         // get extension from resolved path, or source value if unresolved.
         // for .d.ts/.d.mts/.d.cts, use the import path extension instead.
-        const extension = path
+        let extension = path
           .extname(resolvedToDts ? importPath : resolvedPath || importPath)
           .slice(1)
 
@@ -394,6 +410,28 @@ export default createRule<Options, MessageId>({
           ) {
             return
           }
+          // The extension of an unresolved import cannot be read from the
+          // file system. Try the extensions the rule explicitly requires and
+          // use the one that resolves; leave a missing or ambiguous result to
+          // the message below.
+          if (!extension && !resolvedPath) {
+            const candidates = Object.keys(props.pattern).filter(candidate =>
+              isUseOfExtensionRequired(candidate, !overrideAction && isPackage),
+            )
+            const resolvedCandidates = candidates.filter(candidate => {
+              const candidateResolved = resolve(
+                appendExtension(importPath, candidate),
+                context,
+              )
+              return (
+                candidateResolved &&
+                path.extname(candidateResolved) === `.${candidate}`
+              )
+            })
+            if (resolvedCandidates.length === 1) {
+              extension = resolvedCandidates[0]!
+            }
+          }
           const extensionRequired = isUseOfExtensionRequired(
             extension,
             !overrideAction && isPackage,
@@ -401,15 +439,7 @@ export default createRule<Options, MessageId>({
           const extensionForbidden = isUseOfExtensionForbidden(extension)
           if (extensionRequired && !extensionForbidden) {
             const fixedImportPath = stringifyPath({
-              pathname: `${
-                /([\\/]|[\\/]?\.?\.)$/.test(importPath)
-                  ? `${
-                      importPath.endsWith('/')
-                        ? importPath.slice(0, -1)
-                        : importPath
-                    }/index.${extension}`
-                  : `${importPath}.${extension}`
-              }`,
+              pathname: appendExtension(importPath, extension),
               query,
               hash,
             })

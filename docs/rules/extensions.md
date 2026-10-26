@@ -16,7 +16,7 @@
 >
 > It will change to be automatically fixable in the next major version.
 >
-> The extension to add can only be determined when the import path resolves to a file with an extension. When it cannot be determined automatically (for example, the import cannot be resolved and has no extension), the rule reports the problem but provides neither a fix nor a suggestion, and the message says why.
+> The extension to add is taken from the resolved file when possible. When the import cannot be resolved as-is and has no extension, the rule tries the extensions configured as `always` in `pattern`; if exactly one of them resolves, that extension is used for the fix or suggestion. If none or several of them resolve, the extension cannot be determined automatically: the rule reports the problem but provides neither a fix nor a suggestion, and the message says why.
 
 Some file resolve algorithms allow you to omit the file extension within the import source path. For example the `node` resolver (which does not yet support ESM/`import`) can resolve `./foo/bar` to the absolute path `/User/someone/foo/bar.js` because the `.js` extension is resolved automatically by default in CJS. Depending on the resolver you can configure more extensions to get resolved automatically.
 
