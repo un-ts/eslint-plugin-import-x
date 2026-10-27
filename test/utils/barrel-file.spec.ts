@@ -54,6 +54,7 @@ const trickyDeclarations: Array<[string, string]> = [
   // pattern names something, and the lexer reports every bound name
   ['renamed destructuring', 'export const { a: b, c: d } = obj'],
   ['array destructuring', 'export const [a, b] = arr'],
+  ['computed key destructuring', 'export const { [key]: bound } = obj'],
   ['empty object pattern', 'export const {} = obj'],
   ['empty array pattern', 'export const [] = arr'],
   ['elided array pattern', 'export const [,,] = arr'],
