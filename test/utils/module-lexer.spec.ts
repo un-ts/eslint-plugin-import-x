@@ -692,6 +692,11 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       ['export const [a] = arr', ['a']],
       ['export const { a: b, c: d } = obj', ['b', 'd']],
       ['export const { [key]: bound } = obj', ['bound']],
+      ['export const { a, ...rest } = obj', ['a', 'rest']],
+      ['export const { ...rest } = obj', ['rest']],
+      ['export const [...rest] = arr', ['rest']],
+      ['export const { a = 1 } = obj', ['a']],
+      ['export const [a = 1] = arr', ['a']],
       // a statement whose only declarator binds nothing needs a readable
       // export next to it to look like a module to the lexer
       ['export const x = 1\nexport const {} = obj', ['x']],

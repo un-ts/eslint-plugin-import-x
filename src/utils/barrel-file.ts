@@ -47,13 +47,10 @@ function bindsName(node: TSESTree.Node | null): boolean {
     case 'AssignmentPattern': {
       return bindsName(node.left)
     }
-    case 'RestElement': {
-      return bindsName(node.argument)
-    }
-    default: {
-      return false
-    }
   }
+  // `{ ...rest }`, `[...rest]`: a rest element is the only binding form left.
+  // Anything else cannot appear in a binding pattern, so it names nothing.
+  return node.type === 'RestElement' && bindsName(node.argument)
 }
 
 /**
