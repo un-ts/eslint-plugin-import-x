@@ -50,8 +50,8 @@ const trickyDeclarations: Array<[string, string]> = [
   ['export star as ns', "export * as ns from './a.js'"],
   ['async generator', 'export async function* g() {}'],
   ['class with type parameters', 'export class C<T> {}'],
-  // destructuring declarators, which bail: a pattern can bind no name at all
-  // (`{}`) while the surface still counts it as a declarator
+  // destructuring declarators: the surface counts a declarator only when its
+  // pattern names something, and the lexer reports every bound name
   ['renamed destructuring', 'export const { a: b, c: d } = obj'],
   ['array destructuring', 'export const [a, b] = arr'],
   ['empty object pattern', 'export const {} = obj'],
@@ -96,6 +96,27 @@ describe(countModuleSurface, () => {
         export default { a: 1, b: 2 }
       `),
     ).toEqual({ exports: 5, declarations: 2 })
+  })
+
+  it('does not count a declarator that binds no name', () => {
+    // a declarator is an export only once its pattern names something, which
+    // is what keeps the lexer route's entry count an upper bound for
+    // `export const {} = obj` without scanning the declaration
+    for (const [source, surface] of [
+      ['export const {} = obj', { exports: 0, declarations: 1 }],
+      ['export const [] = arr', { exports: 0, declarations: 1 }],
+      ['export const [,,] = arr', { exports: 0, declarations: 1 }],
+      ['export const { a: {} } = obj', { exports: 0, declarations: 1 }],
+      ['export const [{}, []] = arr', { exports: 0, declarations: 1 }],
+      ['export const a = 1, {} = obj', { exports: 1, declarations: 2 }],
+      ['export const { a, b } = obj', { exports: 1, declarations: 1 }],
+      ['export const [a] = arr', { exports: 1, declarations: 1 }],
+    ] as Array<[string, { exports: number; declarations: number }]>) {
+      expect({ source, surface: surfaceOf(source) }).toEqual({
+        source,
+        surface,
+      })
+    }
   })
 
   it('counts named re-exports as exports only', () => {

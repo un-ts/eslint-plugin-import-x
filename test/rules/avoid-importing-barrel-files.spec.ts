@@ -134,6 +134,13 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       filename,
       options: [{ maxModuleGraphSizeAllowed: 0 }],
     }),
+    // `export const {} = obj` binds no name, so it exports nothing: three
+    // `export *` plus it is not a barrel, whatever the module graph size
+    tValid({
+      code: "import { a } from './empty-pattern-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+    }),
   ],
 
   invalid: [
@@ -388,23 +395,6 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
             amount: 4,
             specifier: './overload-barrel.js',
             maxModuleGraphSizeAllowed: 3,
-          },
-        },
-      ],
-    }),
-    // a declarator that binds no name still counts as an export in the
-    // surface, so the pre-filter must not rule this target out
-    tInvalid({
-      code: "import { a } from './empty-pattern-barrel.js';",
-      filename,
-      options: [{ maxModuleGraphSizeAllowed: 4 }],
-      errors: [
-        {
-          messageId: 'avoidImport',
-          data: {
-            amount: 5,
-            specifier: './empty-pattern-barrel.js',
-            maxModuleGraphSizeAllowed: 4,
           },
         },
       ],

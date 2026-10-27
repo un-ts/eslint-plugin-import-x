@@ -99,10 +99,11 @@ export interface AstModuleFacts {
    * but one name to the map — and because the lexer route only ever sees what
    * es-module-lexer reads faithfully: type-only syntax,
    * `TYPE_MODIFIER_PATTERN`'s `type`/`typeof`, an unreadable declaration head
-   * (`LEXABLE_EXPORT_HEAD_PATTERN`), a destructuring declarator
-   * (`hasDestructuringDeclarator` — a pattern may bind no name while still
-   * counting as a declarator), non-standard `export … from` and
-   * U+2028/U+2029 all bail to the AST route instead.
+   * (`LEXABLE_EXPORT_HEAD_PATTERN`), non-standard `export … from` and
+   * U+2028/U+2029 all bail to the AST route instead. A destructuring declarator
+   * needs no bail: `countModuleSurface` only counts a declarator whose pattern
+   * names something (`bindsName`), and the lexer reports every bound name, so a
+   * pattern that binds nothing counts zero on both sides.
    *
    * One undercount is left on purpose and the guard accounts for it: the
    * properties of `export default { … }` are exports no entry count can see, so

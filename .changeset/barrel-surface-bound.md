@@ -12,5 +12,11 @@ question without producing the exact export/declaration surface — one parse
 saved per small plain-JS dependency.
 
 Anything es-module-lexer does not read faithfully still goes through the parser,
-and a module with a default export is never ruled out: the properties of
-`export default { … }` are exports no entry count can see.
+and a module whose source declares a default export is never ruled out: the
+properties of `export default { … }` are exports no entry count can see (a
+`default` that `esModuleInterop` synthesizes does not count).
+
+A declarator that binds no name — `export const {} = obj`, `export const
+{ a: {} } = obj` — is no longer counted as an export by the barrel surface: it
+exports nothing, and counting it made the rule's own surface disagree with what
+the lexer can see.

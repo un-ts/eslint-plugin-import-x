@@ -17,6 +17,46 @@ export interface ModuleSurface {
 }
 
 /**
+ * Whether a binding pattern introduces at least one name.
+ *
+ * `export const {} = obj`, `export const [,,] = arr` and nested empty patterns
+ * such as `export const { a: {} } = obj` bind nothing at all, so they export
+ * nothing either — a declarator is only an export once its pattern names
+ * something. Counting them as exports would also make the lexer route's entry
+ * count a worse bound for the barrel pre-filter: es-module-lexer reports bound
+ * names, so a zero-binding declarator is invisible to it.
+ */
+function bindsName(node: TSESTree.Node | null): boolean {
+  if (node == null) {
+    return false
+  }
+  switch (node.type) {
+    case 'Identifier': {
+      return true
+    }
+    case 'ObjectPattern': {
+      return node.properties.some(property =>
+        property.type === 'RestElement'
+          ? bindsName(property.argument)
+          : bindsName(property.value),
+      )
+    }
+    case 'ArrayPattern': {
+      return node.elements.some(element => bindsName(element))
+    }
+    case 'AssignmentPattern': {
+      return bindsName(node.left)
+    }
+    case 'RestElement': {
+      return bindsName(node.argument)
+    }
+    default: {
+      return false
+    }
+  }
+}
+
+/**
  * Counts a single declaration both as a declaration and as the exports it
  * introduces (`export const a = 1, b = 2` declares and exports two names).
  *
@@ -29,7 +69,8 @@ function countDeclaration(
 ): ModuleSurface {
   if (declaration.type === 'VariableDeclaration') {
     return {
-      exports: declaration.declarations.length,
+      exports: declaration.declarations.filter(({ id }) => bindsName(id))
+        .length,
       declarations: declaration.declarations.length,
     }
   }

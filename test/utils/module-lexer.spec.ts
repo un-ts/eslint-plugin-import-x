@@ -681,38 +681,23 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
     }
   })
 
-  it('falls back to the AST route for a destructuring declaration', () => {
-    // es-module-lexer reports the names a declaration binds, while the surface
-    // counts its declarators — and a pattern can bind none at all
-    const stayed = [
-      'export const {} = obj',
-      'export const [] = arr',
-      'export const [,,] = arr',
-      'export const a = 1, {} = obj',
-      'export const { a: {} } = obj',
-      'export const [{}, []] = arr',
-      'export const a = 1\n, {} = obj',
-      // a declaration continues past a line break without a leading comma
-      'export const a = 1 +\n  2, {} = obj',
-      'export const a = 1\n  + 2, {} = obj',
-      'export const a = foo\n  .bar, {} = obj',
-      'export const a = flag\n  ? one : two, {} = obj',
-      'export const a = foo\n  (1), {} = obj',
-      'export const { a } = obj',
-      'export const [a] = arr',
-      'export const{a}=o',
-    ].filter(source => lexModule(source, 'f.js') !== null)
-    // anything that keeps the fast path here could undercount the surface
-    expect(stayed).toEqual([])
-  })
-
-  it('falls back to the AST route for a declaration it cannot scan', () => {
-    const stayed = [
-      "export const a = 'x",
-      "export const a = 'x\nexport const b = 1",
-      'export const a = 1 /*',
-    ].filter(source => lexModule(source, 'f.js') !== null)
-    expect(stayed).toEqual([])
+  it('keeps destructuring declarations on the lexer route', () => {
+    // es-module-lexer reports the names a declaration binds, and the surface
+    // counts a declarator only once its pattern names something, so the bound
+    // needs no scan of the declaration itself
+    for (const [source, ownExports] of [
+      ['export const a = 1, {} = obj', ['a']],
+      ['export const a = 1 +\n  2, {} = obj', ['a']],
+      ['export const { a } = obj', ['a']],
+      ['export const [a] = arr', ['a']],
+      ['export const { a: b, c: d } = obj', ['b', 'd']],
+      // a statement whose only declarator binds nothing needs a readable
+      // export next to it to look like a module to the lexer
+      ['export const x = 1\nexport const {} = obj', ['x']],
+      ['export const x = 1\nexport const [{}, []] = arr', ['x']],
+    ] as Array<[string, string[]]>) {
+      expect(lexModule(source, 'f.js')).toMatchObject({ ownExports })
+    }
   })
 
   it('reports every export name the AST route finds, or falls back', () => {
