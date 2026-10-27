@@ -433,6 +433,9 @@ export class ModuleInfo {
     info.defaultExportSourceName = facts.defaultExportSourceName
     info.surface = facts.surface
     info.exportCount = facts.exportCount
+    // captured before the `esModuleInterop` synthesis below, so a default only
+    // that block added is not mistaken for one the source declares
+    info.hasSourceDefaultExport = facts.ownExports.has('default')
 
     const link = (
       local: string,
@@ -474,7 +477,7 @@ export class ModuleInfo {
     // exported and no default exists yet — applied here, once, for both routes
     if (
       info.ownExports.size > 0 &&
-      !info.ownExports.has('default') &&
+      !info.hasSourceDefaultExport &&
       (getTsconfigWithContext(context)?.compilerOptions?.esModuleInterop ??
         false)
     ) {
@@ -541,6 +544,14 @@ export class ModuleInfo {
    *   records why the bound holds and where it stops.
    */
   declare exportCount?: number
+  /**
+   * @internal Whether the module's own source declares a default export —
+   *   captured before the `esModuleInterop` synthesis adds one, so the barrel
+   *   guard's "a default export may hide `export default { … }` properties"
+   *   exception keys off the source, not off a synthesized binding. Set for
+   *   both analysis routes.
+   */
+  declare hasSourceDefaultExport: boolean
   /**
    * @internal Fast path for `module-doc.ts`: whether the raw content
    *   mentions a deprecation marker at all — when it doesn't, doc queries

@@ -258,9 +258,12 @@ describe('ModuleInfo', () => {
       parserPath: 'not-real',
     } as RuleContext
     // plain JS never reaches the parser, so the analysis does not depend on
-    // one being loadable — unlike the AST route above, this is cacheable
-    expect(ModuleInfo.get('./named-exports', mockContext)).toBe(
-      ModuleInfo.get('./named-exports', mockContext),
+    // one being loadable — unlike the AST route above, this is cacheable.
+    // `named-exports` is no longer a lexable module: its destructuring
+    // declarations fall back to the AST route (see
+    // `hasDestructuringDeclarator` in `module-lexer.ts`).
+    expect(ModuleInfo.get('./barrel-files/not-barrel.js', mockContext)).toBe(
+      ModuleInfo.get('./barrel-files/not-barrel.js', mockContext),
     )
   })
 

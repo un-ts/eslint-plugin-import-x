@@ -267,7 +267,10 @@ function skipTrivia(content: string, index: number) {
 
 /**
  * Whether the file has an `export` declaration whose head es-module-lexer does
- * not read faithfully — see {@link LEXABLE_EXPORT_HEAD_PATTERN}.
+ * not read faithfully — see {@link LEXABLE_EXPORT_HEAD_PATTERN} — or whose
+ * variable declaration binds through a destructuring pattern, which can bind no
+ * name at all while still counting as a declarator (see
+ * {@link hasDestructuringDeclarator}).
  */
 function hasUnlexableExportHead(content: string) {
   EXPORT_STATEMENT_PATTERN.lastIndex = 0
@@ -280,15 +283,149 @@ function hasUnlexableExportHead(content: string) {
     if (head === null) {
       return true
     }
-    if (head[0] === 'const') {
-      CONST_ENUM_HEAD_PATTERN.lastIndex = skipTrivia(
-        content,
-        LEXABLE_EXPORT_HEAD_PATTERN.lastIndex,
-      )
-      if (CONST_ENUM_HEAD_PATTERN.test(content)) {
-        return true
+    if (head[0] === 'const' || head[0] === 'let' || head[0] === 'var') {
+      if (
+        hasDestructuringDeclarator(
+          content,
+          LEXABLE_EXPORT_HEAD_PATTERN.lastIndex,
+        )
+      ) {
+        return true // a declarator that binds no name would vanish
+      }
+      if (head[0] === 'const') {
+        CONST_ENUM_HEAD_PATTERN.lastIndex = skipTrivia(
+          content,
+          LEXABLE_EXPORT_HEAD_PATTERN.lastIndex,
+        )
+        if (CONST_ENUM_HEAD_PATTERN.test(content)) {
+          return true
+        }
       }
     }
+  }
+  return false
+}
+
+/** A declarator starting with one of these binds through a pattern. */
+const DESTRUCTURING_START = new Set(['{', '['])
+
+/**
+ * Skips a `'…'`/`"…"` literal starting at `index`, returning the index of its
+ * closing quote, or `-1` when it never closes on the same line.
+ */
+function skipQuoted(content: string, index: number) {
+  const quote = content[index]
+  for (let i = index + 1; i < content.length; i += 1) {
+    const char = content[i]
+    if (char === '\\') {
+      i += 1
+      continue
+    }
+    if (char === quote) {
+      return i
+    }
+    if (char === '\n' || char === '\r') {
+      return -1
+    }
+  }
+  return -1
+}
+
+/**
+ * Whether an exported `const`/`let`/`var` declaration binds through a
+ * destructuring pattern.
+ *
+ * es-module-lexer reports the *names* a declaration binds; `countModuleSurface`
+ * counts its *declarators*. A pattern binding several names only over-counts,
+ * which keeps the guard's upper bound intact, but a pattern binding **none** —
+ * `export const {} = obj`, `export const [,,] = arr`,
+ * `export const { a: {} } = obj` — contributes a declarator with no name, so
+ * the entry count would come out *below* the surface and the guard would skip a
+ * module that is a barrel by the surface's own test.
+ *
+ * A declarator can only start right after the declaration keyword or after a
+ * top-level comma, and a `{`/`[` there is always a pattern: an object/array
+ * literal can only follow `=`, which is inside the declarator. Templates and
+ * regular expressions are reported as patterns instead of scanned — their
+ * contents can hold the `,` and `;` this scan keys on, and falling back is
+ * always safe.
+ */
+function hasDestructuringDeclarator(content: string, index: number) {
+  let i = skipTrivia(content, index)
+  if (DESTRUCTURING_START.has(content[i])) {
+    return true
+  }
+  let depth = 0
+  while (i < content.length) {
+    const char = content[i]
+    if (char === '"' || char === "'") {
+      i = skipQuoted(content, i)
+      if (i < 0) {
+        return true // unterminated string: not plain JavaScript
+      }
+      i += 1
+      continue
+    }
+    if (char === '`') {
+      return true // template: contents are not worth scanning
+    }
+    if (char === '/') {
+      if (content[i + 1] === '/') {
+        const end = content.indexOf('\n', i)
+        if (end === -1) {
+          return false
+        }
+        i = end
+        continue
+      }
+      if (content[i + 1] === '*') {
+        const end = content.indexOf('*/', i + 2)
+        if (end === -1) {
+          return true
+        }
+        i = end + 2
+        continue
+      }
+      return true // regex or division: contents are not worth scanning
+    }
+    if (char === '(' || char === '[' || char === '{') {
+      depth += 1
+      i += 1
+      continue
+    }
+    if (char === ')' || char === ']' || char === '}') {
+      depth -= 1
+      if (depth < 0) {
+        return true // left the declaration
+      }
+      i += 1
+      continue
+    }
+    if (depth > 0) {
+      i += 1
+      continue
+    }
+    if (char === ';') {
+      return false
+    }
+    if (char === '\n' || char === '\r') {
+      // a new declarator can only follow a comma, and a leading comma is the
+      // one way for a declaration to continue on the next line
+      const next = skipTrivia(content, i + 1)
+      if (content[next] === ',') {
+        i = next
+        continue
+      }
+      return false
+    }
+    if (char === ',') {
+      i = skipTrivia(content, i + 1)
+      if (DESTRUCTURING_START.has(content[i])) {
+        return true
+      }
+      continue
+    }
+    i += 1
   }
   return false
 }

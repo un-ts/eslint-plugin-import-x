@@ -1,7 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import type { ModuleImportDeclaration } from '../core/index.js'
-import { getOwnExportNames, ModuleInfo } from '../core/index.js'
+import { ModuleInfo } from '../core/index.js'
 import type { Visitor } from '../utils/index.js'
 import {
   createRule,
@@ -51,16 +51,16 @@ function isRuntimeEdge(
  * caller reads instead. For a lexer-analyzed module `exportCount` is an upper
  * bound on the exports the surface would count (see `AstModuleFacts`), so a
  * bound at or below `amount` settles it — and saves the parse a small plain-JS
- * dependency would otherwise need. A module with a default export is never
- * ruled out: the properties of `export default { … }` are exports no entry
- * count can see.
+ * dependency would otherwise need. A module whose *source* declares a default
+ * export is never ruled out: the properties of `export default { … }` are
+ * exports no entry count can see. The check is deliberately not
+ * `ownExports.has('default')`, because `esModuleInterop` synthesizes one for
+ * every module that exports anything.
  */
 function cannotBeBarrel(moduleInfo: ModuleInfo, amount: number): boolean {
   const count = moduleInfo.exportCount
   return (
-    count !== undefined &&
-    count <= amount &&
-    !getOwnExportNames(moduleInfo).includes('default')
+    count !== undefined && count <= amount && !moduleInfo.hasSourceDefaultExport
   )
 }
 

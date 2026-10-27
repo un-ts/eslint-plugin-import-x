@@ -99,12 +99,16 @@ export interface AstModuleFacts {
    * but one name to the map — and because the lexer route only ever sees what
    * es-module-lexer reads faithfully: type-only syntax,
    * `TYPE_MODIFIER_PATTERN`'s `type`/`typeof`, an unreadable declaration head
-   * (`LEXABLE_EXPORT_HEAD_PATTERN`), non-standard `export … from` and
+   * (`LEXABLE_EXPORT_HEAD_PATTERN`), a destructuring declarator
+   * (`hasDestructuringDeclarator` — a pattern may bind no name while still
+   * counting as a declarator), non-standard `export … from` and
    * U+2028/U+2029 all bail to the AST route instead.
    *
    * One undercount is left on purpose and the guard accounts for it: the
    * properties of `export default { … }` are exports no entry count can see, so
-   * a module with a default export is never ruled out.
+   * a module whose *source* declares a default export is never ruled out
+   * (`ModuleInfo.hasSourceDefaultExport`, which ignores the binding
+   * `esModuleInterop` synthesizes).
    *
    * The invariant is pinned by a test in `test/utils/barrel-file.spec.ts`.
    */

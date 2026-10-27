@@ -392,6 +392,23 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
         },
       ],
     }),
+    // a declarator that binds no name still counts as an export in the
+    // surface, so the pre-filter must not rule this target out
+    tInvalid({
+      code: "import { a } from './empty-pattern-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 4 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 5,
+            specifier: './empty-pattern-barrel.js',
+            maxModuleGraphSizeAllowed: 4,
+          },
+        },
+      ],
+    }),
   ],
 })
 

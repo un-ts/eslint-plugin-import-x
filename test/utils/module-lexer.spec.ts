@@ -619,9 +619,12 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
     // guards the head whitelist against over-matching
     for (const [source, ownExports] of [
       ['export const a = 1', ['a']],
-      ['export const{a}=o', ['a']],
       ['export let a = 1', ['a']],
       ['export var a = 1', ['a']],
+      [String.raw`export const a = 'it\'s', b = 2`, ['a', 'b']],
+      ['export const a = 1;export const b = 2', ['a', 'b']],
+      ['export const a = 1 // note', ['a']],
+      ['export const a = 1 /* c */, b = 2', ['a', 'b']],
       ['export function a() {}', ['a']],
       ['export async function a() {}', ['a']],
       ['export function* a() {}', ['a']],
@@ -671,12 +674,39 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       ['export const a // note\n: number = 1, b = 2', ['a', 'b']],
       ['export const a: number = 1', ['a']],
       ['export const a = 1, b = 2', ['a', 'b']],
-      ['export const { a: b, c } = o', ['b', 'c']],
       ['export default { a: 1 }', ['default']],
       ['export const a = cond ? 1 : 2', ['a']],
     ] as Array<[string, string[]]>) {
       expect(lexModule(source, 'f.js')).toMatchObject({ ownExports })
     }
+  })
+
+  it('falls back to the AST route for a destructuring declaration', () => {
+    // es-module-lexer reports the names a declaration binds, while the surface
+    // counts its declarators — and a pattern can bind none at all
+    const stayed = [
+      'export const {} = obj',
+      'export const [] = arr',
+      'export const [,,] = arr',
+      'export const a = 1, {} = obj',
+      'export const { a: {} } = obj',
+      'export const [{}, []] = arr',
+      'export const a = 1\n, {} = obj',
+      'export const { a } = obj',
+      'export const [a] = arr',
+      'export const{a}=o',
+    ].filter(source => lexModule(source, 'f.js') !== null)
+    // anything that keeps the fast path here could undercount the surface
+    expect(stayed).toEqual([])
+  })
+
+  it('falls back to the AST route for a declaration it cannot scan', () => {
+    const stayed = [
+      "export const a = 'x",
+      "export const a = 'x\nexport const b = 1",
+      'export const a = 1 /*',
+    ].filter(source => lexModule(source, 'f.js') !== null)
+    expect(stayed).toEqual([])
   })
 
   it('reports every export name the AST route finds, or falls back', () => {

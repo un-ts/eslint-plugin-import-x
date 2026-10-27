@@ -43,6 +43,14 @@ const trickyDeclarations: Array<[string, string]> = [
   ['annotated declarator list', 'export const a: number = 1, b: number = 2'],
   ['renamed destructuring', 'export const { a: b, c: d } = obj'],
   ['array destructuring', 'export const [a, b] = arr'],
+  // patterns that bind no name at all: one declarator, zero entries
+  ['empty object pattern', 'export const {} = obj'],
+  ['empty array pattern', 'export const [] = arr'],
+  ['elided array pattern', 'export const [,,] = arr'],
+  ['empty pattern after a binding', 'export const a = 1, {} = obj'],
+  ['nested empty object pattern', 'export const { a: {} } = obj'],
+  ['nested empty array pattern', 'export const [{}, []] = arr'],
+  ['empty pattern on a continuation line', 'export const a = 1\n, {} = obj'],
   [
     'overloads',
     'export function f(a: string): void\nexport function f(b: number): void',
@@ -361,5 +369,56 @@ describe('ModuleInfo.exportCount', () => {
       }
     }
     expect(undercounts).toEqual([])
+  })
+})
+
+describe('ModuleInfo.hasSourceDefaultExport', () => {
+  const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
+  const tsParserContext = {
+    ...testContext(),
+    parserPath: parsers.TS,
+    parserOptions,
+  } as RuleContext
+  // forcing `.js` through an alternate parser keeps it off the lexer route
+  const astRouteContext = {
+    ...tsParserContext,
+    settings: {
+      ...tsParserContext.settings,
+      'import-x/parsers': { [parsers.TS]: ['.js'] },
+    },
+  } as RuleContext
+
+  it('follows the source, not what `esModuleInterop` synthesizes', () => {
+    // the fact exists so the guard can tell a source default from the one
+    // `esModuleInterop` adds for every module that exports anything
+    for (const context of [tsParserContext, astRouteContext]) {
+      expect(
+        ModuleInfo.get('./barrel-files/barrel.js', context)!
+          .hasSourceDefaultExport,
+      ).toBe(false)
+      expect(
+        ModuleInfo.get(testFilePath('default-export.js'), context)!
+          .hasSourceDefaultExport,
+      ).toBe(true)
+    }
+  })
+
+  it('is false when `esModuleInterop` is the only source of the default', () => {
+    const tsconfigContext = {
+      ...tsParserContext,
+      languageOptions: {
+        parserOptions: {
+          tsconfigRootDir: testFilePath('typescript-export-assign-type'),
+        },
+      },
+    } as RuleContext
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/not-barrel.js',
+      tsconfigContext,
+    )!
+    // the compiler option adds the binding…
+    expect(moduleInfo.ownExports.has('default')).toBe(true)
+    // …but the source declares no default, so the guard may still rule it out
+    expect(moduleInfo.hasSourceDefaultExport).toBe(false)
   })
 })
