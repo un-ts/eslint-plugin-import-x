@@ -537,19 +537,14 @@ export class ModuleInfo {
   /** @internal The barrel heuristic's surface (AST route only). */
   declare private surface?: ModuleSurface
   /**
-   * @internal Runtime export entries the lexer reported, counted before the
-   *   name maps dedup them — an upper bound on the surface's `exports`, set
-   *   only for a lexer-analyzed module. Read by the guard in
-   *   `rules/avoid-importing-barrel-files.ts`; `AstModuleFacts.exportCount`
-   *   records why the bound holds and where it stops.
+   * @internal Runtime export entries the lexer reported — the barrel guard's
+   *   upper bound on {@link surface}. See `AstModuleFacts.exportCount`.
    */
   declare exportCount?: number
   /**
-   * @internal Whether the module's own source declares a default export —
-   *   captured before the `esModuleInterop` synthesis adds one, so the barrel
-   *   guard's "a default export may hide `export default { … }` properties"
-   *   exception keys off the source, not off a synthesized binding. Set for
-   *   both analysis routes.
+   * @internal Whether the module's own source declares a default export,
+   *   captured before `esModuleInterop` synthesizes one: the guard's
+   *   "`export default { … }` may hide properties" exception keys off it.
    */
   declare hasSourceDefaultExport: boolean
   /**

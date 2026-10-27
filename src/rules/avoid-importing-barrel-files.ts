@@ -44,18 +44,14 @@ function isRuntimeEdge(
 
 /**
  * Whether the target provably is not a barrel at `amount` without producing a
- * surface for it — `false` for anything but a lexer-analyzed module, whose
- * count is the only one known before a parse.
+ * surface for it — `false` for anything but a lexer-analyzed module.
  *
- * The AST route already counted an exact surface during its walk, which the
- * caller reads instead. For a lexer-analyzed module `exportCount` is an upper
- * bound on the exports the surface would count (see `AstModuleFacts`), so a
- * bound at or below `amount` settles it — and saves the parse a small plain-JS
- * dependency would otherwise need. A module whose *source* declares a default
- * export is never ruled out: the properties of `export default { … }` are
- * exports no entry count can see. The check is deliberately not
- * `ownExports.has('default')`, because `esModuleInterop` synthesizes one for
- * every module that exports anything.
+ * The AST route already has an exact surface (`getSurface`), so only the lexer
+ * route needs this: `exportCount` is an upper bound on the exports the surface
+ * would count (see `AstModuleFacts`). A module whose *source* declares a
+ * default export is never ruled out — `export default { … }` properties are
+ * invisible to any entry count — so the check reads `hasSourceDefaultExport`,
+ * not `ownExports`, where `esModuleInterop` synthesizes a default.
  */
 function cannotBeBarrel(moduleInfo: ModuleInfo, amount: number): boolean {
   const count = moduleInfo.exportCount
@@ -256,10 +252,7 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        // A lexer-analyzed module has no surface yet, and producing one costs a
-        // parse: rule it out from the export entries the lexer counted before
-        // its name maps deduped anything. The AST route already counted an
-        // exact surface during its walk, so it goes straight there.
+        // rule a lexer-analyzed module out before paying for its surface
         if (
           cannotBeBarrel(moduleInfo, amountOfExportsToConsiderModuleAsBarrel)
         ) {

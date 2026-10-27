@@ -26,6 +26,13 @@ const tsContext = {
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
 } as ChildContext
 
+const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
+const tsParserContext = {
+  ...testContext(),
+  parserPath: parsers.TS,
+  parserOptions,
+} as RuleContext
+
 function surfaceOf(code: string, context = jsContext) {
   const { ast } = parse('module.js', code, context)
   return countModuleSurface(ast.body)
@@ -248,15 +255,9 @@ describe(isBarrelFileSurface, () => {
 })
 
 describe('ModuleInfo.getSurface', () => {
-  const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
   const jsParserContext = {
     ...testContext(),
     parserPath: parsers.ESPREE,
-    parserOptions,
-  } as RuleContext
-  const tsParserContext = {
-    ...testContext(),
-    parserPath: parsers.TS,
     parserOptions,
   } as RuleContext
   // forcing `.js` through an alternate parser keeps it off the lexer route
@@ -330,12 +331,6 @@ describe('ModuleInfo.getSurface', () => {
 })
 
 describe('ModuleInfo.exportCount', () => {
-  const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
-  const tsParserContext = {
-    ...testContext(),
-    parserPath: parsers.TS,
-    parserOptions,
-  } as RuleContext
   // forcing `.js` through an alternate parser keeps it off the lexer route
   const astRouteContext = {
     ...tsParserContext,
@@ -411,12 +406,6 @@ describe('ModuleInfo.exportCount', () => {
 })
 
 describe('ModuleInfo.hasSourceDefaultExport', () => {
-  const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
-  const tsParserContext = {
-    ...testContext(),
-    parserPath: parsers.TS,
-    parserOptions,
-  } as RuleContext
   // forcing `.js` through an alternate parser keeps it off the lexer route
   const astRouteContext = {
     ...tsParserContext,
