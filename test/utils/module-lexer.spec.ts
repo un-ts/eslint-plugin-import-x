@@ -691,6 +691,7 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       ['export const { a } = obj', ['a']],
       ['export const [a] = arr', ['a']],
       ['export const { a: b, c: d } = obj', ['b', 'd']],
+      ['export const{a}=o', ['a']],
       ['export const { [key]: bound } = obj', ['bound']],
       ['export const { a, ...rest } = obj', ['a', 'rest']],
       ['export const { ...rest } = obj', ['rest']],

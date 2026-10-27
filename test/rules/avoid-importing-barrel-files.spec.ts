@@ -365,7 +365,7 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       ],
     }),
     // three `export function f` overloads + two `export * from`: the name map
-    // sees one `f`, the pre-filter's per-statement count sees five
+    // sees one `f`, the pre-filter's entry count sees five
     tInvalid({
       code: "import { f } from './overload-barrel.js';",
       filename,

@@ -18,5 +18,5 @@ properties of `export default { … }` are exports no entry count can see (a
 
 A declarator that binds no name — `export const {} = obj`, `export const
 { a: {} } = obj` — is no longer counted as an export by the barrel surface: it
-exports nothing, and counting it made the rule's own surface disagree with what
-the lexer can see.
+exports nothing, and counting it made the surface disagree with the lexer's
+entry count.

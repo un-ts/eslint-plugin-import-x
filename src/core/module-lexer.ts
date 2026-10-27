@@ -280,10 +280,7 @@ function hasUnlexableExportHead(content: string) {
     if (head === null) {
       return true
     }
-    if (
-      (head[0] === 'const' || head[0] === 'let' || head[0] === 'var') &&
-      head[0] === 'const'
-    ) {
+    if (head[0] === 'const') {
       CONST_ENUM_HEAD_PATTERN.lastIndex = skipTrivia(
         content,
         LEXABLE_EXPORT_HEAD_PATTERN.lastIndex,
