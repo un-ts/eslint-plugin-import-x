@@ -692,6 +692,12 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       'export const { a: {} } = obj',
       'export const [{}, []] = arr',
       'export const a = 1\n, {} = obj',
+      // a declaration continues past a line break without a leading comma
+      'export const a = 1 +\n  2, {} = obj',
+      'export const a = 1\n  + 2, {} = obj',
+      'export const a = foo\n  .bar, {} = obj',
+      'export const a = flag\n  ? one : two, {} = obj',
+      'export const a = foo\n  (1), {} = obj',
       'export const { a } = obj',
       'export const [a] = arr',
       'export const{a}=o',

@@ -331,6 +331,124 @@ function skipQuoted(content: string, index: number) {
   return -1
 }
 
+/** Bracket characters, and the depth they add or remove. */
+const BRACKET_DELTA = new Map([
+  ['(', 1],
+  ['[', 1],
+  ['{', 1],
+  [')', -1],
+  [']', -1],
+  ['}', -1],
+])
+
+/**
+ * Characters a line can end on when the declarator on it is complete. Anything
+ * else — an operator, `=`, `(`, `?`, `:` — means the declaration continues on
+ * the next line.
+ */
+const COMPLETE_LINE_END_PATTERN = /[\w$)\]}"'`]$/
+
+/** Where a declarator scan goes next: another position, or how it ended. */
+type ScanStep = { index: number; depth: number } | 'pattern' | 'stop'
+
+/** Skips a `//` or `/* … *\/` comment; `-1` for a regex or division. */
+function skipComment(content: string, index: number) {
+  if (content[index + 1] === '/') {
+    const end = content.indexOf('\n', index)
+    return end === -1 ? content.length : end
+  }
+  if (content[index + 1] === '*') {
+    const end = content.indexOf('*/', index + 2)
+    return end === -1 ? -1 : end + 2
+  }
+  return -1 // regex or division: the contents are not worth scanning
+}
+
+/**
+ * Skips the string or comment at `index`, returning where to resume — or `-1`
+ * for a template, regex or division, whose contents can hold the separators
+ * this scan keys on, and which therefore send the file to the AST route.
+ */
+function skipCodeToken(content: string, index: number) {
+  const char = content[index]
+  if (char === '"' || char === "'") {
+    const close = skipQuoted(content, index)
+    return close < 0 ? -1 : close + 1
+  }
+  if (char === '`') {
+    return -1
+  }
+  return char === '/' ? skipComment(content, index) : index
+}
+
+/** Whether the text starts the way a continued declaration can. */
+function continuesExpression(text: string) {
+  return (
+    EXPRESSION_CONTINUATION_PATTERN.test(text) ||
+    KEYWORD_CONTINUATION_PATTERN.test(text)
+  )
+}
+
+/** Whether the line ending at `index` completes the declarator on it. */
+function endsDeclarationLine(content: string, index: number) {
+  const lineStart = content.lastIndexOf('\n', index - 1) + 1
+  return COMPLETE_LINE_END_PATTERN.test(
+    stripComments(content.slice(lineStart, index)).trimEnd(),
+  )
+}
+
+/**
+ * Whether the declaration continues across the line break at `index`: through
+ * a trailing operator, through a next line that picks the expression up
+ * (member access, call, index, conditional, template), or through a leading
+ * comma.
+ */
+function continuesDeclaration(content: string, index: number) {
+  return (
+    continuesExpression(content.slice(skipTrivia(content, index + 1))) ||
+    !endsDeclarationLine(content, index)
+  )
+}
+
+/** Where the scan resumes at a separator, or how it ends. */
+function resumeAt(content: string, index: number, depth: number): ScanStep {
+  const char = content[index]
+  if (char === ';') {
+    return 'stop'
+  }
+  if (char === ',') {
+    const next = skipTrivia(content, index + 1)
+    return DESTRUCTURING_START.has(content[next])
+      ? 'pattern'
+      : { index: next, depth }
+  }
+  if (char === '\n' || char === '\r') {
+    return continuesDeclaration(content, index)
+      ? { index: skipTrivia(content, index + 1), depth }
+      : 'stop'
+  }
+  return { index: index + 1, depth }
+}
+
+/** One step of the declarator scan. */
+function scanStep(content: string, index: number, depth: number): ScanStep {
+  const skipped = skipCodeToken(content, index)
+  if (skipped < 0) {
+    return 'pattern' // not scannable, so not provably a non-pattern
+  }
+  if (skipped > index) {
+    return { index: skipped, depth }
+  }
+  const delta = BRACKET_DELTA.get(content[index])
+  if (delta === undefined) {
+    return depth > 0
+      ? { index: index + 1, depth }
+      : resumeAt(content, index, depth)
+  }
+  const next = depth + delta
+  return next < 0 ? 'pattern' : { index: index + 1, depth: next }
+}
+
 /**
  * Whether an exported `const`/`let`/`var` declaration binds through a
  * destructuring pattern.
@@ -343,12 +461,14 @@ function skipQuoted(content: string, index: number) {
  * the entry count would come out *below* the surface and the guard would skip a
  * module that is a barrel by the surface's own test.
  *
- * A declarator can only start right after the declaration keyword or after a
- * top-level comma, and a `{`/`[` there is always a pattern: an object/array
- * literal can only follow `=`, which is inside the declarator. Templates and
- * regular expressions are reported as patterns instead of scanned — their
- * contents can hold the `,` and `;` this scan keys on, and falling back is
- * always safe.
+ * A declarator starts right after the declaration keyword or after a top-level
+ * comma, and a `{`/`[` there is always a pattern: an object/array literal can
+ * only follow `=`, inside the declarator. A declaration can run past a line
+ * break without a leading comma, so a line break only ends it when the line
+ * before completes the declarator and the next one does not pick it up.
+ * Templates, regular expressions and anything else this scan cannot follow
+ * are reported as patterns instead of scanned — their contents can hold the
+ * separators it keys on, and falling back is always safe.
  */
 function hasDestructuringDeclarator(content: string, index: number) {
   let i = skipTrivia(content, index)
@@ -356,78 +476,17 @@ function hasDestructuringDeclarator(content: string, index: number) {
     return true
   }
   let depth = 0
-  while (i < content.length) {
-    const char = content[i]
-    if (char === '"' || char === "'") {
-      i = skipQuoted(content, i)
-      if (i < 0) {
-        return true // unterminated string: not plain JavaScript
-      }
-      i += 1
-      continue
+  for (;;) {
+    const step = scanStep(content, i, depth)
+    if (step === 'pattern') {
+      return true
     }
-    if (char === '`') {
-      return true // template: contents are not worth scanning
-    }
-    if (char === '/') {
-      if (content[i + 1] === '/') {
-        const end = content.indexOf('\n', i)
-        if (end === -1) {
-          return false
-        }
-        i = end
-        continue
-      }
-      if (content[i + 1] === '*') {
-        const end = content.indexOf('*/', i + 2)
-        if (end === -1) {
-          return true
-        }
-        i = end + 2
-        continue
-      }
-      return true // regex or division: contents are not worth scanning
-    }
-    if (char === '(' || char === '[' || char === '{') {
-      depth += 1
-      i += 1
-      continue
-    }
-    if (char === ')' || char === ']' || char === '}') {
-      depth -= 1
-      if (depth < 0) {
-        return true // left the declaration
-      }
-      i += 1
-      continue
-    }
-    if (depth > 0) {
-      i += 1
-      continue
-    }
-    if (char === ';') {
+    if (step === 'stop' || step.index >= content.length) {
       return false
     }
-    if (char === '\n' || char === '\r') {
-      // a new declarator can only follow a comma, and a leading comma is the
-      // one way for a declaration to continue on the next line
-      const next = skipTrivia(content, i + 1)
-      if (content[next] === ',') {
-        i = next
-        continue
-      }
-      return false
-    }
-    if (char === ',') {
-      i = skipTrivia(content, i + 1)
-      if (DESTRUCTURING_START.has(content[i])) {
-        return true
-      }
-      continue
-    }
-    i += 1
+    i = step.index
+    depth = step.depth
   }
-  return false
 }
 
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/

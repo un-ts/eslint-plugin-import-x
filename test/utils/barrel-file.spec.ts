@@ -41,16 +41,6 @@ const trickyDeclarations: Array<[string, string]> = [
   ['plain declarator list', 'export const a = 1, b = 2, c = 3'],
   ['declarators without initializers', 'export let a, b, c'],
   ['annotated declarator list', 'export const a: number = 1, b: number = 2'],
-  ['renamed destructuring', 'export const { a: b, c: d } = obj'],
-  ['array destructuring', 'export const [a, b] = arr'],
-  // patterns that bind no name at all: one declarator, zero entries
-  ['empty object pattern', 'export const {} = obj'],
-  ['empty array pattern', 'export const [] = arr'],
-  ['elided array pattern', 'export const [,,] = arr'],
-  ['empty pattern after a binding', 'export const a = 1, {} = obj'],
-  ['nested empty object pattern', 'export const { a: {} } = obj'],
-  ['nested empty array pattern', 'export const [{}, []] = arr'],
-  ['empty pattern on a continuation line', 'export const a = 1\n, {} = obj'],
   [
     'overloads',
     'export function f(a: string): void\nexport function f(b: number): void',
@@ -60,6 +50,26 @@ const trickyDeclarations: Array<[string, string]> = [
   ['export star as ns', "export * as ns from './a.js'"],
   ['async generator', 'export async function* g() {}'],
   ['class with type parameters', 'export class C<T> {}'],
+  // destructuring declarators, which bail: a pattern can bind no name at all
+  // (`{}`) while the surface still counts it as a declarator
+  ['renamed destructuring', 'export const { a: b, c: d } = obj'],
+  ['array destructuring', 'export const [a, b] = arr'],
+  ['empty object pattern', 'export const {} = obj'],
+  ['empty array pattern', 'export const [] = arr'],
+  ['elided array pattern', 'export const [,,] = arr'],
+  ['empty pattern after a binding', 'export const a = 1, {} = obj'],
+  ['nested empty object pattern', 'export const { a: {} } = obj'],
+  ['nested empty array pattern', 'export const [{}, []] = arr'],
+  // a declaration can continue past a line break without a leading comma
+  ['empty pattern on a continuation line', 'export const a = 1\n, {} = obj'],
+  ['operator continuation', 'export const a = 1 +\n  2, {} = obj'],
+  ['leading operator', 'export const a = 1\n  + 2, {} = obj'],
+  ['member-access continuation', 'export const a = foo\n  .bar, {} = obj'],
+  [
+    'conditional continuation',
+    'export const a = flag\n  ? one : two, {} = obj',
+  ],
+  ['call continuation', 'export const a = foo\n  (1), {} = obj'],
   // heads it does not read, which must bail to the AST route
   ['enum', 'export enum E { A }'],
   ['const enum', 'export const enum E { A }'],
