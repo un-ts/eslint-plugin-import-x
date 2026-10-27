@@ -82,6 +82,33 @@ export interface AstModuleFacts {
   reexports: Map<string, AstReexport>
   /** `export * from '...'` targets by resolved path. */
   starExports: Array<{ targetPath: string; typeOnly?: true }>
+  /**
+   * Number of runtime export entries the lexer reported — own exports,
+   * `export * as ns from` namespace exports, named re-exports and `export *
+   * from` statements — counted **before** `ownExports`/`reexports` dedup them.
+   * Set only for a lexer-analyzed module; the AST route carries an exact
+   * {@link surface} instead.
+   *
+   * It is an **upper bound** on that surface's `exports`, which is what the
+   * guard in `rules/avoid-importing-barrel-files.ts` reads: a module whose
+   * bound is at or below the threshold cannot be a barrel, so its surface never
+   * has to be produced (one parse saved for every small plain-JS dependency).
+   *
+   * The bound holds because counting happens before the dedup — `export
+   * function f(a: string): void` twice is two exports to `countModuleSurface`
+   * but one name to the map — and because the lexer route only ever sees what
+   * es-module-lexer reads faithfully: type-only syntax,
+   * `TYPE_MODIFIER_PATTERN`'s `type`/`typeof`, an unreadable declaration head
+   * (`LEXABLE_EXPORT_HEAD_PATTERN`), non-standard `export … from` and
+   * U+2028/U+2029 all bail to the AST route instead.
+   *
+   * One undercount is left on purpose and the guard accounts for it: the
+   * properties of `export default { … }` are exports no entry count can see, so
+   * a module with a default export is never ruled out.
+   *
+   * The invariant is pinned by a test in `test/utils/barrel-file.spec.ts`.
+   */
+  exportCount?: number
   /** Import declarations, keyed by resolved path. */
   imports: Map<string, ModuleImportDeclaration[]>
   defaultExportSourceName?: DefaultExportSourceName

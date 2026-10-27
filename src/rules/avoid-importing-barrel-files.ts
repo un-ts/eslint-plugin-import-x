@@ -1,7 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import type { ModuleImportDeclaration } from '../core/index.js'
-import { ModuleInfo } from '../core/index.js'
+import { getOwnExportNames, ModuleInfo } from '../core/index.js'
 import type { Visitor } from '../utils/index.js'
 import {
   createRule,
@@ -40,6 +40,28 @@ function isRuntimeEdge(
     }
   }
   return false
+}
+
+/**
+ * Whether the target provably is not a barrel at `amount` without producing a
+ * surface for it — `false` for anything but a lexer-analyzed module, whose
+ * count is the only one known before a parse.
+ *
+ * The AST route already counted an exact surface during its walk, which the
+ * caller reads instead. For a lexer-analyzed module `exportCount` is an upper
+ * bound on the exports the surface would count (see `AstModuleFacts`), so a
+ * bound at or below `amount` settles it — and saves the parse a small plain-JS
+ * dependency would otherwise need. A module with a default export is never
+ * ruled out: the properties of `export default { … }` are exports no entry
+ * count can see.
+ */
+function cannotBeBarrel(moduleInfo: ModuleInfo, amount: number): boolean {
+  const count = moduleInfo.exportCount
+  return (
+    count !== undefined &&
+    count <= amount &&
+    !getOwnExportNames(moduleInfo).includes('default')
+  )
 }
 
 /** `type`/`typeof` modifiers, which only Flow and TS parsers emit. */
@@ -231,6 +253,16 @@ export default createRule<[Options?], MessageId>({
         const moduleInfo = ModuleInfo.get(moduleSpecifier, context)
 
         if (moduleInfo == null) {
+          return
+        }
+
+        // A lexer-analyzed module has no surface yet, and producing one costs a
+        // parse: rule it out from the export entries the lexer counted before
+        // its name maps deduped anything. The AST route already counted an
+        // exact surface during its walk, so it goes straight there.
+        if (
+          cannotBeBarrel(moduleInfo, amountOfExportsToConsiderModuleAsBarrel)
+        ) {
           return
         }
 

@@ -357,6 +357,41 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
         },
       ],
     }),
+    // three `export function f` overloads + two `export * from`: the name map
+    // sees one `f`, the pre-filter's per-statement count sees five
+    tInvalid({
+      code: "import { f } from './overload-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 3 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 4,
+            specifier: './overload-barrel.js',
+            maxModuleGraphSizeAllowed: 3,
+          },
+        },
+      ],
+    }),
+    // ...and the same target on the AST route, where the pre-filter does not
+    // apply because the walk already counted an exact surface
+    tInvalid({
+      code: "import { f } from './overload-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 3 }],
+      settings: { 'import-x/parsers': { [parsers.TS]: ['.js'] } },
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 4,
+            specifier: './overload-barrel.js',
+            maxModuleGraphSizeAllowed: 3,
+          },
+        },
+      ],
+    }),
   ],
 })
 

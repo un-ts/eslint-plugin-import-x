@@ -5,6 +5,8 @@ import { testContext, testFilePath, parsers } from '../utils.js'
 import type { ChildContext } from 'eslint-plugin-import-x'
 import { analyzeAstModule } from 'eslint-plugin-import-x/core/ast-module'
 import { ModuleInfo } from 'eslint-plugin-import-x/core/index'
+import type { LexedEsModule } from 'eslint-plugin-import-x/core/module-lexer'
+import { lexModule } from 'eslint-plugin-import-x/core/module-lexer'
 import type { RuleContext } from 'eslint-plugin-import-x/types'
 import {
   countModuleSurface,
@@ -28,6 +30,42 @@ function surfaceOf(code: string, context = jsContext) {
   const { ast } = parse('module.js', code, context)
   return countModuleSurface(ast.body)
 }
+
+/**
+ * Declarations the guard's bound has to survive, each also tried after a plain
+ * `export const x = 1` — a construct the lexer mis-reads only shows up as an
+ * undercount once the file has an export it *does* report.
+ */
+const trickyDeclarations: Array<[string, string]> = [
+  // heads the lexer reads, which must stay on the fast path
+  ['plain declarator list', 'export const a = 1, b = 2, c = 3'],
+  ['declarators without initializers', 'export let a, b, c'],
+  ['annotated declarator list', 'export const a: number = 1, b: number = 2'],
+  ['renamed destructuring', 'export const { a: b, c: d } = obj'],
+  ['array destructuring', 'export const [a, b] = arr'],
+  [
+    'overloads',
+    'export function f(a: string): void\nexport function f(b: number): void',
+  ],
+  ['string export name', "export { a as 'string name' }"],
+  ['export star', "export * from './a.js'"],
+  ['export star as ns', "export * as ns from './a.js'"],
+  ['async generator', 'export async function* g() {}'],
+  ['class with type parameters', 'export class C<T> {}'],
+  // heads it does not read, which must bail to the AST route
+  ['enum', 'export enum E { A }'],
+  ['const enum', 'export const enum E { A }'],
+  ['namespace', 'export namespace N {}'],
+  ['module', 'export module M {}'],
+  ['interface', 'export interface I { a: number }'],
+  ['using', 'export using a = res'],
+  ['await using', 'export await using b = res'],
+  ['abstract class', 'export abstract class A {}'],
+  ['declare function', 'export declare function f(x: number): void'],
+  ['decorated class', 'export @dec class A {}'],
+  ['type alias', 'export type T = number'],
+  ['export assignment', 'export = x'],
+]
 
 describe(countModuleSurface, () => {
   it('counts top-level declarations and exported names', () => {
@@ -242,5 +280,86 @@ describe('ModuleInfo.getSurface', () => {
       unusedParserContext,
     )!
     expect(moduleInfo.getSurface()).toBeNull()
+  })
+})
+
+describe('ModuleInfo.exportCount', () => {
+  const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
+  const tsParserContext = {
+    ...testContext(),
+    parserPath: parsers.TS,
+    parserOptions,
+  } as RuleContext
+  // forcing `.js` through an alternate parser keeps it off the lexer route
+  const astRouteContext = {
+    ...tsParserContext,
+    settings: {
+      ...tsParserContext.settings,
+      'import-x/parsers': { [parsers.TS]: ['.js'] },
+    },
+  } as RuleContext
+
+  it('counts every runtime export entry the lexer reported', () => {
+    const counts: Record<string, number | undefined> = {}
+    for (const fixture of [
+      // 4 named re-exports
+      'barrel.js',
+      // 4 `export * from`
+      'star-barrel.js',
+      // 4 `export * as ns from`
+      'ns-barrel.js',
+      // three overloads of one name (the surface counts each) + 2 stars
+      'overload-barrel.js',
+    ]) {
+      counts[fixture] = ModuleInfo.get(
+        `./barrel-files/${fixture}`,
+        tsParserContext,
+      )!.exportCount
+    }
+    expect(counts).toEqual({
+      'barrel.js': 4,
+      'star-barrel.js': 4,
+      'ns-barrel.js': 4,
+      'overload-barrel.js': 5,
+    })
+  })
+
+  it('is not set for an AST-analyzed module, which has the surface', () => {
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/barrel.js',
+      astRouteContext,
+    )!
+    expect(moduleInfo.exportCount).toBeUndefined()
+    expect(moduleInfo.getSurface()).toEqual({ exports: 4, declarations: 0 })
+  })
+
+  it('stays an upper bound on the surface it lets the guard skip', () => {
+    // The guard skips `getSurface()` when this count is at or below the
+    // threshold, so it must never be smaller than what the surface would count.
+    // Anything the lexer reads unfaithfully has to bail instead, and a module
+    // with a default export is never ruled out (its `export default { … }`
+    // properties are invisible to any entry count).
+    const undercounts: Array<[string, number, number]> = []
+    for (const [label, declaration] of trickyDeclarations) {
+      for (const [variant, code] of [
+        ['', declaration],
+        [' after a readable export', `export const x = 1\n${declaration}`],
+      ] as const) {
+        const lexed = lexModule(code, 'f.js') as LexedEsModule | null
+        if (lexed == null || lexed.ownExports.includes('default')) {
+          continue
+        }
+        const count =
+          lexed.ownExports.length +
+          lexed.namespaceExports.length +
+          lexed.reexports.length +
+          lexed.imports.filter(imp => imp.starReexport).length
+        const exact = surfaceOf(code, tsContext).exports
+        if (count < exact) {
+          undercounts.push([`${label}${variant}`, count, exact])
+        }
+      }
+    }
+    expect(undercounts).toEqual([])
   })
 })
