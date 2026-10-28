@@ -206,6 +206,22 @@ describe('Vue', () => {
           },
         },
       }),
+      tValid({
+        name: '`absolute-first` checks each script block on its own',
+        code: `
+          <script>
+          import { local } from './local'
+          console.log(local)
+          </script>
+
+          <script setup>
+          import { p } from 'package'
+          console.log(p)
+          </script>
+        `,
+        ...vueParserConfig,
+        options: ['absolute-first'],
+      }),
     ],
     invalid: [
       tInvalid({
