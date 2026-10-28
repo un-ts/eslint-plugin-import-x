@@ -153,6 +153,16 @@ describe('Vue', () => {
     },
   }
 
+  const vueTsParserConfig = {
+    ...vueParserConfig,
+    languageOptions: {
+      ...vueParserConfig.languageOptions,
+      parserOptions: {
+        parser: cjsRequire('@typescript-eslint/parser'),
+      },
+    },
+  }
+
   ruleTester.run('first', rule, {
     valid: [
       tValid({
@@ -198,13 +208,7 @@ describe('Vue', () => {
           const a: A = b
           </script>
         `,
-        ...vueParserConfig,
-        languageOptions: {
-          ...vueParserConfig.languageOptions,
-          parserOptions: {
-            parser: cjsRequire('@typescript-eslint/parser'),
-          },
-        },
+        ...vueTsParserConfig,
       }),
       tValid({
         name: '`absolute-first` checks each script block on its own',
@@ -292,6 +296,33 @@ describe('Vue', () => {
           <script setup>
           import { b } from 'b'
           const a = 1
+          </script>
+        `,
+      }),
+      tInvalid({
+        name: 'TypeScript `<script setup>` with an import after code',
+        code: `
+          <script lang="ts">
+          import type { A } from 'a'
+          export default {}
+          </script>
+
+          <script setup lang="ts">
+          const n = 1
+          import { x } from 'x'
+          </script>
+        `,
+        ...vueTsParserConfig,
+        errors: [{ messageId: 'order' }],
+        output: `
+          <script lang="ts">
+          import type { A } from 'a'
+          export default {}
+          </script>
+
+          <script setup lang="ts">
+          import { x } from 'x'
+          const n = 1
           </script>
         `,
       }),
