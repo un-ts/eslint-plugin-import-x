@@ -2,4 +2,4 @@
 "eslint-plugin-import-x": patch
 ---
 
-fix(no-duplicates): keep type-only specifiers type-only when the autofix merges `import type { ... }` with an import that has inline `type` specifiers.
+fix(no-duplicates): without `prefer-inline`, the autofix moves inline `type` specifiers into the `import type { ... }` of the same module and leaves the value specifiers in their own import, instead of merging both into one import that is invalid or changes which specifiers are type-only.
