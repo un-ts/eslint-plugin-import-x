@@ -82,6 +82,23 @@ export interface AstModuleFacts {
   reexports: Map<string, AstReexport>
   /** `export * from '...'` targets by resolved path. */
   starExports: Array<{ targetPath: string; typeOnly?: true }>
+  /**
+   * Runtime export entries the lexer reported (own exports, `export * as ns`,
+   * named re-exports, `export * from`), counted **before** the name maps dedup
+   * them. Set only for a lexer-analyzed module; the AST route carries an exact
+   * {@link surface}.
+   *
+   * An **upper bound** on that surface's `exports`: at or below the threshold
+   * the module cannot be a barrel, so `rules/avoid-importing-barrel-files.ts`
+   * never produces its surface — one parse saved per small plain-JS dependency.
+   * It stays an upper bound because the lexer route bails on whatever
+   * es-module-lexer cannot read (`LEXABLE_EXPORT_HEAD_PATTERN`) and because
+   * `countModuleSurface` counts a declarator only when its pattern names
+   * something (`bindsName`). The one undercount left, `export default { … }`
+   * properties, is why the guard never rules out a source default.
+   * Pinned by the invariant test in `test/utils/barrel-file.spec.ts`.
+   */
+  exportCount?: number
   /** Import declarations, keyed by resolved path. */
   imports: Map<string, ModuleImportDeclaration[]>
   defaultExportSourceName?: DefaultExportSourceName

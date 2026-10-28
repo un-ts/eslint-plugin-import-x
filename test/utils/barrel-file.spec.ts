@@ -5,6 +5,8 @@ import { testContext, testFilePath, parsers } from '../utils.js'
 import type { ChildContext } from 'eslint-plugin-import-x'
 import { analyzeAstModule } from 'eslint-plugin-import-x/core/ast-module'
 import { ModuleInfo } from 'eslint-plugin-import-x/core/index'
+import type { LexedEsModule } from 'eslint-plugin-import-x/core/module-lexer'
+import { lexModule } from 'eslint-plugin-import-x/core/module-lexer'
 import type { RuleContext } from 'eslint-plugin-import-x/types'
 import {
   countModuleSurface,
@@ -24,10 +26,78 @@ const tsContext = {
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
 } as ChildContext
 
+const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
+const tsParserContext = {
+  ...testContext(),
+  parserPath: parsers.TS,
+  parserOptions,
+} as RuleContext
+
 function surfaceOf(code: string, context = jsContext) {
   const { ast } = parse('module.js', code, context)
   return countModuleSurface(ast.body)
 }
+
+/**
+ * Declarations the guard's bound has to survive, each also tried after a plain
+ * `export const x = 1` — a construct the lexer mis-reads only shows up as an
+ * undercount once the file has an export it *does* report.
+ */
+const trickyDeclarations: Array<[string, string]> = [
+  // heads the lexer reads, which must stay on the fast path
+  ['plain declarator list', 'export const a = 1, b = 2, c = 3'],
+  ['declarators without initializers', 'export let a, b, c'],
+  ['annotated declarator list', 'export const a: number = 1, b: number = 2'],
+  [
+    'overloads',
+    'export function f(a: string): void\nexport function f(b: number): void',
+  ],
+  ['string export name', "export { a as 'string name' }"],
+  ['export star', "export * from './a.js'"],
+  ['export star as ns', "export * as ns from './a.js'"],
+  ['async generator', 'export async function* g() {}'],
+  ['class with type parameters', 'export class C<T> {}'],
+  // destructuring declarators: the surface counts a declarator only when its
+  // pattern names something, and the lexer reports every bound name
+  ['renamed destructuring', 'export const { a: b, c: d } = obj'],
+  ['array destructuring', 'export const [a, b] = arr'],
+  ['computed key destructuring', 'export const { [key]: bound } = obj'],
+  ['object rest', 'export const { a, ...rest } = obj'],
+  ['object rest only', 'export const { ...rest } = obj'],
+  ['array rest', 'export const [a, ...rest] = arr'],
+  ['array rest only', 'export const [...rest] = arr'],
+  ['defaulted binding', 'export const { a = 1 } = obj'],
+  ['defaulted array element', 'export const [a = 1] = arr'],
+  ['empty object pattern', 'export const {} = obj'],
+  ['empty array pattern', 'export const [] = arr'],
+  ['elided array pattern', 'export const [,,] = arr'],
+  ['empty pattern after a binding', 'export const a = 1, {} = obj'],
+  ['nested empty object pattern', 'export const { a: {} } = obj'],
+  ['nested empty array pattern', 'export const [{}, []] = arr'],
+  // a declaration can continue past a line break without a leading comma
+  ['empty pattern on a continuation line', 'export const a = 1\n, {} = obj'],
+  ['operator continuation', 'export const a = 1 +\n  2, {} = obj'],
+  ['leading operator', 'export const a = 1\n  + 2, {} = obj'],
+  ['member-access continuation', 'export const a = foo\n  .bar, {} = obj'],
+  [
+    'conditional continuation',
+    'export const a = flag\n  ? one : two, {} = obj',
+  ],
+  ['call continuation', 'export const a = foo\n  (1), {} = obj'],
+  // heads it does not read, which must bail to the AST route
+  ['enum', 'export enum E { A }'],
+  ['const enum', 'export const enum E { A }'],
+  ['namespace', 'export namespace N {}'],
+  ['module', 'export module M {}'],
+  ['interface', 'export interface I { a: number }'],
+  ['using', 'export using a = res'],
+  ['await using', 'export await using b = res'],
+  ['abstract class', 'export abstract class A {}'],
+  ['declare function', 'export declare function f(x: number): void'],
+  ['decorated class', 'export @dec class A {}'],
+  ['type alias', 'export type T = number'],
+  ['export assignment', 'export = x'],
+]
 
 describe(countModuleSurface, () => {
   it('counts top-level declarations and exported names', () => {
@@ -40,6 +110,27 @@ describe(countModuleSurface, () => {
         export default { a: 1, b: 2 }
       `),
     ).toEqual({ exports: 5, declarations: 2 })
+  })
+
+  it('does not count a declarator that binds no name', () => {
+    // a declarator is an export only once its pattern names something, which
+    // is what keeps the lexer route's entry count an upper bound for
+    // `export const {} = obj` without scanning the declaration
+    for (const [source, surface] of [
+      ['export const {} = obj', { exports: 0, declarations: 1 }],
+      ['export const [] = arr', { exports: 0, declarations: 1 }],
+      ['export const [,,] = arr', { exports: 0, declarations: 1 }],
+      ['export const { a: {} } = obj', { exports: 0, declarations: 1 }],
+      ['export const [{}, []] = arr', { exports: 0, declarations: 1 }],
+      ['export const a = 1, {} = obj', { exports: 1, declarations: 2 }],
+      ['export const { a, b } = obj', { exports: 1, declarations: 1 }],
+      ['export const [a] = arr', { exports: 1, declarations: 1 }],
+    ] as Array<[string, { exports: number; declarations: number }]>) {
+      expect({ source, surface: surfaceOf(source) }).toEqual({
+        source,
+        surface,
+      })
+    }
   })
 
   it('counts named re-exports as exports only', () => {
@@ -164,15 +255,9 @@ describe(isBarrelFileSurface, () => {
 })
 
 describe('ModuleInfo.getSurface', () => {
-  const parserOptions = { ecmaVersion: 'latest', sourceType: 'module' }
   const jsParserContext = {
     ...testContext(),
     parserPath: parsers.ESPREE,
-    parserOptions,
-  } as RuleContext
-  const tsParserContext = {
-    ...testContext(),
-    parserPath: parsers.TS,
     parserOptions,
   } as RuleContext
   // forcing `.js` through an alternate parser keeps it off the lexer route
@@ -242,5 +327,125 @@ describe('ModuleInfo.getSurface', () => {
       unusedParserContext,
     )!
     expect(moduleInfo.getSurface()).toBeNull()
+  })
+})
+
+describe('ModuleInfo.exportCount', () => {
+  // forcing `.js` through an alternate parser keeps it off the lexer route
+  const astRouteContext = {
+    ...tsParserContext,
+    settings: {
+      ...tsParserContext.settings,
+      'import-x/parsers': { [parsers.TS]: ['.js'] },
+    },
+  } as RuleContext
+
+  it('counts every runtime export entry the lexer reported', () => {
+    const counts: Record<string, number | undefined> = {}
+    for (const fixture of [
+      // 4 named re-exports
+      'barrel.js',
+      // 4 `export * from`
+      'star-barrel.js',
+      // 4 `export * as ns from`
+      'ns-barrel.js',
+      // three overloads of one name (the surface counts each) + 2 stars
+      'overload-barrel.js',
+    ]) {
+      counts[fixture] = ModuleInfo.get(
+        `./barrel-files/${fixture}`,
+        tsParserContext,
+      )!.exportCount
+    }
+    expect(counts).toEqual({
+      'barrel.js': 4,
+      'star-barrel.js': 4,
+      'ns-barrel.js': 4,
+      'overload-barrel.js': 5,
+    })
+  })
+
+  it('is not set for an AST-analyzed module, which has the surface', () => {
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/barrel.js',
+      astRouteContext,
+    )!
+    expect(moduleInfo.exportCount).toBeUndefined()
+    expect(moduleInfo.getSurface()).toEqual({ exports: 4, declarations: 0 })
+  })
+
+  it('stays an upper bound on the surface it lets the guard skip', () => {
+    // The guard skips `getSurface()` when this count is at or below the
+    // threshold, so it must never be smaller than what the surface would count.
+    // Anything the lexer reads unfaithfully has to bail instead, and a module
+    // with a default export is never ruled out (its `export default { … }`
+    // properties are invisible to any entry count).
+    const undercounts: Array<[string, number, number]> = []
+    for (const [label, declaration] of trickyDeclarations) {
+      for (const [variant, code] of [
+        ['', declaration],
+        [' after a readable export', `export const x = 1\n${declaration}`],
+      ] as const) {
+        const lexed = lexModule(code, 'f.js') as LexedEsModule | null
+        if (lexed == null || lexed.ownExports.includes('default')) {
+          continue
+        }
+        const count =
+          lexed.ownExports.length +
+          lexed.namespaceExports.length +
+          lexed.reexports.length +
+          lexed.imports.filter(imp => imp.starReexport).length
+        const exact = surfaceOf(code, tsContext).exports
+        if (count < exact) {
+          undercounts.push([`${label}${variant}`, count, exact])
+        }
+      }
+    }
+    expect(undercounts).toEqual([])
+  })
+})
+
+describe('ModuleInfo.hasSourceDefaultExport', () => {
+  // forcing `.js` through an alternate parser keeps it off the lexer route
+  const astRouteContext = {
+    ...tsParserContext,
+    settings: {
+      ...tsParserContext.settings,
+      'import-x/parsers': { [parsers.TS]: ['.js'] },
+    },
+  } as RuleContext
+
+  it('follows the source, not what `esModuleInterop` synthesizes', () => {
+    // the fact exists so the guard can tell a source default from the one
+    // `esModuleInterop` adds for every module that exports anything
+    for (const context of [tsParserContext, astRouteContext]) {
+      expect(
+        ModuleInfo.get('./barrel-files/barrel.js', context)!
+          .hasSourceDefaultExport,
+      ).toBe(false)
+      expect(
+        ModuleInfo.get(testFilePath('default-export.js'), context)!
+          .hasSourceDefaultExport,
+      ).toBe(true)
+    }
+  })
+
+  it('is false when `esModuleInterop` is the only source of the default', () => {
+    const tsconfigContext = {
+      ...tsParserContext,
+      languageOptions: {
+        parserOptions: {
+          tsconfigRootDir: testFilePath('typescript-export-assign-type'),
+        },
+      },
+    } as RuleContext
+    const moduleInfo = ModuleInfo.get(
+      './barrel-files/not-barrel.js',
+      tsconfigContext,
+    )!
+    // the compiler option adds the binding…
+    expect(moduleInfo.ownExports.has('default')).toBe(true)
+    // …but the source declares no default, so the guard may still rule it out
+    expect(moduleInfo.hasSourceDefaultExport).toBe(false)
   })
 })

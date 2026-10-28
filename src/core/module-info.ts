@@ -370,7 +370,12 @@ export class ModuleInfo {
 
     const imports = new Map<string, ModuleImportDeclaration[]>()
     const starExports: AstModuleFacts['starExports'] = []
+    let starReexportCount = 0
     for (const imp of lexed.imports) {
+      if (imp.starReexport) {
+        // counted before resolution: an unresolvable target still exports
+        starReexportCount += 1
+      }
       const p = resolvePath(imp.specifier)
       if (p == null) {
         continue
@@ -397,6 +402,14 @@ export class ModuleInfo {
       ownExports,
       reexports,
       starExports,
+      // counted before the maps above dedup them, so a repeated export name
+      // (TypeScript overloads, declaration merging) is not lost — see
+      // `AstModuleFacts.exportCount`
+      exportCount:
+        lexed.ownExports.length +
+        lexed.namespaceExports.length +
+        lexed.reexports.length +
+        starReexportCount,
       imports,
       defaultExportSourceName: lexed.defaultExportSourceName,
     }
@@ -419,6 +432,10 @@ export class ModuleInfo {
     info.moduleDocGetter = facts.getModuleDoc
     info.defaultExportSourceName = facts.defaultExportSourceName
     info.surface = facts.surface
+    info.exportCount = facts.exportCount
+    // captured before the `esModuleInterop` synthesis below, so a default only
+    // that block added is not mistaken for one the source declares
+    info.hasSourceDefaultExport = facts.ownExports.has('default')
 
     const link = (
       local: string,
@@ -460,7 +477,7 @@ export class ModuleInfo {
     // exported and no default exists yet — applied here, once, for both routes
     if (
       info.ownExports.size > 0 &&
-      !info.ownExports.has('default') &&
+      !info.hasSourceDefaultExport &&
       (getTsconfigWithContext(context)?.compilerOptions?.esModuleInterop ??
         false)
     ) {
@@ -519,6 +536,17 @@ export class ModuleInfo {
   declare defaultExportSourceName?: DefaultExportSourceName
   /** @internal The barrel heuristic's surface (AST route only). */
   declare private surface?: ModuleSurface
+  /**
+   * @internal Runtime export entries the lexer reported — the barrel guard's
+   *   upper bound on {@link surface}. See `AstModuleFacts.exportCount`.
+   */
+  declare exportCount?: number
+  /**
+   * @internal Whether the module's own source declares a default export,
+   *   captured before `esModuleInterop` synthesizes one: the guard's
+   *   "`export default { … }` may hide properties" exception keys off it.
+   */
+  declare hasSourceDefaultExport: boolean
   /**
    * @internal Fast path for `module-doc.ts`: whether the raw content
    *   mentions a deprecation marker at all — when it doesn't, doc queries

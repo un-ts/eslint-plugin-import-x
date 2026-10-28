@@ -619,9 +619,12 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
     // guards the head whitelist against over-matching
     for (const [source, ownExports] of [
       ['export const a = 1', ['a']],
-      ['export const{a}=o', ['a']],
       ['export let a = 1', ['a']],
       ['export var a = 1', ['a']],
+      [String.raw`export const a = 'it\'s', b = 2`, ['a', 'b']],
+      ['export const a = 1;export const b = 2', ['a', 'b']],
+      ['export const a = 1 // note', ['a']],
+      ['export const a = 1 /* c */, b = 2', ['a', 'b']],
       ['export function a() {}', ['a']],
       ['export async function a() {}', ['a']],
       ['export function* a() {}', ['a']],
@@ -671,9 +674,34 @@ describe('ModuleInfo tier-2 escalation for lexed modules', () => {
       ['export const a // note\n: number = 1, b = 2', ['a', 'b']],
       ['export const a: number = 1', ['a']],
       ['export const a = 1, b = 2', ['a', 'b']],
-      ['export const { a: b, c } = o', ['b', 'c']],
       ['export default { a: 1 }', ['default']],
       ['export const a = cond ? 1 : 2', ['a']],
+    ] as Array<[string, string[]]>) {
+      expect(lexModule(source, 'f.js')).toMatchObject({ ownExports })
+    }
+  })
+
+  it('keeps destructuring declarations on the lexer route', () => {
+    // es-module-lexer reports the names a declaration binds, and the surface
+    // counts a declarator only once its pattern names something, so the bound
+    // needs no scan of the declaration itself
+    for (const [source, ownExports] of [
+      ['export const a = 1, {} = obj', ['a']],
+      ['export const a = 1 +\n  2, {} = obj', ['a']],
+      ['export const { a } = obj', ['a']],
+      ['export const [a] = arr', ['a']],
+      ['export const { a: b, c: d } = obj', ['b', 'd']],
+      ['export const{a}=o', ['a']],
+      ['export const { [key]: bound } = obj', ['bound']],
+      ['export const { a, ...rest } = obj', ['a', 'rest']],
+      ['export const { ...rest } = obj', ['rest']],
+      ['export const [...rest] = arr', ['rest']],
+      ['export const { a = 1 } = obj', ['a']],
+      ['export const [a = 1] = arr', ['a']],
+      // a statement whose only declarator binds nothing needs a readable
+      // export next to it to look like a module to the lexer
+      ['export const x = 1\nexport const {} = obj', ['x']],
+      ['export const x = 1\nexport const [{}, []] = arr', ['x']],
     ] as Array<[string, string[]]>) {
       expect(lexModule(source, 'f.js')).toMatchObject({ ownExports })
     }

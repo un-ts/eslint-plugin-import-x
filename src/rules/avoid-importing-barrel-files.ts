@@ -42,6 +42,24 @@ function isRuntimeEdge(
   return false
 }
 
+/**
+ * Whether the target provably is not a barrel at `amount` without producing a
+ * surface for it — `false` for anything but a lexer-analyzed module.
+ *
+ * The AST route already has an exact surface (`getSurface`), so only the lexer
+ * route needs this: `exportCount` is an upper bound on the exports the surface
+ * would count (see `AstModuleFacts`). A module whose *source* declares a
+ * default export is never ruled out — `export default { … }` properties are
+ * invisible to any entry count — so the check reads `hasSourceDefaultExport`,
+ * not `ownExports`, where `esModuleInterop` synthesizes a default.
+ */
+function cannotBeBarrel(moduleInfo: ModuleInfo, amount: number): boolean {
+  const count = moduleInfo.exportCount
+  return (
+    count !== undefined && count <= amount && !moduleInfo.hasSourceDefaultExport
+  )
+}
+
 /** `type`/`typeof` modifiers, which only Flow and TS parsers emit. */
 function isTypeKind(kind: string | undefined): boolean {
   return kind === 'type' || kind === 'typeof'
@@ -231,6 +249,13 @@ export default createRule<[Options?], MessageId>({
         const moduleInfo = ModuleInfo.get(moduleSpecifier, context)
 
         if (moduleInfo == null) {
+          return
+        }
+
+        // rule a lexer-analyzed module out before paying for its surface
+        if (
+          cannotBeBarrel(moduleInfo, amountOfExportsToConsiderModuleAsBarrel)
+        ) {
           return
         }
 

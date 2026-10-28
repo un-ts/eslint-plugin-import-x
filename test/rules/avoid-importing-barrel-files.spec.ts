@@ -134,6 +134,13 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
       filename,
       options: [{ maxModuleGraphSizeAllowed: 0 }],
     }),
+    // `export const {} = obj` binds no name, so it exports nothing: three
+    // `export *` plus it is not a barrel, whatever the module graph size
+    tValid({
+      code: "import { a } from './empty-pattern-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 0 }],
+    }),
   ],
 
   invalid: [
@@ -353,6 +360,23 @@ ruleTester.run('avoid-importing-barrel-files', rule, {
             amount: 6,
             specifier: 'barrel-pkg',
             maxModuleGraphSizeAllowed: 5,
+          },
+        },
+      ],
+    }),
+    // three `export function f` overloads + two `export * from`: the name map
+    // sees one `f`, the pre-filter's entry count sees five
+    tInvalid({
+      code: "import { f } from './overload-barrel.js';",
+      filename,
+      options: [{ maxModuleGraphSizeAllowed: 3 }],
+      errors: [
+        {
+          messageId: 'avoidImport',
+          data: {
+            amount: 4,
+            specifier: './overload-barrel.js',
+            maxModuleGraphSizeAllowed: 3,
           },
         },
       ],
