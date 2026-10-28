@@ -970,6 +970,40 @@ describe('TypeScript', () => {
             ],
           }),
           tInvalid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo'",
+            ...parserConfig,
+            output: null,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 92,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo'; import {type y, z} from './foo' with { 'resolution-mode': 'import' }",
+            ...parserConfig,
+            output: null,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
+              },
+            ],
+          }),
+          tInvalid({
             code: "import type {x} from './foo'; import {type y, z} from './foo'; import type {w} from './foo'",
             ...parserConfig,
             output: `import type {x,y,w} from './foo'; import {z} from './foo'; `,
