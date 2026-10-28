@@ -54,6 +54,24 @@ mode](https://262.ecma-international.org/6.0/#sec-strict-mode-code) so it would 
 
 Given that, see [#255] for the reasoning.
 
+### Vue single-file components
+
+With [`vue-eslint-parser`], the `<script>` and `<script setup>` blocks of a `.vue`
+file are checked separately, so each block can start with its own imports:
+
+```vue
+<script>
+import { a } from 'a'
+export default {}
+</script>
+
+<script setup>
+import { b } from 'b' // no report here
+</script>
+```
+
+The fixer also keeps each import in the block it came from.
+
 ### With Fixer
 
 This rule contains a fixer to reorder in-body import to top, the following criteria applied:
@@ -72,4 +90,5 @@ enable this rule.
 - Issue [#255]
 
 [`import-x/order`]: ./order.md
+[`vue-eslint-parser`]: https://github.com/vuejs/vue-eslint-parser
 [#255]: https://github.com/import-js/eslint-plugin-import/issues/255

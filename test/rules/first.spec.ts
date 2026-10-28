@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
+import type { TSESLint } from '@typescript-eslint/utils'
 
 import { createRuleTestCaseFunctions, parsers, testFilePath } from '../utils.js'
 
@@ -138,6 +139,152 @@ describe('TypeScript', () => {
         options: ['absolute-first'],
         ...parserConfig,
         errors: [{ messageId: 'absolute' }],
+      }),
+    ],
+  })
+})
+
+describe('Vue', () => {
+  const vueParserConfig = {
+    filename: testFilePath('foo.vue'),
+    languageOptions: {
+      parser:
+        cjsRequire<TSESLint.Parser.LooseParserModule>('vue-eslint-parser'),
+    },
+  }
+
+  ruleTester.run('first', rule, {
+    valid: [
+      tValid({
+        name: 'imports at the top of `<script>` and `<script setup>` (#177)',
+        code: `
+          <script>
+          import { a } from 'a'
+          console.log(a)
+          </script>
+
+          <script setup>
+          import { b } from 'b'
+          console.log(b)
+          </script>
+        `,
+        ...vueParserConfig,
+      }),
+      tValid({
+        name: '`<script setup>` before `<script>`',
+        code: `
+          <script setup>
+          import { b } from 'b'
+          console.log(b)
+          </script>
+
+          <script>
+          import { a } from 'a'
+          console.log(a)
+          </script>
+        `,
+        ...vueParserConfig,
+      }),
+      tValid({
+        name: 'TypeScript script blocks',
+        code: `
+          <script lang="ts">
+          import type { A } from 'a'
+          export default {}
+          </script>
+
+          <script setup lang="ts">
+          import { b } from 'b'
+          const a: A = b
+          </script>
+        `,
+        ...vueParserConfig,
+        languageOptions: {
+          ...vueParserConfig.languageOptions,
+          parserOptions: {
+            parser: cjsRequire('@typescript-eslint/parser'),
+          },
+        },
+      }),
+    ],
+    invalid: [
+      tInvalid({
+        name: 'each script block is fixed on its own (#177)',
+        code: `
+          <script>
+          console.log('a')
+          import 'vue'
+          console.log('b')
+          </script>
+
+          <script setup>
+          console.log('c')
+          import 'vue'
+          console.log('d')
+          </script>
+        `,
+        ...vueParserConfig,
+        errors: [{ messageId: 'order' }, { messageId: 'order' }],
+        output: [
+          `
+          <script>
+          import 'vue'
+          console.log('a')
+          console.log('b')
+          </script>
+
+          <script setup>
+          console.log('c')
+          import 'vue'
+          console.log('d')
+          </script>
+        `,
+          `
+          <script>
+          import 'vue'
+          console.log('a')
+          console.log('b')
+          </script>
+
+          <script setup>
+          import 'vue'
+          console.log('c')
+          console.log('d')
+          </script>
+        `,
+        ],
+      }),
+      tInvalid({
+        name: 'does not move an import into the other script block',
+        code: `
+          <script>
+          export default { name: 'Foo' }
+          </script>
+
+          <script setup>
+          const a = 1
+          import { b } from 'b'
+          </script>
+        `,
+        ...vueParserConfig,
+        errors: [{ messageId: 'order' }],
+        output: `
+          <script>
+          export default { name: 'Foo' }
+          </script>
+
+          <script setup>
+          import { b } from 'b'
+          const a = 1
+          </script>
+        `,
+      }),
+      tInvalid({
+        name: 'non-Vue file parsed by vue-eslint-parser',
+        code: "console.log('x')\nimport { y } from './bar'",
+        languageOptions: vueParserConfig.languageOptions,
+        errors: [{ messageId: 'order' }],
+        output: "import { y } from './bar'\nconsole.log('x')",
       }),
     ],
   })

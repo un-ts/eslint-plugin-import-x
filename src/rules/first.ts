@@ -20,6 +20,38 @@ function isPossibleDirective(node: TSESTree.ProgramStatement) {
   )
 }
 
+interface VueParserServices {
+  getDocumentFragment?: () => {
+    children: Array<{ type: string; name?: string; range: [number, number] }>
+  } | null
+}
+
+/**
+ * `vue-eslint-parser` puts the statements of `<script>` and `<script setup>`
+ * into a single `Program`, but each block has its own imports, so check them
+ * separately.
+ */
+function getScriptBodies(
+  sourceCode: TSESLint.SourceCode,
+  program: TSESTree.Program,
+) {
+  const documentFragment = (
+    sourceCode.parserServices as VueParserServices | undefined
+  )?.getDocumentFragment?.()
+
+  if (!documentFragment) {
+    return [program.body]
+  }
+
+  return documentFragment.children
+    .filter(child => child.type === 'VElement' && child.name === 'script')
+    .map(({ range: [start, end] }) =>
+      program.body.filter(
+        node => node.range[0] >= start && node.range[1] <= end,
+      ),
+    )
+}
+
 export type Options = 'absolute-first' | 'disable-absolute-first'
 
 export type MessageId = 'absolute' | 'order'
@@ -46,148 +78,153 @@ export default createRule<[Options?], MessageId>({
   },
   defaultOptions: [],
   create(context) {
-    return {
-      Program(n) {
-        const body = n.body
-        if (!body?.length) {
-          return
+    function checkBody(body: TSESTree.ProgramStatement[]) {
+      if (!body?.length) {
+        return
+      }
+
+      const absoluteFirst = context.options[0] === 'absolute-first'
+      const { sourceCode } = context
+      const originSourceCode = sourceCode.getText()
+
+      let nonImportCount = 0
+      let anyExpressions = false
+      let anyRelative = false
+
+      let lastLegalImp: TSESTree.ProgramStatement | null = null
+
+      const errorInfos: Array<{
+        node: TSESTree.ProgramStatement
+        range: [number, number]
+      }> = []
+
+      let shouldSort = true
+      let lastSortNodesIndex = 0
+
+      for (const [index, node] of body.entries()) {
+        if (!anyExpressions && isPossibleDirective(node)) {
+          continue
         }
 
-        const absoluteFirst = context.options[0] === 'absolute-first'
-        const { sourceCode } = context
-        const originSourceCode = sourceCode.getText()
+        anyExpressions = true
 
-        let nonImportCount = 0
-        let anyExpressions = false
-        let anyRelative = false
-
-        let lastLegalImp: TSESTree.ProgramStatement | null = null
-
-        const errorInfos: Array<{
-          node: TSESTree.ProgramStatement
-          range: [number, number]
-        }> = []
-
-        let shouldSort = true
-        let lastSortNodesIndex = 0
-
-        for (const [index, node] of body.entries()) {
-          if (!anyExpressions && isPossibleDirective(node)) {
-            continue
+        if (
+          node.type === 'ImportDeclaration' ||
+          node.type === 'TSImportEqualsDeclaration'
+        ) {
+          if (absoluteFirst) {
+            const importValue = getImportValue(node)
+            if (typeof importValue === 'string' && /^\./.test(importValue)) {
+              anyRelative = true
+            } else if (anyRelative) {
+              context.report({
+                node:
+                  node.type === 'ImportDeclaration'
+                    ? node.source
+                    : node.moduleReference,
+                messageId: 'absolute',
+              })
+            }
           }
 
-          anyExpressions = true
-
-          if (
-            node.type === 'ImportDeclaration' ||
-            node.type === 'TSImportEqualsDeclaration'
-          ) {
-            if (absoluteFirst) {
-              const importValue = getImportValue(node)
-              if (typeof importValue === 'string' && /^\./.test(importValue)) {
-                anyRelative = true
-              } else if (anyRelative) {
-                context.report({
-                  node:
-                    node.type === 'ImportDeclaration'
-                      ? node.source
-                      : node.moduleReference,
-                  messageId: 'absolute',
-                })
+          if (nonImportCount > 0) {
+            /** @see https://eslint.org/docs/next/use/migrate-to-9.0.0#-removed-multiple-context-methods */
+            for (const variable of (
+              sourceCode as unknown as RuleContext
+            ).getDeclaredVariables(node)) {
+              if (!shouldSort) {
+                break
               }
-            }
 
-            if (nonImportCount > 0) {
-              /** @see https://eslint.org/docs/next/use/migrate-to-9.0.0#-removed-multiple-context-methods */
-              for (const variable of (
-                sourceCode as unknown as RuleContext
-              ).getDeclaredVariables(node)) {
-                if (!shouldSort) {
+              for (const reference of variable.references) {
+                if (reference.identifier.range[0] < node.range[1]) {
+                  shouldSort = false
                   break
                 }
-
-                for (const reference of variable.references) {
-                  if (reference.identifier.range[0] < node.range[1]) {
-                    shouldSort = false
-                    break
-                  }
-                }
               }
-
-              if (shouldSort) {
-                lastSortNodesIndex = errorInfos.length
-              }
-
-              errorInfos.push({
-                node,
-                range: [body[index - 1].range[1], node.range[1]],
-              })
-            } else {
-              lastLegalImp = node
             }
+
+            if (shouldSort) {
+              lastSortNodesIndex = errorInfos.length
+            }
+
+            errorInfos.push({
+              node,
+              range: [body[index - 1].range[1], node.range[1]],
+            })
           } else {
-            nonImportCount++
+            lastLegalImp = node
           }
+        } else {
+          nonImportCount++
         }
+      }
 
-        if (errorInfos.length === 0) {
-          return
-        }
+      if (errorInfos.length === 0) {
+        return
+      }
 
-        for (const [index, { node }] of errorInfos.entries()) {
-          let fix: TSESLint.ReportFixFunction | undefined
+      for (const [index, { node }] of errorInfos.entries()) {
+        let fix: TSESLint.ReportFixFunction | undefined
 
-          if (index < lastSortNodesIndex) {
-            fix = (fixer: TSESLint.RuleFixer) => fixer.insertTextAfter(node, '')
-          } else if (index === lastSortNodesIndex) {
-            const sortNodes = errorInfos.slice(0, lastSortNodesIndex + 1)
-            fix = (fixer: TSESLint.RuleFixer) => {
-              const removeFixers = sortNodes.map(({ range }) =>
-                fixer.removeRange(range),
-              )
-              const range = [
-                0,
-                removeFixers[removeFixers.length - 1].range[1],
-              ] as const
+        if (index < lastSortNodesIndex) {
+          fix = (fixer: TSESLint.RuleFixer) => fixer.insertTextAfter(node, '')
+        } else if (index === lastSortNodesIndex) {
+          const sortNodes = errorInfos.slice(0, lastSortNodesIndex + 1)
+          fix = (fixer: TSESLint.RuleFixer) => {
+            const removeFixers = sortNodes.map(({ range }) =>
+              fixer.removeRange(range),
+            )
+            const range = [
+              0,
+              removeFixers[removeFixers.length - 1].range[1],
+            ] as const
 
-              let insertSourceCode = sortNodes
-                .map(({ range }) => {
-                  const nodeSourceCode = originSourceCode.slice(...range)
-                  if (/\S/.test(nodeSourceCode[0])) {
-                    return `\n${nodeSourceCode}`
-                  }
-                  return nodeSourceCode
-                })
-                .join('')
+            let insertSourceCode = sortNodes
+              .map(({ range }) => {
+                const nodeSourceCode = originSourceCode.slice(...range)
+                if (/\S/.test(nodeSourceCode[0])) {
+                  return `\n${nodeSourceCode}`
+                }
+                return nodeSourceCode
+              })
+              .join('')
 
-              let replaceSourceCode = ''
+            let replaceSourceCode = ''
 
-              if (!lastLegalImp) {
-                insertSourceCode =
-                  insertSourceCode.trim() + insertSourceCode.match(/^(\s+)/)![0]
-              }
-
-              const insertFixer = lastLegalImp
-                ? fixer.insertTextAfter(lastLegalImp, insertSourceCode)
-                : fixer.insertTextBefore(body[0], insertSourceCode)
-
-              const fixers = [insertFixer, ...removeFixers]
-              for (const [i, computedFixer] of fixers.entries()) {
-                replaceSourceCode +=
-                  originSourceCode.slice(
-                    fixers[i - 1] ? fixers[i - 1].range[1] : 0,
-                    computedFixer.range[0],
-                  ) + computedFixer.text
-              }
-
-              return fixer.replaceTextRange(range, replaceSourceCode)
+            if (!lastLegalImp) {
+              insertSourceCode =
+                insertSourceCode.trim() + insertSourceCode.match(/^(\s+)/)![0]
             }
+
+            const insertFixer = lastLegalImp
+              ? fixer.insertTextAfter(lastLegalImp, insertSourceCode)
+              : fixer.insertTextBefore(body[0], insertSourceCode)
+
+            const fixers = [insertFixer, ...removeFixers]
+            for (const [i, computedFixer] of fixers.entries()) {
+              replaceSourceCode +=
+                originSourceCode.slice(
+                  fixers[i - 1] ? fixers[i - 1].range[1] : 0,
+                  computedFixer.range[0],
+                ) + computedFixer.text
+            }
+
+            return fixer.replaceTextRange(range, replaceSourceCode)
           }
-          context.report({
-            node,
-            messageId: 'order',
-            fix,
-          })
+        }
+        context.report({
+          node,
+          messageId: 'order',
+          fix,
+        })
+      }
+    }
+
+    return {
+      Program(n) {
+        for (const body of getScriptBodies(context.sourceCode, n)) {
+          checkBody(body)
         }
       },
     }
