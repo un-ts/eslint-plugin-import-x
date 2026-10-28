@@ -73,6 +73,8 @@ The `whitelist` option is an optional string array to specify the names of packa
 "import-x/no-extraneous-dependencies": ["error", {"whitelist": ["foo", "bar"]}]
 ```
 
+When an import resolves to a DefinitelyTyped package, the rule reports the runtime package (`qs` for `@types/qs`, `@babel/core` for `@types/babel__core`), and either name in `whitelist` ignores it.
+
 ## Rule Details
 
 Given the following `package.json`:

@@ -48,6 +48,9 @@ const packageDirMonoRepoRoot = testFilePath('monorepo')
 const packageDirWithResolvedTypesDependencies = testFilePath(
   'with-resolved-types-dependencies',
 )
+const packageDirWithResolvedTypesInDependencies = testFilePath(
+  'with-resolved-types-in-dependencies',
+)
 const packageDirMonoRepoWithNested = testFilePath(
   'monorepo/packages/nested-package',
 )
@@ -279,6 +282,17 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         },
       ],
     }),
+    tValid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesDependencies,
+          devDependencies: false,
+          whitelist: ['@types/qs'],
+        },
+      ],
+    }),
   ],
   invalid: [
     tInvalid({
@@ -302,6 +316,12 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         },
       ],
       errors: [{ messageId: 'missing', data: { packageName: '@babel/core' } }],
+    }),
+    tInvalid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesInDependencies, 'foo.js'),
+      options: [{ packageDir: packageDirWithResolvedTypesInDependencies }],
+      errors: [{ messageId: 'missing', data: { packageName: 'qs' } }],
     }),
     tInvalid({
       code: 'import "not-a-dependency"',

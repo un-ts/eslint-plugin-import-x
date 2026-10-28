@@ -332,7 +332,9 @@ function reportIfMissing(
   if (realPackageName && realPackageName !== importPackageName) {
     declarationStatus = checkDependencyDeclaration(
       deps,
-      realPackageName,
+      realPackageName.startsWith('@types/')
+        ? runtimePackageNameFromTypesPackageName(realPackageName)
+        : realPackageName,
       declarationStatus,
     )
 
@@ -351,7 +353,10 @@ function reportIfMissing(
     ? runtimePackageNameFromTypesPackageName(realPackageName)
     : realPackageName || importPackageName
 
-  if (whitelist?.has(packageName)) {
+  if (
+    whitelist?.has(packageName) ||
+    (realPackageName && whitelist?.has(realPackageName))
+  ) {
     return
   }
 
