@@ -57,6 +57,16 @@ function getFix(
   sourceCode: TSESLint.SourceCode,
   context: RuleContext<MessageId, [Options?]>,
 ): TSESLint.ReportFixFunction | null {
+  // Without `prefer-inline`, `import type {a}` and `import {type b, c}` share a
+  // group. Keep the types in `import type` instead of writing inline types.
+  if (
+    !context.options[0]?.['prefer-inline'] &&
+    nodes.some(node => node.importKind === 'type') &&
+    nodes.some(node => node.importKind !== 'type')
+  ) {
+    return getTypeImportFix(nodes, sourceCode)
+  }
+
   const first = nodes[0]
 
   // Adjusting the first import might make it multiline, which could break
@@ -123,7 +133,11 @@ function getFix(
   const shouldAddSpecifiers = specifiers.length > 0
   const shouldRemoveUnnecessary = unnecessaryImports.length > 0
   const shouldAddDefault = lazy(
-    () => getDefaultImportName(first) == null && defaultImportNames.size === 1,
+    () =>
+      getDefaultImportName(first) == null &&
+      defaultImportNames.size === 1 &&
+      // The default import must come from an import that is merged here.
+      restWithoutCommentsAndNamespaces.some(getDefaultImportName),
   )
 
   if (!shouldAddSpecifiers && !shouldRemoveUnnecessary && !shouldAddDefault()) {
@@ -191,7 +205,7 @@ function getFix(
           needsComma && !specifier.isEmpty && specifierText.length > 0
             ? `${result},${specifierText}`
             : `${result}${specifierText}`,
-          specifier.isEmpty ? needsComma : true,
+          specifier.isEmpty || specifierText.length === 0 ? needsComma : true,
           updatedExistingIdentifiers,
         ]
       },
@@ -297,6 +311,134 @@ function getFix(
       if (charAfterImport === '\n') {
         fixes.push(fixer.removeRange(charAfterImportRange))
       }
+    }
+
+    return fixes
+  }
+}
+
+// Move `b` of `import {type b, c} from './foo'` into the first `import type` of
+// the group and leave `c` where it is. The next fix pass merges the value
+// imports that are left like any other duplicates.
+function getTypeImportFix(
+  nodes: TSESTree.ImportDeclaration[],
+  sourceCode: TSESLint.SourceCode,
+): TSESLint.ReportFixFunction | null {
+  const first = nodes.find(node => node.importKind === 'type')!
+
+  // Leave it to the user to handle comments, also inside the `{...}` part
+  // since the specifiers are rewritten here.
+  const hasComments = (node: TSESTree.ImportDeclaration) =>
+    hasProblematicComments(node, sourceCode) ||
+    sourceCode.getCommentsInside(node).length > 0
+
+  // Specifiers only move between imports with the same attributes, like
+  // `with { 'resolution-mode': 'import' }`. Legacy parsers only set
+  // `assertions`.
+  const getAttributes = (node: TSESTree.ImportDeclaration) =>
+    (node.attributes ?? node.assertions)
+      ?.map(attr => sourceCode.getText(attr))
+      .join(',')
+
+  const rest = nodes.filter(
+    node =>
+      node !== first &&
+      !hasComments(node) &&
+      getAttributes(node) === getAttributes(first),
+  )
+
+  if (hasComments(first) || rest.length === 0) {
+    return null
+  }
+
+  return (fixer: TSESLint.RuleFixer) => {
+    const tokens = sourceCode.getTokens(first)
+    const closeBrace = tokens.find(token => isPunctuator(token, '}'))!
+    const tokenBefore = sourceCode.getTokenBefore(closeBrace)!
+    const existingIdentifiers = new Set(
+      first.specifiers.map(specifier =>
+        normalizeSpecifier(sourceCode.getText(specifier)),
+      ),
+    )
+    const identifiers: string[] = []
+    const fixes = []
+
+    for (const node of rest) {
+      const named = node.specifiers.filter(
+        specifier => specifier.type === 'ImportSpecifier',
+      )
+      // All of `import type {a}`, but only `type b` of `import {type b, c}`
+      const types = named.filter(
+        specifier =>
+          node.importKind === 'type' || specifier.importKind === 'type',
+      )
+      const values = named.filter(specifier => !types.includes(specifier))
+
+      for (const specifier of types) {
+        // Keep the whitespace before the specifier, but drop the inline `type`
+        const text =
+          sourceCode.text.slice(
+            sourceCode.getTokenBefore(specifier)!.range[1],
+            specifier.range[0],
+          ) +
+          sourceCode.text.slice(specifier.imported.range[0], specifier.range[1])
+        const trimmed = normalizeSpecifier(text)
+        if (!existingIdentifiers.has(trimmed)) {
+          existingIdentifiers.add(trimmed)
+          identifiers.push(text)
+        }
+      }
+
+      if (values.length > 0) {
+        // `import {type b, c} from './foo'` becomes `import {c} from './foo'`
+        fixes.push(
+          fixer.replaceTextRange(
+            [named[0].range[0], named[named.length - 1].range[1]],
+            values
+              .map(specifier => sourceCode.getText(specifier))
+              .join(
+                sourceCode.text.slice(named[0].range[1], named[1].range[0]),
+              ),
+          ),
+        )
+      } else if (getDefaultImportName(node)) {
+        // `import def, {type b} from './foo'` becomes `import def from './foo'`
+        fixes.push(
+          fixer.removeRange([
+            node.specifiers[0].range[1],
+            sourceCode.getTokenAfter(named[named.length - 1], token =>
+              isPunctuator(token, '}'),
+            )!.range[1],
+          ]),
+        )
+      } else {
+        // Remove imports that are left without specifiers.
+        fixes.push(fixer.remove(node))
+
+        const charAfterImportRange = [node.range[1], node.range[1] + 1] as const
+        const charAfterImport = sourceCode.text.slice(
+          charAfterImportRange[0],
+          charAfterImportRange[1],
+        )
+        if (charAfterImport === '\n') {
+          fixes.push(fixer.removeRange(charAfterImportRange))
+        }
+      }
+    }
+
+    if (identifiers.length > 0) {
+      fixes.push(
+        // Keep `type` of `import type` in the fix range, so another fix (like
+        // `consistent-type-specifier-style`) cannot drop it in the same pass.
+        fixer.replaceText(tokens[1], tokens[1].value),
+        // `import type {a} from './foo'` becomes `import type {a,b} from './foo'`
+        fixer.insertTextAfter(
+          tokenBefore,
+          hasSpecifiers(first) && !isPunctuator(tokenBefore, ',')
+            ? `,${identifiers.join(',')}`
+            : identifiers.join(','),
+        ),
+      )
     }
 
     return fixes

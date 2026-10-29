@@ -2,6 +2,7 @@ import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
+import { TSESLint } from '@typescript-eslint/utils'
 
 import {
   createRuleTestCaseFunctions,
@@ -13,6 +14,7 @@ import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
 import { cjsRequire as require } from 'eslint-plugin-import-x'
 import jsxConfig from 'eslint-plugin-import-x/config/flat/react'
+import consistentTypeSpecifierStyle from 'eslint-plugin-import-x/rules/consistent-type-specifier-style'
 import rule from 'eslint-plugin-import-x/rules/no-duplicates'
 
 const ruleTester = new TSESLintRuleTester()
@@ -561,6 +563,21 @@ export default TestComponent;
   ],
 })
 
+// Sets only the legacy `assertions` property, like older parsers
+const legacyAssertionsParser = {
+  parseForESLint(code: string, options: TSESLint.ParserOptions) {
+    const result = require(parsers.TS).parseForESLint(code, options)
+    for (const node of result.ast.body) {
+      if (node.type === 'ImportDeclaration') {
+        const attributes = node.attributes
+        delete node.attributes
+        Object.defineProperty(node, 'assertions', { value: attributes })
+      }
+    }
+    return result
+  },
+}
+
 describe('TypeScript', () => {
   const parserConfig = {
     settings: {
@@ -726,7 +743,7 @@ describe('TypeScript', () => {
             code: "import {type x} from './foo'; import type {y} from './foo'",
             ...parserConfig,
             options: [{ 'prefer-inline': false }],
-            output: `import {type x,y} from './foo'; `,
+            output: ` import type {y,x} from './foo'`,
             errors: [
               {
                 ...createDuplicatedError('./foo'),
@@ -779,7 +796,7 @@ describe('TypeScript', () => {
           tInvalid({
             code: "import {type x} from 'foo'; import type {y} from 'foo'",
             ...parserConfig,
-            output: `import {type x,y} from 'foo'; `,
+            output: ` import type {y,x} from 'foo'`,
             errors: [
               {
                 ...createDuplicatedError('foo'),
@@ -842,6 +859,393 @@ describe('TypeScript', () => {
                 ...createDuplicatedError('./foo'),
                 line: 1,
                 column: 68,
+              },
+            ],
+          }),
+          // #231
+          tInvalid({
+            code: "import type {x} from './foo'; import {type y, z} from './foo'",
+            ...parserConfig,
+            output: `import type {x,y} from './foo'; import {z} from './foo'`,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import {type x, z} from './foo'; import type {y} from './foo'",
+            ...parserConfig,
+            options: [{ 'prefer-inline': false }],
+            output: `import {z} from './foo'; import type {y,x} from './foo'`,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 25,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import def, {type y} from './foo'; import type {x} from './foo'",
+            ...parserConfig,
+            output: `import def from './foo'; import type {x,y} from './foo'`,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 27,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 57,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo'; import def, {type y, z} from './foo'",
+            ...parserConfig,
+            output: `import type {x,y} from './foo'; import def, {z} from './foo'`,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 60,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo'; import {type y as w, z} from './foo'",
+            ...parserConfig,
+            output: `import type {x,y as w} from './foo'; import {z} from './foo'`,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 60,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo';\nimport {type y, type z} from './foo';\nexport const value = {}",
+            ...parserConfig,
+            output:
+              "import type {x,y, z} from './foo';\nexport const value = {}",
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 2,
+                column: 30,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo'; import {type x, z} from './foo'",
+            ...parserConfig,
+            output: `import type {x} from './foo'; import {z} from './foo'`,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo'",
+            ...parserConfig,
+            output: null,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 92,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo'; import {type y, z} from './foo' with { 'resolution-mode': 'import' }",
+            ...parserConfig,
+            output: null,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
+              },
+            ],
+          }),
+          // two different nonempty attribute values must not merge
+          tInvalid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo' with { 'resolution-mode': 'require' }",
+            ...parserConfig,
+            output: null,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 92,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo'",
+            ...parserConfig,
+            languageOptions: { parser: legacyAssertionsParser },
+            output: null,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 92,
+              },
+            ],
+          }),
+          // matching legacy assertions still merge (positive coverage)
+          tInvalid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo' with { 'resolution-mode': 'import' }",
+            ...parserConfig,
+            languageOptions: { parser: legacyAssertionsParser },
+            output:
+              "import type {x,y} from './foo' with { 'resolution-mode': 'import' }; import {z} from './foo' with { 'resolution-mode': 'import' }",
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 92,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo'; import {type y, z} from './foo'; import type {w} from './foo'",
+            ...parserConfig,
+            output: `import type {x,y,w} from './foo'; import {z} from './foo'; `,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 85,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo'; import {type y, a} from './foo'; import {type z, b} from './foo'",
+            ...parserConfig,
+            // The value imports are merged by the next fix pass.
+            output: [
+              `import type {x,y,z} from './foo'; import {a} from './foo'; import {b} from './foo'`,
+              `import type {x,y,z} from './foo'; import {a,b} from './foo'; `,
+            ],
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 88,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo'; import {type y, a,} from './foo'; import {type z, a} from './foo'; import {b} from './foo'",
+            ...parserConfig,
+            output: [
+              `import type {x,y,z} from './foo'; import {a,} from './foo'; import {a} from './foo'; import {b} from './foo'`,
+              `import type {x,y,z} from './foo'; import {a,b} from './foo';  `,
+            ],
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 56,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 89,
+              },
+            ],
+          }),
+          tInvalid({
+            // The default import is not taken from an import with a comment.
+            code: "import type {x} from './foo';\nimport {type y, a} from './foo';\n// comment\nimport def, {b} from './foo';\n",
+            ...parserConfig,
+            output:
+              "import type {x,y} from './foo';\nimport {a} from './foo';\n// comment\nimport def, {b} from './foo';\n",
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 2,
+                column: 25,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {'a,b,c' as abc} from './foo'; import {type b, d} from './foo'",
+            ...parserConfig,
+            output: `import type {'a,b,c' as abc,b} from './foo'; import {d} from './foo'`,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 35,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 68,
+              },
+            ],
+          }),
+          tInvalid({
+            code: `
+            import type {
+              a,
+            } from './foo';
+            import {
+              type b,
+              c,
+            } from './foo';`,
+            ...parserConfig,
+            output: `
+            import type {
+              a,
+              b
+            } from './foo';
+            import {
+              c,
+            } from './foo';`,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 4,
+                column: 20,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 8,
+                column: 20,
+              },
+            ],
+          }),
+          tInvalid({
+            // Autofix bail because of comment.
+            code: "import type {x} from './foo'; import {type y, /* c */ z} from './foo'",
+            ...parserConfig,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 63,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo'; import {type y, z} from './foo'",
+            ...parserConfig,
+            options: [{ 'prefer-inline': true }],
+            output: `import {type x,type y, z} from './foo'; `,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 55,
               },
             ],
           }),
@@ -973,5 +1377,35 @@ describe('TypeScript', () => {
   ruleTester.run('no-duplicates', rule, {
     valid,
     invalid,
+  })
+
+  it('keeps moved types type-only with consistent-type-specifier-style', () => {
+    const linter = new TSESLint.Linter({ configType: 'flat' })
+    const { output } = linter.verifyAndFix(
+      "import type {x} from './foo'; import {type y, z} from './foo'",
+      [
+        {
+          files: ['**/*.ts'],
+          languageOptions: { parser: require(parsers.TS) },
+          plugins: {
+            'import-x': {
+              rules: {
+                'consistent-type-specifier-style': consistentTypeSpecifierStyle,
+                'no-duplicates': rule,
+              },
+            },
+          },
+          rules: {
+            'import-x/consistent-type-specifier-style': [
+              'error',
+              'prefer-inline',
+            ],
+            'import-x/no-duplicates': 'error',
+          },
+        },
+      ],
+      { filename: 'foo.ts' },
+    )
+    expect(output).toBe("import  {type x,type y, z} from './foo'; ")
   })
 })
