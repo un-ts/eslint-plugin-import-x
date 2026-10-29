@@ -518,14 +518,23 @@ function inferNamespaceMembers(walk: Walk, decl: TSESTree.TSModuleDeclaration) {
       inferred: true,
     })
     return
-  } else if (type === 'TSModuleBlock' && decl.kind === 'namespace') {
-    const getDoc = walk.captureDoc(decl.body)
-    if ('name' in decl.id) {
-      addOwnExport(walk, decl.id.name, { getDoc, inferred: true })
-    } else {
-      // TODO: handle left TSQualifiedName: `declare module foo.bar.baz`
-      addOwnExport(walk, decl.id.right.name, { getDoc, inferred: true })
+  } else if (decl.id.type === 'TSQualifiedName') {
+    // `namespace foo.bar.baz { … }` only adds `bar` to `foo`; `baz` and the
+    // block's members belong further down the chain
+    let id = decl.id
+    while (id.left.type === 'TSQualifiedName') {
+      id = id.left
     }
+    addOwnExport(walk, id.right.name, {
+      getDoc: walk.captureDoc(decl.body),
+      inferred: true,
+    })
+    return
+  } else if (type === 'TSModuleBlock' && decl.kind === 'namespace') {
+    addOwnExport(walk, decl.id.name, {
+      getDoc: walk.captureDoc(decl.body),
+      inferred: true,
+    })
   }
 
   if (!decl.body?.body) {

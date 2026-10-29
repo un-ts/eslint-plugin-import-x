@@ -613,6 +613,49 @@ describe('TypeScript', () => {
     ]
   }
 
+  // `declare namespace foo.bar.baz {}` adds only `bar` to `foo`; `baz` and
+  // the block's members live further down the chain
+  valid = [
+    ...valid,
+    tValid({
+      code: `import { topLevel, bar, qux } from "./typescript-export-assign-qualified-namespace"`,
+      settings,
+    }),
+  ]
+  invalid = [
+    ...invalid,
+    tInvalid({
+      code: `import { baz } from "./typescript-export-assign-qualified-namespace"`,
+      settings,
+      errors: [
+        createNotFoundError(
+          'baz',
+          './typescript-export-assign-qualified-namespace',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import { deep } from "./typescript-export-assign-qualified-namespace"`,
+      settings,
+      errors: [
+        createNotFoundError(
+          'deep',
+          './typescript-export-assign-qualified-namespace',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import { inModule } from "./typescript-export-assign-qualified-namespace"`,
+      settings,
+      errors: [
+        createNotFoundError(
+          'inModule',
+          './typescript-export-assign-qualified-namespace',
+        ),
+      ],
+    }),
+  ]
+
   ruleTester.run(`named`, rule, {
     valid,
     invalid,
