@@ -563,6 +563,21 @@ export default TestComponent;
   ],
 })
 
+// Sets only the legacy `assertions` property, like older parsers
+const legacyAssertionsParser = {
+  parseForESLint(code: string, options: TSESLint.ParserOptions) {
+    const result = require(parsers.TS).parseForESLint(code, options)
+    for (const node of result.ast.body) {
+      if (node.type === 'ImportDeclaration') {
+        const attributes = node.attributes
+        delete node.attributes
+        Object.defineProperty(node, 'assertions', { value: attributes })
+      }
+    }
+    return result
+  },
+}
+
 describe('TypeScript', () => {
   const parserConfig = {
     settings: {
@@ -1000,6 +1015,24 @@ describe('TypeScript', () => {
                 ...createDuplicatedError('./foo'),
                 line: 1,
                 column: 55,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo'",
+            ...parserConfig,
+            languageOptions: { parser: legacyAssertionsParser },
+            output: null,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 92,
               },
             ],
           }),

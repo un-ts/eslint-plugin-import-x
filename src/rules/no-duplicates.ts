@@ -333,9 +333,12 @@ function getTypeImportFix(
     sourceCode.getCommentsInside(node).length > 0
 
   // Specifiers only move between imports with the same attributes, like
-  // `with { 'resolution-mode': 'import' }`.
+  // `with { 'resolution-mode': 'import' }`. Legacy parsers only set
+  // `assertions`.
   const getAttributes = (node: TSESTree.ImportDeclaration) =>
-    node.attributes?.map(attr => sourceCode.getText(attr)).join(',')
+    (node.attributes ?? node.assertions)
+      ?.map(attr => sourceCode.getText(attr))
+      .join(',')
 
   const rest = nodes.filter(
     node =>
