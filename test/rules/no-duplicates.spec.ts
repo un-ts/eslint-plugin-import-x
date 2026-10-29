@@ -1018,6 +1018,24 @@ describe('TypeScript', () => {
               },
             ],
           }),
+          // two different nonempty attribute values must not merge
+          tInvalid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo' with { 'resolution-mode': 'require' }",
+            ...parserConfig,
+            output: null,
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 92,
+              },
+            ],
+          }),
           tInvalid({
             code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo'",
             ...parserConfig,
