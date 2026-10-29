@@ -45,6 +45,12 @@ const packageDirWithTypescriptDevDependencies = testFilePath(
   'with-typescript-dev-dependencies',
 )
 const packageDirMonoRepoRoot = testFilePath('monorepo')
+const packageDirWithResolvedTypesDependencies = testFilePath(
+  'with-resolved-types-dependencies',
+)
+const packageDirWithResolvedTypesInDependencies = testFilePath(
+  'with-resolved-types-in-dependencies',
+)
 const packageDirMonoRepoWithNested = testFilePath(
   'monorepo/packages/nested-package',
 )
@@ -265,8 +271,58 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         },
       ],
     }),
+    tValid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesDependencies,
+          devDependencies: false,
+          whitelist: ['qs'],
+        },
+      ],
+    }),
+    tValid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesDependencies,
+          devDependencies: false,
+          whitelist: ['@types/qs'],
+        },
+      ],
+    }),
   ],
   invalid: [
+    tInvalid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesDependencies,
+          devDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { packageName: 'qs' } }],
+    }),
+    tInvalid({
+      code: 'import babel from "@babel/core";',
+      filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesDependencies,
+          devDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { packageName: '@babel/core' } }],
+    }),
+    tInvalid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesInDependencies, 'foo.js'),
+      options: [{ packageDir: packageDirWithResolvedTypesInDependencies }],
+      errors: [{ messageId: 'missing', data: { packageName: 'qs' } }],
+    }),
     tInvalid({
       code: 'import "not-a-dependency"',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
@@ -573,8 +629,34 @@ describe('TypeScript', () => {
         ],
         ...parserConfig,
       }),
+
+      tValid({
+        code: 'import type qs from "qs";',
+        filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.ts'),
+        options: [
+          {
+            packageDir: packageDirWithResolvedTypesDependencies,
+            includeTypes: true,
+          },
+        ],
+        ...parserConfig,
+      }),
     ],
     invalid: [
+      tInvalid({
+        code: 'import type qs from "qs";',
+        filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.ts'),
+        options: [
+          {
+            packageDir: packageDirWithResolvedTypesDependencies,
+            devDependencies: false,
+            includeTypes: true,
+          },
+        ],
+        errors: [{ messageId: 'devDep', data: { packageName: '@types/qs' } }],
+        ...parserConfig,
+      }),
+
       tInvalid({
         code: 'import T from "a";',
         options: [

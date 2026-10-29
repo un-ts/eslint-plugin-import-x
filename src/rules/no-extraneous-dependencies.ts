@@ -232,6 +232,15 @@ export interface DepsOptions {
   verifyTypeImports: boolean
 }
 
+// derive the runtime package a DefinitelyTyped `@types/*` package provides types for,
+// mirroring TypeScript's `getPackageNameFromTypesPackageName`: `@types/babel__core` -> `@babel/core`
+function runtimePackageNameFromTypesPackageName(packageName: string) {
+  const innerPackageName = packageName.slice('@types/'.length)
+  return innerPackageName.includes('__')
+    ? `@${innerPackageName.replace('__', '/')}`
+    : innerPackageName
+}
+
 function reportIfMissing(
   context: RuleContext<MessageId>,
   deps: PackageDeps,
@@ -241,29 +250,29 @@ function reportIfMissing(
   whitelist: Set<string> | undefined,
   selfPackage: PackageIdentity | undefined,
 ) {
-  // Do not report when importing types unless option is enabled
-  if (
-    !depsOptions.verifyTypeImports &&
-    (('importKind' in node &&
+  const isTypeImport =
+    ('importKind' in node &&
       (node.importKind === 'type' ||
         // @ts-expect-error - flow type
         node.importKind === 'typeof')) ||
-      ('exportKind' in node && node.exportKind === 'type') ||
-      ('specifiers' in node &&
-        Array.isArray(node.specifiers) &&
-        node.specifiers.length > 0 &&
-        (
-          node.specifiers as Array<
-            TSESTree.ExportSpecifier | TSESTree.ImportClause
-          >
-        ).every(
-          specifier =>
-            'importKind' in specifier &&
-            (specifier.importKind === 'type' ||
-              // @ts-expect-error - flow type
-              specifier.importKind === 'typeof'),
-        )))
-  ) {
+    ('exportKind' in node && node.exportKind === 'type') ||
+    ('specifiers' in node &&
+      Array.isArray(node.specifiers) &&
+      node.specifiers.length > 0 &&
+      (
+        node.specifiers as Array<
+          TSESTree.ExportSpecifier | TSESTree.ImportClause
+        >
+      ).every(
+        specifier =>
+          'importKind' in specifier &&
+          (specifier.importKind === 'type' ||
+            // @ts-expect-error - flow type
+            specifier.importKind === 'typeof'),
+      ))
+
+  // Do not report when importing types unless option is enabled
+  if (!depsOptions.verifyTypeImports && isTypeImport) {
     return
   }
 
@@ -320,10 +329,17 @@ function reportIfMissing(
     return
   }
 
+  // A type-only import needs only the `@types/*` package, others need the
+  // runtime package it provides types for
+  const runtimePackageName =
+    !isTypeImport && realPackageName?.startsWith('@types/')
+      ? runtimePackageNameFromTypesPackageName(realPackageName)
+      : undefined
+
   if (realPackageName && realPackageName !== importPackageName) {
     declarationStatus = checkDependencyDeclaration(
       deps,
-      realPackageName,
+      runtimePackageName ?? realPackageName,
       declarationStatus,
     )
 
@@ -338,9 +354,24 @@ function reportIfMissing(
     }
   }
 
-  const packageName = realPackageName || importPackageName
+  const packageName =
+    runtimePackageName ?? (realPackageName || importPackageName)
 
-  if (whitelist?.has(packageName)) {
+  if (
+    whitelist?.has(packageName) ||
+    (realPackageName && whitelist?.has(realPackageName))
+  ) {
+    return
+  }
+
+  if (runtimePackageName) {
+    context.report({
+      node,
+      messageId: 'missing',
+      data: {
+        packageName,
+      },
+    })
     return
   }
 
