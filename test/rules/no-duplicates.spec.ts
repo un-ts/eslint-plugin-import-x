@@ -1036,6 +1036,25 @@ describe('TypeScript', () => {
               },
             ],
           }),
+          // matching legacy assertions still merge (positive coverage)
+          tInvalid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo' with { 'resolution-mode': 'import' }",
+            ...parserConfig,
+            languageOptions: { parser: legacyAssertionsParser },
+            output: "import type {x,y} from './foo' with { 'resolution-mode': 'import' }; import {z} from './foo' with { 'resolution-mode': 'import' }",
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 22,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 92,
+              },
+            ],
+          }),
           tInvalid({
             code: "import type {x} from './foo'; import {type y, z} from './foo'; import type {w} from './foo'",
             ...parserConfig,
