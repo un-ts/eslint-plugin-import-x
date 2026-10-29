@@ -629,8 +629,34 @@ describe('TypeScript', () => {
         ],
         ...parserConfig,
       }),
+
+      tValid({
+        code: 'import type qs from "qs";',
+        filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.ts'),
+        options: [
+          {
+            packageDir: packageDirWithResolvedTypesDependencies,
+            includeTypes: true,
+          },
+        ],
+        ...parserConfig,
+      }),
     ],
     invalid: [
+      tInvalid({
+        code: 'import type qs from "qs";',
+        filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.ts'),
+        options: [
+          {
+            packageDir: packageDirWithResolvedTypesDependencies,
+            devDependencies: false,
+            includeTypes: true,
+          },
+        ],
+        errors: [{ messageId: 'devDep', data: { packageName: '@types/qs' } }],
+        ...parserConfig,
+      }),
+
       tInvalid({
         code: 'import T from "a";',
         options: [
