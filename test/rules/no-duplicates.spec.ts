@@ -1041,7 +1041,8 @@ describe('TypeScript', () => {
             code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo' with { 'resolution-mode': 'import' }",
             ...parserConfig,
             languageOptions: { parser: legacyAssertionsParser },
-            output: "import type {x,y} from './foo' with { 'resolution-mode': 'import' }; import {z} from './foo' with { 'resolution-mode': 'import' }",
+            output:
+              "import type {x,y} from './foo' with { 'resolution-mode': 'import' }; import {z} from './foo' with { 'resolution-mode': 'import' }",
             errors: [
               {
                 ...createDuplicatedError('./foo'),
