@@ -7,7 +7,12 @@ export function declaredScope(
   node: TSESTree.Node,
   name: string,
 ) {
-  const references = context.sourceCode.getScope(node).references
-  const reference = references.find(x => x.identifier.name === name)
-  return reference?.resolved?.scope.type
+  let scope: ReturnType<typeof context.sourceCode.getScope> | null =
+    context.sourceCode.getScope(node)
+  while (scope !== null) {
+    const reference = scope.references.find(x => x.identifier.name === name)
+    if (reference !== undefined) return reference.resolved?.scope.type
+    scope = scope.upper
+  }
+  return
 }

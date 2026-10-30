@@ -9,6 +9,7 @@ import {
 } from '../utils.js'
 import type { GetRuleModuleMessageIds, RuleRunTests } from '../utils.js'
 
+import { cjsRequire as require } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-deprecated'
 
 const ruleTester = new TSESLintRuleTester()
@@ -268,6 +269,17 @@ ruleTester.run('no-deprecated', rule, {
     }),
     tInvalid({
       code: "import { deepDep } from './deep-deprecated'; function x(deepNDep) { console.log(deepDep.MY_TERRIBLE_ACTION) }",
+      errors: [
+        createDeprecatedDescError(
+          'Please stop sending/handling this action type.',
+          'Identifier',
+        ),
+      ],
+    }),
+    // namespace member access in a decorator is also reported
+    tInvalid({
+      code: "import * as depd from './deprecated'; @depd.MY_TERRIBLE_ACTION class X {}",
+      languageOptions: { parser: require(parsers.BABEL) },
       errors: [
         createDeprecatedDescError(
           'Please stop sending/handling this action type.',
