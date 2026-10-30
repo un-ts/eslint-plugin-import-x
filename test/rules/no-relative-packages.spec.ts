@@ -80,6 +80,36 @@ ruleTester.run('no-relative-packages', rule, {
       output: 'import foo from "package-named"',
     }),
     tInvalid({
+      code: 'import foo from "../package-named/package-named"',
+      filename: testFilePath('./package/index.js'),
+      errors: [
+        {
+          ...createNotFoundError(
+            '../package-named/package-named',
+            path.normalize('package-named/package-named'),
+          ),
+          line: 1,
+          column: 17,
+        },
+      ],
+      output: 'import foo from "package-named/package-named"',
+    }),
+    tInvalid({
+      code: 'import foo from "../package-named/sub"',
+      filename: testFilePath('./package/index.js'),
+      errors: [
+        {
+          ...createNotFoundError(
+            '../package-named/sub',
+            path.normalize('package-named/sub'),
+          ),
+          line: 1,
+          column: 17,
+        },
+      ],
+      output: 'import foo from "package-named/sub"',
+    }),
+    tInvalid({
       code: 'import foo from "../package-scoped"',
       filename: testFilePath('./package/index.js'),
       errors: [
