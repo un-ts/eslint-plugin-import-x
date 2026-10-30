@@ -160,7 +160,7 @@ export default createRule({
           return
         }
 
-        if (declaredScope(context, node, node.name) !== 'module') {
+        if (declaredScope(context, node) !== 'module') {
           return
         }
         context.report({
@@ -177,10 +177,7 @@ export default createRule({
           return
         }
 
-        if (
-          declaredScope(context, dereference, dereference.object.name) !==
-          'module'
-        ) {
+        if (declaredScope(context, dereference.object) !== 'module') {
           return
         }
 
