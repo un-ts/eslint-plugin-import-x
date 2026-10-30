@@ -1046,6 +1046,27 @@ describe('TypeScript', () => {
           `,
         ...parserConfig,
       }),
+      // a namespace with only types is not a value, so it merges with a value
+      tValid({
+        code: `
+            export const Foo = 'bar';
+            export namespace Foo { }
+          `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+            export const Foo = { create() {} };
+            export namespace Foo {
+              export type Bar = string
+              export interface Baz {}
+              export namespace Qux {
+                export type Quux = number
+              }
+            }
+          `,
+        ...parserConfig,
+      }),
       tValid({
         code: 'export * from "./file1.ts"',
         filename: testFilePath('typescript-d-ts/file-2.ts'),
@@ -1323,7 +1344,9 @@ describe('TypeScript', () => {
       tInvalid({
         code: `
             export const Foo = 'bar';
-            export namespace Foo { }
+            export namespace Foo {
+              export const value = 1
+            }
           `,
         errors: [
           {
