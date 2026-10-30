@@ -245,6 +245,14 @@ let valid: RuleRunTests<typeof rule>['valid'] = [
       const f = (names: names.ExportedClass) => names.nope()
     `,
   }),
+  tValid({
+    code: `
+      import type * as names from './named-exports'
+      const f = (names: names.ExportedClass) => {
+        const { nope } = names
+      }
+    `,
+  }),
 
   // Typescript
   tValid({
