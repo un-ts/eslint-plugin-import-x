@@ -94,6 +94,41 @@ function isExplicitValue(node: TSESTree.Node) {
 }
 
 /**
+ * A namespace that only declares types is not instantiated, so it occupies no
+ * value and merges with any other declaration of its name:
+ *
+ * ```ts
+ * export const Foo = {}
+ * export namespace Foo {
+ *   export type Bar = string
+ * }
+ * ```
+ */
+function isTypeOnlyNamespace(node: TSESTree.TSModuleDeclaration): boolean {
+  if (node.body?.type !== AST_NODE_TYPES.TSModuleBlock) {
+    return false
+  }
+  return node.body.body.every(statement => {
+    const declaration =
+      statement.type === AST_NODE_TYPES.ExportNamedDeclaration
+        ? statement.declaration
+        : statement
+    switch (declaration?.type) {
+      case AST_NODE_TYPES.TSInterfaceDeclaration:
+      case AST_NODE_TYPES.TSTypeAliasDeclaration: {
+        return true
+      }
+      case AST_NODE_TYPES.TSModuleDeclaration: {
+        return isTypeOnlyNamespace(declaration)
+      }
+      default: {
+        return false
+      }
+    }
+  })
+}
+
+/**
  * Detect merging Namespaces with Classes, Functions, or Enums like:
  *
  * ```ts
@@ -256,6 +291,13 @@ export default createRule<[], MessageId>({
 
       ExportNamedDeclaration(node) {
         if (node.declaration == null) {
+          return
+        }
+
+        if (
+          node.declaration.type === AST_NODE_TYPES.TSModuleDeclaration &&
+          isTypeOnlyNamespace(node.declaration)
+        ) {
           return
         }
 
