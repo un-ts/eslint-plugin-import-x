@@ -156,6 +156,10 @@ let valid: RuleRunTests<typeof rule>['valid'] = [
     code: `import * as names from './named-exports'; function f() { const names = {}; @names.Nope class X {} }`,
     languageOptions: { parser: require(parsers.BABEL) },
   }),
+  // TS parser: valid namespace member in a decorator (bug was reported with TS parser)
+  tValid({
+    code: `import * as names from './named-exports'; @names.a class X {}`,
+  }),
 
   tValid({
     code: 'export * as names from "./named-exports"',
@@ -401,6 +405,11 @@ let invalid: RuleRunTests<typeof rule>['invalid'] = [
   tInvalid({
     code: `import * as names from './named-exports'; class X { @names.Nope prop = 1; }`,
     languageOptions: { parser: require(parsers.BABEL) },
+    errors: [createNotFoundInNamespaceError('Nope', 'names')],
+  }),
+  // TS parser: missing member in a decorator is reported (bug was reported with TS parser)
+  tInvalid({
+    code: `import * as names from './named-exports'; @names.Nope class X {}`,
     errors: [createNotFoundInNamespaceError('Nope', 'names')],
   }),
 
