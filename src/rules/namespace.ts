@@ -99,6 +99,8 @@ function hasValueExport(namespace: ModuleInfo, name: string) {
   )
 }
 
+const TYPESCRIPT_FILE = /\.[cm]?tsx?$/
+
 /**
  * Whether a member expression is a heritage clause (`class X implements ns.I`,
  * `interface X extends ns.I`). Those are type positions that the parser turns
@@ -316,6 +318,11 @@ export default createRule<[Options], MessageId>({
                 },
               })
             }
+            return
+          }
+
+          // a JavaScript module has no types to check the name against
+          if (typePosition && !TYPESCRIPT_FILE.test(namespace.path)) {
             return
           }
 

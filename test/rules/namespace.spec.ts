@@ -613,6 +613,15 @@ describe('TypeScript type-only exports', () => {
         code: 'import * as ns from "./export-type-star/mixed"; interface X extends ns.I {}; class Y implements ns.I { value = 1 }',
         settings,
       }),
+      // a JavaScript module has no types to check a heritage clause against
+      tValid({
+        code: 'import * as ns from "./named-exports"; interface X extends ns.T {}; class Y implements ns.T { value = 1 }',
+        settings,
+      }),
+      tValid({
+        code: 'import { b } from "./deep/a"; interface X extends b.T {}',
+        settings,
+      }),
       // value member used in a decorator is fine
       tValid({
         code: `import * as ns from './export-type-star/mixed'; @ns.C class X {}`,
@@ -621,6 +630,12 @@ describe('TypeScript type-only exports', () => {
       }),
     ],
     invalid: [
+      // a heritage clause naming nothing in a TypeScript module
+      tInvalid({
+        code: 'import * as ns from "./export-type-star/mixed"; interface X extends ns.Missing {}',
+        settings,
+        errors: [createNotFoundInNamespaceError('Missing', 'ns')],
+      }),
       // `export type Foo`
       tInvalid({
         code: 'import * as ns from "./export-type-star/types"; console.log(ns.MyType)',
