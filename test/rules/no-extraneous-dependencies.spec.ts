@@ -51,6 +51,12 @@ const packageDirWithResolvedTypesDependencies = testFilePath(
 const packageDirWithResolvedTypesInDependencies = testFilePath(
   'with-resolved-types-in-dependencies',
 )
+const packageDirWithResolvedTypesRuntimeInDev = testFilePath(
+  'with-resolved-types-runtime-in-dev-dependencies',
+)
+const packageDirWithResolvedTypesRuntimeInOpt = testFilePath(
+  'with-resolved-types-runtime-in-opt-dependencies',
+)
 const packageDirMonoRepoWithNested = testFilePath(
   'monorepo/packages/nested-package',
 )
@@ -322,6 +328,39 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       filename: path.join(packageDirWithResolvedTypesInDependencies, 'foo.js'),
       options: [{ packageDir: packageDirWithResolvedTypesInDependencies }],
       errors: [{ messageId: 'missing', data: { packageName: 'qs' } }],
+    }),
+    tInvalid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesRuntimeInDev, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesRuntimeInDev,
+          devDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'devDep', data: { packageName: 'qs' } }],
+    }),
+    tInvalid({
+      code: 'import babel from "babel-alias";',
+      filename: path.join(packageDirWithResolvedTypesRuntimeInDev, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesRuntimeInDev,
+          devDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { packageName: '@babel/core' } }],
+    }),
+    tInvalid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesRuntimeInOpt, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesRuntimeInOpt,
+          optionalDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'optDep', data: { packageName: 'qs' } }],
     }),
     tInvalid({
       code: 'import "not-a-dependency"',

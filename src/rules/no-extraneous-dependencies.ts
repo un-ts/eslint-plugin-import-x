@@ -364,15 +364,9 @@ function reportIfMissing(
     return
   }
 
+  // What matters is the runtime package, not an alias that resolved to its types
   if (runtimePackageName) {
-    context.report({
-      node,
-      messageId: 'missing',
-      data: {
-        packageName,
-      },
-    })
-    return
+    declarationStatus = checkDependencyDeclaration(deps, runtimePackageName)
   }
 
   if (declarationStatus.isInDevDeps && !depsOptions.allowDevDeps) {
