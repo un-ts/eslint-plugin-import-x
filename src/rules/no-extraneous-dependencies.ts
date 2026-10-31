@@ -364,17 +364,6 @@ function reportIfMissing(
     return
   }
 
-  if (runtimePackageName) {
-    context.report({
-      node,
-      messageId: 'missing',
-      data: {
-        packageName,
-      },
-    })
-    return
-  }
-
   if (declarationStatus.isInDevDeps && !depsOptions.allowDevDeps) {
     context.report({
       node,

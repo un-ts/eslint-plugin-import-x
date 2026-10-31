@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "@types/qs": "*"
+  },
+  "optionalDependencies": {
+    "qs": "*"
+  }
+}
