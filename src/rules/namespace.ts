@@ -321,14 +321,11 @@ export default createRule<[Options], MessageId>({
             return
           }
 
-          // a JavaScript module has no types to check the name against
-          if (typePosition && !TYPESCRIPT_FILE.test(namespace.path)) {
-            return
-          }
-
           if (
             !(typePosition
-              ? namespace.hasExport(deref.property.name)
+              ? // types in a JavaScript module (JSDoc `@typedef`) aren't visible here
+                !TYPESCRIPT_FILE.test(namespace.path) ||
+                namespace.hasExport(deref.property.name)
               : hasValueExport(namespace, deref.property.name))
           ) {
             context.report(makeMessage(deref.property, namepath))

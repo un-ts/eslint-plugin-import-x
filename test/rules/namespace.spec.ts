@@ -630,6 +630,12 @@ describe('TypeScript type-only exports', () => {
       }),
     ],
     invalid: [
+      // a TypeScript module reached through a JavaScript one is still checked
+      tInvalid({
+        code: 'import * as barrel from "./export-type-star/js-barrel"; interface X extends barrel.types.Missing {}',
+        settings,
+        errors: [createNotFoundInNamespaceDeepError('Missing', 'barrel.types')],
+      }),
       // a heritage clause naming nothing in a TypeScript module
       tInvalid({
         code: 'import * as ns from "./export-type-star/mixed"; interface X extends ns.Missing {}',
