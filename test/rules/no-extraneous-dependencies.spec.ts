@@ -341,6 +341,17 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       errors: [{ messageId: 'devDep', data: { packageName: 'qs' } }],
     }),
     tInvalid({
+      code: 'import babel from "babel-alias";',
+      filename: path.join(packageDirWithResolvedTypesRuntimeInDev, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesRuntimeInDev,
+          devDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { packageName: '@babel/core' } }],
+    }),
+    tInvalid({
       code: 'import qs from "qs";',
       filename: path.join(packageDirWithResolvedTypesRuntimeInOpt, 'foo.js'),
       options: [

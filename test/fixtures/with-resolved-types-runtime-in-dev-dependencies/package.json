@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@types/qs": "*",
+    "babel-alias": "*",
     "qs": "*"
   }
 }
