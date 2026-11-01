@@ -83,6 +83,30 @@ import SomeDefaultClass from './mod?minify'
 import * from './mod.js?minify'
 ```
 
+### Whitelist
+
+This rule compares imports by the path they resolve to. A package can declare the types of several entry points in one file, as `svelte` and `svelte/easing` do, so with a TypeScript resolver they look like the same module. Merging them would break the code.
+
+The `whitelist` option is an optional string array of package names whose imports are compared by specifier instead:
+
+```js
+"import-x/no-duplicates": ["error", {"whitelist": ["svelte"]}]
+```
+
+✅ Valid with `["error", {"whitelist": ["svelte"]}]`
+
+```js
+import { onMount } from 'svelte'
+import { quintOut } from 'svelte/easing'
+```
+
+❌ Invalid with `["error", {"whitelist": ["svelte"]}]`
+
+```js
+import { quintOut } from 'svelte/easing'
+import { linear } from 'svelte/easing'
+```
+
 ### Inline Type imports
 
 TypeScript 4.5 introduced a new [feature](https://devblogs.microsoft.com/typescript/announcing-typescript-4-5/#type-on-import-names) that allows mixing of named value and type imports. In order to support fixing to an inline type import when duplicate imports are detected, `prefer-inline` can be set to true.

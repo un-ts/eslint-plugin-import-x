@@ -34,28 +34,15 @@ const sharedDeclarationPath = path.resolve(
   'test/fixtures/node_modules/svelte/types/index.d.ts',
 )
 
-const sharedRuntimePath = path.resolve(
-  'test/fixtures/node_modules/svelte/src/index.js',
-)
-
-const sharedFileSettings = {
+const sharedDeclarationSettings = {
   'import-x/resolver-next': [
     {
-      name: 'shared-file-resolver',
+      name: 'shared-declaration-resolver',
       interfaceVersion: 3,
       resolve(modulePath: string) {
-        if (
-          ['svelte', 'svelte/easing', 'svelte/transition'].includes(modulePath)
-        ) {
-          return { found: true, path: sharedDeclarationPath }
-        }
-        if (['runtime', 'runtime/index.js'].includes(modulePath)) {
-          return { found: true, path: sharedRuntimePath }
-        }
-        if (modulePath === 'virtual') {
-          return { found: true, path: '\0virtual' }
-        }
-        return { found: false }
+        return /^(svelte|@scope\/pkg)(\/|$)/.test(modulePath)
+          ? { found: true, path: sharedDeclarationPath }
+          : { found: false }
       },
     },
   ],
@@ -63,10 +50,21 @@ const sharedFileSettings = {
 
 ruleTester.run('no-duplicates', rule, {
   valid: [
-    // #505: entry points of a package that share a declaration file are not duplicates
+    // #505: entry points of a whitelisted package are different modules
     tValid({
       code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'; import { scale } from 'svelte/transition'",
-      settings: sharedFileSettings,
+      options: [{ whitelist: ['svelte'] }],
+      settings: sharedDeclarationSettings,
+    }),
+    tValid({
+      code: "import { a } from '@scope/pkg/a'; import { b } from '@scope/pkg/b'",
+      options: [{ whitelist: ['@scope/pkg'] }],
+      settings: sharedDeclarationSettings,
+    }),
+    tValid({
+      code: "import { a } from 'svelte/easing?a'; import { b } from 'svelte/easing?b'",
+      options: [{ whitelist: ['svelte'], considerQueryString: true }],
+      settings: sharedDeclarationSettings,
     }),
 
     tValid({
@@ -108,37 +106,27 @@ ruleTester.run('no-duplicates', rule, {
     }),
   ],
   invalid: [
-    // #505: the same entry point of a package that shares a declaration file
+    // #505: without the whitelist these share a resolved path, so they are duplicates
     tInvalid({
-      code: "import { quintOut } from 'svelte/easing'; import { onMount } from 'svelte'; import { linear } from 'svelte/easing'",
+      code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'",
+      output: "import { onMount, quintOut  } from 'svelte'; ",
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+
+    // #505: the same entry point of a whitelisted package is still a duplicate
+    tInvalid({
+      code: "import { quintOut } from 'svelte/easing'; import { onMount } from 'svelte'; import { linear } from 'svelte/easing?a'",
       output:
         "import { quintOut, linear  } from 'svelte/easing'; import { onMount } from 'svelte'; ",
-      settings: sharedFileSettings,
+      options: [{ whitelist: ['svelte'] }],
+      settings: sharedDeclarationSettings,
       errors: [
-        createDuplicatedError(sharedDeclarationPath),
-        createDuplicatedError(sharedDeclarationPath),
-      ],
-    }),
-
-    // A resolved path with a null byte stays intact in the message
-    tInvalid({
-      code: "import { a } from 'virtual'; import { b } from 'virtual'",
-      output: "import { a, b  } from 'virtual'; ",
-      settings: sharedFileSettings,
-      errors: [
-        createDuplicatedError('\0virtual'),
-        createDuplicatedError('\0virtual'),
-      ],
-    }),
-
-    // Two specifiers for one runtime file are still duplicates
-    tInvalid({
-      code: "import { a } from 'runtime'; import { b } from 'runtime/index.js'",
-      output: "import { a, b  } from 'runtime'; ",
-      settings: sharedFileSettings,
-      errors: [
-        createDuplicatedError(sharedRuntimePath),
-        createDuplicatedError(sharedRuntimePath),
+        createDuplicatedError('svelte/easing'),
+        createDuplicatedError('svelte/easing'),
       ],
     }),
 

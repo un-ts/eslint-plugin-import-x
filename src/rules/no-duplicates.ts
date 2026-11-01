@@ -3,7 +3,7 @@ import * as semver from 'semver'
 
 import { cjsRequire } from '../require.js'
 import type { PackageJson, RuleContext } from '../types.js'
-import { createRule, lazy, resolve } from '../utils/index.js'
+import { baseModule, createRule, lazy, resolve } from '../utils/index.js'
 
 // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
 // pre-calculate if the TypeScript version is supported
@@ -22,36 +22,21 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
 export interface Options {
   considerQueryString?: boolean
   'prefer-inline'?: boolean
+  whitelist?: string[]
 }
 
 export type MessageId = 'duplicate'
-
-const SPECIFIER_SEPARATOR = '\0'
-
-/**
- * A package can declare the types of several entry points in one file, as
- * `svelte` and `svelte/easing` do, so a TypeScript resolver gives them the same
- * path even though they are different modules at runtime.
- */
-function isSharedPackageDeclaration(resolvedPath: string) {
-  return (
-    /[/\\]node_modules[/\\]/.test(resolvedPath) &&
-    /\.d\.[cm]?ts$/.test(resolvedPath)
-  )
-}
 
 function checkImports(
   imported: Map<string, TSESTree.ImportDeclaration[]>,
   context: RuleContext<MessageId, [Options?]>,
 ) {
   // eslint-disable-next-line unicorn/no-array-for-each -- Map.forEach is faster than Map.entries
-  imported.forEach((nodes, key) => {
+  imported.forEach((nodes, module) => {
     if (nodes.length <= 1) {
       // not enough imports, definitely not duplicates
       return
     }
-
-    const [sharedPath] = key.split(SPECIFIER_SEPARATOR, 1)
 
     for (let i = 0, len = nodes.length; i < len; i++) {
       const node = nodes[i]
@@ -59,10 +44,7 @@ function checkImports(
         node: node.source,
         messageId: 'duplicate',
         data: {
-          module:
-            sharedPath && isSharedPackageDeclaration(sharedPath)
-              ? sharedPath
-              : key,
+          module,
         },
         // Attach the autofix (if any) to the first import only
         fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
@@ -640,6 +622,13 @@ export default createRule<[Options?], MessageId>({
           'prefer-inline': {
             type: 'boolean',
           },
+          whitelist: {
+            type: 'array',
+            uniqueItems: true,
+            items: {
+              type: 'string',
+            },
+          },
         },
         additionalProperties: false,
       },
@@ -665,6 +654,16 @@ export default createRule<[Options?], MessageId>({
           return `${defaultResolver(parts[1])}?${parts[2]}`
         }
       : defaultResolver
+
+    const whitelist = new Set(context.options[0]?.whitelist)
+
+    const getImportKey = (sourcePath: string) => {
+      if (whitelist.has(baseModule(sourcePath))) {
+        return considerQueryStringOption ? sourcePath : sourcePath.split('?')[0]
+      }
+      // resolved path will cover aliased duplicates
+      return resolver(sourcePath)
+    }
 
     const moduleMaps = new Map<TSESTree.Node, Map<string, ModuleMap>>()
 
@@ -721,11 +720,7 @@ export default createRule<[Options?], MessageId>({
 
     return {
       ImportDeclaration(n) {
-        // resolved path will cover aliased duplicates
-        const resolvedPath = resolver(n.source.value)
-        const key = isSharedPackageDeclaration(resolvedPath)
-          ? `${resolvedPath}${SPECIFIER_SEPARATOR}${n.source.value}`
-          : resolvedPath
+        const key = getImportKey(n.source.value)
         const importMap = getImportMap(n)
 
         if (importMap.has(key)) {

@@ -19,7 +19,7 @@ import { resolve } from './resolve.js'
  * @param name The name of the module to check
  * @returns The base module name
  */
-function baseModule(name: string) {
+export function baseModule(name: string) {
   if (isScoped(name)) {
     const [scope, pkg] = name.split('/')
     return `${scope}/${pkg}`
