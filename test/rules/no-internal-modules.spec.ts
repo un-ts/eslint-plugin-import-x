@@ -97,6 +97,16 @@ ruleTester.run('no-internal-modules', rule, {
       ],
     }),
     tValid({
+      // An empty pattern forbids nothing, though `..` normalizes to an empty path
+      code: 'import a from ".."',
+      filename: testFilePath('./internal-modules/plugins/plugin.js'),
+      options: [
+        {
+          forbid: [''],
+        },
+      ],
+    }),
+    tValid({
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
