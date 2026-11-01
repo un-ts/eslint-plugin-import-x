@@ -30,8 +30,42 @@ function createDuplicatedError(
   }
 }
 
+const sharedDeclarationPath = path.resolve(
+  'test/fixtures/node_modules/svelte/types/index.d.ts',
+)
+
+const sharedRuntimePath = path.resolve(
+  'test/fixtures/node_modules/svelte/src/index.js',
+)
+
+const sharedFileSettings = {
+  'import-x/resolver-next': [
+    {
+      name: 'shared-file-resolver',
+      interfaceVersion: 3,
+      resolve(modulePath: string) {
+        if (
+          ['svelte', 'svelte/easing', 'svelte/transition'].includes(modulePath)
+        ) {
+          return { found: true, path: sharedDeclarationPath }
+        }
+        if (['runtime', 'runtime/index.js'].includes(modulePath)) {
+          return { found: true, path: sharedRuntimePath }
+        }
+        return { found: false }
+      },
+    },
+  ],
+}
+
 ruleTester.run('no-duplicates', rule, {
   valid: [
+    // #505: entry points of a package that share a declaration file are not duplicates
+    tValid({
+      code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'; import { scale } from 'svelte/transition'",
+      settings: sharedFileSettings,
+    }),
+
     tValid({
       code: 'import "./malformed.js"',
       languageOptions: { parser: require(parsers.ESPREE) },
@@ -71,6 +105,29 @@ ruleTester.run('no-duplicates', rule, {
     }),
   ],
   invalid: [
+    // #505: the same entry point of a package that shares a declaration file
+    tInvalid({
+      code: "import { quintOut } from 'svelte/easing'; import { onMount } from 'svelte'; import { linear } from 'svelte/easing'",
+      output:
+        "import { quintOut, linear  } from 'svelte/easing'; import { onMount } from 'svelte'; ",
+      settings: sharedFileSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+
+    // Two specifiers for one runtime file are still duplicates
+    tInvalid({
+      code: "import { a } from 'runtime'; import { b } from 'runtime/index.js'",
+      output: "import { a, b  } from 'runtime'; ",
+      settings: sharedFileSettings,
+      errors: [
+        createDuplicatedError(sharedRuntimePath),
+        createDuplicatedError(sharedRuntimePath),
+      ],
+    }),
+
     tInvalid({
       code: "import { x } from './foo'; import { y } from './foo'",
       output: "import { x, y } from './foo'; ",

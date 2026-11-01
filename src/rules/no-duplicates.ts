@@ -26,12 +26,26 @@ export interface Options {
 
 export type MessageId = 'duplicate'
 
+const SPECIFIER_SEPARATOR = '\0'
+
+/**
+ * A package can declare the types of several entry points in one file, as
+ * `svelte` and `svelte/easing` do, so a TypeScript resolver gives them the same
+ * path even though they are different modules at runtime.
+ */
+function isSharedPackageDeclaration(resolvedPath: string) {
+  return (
+    /[/\\]node_modules[/\\]/.test(resolvedPath) &&
+    /\.d\.[cm]?ts$/.test(resolvedPath)
+  )
+}
+
 function checkImports(
   imported: Map<string, TSESTree.ImportDeclaration[]>,
   context: RuleContext<MessageId, [Options?]>,
 ) {
   // eslint-disable-next-line unicorn/no-array-for-each -- Map.forEach is faster than Map.entries
-  imported.forEach((nodes, module) => {
+  imported.forEach((nodes, key) => {
     if (nodes.length <= 1) {
       // not enough imports, definitely not duplicates
       return
@@ -43,7 +57,7 @@ function checkImports(
         node: node.source,
         messageId: 'duplicate',
         data: {
-          module,
+          module: key.split(SPECIFIER_SEPARATOR, 1)[0],
         },
         // Attach the autofix (if any) to the first import only
         fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
@@ -704,12 +718,15 @@ export default createRule<[Options?], MessageId>({
       ImportDeclaration(n) {
         // resolved path will cover aliased duplicates
         const resolvedPath = resolver(n.source.value)
+        const key = isSharedPackageDeclaration(resolvedPath)
+          ? `${resolvedPath}${SPECIFIER_SEPARATOR}${n.source.value}`
+          : resolvedPath
         const importMap = getImportMap(n)
 
-        if (importMap.has(resolvedPath)) {
-          importMap.get(resolvedPath)!.push(n)
+        if (importMap.has(key)) {
+          importMap.get(key)!.push(n)
         } else {
-          importMap.set(resolvedPath, [n])
+          importMap.set(key, [n])
         }
       },
 
