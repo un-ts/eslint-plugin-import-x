@@ -85,11 +85,8 @@ export default createRule<[Options?], MessageId>({
   defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
-    // Minimatch#match instead of makeRe(): makeRe() is gone in minimatch 11.
-    // makeRe() rejected an empty pattern and the rule dropped it, but
-    // Minimatch('') matches the empty path that `.`, `./` or `..` normalize
-    // to, so empty patterns are still dropped here. A comment pattern, which
-    // makeRe() also rejected, never matches.
+    // `new Minimatch('')` matches the empty path that `.`, `./` and `..`
+    // normalize to, so drop empty patterns.
     const allowMatchers = (options.allow || [])
       .filter(Boolean)
       .map(p => new Minimatch(p))
