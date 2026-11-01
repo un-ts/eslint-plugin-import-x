@@ -64,6 +64,11 @@ ruleTester.run('no-duplicates', rule, {
       settings: sharedDeclarationSettings,
     }),
     tValid({
+      code: "import { a } from 'svelte/easing?raw'; import { b } from 'svelte/motion?raw'",
+      options: [{ whitelist: [['svelte/easing?raw', 'svelte/motion?raw']] }],
+      settings: sharedDeclarationSettings,
+    }),
+    tValid({
       code: "import { a } from 'svelte/easing?a'; import { b } from 'svelte/easing?b'",
       options: [{ whitelist: [['svelte/easing']], considerQueryString: true }],
       settings: sharedDeclarationSettings,

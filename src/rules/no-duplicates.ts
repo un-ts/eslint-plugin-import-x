@@ -662,7 +662,7 @@ export default createRule<[Options?], MessageId>({
 
     const getImportKey = (sourcePath: string) => {
       const [specifier] = sourcePath.split('?')
-      if (whitelist.has(specifier)) {
+      if (whitelist.has(specifier) || whitelist.has(sourcePath)) {
         return considerQueryStringOption ? sourcePath : specifier
       }
       // resolved path will cover aliased duplicates
