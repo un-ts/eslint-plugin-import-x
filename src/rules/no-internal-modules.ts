@@ -25,6 +25,19 @@ function toSteps(somePath: string) {
     }, [])
 }
 
+// `new Minimatch('')` matches the empty path that `.`, `./` and `..`
+// normalize to, so drop empty patterns. `Minimatch#match` doesn't let a
+// trailing `/**` match the directory itself, as `lodash/**` should match
+// `lodash`, so match that directory too.
+function toMatchers(patterns: string[] = []) {
+  return patterns.filter(Boolean).flatMap(pattern => {
+    const dir = pattern.replace(/(\/\*\*)+$/, '')
+    return dir === pattern
+      ? [new Minimatch(pattern)]
+      : [new Minimatch(pattern), new Minimatch(dir)]
+  })
+}
+
 const potentialViolationTypes = new Set([
   'parent',
   'index',
@@ -85,14 +98,8 @@ export default createRule<[Options?], MessageId>({
   defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
-    // `new Minimatch('')` matches the empty path that `.`, `./` and `..`
-    // normalize to, so drop empty patterns.
-    const allowMatchers = (options.allow || [])
-      .filter(Boolean)
-      .map(p => new Minimatch(p))
-    const forbidMatchers = (options.forbid || [])
-      .filter(Boolean)
-      .map(p => new Minimatch(p))
+    const allowMatchers = toMatchers(options.allow)
+    const forbidMatchers = toMatchers(options.forbid)
 
     // test if reaching to this destination is allowed
     function reachingAllowed(importPath: string) {
