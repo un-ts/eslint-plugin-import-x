@@ -1459,6 +1459,27 @@ describe('TypeScript', () => {
         options: ['always'],
       }),
 
+      // a `.js` specifier that the resolver maps to a `.ts` file is an extension
+      // alias, so the specifier's own extension is authoritative
+      ...(['always', 'ignorePackages'] as const).flatMap(modifier => [
+        tValid({
+          code: 'import foo from "./typescript-default.js";',
+          filename: testFilePath('./foo.ts'),
+          settings: {
+            'import-x/resolver': { typescript: { extensions: ['.js'] } },
+          },
+          options: [modifier],
+        }),
+        tValid({
+          code: 'import foo from "./typescript-default.js";',
+          filename: testFilePath('./foo.ts'),
+          settings: {
+            'import-x/resolver': { typescript: { extensions: ['.js'] } },
+          },
+          options: [modifier, { checkTypeImports: true, fix: true }],
+        }),
+      ]),
+
       // an extensionless package subpath that resolves to a `.d.ts` declaration
       // (via the TypeScript resolver's types-first conditions) has no runtime
       // extension to enforce (e.g. `vitest/config`) — #468 regression

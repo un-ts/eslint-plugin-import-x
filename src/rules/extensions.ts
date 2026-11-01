@@ -226,12 +226,39 @@ function appendExtension(importPath: string, extension: string) {
 }
 
 /**
+ * Whether the resolved file is the import path with another extension, e.g.
+ * `./foo.js` resolved to `foo.ts` (a resolver extension alias).
+ *
+ * @param importPath - The import path as written.
+ * @param resolvedPath - The result of resolving the import path.
+ * @returns Whether the resolved path is an extension alias of the import path.
+ */
+function isExtensionAlias(
+  importPath: string,
+  resolvedPath: string | null | undefined,
+) {
+  if (!resolvedPath) {
+    return false
+  }
+  const importPathExtension = path.extname(importPath)
+  const resolvedPathExtension = path.extname(resolvedPath)
+  return (
+    !!importPathExtension &&
+    !!resolvedPathExtension &&
+    importPathExtension !== resolvedPathExtension &&
+    path.basename(importPath, importPathExtension) ===
+      path.basename(resolvedPath, resolvedPathExtension)
+  )
+}
+
+/**
  * Infers the extension of an unresolved import by probing the extensions the
  * rule explicitly requires.
  *
  * @param extension - The extension already derived from the import path.
  * @param resolvedPath - The result of resolving the import path as-is.
  * @param candidates - The extensions the rule requires, without leading dots.
+ * @param importPath - The import path as written, for extension aliases.
  * @param resolveCandidate - Resolves a candidate import path.
  * @returns The inferred extension and whether several candidates resolved.
  */
@@ -239,6 +266,7 @@ function inferExtension(
   extension: string,
   resolvedPath: string | null | undefined,
   candidates: readonly string[],
+  importPath: string,
   resolveCandidate: (candidate: string) => string | null | undefined,
 ) {
   if (extension || resolvedPath) {
@@ -248,7 +276,11 @@ function inferExtension(
     const candidateResolved = resolveCandidate(candidate)
     return (
       candidateResolved &&
-      path.basename(candidateResolved).endsWith(`.${candidate}`)
+      (path.basename(candidateResolved).endsWith(`.${candidate}`) ||
+        isExtensionAlias(
+          appendExtension(importPath, candidate),
+          candidateResolved,
+        ))
     )
   })
   return resolvedCandidates.length > 1
@@ -422,9 +454,14 @@ export default createRule<Options, MessageId>({
         const resolvedToDts = !!resolvedPath && dtsRe.test(resolvedPath)
 
         // get extension from resolved path, or source value if unresolved.
-        // for .d.ts/.d.mts/.d.cts, use the import path extension instead.
+        // for .d.ts/.d.mts/.d.cts and extension aliases, use the import path
+        // extension instead.
         let extension = path
-          .extname(resolvedToDts ? importPath : resolvedPath || importPath)
+          .extname(
+            resolvedToDts || isExtensionAlias(importPath, resolvedPath)
+              ? importPath
+              : resolvedPath || importPath,
+          )
           .slice(1)
 
         // determine if this is a module
@@ -461,6 +498,7 @@ export default createRule<Options, MessageId>({
             Object.keys(props.pattern).filter(candidate =>
               isUseOfExtensionRequired(candidate, !overrideAction && isPackage),
             ),
+            importPath,
             candidate =>
               resolve(appendExtension(importPath, candidate), context),
           )
