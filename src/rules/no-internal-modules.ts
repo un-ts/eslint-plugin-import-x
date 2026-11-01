@@ -1,4 +1,4 @@
-import { makeRe } from 'minimatch'
+import { Minimatch } from 'minimatch'
 
 import {
   importType,
@@ -85,21 +85,20 @@ export default createRule<[Options?], MessageId>({
   defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
-    const allowRegexps = (options.allow || [])
-      .map(p => makeRe(p))
-      .filter(Boolean)
-    const forbidRegexps = (options.forbid || [])
-      .map(p => makeRe(p))
-      .filter(Boolean)
+    // Minimatch#match instead of makeRe(): makeRe() is gone in minimatch 11.
+    // A pattern makeRe() rejected (a comment, or empty) never matches here
+    // either, so the old `.filter(Boolean)` has nothing left to drop.
+    const allowMatchers = (options.allow || []).map(p => new Minimatch(p))
+    const forbidMatchers = (options.forbid || []).map(p => new Minimatch(p))
 
     // test if reaching to this destination is allowed
     function reachingAllowed(importPath: string) {
-      return allowRegexps.some(re => re.test(importPath))
+      return allowMatchers.some(mm => mm.match(importPath))
     }
 
     // test if reaching to this destination is forbidden
     function reachingForbidden(importPath: string) {
-      return forbidRegexps.some(re => re.test(importPath))
+      return forbidMatchers.some(mm => mm.match(importPath))
     }
 
     function isAllowViolation(importPath: string) {
