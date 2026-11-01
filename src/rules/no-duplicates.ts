@@ -3,7 +3,7 @@ import * as semver from 'semver'
 
 import { cjsRequire } from '../require.js'
 import type { PackageJson, RuleContext } from '../types.js'
-import { baseModule, createRule, lazy, resolve } from '../utils/index.js'
+import { createRule, lazy, resolve } from '../utils/index.js'
 
 // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
 // pre-calculate if the TypeScript version is supported
@@ -22,7 +22,7 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
 export interface Options {
   considerQueryString?: boolean
   'prefer-inline'?: boolean
-  whitelist?: string[]
+  whitelist?: string[][]
 }
 
 export type MessageId = 'duplicate'
@@ -624,9 +624,12 @@ export default createRule<[Options?], MessageId>({
           },
           whitelist: {
             type: 'array',
-            uniqueItems: true,
             items: {
-              type: 'string',
+              type: 'array',
+              uniqueItems: true,
+              items: {
+                type: 'string',
+              },
             },
           },
         },
@@ -655,11 +658,12 @@ export default createRule<[Options?], MessageId>({
         }
       : defaultResolver
 
-    const whitelist = new Set(context.options[0]?.whitelist)
+    const whitelist = new Set(context.options[0]?.whitelist?.flat())
 
     const getImportKey = (sourcePath: string) => {
-      if (whitelist.has(baseModule(sourcePath))) {
-        return considerQueryStringOption ? sourcePath : sourcePath.split('?')[0]
+      const [specifier] = sourcePath.split('?')
+      if (whitelist.has(specifier)) {
+        return considerQueryStringOption ? sourcePath : specifier
       }
       // resolved path will cover aliased duplicates
       return resolver(sourcePath)

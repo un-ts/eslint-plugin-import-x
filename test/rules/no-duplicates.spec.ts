@@ -53,17 +53,19 @@ ruleTester.run('no-duplicates', rule, {
     // #505: entry points of a whitelisted package are different modules
     tValid({
       code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'; import { scale } from 'svelte/transition'",
-      options: [{ whitelist: ['svelte'] }],
+      options: [
+        { whitelist: [['svelte', 'svelte/easing', 'svelte/transition']] },
+      ],
       settings: sharedDeclarationSettings,
     }),
     tValid({
       code: "import { a } from '@scope/pkg/a'; import { b } from '@scope/pkg/b'",
-      options: [{ whitelist: ['@scope/pkg'] }],
+      options: [{ whitelist: [['svelte'], ['@scope/pkg/a', '@scope/pkg/b']] }],
       settings: sharedDeclarationSettings,
     }),
     tValid({
       code: "import { a } from 'svelte/easing?a'; import { b } from 'svelte/easing?b'",
-      options: [{ whitelist: ['svelte'], considerQueryString: true }],
+      options: [{ whitelist: [['svelte/easing']], considerQueryString: true }],
       settings: sharedDeclarationSettings,
     }),
 
@@ -122,11 +124,24 @@ ruleTester.run('no-duplicates', rule, {
       code: "import { quintOut } from 'svelte/easing'; import { onMount } from 'svelte'; import { linear } from 'svelte/easing?a'",
       output:
         "import { quintOut, linear  } from 'svelte/easing'; import { onMount } from 'svelte'; ",
-      options: [{ whitelist: ['svelte'] }],
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
       settings: sharedDeclarationSettings,
       errors: [
         createDuplicatedError('svelte/easing'),
         createDuplicatedError('svelte/easing'),
+      ],
+    }),
+
+    // #505: entry points that aren't listed are still compared by resolved path
+    tInvalid({
+      code: "import { onMount } from 'svelte'; import { tweened } from 'svelte/motion'; import { writable } from 'svelte/store'",
+      output:
+        "import { onMount } from 'svelte'; import { tweened, writable  } from 'svelte/motion'; ",
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
       ],
     }),
 
