@@ -6132,7 +6132,7 @@ __metadata:
     is-glob: "npm:^4.0.3"
     jest: "npm:^30.0.3"
     klaw-sync: "npm:^7.0.0"
-    minimatch: "npm:^9.0.3 || ^10.1.2"
+    minimatch: "npm:^9.0.3 || ^10.1.2 || ^11.0.1"
     nano-staged: "npm:^0.8.0"
     npm-run-all2: "npm:^8.0.4"
     path-serializer: "npm:^0.5.0"
