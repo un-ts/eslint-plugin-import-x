@@ -25,17 +25,28 @@ function toSteps(somePath: string) {
     }, [])
 }
 
+// `Minimatch#match` doesn't let a trailing `/**` match the directory itself,
+// as `lodash/**` should match `lodash`, so each brace alternative ending in
+// `/**` also matches its directory. A negated pattern matches neither.
+function toMatcher(pattern: string) {
+  const mm = new Minimatch(pattern)
+  const dirs: Minimatch[] = []
+  for (const glob of mm.globSet) {
+    const dir = glob.replace(/(\/\*\*)+$/, '')
+    if (dir !== glob) {
+      dirs.push(new Minimatch(dir, { nocomment: true, nonegate: true }))
+    }
+  }
+  const inDir = (path: string) => dirs.some(dir => dir.match(path))
+  return mm.negate
+    ? (path: string) => mm.match(path) && !inDir(path)
+    : (path: string) => mm.match(path) || inDir(path)
+}
+
 // `new Minimatch('')` matches the empty path that `.`, `./` and `..`
-// normalize to, so drop empty patterns. `Minimatch#match` doesn't let a
-// trailing `/**` match the directory itself, as `lodash/**` should match
-// `lodash`, so match that directory too.
+// normalize to, so drop empty patterns.
 function toMatchers(patterns: string[] = []) {
-  return patterns.filter(Boolean).flatMap(pattern => {
-    const dir = pattern.replace(/(\/\*\*)+$/, '')
-    return dir === pattern
-      ? [new Minimatch(pattern)]
-      : [new Minimatch(pattern), new Minimatch(dir)]
-  })
+  return patterns.filter(Boolean).map(toMatcher)
 }
 
 const potentialViolationTypes = new Set([
@@ -103,12 +114,12 @@ export default createRule<[Options?], MessageId>({
 
     // test if reaching to this destination is allowed
     function reachingAllowed(importPath: string) {
-      return allowMatchers.some(mm => mm.match(importPath))
+      return allowMatchers.some(match => match(importPath))
     }
 
     // test if reaching to this destination is forbidden
     function reachingForbidden(importPath: string) {
-      return forbidMatchers.some(mm => mm.match(importPath))
+      return forbidMatchers.some(match => match(importPath))
     }
 
     function isAllowViolation(importPath: string) {

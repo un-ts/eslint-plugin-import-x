@@ -112,6 +112,11 @@ ruleTester.run('no-internal-modules', rule, {
       options: [{ allow: ['api/service/**'] }],
     }),
     tValid({
+      code: 'import b from "@org/package/internal"',
+      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
+      options: [{ forbid: ['!**/package/**'] }],
+    }),
+    tValid({
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -309,6 +314,18 @@ ruleTester.run('no-internal-modules', rule, {
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [{ forbid: ['@org/package/**'] }],
+      errors: [
+        {
+          ...createNotAllowedError('@org/package'),
+          line: 1,
+          column: 15,
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'import b from "@org/package"',
+      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
+      options: [{ forbid: ['@org/{package/**,other}'] }],
       errors: [
         {
           ...createNotAllowedError('@org/package'),
