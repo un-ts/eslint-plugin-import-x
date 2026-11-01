@@ -132,17 +132,46 @@ ruleTester.run('no-duplicates', rule, {
       options: [{ whitelist: [['svelte', 'svelte/easing']] }],
       settings: sharedDeclarationSettings,
       errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+    tInvalid({
+      code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'; import { linear } from 'svelte/easing'",
+      output:
+        "import { onMount } from 'svelte'; import { quintOut, linear  } from 'svelte/easing'; ",
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
         createDuplicatedError('svelte/easing'),
         createDuplicatedError('svelte/easing'),
       ],
     }),
 
-    // #505: entry points that aren't listed are still compared by resolved path
+    // #505: an entry point that isn't listed is compared by resolved path
     tInvalid({
-      code: "import { onMount } from 'svelte'; import { tweened } from 'svelte/motion'; import { writable } from 'svelte/store'",
-      output:
-        "import { onMount } from 'svelte'; import { tweened, writable  } from 'svelte/motion'; ",
+      code: "import { onMount } from 'svelte'; import { writable } from 'svelte/store'",
+      output: "import { onMount, writable  } from 'svelte'; ",
       options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+
+    // #505: only specifiers in the same group are kept apart
+    tInvalid({
+      code: "import { onMount } from 'svelte'; import { a } from '@scope/pkg/a'",
+      output: "import { onMount, a  } from 'svelte'; ",
+      options: [
+        {
+          whitelist: [
+            ['svelte', 'svelte/easing'],
+            ['@scope/pkg/a', '@scope/pkg/b'],
+          ],
+        },
+      ],
       settings: sharedDeclarationSettings,
       errors: [
         createDuplicatedError(sharedDeclarationPath),

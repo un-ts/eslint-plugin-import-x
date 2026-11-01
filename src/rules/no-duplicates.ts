@@ -27,6 +27,10 @@ export interface Options {
 
 export type MessageId = 'duplicate'
 
+function isListed(group: Set<string>, sourcePath: string) {
+  return group.has(sourcePath) || group.has(sourcePath.split('?')[0])
+}
+
 function checkImports(
   imported: Map<string, TSESTree.ImportDeclaration[]>,
   context: RuleContext<MessageId, [Options?]>,
@@ -658,15 +662,38 @@ export default createRule<[Options?], MessageId>({
         }
       : defaultResolver
 
-    const whitelist = new Set(context.options[0]?.whitelist?.flat())
+    const whitelist = context.options[0]?.whitelist?.map(
+      group => new Set(group),
+    )
 
-    const getImportKey = (sourcePath: string) => {
-      const [specifier] = sourcePath.split('?')
-      if (whitelist.has(specifier) || whitelist.has(sourcePath)) {
-        return considerQueryStringOption ? sourcePath : specifier
-      }
+    // only specifiers listed in the same group are known to be different modules
+    const areDifferentModules = (a: string, b: string) =>
+      a.split('?')[0] !== b.split('?')[0] &&
+      whitelist!.some(group => isListed(group, a) && isListed(group, b))
+
+    const getImportKey = (
+      sourcePath: string,
+      importMap: Map<string, TSESTree.ImportDeclaration[]>,
+    ) => {
       // resolved path will cover aliased duplicates
-      return resolver(sourcePath)
+      const resolvedPath = resolver(sourcePath)
+
+      if (!whitelist) {
+        return resolvedPath
+      }
+
+      for (const [key, nodes] of importMap) {
+        if (
+          resolver(nodes[0].source.value) === resolvedPath &&
+          !nodes.some(node =>
+            areDifferentModules(node.source.value, sourcePath),
+          )
+        ) {
+          return key
+        }
+      }
+
+      return importMap.has(resolvedPath) ? sourcePath : resolvedPath
     }
 
     const moduleMaps = new Map<TSESTree.Node, Map<string, ModuleMap>>()
@@ -724,8 +751,8 @@ export default createRule<[Options?], MessageId>({
 
     return {
       ImportDeclaration(n) {
-        const key = getImportKey(n.source.value)
         const importMap = getImportMap(n)
+        const key = getImportKey(n.source.value, importMap)
 
         if (importMap.has(key)) {
           importMap.get(key)!.push(n)

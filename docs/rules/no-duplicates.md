@@ -87,7 +87,7 @@ import * from './mod.js?minify'
 
 This rule compares imports by the path they resolve to. A package can declare the types of several entry points in one file, as `svelte` and `svelte/easing` do, so with a TypeScript resolver they look like the same module. Merging them would break the code.
 
-The `whitelist` option is an optional array of groups, each listing the exact specifiers of entry points that are different modules. Imports of a listed specifier are compared by specifier instead:
+The `whitelist` option is an optional array of groups, each listing the exact specifiers of entry points that are different modules. Specifiers in the same group are never duplicates of each other, unless they are the same specifier:
 
 ```js
 "import-x/no-duplicates": ["error", {"whitelist": [["svelte", "svelte/easing", "svelte/transition"]]}]
@@ -108,7 +108,13 @@ import { quintOut } from 'svelte/easing'
 import { linear } from 'svelte/easing'
 ```
 
-Specifiers must match exactly, there are no wildcards. An entry point that isn't listed is still compared by resolved path, so `svelte/store` and `svelte/motion` would be duplicates of each other here.
+Specifiers must match exactly, there are no wildcards. Everything else is still compared by resolved path, so an entry point that isn't listed, or that is only listed in another group, is a duplicate of the others:
+
+```js
+// "svelte/store" is not listed, so it is reported along with "svelte"
+import { onMount } from 'svelte'
+import { writable } from 'svelte/store'
+```
 
 ### Inline Type imports
 
