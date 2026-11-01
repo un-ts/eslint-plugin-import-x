@@ -52,6 +52,9 @@ const sharedFileSettings = {
         if (['runtime', 'runtime/index.js'].includes(modulePath)) {
           return { found: true, path: sharedRuntimePath }
         }
+        if (modulePath === 'virtual') {
+          return { found: true, path: '\0virtual' }
+        }
         return { found: false }
       },
     },
@@ -114,6 +117,17 @@ ruleTester.run('no-duplicates', rule, {
       errors: [
         createDuplicatedError(sharedDeclarationPath),
         createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+
+    // A resolved path with a null byte stays intact in the message
+    tInvalid({
+      code: "import { a } from 'virtual'; import { b } from 'virtual'",
+      output: "import { a, b  } from 'virtual'; ",
+      settings: sharedFileSettings,
+      errors: [
+        createDuplicatedError('\0virtual'),
+        createDuplicatedError('\0virtual'),
       ],
     }),
 

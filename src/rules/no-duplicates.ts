@@ -51,13 +51,18 @@ function checkImports(
       return
     }
 
+    const [sharedPath] = key.split(SPECIFIER_SEPARATOR, 1)
+
     for (let i = 0, len = nodes.length; i < len; i++) {
       const node = nodes[i]
       context.report({
         node: node.source,
         messageId: 'duplicate',
         data: {
-          module: key.split(SPECIFIER_SEPARATOR, 1)[0],
+          module:
+            sharedPath && isSharedPackageDeclaration(sharedPath)
+              ? sharedPath
+              : key,
         },
         // Attach the autofix (if any) to the first import only
         fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
