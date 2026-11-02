@@ -104,10 +104,8 @@ export default createRule({
                         // Remove the empty block and the 'from' token, leaving the import only for its side
                         // effects, e.g. `import 'mod'`
                         const { sourceCode } = context
-                        const fromToken = pTokens.find(t => t.value === 'from')!
-                        const importToken = pTokens.find(
-                          t => t.value === 'import',
-                        )!
+                        const fromToken = tokens.find(t => t.value === 'from')!
+                        const importToken = tokens[0]
                         const hasSpaceAfterFrom = sourceCode.isSpaceBetween!(
                           fromToken,
                           sourceCode.getTokenAfter(fromToken)!,
