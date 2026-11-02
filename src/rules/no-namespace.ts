@@ -177,7 +177,8 @@ function usesNamespaceAsObject(
       parent.type === 'MemberExpression' &&
       parent.object === identifier &&
       (parent.computed
-        ? parent.property.type === 'Literal'
+        ? parent.property.type === 'Literal' &&
+          typeof parent.property.value === 'string'
         : parent.property.type === 'Identifier')
     )
   })

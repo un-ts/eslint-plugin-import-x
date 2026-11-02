@@ -272,5 +272,13 @@ ruleTester.run('no-namespace', rule, {
         parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
       },
     }),
+    tInvalid({
+      code: "import * as foo from './foo';\nflorp(foo[1]);",
+      output: null,
+      errors: [NO_NAMESPACE_ERROR],
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+    }),
   ],
 })
