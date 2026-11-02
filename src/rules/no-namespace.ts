@@ -171,12 +171,14 @@ function usesNamespaceAsObject(
   return !namespaceIdentifiers.every(identifier => {
     const parent = identifier.parent
 
-    // `namespace.x` or `namespace['x']`
+    // `namespace.x` or `namespace['x']`, but not `namespace[x]` or `x[namespace]`
     return (
       parent &&
       parent.type === 'MemberExpression' &&
-      (parent.property.type === 'Identifier' ||
-        parent.property.type === 'Literal')
+      parent.object === identifier &&
+      (parent.computed
+        ? parent.property.type === 'Literal'
+        : parent.property.type === 'Identifier')
     )
   })
 }

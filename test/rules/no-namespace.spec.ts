@@ -247,5 +247,30 @@ ruleTester.run('no-namespace', rule, {
         },
       ],
     }),
+    tInvalid({
+      // `foo[key]` reads the export named by the value of `key`, so there is no named import to swap it for
+      code: "import * as foo from './foo';\nconst key = 'bar';\nflorp(foo[key]);",
+      output: null,
+      errors: [NO_NAMESPACE_ERROR],
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+    }),
+    tInvalid({
+      code: "import * as foo from './foo';\nconst key = 'bar';\nflorp(foo.baz, foo[key]);",
+      output: null,
+      errors: [NO_NAMESPACE_ERROR],
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+    }),
+    tInvalid({
+      code: "import * as foo from './foo';\nflorp(list[foo]);",
+      output: null,
+      errors: [NO_NAMESPACE_ERROR],
+      languageOptions: {
+        parserOptions: { ecmaVersion: 2015, sourceType: 'module' },
+      },
+    }),
   ],
 })
