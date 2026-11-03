@@ -62,6 +62,7 @@ export default createRule<[Options?], MessageId>({
         let anyRelative = false
 
         let lastLegalImp: TSESTree.ProgramStatement | null = null
+        let lastDirective: TSESTree.ProgramStatement | null = null
 
         const errorInfos: Array<{
           node: TSESTree.ProgramStatement
@@ -73,6 +74,7 @@ export default createRule<[Options?], MessageId>({
 
         for (const [index, node] of body.entries()) {
           if (!anyExpressions && isPossibleDirective(node)) {
+            lastDirective = node
             continue
           }
 
@@ -162,13 +164,17 @@ export default createRule<[Options?], MessageId>({
 
               let replaceSourceCode = ''
 
-              if (!lastLegalImp) {
+              // Directives such as `'use client'` only work at the very top,
+              // so imports moved up go after them
+              const insertAfterNode = lastLegalImp ?? lastDirective
+
+              if (!insertAfterNode) {
                 insertSourceCode =
                   insertSourceCode.trim() + insertSourceCode.match(/^(\s+)/)![0]
               }
 
-              const insertFixer = lastLegalImp
-                ? fixer.insertTextAfter(lastLegalImp, insertSourceCode)
+              const insertFixer = insertAfterNode
+                ? fixer.insertTextAfter(insertAfterNode, insertSourceCode)
                 : fixer.insertTextBefore(body[0], insertSourceCode)
 
               const fixers = [insertFixer, ...removeFixers]

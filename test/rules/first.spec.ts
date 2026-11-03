@@ -59,6 +59,17 @@ ruleTester.run('first', rule, {
               export { x };",
     }),
     tInvalid({
+      code: "'use client';\nconst a = 1;\nimport { y } from 'bar';",
+      errors: [{ messageId: 'order' }],
+      output: "'use client';\nimport { y } from 'bar';\nconst a = 1;",
+    }),
+    tInvalid({
+      code: "'use strict';\n'use client';\nfoo();\nimport { x } from './foo';\nimport { y } from 'bar';",
+      errors: [{ messageId: 'order' }, { messageId: 'order' }],
+      output:
+        "'use strict';\n'use client';\nimport { x } from './foo';\nimport { y } from 'bar';\nfoo();",
+    }),
+    tInvalid({
       code: "import { x } from './foo'; import { y } from 'bar'",
       options: ['absolute-first'],
       errors: [{ messageId: 'absolute' }],
