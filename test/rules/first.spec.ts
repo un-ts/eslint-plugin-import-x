@@ -64,6 +64,12 @@ ruleTester.run('first', rule, {
       output: "'use client';\nimport { y } from 'bar';\nconst a = 1;",
     }),
     tInvalid({
+      // directive with no trailing newline: moved import must not glue to the next statement
+      code: "'use client';const a = 1;import { y } from 'bar'",
+      errors: [{ messageId: 'order' }],
+      output: "'use client';\nimport { y } from 'bar'\nconst a = 1;",
+    }),
+    tInvalid({
       code: "'use strict';\n'use client';\nfoo();\nimport { x } from './foo';\nimport { y } from 'bar';",
       errors: [{ messageId: 'order' }, { messageId: 'order' }],
       output:

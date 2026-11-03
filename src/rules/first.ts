@@ -173,8 +173,19 @@ export default createRule<[Options?], MessageId>({
                   insertSourceCode.trim() + insertSourceCode.match(/^(\s+)/)![0]
               }
 
+              // When inserting after a directive with no trailing newline, add one
+              // to prevent the moved import from being glued to the next statement.
+              const insertingAfterDirective = !lastLegalImp && !!lastDirective
               const insertFixer = insertAfterNode
-                ? fixer.insertTextAfter(insertAfterNode, insertSourceCode)
+                ? fixer.insertTextAfter(
+                    insertAfterNode,
+                    insertingAfterDirective &&
+                      !/^[^\S\n]*\n/.test(
+                        originSourceCode.slice(insertAfterNode.range[1]),
+                      )
+                      ? `${insertSourceCode}\n`
+                      : insertSourceCode,
+                  )
                 : fixer.insertTextBefore(body[0], insertSourceCode)
 
               const fixers = [insertFixer, ...removeFixers]

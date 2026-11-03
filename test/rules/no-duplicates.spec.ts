@@ -566,7 +566,14 @@ export default TestComponent;
 // Sets only the legacy `assertions` property, like older parsers
 const legacyAssertionsParser = {
   parseForESLint(code: string, options: TSESLint.ParserOptions) {
-    const result = require(parsers.TS).parseForESLint(code, options)
+    const result = (
+      require(parsers.TS) as {
+        parseForESLint(
+          c: string,
+          o: unknown,
+        ): { ast: { body: Array<Record<string, unknown>> } }
+      }
+    ).parseForESLint(code, options)
     for (const node of result.ast.body) {
       if (node.type === 'ImportDeclaration') {
         const attributes = node.attributes
