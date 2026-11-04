@@ -73,13 +73,13 @@ ruleTester.run('no-duplicates', rule, {
   invalid: [
     tInvalid({
       code: "import { x } from './foo'; import { y } from './foo'",
-      output: "import { x, y  } from './foo'; ",
+      output: "import { x, y } from './foo'; ",
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
     tInvalid({
       code: "import {x} from './foo'; import {y} from './foo'; import { z } from './foo'",
-      output: "import {x,y, z } from './foo';  ",
+      output: "import {x,y, z} from './foo';  ",
       errors: [
         createDuplicatedError('./foo'),
         createDuplicatedError('./foo'),
@@ -90,7 +90,7 @@ ruleTester.run('no-duplicates', rule, {
     // ensure resolved path results in warnings
     tInvalid({
       code: "import { x } from './bar'; import { y } from 'bar';",
-      output: "import { x, y  } from './bar'; ",
+      output: "import { x, y } from './bar'; ",
       settings: {
         'import-x/resolve': {
           paths: [path.resolve('test/fixtures')],
@@ -136,7 +136,7 @@ ruleTester.run('no-duplicates', rule, {
 
     tInvalid({
       code: "import type { x } from './foo'; import type { y } from './foo'",
-      output: "import type { x, y  } from './foo'; ",
+      output: "import type { x, y } from './foo'; ",
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
@@ -170,7 +170,7 @@ ruleTester.run('no-duplicates', rule, {
     // #2347: duplicate identifiers should be removed
     tInvalid({
       code: "import {a,b} from './foo'; import { b, c } from './foo'; import {b,c,d} from './foo'",
-      output: "import {a,b, c ,d} from './foo';  ",
+      output: "import {a,b, c,d} from './foo';  ",
       errors: [
         createDuplicatedError('./foo'),
         createDuplicatedError('./foo'),
@@ -181,20 +181,20 @@ ruleTester.run('no-duplicates', rule, {
     // #2347: duplicate identifiers should be removed, but not if they are adjacent to comments
     tInvalid({
       code: "import {a} from './foo'; import { a/*,b*/ } from './foo'",
-      output: "import {a, a/*,b*/ } from './foo'; ",
+      output: "import {a, a/*,b*/} from './foo'; ",
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
     // an aliased specifier must not swallow an unaliased one of the same name
     tInvalid({
       code: "import { x as y } from './foo'; import { x } from './foo'",
-      output: "import { x as y, x  } from './foo'; ",
+      output: "import { x as y, x } from './foo'; ",
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
     tInvalid({
       code: "import { x as y } from './foo'; import { x as y, z } from './foo'",
-      output: "import { x as y, z  } from './foo'; ",
+      output: "import { x as y, z } from './foo'; ",
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
@@ -206,7 +206,7 @@ ruleTester.run('no-duplicates', rule, {
 
     tInvalid({
       code: "import { x } from './foo'; import { x as x, y } from './foo'",
-      output: "import { x, y  } from './foo'; ",
+      output: "import { x, y } from './foo'; ",
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
@@ -219,6 +219,39 @@ ruleTester.run('no-duplicates', rule, {
         createDuplicatedError('./foo'),
         createDuplicatedError('./foo'),
       ],
+    }),
+
+    tInvalid({
+      code: "import { x } from './foo'; import def, { y } from './foo'",
+      output: "import def, { x, y } from './foo'; ",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    tInvalid({
+      code: "import {\n  a,\n} from './foo'\nimport { b } from './foo'\n",
+      output: "import {\n  a, b\n} from './foo'\n",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    // a comma inside a line comment is not a specifier separator
+    tInvalid({
+      code: "import { a } from './foo'\nimport {\n  b, // used by c, d\n  e,\n} from './foo'\n",
+      output: "import { a,\n  b, // used by c, d\n  e } from './foo'\n",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    // a line comment keeps its line break, or it would comment out `}`
+    tInvalid({
+      code: "import {\n  a\n} from './foo'\nimport {\n  b // note\n} from './foo'\n",
+      output: "import {\n  a,\n  b // note\n\n} from './foo'\n",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    // line endings of a merged list stay as they are
+    tInvalid({
+      code: "import {\r\n  a\r\n} from './foo'\r\nimport {\r\n  b\r\n} from './foo'",
+      output: "import {\r\n  a,\r\n  b\r\n} from './foo'\r\n",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
     tInvalid({
@@ -447,7 +480,7 @@ import {x,y} from './foo'
     // #2027 long import list generate empty lines
     tInvalid({
       code: "import { Foo } from './foo';\nimport { Bar } from './foo';\nexport const value = {}",
-      output: "import { Foo, Bar  } from './foo';\nexport const value = {}",
+      output: "import { Foo, Bar } from './foo';\nexport const value = {}",
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
@@ -481,7 +514,6 @@ import {
   DEFAULT_FILTER_KEYS,
   BULK_DISABLED,
   BULK_ACTIONS_ENABLED
-
 } from '../constants';
 import React from 'react';
 
@@ -1272,7 +1304,7 @@ describe('TypeScript', () => {
             code: "import type { AType as BType } from './foo'; import { CValue } from './foo'",
             ...parserConfig,
             options: [{ 'prefer-inline': true }],
-            output: `import { type AType as BType, CValue  } from './foo'; `,
+            output: `import { type AType as BType, CValue } from './foo'; `,
             errors: [
               {
                 ...createDuplicatedError('./foo'),
@@ -1309,7 +1341,7 @@ describe('TypeScript', () => {
             code: "import type { A as B, B as C } from './foo'; import { D } from './foo'",
             ...parserConfig,
             options: [{ 'prefer-inline': true }],
-            output: `import { type A as B, type B as C, D  } from './foo'; `,
+            output: `import { type A as B, type B as C, D } from './foo'; `,
             errors: [
               {
                 ...createDuplicatedError('./foo'),

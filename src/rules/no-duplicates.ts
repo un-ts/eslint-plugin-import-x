@@ -203,7 +203,7 @@ function getFix(
 
         return [
           needsComma && !specifier.isEmpty && specifierText.length > 0
-            ? `${result},${specifierText}`
+            ? `${trimSpecifierEnd(result)},${specifierText}`
             : `${result}${specifierText}`,
           specifier.isEmpty || specifierText.length === 0 ? needsComma : true,
           updatedExistingIdentifiers,
@@ -255,7 +255,12 @@ function getFix(
       fixes.push(fixer.insertTextAfter(firstToken, ` ${defaultImportName},`))
       if (shouldAddSpecifiers) {
         // `import def, {...} from './foo'` → `import def, {..., ...} from './foo'`
-        fixes.push(fixer.insertTextBefore(closeBrace, specifiersText))
+        fixes.push(
+          fixer.insertTextAfter(
+            sourceCode.getTokenBefore(closeBrace)!,
+            trimSpecifierEnd(specifiersText),
+          ),
+        )
       }
     } else if (
       openBrace == null &&
@@ -276,7 +281,9 @@ function getFix(
     } else if (openBrace != null && closeBrace != null && !shouldAddDefault()) {
       const tokenBefore = sourceCode.getTokenBefore(closeBrace)!
       // `import {...} './foo'` → `import {..., ...} from './foo'`
-      fixes.push(fixer.insertTextAfter(tokenBefore, specifiersText))
+      fixes.push(
+        fixer.insertTextAfter(tokenBefore, trimSpecifierEnd(specifiersText)),
+      )
     }
 
     // Remove imports whose specifiers have been moved into the first import.
@@ -443,6 +450,14 @@ function getTypeImportFix(
 
     return fixes
   }
+}
+
+// The whitespace before `}` of the first import stays, so the one a merged
+// specifier had before its own `}` has to go. A line comment keeps its line break,
+// or it would comment out what follows.
+function trimSpecifierEnd(text: string) {
+  const trimmed = text.trimEnd()
+  return /\/\/[^\n]*$/.test(trimmed) ? text : trimmed
 }
 
 // `x as x` binds the same name as `x`, so compare them as equal.
