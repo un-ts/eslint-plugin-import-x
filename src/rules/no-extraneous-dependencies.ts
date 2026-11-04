@@ -499,6 +499,15 @@ export default createRule<[Options?], MessageId>({
       verifyTypeImports: !!options.includeTypes,
     }
 
+    // No package.json to check the imports against
+    if (
+      !selfPackage &&
+      !options.packageDir?.length &&
+      !pkgUp({ cwd: context.physicalFilename })
+    ) {
+      return {}
+    }
+
     return {
       ...moduleVisitor(
         (source, node) => {

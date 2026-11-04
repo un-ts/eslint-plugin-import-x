@@ -66,8 +66,26 @@ const packageDirBundledDepsRaceCondition = testFilePath(
 )
 const emptyPackageDir = testFilePath('empty-folder')
 
+const noPackageJsonTestCase = {
+  code: 'import "foo"',
+  filename: path.resolve('/no-package-json-here/bar.js'),
+  settings: {
+    'import-x/resolver-next': [
+      {
+        interfaceVersion: 3,
+        name: 'stub',
+        resolve: () => ({
+          found: true,
+          path: path.resolve('/node_modules/foo/index.js'),
+        }),
+      },
+    ],
+  },
+}
+
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
+    tValid(noPackageJsonTestCase),
     ...[...Object.keys(deps), ...Object.keys(devDeps)].flatMap(pkg => [
       tValid({ code: `import "${pkg}"` }),
       tValid({ code: `import foo, { bar } from "${pkg}"` }),
@@ -295,6 +313,11 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     }),
   ],
   invalid: [
+    tInvalid({
+      ...noPackageJsonTestCase,
+      options: [{ packageDir: packageDirWithEmpty }],
+      errors: [{ messageId: 'missing', data: { packageName: 'foo' } }],
+    }),
     tInvalid({
       code: 'import qs from "qs";',
       filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),

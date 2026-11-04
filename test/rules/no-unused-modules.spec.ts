@@ -1367,6 +1367,19 @@ function createUnusedError(
     })
   })
 
+  describe('do not crash with no package.json above the file', () => {
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [
+        tValid({
+          code: 'export const foo = "foo"',
+          filename: path.resolve('/no-package-json-here/foo.js'),
+          options: unusedExportsOptions,
+        }),
+      ],
+      invalid: [],
+    })
+  })
+
   describe('Avoid errors if re-export all from umd compiled library', () => {
     ruleTester.run('no-unused-modules', rule, {
       valid: [
