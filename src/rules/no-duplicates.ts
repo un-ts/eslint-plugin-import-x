@@ -72,8 +72,13 @@ function getFix(
   // Adjusting the first import might make it multiline, which could break
   // `eslint-disable-next-line` comments and similar, so bail if the first
   // import has comments. Also, if the first import is `import * as ns from
-  // './foo'` there's nothing we can do.
-  if (hasProblematicComments(first, sourceCode) || hasNamespace(first)) {
+  // './foo'` there's nothing we can do, and `prefer-inline` can't keep the
+  // `import type` that `resolution-mode` needs.
+  if (
+    hasProblematicComments(first, sourceCode) ||
+    hasNamespace(first) ||
+    (context.options[0]?.['prefer-inline'] && hasResolutionMode(first))
+  ) {
     return null
   }
 
@@ -106,8 +111,8 @@ function getFix(
     }>
   >((acc, node, nodeIndex) => {
     const tokens = sourceCode.getTokens(node)
-    const openBrace = tokens.find(token => isPunctuator(token, '{'))
-    const closeBrace = tokens.find(token => isPunctuator(token, '}'))
+    const openBrace = tokens.find(token => isSpecifierBrace(node, token, '{'))
+    const closeBrace = tokens.find(token => isSpecifierBrace(node, token, '}'))
 
     if (openBrace == null || closeBrace == null) {
       return acc
@@ -149,8 +154,10 @@ function getFix(
 
   return (fixer: TSESLint.RuleFixer) => {
     const tokens = sourceCode.getTokens(first)
-    const openBrace = tokens.find(token => isPunctuator(token, '{'))!
-    const closeBrace = tokens.find(token => isPunctuator(token, '}'))!
+    const openBrace = tokens.find(token => isSpecifierBrace(first, token, '{'))!
+    const closeBrace = tokens.find(token =>
+      isSpecifierBrace(first, token, '}'),
+    )!
     const firstToken = sourceCode.getFirstToken(first)!
     const [defaultImportName] = defaultImportNames
 
@@ -332,20 +339,7 @@ function getTypeImportFix(
     hasProblematicComments(node, sourceCode) ||
     sourceCode.getCommentsInside(node).length > 0
 
-  // Specifiers only move between imports with the same attributes, like
-  // `with { 'resolution-mode': 'import' }`. Legacy parsers only set
-  // `assertions`.
-  const getAttributes = (node: TSESTree.ImportDeclaration) =>
-    (node.attributes ?? node.assertions)
-      ?.map(attr => sourceCode.getText(attr))
-      .join(',')
-
-  const rest = nodes.filter(
-    node =>
-      node !== first &&
-      !hasComments(node) &&
-      getAttributes(node) === getAttributes(first),
-  )
+  const rest = nodes.filter(node => node !== first && !hasComments(node))
 
   if (hasComments(first) || rest.length === 0) {
     return null
@@ -454,6 +448,37 @@ function isPunctuator(node: TSESTree.Token, value: '{' | '}' | ',') {
   return node.type === 'Punctuator' && node.value === value
 }
 
+// The braces of `import {...}`, not the ones of `with {...}` after the source.
+function isSpecifierBrace(
+  node: TSESTree.ImportDeclaration,
+  token: TSESTree.Token,
+  value: '{' | '}',
+) {
+  return isPunctuator(token, value) && token.range[0] < node.source.range[0]
+}
+
+// Imports of one path with different attributes can load different modules, so
+// only imports with equal attributes are duplicates. The order of the attributes
+// doesn't matter. Legacy parsers only set `assertions`.
+function getAttributesKey(node: TSESTree.ImportDeclaration) {
+  return (node.attributes ?? node.assertions ?? [])
+    .map(({ key, value }) =>
+      JSON.stringify([
+        key.type === 'Identifier' ? key.name : key.value,
+        value.value,
+      ]),
+    )
+    .sort()
+    .join(',')
+}
+
+// TypeScript only allows `resolution-mode` on `import type`.
+function hasResolutionMode(node: TSESTree.ImportDeclaration) {
+  return (node.attributes ?? node.assertions)?.some(
+    ({ key }) => key.type !== 'Identifier' && key.value === 'resolution-mode',
+  )
+}
+
 // Get the name of the default import of `node`, if any.
 function getDefaultImportName(node: TSESTree.ImportDeclaration) {
   const defaultSpecifier = node.specifiers.find(
@@ -516,8 +541,12 @@ function hasCommentInsideNonSpecifiers(
   sourceCode: TSESLint.SourceCode,
 ) {
   const tokens = sourceCode.getTokens(node)
-  const openBraceIndex = tokens.findIndex(token => isPunctuator(token, '{'))
-  const closeBraceIndex = tokens.findIndex(token => isPunctuator(token, '}'))
+  const openBraceIndex = tokens.findIndex(token =>
+    isSpecifierBrace(node, token, '{'),
+  )
+  const closeBraceIndex = tokens.findIndex(token =>
+    isSpecifierBrace(node, token, '}'),
+  )
   // Slice away the first token, since we're no looking for comments _before_
   // `node` (only inside). If there's a `{...}` part, look for comments before
   // the `{`, but not before the `}` (hence the `+1`s).
@@ -587,14 +616,18 @@ export default createRule<[Options?], MessageId>({
         }
       : defaultResolver
 
-    const moduleMaps = new Map<TSESTree.Node, ModuleMap>()
+    const moduleMaps = new Map<TSESTree.Node, Map<string, ModuleMap>>()
 
     function getImportMap(n: TSESTree.ImportDeclaration) {
       const parent = n.parent!
-      let map: ModuleMap
-      if (moduleMaps.has(parent)) {
-        map = moduleMaps.get(parent)!
-      } else {
+      const attributesKey = getAttributesKey(n)
+      let parentMaps = moduleMaps.get(parent)
+      if (!parentMaps) {
+        parentMaps = new Map()
+        moduleMaps.set(parent, parentMaps)
+      }
+      let map = parentMaps.get(attributesKey)
+      if (!map) {
         map = {
           imported: new Map(),
           nsImported: new Map(),
@@ -602,7 +635,7 @@ export default createRule<[Options?], MessageId>({
           namespaceTypesImported: new Map(),
           namedTypesImported: new Map(),
         }
-        moduleMaps.set(parent, map)
+        parentMaps.set(attributesKey, map)
       }
 
       if (n.importKind === 'type') {
@@ -650,12 +683,14 @@ export default createRule<[Options?], MessageId>({
       },
 
       'Program:exit'() {
-        for (const map of moduleMaps.values()) {
-          checkImports(map.imported, context)
-          checkImports(map.nsImported, context)
-          checkImports(map.defaultTypesImported, context)
-          checkImports(map.namespaceTypesImported, context)
-          checkImports(map.namedTypesImported, context)
+        for (const parentMaps of moduleMaps.values()) {
+          for (const map of parentMaps.values()) {
+            checkImports(map.imported, context)
+            checkImports(map.nsImported, context)
+            checkImports(map.defaultTypesImported, context)
+            checkImports(map.namespaceTypesImported, context)
+            checkImports(map.namedTypesImported, context)
+          }
         }
       },
     }
