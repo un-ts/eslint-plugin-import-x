@@ -34,7 +34,7 @@ import foo from './foo.js'
 import bar from './foo.js'
 ```
 
-A type and a value can share a name in TypeScript, so a value default imported under the name of an exported type is valid:
+A type and a value can share a name in TypeScript, so a default that is only a value, imported under the name of an exported type, is valid. A default that also declares a type, like `export default class`, is still reported:
 
 ```ts
 // foo.ts
