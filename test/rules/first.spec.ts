@@ -76,6 +76,13 @@ ruleTester.run('first', rule, {
       output: "'use client'\nimport { y } from 'bar'\nfoo();",
     }),
     tInvalid({
+      // directive with a trailing same-line comment: comment must stay on the directive's line
+      code: "'use client'; // trailing comment\nfoo();\nimport { x } from 'foo'",
+      errors: [{ messageId: 'order' }],
+      output:
+        "'use client'; // trailing comment\nimport { x } from 'foo'\nfoo();",
+    }),
+    tInvalid({
       code: "'use strict';\n'use client';\nfoo();\nimport { x } from './foo';\nimport { y } from 'bar';",
       errors: [{ messageId: 'order' }, { messageId: 'order' }],
       output:

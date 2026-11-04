@@ -182,12 +182,43 @@ export default createRule<[Options?], MessageId>({
               if (insertingAfterDirective) {
                 insertSourceCode = `\n${insertSourceCode.trimStart()}`
               }
+
+              // When inserting after a directive, advance past any trailing
+              // same-line comments (e.g. // eslint-disable-line) so they stay
+              // on the directive's line and inline disable directives remain
+              // effective.
+              let effectiveInsertAfterNode:
+                | TSESTree.Node
+                | TSESTree.Token
+                | null = insertAfterNode
+              if (insertingAfterDirective && insertAfterNode) {
+                let token: TSESTree.Node | TSESTree.Token = insertAfterNode
+                for (;;) {
+                  const next: TSESTree.Token | null = sourceCode.getTokenAfter(
+                    token,
+                    { includeComments: true },
+                  )
+                  if (
+                    next &&
+                    (next.type === 'Line' || next.type === 'Block') &&
+                    next.loc.start.line === token.loc.end.line
+                  ) {
+                    token = next
+                  } else {
+                    break
+                  }
+                }
+                effectiveInsertAfterNode = token
+              }
+
               const insertFixer = insertAfterNode
                 ? fixer.insertTextAfter(
-                    insertAfterNode,
+                    effectiveInsertAfterNode!,
                     insertingAfterDirective &&
                       !/^[^\S\n]*\n/.test(
-                        originSourceCode.slice(insertAfterNode.range[1]),
+                        originSourceCode.slice(
+                          effectiveInsertAfterNode!.range![1],
+                        ),
                       )
                       ? `${insertSourceCode}\n`
                       : insertSourceCode,
