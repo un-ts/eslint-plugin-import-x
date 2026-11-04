@@ -94,6 +94,17 @@ import Name6 from 'other-name';
       options,
       output: `import * as Name1 from 'prefix-name';\nimport * as Name2 from 'prefix-name';`,
     }),
+    tInvalid({
+      code: `import Name1, * as Name2 // comment\nfrom 'prefix-name';`,
+      errors: [
+        {
+          messageId: 'preferNamespaceImport',
+          data: { source: 'prefix-name', specifier: 'Name1' },
+        },
+      ],
+      options,
+      output: `import * as Name1 from 'prefix-name';\nimport * as Name2 // comment\nfrom 'prefix-name';`,
+    }),
   ],
 })
 

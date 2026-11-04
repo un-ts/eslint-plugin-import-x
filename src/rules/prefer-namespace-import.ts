@@ -67,13 +67,15 @@ export default createRule<[Options?], MessageId>({
             const importStringPrefix = `import${isTypeImport ? ' type' : ''}`
             // remove the default specifier and prepend the namespace import specifier.
             // The other specifiers are either `{ ... }` or `* as name`, so take
-            // everything between the comma after the default and `from`.
+            // everything between the comma after the default and `from`. The text
+            // before `from` is kept as written, so a `//` comment there still ends
+            // before `from`.
             const { sourceCode } = context
             const comma = sourceCode.getTokenAfter(node)!
             const fromToken = sourceCode.getTokenBefore(node.parent.source)!
             const specifiers = sourceCode.text
               .slice(comma.range[1], fromToken.range[0])
-              .trim()
+              .trimStart()
             const remainingText = sourceCode.text.slice(
               fromToken.range[0],
               node.parent.range[1],
@@ -82,7 +84,7 @@ export default createRule<[Options?], MessageId>({
               node.parent,
               [
                 `${importStringPrefix} * as ${localName} ${remainingText}`,
-                `${importStringPrefix} ${specifiers} ${remainingText}`,
+                `${importStringPrefix} ${specifiers}${remainingText}`,
               ].join('\n'),
             )
           },
