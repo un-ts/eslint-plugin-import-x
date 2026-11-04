@@ -1,6 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
 import {
+  getExportKind,
   hasDefaultExport,
   hasExplicitExport,
   ModuleInfo,
@@ -66,7 +67,12 @@ export default createRule<[], MessageId>({
 
         if (
           hasExplicitExport(importedModule, 'default') &&
-          hasExplicitExport(importedModule, nameValue)
+          hasExplicitExport(importedModule, nameValue) &&
+          // A value default can share its name with an exported type: the import
+          // gets the value either way, so it isn't a named import without braces.
+          (declaration.importKind === 'type' ||
+            getExportKind(importedModule, nameValue) !== 'type' ||
+            getExportKind(importedModule, 'default') !== 'value')
         ) {
           context.report({
             node: defaultSpecifier,

@@ -34,6 +34,20 @@ import foo from './foo.js'
 import bar from './foo.js'
 ```
 
+A type and a value can share a name in TypeScript, so a value default imported under the name of an exported type is valid:
+
+```ts
+// foo.ts
+export type Foo = string
+export default 'foo'
+
+// valid:
+import Foo from './foo'
+
+// message: Using exported name 'Foo' as identifier for default export.
+import type Foo from './foo'
+```
+
 For post-ES2015 `export` extensions, this also prevents exporting the default from a referenced module as a name within that module, for the same reasons:
 
 ```js

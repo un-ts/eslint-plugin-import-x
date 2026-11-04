@@ -49,4 +49,6 @@ import foo from './foo.js'
 const { bar } = foo
 ```
 
+A named export that is only a type is not reported: it can't be what a value member access was meant to be.
+
 [blog]: https://kentcdodds.com/blog/misunderstanding-es6-modules-upgrading-babel-tears-and-a-solution
