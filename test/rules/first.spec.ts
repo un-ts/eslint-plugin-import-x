@@ -70,6 +70,12 @@ ruleTester.run('first', rule, {
       output: "'use client';\nimport { y } from 'bar'\nconst a = 1;",
     }),
     tInvalid({
+      // directive without a semicolon, import on the same line as the statement before it
+      code: "'use client'\nfoo(); import { y } from 'bar'",
+      errors: [{ messageId: 'order' }],
+      output: "'use client'\nimport { y } from 'bar'\nfoo();",
+    }),
+    tInvalid({
       code: "'use strict';\n'use client';\nfoo();\nimport { x } from './foo';\nimport { y } from 'bar';",
       errors: [{ messageId: 'order' }, { messageId: 'order' }],
       output:

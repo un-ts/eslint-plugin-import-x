@@ -176,6 +176,12 @@ export default createRule<[Options?], MessageId>({
               // When inserting after a directive with no trailing newline, add one
               // to prevent the moved import from being glued to the next statement.
               const insertingAfterDirective = !lastLegalImp && !!lastDirective
+              // A moved import that shared a line with the statement before it
+              // keeps its leading space; start it on its own line instead, so a
+              // directive without a semicolon doesn't become `'use client' import`
+              if (insertingAfterDirective) {
+                insertSourceCode = `\n${insertSourceCode.trimStart()}`
+              }
               const insertFixer = insertAfterNode
                 ? fixer.insertTextAfter(
                     insertAfterNode,
