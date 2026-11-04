@@ -1,5 +1,8 @@
+import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
+
+import { jest } from '@jest/globals'
 
 import { FIXTURES_PATH, testContext, testFilePath } from '../utils.js'
 
@@ -34,6 +37,21 @@ describe('importType(name) with no package.json above the file', () => {
     cwd: root,
     physicalFilename: path.resolve(root, 'src/foo.js'),
   }
+
+  // The lookup walks up to the root of the file system, which is outside of the test's control
+  beforeAll(() => {
+    const { existsSync } = fs
+    jest
+      .spyOn(fs, 'existsSync')
+      .mockImplementation(
+        file =>
+          path.basename(String(file)) !== 'package.json' && existsSync(file),
+      )
+  })
+
+  afterAll(() => {
+    jest.restoreAllMocks()
+  })
 
   it('should not throw, and use the cwd as the root of the package', () => {
     expect(importType('pkg', context)).toBe('external')
