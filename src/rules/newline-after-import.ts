@@ -39,13 +39,6 @@ function findNodeIndexInScopeBody(
   return body.findIndex(node => containsNodeOrEqual(node, nodeToFind))
 }
 
-function getLineDifference(
-  node: TSESTree.Node,
-  nextNode: TSESTree.Comment | TSESTree.Node,
-) {
-  return nextNode.loc.start.line - node.loc.end.line
-}
-
 function isClassWithDecorator(
   node: TSESTree.Node,
 ): node is TSESTree.ClassDeclaration & { decorators: TSESTree.Decorator[] } {
@@ -136,7 +129,7 @@ export default createRule<[Options?], MessageId>({
         nextNode = nextNode.decorators[0]
       }
 
-      const lineDifference = getLineDifference(node, nextNode)
+      const lineDifference = nextNode.loc.start.line - getEndLine(node)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
 
       if (
@@ -177,7 +170,7 @@ export default createRule<[Options?], MessageId>({
       nextComment: TSESTree.Comment,
       type: 'import' | 'require',
     ) {
-      const lineDifference = getLineDifference(node, nextComment)
+      const lineDifference = nextComment.loc.start.line - getEndLine(node)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
 
       if (lineDifference < EXPECTED_LINE_DIFFERENCE) {
@@ -211,7 +204,8 @@ export default createRule<[Options?], MessageId>({
     }
 
     // A comment that starts on the statement's last line belongs to the
-    // statement, so new lines have to go after it, not between them.
+    // statement (as do comments chained onto it on the line where it ends),
+    // so new lines go after them and the gap is measured from their end.
     function getLastTokenOnEndLine(node: TSESTree.Node) {
       let last: TSESTree.Node | TSESTree.Token = node
       let next = context.sourceCode.getTokenAfter(node, {
@@ -220,12 +214,16 @@ export default createRule<[Options?], MessageId>({
       while (
         next &&
         (next.type === 'Line' || next.type === 'Block') &&
-        next.loc.start.line === node.loc.end.line
+        next.loc.start.line === last.loc.end.line
       ) {
         last = next
         next = context.sourceCode.getTokenAfter(next, { includeComments: true })
       }
       return last
+    }
+
+    function getEndLine(node: TSESTree.Node) {
+      return getLastTokenOnEndLine(node).loc.end.line
     }
 
     function incrementLevel() {
@@ -248,7 +246,7 @@ export default createRule<[Options?], MessageId>({
 
       const nodePosition = root.body.indexOf(node)
       const nextNode = root.body[nodePosition + 1]
-      const endLine = node.loc.end.line
+      const endLine = getEndLine(node)
 
       let nextComment: TSESTree.Comment | undefined
 
@@ -328,7 +326,10 @@ export default createRule<[Options?], MessageId>({
               statementWithRequireCall.parent.comments !== undefined &&
               options.considerComments
             ) {
-              const endLine = node.loc.end.line
+              const endLine = Math.max(
+                node.loc.end.line,
+                getEndLine(statementWithRequireCall),
+              )
               nextComment = statementWithRequireCall.parent.comments.find(
                 o =>
                   o.loc.start.line > endLine &&

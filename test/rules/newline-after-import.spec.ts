@@ -50,6 +50,15 @@ ruleTester.run('newline-after-import', rule, {
       code: `const a = require('a') // trailing\n\nfoo()`,
       options: [{ considerComments: true }],
     },
+    {
+      // the gap is measured from the end of a multi-line trailing comment
+      code: `import 'a'; /*\n*/\n\nfoo()`,
+      options: [{ exactCount: true }],
+    },
+    {
+      code: `import 'a'; /*\n*/ /* c */\n\nfoo()`,
+      options: [{ considerComments: true, exactCount: true }],
+    },
     `var path = require('path');\nvar foo = require('foo');\n`,
     `require('foo');`,
     `switch ('foo') { case 'bar': require('baz'); }`,
@@ -564,6 +573,27 @@ ruleTester.run('newline-after-import', rule, {
     {
       code: `const a = require('a') // trailing\nfoo()`,
       output: `const a = require('a') // trailing\n\nfoo()`,
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
+    {
+      code: `import 'a'; /*\n*/ foo()`,
+      output: `import 'a'; /*\n*/\n\n foo()`,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import 'a'; /*\n*/\nfoo()`,
+      output: `import 'a'; /*\n*/\n\nfoo()`,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import 'a'; /*\n*/\nfoo()`,
+      output: `import 'a'; /*\n*/\n\nfoo()`,
+      options: [{ considerComments: true }],
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `const a = require('a'); /*\n*/ foo()`,
+      output: `const a = require('a'); /*\n*/\n\n foo()`,
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
