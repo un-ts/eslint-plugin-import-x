@@ -165,7 +165,7 @@ export default createRule<[Options?], MessageId>({
               ? undefined
               : fixer =>
                   fixer.insertTextAfter(
-                    node,
+                    getLastTokenOnEndLine(node),
                     '\n'.repeat(EXPECTED_LINE_DIFFERENCE - lineDifference),
                   ),
         })
@@ -203,11 +203,29 @@ export default createRule<[Options?], MessageId>({
               ? undefined
               : fixer =>
                   fixer.insertTextAfter(
-                    node,
+                    getLastTokenOnEndLine(node),
                     '\n'.repeat(EXPECTED_LINE_DIFFERENCE - lineDifference),
                   ),
         })
       }
+    }
+
+    // A comment that starts on the statement's last line belongs to the
+    // statement, so new lines have to go after it, not between them.
+    function getLastTokenOnEndLine(node: TSESTree.Node) {
+      let last: TSESTree.Node | TSESTree.Token = node
+      let next = context.sourceCode.getTokenAfter(node, {
+        includeComments: true,
+      })
+      while (
+        next &&
+        (next.type === 'Line' || next.type === 'Block') &&
+        next.loc.start.line === node.loc.end.line
+      ) {
+        last = next
+        next = context.sourceCode.getTokenAfter(next, { includeComments: true })
+      }
+      return last
     }
 
     function incrementLevel() {
@@ -237,7 +255,7 @@ export default createRule<[Options?], MessageId>({
       if (root.comments !== undefined && options.considerComments) {
         nextComment = root.comments.find(
           o =>
-            o.loc.start.line >= endLine &&
+            o.loc.start.line > endLine &&
             o.loc.start.line <= endLine + options.count + 1,
         )
       }
@@ -313,7 +331,7 @@ export default createRule<[Options?], MessageId>({
               const endLine = node.loc.end.line
               nextComment = statementWithRequireCall.parent.comments.find(
                 o =>
-                  o.loc.start.line >= endLine &&
+                  o.loc.start.line > endLine &&
                   o.loc.start.line <= endLine + options.count + 1,
               )
             }

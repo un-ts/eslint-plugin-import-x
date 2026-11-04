@@ -38,6 +38,18 @@ const REQUIRE_ERROR = createRequireError(1)
 
 ruleTester.run('newline-after-import', rule, {
   valid: [
+    {
+      code: `import a from 'a' // trailing\n\nfoo()`,
+      options: [{ considerComments: true }],
+    },
+    {
+      code: `import a from 'a' /* trailing */\n\nfoo()`,
+      options: [{ considerComments: true, exactCount: true }],
+    },
+    {
+      code: `const a = require('a') // trailing\n\nfoo()`,
+      options: [{ considerComments: true }],
+    },
     `var path = require('path');\nvar foo = require('foo');\n`,
     `require('foo');`,
     `switch ('foo') { case 'bar': require('baz'); }`,
@@ -533,6 +545,27 @@ ruleTester.run('newline-after-import', rule, {
   ],
 
   invalid: [
+    {
+      code: `import a from 'a' // trailing\nfoo()`,
+      output: `import a from 'a' // trailing\n\nfoo()`,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import a from 'a' /* one */ /* two */\nfoo()`,
+      output: `import a from 'a' /* one */ /* two */\n\nfoo()`,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import a from 'a' // trailing\n// next\nfoo()`,
+      output: `import a from 'a' // trailing\n\n// next\nfoo()`,
+      options: [{ considerComments: true }],
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `const a = require('a') // trailing\nfoo()`,
+      output: `const a = require('a') // trailing\n\nfoo()`,
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
     {
       code: `
         import { A, B, C, D } from
@@ -1087,7 +1120,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `import foo from 'foo';// some random comment\nexport default function() {};`,
-      output: `import foo from 'foo';\n\n// some random comment\nexport default function() {};`,
+      output: `import foo from 'foo';// some random comment\n\nexport default function() {};`,
       options: [{ count: 1, exactCount: true, considerComments: true }],
       errors: [
         {
