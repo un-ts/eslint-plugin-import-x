@@ -121,6 +121,71 @@ ruleTester.run('no-namespace', rule, {
       ],
     }),
     tInvalid({
+      // exports named like `Object.prototype` members, e.g. `_.toString` from lodash
+      code: `
+        import * as foo from './foo';
+        florp(foo.toString(), foo.valueOf());
+      `.trim(),
+      output: `
+        import { toString as foo_toString, valueOf as foo_valueOf } from './foo';
+        florp(foo_toString(), foo_valueOf());
+      `.trim(),
+      errors: [
+        {
+          ...NO_NAMESPACE_ERROR,
+          line: 1,
+          column: 8,
+        },
+      ],
+    }),
+    tInvalid({
+      code: `
+        import * as foo from './foo';
+        function bar() {
+          return foo.__proto__;
+        }
+      `.trim(),
+      output: `
+        import { __proto__ } from './foo';
+        function bar() {
+          return __proto__;
+        }
+      `.trim(),
+      errors: [
+        {
+          ...NO_NAMESPACE_ERROR,
+          line: 1,
+          column: 8,
+        },
+      ],
+    }),
+    tInvalid({
+      // no names in the two nearest scopes, this used to write `[object Object]` instead of throwing
+      code: `
+        import * as foo from './foo';
+        if (a) {
+          if (b) {
+            florp(foo.__proto__);
+          }
+        }
+      `.trim(),
+      output: `
+        import { __proto__ } from './foo';
+        if (a) {
+          if (b) {
+            florp(__proto__);
+          }
+        }
+      `.trim(),
+      errors: [
+        {
+          ...NO_NAMESPACE_ERROR,
+          line: 1,
+          column: 8,
+        },
+      ],
+    }),
+    tInvalid({
       code: `
         import * as foo from './foo';
         function func(arg) {
