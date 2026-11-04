@@ -76,6 +76,11 @@ export default createRule<[Options?], MessageId>({
             const specifiers = sourceCode.text
               .slice(comma.range[1], fromToken.range[0])
               .trimStart()
+            // keep anything between the default specifier and the comma, such as
+            // a comment, with the new namespace import
+            const afterDefault = sourceCode.text
+              .slice(node.range[1], comma.range[0])
+              .trimEnd()
             const remainingText = sourceCode.text.slice(
               fromToken.range[0],
               node.parent.range[1],
@@ -83,7 +88,7 @@ export default createRule<[Options?], MessageId>({
             return fixer.replaceText(
               node.parent,
               [
-                `${importStringPrefix} * as ${localName} ${remainingText}`,
+                `${importStringPrefix} * as ${localName}${afterDefault} ${remainingText}`,
                 `${importStringPrefix} ${specifiers}${remainingText}`,
               ].join('\n'),
             )
