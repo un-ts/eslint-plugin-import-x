@@ -63,16 +63,43 @@ function getPackageDepFields(packageJsonPath: string, throwAtRead: boolean) {
   return depFieldCache.get(packageJsonPath)
 }
 
-function getDependencies(context: RuleContext, packageDir?: string | string[]) {
+function mergeDependencyFields(target: PackageDeps, source: PackageDeps) {
+  Object.assign(target.dependencies, source.dependencies)
+  Object.assign(target.devDependencies, source.devDependencies)
+  Object.assign(target.optionalDependencies, source.optionalDependencies)
+  Object.assign(target.peerDependencies, source.peerDependencies)
+  target.bundledDependencies = [
+    ...new Set([...target.bundledDependencies, ...source.bundledDependencies]),
+  ]
+}
+
+function getDependencies(
+  context: RuleContext,
+  closestPackageJsonPath: string | null,
+  packageDir?: string | string[],
+) {
   let paths: string[] = []
 
   try {
-    let packageContent: PackageDeps = {
+    const packageContent: PackageDeps = {
       dependencies: {},
       devDependencies: {},
       optionalDependencies: {},
       peerDependencies: {},
       bundledDependencies: [],
+    }
+
+    // Always merge the closest `package.json` too: in a workspace the linted
+    // file's own manifest declares its dependencies, even when `packageDir`
+    // points at the shared root manifest.
+    if (closestPackageJsonPath) {
+      const closestPackageContent = getPackageDepFields(
+        closestPackageJsonPath,
+        false,
+      )
+      if (closestPackageContent) {
+        mergeDependencyFields(packageContent, closestPackageContent)
+      }
     }
 
     if (packageDir && packageDir.length > 0) {
@@ -81,31 +108,15 @@ function getDependencies(context: RuleContext, packageDir?: string | string[]) {
         : [path.resolve(packageDir)]
     }
 
-    if (paths.length > 0) {
-      // use rule config to find package.json
-      for (const dir of paths) {
-        const packageJsonPath = path.resolve(dir, 'package.json')
-        const packageContent_ = getPackageDepFields(
-          packageJsonPath,
-          paths.length === 1,
-        )
-        if (packageContent_) {
-          for (const depsKey of Object.keys(packageContent)) {
-            const key = depsKey as keyof PackageDeps
-            Object.assign(packageContent[key], packageContent_[key])
-          }
-        }
-      }
-    } else {
-      // use closest package.json
-      const packageJsonPath = pkgUp({
-        cwd: context.physicalFilename,
-      })!
-
-      const packageContent_ = getPackageDepFields(packageJsonPath, false)
-
+    // Layer in any deps from `packageDir` on top of the closest match.
+    for (const dir of paths) {
+      const packageJsonPath = path.resolve(dir, 'package.json')
+      const packageContent_ = getPackageDepFields(
+        packageJsonPath,
+        paths.length === 1,
+      )
       if (packageContent_) {
-        packageContent = packageContent_
+        mergeDependencyFields(packageContent, packageContent_)
       }
     }
 
@@ -153,9 +164,9 @@ interface PackageIdentity {
 
 // Node.js resolves a package self-reference through the `exports` field of the
 // package.json closest to the linting file, independently of `packageDir`.
-function getSelfPackage(context: RuleContext): PackageIdentity | undefined {
-  const packageJsonPath = pkgUp({ cwd: context.physicalFilename })
-
+function getSelfPackage(
+  packageJsonPath: string | null,
+): PackageIdentity | undefined {
   if (!packageJsonPath) {
     return
   }
@@ -485,9 +496,13 @@ export default createRule<[Options?], MessageId>({
   create(context) {
     const options = context.options[0] || {}
 
+    const closestPackageJsonPath = pkgUp({
+      cwd: context.physicalFilename,
+    })
     const deps =
-      getDependencies(context, options.packageDir) || extractDepFields({})
-    const selfPackage = getSelfPackage(context)
+      getDependencies(context, closestPackageJsonPath, options.packageDir) ||
+      extractDepFields({})
+    const selfPackage = getSelfPackage(closestPackageJsonPath)
 
     const depsOptions = {
       allowDevDeps: testConfig(options.devDependencies, context) !== false,

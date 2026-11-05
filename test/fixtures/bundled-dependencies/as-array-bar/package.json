@@ -1,0 +1,6 @@
+{
+  "bundleDependencies": [
+    "@generated/bar"
+  ],
+  "dummy": true
+}
