@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import type { JSONSchema, TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { JSONSchema, TSESLint } from '@typescript-eslint/utils'
 import { minimatch } from 'minimatch'
 import type { MinimatchOptions } from 'minimatch'
 
@@ -10,6 +10,7 @@ import {
   isBuiltIn,
   isExternalModule,
   isScoped,
+  isTypeOnlyImportOrExport,
   createRule,
   moduleVisitor,
   resolve,
@@ -300,46 +301,6 @@ function shouldReportMissing(
 }
 
 /**
- * Whether an import/export declaration is type-only. Inline `type` specifiers
- * count, so `import { type T }` is type-only while a mixed declaration is not.
- */
-function isTypeOnlyDeclaration(node: TSESTree.Node) {
-  if (
-    'importKind' in node &&
-    (node.importKind === 'type' ||
-      // @ts-expect-error - flow type
-      node.importKind === 'typeof')
-  ) {
-    return true
-  }
-  if ('exportKind' in node && node.exportKind === 'type') {
-    return true
-  }
-  if (
-    !('specifiers' in node) ||
-    !Array.isArray(node.specifiers) ||
-    node.specifiers.length === 0
-  ) {
-    return false
-  }
-  return (
-    node.specifiers as Array<TSESTree.ExportSpecifier | TSESTree.ImportClause>
-  ).every(specifier => {
-    if ('importKind' in specifier) {
-      return (
-        specifier.importKind === 'type' ||
-        // @ts-expect-error - flow type
-        specifier.importKind === 'typeof'
-      )
-    }
-    if ('exportKind' in specifier) {
-      return specifier.exportKind === 'type'
-    }
-    return false
-  })
-}
-
-/**
  * Replaces the import path in a source string with a new import path.
  *
  * @param source - The original source string containing the import statement.
@@ -514,7 +475,7 @@ export default createRule<Options, MessageId>({
           (props.checkSelfReference && isSelfReference(importPath))
 
         // ignore type-only imports and exports, including inline `type` specifiers
-        if (!props.checkTypeImports && isTypeOnlyDeclaration(node)) {
+        if (!props.checkTypeImports && isTypeOnlyImportOrExport(node)) {
           return
         }
 
