@@ -597,6 +597,30 @@ ruleTester.run('newline-after-import', rule, {
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
+      // do not move a line-scoped directive away from its target
+      code: "import a from 'a' // @ts-ignore\nfoo()",
+      output: null,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: "const a = require('a') // @ts-ignore\nfoo()",
+      output: null,
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
+    {
+      // a comment inside the next statement does not satisfy the blank line
+      code: "import a from 'a'\nfoo(\n  // inside\n  bar,\n)",
+      output: "import a from 'a'\n\nfoo(\n  // inside\n  bar,\n)",
+      options: [{ considerComments: true }],
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: "const a = require('a')\nfoo(\n  // inside\n  bar,\n)",
+      output: "const a = require('a')\n\nfoo(\n  // inside\n  bar,\n)",
+      options: [{ considerComments: true }],
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
+    {
       code: `
         import { A, B, C, D } from
         '../path/to/my/module/in/very/far/directory'

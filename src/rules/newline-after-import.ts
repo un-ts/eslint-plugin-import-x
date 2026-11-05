@@ -156,11 +156,7 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : fixer =>
-                  fixer.insertTextAfter(
-                    getLastTokenOnEndLine(node),
-                    '\n'.repeat(EXPECTED_LINE_DIFFERENCE - lineDifference),
-                  ),
+              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
         })
       }
     }
@@ -194,18 +190,15 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : fixer =>
-                  fixer.insertTextAfter(
-                    getLastTokenOnEndLine(node),
-                    '\n'.repeat(EXPECTED_LINE_DIFFERENCE - lineDifference),
-                  ),
+              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
         })
       }
     }
 
-    // A comment that starts on the statement's last line belongs to the
-    // statement (as do comments chained onto it on the line where it ends),
-    // so new lines go after them and the gap is measured from their end.
+    /**
+     * The last token on the statement's final line, including comments that
+     * start there or chain onto the line where a previous one ends.
+     */
     function getLastTokenOnEndLine(node: TSESTree.Node) {
       let last: TSESTree.Node | TSESTree.Token = node
       let next = context.sourceCode.getTokenAfter(node, {
@@ -222,8 +215,35 @@ export default createRule<[Options?], MessageId>({
       return last
     }
 
+    /** The line where the statement and its trailing comments end. */
     function getEndLine(node: TSESTree.Node) {
       return getLastTokenOnEndLine(node).loc.end.line
+    }
+
+    /**
+     * Adds the missing blank lines after the statement's trailing comments,
+     * unless that would retarget a line-scoped directive.
+     */
+    function getFixer(node: TSESTree.Node, count: number) {
+      return (fixer: TSESLint.RuleFixer) => {
+        const lastToken = getLastTokenOnEndLine(node)
+        return isLineScopedDirective(lastToken)
+          ? null
+          : fixer.insertTextAfter(lastToken, '\n'.repeat(count))
+      }
+    }
+
+    // A trailing `eslint-disable-next-line` (or the TS equivalent) applies to
+    // the next line, so inserting the blank line before its target would move
+    // the directive away from the code it is meant to cover.
+    const LINE_SCOPED_DIRECTIVE =
+      /^\s*(?:eslint-disable-next-line|@ts-ignore|@ts-expect-error)(?:\s|$)/
+
+    function isLineScopedDirective(token: TSESTree.Node | TSESTree.Token) {
+      return (
+        (token.type === 'Line' || token.type === 'Block') &&
+        LINE_SCOPED_DIRECTIVE.test(token.value)
+      )
     }
 
     function incrementLevel() {
@@ -254,7 +274,8 @@ export default createRule<[Options?], MessageId>({
         nextComment = root.comments.find(
           o =>
             o.loc.start.line > endLine &&
-            o.loc.start.line <= endLine + options.count + 1,
+            o.loc.start.line <= endLine + options.count + 1 &&
+            (!nextNode || o.loc.start.line < nextNode.loc.start.line),
         )
       }
 
@@ -333,7 +354,8 @@ export default createRule<[Options?], MessageId>({
               nextComment = statementWithRequireCall.parent.comments.find(
                 o =>
                   o.loc.start.line > endLine &&
-                  o.loc.start.line <= endLine + options.count + 1,
+                  o.loc.start.line <= endLine + options.count + 1 &&
+                  o.loc.start.line < nextStatement.loc.start.line,
               )
             }
 
