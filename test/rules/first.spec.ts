@@ -101,6 +101,12 @@ ruleTester.run('first', rule, {
       output: null,
     }),
     tInvalid({
+      // a plain comment on a moved import also leaves the group unfixed
+      code: "'use client';\nfoo();\n// plain\nimport { y } from 'bar';",
+      errors: [{ messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
       code: "'use strict';\n'use client';\nfoo();\nimport { x } from './foo';\nimport { y } from 'bar';",
       errors: [{ messageId: 'order' }, { messageId: 'order' }],
       output:

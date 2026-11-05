@@ -3,7 +3,11 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 
-import { isStaticRequire, createRule } from '../utils/index.js'
+import {
+  isStaticRequire,
+  createRule,
+  isLineScopedDirective,
+} from '../utils/index.js'
 
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')
 
@@ -249,19 +253,6 @@ export default createRule<[Options?], MessageId>({
           '\n'.repeat(count),
         )
       }
-    }
-
-    // A trailing `eslint-disable-next-line` (or the TS equivalent) applies to
-    // the next line, so inserting the blank line before its target would move
-    // the directive away from the code it is meant to cover.
-    const LINE_SCOPED_DIRECTIVE =
-      /^\s*(?:eslint-disable-next-line|@ts-ignore|@ts-expect-error)(?:\s|$)/
-
-    function isLineScopedDirective(token: TSESTree.Node | TSESTree.Token) {
-      return (
-        (token.type === 'Line' || token.type === 'Block') &&
-        LINE_SCOPED_DIRECTIVE.test(token.value)
-      )
     }
 
     function incrementLevel() {

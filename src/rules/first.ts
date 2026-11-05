@@ -1,12 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
 import type { RuleContext } from '../types.js'
-import { createRule } from '../utils/index.js'
-
-// A next-line directive applies to the line below it; inserting a moved import
-// between the directive and that line would retarget it.
-const LINE_SCOPED_NEXT_DIRECTIVE =
-  /^\s*(?:eslint-disable-next-line|@ts-ignore|@ts-expect-error)(?:\s|$)/
+import { createRule, isLineScopedDirective } from '../utils/index.js'
 
 function getImportValue(node: TSESTree.ProgramStatement) {
   return node.type === 'ImportDeclaration'
@@ -144,10 +139,16 @@ export default createRule<[Options?], MessageId>({
         const sortNodes = errorInfos.slice(0, lastSortNodesIndex + 1)
         // A next-line suppression above a moved import would be left behind,
         // so the whole group is left without an autofix.
-        const canFix = !sortNodes.some(({ node: sortNode }) =>
-          sourceCode
-            .getCommentsBefore(sortNode)
-            .some(comment => LINE_SCOPED_NEXT_DIRECTIVE.test(comment.value)),
+        // A comment on a moved import would be left behind, so the whole
+        // group is left without an autofix; the rule still reports.
+        const canFix = !sortNodes.some(
+          ({ node: sortNode }) =>
+            sourceCode.getCommentsBefore(sortNode).length > 0 ||
+            sourceCode
+              .getCommentsAfter(sortNode)
+              .some(
+                comment => comment.loc.start.line === sortNode.loc.end.line,
+              ),
         )
 
         for (const [index, { node }] of errorInfos.entries()) {
@@ -222,7 +223,7 @@ export default createRule<[Options?], MessageId>({
                         next.loc.start.line === token.loc.end.line
                       ) {
                         // Keep a next-line directive above the statement it covers.
-                        if (LINE_SCOPED_NEXT_DIRECTIVE.test(next.value)) {
+                        if (isLineScopedDirective(next)) {
                           break
                         }
                         token = next
