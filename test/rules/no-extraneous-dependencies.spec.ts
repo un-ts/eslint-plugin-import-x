@@ -5,7 +5,12 @@ import { fileURLToPath } from 'node:url'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils.js'
+import {
+  parsers,
+  createRuleTestCaseFunctions,
+  hidePackageJsonFiles,
+  testFilePath,
+} from '../utils.js'
 
 import type { CjsRequire } from 'eslint-plugin-import-x'
 import typescriptConfig from 'eslint-plugin-import-x/config/flat/typescript'
@@ -85,7 +90,6 @@ const noPackageJsonTestCase = {
 
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
-    tValid(noPackageJsonTestCase),
     ...[...Object.keys(deps), ...Object.keys(devDeps)].flatMap(pkg => [
       tValid({ code: `import "${pkg}"` }),
       tValid({ code: `import foo, { bar } from "${pkg}"` }),
@@ -313,11 +317,6 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     }),
   ],
   invalid: [
-    tInvalid({
-      ...noPackageJsonTestCase,
-      options: [{ packageDir: packageDirWithEmpty }],
-      errors: [{ messageId: 'missing', data: { packageName: 'foo' } }],
-    }),
     tInvalid({
       code: 'import qs from "qs";',
       filename: path.join(packageDirWithResolvedTypesDependencies, 'foo.js'),
@@ -608,6 +607,21 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       ],
     }),
   ],
+})
+
+describe('no package.json above the file', () => {
+  hidePackageJsonFiles()
+
+  ruleTester.run('no-extraneous-dependencies', rule, {
+    valid: [tValid(noPackageJsonTestCase)],
+    invalid: [
+      tInvalid({
+        ...noPackageJsonTestCase,
+        options: [{ packageDir: packageDirWithEmpty }],
+        errors: [{ messageId: 'missing', data: { packageName: 'foo' } }],
+      }),
+    ],
+  })
 })
 
 describe('TypeScript', () => {

@@ -1,5 +1,7 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
+import { jest } from '@jest/globals'
 import type {
   ValidTestCase as TSESLintValidTestCase,
   InvalidTestCase as TSESLintInvalidTestCase,
@@ -12,6 +14,24 @@ import typescriptPkg from 'typescript/package.json'
 
 import { cjsRequire as require } from 'eslint-plugin-import-x'
 import type { PluginSettings, RuleContext } from 'eslint-plugin-import-x'
+
+// A package.json lookup walks up to the root of the file system, which is outside
+// of a test's control, so hide all of them from the tests of the enclosing `describe`.
+export function hidePackageJsonFiles() {
+  beforeAll(() => {
+    const { existsSync } = fs
+    jest
+      .spyOn(fs, 'existsSync')
+      .mockImplementation(
+        file =>
+          path.basename(String(file)) !== 'package.json' && existsSync(file),
+      )
+  })
+
+  afterAll(() => {
+    jest.restoreAllMocks()
+  })
+}
 
 export const isESLint9 =
   semver.satisfies(eslintPkg.version, '>=9') &&
