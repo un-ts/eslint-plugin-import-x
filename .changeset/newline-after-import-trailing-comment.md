@@ -10,7 +10,7 @@ empty line before the next statement. The autofix also inserted the new lines
 between the import and its trailing comment, moving the comment onto its own
 line. Both now skip comments that start on the statement's last line.
 
-The fix is withheld when that trailing comment is a line-scoped directive
+The fix is withheld when any trailing comment is a line-scoped directive
 (`eslint-disable-next-line`, `@ts-ignore`, `@ts-expect-error`), so the directive
 keeps its target, and comments inside the following statement no longer satisfy
 the blank-line check.

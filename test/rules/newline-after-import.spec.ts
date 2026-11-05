@@ -608,6 +608,17 @@ ruleTester.run('newline-after-import', rule, {
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
+      // a directive earlier in the trailing comment chain also withholds the fix
+      code: "import a from 'a' /* @ts-ignore */ /* plain */\nfoo()",
+      output: null,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: "const a = require('a') /* @ts-ignore */ /* plain */\nfoo()",
+      output: null,
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
+    {
       // a comment inside the next statement does not satisfy the blank line
       code: "import a from 'a'\nfoo(\n  // inside\n  bar,\n)",
       output: "import a from 'a'\n\nfoo(\n  // inside\n  bar,\n)",

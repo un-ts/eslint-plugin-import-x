@@ -196,10 +196,11 @@ export default createRule<[Options?], MessageId>({
     }
 
     /**
-     * The last token on the statement's final line, including comments that
-     * start there or chain onto the line where a previous one ends.
+     * The comments that start on the statement's final line, including
+     * comments chained onto the line where a previous one ends.
      */
-    function getLastTokenOnEndLine(node: TSESTree.Node) {
+    function getTrailingComments(node: TSESTree.Node) {
+      const comments: TSESTree.Comment[] = []
       let last: TSESTree.Node | TSESTree.Token = node
       let next = context.sourceCode.getTokenAfter(node, {
         includeComments: true,
@@ -209,10 +210,16 @@ export default createRule<[Options?], MessageId>({
         (next.type === 'Line' || next.type === 'Block') &&
         next.loc.start.line === last.loc.end.line
       ) {
+        comments.push(next)
         last = next
         next = context.sourceCode.getTokenAfter(next, { includeComments: true })
       }
-      return last
+      return comments
+    }
+
+    /** The last token on the statement's final line, or the statement itself. */
+    function getLastTokenOnEndLine(node: TSESTree.Node) {
+      return getTrailingComments(node).at(-1) ?? node
     }
 
     /** The line where the statement and its trailing comments end. */
@@ -221,15 +228,26 @@ export default createRule<[Options?], MessageId>({
     }
 
     /**
+     * Whether any of the statement's trailing comments is a line-scoped
+     * directive, which the fix would retarget.
+     */
+    function hasLineScopedDirective(node: TSESTree.Node) {
+      return getTrailingComments(node).some(isLineScopedDirective)
+    }
+
+    /**
      * Adds the missing blank lines after the statement's trailing comments,
      * unless that would retarget a line-scoped directive.
      */
     function getFixer(node: TSESTree.Node, count: number) {
       return (fixer: TSESLint.RuleFixer) => {
-        const lastToken = getLastTokenOnEndLine(node)
-        return isLineScopedDirective(lastToken)
-          ? null
-          : fixer.insertTextAfter(lastToken, '\n'.repeat(count))
+        if (hasLineScopedDirective(node)) {
+          return null
+        }
+        return fixer.insertTextAfter(
+          getLastTokenOnEndLine(node),
+          '\n'.repeat(count),
+        )
       }
     }
 
