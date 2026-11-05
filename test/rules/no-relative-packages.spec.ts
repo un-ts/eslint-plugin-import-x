@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
@@ -6,6 +8,7 @@ import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/
 import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 import type { GetRuleModuleMessageIds } from '../utils.js'
 
+import { createNodeResolver } from 'eslint-plugin-import-x/node-resolver'
 import rule from 'eslint-plugin-import-x/rules/no-relative-packages'
 
 const ruleTester = new TSESLintRuleTester()
@@ -21,6 +24,44 @@ function createNotFoundError(
     data: { properImport, importPath },
   }
 }
+
+// A workspace that reaches its packages through symlinks, as pnpm and yarn
+// workspaces do. The resolver follows the symlinks, so the resolved file is
+// not below the path written in the import.
+const symlinkRoot = fs.realpathSync(
+  fs.mkdtempSync(path.join(os.tmpdir(), 'no-relative-packages-')),
+)
+
+function symlinkFixture(relativePath = '') {
+  return path.join(symlinkRoot, relativePath)
+}
+
+for (const [file, content] of [
+  ['repo/packages/foo/package.json', '{ "name": "foo" }'],
+  ['repo/packages/foo/index.js', ''],
+  ['store/shared/package.json', '{ "name": "shared" }'],
+  ['store/shared/lib/util.js', ''],
+  ['store/bootstrap/package.json', '{ "name": "bootstrap" }'],
+  ['store/bootstrap/dist/css/bootstrap.css', ''],
+]) {
+  fs.mkdirSync(path.dirname(symlinkFixture(file)), { recursive: true })
+  fs.writeFileSync(symlinkFixture(file), content)
+}
+fs.mkdirSync(symlinkFixture('repo/packages/foo/node_modules'))
+fs.symlinkSync(
+  symlinkFixture('store/shared'),
+  symlinkFixture('repo/packages/shared'),
+  'junction',
+)
+fs.symlinkSync(
+  symlinkFixture('store/bootstrap'),
+  symlinkFixture('repo/packages/foo/node_modules/bootstrap'),
+  'junction',
+)
+
+afterAll(() => {
+  fs.rmSync(symlinkRoot, { recursive: true, force: true })
+})
 
 ruleTester.run('no-relative-packages', rule, {
   valid: [
@@ -138,6 +179,38 @@ ruleTester.run('no-relative-packages', rule, {
         },
       ],
       output: `import bar from "eslint-plugin-import-x/test/fixtures/bar"`,
+    }),
+    tInvalid({
+      code: 'import util from "../shared/lib/util"',
+      filename: symlinkFixture('repo/packages/foo/index.js'),
+      settings: { 'import-x/resolver-next': [createNodeResolver()] },
+      errors: [
+        {
+          ...createNotFoundError(
+            '../shared/lib/util',
+            path.normalize('shared/lib/util'),
+          ),
+          line: 1,
+          column: 18,
+        },
+      ],
+      output: 'import util from "shared/lib/util"',
+    }),
+    tInvalid({
+      code: 'import "./node_modules/bootstrap/dist/css/bootstrap.css"',
+      filename: symlinkFixture('repo/packages/foo/index.js'),
+      settings: { 'import-x/resolver-next': [createNodeResolver()] },
+      errors: [
+        {
+          ...createNotFoundError(
+            './node_modules/bootstrap/dist/css/bootstrap.css',
+            path.normalize('bootstrap/dist/css/bootstrap.css'),
+          ),
+          line: 1,
+          column: 8,
+        },
+      ],
+      output: 'import "bootstrap/dist/css/bootstrap.css"',
     }),
   ],
 })
