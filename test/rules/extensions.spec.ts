@@ -1776,7 +1776,7 @@ describe('TypeScript', () => {
       }),
 
       tInvalid({
-        name: 'extensions should not infer an extension when the resolver maps it to another extension',
+        name: 'extensions should infer an extension when the resolver maps it to another extension',
         code: 'import alias from "./extensions-inference/alias"',
         options: ['always', { pattern: { js: 'always' }, fix: true }],
         settings: {
@@ -1784,11 +1784,14 @@ describe('TypeScript', () => {
         },
         errors: [
           {
-            messageId: 'missing',
-            data: { importPath: './extensions-inference/alias' },
+            messageId: 'missingKnown',
+            data: {
+              extension: 'js',
+              importPath: './extensions-inference/alias',
+            },
           },
         ],
-        output: null,
+        output: 'import alias from "./extensions-inference/alias.js"',
       }),
 
       tInvalid({
