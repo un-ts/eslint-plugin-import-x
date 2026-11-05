@@ -3,6 +3,11 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import type { RuleContext } from '../types.js'
 import { createRule } from '../utils/index.js'
 
+// A next-line directive applies to the line below it; inserting a moved import
+// between the directive and that line would retarget it.
+const LINE_SCOPED_NEXT_DIRECTIVE =
+  /^\s*(?:eslint-disable-next-line|@ts-ignore|@ts-expect-error)(?:\s|$)/
+
 function getImportValue(node: TSESTree.ProgramStatement) {
   return node.type === 'ImportDeclaration'
     ? node.source.value
@@ -203,6 +208,10 @@ export default createRule<[Options?], MessageId>({
                     (next.type === 'Line' || next.type === 'Block') &&
                     next.loc.start.line === token.loc.end.line
                   ) {
+                    // Keep a next-line directive above the statement it covers.
+                    if (LINE_SCOPED_NEXT_DIRECTIVE.test(next.value)) {
+                      break
+                    }
                     token = next
                   } else {
                     break

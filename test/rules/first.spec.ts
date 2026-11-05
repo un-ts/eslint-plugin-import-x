@@ -83,6 +83,12 @@ ruleTester.run('first', rule, {
         "'use client'; // trailing comment\nimport { x } from 'foo'\nfoo();",
     }),
     tInvalid({
+      // a next-line directive on the directive's line must keep its target
+      code: "'use client'; // @ts-ignore\nfoo();\nimport { x } from 'foo'",
+      errors: [{ messageId: 'order' }],
+      output: "'use client';\nimport { x } from 'foo'\n // @ts-ignore\nfoo();",
+    }),
+    tInvalid({
       code: "'use strict';\n'use client';\nfoo();\nimport { x } from './foo';\nimport { y } from 'bar';",
       errors: [{ messageId: 'order' }, { messageId: 'order' }],
       output:
