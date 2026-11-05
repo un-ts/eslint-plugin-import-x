@@ -1494,6 +1494,19 @@ describe('TypeScript', () => {
         settings: { 'import-x/resolver': { typescript: true } },
         options: ['never'],
       }),
+      // inline type-only specifiers are type-only too
+      tValid({
+        code: 'import { type T } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never'],
+      }),
+      tValid({
+        code: 'export { type T } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never'],
+      }),
 
       // an extensionless package subpath that resolves to a `.d.ts` declaration
       // (via the TypeScript resolver's types-first conditions) has no runtime
@@ -1807,6 +1820,24 @@ describe('TypeScript', () => {
           },
         ],
         output: 'import alias from "./extensions-inference/alias.js"',
+      }),
+
+      tInvalid({
+        // mixed value/type declarations are still checked
+        code: 'import { type T, value } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never', { fix: true }],
+        errors: [
+          {
+            messageId: 'unexpected',
+            data: {
+              extension: 'js',
+              importPath: './typescript-default.js',
+            },
+          },
+        ],
+        output: 'import { type T, value } from "./typescript-default";',
       }),
 
       tInvalid({
