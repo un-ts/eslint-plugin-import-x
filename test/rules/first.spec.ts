@@ -89,6 +89,12 @@ ruleTester.run('first', rule, {
       output: "'use client';\nimport { x } from 'foo'\n // @ts-ignore\nfoo();",
     }),
     tInvalid({
+      // do not move an import out of its next-line suppression
+      code: "'use client';\nfoo();\n// @ts-ignore\nimport { y } from 'bar';",
+      errors: [{ messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
       code: "'use strict';\n'use client';\nfoo();\nimport { x } from './foo';\nimport { y } from 'bar';",
       errors: [{ messageId: 'order' }, { messageId: 'order' }],
       output:

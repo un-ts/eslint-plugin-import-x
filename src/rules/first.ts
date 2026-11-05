@@ -149,6 +149,20 @@ export default createRule<[Options?], MessageId>({
           } else if (index === lastSortNodesIndex) {
             const sortNodes = errorInfos.slice(0, lastSortNodesIndex + 1)
             fix = (fixer: TSESLint.RuleFixer) => {
+              // A next-line suppression above a moved import would be left
+              // behind, so omit the fix rather than move the import out of it.
+              if (
+                sortNodes.some(({ node: sortNode }) =>
+                  sourceCode
+                    .getCommentsBefore(sortNode)
+                    .some(comment =>
+                      LINE_SCOPED_NEXT_DIRECTIVE.test(comment.value),
+                    ),
+                )
+              ) {
+                return null
+              }
+
               const removeFixers = sortNodes.map(({ range }) =>
                 fixer.removeRange(range),
               )
