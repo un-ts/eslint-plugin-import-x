@@ -19,7 +19,7 @@ import type {
 } from '../types.js'
 
 import { arraify } from './arraify.js'
-import { makeContextCacheKey } from './child-context.js'
+import { hashId, makeContextCacheKey } from './child-context.js'
 import { isExternalLookingName } from './import-type.js'
 import {
   LEGACY_NODE_RESOLVERS,
@@ -133,7 +133,7 @@ export function fileExistsWithCaseSync(
 }
 
 let prevSettings: PluginSettings | null = null
-let memoizedHash: string
+let memoizedHash: number
 
 function isNamedResolver(resolver: unknown): resolver is { name: string } {
   return !!(
@@ -329,7 +329,7 @@ function fullResolve(
   const sourceDir = path.dirname(sourceFile)
 
   if (prevSettings !== settings) {
-    memoizedHash = stableHash(settings)
+    memoizedHash = hashId(settings)
     prevSettings = settings
   }
 

@@ -33,15 +33,32 @@ export function childContext(
   }
 }
 
+const hashIds = new Map<string, number>()
+
+/**
+ * `stableHash` returns the full text of what it hashes, and `settings` is shared
+ * with other plugins, so one large value there would end up in every cache key.
+ * Keep one copy of each hash here and put a short id in the keys.
+ */
+export function hashId(value: unknown) {
+  const hash = stableHash(value)
+  let id = hashIds.get(hash)
+  if (id === undefined) {
+    id = hashIds.size
+    hashIds.set(hash, id)
+  }
+  return id
+}
+
 export function makeContextCacheKey(context: RuleContext | ChildContext) {
   const { settings, parserPath, parserOptions, languageOptions, cwd } = context
 
   let hash =
     cwd +
     '\0' +
-    stableHash(settings) +
+    hashId(settings) +
     '\0' +
-    stableHash(languageOptions?.parserOptions ?? parserOptions)
+    hashId(languageOptions?.parserOptions ?? parserOptions)
 
   if (languageOptions) {
     hash +=
@@ -53,7 +70,7 @@ export function makeContextCacheKey(context: RuleContext | ChildContext) {
 
   hash +=
     '\0' +
-    stableHash(
+    hashId(
       parserPath ?? languageOptions?.parser?.meta ?? languageOptions?.parser,
     )
 
