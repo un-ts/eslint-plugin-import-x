@@ -1842,6 +1842,65 @@ describe('TypeScript', () => {
       }),
 
       tInvalid({
+        // the extensionless import resolves to conflict.ts, while the js candidate is a different file
+        name: 'extensions should not infer a candidate that resolves to a different file',
+        code: 'import foo from "./extensions-inference/conflict";',
+        filename: testFilePath('./foo.ts'),
+        settings: {
+          'import-x/resolver-next': [
+            {
+              name: 'conflict-resolver',
+              interfaceVersion: 3,
+              resolve(modulePath: string) {
+                if (modulePath === './extensions-inference/conflict') {
+                  return {
+                    found: true,
+                    path: testFilePath('extensions-inference/conflict.ts'),
+                  }
+                }
+                if (modulePath === './extensions-inference/conflict.js') {
+                  return {
+                    found: true,
+                    path: testFilePath('extensions-inference/conflict.js'),
+                  }
+                }
+                return { found: false }
+              },
+            },
+          ],
+        },
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'ts',
+              importPath: './extensions-inference/conflict',
+            },
+          },
+        ],
+        output: 'import foo from "./extensions-inference/conflict.ts";',
+      }),
+
+      tInvalid({
+        name: 'extensions should not fix an ambiguous resolved extension',
+        code: 'import foo from "./typescript-default";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: [
+          'always',
+          { pattern: { js: 'always', ts: 'always' }, fix: true },
+        ],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './typescript-default' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
         // mixed value/type declarations are still checked
         code: 'import { type T, value } from "./typescript-default.js";',
         filename: testFilePath('./foo.ts'),

@@ -257,6 +257,7 @@ function isExtensionAlias(
  * rule explicitly requires.
  *
  * @param extension - The extension already derived from the resolved path, used as a fallback.
+ * @param resolvedPath - The result of resolving the import path as-is.
  * @param candidates - The extensions the rule requires, without leading dots.
  * @param importPath - The import path as written, for extension aliases.
  * @param resolveCandidate - Resolves a candidate import path.
@@ -264,6 +265,7 @@ function isExtensionAlias(
  */
 function inferExtension(
   extension: string,
+  resolvedPath: string | null | undefined,
   candidates: readonly string[],
   importPath: string,
   resolveCandidate: (candidate: string) => string | null | undefined,
@@ -274,17 +276,23 @@ function inferExtension(
   }
   const resolvedCandidates = candidates.filter(candidate => {
     const candidateResolved = resolveCandidate(candidate)
+    if (!candidateResolved) {
+      return false
+    }
+    // A resolved import must keep resolving to the same file.
+    if (resolvedPath) {
+      return candidateResolved === resolvedPath
+    }
     return (
-      candidateResolved &&
-      (path.basename(candidateResolved).endsWith(`.${candidate}`) ||
-        isExtensionAlias(
-          appendExtension(importPath, candidate),
-          candidateResolved,
-        ))
+      path.basename(candidateResolved).endsWith(`.${candidate}`) ||
+      isExtensionAlias(
+        appendExtension(importPath, candidate),
+        candidateResolved,
+      )
     )
   })
   return resolvedCandidates.length > 1
-    ? { extension, ambiguous: true }
+    ? { extension: '', ambiguous: true }
     : { extension: resolvedCandidates[0] || extension, ambiguous: false }
 }
 
@@ -491,6 +499,7 @@ export default createRule<Options, MessageId>({
           // file system: probe the extensions the rule explicitly requires.
           const inference = inferExtension(
             extension,
+            resolvedPath,
             Object.keys(props.pattern).filter(candidate =>
               isUseOfExtensionRequired(candidate, !overrideAction && isPackage),
             ),
