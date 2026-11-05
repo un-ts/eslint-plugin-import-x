@@ -95,6 +95,12 @@ ruleTester.run('first', rule, {
       output: null,
     }),
     tInvalid({
+      // a declined group leaves every report in it without a fix
+      code: "'use client';\nfoo();\nimport { a } from 'bar';\n// @ts-ignore\nimport { b } from 'baz';",
+      errors: [{ messageId: 'order' }, { messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
       code: "'use strict';\n'use client';\nfoo();\nimport { x } from './foo';\nimport { y } from 'bar';",
       errors: [{ messageId: 'order' }, { messageId: 'order' }],
       output:

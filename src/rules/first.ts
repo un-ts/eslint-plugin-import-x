@@ -141,124 +141,124 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
+        const sortNodes = errorInfos.slice(0, lastSortNodesIndex + 1)
+        // A next-line suppression above a moved import would be left behind,
+        // so the whole group is left without an autofix.
+        const canFix = !sortNodes.some(({ node: sortNode }) =>
+          sourceCode
+            .getCommentsBefore(sortNode)
+            .some(comment => LINE_SCOPED_NEXT_DIRECTIVE.test(comment.value)),
+        )
+
         for (const [index, { node }] of errorInfos.entries()) {
           let fix: TSESLint.ReportFixFunction | undefined
 
           if (index < lastSortNodesIndex) {
-            fix = (fixer: TSESLint.RuleFixer) => fixer.insertTextAfter(node, '')
+            fix = canFix
+              ? (fixer: TSESLint.RuleFixer) => fixer.insertTextAfter(node, '')
+              : undefined
           } else if (index === lastSortNodesIndex) {
-            const sortNodes = errorInfos.slice(0, lastSortNodesIndex + 1)
-            fix = (fixer: TSESLint.RuleFixer) => {
-              // A next-line suppression above a moved import would be left
-              // behind, so omit the fix rather than move the import out of it.
-              if (
-                sortNodes.some(({ node: sortNode }) =>
-                  sourceCode
-                    .getCommentsBefore(sortNode)
-                    .some(comment =>
-                      LINE_SCOPED_NEXT_DIRECTIVE.test(comment.value),
-                    ),
-                )
-              ) {
-                return null
-              }
-
-              const removeFixers = sortNodes.map(({ range }) =>
-                fixer.removeRange(range),
-              )
-              const range = [
-                0,
-                removeFixers[removeFixers.length - 1].range[1],
-              ] as const
-
-              let insertSourceCode = sortNodes
-                .map(({ range }) => {
-                  const nodeSourceCode = originSourceCode.slice(...range)
-                  if (/\S/.test(nodeSourceCode[0])) {
-                    return `\n${nodeSourceCode}`
-                  }
-                  return nodeSourceCode
-                })
-                .join('')
-
-              let replaceSourceCode = ''
-
-              // Directives such as `'use client'` only work at the very top,
-              // so imports moved up go after them
-              const insertAfterNode = lastLegalImp ?? lastDirective
-
-              if (!insertAfterNode) {
-                insertSourceCode =
-                  insertSourceCode.trim() + insertSourceCode.match(/^(\s+)/)![0]
-              }
-
-              // When inserting after a directive with no trailing newline, add one
-              // to prevent the moved import from being glued to the next statement.
-              const insertingAfterDirective = !lastLegalImp && !!lastDirective
-              // A moved import that shared a line with the statement before it
-              // keeps its leading space; start it on its own line instead, so a
-              // directive without a semicolon doesn't become `'use client' import`
-              if (insertingAfterDirective) {
-                insertSourceCode = `\n${insertSourceCode.trimStart()}`
-              }
-
-              // When inserting after a directive, advance past any trailing
-              // same-line comments (e.g. // eslint-disable-line) so they stay
-              // on the directive's line and inline disable directives remain
-              // effective.
-              let effectiveInsertAfterNode:
-                | TSESTree.Node
-                | TSESTree.Token
-                | null = insertAfterNode
-              if (insertingAfterDirective && insertAfterNode) {
-                let token: TSESTree.Node | TSESTree.Token = insertAfterNode
-                for (;;) {
-                  const next: TSESTree.Token | null = sourceCode.getTokenAfter(
-                    token,
-                    { includeComments: true },
+            fix = canFix
+              ? (fixer: TSESLint.RuleFixer) => {
+                  const removeFixers = sortNodes.map(({ range }) =>
+                    fixer.removeRange(range),
                   )
-                  if (
-                    next &&
-                    (next.type === 'Line' || next.type === 'Block') &&
-                    next.loc.start.line === token.loc.end.line
-                  ) {
-                    // Keep a next-line directive above the statement it covers.
-                    if (LINE_SCOPED_NEXT_DIRECTIVE.test(next.value)) {
-                      break
+                  const range = [
+                    0,
+                    removeFixers[removeFixers.length - 1].range[1],
+                  ] as const
+
+                  let insertSourceCode = sortNodes
+                    .map(({ range }) => {
+                      const nodeSourceCode = originSourceCode.slice(...range)
+                      if (/\S/.test(nodeSourceCode[0])) {
+                        return `\n${nodeSourceCode}`
+                      }
+                      return nodeSourceCode
+                    })
+                    .join('')
+
+                  let replaceSourceCode = ''
+
+                  // Directives such as `'use client'` only work at the very top,
+                  // so imports moved up go after them
+                  const insertAfterNode = lastLegalImp ?? lastDirective
+
+                  if (!insertAfterNode) {
+                    insertSourceCode =
+                      insertSourceCode.trim() +
+                      insertSourceCode.match(/^(\s+)/)![0]
+                  }
+
+                  // When inserting after a directive with no trailing newline, add one
+                  // to prevent the moved import from being glued to the next statement.
+                  const insertingAfterDirective =
+                    !lastLegalImp && !!lastDirective
+                  // A moved import that shared a line with the statement before it
+                  // keeps its leading space; start it on its own line instead, so a
+                  // directive without a semicolon doesn't become `'use client' import`
+                  if (insertingAfterDirective) {
+                    insertSourceCode = `\n${insertSourceCode.trimStart()}`
+                  }
+
+                  // When inserting after a directive, advance past any trailing
+                  // same-line comments (e.g. // eslint-disable-line) so they stay
+                  // on the directive's line and inline disable directives remain
+                  // effective.
+                  let effectiveInsertAfterNode:
+                    | TSESTree.Node
+                    | TSESTree.Token
+                    | null = insertAfterNode
+                  if (insertingAfterDirective && insertAfterNode) {
+                    let token: TSESTree.Node | TSESTree.Token = insertAfterNode
+                    for (;;) {
+                      const next: TSESTree.Token | null =
+                        sourceCode.getTokenAfter(token, {
+                          includeComments: true,
+                        })
+                      if (
+                        next &&
+                        (next.type === 'Line' || next.type === 'Block') &&
+                        next.loc.start.line === token.loc.end.line
+                      ) {
+                        // Keep a next-line directive above the statement it covers.
+                        if (LINE_SCOPED_NEXT_DIRECTIVE.test(next.value)) {
+                          break
+                        }
+                        token = next
+                      } else {
+                        break
+                      }
                     }
-                    token = next
-                  } else {
-                    break
+                    effectiveInsertAfterNode = token
                   }
-                }
-                effectiveInsertAfterNode = token
-              }
 
-              const insertFixer = insertAfterNode
-                ? fixer.insertTextAfter(
-                    effectiveInsertAfterNode!,
-                    insertingAfterDirective &&
-                      !/^[^\S\n]*\n/.test(
-                        originSourceCode.slice(
-                          effectiveInsertAfterNode!.range![1],
-                        ),
+                  const insertFixer = insertAfterNode
+                    ? fixer.insertTextAfter(
+                        effectiveInsertAfterNode!,
+                        insertingAfterDirective &&
+                          !/^[^\S\n]*\n/.test(
+                            originSourceCode.slice(
+                              effectiveInsertAfterNode!.range![1],
+                            ),
+                          )
+                          ? `${insertSourceCode}\n`
+                          : insertSourceCode,
                       )
-                      ? `${insertSourceCode}\n`
-                      : insertSourceCode,
-                  )
-                : fixer.insertTextBefore(body[0], insertSourceCode)
+                    : fixer.insertTextBefore(body[0], insertSourceCode)
 
-              const fixers = [insertFixer, ...removeFixers]
-              for (const [i, computedFixer] of fixers.entries()) {
-                replaceSourceCode +=
-                  originSourceCode.slice(
-                    fixers[i - 1] ? fixers[i - 1].range[1] : 0,
-                    computedFixer.range[0],
-                  ) + computedFixer.text
-              }
+                  const fixers = [insertFixer, ...removeFixers]
+                  for (const [i, computedFixer] of fixers.entries()) {
+                    replaceSourceCode +=
+                      originSourceCode.slice(
+                        fixers[i - 1] ? fixers[i - 1].range[1] : 0,
+                        computedFixer.range[0],
+                      ) + computedFixer.text
+                  }
 
-              return fixer.replaceTextRange(range, replaceSourceCode)
-            }
+                  return fixer.replaceTextRange(range, replaceSourceCode)
+                }
+              : undefined
           }
           context.report({
             node,
