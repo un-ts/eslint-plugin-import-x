@@ -130,6 +130,17 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     tValid({
+      // inline type-only export specifiers are type-only too
+      code: 'export { type T } from "qs";',
+      filename: path.join(packageDirWithResolvedTypesRuntimeInDev, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesRuntimeInDev,
+          devDependencies: false,
+        },
+      ],
+    }),
+    tValid({
       code: `
         // @flow
         import typeof TypeScriptModule from 'typescript';

@@ -10,6 +10,7 @@ import {
   isBuiltIn,
   isExternalModule,
   isScoped,
+  isTypeOnlyImportOrExport,
   createRule,
   moduleVisitor,
   resolve,
@@ -226,12 +227,39 @@ function appendExtension(importPath: string, extension: string) {
 }
 
 /**
+ * Whether the resolved file is the import path with another extension, e.g.
+ * `./foo.js` resolved to `foo.ts` (a resolver extension alias).
+ *
+ * @param importPath - The import path as written.
+ * @param resolvedPath - The result of resolving the import path.
+ * @returns Whether the resolved path is an extension alias of the import path.
+ */
+function isExtensionAlias(
+  importPath: string,
+  resolvedPath: string | null | undefined,
+) {
+  if (!resolvedPath) {
+    return false
+  }
+  const importPathExtension = path.extname(importPath)
+  const resolvedPathExtension = path.extname(resolvedPath)
+  return (
+    !!importPathExtension &&
+    !!resolvedPathExtension &&
+    importPathExtension !== resolvedPathExtension &&
+    path.basename(importPath, importPathExtension) ===
+      path.basename(resolvedPath, resolvedPathExtension)
+  )
+}
+
+/**
  * Infers the extension of an unresolved import by probing the extensions the
  * rule explicitly requires.
  *
- * @param extension - The extension already derived from the import path.
+ * @param extension - The extension already derived from the resolved path, used as a fallback.
  * @param resolvedPath - The result of resolving the import path as-is.
  * @param candidates - The extensions the rule requires, without leading dots.
+ * @param importPath - The import path as written, for extension aliases.
  * @param resolveCandidate - Resolves a candidate import path.
  * @returns The inferred extension and whether several candidates resolved.
  */
@@ -239,20 +267,32 @@ function inferExtension(
   extension: string,
   resolvedPath: string | null | undefined,
   candidates: readonly string[],
+  importPath: string,
   resolveCandidate: (candidate: string) => string | null | undefined,
 ) {
-  if (extension || resolvedPath) {
+  // An import path extension (including an alias) is authoritative.
+  if (path.extname(importPath)) {
     return { extension, ambiguous: false }
   }
   const resolvedCandidates = candidates.filter(candidate => {
     const candidateResolved = resolveCandidate(candidate)
+    if (!candidateResolved) {
+      return false
+    }
+    // A resolved import must keep resolving to the same file.
+    if (resolvedPath) {
+      return candidateResolved === resolvedPath
+    }
     return (
-      candidateResolved &&
-      path.basename(candidateResolved).endsWith(`.${candidate}`)
+      path.basename(candidateResolved).endsWith(`.${candidate}`) ||
+      isExtensionAlias(
+        appendExtension(importPath, candidate),
+        candidateResolved,
+      )
     )
   })
   return resolvedCandidates.length > 1
-    ? { extension, ambiguous: true }
+    ? { extension: '', ambiguous: true }
     : { extension: resolvedCandidates[0] || extension, ambiguous: false }
 }
 
@@ -422,9 +462,14 @@ export default createRule<Options, MessageId>({
         const resolvedToDts = !!resolvedPath && dtsRe.test(resolvedPath)
 
         // get extension from resolved path, or source value if unresolved.
-        // for .d.ts/.d.mts/.d.cts, use the import path extension instead.
+        // for .d.ts/.d.mts/.d.cts and extension aliases, use the import path
+        // extension instead.
         let extension = path
-          .extname(resolvedToDts ? importPath : resolvedPath || importPath)
+          .extname(
+            resolvedToDts || isExtensionAlias(importPath, resolvedPath)
+              ? importPath
+              : resolvedPath || importPath,
+          )
           .slice(1)
 
         // determine if this is a module
@@ -437,20 +482,17 @@ export default createRule<Options, MessageId>({
           isScoped(importPath) ||
           (props.checkSelfReference && isSelfReference(importPath))
 
+        // ignore type-only imports and exports, including inline `type` specifiers
+        if (!props.checkTypeImports && isTypeOnlyImportOrExport(node)) {
+          return
+        }
+
         if (!extension || !importPath.endsWith(`.${extension}`)) {
           // A package subpath that resolves to a type declaration
           // (.d.ts/.d.mts/.d.cts) has no runtime extension to enforce — the
           // entry point is governed by the package's "exports" map
           // (e.g. `vitest/config`, `eslint/config`).
           if (resolvedToDts && !extension && isPackage) {
-            return
-          }
-          // ignore type-only imports and exports
-          if (
-            !props.checkTypeImports &&
-            (('importKind' in node && node.importKind === 'type') ||
-              ('exportKind' in node && node.exportKind === 'type'))
-          ) {
             return
           }
           // The extension of an unresolved import cannot be read from the
@@ -461,6 +503,7 @@ export default createRule<Options, MessageId>({
             Object.keys(props.pattern).filter(candidate =>
               isUseOfExtensionRequired(candidate, !overrideAction && isPackage),
             ),
+            importPath,
             candidate =>
               resolve(appendExtension(importPath, candidate), context),
           )

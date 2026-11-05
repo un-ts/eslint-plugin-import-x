@@ -13,6 +13,7 @@ import {
   importType,
   getFilePackageName,
   getNpmInstallCommand,
+  isTypeOnlyImportOrExport,
 } from '../utils/index.js'
 
 export type PackageDeps = ReturnType<typeof extractDepFields>
@@ -261,26 +262,7 @@ function reportIfMissing(
   whitelist: Set<string> | undefined,
   selfPackage: PackageIdentity | undefined,
 ) {
-  const isTypeImport =
-    ('importKind' in node &&
-      (node.importKind === 'type' ||
-        // @ts-expect-error - flow type
-        node.importKind === 'typeof')) ||
-    ('exportKind' in node && node.exportKind === 'type') ||
-    ('specifiers' in node &&
-      Array.isArray(node.specifiers) &&
-      node.specifiers.length > 0 &&
-      (
-        node.specifiers as Array<
-          TSESTree.ExportSpecifier | TSESTree.ImportClause
-        >
-      ).every(
-        specifier =>
-          'importKind' in specifier &&
-          (specifier.importKind === 'type' ||
-            // @ts-expect-error - flow type
-            specifier.importKind === 'typeof'),
-      ))
+  const isTypeImport = isTypeOnlyImportOrExport(node)
 
   // Do not report when importing types unless option is enabled
   if (!depsOptions.verifyTypeImports && isTypeImport) {
