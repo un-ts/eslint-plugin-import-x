@@ -115,9 +115,7 @@ function getFix(
 
     acc.push({
       importNode: node,
-      identifiers: sourceCode.text
-        .slice(openBrace.range[1], closeBrace.range[0])
-        .split(','), // Split the text into separate identifiers (retaining any whitespace before or after)
+      identifiers: splitSpecifiers(sourceCode, openBrace, closeBrace),
       isEmpty: !restWithoutCommentsAndNamespacesHasSpecifiers[nodeIndex],
     })
 
@@ -161,10 +159,9 @@ function getFix(
     const firstExistingIdentifiers = firstIsEmpty
       ? new Set()
       : new Set(
-          sourceCode.text
-            .slice(openBrace.range[1], closeBrace.range[0])
-            .split(',')
-            .map(normalizeSpecifier),
+          splitSpecifiers(sourceCode, openBrace, closeBrace).map(
+            normalizeSpecifier,
+          ),
         )
 
     const [specifiersText] = specifiers.reduce(
@@ -448,6 +445,25 @@ function getTypeImportFix(
 // `x as x` binds the same name as `x`, so compare them as equal.
 function normalizeSpecifier(text: string) {
   return text.trim().replace(/^((?:type\s+)?)(\S+)\s+as\s+\2$/, '$1$2')
+}
+
+// Split the text inside `{...}` into separate identifiers, retaining any whitespace
+// and comments before or after. Only comma tokens count, not commas inside comments.
+function splitSpecifiers(
+  sourceCode: TSESLint.SourceCode,
+  openBrace: TSESTree.Token,
+  closeBrace: TSESTree.Token,
+) {
+  const identifiers: string[] = []
+  let start = openBrace.range[1]
+  for (const token of sourceCode.getTokensBetween(openBrace, closeBrace)) {
+    if (isPunctuator(token, ',')) {
+      identifiers.push(sourceCode.text.slice(start, token.range[0]))
+      start = token.range[1]
+    }
+  }
+  identifiers.push(sourceCode.text.slice(start, closeBrace.range[0]))
+  return identifiers
 }
 
 function isPunctuator(node: TSESTree.Token, value: '{' | '}' | ',') {

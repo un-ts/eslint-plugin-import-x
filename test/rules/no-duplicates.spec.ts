@@ -185,6 +185,27 @@ ruleTester.run('no-duplicates', rule, {
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
+    // a name after a comma in a comment is not a specifier, so the comment stays whole
+    tInvalid({
+      code: "import {a} from './foo'\nimport {b, // note, a, rest\nc} from './foo'\n",
+      output: "import {a,b, // note, a, rest\nc} from './foo'\n",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    // a specifier named after a comment that mentions it stays below that comment
+    tInvalid({
+      code: "import {a} from './foo'\nimport {// x, c,\nc, d} from './foo'\n",
+      output: "import {a,// x, c,\nc, d} from './foo'\n",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    // a name mentioned in a comment of the first import is not imported yet
+    tInvalid({
+      code: "import {a, // x, b,\n} from './foo'\nimport {b} from './foo'\n",
+      output: "import {a,b // x, b,\n} from './foo'\n",
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
     // an aliased specifier must not swallow an unaliased one of the same name
     tInvalid({
       code: "import { x as y } from './foo'; import { x } from './foo'",
