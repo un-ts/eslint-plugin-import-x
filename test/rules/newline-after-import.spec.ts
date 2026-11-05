@@ -38,6 +38,27 @@ const REQUIRE_ERROR = createRequireError(1)
 
 ruleTester.run('newline-after-import', rule, {
   valid: [
+    {
+      code: `import a from 'a' // trailing\n\nfoo()`,
+      options: [{ considerComments: true }],
+    },
+    {
+      code: `import a from 'a' /* trailing */\n\nfoo()`,
+      options: [{ considerComments: true, exactCount: true }],
+    },
+    {
+      code: `const a = require('a') // trailing\n\nfoo()`,
+      options: [{ considerComments: true }],
+    },
+    {
+      // the gap is measured from the end of a multi-line trailing comment
+      code: `import 'a'; /*\n*/\n\nfoo()`,
+      options: [{ exactCount: true }],
+    },
+    {
+      code: `import 'a'; /*\n*/ /* c */\n\nfoo()`,
+      options: [{ considerComments: true, exactCount: true }],
+    },
     `var path = require('path');\nvar foo = require('foo');\n`,
     `require('foo');`,
     `switch ('foo') { case 'bar': require('baz'); }`,
@@ -533,6 +554,83 @@ ruleTester.run('newline-after-import', rule, {
   ],
 
   invalid: [
+    {
+      code: `import a from 'a' // trailing\nfoo()`,
+      output: `import a from 'a' // trailing\n\nfoo()`,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import a from 'a' /* one */ /* two */\nfoo()`,
+      output: `import a from 'a' /* one */ /* two */\n\nfoo()`,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import a from 'a' // trailing\n// next\nfoo()`,
+      output: `import a from 'a' // trailing\n\n// next\nfoo()`,
+      options: [{ considerComments: true }],
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `const a = require('a') // trailing\nfoo()`,
+      output: `const a = require('a') // trailing\n\nfoo()`,
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
+    {
+      code: `import 'a'; /*\n*/ foo()`,
+      output: `import 'a'; /*\n*/\n\n foo()`,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import 'a'; /*\n*/\nfoo()`,
+      output: `import 'a'; /*\n*/\n\nfoo()`,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import 'a'; /*\n*/\nfoo()`,
+      output: `import 'a'; /*\n*/\n\nfoo()`,
+      options: [{ considerComments: true }],
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `const a = require('a'); /*\n*/ foo()`,
+      output: `const a = require('a'); /*\n*/\n\n foo()`,
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
+    {
+      // do not move a line-scoped directive away from its target
+      code: "import a from 'a' // @ts-ignore\nfoo()",
+      output: null,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: "const a = require('a') // @ts-ignore\nfoo()",
+      output: null,
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
+    {
+      // a directive earlier in the trailing comment chain also withholds the fix
+      code: "import a from 'a' /* @ts-ignore */ /* plain */\nfoo()",
+      output: null,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: "const a = require('a') /* @ts-ignore */ /* plain */\nfoo()",
+      output: null,
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
+    {
+      // a comment inside the next statement does not satisfy the blank line
+      code: "import a from 'a'\nfoo(\n  // inside\n  bar,\n)",
+      output: "import a from 'a'\n\nfoo(\n  // inside\n  bar,\n)",
+      options: [{ considerComments: true }],
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: "const a = require('a')\nfoo(\n  // inside\n  bar,\n)",
+      output: "const a = require('a')\n\nfoo(\n  // inside\n  bar,\n)",
+      options: [{ considerComments: true }],
+      errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
+    },
     {
       code: `
         import { A, B, C, D } from
@@ -1087,7 +1185,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `import foo from 'foo';// some random comment\nexport default function() {};`,
-      output: `import foo from 'foo';\n\n// some random comment\nexport default function() {};`,
+      output: `import foo from 'foo';// some random comment\n\nexport default function() {};`,
       options: [{ count: 1, exactCount: true, considerComments: true }],
       errors: [
         {
