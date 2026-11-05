@@ -237,6 +237,23 @@ let valid: RuleRunTests<typeof rule>['valid'] = [
     },
   }),
 
+  // a parameter that shadows the namespace is not checked, even when the
+  // namespace is also referenced in the same scope by a type annotation
+  tValid({
+    code: `
+      import type * as names from './named-exports'
+      const f = (names: names.ExportedClass) => names.nope()
+    `,
+  }),
+  tValid({
+    code: `
+      import type * as names from './named-exports'
+      const f = (names: names.ExportedClass) => {
+        const { nope } = names
+      }
+    `,
+  }),
+
   // Typescript
   tValid({
     code: `
@@ -346,6 +363,14 @@ let valid: RuleRunTests<typeof rule>['valid'] = [
 ]
 
 let invalid: RuleRunTests<typeof rule>['invalid'] = [
+  tInvalid({
+    code: `
+      import * as names from './named-exports'
+      const f = (x: names.ExportedClass) => names.nope()
+    `,
+    errors: [createNotFoundInNamespaceError('nope', 'names')],
+  }),
+
   tInvalid({
     code: "import * as names from './named-exports'; console.log(names.c)",
     errors: [createNotFoundInNamespaceError('c', 'names')],

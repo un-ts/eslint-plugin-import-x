@@ -269,10 +269,7 @@ export default createRule<[Options], MessageId>({
           return
         }
 
-        if (
-          declaredScope(context, dereference, dereference.object.name) !==
-          'module'
-        ) {
+        if (declaredScope(context, dereference.object) !== 'module') {
           return
         }
 
@@ -356,7 +353,7 @@ export default createRule<[Options], MessageId>({
         }
 
         // check for redefinition in intermediate scopes
-        if (declaredScope(context, node, init.name) !== 'module') {
+        if (declaredScope(context, init) !== 'module') {
           return
         }
 
