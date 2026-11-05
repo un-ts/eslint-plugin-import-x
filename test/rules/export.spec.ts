@@ -1067,6 +1067,45 @@ describe('TypeScript', () => {
           `,
         ...parserConfig,
       }),
+      // interfaces and type aliases merge with a type-only namespace as well
+      tValid({
+        code: `
+            export interface Shape { x: number }
+            export namespace Shape { export type Kind = string }
+          `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+            export type T = number
+            export namespace T { export type X = string }
+          `,
+        ...parserConfig,
+      }),
+      // dotted, nested and `declare` namespaces are type-only too
+      tValid({
+        code: `
+            export const Dotted = 1
+            export namespace Dotted.Child { export type X = string }
+          `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+            export const Nested = 1
+            export namespace Nested {
+              export namespace Inner { export type X = string }
+            }
+          `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+            export const Decl = 1
+            export declare namespace Decl {}
+          `,
+        ...parserConfig,
+      }),
       tValid({
         code: 'export * from "./file1.ts"',
         filename: testFilePath('typescript-d-ts/file-2.ts'),
