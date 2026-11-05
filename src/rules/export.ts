@@ -94,6 +94,67 @@ function isExplicitValue(node: TSESTree.Node) {
 }
 
 /**
+ * A namespace that only declares types is not instantiated, so it occupies no
+ * value and merges with any other declaration of its name:
+ *
+ * ```ts
+ * export const Foo = {}
+ * export namespace Foo {
+ *   export type Bar = string
+ * }
+ * ```
+ */
+function isTypeOnlyNamespace(node: TSESTree.TSModuleDeclaration): boolean {
+  // Babel parses a dotted namespace (`namespace A.B {}`) as nested module
+  // declarations rather than a qualified name + block; the typescript-eslint
+  // parser always gives the block directly. Babel's shape is outside the
+  // TSESTree types, hence the cast.
+  const body = node.body as
+    | TSESTree.TSModuleBlock
+    | TSESTree.TSModuleDeclaration
+    | undefined
+  if (body == null) {
+    return false
+  }
+  if (body.type === AST_NODE_TYPES.TSModuleDeclaration) {
+    return isTypeOnlyNamespace(body)
+  }
+  return body.body.every(statement => {
+    const declaration =
+      statement.type === AST_NODE_TYPES.ExportNamedDeclaration
+        ? statement.declaration
+        : statement
+    switch (declaration?.type) {
+      case AST_NODE_TYPES.TSInterfaceDeclaration:
+      case AST_NODE_TYPES.TSTypeAliasDeclaration: {
+        return true
+      }
+      case AST_NODE_TYPES.TSModuleDeclaration: {
+        return isTypeOnlyNamespace(declaration)
+      }
+      case AST_NODE_TYPES.TSImportEqualsDeclaration: {
+        // `import X = A.B` is erased, while `export import X = A.B` adds a
+        // runtime property. (A module-reference alias is not allowed inside a
+        // namespace, but treat it as instantiating if a parser accepts it.)
+        if (
+          declaration.moduleReference.type ===
+          AST_NODE_TYPES.TSExternalModuleReference
+        ) {
+          return false
+        }
+        return (
+          statement.type !== AST_NODE_TYPES.ExportNamedDeclaration &&
+          !(declaration as { isExport?: boolean }).isExport
+        )
+      }
+      default: {
+        return false
+      }
+    }
+  })
+}
+
+/**
  * Detect merging Namespaces with Classes, Functions, or Enums like:
  *
  * ```ts
@@ -256,6 +317,13 @@ export default createRule<[], MessageId>({
 
       ExportNamedDeclaration(node) {
         if (node.declaration == null) {
+          return
+        }
+
+        if (
+          node.declaration.type === AST_NODE_TYPES.TSModuleDeclaration &&
+          isTypeOnlyNamespace(node.declaration)
+        ) {
           return
         }
 

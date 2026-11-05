@@ -1046,6 +1046,105 @@ describe('TypeScript', () => {
           `,
         ...parserConfig,
       }),
+      // a namespace with only types is not a value, so it merges with a value
+      tValid({
+        code: `
+            export const Foo = 'bar';
+            export namespace Foo { }
+          `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+            export const Foo = { create() {} };
+            export namespace Foo {
+              export type Bar = string
+              export interface Baz {}
+              export namespace Qux {
+                export type Quux = number
+              }
+            }
+          `,
+        ...parserConfig,
+      }),
+      // interfaces and type aliases merge with a type-only namespace as well
+      tValid({
+        code: `
+            export interface Shape { x: number }
+            export namespace Shape { export type Kind = string }
+          `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+            export type T = number
+            export namespace T { export type X = string }
+          `,
+        ...parserConfig,
+      }),
+      // dotted, nested and `declare` namespaces are type-only too
+      tValid({
+        code: `
+            export const Dotted = 1
+            export namespace Dotted.Child { export type X = string }
+          `,
+        ...parserConfig,
+      }),
+      // Babel parses a dotted namespace as nested TSModuleDeclaration nodes
+      tValid({
+        code: `
+            export const Dotted = 1
+            export namespace Dotted.Child { export type X = string }
+          `,
+        filename: testFilePath('typescript.ts'),
+        languageOptions: { parser: cjsRequire(parsers.BABEL) },
+      }),
+      // an unexported import alias inside a namespace is erased, so the
+      // namespace is still type-only
+      tValid({
+        code: `
+            namespace Types {
+              export namespace Inner { export type Item = string }
+            }
+            export const A = 1
+            export namespace A {
+              import Inner = Types.Inner
+              export type T = Inner.Item
+            }
+          `,
+        ...parserConfig,
+      }),
+      // the same through Babel's nested representation of a dotted namespace
+      tValid({
+        code: `
+            namespace Types {
+              export namespace Inner { export type Item = string }
+            }
+            export const A = 1
+            export namespace A.B {
+              import Inner = Types.Inner
+              export type T = Inner.Item
+            }
+          `,
+        filename: testFilePath('typescript.ts'),
+        languageOptions: { parser: cjsRequire(parsers.BABEL) },
+      }),
+      tValid({
+        code: `
+            export const Nested = 1
+            export namespace Nested {
+              export namespace Inner { export type X = string }
+            }
+          `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+            export const Decl = 1
+            export declare namespace Decl {}
+          `,
+        ...parserConfig,
+      }),
       tValid({
         code: 'export * from "./file1.ts"',
         filename: testFilePath('typescript-d-ts/file-2.ts'),
@@ -1323,7 +1422,9 @@ describe('TypeScript', () => {
       tInvalid({
         code: `
             export const Foo = 'bar';
-            export namespace Foo { }
+            export namespace Foo {
+              export const value = 1
+            }
           `,
         errors: [
           {
@@ -1338,6 +1439,37 @@ describe('TypeScript', () => {
           },
         ],
         ...parserConfig,
+      }),
+      tInvalid({
+        code: `
+            namespace Types {
+              export namespace Inner { export type Item = string }
+            }
+            export const A = 1
+            export namespace A {
+              export import Inner = Types.Inner
+              export type T = Inner.Item
+            }
+          `,
+        errors: 2,
+        ...parserConfig,
+      }),
+      // Babel marks an exported import alias with `isExport` rather than
+      // wrapping it in an ExportNamedDeclaration
+      tInvalid({
+        code: `
+            namespace Types {
+              export namespace Inner { export type Item = string }
+            }
+            export const A = 1
+            export namespace A {
+              export import Inner = Types.Inner
+              export type T = Inner.Item
+            }
+          `,
+        filename: testFilePath('typescript.ts'),
+        languageOptions: { parser: cjsRequire(parsers.BABEL) },
+        errors: 2,
       }),
 
       // Exports in ambient modules
