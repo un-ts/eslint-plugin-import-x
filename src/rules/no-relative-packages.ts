@@ -55,18 +55,20 @@ function checkImportForRelativePackage(
   ) {
     // Keep the import's own path below the package root, so a directory or an
     // extensionless import keeps pointing at the same module. A resolver may
-    // follow symlinks, so look that root up from the import's own path as well
+    // follow symlinks, so look that root up from the import's own path as well,
+    // unless the import is a file symlink that leads into another package
     const importTarget = path.resolve(path.dirname(resolvedContext), importPath)
     const targetPkg = findNamedPackage(importTarget)
-    const properImport = targetPkg.pkg
-      ? path.join(
-          targetPkg.pkg.name,
-          path.relative(path.dirname(targetPkg.path), importTarget),
-        )
-      : path.join(
-          importPkg.pkg.name,
-          path.relative(path.dirname(importPkg.path), resolvedImport),
-        )
+    const properImport =
+      targetPkg.pkg && targetPkg.pkg.name === importPkg.pkg.name
+        ? path.join(
+            importPkg.pkg.name,
+            path.relative(path.dirname(targetPkg.path), importTarget),
+          )
+        : path.join(
+            importPkg.pkg.name,
+            path.relative(path.dirname(importPkg.path), resolvedImport),
+          )
     context.report({
       node,
       messageId: 'noAllowed',
