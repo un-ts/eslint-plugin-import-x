@@ -1705,6 +1705,149 @@ describe('TypeScript', () => {
         ],
         output: 'import foo from "./index.js?query#hash";',
       }),
+
+      tInvalid({
+        name: 'extensions should infer the unique configured extension that resolves',
+        code: 'import icon from "./extensions-inference/unique"',
+        options: ['always', { pattern: { svg: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'svg',
+              importPath: './extensions-inference/unique',
+            },
+          },
+        ],
+        output: 'import icon from "./extensions-inference/unique.svg"',
+      }),
+
+      tInvalid({
+        name: 'extensions should keep the query string when inferring the extension',
+        code: 'import icon from "./extensions-inference/unique?raw"',
+        options: ['always', { pattern: { svg: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'svg',
+              importPath: './extensions-inference/unique?raw',
+            },
+          },
+        ],
+        output: 'import icon from "./extensions-inference/unique.svg?raw"',
+      }),
+
+      tInvalid({
+        name: 'extensions should infer a multi-segment configured extension',
+        code: 'import types from "./extensions-inference/types"',
+        options: ['always', { pattern: { 'd.ts': 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'd.ts',
+              importPath: './extensions-inference/types',
+            },
+          },
+        ],
+        output: 'import types from "./extensions-inference/types.d.ts"',
+      }),
+
+      tInvalid({
+        name: 'extensions should not infer an extension when the resolver maps it to another extension',
+        code: 'import alias from "./extensions-inference/alias"',
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        settings: {
+          'import-x/resolver': { typescript: { extensions: ['.js'] } },
+        },
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './extensions-inference/alias' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        name: 'extensions should not guess between multiple configured extensions that resolve',
+        code: 'import thing from "./extensions-inference/ambiguous"',
+        options: [
+          'always',
+          { pattern: { one: 'always', two: 'always' }, fix: true },
+        ],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './extensions-inference/ambiguous' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        name: 'extensions should report ambiguous required extensions even when the default is never',
+        code: 'import thing from "./extensions-inference/ambiguous"',
+        options: [
+          'never',
+          { pattern: { one: 'always', two: 'always' }, fix: true },
+        ],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './extensions-inference/ambiguous' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        name: 'extensions should not infer an extension that does not resolve',
+        code: 'import foo from "./unresolved"',
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './unresolved' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        name: 'extensions should suggest the unique configured extension that resolves',
+        code: 'import icon from "./extensions-inference/unique"',
+        options: ['always', { pattern: { svg: 'always' } }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'svg',
+              importPath: './extensions-inference/unique',
+            },
+            suggestions: [
+              {
+                messageId: 'addMissing',
+                data: {
+                  extension: 'svg',
+                  importPath: './extensions-inference/unique',
+                  fixedImportPath: './extensions-inference/unique.svg',
+                },
+                output: 'import icon from "./extensions-inference/unique.svg"',
+              },
+            ],
+          },
+        ],
+      }),
     ],
+  })
+})
+
+describe('extensions message for an undeterminable extension', () => {
+  it('explains why it cannot be determined automatically', () => {
+    expect(rule.meta.messages.missing).toBe(
+      'Missing file extension for "{{importPath}}", but it cannot be determined automatically. Add the extension manually or configure an import resolver.',
+    )
   })
 })
