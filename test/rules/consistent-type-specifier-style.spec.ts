@@ -232,7 +232,31 @@ const TS_ONLY: RuleRunTests<typeof rule> = {
       options: ['prefer-top-level'],
     }),
   ],
-  invalid: [],
+  invalid: [
+    // string specifier names (arbitrary module namespace identifiers)
+    {
+      code: `import { type "a-b" as AB } from 'Foo';`,
+      output: `import type {"a-b" as AB} from 'Foo';`,
+      options: ['prefer-top-level'],
+      errors: [
+        { messageId: 'topLevel', type: AST_NODE_TYPES.ImportDeclaration },
+      ],
+    },
+    {
+      code: `import { Foo, type "a-b" as AB } from 'Foo';`,
+      output: `import { Foo  } from 'Foo';\nimport type {"a-b" as AB} from 'Foo';`,
+      options: ['prefer-top-level'],
+      errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
+    },
+    {
+      code: `import { type "Foo" as Foo } from 'Foo';`,
+      output: `import type {Foo} from 'Foo';`,
+      options: ['prefer-top-level'],
+      errors: [
+        { messageId: 'topLevel', type: AST_NODE_TYPES.ImportDeclaration },
+      ],
+    },
+  ],
 }
 
 const FLOW_ONLY: RuleRunTests<typeof rule> = {
