@@ -474,20 +474,21 @@ export default createRule<Options, MessageId>({
           isScoped(importPath) ||
           (props.checkSelfReference && isSelfReference(importPath))
 
+        // ignore type-only imports and exports
+        if (
+          !props.checkTypeImports &&
+          (('importKind' in node && node.importKind === 'type') ||
+            ('exportKind' in node && node.exportKind === 'type'))
+        ) {
+          return
+        }
+
         if (!extension || !importPath.endsWith(`.${extension}`)) {
           // A package subpath that resolves to a type declaration
           // (.d.ts/.d.mts/.d.cts) has no runtime extension to enforce — the
           // entry point is governed by the package's "exports" map
           // (e.g. `vitest/config`, `eslint/config`).
           if (resolvedToDts && !extension && isPackage) {
-            return
-          }
-          // ignore type-only imports and exports
-          if (
-            !props.checkTypeImports &&
-            (('importKind' in node && node.importKind === 'type') ||
-              ('exportKind' in node && node.exportKind === 'type'))
-          ) {
             return
           }
           // The extension of an unresolved import cannot be read from the

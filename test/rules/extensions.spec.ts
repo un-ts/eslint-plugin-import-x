@@ -1480,6 +1480,21 @@ describe('TypeScript', () => {
         }),
       ]),
 
+      // type-only imports and exports keep the `.js` specifier (NodeNext style)
+      // when checkTypeImports is off
+      tValid({
+        code: 'import type { T } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never'],
+      }),
+      tValid({
+        code: 'export type { T } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never'],
+      }),
+
       // an extensionless package subpath that resolves to a `.d.ts` declaration
       // (via the TypeScript resolver's types-first conditions) has no runtime
       // extension to enforce (e.g. `vitest/config`) — #468 regression
