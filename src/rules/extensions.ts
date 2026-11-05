@@ -255,8 +255,7 @@ function isExtensionAlias(
  * Infers the extension of an unresolved import by probing the extensions the
  * rule explicitly requires.
  *
- * @param extension - The extension already derived from the import path.
- * @param resolvedPath - The result of resolving the import path as-is.
+ * @param extension - The extension already derived from the resolved path, used as a fallback.
  * @param candidates - The extensions the rule requires, without leading dots.
  * @param importPath - The import path as written, for extension aliases.
  * @param resolveCandidate - Resolves a candidate import path.
@@ -264,12 +263,12 @@ function isExtensionAlias(
  */
 function inferExtension(
   extension: string,
-  resolvedPath: string | null | undefined,
   candidates: readonly string[],
   importPath: string,
   resolveCandidate: (candidate: string) => string | null | undefined,
 ) {
-  if (extension || resolvedPath) {
+  // An import path extension (including an alias) is authoritative.
+  if (path.extname(importPath)) {
     return { extension, ambiguous: false }
   }
   const resolvedCandidates = candidates.filter(candidate => {
@@ -531,7 +530,6 @@ export default createRule<Options, MessageId>({
           // file system: probe the extensions the rule explicitly requires.
           const inference = inferExtension(
             extension,
-            resolvedPath,
             Object.keys(props.pattern).filter(candidate =>
               isUseOfExtensionRequired(candidate, !overrideAction && isPackage),
             ),

@@ -1823,6 +1823,25 @@ describe('TypeScript', () => {
       }),
 
       tInvalid({
+        // the resolver resolves both ./typescript-default and ./typescript-default.js
+        name: 'extensions should infer the .js alias for a resolved extensionless import',
+        code: 'import foo from "./typescript-default";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'js',
+              importPath: './typescript-default',
+            },
+          },
+        ],
+        output: 'import foo from "./typescript-default.js";',
+      }),
+
+      tInvalid({
         // mixed value/type declarations are still checked
         code: 'import { type T, value } from "./typescript-default.js";',
         filename: testFilePath('./foo.ts'),
