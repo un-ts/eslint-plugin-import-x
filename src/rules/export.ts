@@ -132,6 +132,21 @@ function isTypeOnlyNamespace(node: TSESTree.TSModuleDeclaration): boolean {
       case AST_NODE_TYPES.TSModuleDeclaration: {
         return isTypeOnlyNamespace(declaration)
       }
+      case AST_NODE_TYPES.TSImportEqualsDeclaration: {
+        // `import X = A.B` is erased, while `export import X = A.B` adds a
+        // runtime property. (A module-reference alias is not allowed inside a
+        // namespace, but treat it as instantiating if a parser accepts it.)
+        if (
+          declaration.moduleReference.type ===
+          AST_NODE_TYPES.TSExternalModuleReference
+        ) {
+          return false
+        }
+        return (
+          statement.type !== AST_NODE_TYPES.ExportNamedDeclaration &&
+          !(declaration as { isExport?: boolean }).isExport
+        )
+      }
       default: {
         return false
       }

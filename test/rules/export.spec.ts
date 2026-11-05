@@ -1099,6 +1099,36 @@ describe('TypeScript', () => {
         filename: testFilePath('typescript.ts'),
         languageOptions: { parser: cjsRequire(parsers.BABEL) },
       }),
+      // an unexported import alias inside a namespace is erased, so the
+      // namespace is still type-only
+      tValid({
+        code: `
+            namespace Types {
+              export namespace Inner { export type Item = string }
+            }
+            export const A = 1
+            export namespace A {
+              import Inner = Types.Inner
+              export type T = Inner.Item
+            }
+          `,
+        ...parserConfig,
+      }),
+      // the same through Babel's nested representation of a dotted namespace
+      tValid({
+        code: `
+            namespace Types {
+              export namespace Inner { export type Item = string }
+            }
+            export const A = 1
+            export namespace A.B {
+              import Inner = Types.Inner
+              export type T = Inner.Item
+            }
+          `,
+        filename: testFilePath('typescript.ts'),
+        languageOptions: { parser: cjsRequire(parsers.BABEL) },
+      }),
       tValid({
         code: `
             export const Nested = 1
@@ -1409,6 +1439,37 @@ describe('TypeScript', () => {
           },
         ],
         ...parserConfig,
+      }),
+      tInvalid({
+        code: `
+            namespace Types {
+              export namespace Inner { export type Item = string }
+            }
+            export const A = 1
+            export namespace A {
+              export import Inner = Types.Inner
+              export type T = Inner.Item
+            }
+          `,
+        errors: 2,
+        ...parserConfig,
+      }),
+      // Babel marks an exported import alias with `isExport` rather than
+      // wrapping it in an ExportNamedDeclaration
+      tInvalid({
+        code: `
+            namespace Types {
+              export namespace Inner { export type Item = string }
+            }
+            export const A = 1
+            export namespace A {
+              export import Inner = Types.Inner
+              export type T = Inner.Item
+            }
+          `,
+        filename: testFilePath('typescript.ts'),
+        languageOptions: { parser: cjsRequire(parsers.BABEL) },
+        errors: 2,
       }),
 
       // Exports in ambient modules
