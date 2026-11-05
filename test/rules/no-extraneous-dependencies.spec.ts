@@ -51,6 +51,12 @@ const packageDirWithResolvedTypesDependencies = testFilePath(
 const packageDirWithResolvedTypesInDependencies = testFilePath(
   'with-resolved-types-in-dependencies',
 )
+const packageDirWithResolvedTypesRuntimeInDev = testFilePath(
+  'with-resolved-types-runtime-in-dev-dependencies',
+)
+const packageDirWithResolvedTypesRuntimeInOpt = testFilePath(
+  'with-resolved-types-runtime-in-opt-dependencies',
+)
 const packageDirMonoRepoWithNested = testFilePath(
   'monorepo/packages/nested-package',
 )
@@ -124,6 +130,17 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       languageOptions: { parser: require(parsers.BABEL) },
     }),
     tValid({
+      // inline type-only export specifiers are type-only too
+      code: 'export { type T } from "qs";',
+      filename: path.join(packageDirWithResolvedTypesRuntimeInDev, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesRuntimeInDev,
+          devDependencies: false,
+        },
+      ],
+    }),
+    tValid({
       code: `
         // @flow
         import typeof TypeScriptModule from 'typescript';
@@ -183,6 +200,31 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     tValid({
       code: 'import foo from "@generated/foo"',
       options: [{ packageDir: packageDirBundledDepsRaceCondition }],
+    }),
+    // bundledDependencies from every merged manifest are unioned, not overwritten
+    tValid({
+      code: 'import foo from "@generated/foo"',
+      filename: testFilePath('bundled-dependencies/race-condition/index.js'),
+      options: [
+        {
+          packageDir: [
+            packageDirBundledDepsRaceCondition,
+            testFilePath('bundled-dependencies/as-array-bar'),
+          ],
+        },
+      ],
+    }),
+    tValid({
+      code: 'import bar from "@generated/bar"',
+      filename: testFilePath('bundled-dependencies/race-condition/index.js'),
+      options: [
+        {
+          packageDir: [
+            packageDirBundledDepsRaceCondition,
+            testFilePath('bundled-dependencies/as-array-bar'),
+          ],
+        },
+      ],
     }),
     tValid({ code: 'export function getToken() {}' }),
     tValid({ code: 'export class Component extends React.Component {}' }),
@@ -293,6 +335,31 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         },
       ],
     }),
+
+    // Closest package.json is always merged when packageDir is set.
+    // File is inside nested-package/ which has react, so react is found
+    // even though packageDir only points to monorepo root (which lacks react).
+    tValid({
+      code: 'import react from "react";',
+      filename: path.join(packageDirMonoRepoWithNested, 'foo.js'),
+      options: [{ packageDir: packageDirMonoRepoRoot }],
+    }),
+
+    // Deps from both the closest package.json AND packageDir are merged.
+    // right-pad is only in monorepo root, react is only in nested-package.
+    // File is in nested-package, packageDir points to root — both should be found.
+    tValid({
+      code: 'import rightpad from "right-pad";',
+      filename: path.join(packageDirMonoRepoWithNested, 'foo.js'),
+      options: [{ packageDir: packageDirMonoRepoRoot }],
+    }),
+
+    // When closest package.json IS the packageDir, behavior is unchanged.
+    tValid({
+      code: 'import rightpad from "right-pad";',
+      filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
+      options: [{ packageDir: packageDirMonoRepoRoot }],
+    }),
   ],
   invalid: [
     tInvalid({
@@ -322,6 +389,39 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       filename: path.join(packageDirWithResolvedTypesInDependencies, 'foo.js'),
       options: [{ packageDir: packageDirWithResolvedTypesInDependencies }],
       errors: [{ messageId: 'missing', data: { packageName: 'qs' } }],
+    }),
+    tInvalid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesRuntimeInDev, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesRuntimeInDev,
+          devDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'devDep', data: { packageName: 'qs' } }],
+    }),
+    tInvalid({
+      code: 'import babel from "babel-alias";',
+      filename: path.join(packageDirWithResolvedTypesRuntimeInDev, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesRuntimeInDev,
+          devDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'missing', data: { packageName: '@babel/core' } }],
+    }),
+    tInvalid({
+      code: 'import qs from "qs";',
+      filename: path.join(packageDirWithResolvedTypesRuntimeInOpt, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirWithResolvedTypesRuntimeInOpt,
+          optionalDependencies: false,
+        },
+      ],
+      errors: [{ messageId: 'optDep', data: { packageName: 'qs' } }],
     }),
     tInvalid({
       code: 'import "not-a-dependency"',
@@ -451,12 +551,6 @@ ruleTester.run('no-extraneous-dependencies', rule, {
     tInvalid({
       code: 'import react from "react";',
       filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
-      errors: [{ messageId: 'missing', data: { packageName: 'react' } }],
-    }),
-    tInvalid({
-      code: 'import react from "react";',
-      filename: path.join(packageDirMonoRepoWithNested, 'foo.js'),
-      options: [{ packageDir: packageDirMonoRepoRoot }],
       errors: [{ messageId: 'missing', data: { packageName: 'react' } }],
     }),
     tInvalid({

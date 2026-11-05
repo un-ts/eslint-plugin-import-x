@@ -3,7 +3,7 @@
 <!-- end auto-generated rule header -->
 
 Forbid the import of external modules that are not declared in the `package.json`'s `dependencies`, `devDependencies`, `optionalDependencies`, `peerDependencies`, or `bundledDependencies`.
-The closest parent `package.json` will be used. If no `package.json` is found, the rule will not lint anything. This behavior can be changed with the rule option `packageDir`. Normally ignores imports of modules marked internal, but this can be changed with the rule option `includeInternal`. Type imports can be verified by specifying `includeTypes`.
+The closest parent `package.json` will be used. If no `package.json` is found, the rule will not lint anything. Additional manifests can be merged in with the rule option `packageDir`. Normally ignores imports of modules marked internal, but this can be changed with the rule option `includeInternal`. Type imports can be verified by specifying `includeTypes`.
 
 A package may import itself by its own `name` only when the closest `package.json` defines a usable `exports` map — that is how Node.js resolves package self-references, and `main` does not enable them. If the name matches but `exports` is missing or `null`, the rule reports a `selfImport` error instead of `missing`.
 
@@ -64,6 +64,10 @@ folder layouts:
 ```js
 "import-x/no-extraneous-dependencies": ["error", {"packageDir": ["./some-dir/", "./root-pkg"]}]
 ```
+
+Dependency fields from the closest `package.json` relative to the linted file are always merged
+in as well; the `packageDir` manifests are merged on top of them. This keeps workspace packages
+aware of the dependencies declared in their own `package.json`.
 
 #### `whitelist`
 

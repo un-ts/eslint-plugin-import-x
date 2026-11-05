@@ -644,6 +644,71 @@ describe('TypeScript', () => {
     !typescriptEslintParserSatisfies('>= 5.7.0')
       ? []
       : [
+          // imports with different attributes can load different modules
+          tValid({
+            code: "import { compile } from './macro' with { type: 'macro' }; import { compile as compileNoMacro } from './macro'",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import { x } from './foo' with { type: 'macro', mode: 'strict' }; import { y } from './foo' with { mode: 'strict', type: 'json' }",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import x from './foo.json' with { 'type': 'json' }; import y from './foo.json' with { 'type': 'text' }",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import './foo.css' with { type: 'css' }; import { x } from './foo.css'",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import type {y} from './foo' with { 'resolution-mode': 'require' }",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo'",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import type {x} from './foo'; import {type y, z} from './foo' with { 'resolution-mode': 'import' }",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo' with { 'resolution-mode': 'require' }",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo'",
+            ...parserConfig,
+            languageOptions: { parser: legacyAssertionsParser },
+          }),
+          tValid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import type {y} from './foo' with { 'resolution-mode': 'require' }",
+            ...parserConfig,
+            options: [{ 'prefer-inline': true }],
+          }),
+          tValid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {y} from './foo'",
+            ...parserConfig,
+            options: [{ 'prefer-inline': true }],
+          }),
+          tValid({
+            code: "import x from './foo?a' with { type: 'json' }; import y from './foo?a'",
+            ...parserConfig,
+            options: [{ considerQueryString: true }],
+          }),
+          tValid({
+            code: "import type x from './foo' with { 'resolution-mode': 'import' }; import type y from './foo' with { 'resolution-mode': 'require' }",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import type * as x from './foo' with { 'resolution-mode': 'import' }; import type * as y from './foo' with { 'resolution-mode': 'require' }",
+            ...parserConfig,
+          }),
+          tValid({
+            code: "import * as x from './foo.json' with { type: 'json' }; import * as y from './foo.json' with { type: 'text' }",
+            ...parserConfig,
+          }),
           // #2470: ignore duplicate if is a typescript inline type import
           tValid({
             code: "import { type x } from './foo'; import y from './foo'",
@@ -991,44 +1056,83 @@ describe('TypeScript', () => {
               },
             ],
           }),
+          // equal attributes in another order are still duplicates
           tInvalid({
-            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo'",
+            code: "import {x} from './foo.json' with { type: 'json', mode: 'strict' }; import {y} from './foo.json' with { mode: 'strict', type: 'json' }",
             ...parserConfig,
-            output: null,
+            output:
+              "import {x,y} from './foo.json' with { type: 'json', mode: 'strict' }; ",
             errors: [
               {
-                ...createDuplicatedError('./foo'),
+                ...createDuplicatedError('./foo.json'),
                 line: 1,
-                column: 22,
+                column: 17,
               },
               {
-                ...createDuplicatedError('./foo'),
+                ...createDuplicatedError('./foo.json'),
                 line: 1,
-                column: 92,
+                column: 85,
               },
             ],
           }),
           tInvalid({
-            code: "import type {x} from './foo'; import {type y, z} from './foo' with { 'resolution-mode': 'import' }",
+            code: "import {x} from './foo.json' with { 'type': 'json' }; import {y} from './foo.json' with { type: 'json' }",
             ...parserConfig,
-            output: null,
+            output: "import {x,y} from './foo.json' with { 'type': 'json' }; ",
             errors: [
               {
-                ...createDuplicatedError('./foo'),
+                ...createDuplicatedError('./foo.json'),
                 line: 1,
-                column: 22,
+                column: 17,
               },
               {
-                ...createDuplicatedError('./foo'),
+                ...createDuplicatedError('./foo.json'),
                 line: 1,
-                column: 55,
+                column: 71,
               },
             ],
           }),
-          // two different nonempty attribute values must not merge
+          // keys and values with a comma don't break the comparison
           tInvalid({
-            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo' with { 'resolution-mode': 'require' }",
+            code: "import {x} from './foo' with { 'a,b': 'c', a: 'b,c' }; import {y} from './foo' with { a: 'b,c', 'a,b': 'c' }",
             ...parserConfig,
+            output: "import {x,y} from './foo' with { 'a,b': 'c', a: 'b,c' }; ",
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 17,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 72,
+              },
+            ],
+          }),
+          // an empty `with {}` is no attributes at all
+          tInvalid({
+            code: "import x from './foo' with {}; import {y} from './foo'",
+            ...parserConfig,
+            output: "import x, {y} from './foo' with {}; ",
+            errors: [
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 15,
+              },
+              {
+                ...createDuplicatedError('./foo'),
+                line: 1,
+                column: 48,
+              },
+            ],
+          }),
+          // `resolution-mode` is only allowed on `import type`
+          tInvalid({
+            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import type {y} from './foo' with { 'resolution-mode': 'import' }",
+            ...parserConfig,
+            options: [{ 'prefer-inline': true }],
             output: null,
             errors: [
               {
@@ -1039,25 +1143,145 @@ describe('TypeScript', () => {
               {
                 ...createDuplicatedError('./foo'),
                 line: 1,
-                column: 92,
+                column: 89,
+              },
+            ],
+          }),
+          // the braces of `with {...}` aren't the braces of the specifiers
+          tInvalid({
+            code: "import x from './foo.json' with { type: 'json' }; import { y } from './foo.json' with { type: 'json' }",
+            ...parserConfig,
+            output: "import x, { y } from './foo.json' with { type: 'json' }; ",
+            errors: [
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 15,
+              },
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 69,
               },
             ],
           }),
           tInvalid({
-            code: "import type {x} from './foo' with { 'resolution-mode': 'import' }; import {type y, z} from './foo'",
+            code: "import { y } from './foo.json' with { type: 'json' }; import x from './foo.json' with { type: 'json' }",
             ...parserConfig,
-            languageOptions: { parser: legacyAssertionsParser },
-            output: null,
+            output: "import x, { y } from './foo.json' with { type: 'json' }; ",
             errors: [
               {
-                ...createDuplicatedError('./foo'),
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 19,
+              },
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 69,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import './foo.json' with { type: 'json' }; import { y } from './foo.json' with { type: 'json' }",
+            ...parserConfig,
+            output: "import { y } from './foo.json' with { type: 'json' }; ",
+            errors: [
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 8,
+              },
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 62,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import { y } from './foo.json' with { type: 'json' }; import './foo.json' with { type: 'json' }",
+            ...parserConfig,
+            output: "import { y } from './foo.json' with { type: 'json' }; ",
+            errors: [
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 19,
+              },
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 62,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import x from './foo.json' with { type: 'json' }; import './foo.json' with { type: 'json' }",
+            ...parserConfig,
+            output: "import x from './foo.json' with { type: 'json' }; ",
+            errors: [
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 15,
+              },
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 58,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import './foo.json' with { type: 'json' }; import x from './foo.json' with { type: 'json' }",
+            ...parserConfig,
+            output: "import x from './foo.json' with { type: 'json' }; ",
+            errors: [
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 8,
+              },
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 58,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import './foo.json' with { type: 'json' }; import './foo.json' with { type: 'json' }",
+            ...parserConfig,
+            output: "import './foo.json' with { type: 'json' }; ",
+            errors: [
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 8,
+              },
+              {
+                ...createDuplicatedError('./foo.json'),
+                line: 1,
+                column: 51,
+              },
+            ],
+          }),
+          tInvalid({
+            code: "import type {x} from './foo.json' with { 'resolution-mode': 'import' }; import type {y} from './foo.json' with { 'resolution-mode': 'import' }",
+            ...parserConfig,
+            output:
+              "import type {x,y} from './foo.json' with { 'resolution-mode': 'import' }; ",
+            errors: [
+              {
+                ...createDuplicatedError('./foo.json'),
                 line: 1,
                 column: 22,
               },
               {
-                ...createDuplicatedError('./foo'),
+                ...createDuplicatedError('./foo.json'),
                 line: 1,
-                column: 92,
+                column: 94,
               },
             ],
           }),

@@ -42,6 +42,20 @@ The motivation is that this is likely a result of two developers importing diffe
 names from the same module at different times (and potentially largely different
 locations in the file.) This rule brings both (or n-many) to attention.
 
+### Import Attributes
+
+Imports of one path with different [import attributes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import/with) can load different modules, so they are not duplicates. Imports with the same attributes are, whatever the order of the attributes:
+
+```js
+// Valid
+import { compile } from './macro.ts' with { type: 'macro' }
+import { compile as compileNoMacro } from './macro.ts'
+
+// Invalid
+import { a } from './data' with { type: 'json', mode: 'strict' }
+import { b } from './data' with { mode: 'strict', type: 'json' }
+```
+
 ### Query Strings
 
 By default, this rule ignores query strings (i.e. paths followed by a question mark), and thus imports from `./mod?a` and `./mod?b` will be considered as duplicates. However you can use the option `considerQueryString` to handle them as different (primarily because browsers will resolve those imports differently).

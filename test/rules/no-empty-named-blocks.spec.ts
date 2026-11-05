@@ -138,5 +138,24 @@ ruleTester.run('no-empty-named-blocks', rule, {
       languageOptions: { parser: require(parsers.BABEL) },
       errors: [{ messageId: 'emptyNamed' }],
     }),
+    tInvalid({
+      // the suggestions must act on the import being reported, not the first import in the file
+      code: `import Default from 'first';\nimport {} from 'second';`,
+      errors: [
+        {
+          messageId: 'emptyNamed',
+          suggestions: [
+            {
+              messageId: 'unused',
+              output: `import Default from 'first';\n`,
+            },
+            {
+              messageId: 'emptyImport',
+              output: `import Default from 'first';\nimport 'second';`,
+            },
+          ],
+        },
+      ],
+    }),
   ],
 })

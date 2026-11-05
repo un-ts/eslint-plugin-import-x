@@ -10,6 +10,7 @@ import {
   isBuiltIn,
   isExternalModule,
   isScoped,
+  isTypeOnlyImportOrExport,
   createRule,
   moduleVisitor,
   resolve,
@@ -210,6 +211,104 @@ function computeOverrideAction(
 }
 
 /**
+ * Appends an extension to an import path, using the directory index form
+ * when the path ends with a slash or dot (e.g. `./dir/` → `./dir/index.js`).
+ *
+ * @param importPath - The import path to append the extension to.
+ * @param extension - The extension without a leading dot.
+ * @returns The import path with the extension appended.
+ */
+function appendExtension(importPath: string, extension: string) {
+  return /([\\/]|[\\/]?\.?\.)$/.test(importPath)
+    ? `${
+        importPath.endsWith('/') ? importPath.slice(0, -1) : importPath
+      }/index.${extension}`
+    : `${importPath}.${extension}`
+}
+
+/**
+ * Whether the resolved file is the import path with another extension, e.g.
+ * `./foo.js` resolved to `foo.ts` (a resolver extension alias).
+ *
+ * @param importPath - The import path as written.
+ * @param resolvedPath - The result of resolving the import path.
+ * @returns Whether the resolved path is an extension alias of the import path.
+ */
+function isExtensionAlias(
+  importPath: string,
+  resolvedPath: string | null | undefined,
+) {
+  if (!resolvedPath) {
+    return false
+  }
+  const importPathExtension = path.extname(importPath)
+  const resolvedPathExtension = path.extname(resolvedPath)
+  return (
+    !!importPathExtension &&
+    !!resolvedPathExtension &&
+    importPathExtension !== resolvedPathExtension &&
+    path.basename(importPath, importPathExtension) ===
+      path.basename(resolvedPath, resolvedPathExtension)
+  )
+}
+
+/**
+ * Infers the extension of an unresolved import by probing the extensions the
+ * rule explicitly requires.
+ *
+ * @param extension - The extension already derived from the resolved path, used as a fallback.
+ * @param resolvedPath - The result of resolving the import path as-is.
+ * @param candidates - The extensions the rule requires, without leading dots.
+ * @param importPath - The import path as written, for extension aliases.
+ * @param resolveCandidate - Resolves a candidate import path.
+ * @returns The inferred extension and whether several candidates resolved.
+ */
+function inferExtension(
+  extension: string,
+  resolvedPath: string | null | undefined,
+  candidates: readonly string[],
+  importPath: string,
+  resolveCandidate: (candidate: string) => string | null | undefined,
+) {
+  // An import path extension (including an alias) is authoritative.
+  if (path.extname(importPath)) {
+    return { extension, ambiguous: false }
+  }
+  const resolvedCandidates = candidates.filter(candidate => {
+    const candidateResolved = resolveCandidate(candidate)
+    if (!candidateResolved) {
+      return false
+    }
+    // A resolved import must keep resolving to the same file.
+    if (resolvedPath) {
+      return candidateResolved === resolvedPath
+    }
+    return (
+      path.basename(candidateResolved).endsWith(`.${candidate}`) ||
+      isExtensionAlias(
+        appendExtension(importPath, candidate),
+        candidateResolved,
+      )
+    )
+  })
+  return resolvedCandidates.length > 1
+    ? { extension: '', ambiguous: true }
+    : { extension: resolvedCandidates[0] || extension, ambiguous: false }
+}
+
+/**
+ * Whether a missing extension should be reported. An ambiguous extension is
+ * always reported, even when the default modifier is `never`.
+ */
+function shouldReportMissing(
+  ambiguous: boolean,
+  extensionRequired: boolean,
+  extensionForbidden: boolean,
+) {
+  return ambiguous || (extensionRequired && !extensionForbidden)
+}
+
+/**
  * Replaces the import path in a source string with a new import path.
  *
  * @param source - The original source string containing the import statement.
@@ -264,7 +363,8 @@ export default createRule<Options, MessageId>({
       ],
     },
     messages: {
-      missing: 'Missing file extension for "{{importPath}}"',
+      missing:
+        'Missing file extension for "{{importPath}}", but it cannot be determined automatically. Add the extension manually or configure an import resolver.',
       missingKnown:
         'Missing file extension "{{extension}}" for "{{importPath}}"',
       unexpected:
@@ -362,9 +462,14 @@ export default createRule<Options, MessageId>({
         const resolvedToDts = !!resolvedPath && dtsRe.test(resolvedPath)
 
         // get extension from resolved path, or source value if unresolved.
-        // for .d.ts/.d.mts/.d.cts, use the import path extension instead.
-        const extension = path
-          .extname(resolvedToDts ? importPath : resolvedPath || importPath)
+        // for .d.ts/.d.mts/.d.cts and extension aliases, use the import path
+        // extension instead.
+        let extension = path
+          .extname(
+            resolvedToDts || isExtensionAlias(importPath, resolvedPath)
+              ? importPath
+              : resolvedPath || importPath,
+          )
           .slice(1)
 
         // determine if this is a module
@@ -377,6 +482,11 @@ export default createRule<Options, MessageId>({
           isScoped(importPath) ||
           (props.checkSelfReference && isSelfReference(importPath))
 
+        // ignore type-only imports and exports, including inline `type` specifiers
+        if (!props.checkTypeImports && isTypeOnlyImportOrExport(node)) {
+          return
+        }
+
         if (!extension || !importPath.endsWith(`.${extension}`)) {
           // A package subpath that resolves to a type declaration
           // (.d.ts/.d.mts/.d.cts) has no runtime extension to enforce — the
@@ -385,33 +495,38 @@ export default createRule<Options, MessageId>({
           if (resolvedToDts && !extension && isPackage) {
             return
           }
-          // ignore type-only imports and exports
-          if (
-            !props.checkTypeImports &&
-            (('importKind' in node && node.importKind === 'type') ||
-              ('exportKind' in node && node.exportKind === 'type'))
-          ) {
-            return
-          }
+          // The extension of an unresolved import cannot be read from the
+          // file system: probe the extensions the rule explicitly requires.
+          const inference = inferExtension(
+            extension,
+            resolvedPath,
+            Object.keys(props.pattern).filter(candidate =>
+              isUseOfExtensionRequired(candidate, !overrideAction && isPackage),
+            ),
+            importPath,
+            candidate =>
+              resolve(appendExtension(importPath, candidate), context),
+          )
+          extension = inference.extension
           const extensionRequired = isUseOfExtensionRequired(
             extension,
             !overrideAction && isPackage,
           )
           const extensionForbidden = isUseOfExtensionForbidden(extension)
-          if (extensionRequired && !extensionForbidden) {
-            const fixedImportPath = stringifyPath({
-              pathname: `${
-                /([\\/]|[\\/]?\.?\.)$/.test(importPath)
-                  ? `${
-                      importPath.endsWith('/')
-                        ? importPath.slice(0, -1)
-                        : importPath
-                    }/index.${extension}`
-                  : `${importPath}.${extension}`
-              }`,
-              query,
-              hash,
-            })
+          if (
+            shouldReportMissing(
+              inference.ambiguous,
+              extensionRequired,
+              extensionForbidden,
+            )
+          ) {
+            const fixedImportPath = extension
+              ? stringifyPath({
+                  pathname: appendExtension(importPath, extension),
+                  query,
+                  hash,
+                })
+              : ''
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
                 return fixer.replaceText(

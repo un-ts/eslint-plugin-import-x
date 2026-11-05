@@ -1459,6 +1459,55 @@ describe('TypeScript', () => {
         options: ['always'],
       }),
 
+      // a `.js` specifier that the resolver maps to a `.ts` file is an extension
+      // alias, so the specifier's own extension is authoritative
+      ...(['always', 'ignorePackages'] as const).flatMap(modifier => [
+        tValid({
+          code: 'import foo from "./typescript-default.js";',
+          filename: testFilePath('./foo.ts'),
+          settings: {
+            'import-x/resolver': { typescript: { extensions: ['.js'] } },
+          },
+          options: [modifier],
+        }),
+        tValid({
+          code: 'import foo from "./typescript-default.js";',
+          filename: testFilePath('./foo.ts'),
+          settings: {
+            'import-x/resolver': { typescript: { extensions: ['.js'] } },
+          },
+          options: [modifier, { checkTypeImports: true, fix: true }],
+        }),
+      ]),
+
+      // type-only imports and exports keep the `.js` specifier (NodeNext style)
+      // when checkTypeImports is off
+      tValid({
+        code: 'import type { T } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never'],
+      }),
+      tValid({
+        code: 'export type { T } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never'],
+      }),
+      // inline type-only specifiers are type-only too
+      tValid({
+        code: 'import { type T } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never'],
+      }),
+      tValid({
+        code: 'export { type T } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never'],
+      }),
+
       // an extensionless package subpath that resolves to a `.d.ts` declaration
       // (via the TypeScript resolver's types-first conditions) has no runtime
       // extension to enforce (e.g. `vitest/config`) — #468 regression
@@ -1705,6 +1754,248 @@ describe('TypeScript', () => {
         ],
         output: 'import foo from "./index.js?query#hash";',
       }),
+
+      tInvalid({
+        name: 'extensions should infer the unique configured extension that resolves',
+        code: 'import icon from "./extensions-inference/unique"',
+        options: ['always', { pattern: { svg: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'svg',
+              importPath: './extensions-inference/unique',
+            },
+          },
+        ],
+        output: 'import icon from "./extensions-inference/unique.svg"',
+      }),
+
+      tInvalid({
+        name: 'extensions should keep the query string when inferring the extension',
+        code: 'import icon from "./extensions-inference/unique?raw"',
+        options: ['always', { pattern: { svg: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'svg',
+              importPath: './extensions-inference/unique?raw',
+            },
+          },
+        ],
+        output: 'import icon from "./extensions-inference/unique.svg?raw"',
+      }),
+
+      tInvalid({
+        name: 'extensions should infer a multi-segment configured extension',
+        code: 'import types from "./extensions-inference/types"',
+        options: ['always', { pattern: { 'd.ts': 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'd.ts',
+              importPath: './extensions-inference/types',
+            },
+          },
+        ],
+        output: 'import types from "./extensions-inference/types.d.ts"',
+      }),
+
+      tInvalid({
+        name: 'extensions should infer an extension when the resolver maps it to another extension',
+        code: 'import alias from "./extensions-inference/alias"',
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        settings: {
+          'import-x/resolver': { typescript: { extensions: ['.js'] } },
+        },
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'js',
+              importPath: './extensions-inference/alias',
+            },
+          },
+        ],
+        output: 'import alias from "./extensions-inference/alias.js"',
+      }),
+
+      tInvalid({
+        // the resolver resolves both ./typescript-default and ./typescript-default.js
+        name: 'extensions should infer the .js alias for a resolved extensionless import',
+        code: 'import foo from "./typescript-default";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'js',
+              importPath: './typescript-default',
+            },
+          },
+        ],
+        output: 'import foo from "./typescript-default.js";',
+      }),
+
+      tInvalid({
+        // the extensionless import resolves to conflict.ts, while the js candidate is a different file
+        name: 'extensions should not infer a candidate that resolves to a different file',
+        code: 'import foo from "./extensions-inference/conflict";',
+        filename: testFilePath('./foo.ts'),
+        settings: {
+          'import-x/resolver-next': [
+            {
+              name: 'conflict-resolver',
+              interfaceVersion: 3,
+              resolve(modulePath: string) {
+                if (modulePath === './extensions-inference/conflict') {
+                  return {
+                    found: true,
+                    path: testFilePath('extensions-inference/conflict.ts'),
+                  }
+                }
+                if (modulePath === './extensions-inference/conflict.js') {
+                  return {
+                    found: true,
+                    path: testFilePath('extensions-inference/conflict.js'),
+                  }
+                }
+                return { found: false }
+              },
+            },
+          ],
+        },
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'ts',
+              importPath: './extensions-inference/conflict',
+            },
+          },
+        ],
+        output: 'import foo from "./extensions-inference/conflict.ts";',
+      }),
+
+      tInvalid({
+        name: 'extensions should not fix an ambiguous resolved extension',
+        code: 'import foo from "./typescript-default";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: [
+          'always',
+          { pattern: { js: 'always', ts: 'always' }, fix: true },
+        ],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './typescript-default' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        // mixed value/type declarations are still checked
+        code: 'import { type T, value } from "./typescript-default.js";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never', { fix: true }],
+        errors: [
+          {
+            messageId: 'unexpected',
+            data: {
+              extension: 'js',
+              importPath: './typescript-default.js',
+            },
+          },
+        ],
+        output: 'import { type T, value } from "./typescript-default";',
+      }),
+
+      tInvalid({
+        name: 'extensions should not guess between multiple configured extensions that resolve',
+        code: 'import thing from "./extensions-inference/ambiguous"',
+        options: [
+          'always',
+          { pattern: { one: 'always', two: 'always' }, fix: true },
+        ],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './extensions-inference/ambiguous' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        name: 'extensions should report ambiguous required extensions even when the default is never',
+        code: 'import thing from "./extensions-inference/ambiguous"',
+        options: [
+          'never',
+          { pattern: { one: 'always', two: 'always' }, fix: true },
+        ],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './extensions-inference/ambiguous' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        name: 'extensions should not infer an extension that does not resolve',
+        code: 'import foo from "./unresolved"',
+        options: ['always', { pattern: { js: 'always' }, fix: true }],
+        errors: [
+          {
+            messageId: 'missing',
+            data: { importPath: './unresolved' },
+          },
+        ],
+        output: null,
+      }),
+
+      tInvalid({
+        name: 'extensions should suggest the unique configured extension that resolves',
+        code: 'import icon from "./extensions-inference/unique"',
+        options: ['always', { pattern: { svg: 'always' } }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'svg',
+              importPath: './extensions-inference/unique',
+            },
+            suggestions: [
+              {
+                messageId: 'addMissing',
+                data: {
+                  extension: 'svg',
+                  importPath: './extensions-inference/unique',
+                  fixedImportPath: './extensions-inference/unique.svg',
+                },
+                output: 'import icon from "./extensions-inference/unique.svg"',
+              },
+            ],
+          },
+        ],
+      }),
     ],
+  })
+})
+
+describe('extensions message for an undeterminable extension', () => {
+  it('explains why it cannot be determined automatically', () => {
+    expect(rule.meta.messages.missing).toBe(
+      'Missing file extension for "{{importPath}}", but it cannot be determined automatically. Add the extension manually or configure an import resolver.',
+    )
   })
 })

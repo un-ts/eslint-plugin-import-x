@@ -63,6 +63,13 @@ ruleTester.run('no-deprecated', rule, {
     tValid({
       code: "import { deepDep } from './deep-deprecated'; function x(deepDep) { console.log(deepDep.MY_TERRIBLE_ACTION) }",
     }),
+    // a shadowing parameter typed by the namespace is still not checked
+    tValid({
+      code: `
+        import * as depd from './deprecated'
+        const f = (depd: depd.SomeType) => depd.MY_TERRIBLE_ACTION
+      `,
+    }),
 
     ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],

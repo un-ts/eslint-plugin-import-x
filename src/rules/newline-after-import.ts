@@ -39,13 +39,6 @@ function findNodeIndexInScopeBody(
   return body.findIndex(node => containsNodeOrEqual(node, nodeToFind))
 }
 
-function getLineDifference(
-  node: TSESTree.Node,
-  nextNode: TSESTree.Comment | TSESTree.Node,
-) {
-  return nextNode.loc.start.line - node.loc.end.line
-}
-
 function isClassWithDecorator(
   node: TSESTree.Node,
 ): node is TSESTree.ClassDeclaration & { decorators: TSESTree.Decorator[] } {
@@ -136,7 +129,7 @@ export default createRule<[Options?], MessageId>({
         nextNode = nextNode.decorators[0]
       }
 
-      const lineDifference = getLineDifference(node, nextNode)
+      const lineDifference = nextNode.loc.start.line - getEndLine(node)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
 
       if (
@@ -163,11 +156,7 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : fixer =>
-                  fixer.insertTextAfter(
-                    node,
-                    '\n'.repeat(EXPECTED_LINE_DIFFERENCE - lineDifference),
-                  ),
+              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
         })
       }
     }
@@ -177,7 +166,7 @@ export default createRule<[Options?], MessageId>({
       nextComment: TSESTree.Comment,
       type: 'import' | 'require',
     ) {
-      const lineDifference = getLineDifference(node, nextComment)
+      const lineDifference = nextComment.loc.start.line - getEndLine(node)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
 
       if (lineDifference < EXPECTED_LINE_DIFFERENCE) {
@@ -201,13 +190,78 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : fixer =>
-                  fixer.insertTextAfter(
-                    node,
-                    '\n'.repeat(EXPECTED_LINE_DIFFERENCE - lineDifference),
-                  ),
+              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
         })
       }
+    }
+
+    /**
+     * The comments that start on the statement's final line, including
+     * comments chained onto the line where a previous one ends.
+     */
+    function getTrailingComments(node: TSESTree.Node) {
+      const comments: TSESTree.Comment[] = []
+      let last: TSESTree.Node | TSESTree.Token = node
+      let next = context.sourceCode.getTokenAfter(node, {
+        includeComments: true,
+      })
+      while (
+        next &&
+        (next.type === 'Line' || next.type === 'Block') &&
+        next.loc.start.line === last.loc.end.line
+      ) {
+        comments.push(next)
+        last = next
+        next = context.sourceCode.getTokenAfter(next, { includeComments: true })
+      }
+      return comments
+    }
+
+    /** The last token on the statement's final line, or the statement itself. */
+    function getLastTokenOnEndLine(node: TSESTree.Node) {
+      return getTrailingComments(node).at(-1) ?? node
+    }
+
+    /** The line where the statement and its trailing comments end. */
+    function getEndLine(node: TSESTree.Node) {
+      return getLastTokenOnEndLine(node).loc.end.line
+    }
+
+    /**
+     * Whether any of the statement's trailing comments is a line-scoped
+     * directive, which the fix would retarget.
+     */
+    function hasLineScopedDirective(node: TSESTree.Node) {
+      return getTrailingComments(node).some(isLineScopedDirective)
+    }
+
+    /**
+     * Adds the missing blank lines after the statement's trailing comments,
+     * unless that would retarget a line-scoped directive.
+     */
+    function getFixer(node: TSESTree.Node, count: number) {
+      return (fixer: TSESLint.RuleFixer) => {
+        if (hasLineScopedDirective(node)) {
+          return null
+        }
+        return fixer.insertTextAfter(
+          getLastTokenOnEndLine(node),
+          '\n'.repeat(count),
+        )
+      }
+    }
+
+    // A trailing `eslint-disable-next-line` (or the TS equivalent) applies to
+    // the next line, so inserting the blank line before its target would move
+    // the directive away from the code it is meant to cover.
+    const LINE_SCOPED_DIRECTIVE =
+      /^\s*(?:eslint-disable-next-line|@ts-ignore|@ts-expect-error)(?:\s|$)/
+
+    function isLineScopedDirective(token: TSESTree.Node | TSESTree.Token) {
+      return (
+        (token.type === 'Line' || token.type === 'Block') &&
+        LINE_SCOPED_DIRECTIVE.test(token.value)
+      )
     }
 
     function incrementLevel() {
@@ -230,15 +284,16 @@ export default createRule<[Options?], MessageId>({
 
       const nodePosition = root.body.indexOf(node)
       const nextNode = root.body[nodePosition + 1]
-      const endLine = node.loc.end.line
+      const endLine = getEndLine(node)
 
       let nextComment: TSESTree.Comment | undefined
 
       if (root.comments !== undefined && options.considerComments) {
         nextComment = root.comments.find(
           o =>
-            o.loc.start.line >= endLine &&
-            o.loc.start.line <= endLine + options.count + 1,
+            o.loc.start.line > endLine &&
+            o.loc.start.line <= endLine + options.count + 1 &&
+            (!nextNode || o.loc.start.line < nextNode.loc.start.line),
         )
       }
 
@@ -310,11 +365,15 @@ export default createRule<[Options?], MessageId>({
               statementWithRequireCall.parent.comments !== undefined &&
               options.considerComments
             ) {
-              const endLine = node.loc.end.line
+              const endLine = Math.max(
+                node.loc.end.line,
+                getEndLine(statementWithRequireCall),
+              )
               nextComment = statementWithRequireCall.parent.comments.find(
                 o =>
-                  o.loc.start.line >= endLine &&
-                  o.loc.start.line <= endLine + options.count + 1,
+                  o.loc.start.line > endLine &&
+                  o.loc.start.line <= endLine + options.count + 1 &&
+                  o.loc.start.line < nextStatement.loc.start.line,
               )
             }
 
