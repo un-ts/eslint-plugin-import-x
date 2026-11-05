@@ -1090,6 +1090,15 @@ describe('TypeScript', () => {
           `,
         ...parserConfig,
       }),
+      // Babel parses a dotted namespace as nested TSModuleDeclaration nodes
+      tValid({
+        code: `
+            export const Dotted = 1
+            export namespace Dotted.Child { export type X = string }
+          `,
+        filename: testFilePath('typescript.ts'),
+        languageOptions: { parser: cjsRequire(parsers.BABEL) },
+      }),
       tValid({
         code: `
             export const Nested = 1

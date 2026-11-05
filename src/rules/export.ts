@@ -105,10 +105,21 @@ function isExplicitValue(node: TSESTree.Node) {
  * ```
  */
 function isTypeOnlyNamespace(node: TSESTree.TSModuleDeclaration): boolean {
-  if (node.body?.type !== AST_NODE_TYPES.TSModuleBlock) {
+  // Babel parses a dotted namespace (`namespace A.B {}`) as nested module
+  // declarations rather than a qualified name + block; the typescript-eslint
+  // parser always gives the block directly. Babel's shape is outside the
+  // TSESTree types, hence the cast.
+  const body = node.body as
+    | TSESTree.TSModuleBlock
+    | TSESTree.TSModuleDeclaration
+    | undefined
+  if (body == null) {
     return false
   }
-  return node.body.body.every(statement => {
+  if (body.type === AST_NODE_TYPES.TSModuleDeclaration) {
+    return isTypeOnlyNamespace(body)
+  }
+  return body.body.every(statement => {
     const declaration =
       statement.type === AST_NODE_TYPES.ExportNamedDeclaration
         ? statement.declaration
