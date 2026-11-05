@@ -192,6 +192,36 @@ ruleTester.run('no-namespace', rule, {
       ],
     }),
     tInvalid({
+      // a chosen local name must not collide with a later import's name
+      code: `
+        import * as foo from './foo';
+        function f() {
+          const a = 'local';
+          return () => {
+            foo.a;
+            foo.foo_a;
+          };
+        }
+      `.trim(),
+      output: `
+        import { a as foo_a, foo_a as foo_foo_a } from './foo';
+        function f() {
+          const a = 'local';
+          return () => {
+            foo_a;
+            foo_foo_a;
+          };
+        }
+      `.trim(),
+      errors: [
+        {
+          ...NO_NAMESPACE_ERROR,
+          line: 1,
+          column: 8,
+        },
+      ],
+    }),
+    tInvalid({
       code: `
         import * as foo from './foo';
         florp(foo.bar, foo.default);

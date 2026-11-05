@@ -276,9 +276,12 @@ function generateLocalNames(
   namespaceName: string,
 ) {
   const localNames: Record<string, string> = {}
+  // Names chosen for earlier imports are taken too, or two imports would
+  // declare the same local name
+  const usedNames = new Set(outerNames)
   for (const name of names) {
     const isTaken = (localName: string) =>
-      nameConflicts[name].has(localName) || outerNames.has(localName)
+      nameConflicts[name].has(localName) || usedNames.has(localName)
     let localName: string
     if (!isTaken(name)) {
       localName = name
@@ -293,6 +296,7 @@ function generateLocalNames(
       localName = `${namespaceName}_${name}`
     }
     localNames[name] = localName!
+    usedNames.add(localName!)
   }
   return localNames
 }
