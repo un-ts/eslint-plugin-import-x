@@ -59,6 +59,18 @@ fs.symlinkSync(
   'junction',
 )
 
+// A file symlink can need extra privileges on Windows
+let hasFileSymlink = true
+try {
+  fs.symlinkSync(
+    symlinkFixture('store/shared/lib/util.js'),
+    symlinkFixture('repo/packages/foo/linked.js'),
+    'file',
+  )
+} catch {
+  hasFileSymlink = false
+}
+
 afterAll(() => {
   fs.rmSync(symlinkRoot, { recursive: true, force: true })
 })
@@ -212,5 +224,25 @@ ruleTester.run('no-relative-packages', rule, {
       ],
       output: 'import "bootstrap/dist/css/bootstrap.css"',
     }),
+    ...(hasFileSymlink
+      ? [
+          tInvalid({
+            code: 'import util from "./linked.js"',
+            filename: symlinkFixture('repo/packages/foo/index.js'),
+            settings: { 'import-x/resolver-next': [createNodeResolver()] },
+            errors: [
+              {
+                ...createNotFoundError(
+                  './linked.js',
+                  path.normalize('shared/lib/util.js'),
+                ),
+                line: 1,
+                column: 18,
+              },
+            ],
+            output: 'import util from "shared/lib/util.js"',
+          }),
+        ]
+      : []),
   ],
 })
