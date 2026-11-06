@@ -524,15 +524,14 @@ export default createRule<Options, MessageId>({
             // `foo.js` wins over `foo/index.js` when both exist
             const isDirectoryImport =
               !!resolvedPath &&
-              path.basename(resolvedPath, `.${extension}`) === "index" &&
-              path.basename(importPath) !== "index"
+              path.basename(resolvedPath, `.${extension}`) === 'index' &&
+              path.basename(importPath) !== 'index'
             const fixedImportPath = extension
               ? stringifyPath({
                   pathname:
-                    /([\\/]|[\\/]?\.?\.)$/.test(importPath) ||
-                    isDirectoryImport
+                    /([\\/]|[\\/]?\.?\.)$/.test(importPath) || isDirectoryImport
                       ? `${
-                          importPath.endsWith("/")
+                          importPath.endsWith('/')
                             ? importPath.slice(0, -1)
                             : importPath
                         }/index.${extension}`
@@ -540,7 +539,7 @@ export default createRule<Options, MessageId>({
                   query,
                   hash,
                 })
-              : ""
+              : ''
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
                 return fixer.replaceText(
