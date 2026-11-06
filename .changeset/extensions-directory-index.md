@@ -2,4 +2,4 @@
 "eslint-plugin-import-x": patch
 ---
 
-fix(extensions): preserve directory index imports in autofixes and suggestions instead of appending an extension to the directory name.
+fix(extensions): resolve directory imports to their index file in autofixes and suggestions, and avoid package subpath rewrites that do not resolve back to the original file.

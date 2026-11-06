@@ -545,10 +545,10 @@ export default createRule<Options, MessageId>({
               ? indexPathname
               : appendExtension(importPath, extension)
             // An exports map can point `pkg/sub` at `dist/index.js`, and the
-            // appended `.js` may not be exported at all; only a path that
-            // resolves back to the original file may be offered as a fix.
-            // Relative paths can be fixed from the resolved file even when the
-            // resolver cannot resolve the rewritten specifier.
+            // appended `.js` may not be exported at all. Bare specifiers must
+            // resolve back to the original file; relative paths can still be
+            // fixed from the resolved file when the resolver cannot resolve
+            // the rewritten specifier.
             const fixedImportPath =
               extension &&
               (!resolvedPath ||

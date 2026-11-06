@@ -215,7 +215,7 @@ ruleTester.run('extensions', rule, {
       ].map(([importPath, fixedImportPath]) => {
         const output = `import foo from "${fixedImportPath}";`
         return tInvalid({
-          name: `preserves resolved directory imports: ${importPath} (fix: ${fix})`,
+          name: `fixes resolved imports: ${importPath} (fix: ${fix})`,
           code: `import foo from "${importPath}";`,
           options: ['always', { fix }],
           settings: {
@@ -246,8 +246,7 @@ ruleTester.run('extensions', rule, {
     // rewritten to <subpath>/index.js; reported, but without a fix
     tInvalid({
       code: 'import { exported } from "exports-index/sub"',
-      options: ['always', { ignorePackages: false }],
-      filename: testFilePath('./bar.js'),
+      options: ['always'],
       output: null,
       errors: [
         {
