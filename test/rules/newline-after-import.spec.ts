@@ -39,6 +39,10 @@ const REQUIRE_ERROR = createRequireError(1)
 ruleTester.run('newline-after-import', rule, {
   valid: [
     {
+      // the directive applies to the import line itself, so the rule is off
+      code: `import a from 'a' // eslint-disable-line\nfoo()`,
+    },
+    {
       code: `import a from 'a' // trailing\n\nfoo()`,
       options: [{ considerComments: true }],
     },
@@ -554,6 +558,12 @@ ruleTester.run('newline-after-import', rule, {
   ],
 
   invalid: [
+    {
+      // third-party line directives keep their target too
+      code: `import a from 'a' // prettier-ignore\nfoo()`,
+      output: `import a from 'a'\n // prettier-ignore\nfoo()`,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
     {
       code: `import a from 'a' // trailing\nfoo()`,
       output: `import a from 'a'\n // trailing\nfoo()`,

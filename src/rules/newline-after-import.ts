@@ -11,6 +11,11 @@ import {
 
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')
 
+// A directive that applies to its own line, so the blank line must come after
+// it rather than before it.
+const SAME_LINE_DIRECTIVE =
+  /^\s*[*/]*\s*(?:eslint-disable-line|stylelint-disable-line)(?:\s|$)/
+
 function containsNodeOrEqual(
   outerNode: TSESTree.Node,
   innerNode: TSESTree.Node,
@@ -206,7 +211,10 @@ export default createRule<[Options?], MessageId>({
     /** The line where the statement and its trailing comments end. */
     function getEndLine(node: TSESTree.Node) {
       const comments = getTrailingComments(context.sourceCode, node)
-      return comments.at(-1)?.loc.end.line ?? node.loc.end.line
+      const lastComment = comments.at(-1)
+      return lastComment && lastComment.loc.end.line > node.loc.end.line
+        ? lastComment.loc.end.line
+        : node.loc.end.line
     }
 
     /**
@@ -222,9 +230,14 @@ export default createRule<[Options?], MessageId>({
       return (fixer: TSESLint.RuleFixer) => {
         const comments = getTrailingComments(context.sourceCode, node)
         const lastComment = comments.at(-1)
+        const sameLineDirective = comments.some(comment =>
+          SAME_LINE_DIRECTIVE.test(comment.value),
+        )
         const target =
           lastComment &&
-          (afterComments || lastComment.loc.end.line > node.loc.end.line)
+          (afterComments ||
+            sameLineDirective ||
+            lastComment.loc.end.line > node.loc.end.line)
             ? lastComment
             : node
         return fixer.insertTextAfter(target, '\n'.repeat(count))
