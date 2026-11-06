@@ -3,7 +3,11 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import debug from 'debug'
 
-import { isStaticRequire, createRule } from '../utils/index.js'
+import {
+  isStaticRequire,
+  createRule,
+  getTrailingComments,
+} from '../utils/index.js'
 
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')
 
@@ -195,73 +199,27 @@ export default createRule<[Options?], MessageId>({
       }
     }
 
-    /**
-     * The comments that start on the statement's final line, including
-     * comments chained onto the line where a previous one ends.
-     */
-    function getTrailingComments(node: TSESTree.Node) {
-      const comments: TSESTree.Comment[] = []
-      let last: TSESTree.Node | TSESTree.Token = node
-      let next = context.sourceCode.getTokenAfter(node, {
-        includeComments: true,
-      })
-      while (
-        next &&
-        (next.type === 'Line' || next.type === 'Block') &&
-        next.loc.start.line === last.loc.end.line
-      ) {
-        comments.push(next)
-        last = next
-        next = context.sourceCode.getTokenAfter(next, { includeComments: true })
-      }
-      return comments
-    }
-
-    /** The last token on the statement's final line, or the statement itself. */
-    function getLastTokenOnEndLine(node: TSESTree.Node) {
-      return getTrailingComments(node).at(-1) ?? node
-    }
-
     /** The line where the statement and its trailing comments end. */
     function getEndLine(node: TSESTree.Node) {
-      return getLastTokenOnEndLine(node).loc.end.line
+      const comments = getTrailingComments(context.sourceCode, node)
+      return comments.at(-1)?.loc.end.line ?? node.loc.end.line
     }
 
     /**
-     * Whether any of the statement's trailing comments is a line-scoped
-     * directive, which the fix would retarget.
-     */
-    function hasLineScopedDirective(node: TSESTree.Node) {
-      return getTrailingComments(node).some(isLineScopedDirective)
-    }
-
-    /**
-     * Adds the missing blank lines after the statement's trailing comments,
-     * unless that would retarget a line-scoped directive.
+     * Adds the missing blank lines right after the statement, unless it has a
+     * trailing comment.
      */
     function getFixer(node: TSESTree.Node, count: number) {
       return (fixer: TSESLint.RuleFixer) => {
-        if (hasLineScopedDirective(node)) {
+        // A trailing comment may belong to this line (eslint-disable-line),
+        // the next line (prettier-ignore, ts-ignore) or be a third-party
+        // directive; moving it or inserting around it would retarget it, so
+        // the fix is withheld and the rule still reports.
+        if (getTrailingComments(context.sourceCode, node).length > 0) {
           return null
         }
-        return fixer.insertTextAfter(
-          getLastTokenOnEndLine(node),
-          '\n'.repeat(count),
-        )
+        return fixer.insertTextAfter(node, '\n'.repeat(count))
       }
-    }
-
-    // A trailing `eslint-disable-next-line` (or the TS equivalent) applies to
-    // the next line, so inserting the blank line before its target would move
-    // the directive away from the code it is meant to cover.
-    const LINE_SCOPED_DIRECTIVE =
-      /^\s*(?:eslint-disable-next-line|@ts-ignore|@ts-expect-error)(?:\s|$)/
-
-    function isLineScopedDirective(token: TSESTree.Node | TSESTree.Token) {
-      return (
-        (token.type === 'Line' || token.type === 'Block') &&
-        LINE_SCOPED_DIRECTIVE.test(token.value)
-      )
     }
 
     function incrementLevel() {

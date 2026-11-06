@@ -59,6 +59,71 @@ ruleTester.run('first', rule, {
               export { x };",
     }),
     tInvalid({
+      code: "'use client';\nconst a = 1;\nimport { y } from 'bar';",
+      errors: [{ messageId: 'order' }],
+      output: "'use client';\nimport { y } from 'bar';\nconst a = 1;",
+    }),
+    tInvalid({
+      // directive with no trailing newline: moved import must not glue to the next statement
+      code: "'use client';const a = 1;import { y } from 'bar'",
+      errors: [{ messageId: 'order' }],
+      output: "'use client';\nimport { y } from 'bar'\nconst a = 1;",
+    }),
+    tInvalid({
+      // directive without a semicolon, import on the same line as the statement before it
+      code: "'use client'\nfoo(); import { y } from 'bar'",
+      errors: [{ messageId: 'order' }],
+      output: "'use client'\nimport { y } from 'bar'\nfoo();",
+    }),
+    tInvalid({
+      // the directive line has a trailing comment, so the fix is withheld
+      code: "'use client'; // trailing comment\nfoo();\nimport { x } from 'foo'",
+      errors: [{ messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
+      // third-party line directives keep their target by withholding the fix
+      code: "'use client'; // prettier-ignore\nfoo();\nimport { x } from 'foo'",
+      errors: [{ messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
+      // a next-line directive on the directive's line keeps its target the same way
+      code: "'use client'; // @ts-ignore\nfoo();\nimport { x } from 'foo'",
+      errors: [{ messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
+      // a decorated next-line directive keeps its target too
+      code: "'use client'; /** @ts-ignore */\nfoo();\nimport { x } from 'foo'",
+      errors: [{ messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
+      // do not move an import out of its next-line suppression
+      code: "'use client';\nfoo();\n// @ts-ignore\nimport { y } from 'bar';",
+      errors: [{ messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
+      // a declined group leaves every report in it without a fix
+      code: "'use client';\nfoo();\nimport { a } from 'bar';\n// @ts-ignore\nimport { b } from 'baz';",
+      errors: [{ messageId: 'order' }, { messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
+      // a plain comment on a moved import also leaves the group unfixed
+      code: "'use client';\nfoo();\n// plain\nimport { y } from 'bar';",
+      errors: [{ messageId: 'order' }],
+      output: null,
+    }),
+    tInvalid({
+      code: "'use strict';\n'use client';\nfoo();\nimport { x } from './foo';\nimport { y } from 'bar';",
+      errors: [{ messageId: 'order' }, { messageId: 'order' }],
+      output:
+        "'use strict';\n'use client';\nimport { x } from './foo';\nimport { y } from 'bar';\nfoo();",
+    }),
+    tInvalid({
       code: "import { x } from './foo'; import { y } from 'bar'",
       options: ['absolute-first'],
       errors: [{ messageId: 'absolute' }],

@@ -39,6 +39,10 @@ const REQUIRE_ERROR = createRequireError(1)
 ruleTester.run('newline-after-import', rule, {
   valid: [
     {
+      // the directive applies to the import line itself, so the rule is off
+      code: `import a from 'a' // eslint-disable-line\nfoo()`,
+    },
+    {
       code: `import a from 'a' // trailing\n\nfoo()`,
       options: [{ considerComments: true }],
     },
@@ -555,45 +559,61 @@ ruleTester.run('newline-after-import', rule, {
 
   invalid: [
     {
+      // third-party line directives keep their target too
+      code: `import a from 'a' // prettier-ignore\nfoo()`,
+      output: null,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
       code: `import a from 'a' // trailing\nfoo()`,
-      output: `import a from 'a' // trailing\n\nfoo()`,
+      output: null,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import a from 'a' /** @ts-ignore */\nfoo()`,
+      output: null,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import a from 'a' /// @ts-ignore\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' /* one */ /* two */\nfoo()`,
-      output: `import a from 'a' /* one */ /* two */\n\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' // trailing\n// next\nfoo()`,
-      output: `import a from 'a' // trailing\n\n// next\nfoo()`,
+      output: null,
       options: [{ considerComments: true }],
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `const a = require('a') // trailing\nfoo()`,
-      output: `const a = require('a') // trailing\n\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
       code: `import 'a'; /*\n*/ foo()`,
-      output: `import 'a'; /*\n*/\n\n foo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import 'a'; /*\n*/\nfoo()`,
-      output: `import 'a'; /*\n*/\n\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import 'a'; /*\n*/\nfoo()`,
-      output: `import 'a'; /*\n*/\n\nfoo()`,
+      output: null,
       options: [{ considerComments: true }],
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `const a = require('a'); /*\n*/ foo()`,
-      output: `const a = require('a'); /*\n*/\n\n foo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
@@ -1185,7 +1205,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `import foo from 'foo';// some random comment\nexport default function() {};`,
-      output: `import foo from 'foo';// some random comment\n\nexport default function() {};`,
+      output: null,
       options: [{ count: 1, exactCount: true, considerComments: true }],
       errors: [
         {
