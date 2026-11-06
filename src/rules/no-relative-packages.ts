@@ -26,7 +26,7 @@ function findNamedPackage(filePath: string) {
   return found
 }
 
-type MessageId = 'noAllowed'
+type MessageId = 'noAllowed' | 'noAllowedNoFix'
 
 const dtsRe = /\.d\.[cm]?ts$/
 
@@ -90,7 +90,7 @@ function checkImportForRelativePackage(
       isSamePackage || resolve(properImport, context) === resolvedImport
     context.report({
       node,
-      messageId: 'noAllowed',
+      messageId: canFix ? 'noAllowed' : 'noAllowedNoFix',
       data: {
         properImport,
         importPath,
@@ -116,6 +116,8 @@ export default createRule<[ModuleOptions?], MessageId>({
     messages: {
       noAllowed:
         'Relative import from another package is not allowed. Use `{{properImport}}` instead of `{{importPath}}`',
+      noAllowedNoFix:
+        'Relative import from another package is not allowed. No safe package import could be determined for "{{importPath}}".',
     },
   },
   defaultOptions: [],

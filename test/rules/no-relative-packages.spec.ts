@@ -347,10 +347,8 @@ ruleTester.run('no-relative-packages', rule, {
             settings: { 'import-x/resolver-next': tsSymlinkResolvers },
             errors: [
               {
-                ...createNotFoundError(
-                  './linked-ts-conflict.js',
-                  path.normalize('mixed-shared/lib/util.js'),
-                ),
+                messageId: 'noAllowedNoFix',
+                data: { importPath: './linked-ts-conflict.js' },
                 line: 1,
                 column: 18,
               },
