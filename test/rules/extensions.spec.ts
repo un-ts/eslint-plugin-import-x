@@ -139,11 +139,18 @@ ruleTester.run('extensions', rule, {
     }),
 
     // an exports map that points a subpath at dist/index.js must not be
-    // rewritten to <subpath>/index.js
-    tValid({
+    // rewritten to <subpath>/index.js; reported, but without a fix
+    tInvalid({
       code: 'import { exported } from "exports-index/sub"',
       options: ['always', { ignorePackages: false }],
       filename: testFilePath('./bar.js'),
+      output: null,
+      errors: [
+        {
+          messageId: 'missingKnown',
+          data: { extension: '.js', importPath: 'exports-index/sub' },
+        },
+      ],
     }),
 
     tValid({

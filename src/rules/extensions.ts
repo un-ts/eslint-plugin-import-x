@@ -522,10 +522,14 @@ export default createRule<Options, MessageId>({
           ) {
             // `foo` resolving to `foo/index.js` is a directory import, while
             // `foo.js` wins over `foo/index.js` when both exist
+            const isDirectoryImport =
+              !!resolvedPath &&
+              path.basename(resolvedPath, `.${extension}`) === 'index' &&
+              path.basename(importPath) !== 'index' &&
+              resolve(`${importPath}/index.${extension}`, context) ===
+                resolvedPath
             const fixedPathname =
-              /([\\/]|[\\/]?\.?\.)$/.test(importPath) ||
-              (!!resolvedPath &&
-                path.basename(resolvedPath, `.${extension}`) === 'index')
+              /([\\/]|[\\/]?\.?\.)$/.test(importPath) || isDirectoryImport
                 ? `${
                     importPath.endsWith('/')
                       ? importPath.slice(0, -1)
@@ -535,9 +539,12 @@ export default createRule<Options, MessageId>({
             // An exports map can point `pkg/sub` at `dist/index.js`, and the
             // appended `.js` may not be exported at all; only a path that
             // resolves back to the original file may be offered as a fix
+            // Only the directory-index rewrite and the exports subpath need
+            // the round-trip check; resolvers that cannot re-resolve a
+            // rewritten specifier would otherwise lose valid .ts fixes
             const fixedImportPath =
               extension &&
-              (!resolvedPath ||
+              (!isDirectoryImport ||
                 resolve(fixedPathname, context) === resolvedPath)
                 ? stringifyPath({ pathname: fixedPathname, query, hash })
                 : ''
