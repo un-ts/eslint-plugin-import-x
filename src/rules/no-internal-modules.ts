@@ -1,4 +1,4 @@
-import { makeRe } from 'minimatch'
+import { Minimatch } from 'minimatch'
 
 import {
   importType,
@@ -23,6 +23,32 @@ function toSteps(somePath: string) {
       }
       return [...acc, step]
     }, [])
+}
+
+// `Minimatch#match` doesn't let a trailing `/**` match the directory itself,
+// as `lodash/**` should match `lodash`, so each brace alternative ending in
+// `/**` also matches its directory. A negated pattern matches neither.
+function toMatcher(pattern: string) {
+  const mm = new Minimatch(pattern)
+  const dirs: Minimatch[] = []
+  for (const glob of mm.globSet) {
+    const dir = glob.replace(/(\/\*\*)+$/, '')
+    if (dir !== glob) {
+      dirs.push(new Minimatch(dir, { nocomment: true, nonegate: true }))
+    }
+  }
+  const inDir = (path: string) => dirs.some(dir => dir.match(path))
+  return mm.negate
+    ? // The empty path is what `.`, `./` and `..` normalize to; `makeRe` never
+      // matched it, so a negated pattern must not either.
+      (path: string) => path !== '' && mm.match(path) && !inDir(path)
+    : (path: string) => mm.match(path) || inDir(path)
+}
+
+// `new Minimatch('')` matches the empty path that `.`, `./` and `..`
+// normalize to, so drop empty patterns.
+function toMatchers(patterns: string[] = []) {
+  return patterns.filter(Boolean).map(toMatcher)
 }
 
 const potentialViolationTypes = new Set([
@@ -85,21 +111,17 @@ export default createRule<[Options?], MessageId>({
   defaultOptions: [],
   create(context) {
     const options = context.options[0] || {}
-    const allowRegexps = (options.allow || [])
-      .map(p => makeRe(p))
-      .filter(Boolean)
-    const forbidRegexps = (options.forbid || [])
-      .map(p => makeRe(p))
-      .filter(Boolean)
+    const allowMatchers = toMatchers(options.allow)
+    const forbidMatchers = toMatchers(options.forbid)
 
     // test if reaching to this destination is allowed
     function reachingAllowed(importPath: string) {
-      return allowRegexps.some(re => re.test(importPath))
+      return allowMatchers.some(match => match(importPath))
     }
 
     // test if reaching to this destination is forbidden
     function reachingForbidden(importPath: string) {
-      return forbidRegexps.some(re => re.test(importPath))
+      return forbidMatchers.some(match => match(importPath))
     }
 
     function isAllowViolation(importPath: string) {

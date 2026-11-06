@@ -52,6 +52,16 @@ ruleTester.run('no-internal-modules', rule, {
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
     }),
     tValid({
+      // A negated brace alternative must not match the empty path `..` normalizes to
+      code: 'import a from ".."',
+      filename: testFilePath('./internal-modules/plugins/plugin.js'),
+      options: [
+        {
+          forbid: ['!/{,foo}'],
+        },
+      ],
+    }),
+    tValid({
       code: 'import b from "../../api/service"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
@@ -95,6 +105,26 @@ ruleTester.run('no-internal-modules', rule, {
           forbid: ['**/api/*'],
         },
       ],
+    }),
+    tValid({
+      // An empty pattern forbids nothing, though `..` normalizes to an empty path
+      code: 'import a from ".."',
+      filename: testFilePath('./internal-modules/plugins/plugin.js'),
+      options: [
+        {
+          forbid: [''],
+        },
+      ],
+    }),
+    tValid({
+      code: 'import b from "../../api/service"',
+      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
+      options: [{ allow: ['api/service/**'] }],
+    }),
+    tValid({
+      code: 'import b from "@org/package/internal"',
+      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
+      options: [{ forbid: ['!**/package/**'] }],
     }),
     tValid({
       code: 'import b from "@org/package"',
@@ -282,6 +312,30 @@ ruleTester.run('no-internal-modules', rule, {
       code: 'import b from "@org/package"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [{ forbid: ['@org/**'] }],
+      errors: [
+        {
+          ...createNotAllowedError('@org/package'),
+          line: 1,
+          column: 15,
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'import b from "@org/package"',
+      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
+      options: [{ forbid: ['@org/package/**'] }],
+      errors: [
+        {
+          ...createNotAllowedError('@org/package'),
+          line: 1,
+          column: 15,
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'import b from "@org/package"',
+      filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
+      options: [{ forbid: ['@org/{package/**,other}'] }],
       errors: [
         {
           ...createNotAllowedError('@org/package'),
