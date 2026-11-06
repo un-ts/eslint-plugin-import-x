@@ -148,7 +148,7 @@ ruleTester.run('extensions', rule, {
       errors: [
         {
           messageId: 'missingKnown',
-          data: { extension: '.js', importPath: 'exports-index/sub' },
+          data: { extension: 'js', importPath: 'exports-index/sub' },
         },
       ],
     }),
