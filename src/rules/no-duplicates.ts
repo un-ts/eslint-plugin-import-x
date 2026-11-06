@@ -699,6 +699,19 @@ export default createRule<[Options?], MessageId>({
       return Infinity
     }
 
+    // fix into the specifier the whitelist names, not an unlisted one
+    const listedFirst = (
+      nodes: TSESTree.ImportDeclaration[],
+      specifier: string,
+    ) =>
+      getWhitelistRank(specifier) === Infinity
+        ? nodes
+        : [...nodes].sort(
+            (a, b) =>
+              Number(a.source.value !== specifier) -
+              Number(b.source.value !== specifier),
+          )
+
     /**
      * Splits imports that resolve to the same path into the modules the
      * whitelist keeps apart. The specifiers are placed in whitelist order, each
@@ -735,31 +748,16 @@ export default createRule<[Options?], MessageId>({
           }
         }
         if (modules.length === 1) {
-          // fix into the specifier the whitelist names, not an unlisted one
-          const [target] = modules[0]
-          result.set(
-            resolvedPath,
-            getWhitelistRank(target) === Infinity
-              ? nodes
-              : [...nodes].sort(
-                  (a, b) =>
-                    Number(a.source.value !== target) -
-                    Number(b.source.value !== target),
-                ),
-          )
+          result.set(resolvedPath, listedFirst(nodes, modules[0][0]))
           continue
         }
         for (const members of modules) {
-          // fix into the specifier the whitelist names, not an unlisted one
           result.set(
             members[0],
-            nodes
-              .filter(node => members.includes(node.source.value))
-              .sort(
-                (a, b) =>
-                  Number(a.source.value !== members[0]) -
-                  Number(b.source.value !== members[0]),
-              ),
+            listedFirst(
+              nodes.filter(node => members.includes(node.source.value)),
+              members[0],
+            ),
           )
         }
       }
