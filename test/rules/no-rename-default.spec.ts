@@ -1174,6 +1174,10 @@ ruleTester.run('no-rename-default', rule, {
       options: [{ whitelist: ['./no-rename-default/index-declaration'] }],
     }),
     tValid({
+      code: `import { default as anchor } from './no-rename-default/default-declaration'`,
+      options: [{ whitelist: ['./no-rename-default/default-declaration'] }],
+    }),
+    tValid({
       code: `const anchor = require('./no-rename-default/default-declaration')`,
       options: [
         {
@@ -1186,6 +1190,23 @@ ruleTester.run('no-rename-default', rule, {
   invalid: [
     tInvalid({
       code: `import anchor from './no-rename-default/default-declaration'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'default-declaration.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'anchor',
+            suggestion:
+              "import _default from './no-rename-default/default-declaration'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import anchor from './no-rename-default/default-declaration'`,
+      options: [{ whitelist: ['./no-rename-default'] }],
       errors: [
         createRenameDefaultError(
           {
