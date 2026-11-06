@@ -38,7 +38,8 @@ function getImportText(
     if (importedName === s.local.name) {
       return importedName
     }
-    return `${importedName} as ${s.local.name}`
+    // keep the quotes of a string name, e.g. `"a-b" as AB`
+    return `${sourceCode.getText(s.imported)} as ${s.local.name}`
   })
   // insert a fresh top-level import
   return `import ${kind} {${names.join(', ')}} from ${sourceString};`
