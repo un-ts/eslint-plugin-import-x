@@ -78,20 +78,29 @@ function checkImportForRelativePackage(
           ? dir
           : path.join(dir, moduleName)
     }
-    const properImport = path.join(importPkg.pkg.name, importSuffix)
-    const normalizedProperImport = toPosixPath(properImport)
-    let resolvedProperImport: string | null | undefined
-    try {
-      resolvedProperImport = relative(
-        normalizedProperImport,
-        resolvedContext,
-        context.settings,
-        context,
-      )
-    } catch {
-      resolvedProperImport = undefined
+    const resolvesToImport = (candidate: string) => {
+      try {
+        return (
+          relative(
+            toPosixPath(candidate),
+            resolvedContext,
+            context.settings,
+            context,
+          ) === resolvedImport
+        )
+      } catch {
+        return false
+      }
     }
-    const canFix = resolvedProperImport === resolvedImport
+    const packageRootImport = importPkg.pkg.name
+    const packageRootResolves = resolvesToImport(packageRootImport)
+    const resolvedPackageImport = path.join(importPkg.pkg.name, importSuffix)
+    const canFix =
+      packageRootResolves || resolvesToImport(resolvedPackageImport)
+    const properImport = packageRootResolves
+      ? packageRootImport
+      : resolvedPackageImport
+    const normalizedProperImport = toPosixPath(properImport)
     context.report({
       node,
       messageId: canFix ? 'noAllowed' : 'noAllowedNoFix',

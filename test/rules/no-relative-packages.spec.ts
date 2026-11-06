@@ -250,6 +250,18 @@ ruleTester.run('no-relative-packages', rule, {
       output: 'import foo from "package-named/sub"',
     }),
     tInvalid({
+      code: 'import nested from "../node_modules/nested-main"',
+      filename: testFilePath('./package/index.js'),
+      errors: [
+        {
+          ...createNotFoundError('../node_modules/nested-main', 'nested-main'),
+          line: 1,
+          column: 20,
+        },
+      ],
+      output: 'import nested from "nested-main"',
+    }),
+    tInvalid({
       code: 'import foo from "../package-scoped"',
       filename: testFilePath('./package/index.js'),
       settings: fixtureResolverSettings,
