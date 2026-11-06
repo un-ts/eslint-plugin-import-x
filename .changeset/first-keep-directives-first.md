@@ -2,4 +2,4 @@
 "eslint-plugin-import-x": patch
 ---
 
-fix(first): keep directives such as `'use client'` above the imports the fixer moves up, and withhold the autofix for the whole group when a moved import has comments. The moved imports are inserted right after the directive, before any trailing comment, so any line-scoped directive (including third-party ones such as `prettier-ignore`) keeps its target.
+fix: keep trailing comments and line-scoped directives with their targets. `first` inserts moved imports right after the directive/statement, before any trailing comment, and withholds the autofix for the whole group when a moved import has comments. `newline-after-import` inserts the blank before a single-line trailing comment (or after a multi-line one), so third-party directives such as `prettier-ignore` keep their target. Both rules share the `getTrailingComments` util.
