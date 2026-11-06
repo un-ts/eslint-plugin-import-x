@@ -1179,7 +1179,13 @@ ruleTester.run('no-rename-default', rule, {
       code: `import xyz from 'package/xyz'`,
     }),
     tValid({
-      code: `import index from '@org/abc/index'`,
+      code: `import abc from '@org/abc/index'`,
+    }),
+    tValid({
+      code: `import abc from '@org/abc/index.js'`,
+    }),
+    tValid({
+      code: `import xyz from 'package/xyz/index'`,
     }),
     tValid({
       code: `import somePackage from 'somepackage'`,
@@ -1236,15 +1242,45 @@ ruleTester.run('no-rename-default', rule, {
       ],
     }),
     tInvalid({
-      code: `import abc from '@org/abc/index'`,
+      code: `import index from '@org/abc/index'`,
       errors: [
         createRenameDefaultError(
           {
             importBasename: 'index.js',
             defaultExportName: '_default',
             requiresOrImports: 'imports',
-            importName: 'abc',
+            importName: 'index',
             suggestion: "import _default from '@org/abc/index'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import index from '@org/abc/index.js'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'index',
+            suggestion: "import _default from '@org/abc/index.js'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import index from 'package/xyz/index'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'index',
+            suggestion: "import _default from 'package/xyz/index'",
           },
           'ImportDefaultSpecifier',
         ),

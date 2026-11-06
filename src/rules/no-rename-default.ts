@@ -34,15 +34,37 @@ function toIdentifierTokens(name: string) {
  * @param sourcePath - The module specifier as written.
  * @returns The package name or final path segment, if the specifier is bare.
  */
+/**
+ * Removes a module file extension from a subpath segment.
+ *
+ * @param name - The subpath segment.
+ * @returns The segment without its extension.
+ */
+function stripModuleSuffix(name: string) {
+  return name.replace(/\.d\.[cm]?ts$/, '').replace(/\.[^./]+$/, '')
+}
+
 function getModuleName(sourcePath: string) {
   const [specifier] = sourcePath.split(/[?#]/)
   if (!specifier || specifier.startsWith('.') || path.isAbsolute(specifier)) {
     return
   }
   const parts = specifier.split('/')
-  return specifier.startsWith('@') && parts.length === 2
-    ? parts[1]
-    : parts.at(-1)
+  const isScoped = specifier.startsWith('@')
+  const packageParts = isScoped ? 2 : 1
+  const packageName = parts[isScoped ? 1 : 0]
+  if (!packageName) {
+    return
+  }
+  const subpath = parts.slice(packageParts)
+  if (subpath.length === 0) {
+    return packageName
+  }
+  let name = stripModuleSuffix(subpath.at(-1)!)
+  if (name === 'index' && subpath.length > 1) {
+    name = stripModuleSuffix(subpath.at(-2)!)
+  }
+  return !name || name === 'index' ? packageName : name
 }
 
 /**

@@ -45,6 +45,8 @@ import somePackage from 'somepackage'
 
 All of the above are valid. Names that concatenate the words without boundaries, such as `markdownitanchor`, or regroup them, such as `mark_down__it__anchor`, are still reported. The single-word package case is different: `somepackage` may be written as `somePackage`.
 
+When a subpath ends with `index` or a file extension, that entry segment is ignored: `@org/abc/index.js` uses `abc`, and `package/xyz/index` uses `xyz`.
+
 ## Options
 
 ### `whitelist`
