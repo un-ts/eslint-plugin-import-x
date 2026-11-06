@@ -1205,7 +1205,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `import foo from 'foo';// some random comment\nexport default function() {};`,
-      output: `import foo from 'foo';// some random comment\n\nexport default function() {};`,
+      output: null,
       options: [{ count: 1, exactCount: true, considerComments: true }],
       errors: [
         {

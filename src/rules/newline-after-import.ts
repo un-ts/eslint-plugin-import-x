@@ -206,9 +206,8 @@ export default createRule<[Options?], MessageId>({
     }
 
     /**
-     * Adds the missing blank lines right after the statement for a single-line
-     * trailing comment (so a line-scoped directive moves below the blank and
-     * keeps its target), or after a multi-line trailing comment.
+     * Adds the missing blank lines right after the statement, unless it has a
+     * trailing comment.
      */
     function getFixer(node: TSESTree.Node, count: number) {
       return (fixer: TSESLint.RuleFixer) => {

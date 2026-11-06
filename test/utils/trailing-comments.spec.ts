@@ -5,7 +5,8 @@ import { getTrailingComments } from 'eslint-plugin-import-x/utils'
 
 const collect = (code: string) => {
   let result: string[] = []
-  const linter = new Linter()
+  // ESLint 8 defaults to eslintrc mode, which ignores the flat config below
+  const linter = new Linter({ configType: 'flat' })
   linter.verify(
     code,
     [
