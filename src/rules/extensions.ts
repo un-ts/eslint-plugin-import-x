@@ -520,20 +520,20 @@ export default createRule<Options, MessageId>({
               extensionForbidden,
             )
           ) {
-            // `foo` resolving to `foo/index.js` is a directory import, while
-            // `foo.js` wins over `foo/index.js` when both exist
-            const isDirectoryImport =
-              !!resolvedPath &&
-              path.basename(resolvedPath, `.${extension}`) === 'index' &&
-              path.basename(importPath) !== 'index' &&
-              // An exports map can point `pkg/sub` at `dist/index.js`; only a
-              // path that resolves back to the same file is a directory import
-              resolve(`${importPath}/index.${extension}`, context) ===
-                resolvedPath
             const fixedImportPath = extension
               ? stringifyPath({
                   pathname:
-                    /([\\/]|[\\/]?\.?\.)$/.test(importPath) || isDirectoryImport
+                    // `foo` resolving to `foo/index.js` is a directory import,
+                    // while `foo.js` wins over `foo/index.js` when both exist
+                    /([\\/]|[\\/]?\.?\.)$/.test(importPath) ||
+                    (!!resolvedPath &&
+                      path.basename(resolvedPath, `.${extension}`) ===
+                        'index' &&
+                      path.basename(importPath) !== 'index' &&
+                      // An exports map can point `pkg/sub` at `dist/index.js`;
+                      // only a path that resolves back is a directory import
+                      resolve(`${importPath}/index.${extension}`, context) ===
+                        resolvedPath)
                       ? `${
                           importPath.endsWith('/')
                             ? importPath.slice(0, -1)
