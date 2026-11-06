@@ -72,8 +72,9 @@ function checkImportForRelativePackage(
       resolvedImport,
     )
     const { dir, name } = path.parse(resolvedSuffix)
-    const importSuffix = path.extname(importPath)
-      ? resolvedSuffix
+    const importExtension = path.extname(importPath)
+    const importSuffix = importExtension
+      ? path.format({ dir, name, ext: importExtension })
       : path.join(dir, name)
     const properImport =
       isSamePackage && targetPkgRoot

@@ -42,6 +42,7 @@ for (const [file, content] of [
   ['repo/packages/foo/src/deep/index.js', ''],
   ['store/shared/package.json', '{ "name": "shared" }'],
   ['store/shared/lib/util.js', ''],
+  ['store/shared/lib/util.ts', ''],
   ['store/bootstrap/package.json', '{ "name": "bootstrap" }'],
   ['store/bootstrap/dist/css/bootstrap.css', ''],
   ['store/same-name/package.json', '{ "name": "same-name" }'],
@@ -74,6 +75,11 @@ try {
   fs.symlinkSync(
     symlinkFixture('store/shared/lib/util.js'),
     symlinkFixture('repo/packages/foo/linked.js'),
+    'file',
+  )
+  fs.symlinkSync(
+    symlinkFixture('store/shared/lib/util.ts'),
+    symlinkFixture('repo/packages/foo/linked-ts.js'),
     'file',
   )
   fs.symlinkSync(
@@ -264,6 +270,22 @@ ruleTester.run('no-relative-packages', rule, {
               {
                 ...createNotFoundError(
                   './linked.js',
+                  path.normalize('shared/lib/util.js'),
+                ),
+                line: 1,
+                column: 18,
+              },
+            ],
+            output: 'import util from "shared/lib/util.js"',
+          }),
+          tInvalid({
+            code: 'import util from "./linked-ts.js"',
+            filename: symlinkFixture('repo/packages/foo/index.js'),
+            settings: { 'import-x/resolver-next': [createNodeResolver()] },
+            errors: [
+              {
+                ...createNotFoundError(
+                  './linked-ts.js',
                   path.normalize('shared/lib/util.js'),
                 ),
                 line: 1,
