@@ -1173,6 +1173,9 @@ ruleTester.run('no-rename-default', rule, {
       code: `import markdown_it_anchor from 'markdown-it-anchor'`,
     }),
     tValid({
+      code: `import { default as markdownItAnchor } from 'markdown-it-anchor'`,
+    }),
+    tValid({
       code: `import abc from '@org/abc'`,
     }),
     tValid({
