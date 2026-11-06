@@ -1,5 +1,206 @@
 # eslint-plugin-import-x
 
+## 4.18.0
+
+### Minor Changes
+
+- [#520](https://github.com/un-ts/eslint-plugin-import-x/pull/520) [`802441c`](https://github.com/un-ts/eslint-plugin-import-x/commit/802441c40eb4b630850011390dcc0236e73b1e0d) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - Add a `checkSelfReference` option to the `extensions` rule. When set, a package's import of its own subpath export (e.g. `pkg/sub` from inside `pkg`) is treated as a package import, so `ignorePackages` applies to it.
+
+- [#403](https://github.com/un-ts/eslint-plugin-import-x/pull/403) [`f4d0a4b`](https://github.com/un-ts/eslint-plugin-import-x/commit/f4d0a4b5927d7386a9a889c9581499d5e9ae7417) Thanks [@Zamiell](https://github.com/Zamiell)! - `extensions`: when an import has no extension and cannot be resolved as-is, try the extensions configured as `always` in `pattern` and use the unique one that resolves for the fix or suggestion. If several resolve, report the missing extension without guessing. When no extension can be determined automatically, explain that in the `missing` message instead of only reporting a bare missing extension.
+
+- [#572](https://github.com/un-ts/eslint-plugin-import-x/pull/572) [`fc17206`](https://github.com/un-ts/eslint-plugin-import-x/commit/fc17206adca43658dae08f127e54ea8f5d201623) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - feat(no-duplicates): add a `whitelist` option listing entry points that share one declaration file but are different modules, such as `svelte` and `svelte/easing`
+
+- [#504](https://github.com/un-ts/eslint-plugin-import-x/pull/504) [`f10dcc4`](https://github.com/un-ts/eslint-plugin-import-x/commit/f10dcc4a8250d432b47453cabe1f28af60a4c298) Thanks [@morgan-coded](https://github.com/morgan-coded)! - Add a `"top"` mode to the `order` rule's `warnOnUnassignedImports` option for requiring no-specifier ESM imports before assigned imports.
+
+- [#502](https://github.com/un-ts/eslint-plugin-import-x/pull/502) [`9c85ced`](https://github.com/un-ts/eslint-plugin-import-x/commit/9c85ced6cb65536a598e3ae4228f4e5b5eb867bf) Thanks [@SukkaW](https://github.com/SukkaW)! - Rewrite the module analysis core for performance boosts. The speedup depends on your project, and we expect no performance regression in any setup — if you measure one, please report it.
+
+  Rules like `named`, `default`, `namespace`, `no-cycle`, `no-deprecated`, and many more, need to know what the modules you import actually export. Until now, answering that meant running the full ESLint parser over every one of those files — including everything you pull in from `node_modules`.
+
+  That core has been rewritten:
+  - Plain JavaScript is now read with [`es-module-lexer`](https://github.com/guybedford/es-module-lexer) instead of being parsed. Anything it can't read faithfully — TypeScript, JSX, Flow — still goes through the ESLint parser exactly as before.
+  - Analysis is lazy. Much of the work now happens when a rule actually asks for it, so enabling one rule no longer pays for what the others would have needed.
+  - Results are cached and shared between rules.
+
+  **There are no breaking changes: no configuration changes are needed, and no behavior changes are intended.** Every rule should report exactly what it reported before, with one known exception: an imported plain JavaScript file that has a syntax error no longer gets a "Parse errors in imported module" report. ESLint still reports the syntax error when it lints that file itself. The full test suite passes, but there could be some edge cases. If a rule starts reporting something it didn't before, or stops reporting something it should, please open an issue with a minimum reproduction — bug reports on this are very welcome.
+
+- [#456](https://github.com/un-ts/eslint-plugin-import-x/pull/456) [`7b78aae`](https://github.com/un-ts/eslint-plugin-import-x/commit/7b78aae85bf85b7bc793a9254166c6cc73fd2e27) Thanks [@43081j](https://github.com/43081j)! - Add four barrel file detection rules ported from `eslint-plugin-barrel-files`: `avoid-barrel-files`, `avoid-importing-barrel-files`, `avoid-namespace-import` and `avoid-re-export-all`.
+
+  `avoid-importing-barrel-files` checks every runtime way a module can be referenced — static imports, re-exports (`export … from`, `export * from`, `export * as ns from`), dynamic `import()` and CommonJS `require()` — with type-only statements exempt.
+
+- [#157](https://github.com/un-ts/eslint-plugin-import-x/pull/157) [`89cfe42`](https://github.com/un-ts/eslint-plugin-import-x/commit/89cfe424d1cb37c4ada195ddbebe90260b7108cf) Thanks [@Zamiell](https://github.com/Zamiell)! - feat(no-rename-default): accept names derived from bare package paths and add a `whitelist` option for modules that mangle their default export names
+
+### Patch Changes
+
+- [#562](https://github.com/un-ts/eslint-plugin-import-x/pull/562) [`7cbe683`](https://github.com/un-ts/eslint-plugin-import-x/commit/7cbe683d228ed2baf88fe6307e2544f17d00af7d) Thanks [@JounQin](https://github.com/JounQin)! - perf(avoid-importing-barrel-files): skip the surface parse for a dependency that cannot be a barrel
+
+  The rule sizes the runtime module graph behind every imported target, and a
+  target only becomes a candidate once its export count passes
+  `amountOfExportsToConsiderModuleAsBarrel`. A lexer-analyzed module already
+  reports its export entries, so a count at or below the threshold settles the
+  question without producing the exact export/declaration surface — one parse
+  saved per small plain-JS dependency.
+
+  Anything es-module-lexer does not read faithfully still goes through the parser,
+  and a module whose source declares a default export is never ruled out: the
+  properties of `export default { … }` are exports no entry count can see (a
+  `default` that `esModuleInterop` synthesizes does not count).
+
+  A declarator that binds no name — `export const {} = obj`, `export const
+{ a: {} } = obj` — is no longer counted as an export by the barrel surface: it
+  exports nothing, and counting it made the surface disagree with the lexer's
+  entry count.
+
+- [#568](https://github.com/un-ts/eslint-plugin-import-x/pull/568) [`225a5aa`](https://github.com/un-ts/eslint-plugin-import-x/commit/225a5aae4ef876e0cdd8c9b966178714efd2dc8e) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - Fix `no-extraneous-dependencies` telling you to add a package that is already in `devDependencies` or `optionalDependencies` when its import resolves through `@types/*`
+
+- [#579](https://github.com/un-ts/eslint-plugin-import-x/pull/579) [`db16385`](https://github.com/un-ts/eslint-plugin-import-x/commit/db16385a7f234186148a4fbaa515b63c79faee9b) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(core): keep the size of `settings` out of module and resolver cache keys
+
+  Every key held the full `stableHash` text of `settings`, `parserOptions` and the parser. One large value in shared `settings`, like a custom alphabet from `eslint-plugin-perfectionist`, was copied into each key on every resolve, so `no-cycle` and any other rule that resolves imports could run out of memory. Keys now hold a short id per distinct hash.
+
+- [#309](https://github.com/un-ts/eslint-plugin-import-x/pull/309) [`4b9ea02`](https://github.com/un-ts/eslint-plugin-import-x/commit/4b9ea02026781c4f1afd40859fb30a43722b4258) Thanks [@remcohaszing](https://github.com/remcohaszing)! - Allow packages to import themselves in `import-x/no-extraneous-dependencies` when the `exports` field is defined in `package.json`; importing a package's own name without `exports` is reported by the new `selfImport` message.
+
+- [#565](https://github.com/un-ts/eslint-plugin-import-x/pull/565) [`3d0f5a9`](https://github.com/un-ts/eslint-plugin-import-x/commit/3d0f5a91583483a5c83e085b96420dda6c2d961e) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(namespace, no-deprecated): don't report members of a parameter that shadows a namespace import when the namespace is also used in the same scope, e.g. in a type annotation
+
+- [#539](https://github.com/un-ts/eslint-plugin-import-x/pull/539) [`bb7b18b`](https://github.com/un-ts/eslint-plugin-import-x/commit/bb7b18b7885233699430f207cbcdd86bae7cdb87) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - chore(deps): upgrade `es-module-lexer` from v2 to v3. The v3 API is a complete redesign using discriminated union types (`StaticImport | DynamicImport | ImportMetaRef` for imports, `DirectExport | Reexport | ReexportAll` for exports) replacing numeric `d` fields and short property names. The lexer route now resolves `export { x }` where `x` comes from a non-namespace import as a reexport rather than an own export, which is more semantically accurate.
+
+- [#566](https://github.com/un-ts/eslint-plugin-import-x/pull/566) [`4c66c87`](https://github.com/un-ts/eslint-plugin-import-x/commit/4c66c87332858df44ce9668b6666213e4e8acff0) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(export): don't report a namespace that only declares types as a duplicate of a value with the same name
+
+- [#536](https://github.com/un-ts/eslint-plugin-import-x/pull/536) [`db674b5`](https://github.com/un-ts/eslint-plugin-import-x/commit/db674b5aed81ec8aad7d59d9dc895df7fc92eaa1) Thanks [@SukkaW](https://github.com/SukkaW)! - fix(export): check types and values separately
+
+  `export type * from` only re-exports types, so it no longer conflicts with a value export of the same name, and a type reached through `export *` no longer conflicts with a value. Duplicate types among re-exports are now reported, as are a type-only export and a value export of the same name, and ambient function overloads that clash with another export. String-literal export names such as `"type:Foo"` are no longer mistaken for type exports. Fixes [#414](https://github.com/un-ts/eslint-plugin-import-x/issues/414).
+
+- [#594](https://github.com/un-ts/eslint-plugin-import-x/pull/594) [`0c82c7e`](https://github.com/un-ts/eslint-plugin-import-x/commit/0c82c7e0f8bb8c5a5212fe2339539fe372ebecdd) Thanks [@i1stG](https://github.com/i1stG)! - fix(extensions): resolve directory imports to their index file in autofixes and suggestions, and only offer rewrites of resolved imports that point back to the same file.
+
+- [#571](https://github.com/un-ts/eslint-plugin-import-x/pull/571) [`2bc321d`](https://github.com/un-ts/eslint-plugin-import-x/commit/2bc321dd56eb886857201689bab35b62006cdacd) Thanks [@TonyTech404](https://github.com/TonyTech404)! - Fix the `extensions` rule treating an extension alias as a missing extension. An import such as `./foo.js` that the resolver maps to `foo.ts` now keeps its own extension instead of being reported as missing `ts` and autofixed to `./foo.js.ts`. The `pattern` extension inference also recognizes an extension alias, so an extensionless `./foo` that resolves that way is fixed to `./foo.js`. The inference only accepts a candidate that resolves to the same file, and an ambiguous result is reported without a fix. Type-only imports and exports (including inline `type` specifiers) are ignored before the extension branches, so an aliased `.js` specifier is preserved when `checkTypeImports` is off.
+
+- [#512](https://github.com/un-ts/eslint-plugin-import-x/pull/512) [`42dba04`](https://github.com/un-ts/eslint-plugin-import-x/commit/42dba0465ff440f1d1660608af322c390d0dcc0b) Thanks [@LeulTew](https://github.com/LeulTew)! - fix(extensions): honor `pathGroupOverrides` when no `pattern`, `ignorePackages`, or `checkTypeImports` option is provided.
+
+- [#575](https://github.com/un-ts/eslint-plugin-import-x/pull/575) [`27112d6`](https://github.com/un-ts/eslint-plugin-import-x/commit/27112d671a78f1c6adfc6cd919bd06a9998993bc) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix: keep trailing comments and line-scoped directives with their targets. `first` inserts moved imports right after the directive/statement, before any trailing comment, and withholds the autofix for the whole group when a moved import has comments. `newline-after-import` inserts the blank before a single-line trailing comment (or after a multi-line one), so third-party directives such as `prettier-ignore` keep their target. Both rules share the `getTrailingComments` util.
+
+- [#555](https://github.com/un-ts/eslint-plugin-import-x/pull/555) [`27876f2`](https://github.com/un-ts/eslint-plugin-import-x/commit/27876f2496556882be69245f3d85e5ea6c2f9a25) Thanks [@JounQin](https://github.com/JounQin)! - perf(core): memoize `getExportKind` per module and name
+
+  Rules ask for an export kind once per imported specifier and once per
+  namespace member access. Without a memo, every lookup re-walks all `export *`
+  paths and re-resolves each target; on a 100-star barrel, 2,000 namespace
+  member accesses took ~5.7 s instead of ~0.1 s. Answers are cached per
+  `(module, name, typeOnly)`, so the type-only and value answers stay
+  independent.
+
+- [#519](https://github.com/un-ts/eslint-plugin-import-x/pull/519) [`f6a66a0`](https://github.com/un-ts/eslint-plugin-import-x/commit/f6a66a01b56381d2bdf4ba87aba978479d475958) Thanks [@Cherry](https://github.com/Cherry)! - perf: cache legacy resolver lookups per directory instead of re-resolving the resolver package on every import resolution.
+
+- [#570](https://github.com/un-ts/eslint-plugin-import-x/pull/570) [`7254048`](https://github.com/un-ts/eslint-plugin-import-x/commit/72540485d12bea99039f30a636ace9ab8ce84ead) Thanks [@devon-scythe](https://github.com/devon-scythe)! - fix: support minimatch v9/v10/v11 and drop makeRe
+
+  minimatch v11 is the only release line with the fix for GHSA-g3hv-75wg-m249.
+  It removes `makeRe()`, so `no-internal-modules` now matches its `allow` and
+  `forbid` globs with `Minimatch#match`.
+
+- [#535](https://github.com/un-ts/eslint-plugin-import-x/pull/535) [`66632ec`](https://github.com/un-ts/eslint-plugin-import-x/commit/66632ec8738256c9df07b74849219e5a56f7ed0a) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(core): send a `.js` file to the AST route when es-module-lexer cannot read one of its exports. On the lexer fast path, an export the lexer does not read was dropped from the module's export set as soon as the file had any export it did read, so `hasExport`/`getExportNames` — and `named`, `namespace`, `default`, `no-named-as-default` with them — reported the name as missing. The lexer route now keeps only the declaration heads whose exported names are read faithfully by es-module-lexer v3 (`default`, `{`, `*`, `function`, `class`, `const`, `let`, `var`) and bails on every unrecognised head as a conservative fallback, including `module`, `using`, `await using`, `@dec class`, `abstract class`, `declare`, `enum`, `const enum`, `namespace`, and `interface` (v3 reads those, but they are not yet in the whitelist).
+
+- [#534](https://github.com/un-ts/eslint-plugin-import-x/pull/534) [`595f2d7`](https://github.com/un-ts/eslint-plugin-import-x/commit/595f2d730f0a647f7a2a26fbb23680651f4ba753) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(module-visitor): treat `import x = require('y')` as a module reference, so every rule built on `moduleVisitor` (`no-unresolved`, `no-cycle`, `extensions`, `no-extraneous-dependencies`, `no-restricted-paths`, `no-absolute-path`, …) sees the specifier. `export import x = require('y')` was missed too, because its `ExportNamedDeclaration` has a `null` source. `no-cycle` and `avoid-importing-barrel-files` keep ignoring the type-only form, `import type x = require('y')`
+
+- [#556](https://github.com/un-ts/eslint-plugin-import-x/pull/556) [`19ff6c5`](https://github.com/un-ts/eslint-plugin-import-x/commit/19ff6c5006ba5f1213366b20fa6ee0af07aa69b0) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(namespace): report member access in decorator expressions by walking up to the enclosing module scope.
+
+- [#567](https://github.com/un-ts/eslint-plugin-import-x/pull/567) [`b2afa70`](https://github.com/un-ts/eslint-plugin-import-x/commit/b2afa70f839137b9b27e053b751389b3d1ea8226) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(namespace): don't report a heritage clause that names a type from a module resolved to JavaScript, which has no types to check against.
+
+- [#526](https://github.com/un-ts/eslint-plugin-import-x/pull/526) [`8f4f6b9`](https://github.com/un-ts/eslint-plugin-import-x/commit/8f4f6b9922146d93168b1d17cd87c767659399f2) Thanks [@JounQin](https://github.com/JounQin)! - fix: count `export * as ns from '…'` as a runtime dependency in the module analysis core
+
+  `export * as ns from 'x'` loads `x` at runtime, but both `ModuleInfo` construction paths omitted the edge, so graph traversal — and `avoid-importing-barrel-files` in particular — could undercount the modules an import pulls in. The namespace export metadata is unchanged, and `export type * as ns from` stays type-only. Fixes [#525](https://github.com/un-ts/eslint-plugin-import-x/issues/525).
+
+- [#541](https://github.com/un-ts/eslint-plugin-import-x/pull/541) [`bbd0026`](https://github.com/un-ts/eslint-plugin-import-x/commit/bbd0026366bd4d1d19a9546450901e0d98c5f2a6) Thanks [@MFA-G](https://github.com/MFA-G)! - fix(namespace): report members exported only as types
+
+  A name exported only as a type (`export type Foo`, `export interface Foo`, `export type { Foo }`, `export type * from`) is erased at runtime, so accessing it as a member of an imported namespace (`ns.Foo`, `const { Foo } = ns`, `<ns.Foo />`) is now reported. Classes, enums and names that are both a type and a value are still accepted, and unresolvable names still fail open. Fixes [#540](https://github.com/un-ts/eslint-plugin-import-x/issues/540).
+
+- [#543](https://github.com/un-ts/eslint-plugin-import-x/pull/543) [`35fc9bf`](https://github.com/un-ts/eslint-plugin-import-x/commit/35fc9bf6f3fa069b578f9fbf8f5652428ca3cd18) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(newline-after-import): ignore comments between two imports when `considerComments` is enabled, matching `eslint-plugin-import`.
+
+- [#577](https://github.com/un-ts/eslint-plugin-import-x/pull/577) [`5169813`](https://github.com/un-ts/eslint-plugin-import-x/commit/516981368694ddcad9f3e13ab239f39e7d77dcf4) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(newline-after-import): treat a comment on the import's own line as part of the import
+
+  With `considerComments`, a trailing comment such as `import a from 'a' // why`
+  was taken as the comment after the import, so the rule reported even with an
+  empty line before the next statement. The autofix also inserted the new lines
+  between the import and its trailing comment, moving the comment onto its own
+  line. Both now skip comments that start on the statement's last line.
+
+  The fix is withheld when any trailing comment is a line-scoped directive
+  (`eslint-disable-next-line`, `@ts-ignore`, `@ts-expect-error`), so the directive
+  keeps its target, and comments inside the following statement no longer satisfy
+  the blank-line check.
+
+- [#591](https://github.com/un-ts/eslint-plugin-import-x/pull/591) [`65ea15c`](https://github.com/un-ts/eslint-plugin-import-x/commit/65ea15c3201688543356b10ef23b79eed624072a) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(no-absolute-path): prefix `./` when the fixed path starts with a dot directory such as `.config/`, which would otherwise turn into a package import
+
+- [#507](https://github.com/un-ts/eslint-plugin-import-x/pull/507) [`aa1071d`](https://github.com/un-ts/eslint-plugin-import-x/commit/aa1071d6eff519364a35573647c07593aec2da80) Thanks [@BridgeAR](https://github.com/BridgeAR)! - Reduce `no-cycle` CPU usage for converging dependency graphs.
+
+- [#518](https://github.com/un-ts/eslint-plugin-import-x/pull/518) [`c45cfb9`](https://github.com/un-ts/eslint-plugin-import-x/commit/c45cfb9757c19e7e38dfeb40d1b4b701b22378b5) Thanks [@wimvanschandevijl](https://github.com/wimvanschandevijl)! - fix(no-cycle): `allowUnsafeDynamicCyclicDependency` no longer hides static-only cycles that happen to sit in the same module as an unrelated dynamic import
+
+  Previously, `no-cycle`'s traversal bailed out of a module's **entire** remaining import list as soon as it found one path where any declaration was dynamic - `return` rather than `continue` inside the loop over `m.imports`. That meant:
+  - a purely static cycle declared _after_ an unrelated dynamic import earlier in the same file went unreported, and
+  - a path imported both statically and dynamically (the static declaration on its own closing a real cycle) was skipped entirely, because "any declaration to this path is dynamic" discarded the static declaration too.
+
+  Both are now handled per-declaration: only the dynamic declarations for a path are dropped when `allowUnsafeDynamicCyclicDependency` is set, and only that one path is skipped when nothing traversable remains - the module's other, unrelated import paths (and any static declaration to the very same path) are still checked. See [#515](https://github.com/un-ts/eslint-plugin-import-x/issues/515) for the repro that found this.
+
+- [#538](https://github.com/un-ts/eslint-plugin-import-x/pull/538) [`b6a674b`](https://github.com/un-ts/eslint-plugin-import-x/commit/b6a674b235327bede9e598ba2a60dfa23a5e103c) Thanks [@b84330808](https://github.com/b84330808)! - fix(no-cycle): report cycles through side-effect imports such as `import './foo'` and `import {} from './foo'`. They have no specifiers, so they were skipped as if they were type-only imports. The unambiguous-module prefilter also recognizes them now, so a file whose only module syntax is a side-effect import is analyzed on the AST route too, as it already was on the lexer route
+
+- [#585](https://github.com/un-ts/eslint-plugin-import-x/pull/585) [`8777312`](https://github.com/un-ts/eslint-plugin-import-x/commit/87773128953307a62ca21b3eb87bc8008ce5bb1d) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(no-duplicates): do not treat commas inside comments as specifier separators in the autofix
+
+- [#581](https://github.com/un-ts/eslint-plugin-import-x/pull/581) [`76e97db`](https://github.com/un-ts/eslint-plugin-import-x/commit/76e97db501b31ff52c35683ff3f7c31640ab6b0c) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(no-duplicates): imports of one path with different attributes are not duplicates, and the autofix no longer drops an attribute, mistakes the braces of `with {...}` for the braces of the specifiers, or takes a `resolution-mode` import out of `import type`
+
+- [#584](https://github.com/un-ts/eslint-plugin-import-x/pull/584) [`85c1b88`](https://github.com/un-ts/eslint-plugin-import-x/commit/85c1b880a79ad12b110ad86a37c4ad3384f86357) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(no-duplicates): remove extra whitespace before the closing brace when merging import specifiers
+
+- [#522](https://github.com/un-ts/eslint-plugin-import-x/pull/522) [`56b1c48`](https://github.com/un-ts/eslint-plugin-import-x/commit/56b1c48d4b94bb62c4d2d330b6af53fb5160e67b) Thanks [@giaBaoJS](https://github.com/giaBaoJS)! - fix(no-duplicates): the autofix no longer drops `x` when merging `import { x }` into an import of `x as y`, and `prefer-inline` no longer turns the `from` keyword or an alias into `type ...` when the first import is `import type { ... }`
+
+- [#546](https://github.com/un-ts/eslint-plugin-import-x/pull/546) [`1eb95b0`](https://github.com/un-ts/eslint-plugin-import-x/commit/1eb95b0dd6f94a9a43f130b2f5028ff0e3571736) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(no-duplicates): report a module imported twice with `import type * as`, as it already does for `import * as` and `import type x`
+
+- [#548](https://github.com/un-ts/eslint-plugin-import-x/pull/548) [`d565b2f`](https://github.com/un-ts/eslint-plugin-import-x/commit/d565b2f03e6088910f62b7b3fc02b31f807de94f) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(no-duplicates): without `prefer-inline`, the autofix moves inline `type` specifiers into the `import type { ... }` of the same module and leaves the value specifiers in their own import, instead of merging both into one import that is invalid or changes which specifiers are type-only.
+
+- [#574](https://github.com/un-ts/eslint-plugin-import-x/pull/574) [`2fd859d`](https://github.com/un-ts/eslint-plugin-import-x/commit/2fd859d788ededd33e302c86e9af8d0b5256786d) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(no-empty-named-blocks): use the reported import's tokens in the side-effect suggestion
+
+  The suggestion looked up `import` and `from` in the whole file, so an earlier import with a `from` clause, like `import a from 'a'`, supplied the tokens and the suggestion left the code unchanged. Earlier side-effect imports have no `from` and weren't affected.
+
+- [#547](https://github.com/un-ts/eslint-plugin-import-x/pull/547) [`3598430`](https://github.com/un-ts/eslint-plugin-import-x/commit/3598430c17e472c600d24ea8cecb1b44e9803c7f) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(no-extraneous-dependencies): report the runtime package instead of its `@types/*` package when an import resolves to type definitions, matching `eslint-plugin-import`. A `@types/*` package in `dependencies` no longer counts as a declaration of its runtime package, and `whitelist` accepts either name. A type-only import checked with `includeTypes` still needs only the `@types/*` package.
+
+- [#571](https://github.com/un-ts/eslint-plugin-import-x/pull/571) [`2bc321d`](https://github.com/un-ts/eslint-plugin-import-x/commit/2bc321dd56eb886857201689bab35b62006cdacd) Thanks [@TonyTech404](https://github.com/TonyTech404)! - fix(no-extraneous-dependencies): ignore inline type-only export specifiers when `verifyTypeImports` is off, as inline type imports already are
+
+- [#580](https://github.com/un-ts/eslint-plugin-import-x/pull/580) [`059ca92`](https://github.com/un-ts/eslint-plugin-import-x/commit/059ca92f81812b91161e35f66d0debfadbcd33a1) Thanks [@thekhegay](https://github.com/thekhegay)! - fix: ignore type-only named exports for `no-named-as-default` and `no-named-as-default-member`
+
+- [#573](https://github.com/un-ts/eslint-plugin-import-x/pull/573) [`a3553f3`](https://github.com/un-ts/eslint-plugin-import-x/commit/a3553f3cc069430dc852d17b030f673f4af1bc34) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(no-namespace): don't autofix computed member access on the namespace
+
+  `foo[key]` was fixed as if it were `foo.key`, importing an export named `key` and dropping the lookup, `list[foo]` was rewritten the same way, and `foo[1]` produced `import { 1 }`, which doesn't parse. All of them keep the namespace import now, and the rule still reports them.
+
+- [#561](https://github.com/un-ts/eslint-plugin-import-x/pull/561) [`981ada8`](https://github.com/un-ts/eslint-plugin-import-x/commit/981ada8afdab6cf49d991754ab8beef5b1e82697) Thanks [@wleeaf](https://github.com/wleeaf)! - fix(no-namespace): check all enclosing scopes for name conflicts in the autofix
+
+  The autofix only looked at the innermost scope of each `ns.name` reference and its parent for names that would shadow the new import, so a variable declared further out (or an undeclared global used elsewhere in the module) changed what the rewritten reference pointed to. It also turned `ns.default` and `ns['some-key']` into named imports that aren't valid syntax; those are now reported without a fix.
+
+- [#582](https://github.com/un-ts/eslint-plugin-import-x/pull/582) [`47c5419`](https://github.com/un-ts/eslint-plugin-import-x/commit/47c54191d72cd3a0c2b401cba84f5d4864b187ba) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(no-namespace): don't crash or write broken code on members named like `Object.prototype` ones, e.g. `_.toString`
+
+- [#583](https://github.com/un-ts/eslint-plugin-import-x/pull/583) [`2538093`](https://github.com/un-ts/eslint-plugin-import-x/commit/253809325713a3d009f2feceafca4594243b3068) Thanks [@thekhegay](https://github.com/thekhegay)! - fix: don't crash with `The "path" argument must be of type string` when there is no `package.json` above the linted file. The directory ESLint runs in stands in for the root of the package, and `no-extraneous-dependencies` without `packageDir` lints nothing, as its documentation says
+
+- [#560](https://github.com/un-ts/eslint-plugin-import-x/pull/560) [`4afef66`](https://github.com/un-ts/eslint-plugin-import-x/commit/4afef6638e8ebed86063ae0fa05e050be6c4b4a1) Thanks [@wleeaf](https://github.com/wleeaf)! - fix(no-relative-packages): keep the imported path when suggesting the package import
+
+  The suggested package import was built from the directory of the resolved file plus the last segment of the import path. An extensionless import of a file named like its package directory (`../bar/src/bar`) became `bar/src`, which resolves to another module, and a directory import (`../bar/src`) became `bar/src/src`. The suffix is now taken from the resolved file below the package root: explicit import extensions are preserved, extensionless imports omit the resolved extension, directory index files collapse back to the directory, and `.d.ts` targets drop the `.d` marker. If the package name itself resolves to the original module, it is preferred (for example `../node_modules/nested-main` becomes `nested-main`). The autofix is only offered when the suggested package path resolves back to the original module; otherwise the rule reports without suggesting that path. Packages reached through symlinks (pnpm, workspaces) therefore keep their package name and path.
+
+- [#524](https://github.com/un-ts/eslint-plugin-import-x/pull/524) [`2384a48`](https://github.com/un-ts/eslint-plugin-import-x/commit/2384a483d78b40d9c5258e9ad9b866a418244fcc) Thanks [@giaBaoJS](https://github.com/giaBaoJS)! - fix(no-unused-modules): `missingExports` no longer reports "No exports found" for a file whose only exports are `export * from` declarations, and `unusedExports` now checks `export * as ns from` as the export `ns` and counts its source module as namespace imported
+
+- [#533](https://github.com/un-ts/eslint-plugin-import-x/pull/533) [`6ffa22e`](https://github.com/un-ts/eslint-plugin-import-x/commit/6ffa22ee19d78f2407a3a71e77be5bc0d5a33b3e) Thanks [@giaBaoJS](https://github.com/giaBaoJS)! - fix(no-unused-modules): exports named `ImportDefaultSpecifier`, `ImportNamespaceSpecifier` or `ExportAllDeclaration` no longer collide with the rule's internal bookkeeping keys, and `import { default as x }` now counts as a use of the default export
+
+- [#593](https://github.com/un-ts/eslint-plugin-import-x/pull/593) [`9144c94`](https://github.com/un-ts/eslint-plugin-import-x/commit/9144c9477432738997c3051dc47987e60be2a245) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(order): move all out of order imports of a block in one fix, so one `--fix` is enough for a block with more than 10 of them
+
+- [#544](https://github.com/un-ts/eslint-plugin-import-x/pull/544) [`1a2bf7a`](https://github.com/un-ts/eslint-plugin-import-x/commit/1a2bf7a7fde91069ed8f40f86bc8a0432f7cac15) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(order): compare statement indexes as numbers, so the autofix no longer moves an import across a non-import statement when the indexes sort differently as strings, such as 2 and 10.
+
+- [#517](https://github.com/un-ts/eslint-plugin-import-x/pull/517) [`d6808bd`](https://github.com/un-ts/eslint-plugin-import-x/commit/d6808bd4c83d281d748626a1b6aed587f2623040) Thanks [@Cherry](https://github.com/Cherry)! - fix(order): make the alphabetize comparator transitive, so parent imports now consistently sort before sibling imports in the same group (matching `eslint-plugin-import`) and results no longer depend on the Node version
+
+- [#578](https://github.com/un-ts/eslint-plugin-import-x/pull/578) [`57729ae`](https://github.com/un-ts/eslint-plugin-import-x/commit/57729aecfc0d2232443ab47a168aa631141371a4) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(prefer-namespace-import): keep a namespace specifier when splitting the default import
+
+  The autofix looked for `{` and `}` to find the other specifiers, so
+  `import Foo, * as Bar from 'foo'` was rewritten into code that does not parse.
+  It now takes the text between the comma after the default specifier and `from`,
+  which also covers `* as Bar`.
+
+- [#564](https://github.com/un-ts/eslint-plugin-import-x/pull/564) [`ba0b9f6`](https://github.com/un-ts/eslint-plugin-import-x/commit/ba0b9f68ac74030305f649d5b8e1a8d1b8d478a1) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(core): `declare namespace foo.bar.baz {}` behind `export = foo` now only adds `bar` to the module's exports. `baz` and the block's members were previously reported as direct exports, so `named` accepted `import { baz }` and `import { deep }`, and a qualified `declare module foo.qux {}` exposed its members too.
+
+- [#482](https://github.com/un-ts/eslint-plugin-import-x/pull/482) [`53a88f3`](https://github.com/un-ts/eslint-plugin-import-x/commit/53a88f318071384d9c443a726ef3000dd9801a0d) Thanks [@B4nan](https://github.com/B4nan)! - Merge dependencies from the closest `package.json` in addition to `packageDir` in `no-extraneous-dependencies`, so workspace packages see the dependencies declared in their own manifest; `bundledDependencies` from every merged manifest are unioned instead of overwritten.
+
+- [#492](https://github.com/un-ts/eslint-plugin-import-x/pull/492) [`9669829`](https://github.com/un-ts/eslint-plugin-import-x/commit/9669829e20b2d87af64359e51a8b28b9a2d4b4ed) Thanks [@andersk](https://github.com/andersk)! - Ignore TypeScript `namespace` members for `no-named-as-default`, `no-named-as-default-member` rules
+
+- [#590](https://github.com/un-ts/eslint-plugin-import-x/pull/590) [`8c11eb7`](https://github.com/un-ts/eslint-plugin-import-x/commit/8c11eb7438fa0d0ebdf72e0f85bd64200347781b) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(consistent-type-specifier-style): keep the quotes of a string specifier name, like `type "a-b" as AB`, when the `prefer-top-level` fix moves it into a new `import type`
+
 ## 4.17.1
 
 ### Patch Changes
