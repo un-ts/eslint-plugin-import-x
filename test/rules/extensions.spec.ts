@@ -242,9 +242,11 @@ ruleTester.run('extensions', rule, {
         })
       }),
     ),
-    // an exports map that points a subpath at dist/index.js must not be
-    // rewritten to <subpath>/index.js; reported, but without a fix
+    // `always` requires an extension on the subpath, but neither
+    // `exports-index/sub.js` nor `exports-index/sub/index.js` is exported, so
+    // report without offering a fix
     tInvalid({
+      name: 'reports an extensionless exports subpath without a fix',
       code: 'import { exported } from "exports-index/sub"',
       options: ['always'],
       output: null,
