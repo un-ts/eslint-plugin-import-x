@@ -69,6 +69,15 @@ function getFix(
     nodes.some(node => node.importKind === 'type') &&
     nodes.some(node => node.importKind !== 'type')
   ) {
+    // With a whitelist, the specifier is the entry point. Moving types between
+    // imports with different specifiers could send them to another entry point,
+    // so report the duplicates but leave the fix to the user.
+    if (
+      context.options[0]?.whitelist &&
+      nodes.some(node => node.source.value !== nodes[0].source.value)
+    ) {
+      return null
+    }
     return getTypeImportFix(nodes, sourceCode)
   }
 
@@ -341,13 +350,6 @@ function getTypeImportFix(
   sourceCode: TSESLint.SourceCode,
 ): TSESLint.ReportFixFunction | null {
   const first = nodes.find(node => node.importKind === 'type')!
-
-  // If the first `import type` has a different specifier than the first
-  // (canonical) node, merging would redirect imports to a different entry
-  // point. Report the duplicate but leave the fix to the user.
-  if (first.source.value !== nodes[0].source.value) {
-    return null
-  }
 
   // Leave it to the user to handle comments, also inside the `{...}` part
   // since the specifiers are rewritten here.
