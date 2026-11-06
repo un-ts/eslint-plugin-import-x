@@ -137,8 +137,8 @@ ruleTester.run('no-duplicates', rule, {
       options: [{ whitelist: [['svelte', 'svelte/easing']] }],
       settings: sharedDeclarationSettings,
       errors: [
-        createDuplicatedError(sharedDeclarationPath),
-        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError('svelte/easing'),
+        createDuplicatedError('svelte/easing'),
       ],
     }),
     tInvalid({
