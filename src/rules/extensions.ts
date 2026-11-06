@@ -520,24 +520,30 @@ export default createRule<Options, MessageId>({
               extensionForbidden,
             )
           ) {
-            const appendedPathname = appendExtension(importPath, extension)
-            const indexPathname = `${
-              importPath.endsWith('/') ? importPath.slice(0, -1) : importPath
-            }/index.${extension}`
+            const isRelativeImport = importPath.startsWith('.')
+            const isIndexFile =
+              !!resolvedPath &&
+              path.basename(resolvedPath, `.${extension}`) === 'index'
             // `foo` resolving to `foo/index.js` is a directory import, while
             // `foo.js` wins over `foo/index.js` when both exist. The directory
             // name also identifies the index file when a resolver cannot
             // re-resolve a rewritten specifier.
+            const indexPathname = isIndexFile
+              ? `${
+                  importPath.endsWith('/')
+                    ? importPath.slice(0, -1)
+                    : importPath
+                }/index.${extension}`
+              : ''
             const isDirectoryImport =
-              !!resolvedPath &&
-              path.basename(resolvedPath, `.${extension}`) === 'index' &&
-              ((importPath.startsWith('.') &&
+              isIndexFile &&
+              ((isRelativeImport &&
                 path.basename(importPath) ===
-                  path.basename(path.dirname(resolvedPath))) ||
+                  path.basename(path.dirname(resolvedPath!))) ||
                 resolve(indexPathname, context) === resolvedPath)
             const fixedPathname = isDirectoryImport
               ? indexPathname
-              : appendedPathname
+              : appendExtension(importPath, extension)
             // An exports map can point `pkg/sub` at `dist/index.js`, and the
             // appended `.js` may not be exported at all; only a path that
             // resolves back to the original file may be offered as a fix.
@@ -547,7 +553,7 @@ export default createRule<Options, MessageId>({
               extension &&
               (!resolvedPath ||
                 isDirectoryImport ||
-                importPath.startsWith('.') ||
+                isRelativeImport ||
                 resolve(fixedPathname, context) === resolvedPath)
                 ? stringifyPath({ pathname: fixedPathname, query, hash })
                 : ''
