@@ -5907,7 +5907,7 @@ describe('TypeScript', () => {
       `,
         errors: [
           createOrderError([
-            '`./Medals.module.scss` import',
+            '`../Collections.module.scss` import',
             'before',
             'import of `./Medals.module.scss`',
           ]),
