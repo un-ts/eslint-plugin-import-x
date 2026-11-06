@@ -557,6 +557,7 @@ export default createRule<Options, MessageId>({
                 importPath: importPathWithQueryString,
               },
               ...(extension &&
+                fixedImportPath &&
                 (props.fix
                   ? fixOrSuggest
                   : {
