@@ -15,6 +15,22 @@ const ruleTester = new TSESLintRuleTester()
 
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
+const tsSymlinkResolvers = [
+  createNodeResolver({
+    extensions: ['.ts', '.js'],
+    extensionAlias: { '.js': ['.ts'] },
+  }),
+  createNodeResolver({ extensions: ['.ts', '.js'] }),
+]
+
+const dtsSymlinkResolvers = [
+  createNodeResolver({
+    extensions: ['.d.ts', '.ts', '.js'],
+    extensionAlias: { '.js': ['.d.ts', '.ts'] },
+  }),
+  createNodeResolver({ extensions: ['.d.ts', '.ts', '.js'] }),
+]
+
 function createNotFoundError(
   importPath: string,
   properImport: string,
@@ -42,7 +58,13 @@ for (const [file, content] of [
   ['repo/packages/foo/src/deep/index.js', ''],
   ['store/shared/package.json', '{ "name": "shared" }'],
   ['store/shared/lib/util.js', ''],
-  ['store/shared/lib/util.ts', ''],
+  ['store/shared/lib/types.d.ts', ''],
+  ['store/ts-shared/package.json', '{ "name": "ts-shared" }'],
+  ['store/ts-shared/lib/util.ts', ''],
+  ['store/mixed-shared/package.json', '{ "name": "mixed-shared" }'],
+  ['store/mixed-shared/lib/util.ts', ''],
+  ['store/mixed-shared-js/package.json', '{ "name": "mixed-shared" }'],
+  ['store/mixed-shared-js/lib/util.js', ''],
   ['store/bootstrap/package.json', '{ "name": "bootstrap" }'],
   ['store/bootstrap/dist/css/bootstrap.css', ''],
   ['store/same-name/package.json', '{ "name": "same-name" }'],
@@ -68,6 +90,21 @@ fs.symlinkSync(
   symlinkFixture('repo/packages/foo/node_modules/same-name'),
   'junction',
 )
+fs.symlinkSync(
+  symlinkFixture('store/shared'),
+  symlinkFixture('repo/packages/foo/node_modules/shared'),
+  'junction',
+)
+fs.symlinkSync(
+  symlinkFixture('store/ts-shared'),
+  symlinkFixture('repo/packages/foo/node_modules/ts-shared'),
+  'junction',
+)
+fs.symlinkSync(
+  symlinkFixture('store/mixed-shared-js'),
+  symlinkFixture('repo/packages/foo/node_modules/mixed-shared'),
+  'junction',
+)
 
 // A file symlink can need extra privileges on Windows
 let hasFileSymlink = true
@@ -78,8 +115,18 @@ try {
     'file',
   )
   fs.symlinkSync(
-    symlinkFixture('store/shared/lib/util.ts'),
+    symlinkFixture('store/ts-shared/lib/util.ts'),
     symlinkFixture('repo/packages/foo/linked-ts.js'),
+    'file',
+  )
+  fs.symlinkSync(
+    symlinkFixture('store/mixed-shared/lib/util.ts'),
+    symlinkFixture('repo/packages/foo/linked-ts-conflict.js'),
+    'file',
+  )
+  fs.symlinkSync(
+    symlinkFixture('store/shared/lib/types.d.ts'),
+    symlinkFixture('repo/packages/foo/linked-dts.js'),
     'file',
   )
   fs.symlinkSync(
@@ -281,18 +328,66 @@ ruleTester.run('no-relative-packages', rule, {
           tInvalid({
             code: 'import util from "./linked-ts.js"',
             filename: symlinkFixture('repo/packages/foo/index.js'),
-            settings: { 'import-x/resolver-next': [createNodeResolver()] },
+            settings: { 'import-x/resolver-next': tsSymlinkResolvers },
             errors: [
               {
                 ...createNotFoundError(
                   './linked-ts.js',
-                  path.normalize('shared/lib/util.js'),
+                  path.normalize('ts-shared/lib/util.js'),
                 ),
                 line: 1,
                 column: 18,
               },
             ],
-            output: 'import util from "shared/lib/util.js"',
+            output: 'import util from "ts-shared/lib/util.js"',
+          }),
+          tInvalid({
+            code: 'import util from "./linked-ts-conflict.js"',
+            filename: symlinkFixture('repo/packages/foo/index.js'),
+            settings: { 'import-x/resolver-next': tsSymlinkResolvers },
+            errors: [
+              {
+                ...createNotFoundError(
+                  './linked-ts-conflict.js',
+                  path.normalize('mixed-shared/lib/util.js'),
+                ),
+                line: 1,
+                column: 18,
+              },
+            ],
+            output: null,
+          }),
+          tInvalid({
+            code: 'import util from "./linked-dts.js"',
+            filename: symlinkFixture('repo/packages/foo/index.js'),
+            settings: { 'import-x/resolver-next': dtsSymlinkResolvers },
+            errors: [
+              {
+                ...createNotFoundError(
+                  './linked-dts.js',
+                  path.normalize('shared/lib/types.js'),
+                ),
+                line: 1,
+                column: 18,
+              },
+            ],
+            output: 'import util from "shared/lib/types.js"',
+          }),
+          tInvalid({
+            code: 'import util from "./linked-dts"',
+            filename: symlinkFixture('repo/packages/foo/index.js'),
+            settings: { 'import-x/resolver-next': dtsSymlinkResolvers },
+            errors: [
+              {
+                ...createNotFoundError(
+                  './linked-dts',
+                  path.normalize('shared/lib/types'),
+                ),
+                line: 1,
+                column: 18,
+              },
+            ],
+            output: 'import util from "shared/lib/types"',
           }),
           tInvalid({
             code: 'import util from "./linked"',

@@ -28,6 +28,8 @@ function findNamedPackage(filePath: string) {
 
 type MessageId = 'noAllowed'
 
+const dtsRe = /\.d\.[cm]?ts$/
+
 const potentialViolationTypes = new Set(['parent', 'index', 'sibling'])
 
 function checkImportForRelativePackage(
@@ -72,10 +74,11 @@ function checkImportForRelativePackage(
       resolvedImport,
     )
     const { dir, name } = path.parse(resolvedSuffix)
+    const moduleName = dtsRe.test(resolvedSuffix) ? name.slice(0, -2) : name
     const importExtension = path.extname(importPath)
     const importSuffix = importExtension
-      ? path.format({ dir, name, ext: importExtension })
-      : path.join(dir, name)
+      ? path.format({ dir, name: moduleName, ext: importExtension })
+      : path.join(dir, moduleName)
     const properImport =
       isSamePackage && targetPkgRoot
         ? path.join(
@@ -83,6 +86,8 @@ function checkImportForRelativePackage(
             path.relative(targetPkgRoot, importTarget),
           )
         : path.join(importPkg.pkg.name, importSuffix)
+    const canFix =
+      isSamePackage || resolve(properImport, context) === resolvedImport
     context.report({
       node,
       messageId: 'noAllowed',
@@ -90,8 +95,10 @@ function checkImportForRelativePackage(
         properImport,
         importPath,
       },
-      fix: fixer =>
-        fixer.replaceText(node, JSON.stringify(toPosixPath(properImport))),
+      ...(canFix && {
+        fix: fixer =>
+          fixer.replaceText(node, JSON.stringify(toPosixPath(properImport))),
+      }),
     })
   }
 }
