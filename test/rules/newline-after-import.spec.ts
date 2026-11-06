@@ -560,6 +560,16 @@ ruleTester.run('newline-after-import', rule, {
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
+      code: `import a from 'a' /** @ts-ignore */\nfoo()`,
+      output: null,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
+      code: `import a from 'a' /// @ts-ignore\nfoo()`,
+      output: null,
+      errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
+    },
+    {
       code: `import a from 'a' /* one */ /* two */\nfoo()`,
       output: `import a from 'a' /* one */ /* two */\n\nfoo()`,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
