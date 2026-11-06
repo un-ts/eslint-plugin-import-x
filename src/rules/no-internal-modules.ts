@@ -39,7 +39,9 @@ function toMatcher(pattern: string) {
   }
   const inDir = (path: string) => dirs.some(dir => dir.match(path))
   return mm.negate
-    ? (path: string) => mm.match(path) && !inDir(path)
+    ? // The empty path is what `.`, `./` and `..` normalize to; `makeRe` never
+      // matched it, so a negated pattern must not either.
+      (path: string) => path !== '' && mm.match(path) && !inDir(path)
     : (path: string) => mm.match(path) || inDir(path)
 }
 

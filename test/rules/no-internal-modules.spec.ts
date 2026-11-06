@@ -52,6 +52,16 @@ ruleTester.run('no-internal-modules', rule, {
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
     }),
     tValid({
+      // A negated brace alternative must not match the empty path `..` normalizes to
+      code: 'import a from ".."',
+      filename: testFilePath('./internal-modules/plugins/plugin.js'),
+      options: [
+        {
+          forbid: ['!/{,foo}'],
+        },
+      ],
+    }),
+    tValid({
       code: 'import b from "../../api/service"',
       filename: testFilePath('./internal-modules/plugins/plugin2/internal.js'),
       options: [
