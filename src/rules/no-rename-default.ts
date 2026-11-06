@@ -52,13 +52,12 @@ function getModuleName(sourcePath: string) {
     return
   }
   const parts = specifier.split('/')
-  const isScoped = specifier.startsWith('@')
-  const packageParts = isScoped ? 2 : 1
-  const packageName = parts[isScoped ? 1 : 0]
+  const packagePartCount = specifier.startsWith('@') ? 2 : 1
+  const packageName = parts[packagePartCount - 1]
   if (!packageName) {
     return
   }
-  const subpath = parts.slice(packageParts)
+  const subpath = parts.slice(packagePartCount)
   if (subpath.length === 0) {
     return packageName
   }
@@ -148,6 +147,7 @@ export default createRule<[Options?], MessageId>({
       whitelist,
     } = context.options[0] || {}
     const whitelistSet = whitelist ? new Set(whitelist) : undefined
+
     function getDefaultExportName(moduleInfo: ModuleInfo) {
       const sourceName = getDefaultExportSourceName(moduleInfo)
       if (sourceName == null) {
