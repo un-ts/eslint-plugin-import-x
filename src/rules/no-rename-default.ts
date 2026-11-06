@@ -29,12 +29,6 @@ function toIdentifierTokens(name: string) {
 }
 
 /**
- * Gets the package name or final path segment of a bare module specifier.
- *
- * @param sourcePath - The module specifier as written.
- * @returns The package name or final path segment, if the specifier is bare.
- */
-/**
  * Removes a module file extension from a subpath segment.
  *
  * @param name - The subpath segment.
@@ -44,6 +38,14 @@ function stripModuleSuffix(name: string) {
   return name.replace(/\.d\.[cm]?ts$/, '').replace(/\.[^./]+$/, '')
 }
 
+/**
+ * Gets the meaningful name of a bare module specifier: the package name for a
+ * package root, otherwise the final subpath segment, ignoring an `index`
+ * segment or a file extension.
+ *
+ * @param sourcePath - The module specifier as written.
+ * @returns The module name, if the specifier is bare.
+ */
 function getModuleName(sourcePath: string) {
   const [specifier] = sourcePath.split(/[?#]/)
   if (!specifier || specifier.startsWith('.') || path.isAbsolute(specifier)) {
