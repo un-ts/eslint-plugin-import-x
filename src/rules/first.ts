@@ -1,7 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
 import type { RuleContext } from '../types.js'
-import { createRule, isLineScopedDirective } from '../utils/index.js'
+import { createRule } from '../utils/index.js'
 
 function getImportValue(node: TSESTree.ProgramStatement) {
   return node.type === 'ImportDeclaration'
@@ -202,46 +202,16 @@ export default createRule<[Options?], MessageId>({
                     insertSourceCode = `\n${insertSourceCode.trimStart()}`
                   }
 
-                  // When inserting after a directive, advance past any trailing
-                  // same-line comments (e.g. // eslint-disable-line) so they stay
-                  // on the directive's line and inline disable directives remain
-                  // effective.
-                  let effectiveInsertAfterNode:
-                    | TSESTree.Node
-                    | TSESTree.Token
-                    | null = insertAfterNode
-                  if (insertingAfterDirective && insertAfterNode) {
-                    let token: TSESTree.Node | TSESTree.Token = insertAfterNode
-                    for (;;) {
-                      const next: TSESTree.Token | null =
-                        sourceCode.getTokenAfter(token, {
-                          includeComments: true,
-                        })
-                      if (
-                        next &&
-                        (next.type === 'Line' || next.type === 'Block') &&
-                        next.loc.start.line === token.loc.end.line
-                      ) {
-                        // Keep a next-line directive above the statement it covers.
-                        if (isLineScopedDirective(next)) {
-                          break
-                        }
-                        token = next
-                      } else {
-                        break
-                      }
-                    }
-                    effectiveInsertAfterNode = token
-                  }
-
+                  // Insert right after the statement: any trailing same-line
+                  // comment, including `prettier-ignore` and third-party
+                  // directives, then follows the moved imports and keeps its
+                  // target, instead of being skipped over.
                   const insertFixer = insertAfterNode
                     ? fixer.insertTextAfter(
-                        effectiveInsertAfterNode!,
+                        insertAfterNode,
                         insertingAfterDirective &&
                           !/^[^\S\n]*\n/.test(
-                            originSourceCode.slice(
-                              effectiveInsertAfterNode!.range![1],
-                            ),
+                            originSourceCode.slice(insertAfterNode.range[1]),
                           )
                           ? `${insertSourceCode}\n`
                           : insertSourceCode,

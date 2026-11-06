@@ -76,11 +76,18 @@ ruleTester.run('first', rule, {
       output: "'use client'\nimport { y } from 'bar'\nfoo();",
     }),
     tInvalid({
-      // directive with a trailing same-line comment: comment must stay on the directive's line
+      // a trailing comment moves below the moved import but stays above its target
       code: "'use client'; // trailing comment\nfoo();\nimport { x } from 'foo'",
       errors: [{ messageId: 'order' }],
       output:
-        "'use client'; // trailing comment\nimport { x } from 'foo'\nfoo();",
+        "'use client';\nimport { x } from 'foo'\n // trailing comment\nfoo();",
+    }),
+    tInvalid({
+      // third-party line directives keep their target too
+      code: "'use client'; // prettier-ignore\nfoo();\nimport { x } from 'foo'",
+      errors: [{ messageId: 'order' }],
+      output:
+        "'use client';\nimport { x } from 'foo'\n // prettier-ignore\nfoo();",
     }),
     tInvalid({
       // a next-line directive on the directive's line must keep its target
