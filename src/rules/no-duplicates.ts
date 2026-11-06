@@ -22,19 +22,23 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
 export interface Options {
   considerQueryString?: boolean
   'prefer-inline'?: boolean
+  whitelist?: string[][]
 }
 
 export type MessageId = 'duplicate'
 
+function isListed(group: Set<string>, sourcePath: string) {
+  return group.has(sourcePath) || group.has(sourcePath.split('?')[0])
+}
+
 function checkImports(
-  imported: Map<string, TSESTree.ImportDeclaration[]>,
+  imported: Iterable<[string, TSESTree.ImportDeclaration[]]>,
   context: RuleContext<MessageId, [Options?]>,
 ) {
-  // eslint-disable-next-line unicorn/no-array-for-each -- Map.forEach is faster than Map.entries
-  imported.forEach((nodes, module) => {
+  for (const [module, nodes] of imported) {
     if (nodes.length <= 1) {
       // not enough imports, definitely not duplicates
-      return
+      continue
     }
 
     for (let i = 0, len = nodes.length; i < len; i++) {
@@ -49,7 +53,7 @@ function checkImports(
         fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
       })
     }
-  })
+  }
 }
 
 function getFix(
@@ -64,10 +68,29 @@ function getFix(
     nodes.some(node => node.importKind === 'type') &&
     nodes.some(node => node.importKind !== 'type')
   ) {
+    // With a whitelist, the specifier is the entry point. Moving type imports
+    // between imports with different source values could redirect them to another
+    // entry point, so report the duplicates but leave the fix to the user.
+    if (
+      context.options[0]?.whitelist &&
+      nodes.some(node => node.source.value !== nodes[0].source.value)
+    ) {
+      return null
+    }
     return getTypeImportFix(nodes, sourceCode)
   }
 
   const first = nodes[0]
+
+  // With a whitelist, the fix can merge into an import that isn't the first
+  // one. Removing the earlier imports would then run the module after any
+  // import in between, so leave that to the user.
+  if (
+    context.options[0]?.whitelist &&
+    movesPastOtherImports(nodes, sourceCode)
+  ) {
+    return null
+  }
 
   // Adjusting the first import might make it multiline, which could break
   // `eslint-disable-next-line` comments and similar, so bail if the first
@@ -518,6 +541,23 @@ function getDefaultImportName(node: TSESTree.ImportDeclaration) {
   return defaultSpecifier?.local.name
 }
 
+// Returns true if the fix would move imports[0] past another import statement.
+function movesPastOtherImports(
+  nodes: TSESTree.ImportDeclaration[],
+  sourceCode: TSESLint.SourceCode,
+) {
+  const start = Math.min(...nodes.map(node => node.range[0]))
+  const end = nodes[0].range[0]
+  return sourceCode.ast.body.some(
+    statement =>
+      'source' in statement &&
+      statement.source != null &&
+      !nodes.includes(statement as TSESTree.ImportDeclaration) &&
+      statement.range[0] > start &&
+      statement.range[0] < end,
+  )
+}
+
 // Checks whether `node` has a namespace import.
 function hasNamespace(node: TSESTree.ImportDeclaration) {
   return node.specifiers.some(
@@ -621,6 +661,16 @@ export default createRule<[Options?], MessageId>({
           'prefer-inline': {
             type: 'boolean',
           },
+          whitelist: {
+            type: 'array',
+            items: {
+              type: 'array',
+              uniqueItems: true,
+              items: {
+                type: 'string',
+              },
+            },
+          },
         },
         additionalProperties: false,
       },
@@ -646,6 +696,109 @@ export default createRule<[Options?], MessageId>({
           return `${defaultResolver(parts[1])}?${parts[2]}`
         }
       : defaultResolver
+
+    const whitelist = context.options[0]?.whitelist?.map(
+      group => new Set(group),
+    )
+
+    // only specifiers listed in the same group are known to be different modules,
+    // and two queries on one entry point only when both are listed with the query
+    const areDifferentModules = (a: string, b: string) =>
+      a !== b &&
+      whitelist!.some(group =>
+        a.split('?')[0] === b.split('?')[0]
+          ? group.has(a) && group.has(b)
+          : isListed(group, a) && isListed(group, b),
+      )
+
+    // where a specifier first appears in the whitelist, unlisted ones last
+    const getWhitelistRank = (specifier: string) => {
+      let rank = 0
+      for (const group of whitelist!) {
+        for (const entry of group) {
+          if (entry === specifier || entry === specifier.split('?')[0]) {
+            return rank
+          }
+          rank++
+        }
+      }
+      return Infinity
+    }
+
+    // fix into the specifier the whitelist names, not an unlisted one
+    const listedFirst = (
+      nodes: TSESTree.ImportDeclaration[],
+      specifier: string,
+    ) =>
+      getWhitelistRank(specifier) === Infinity
+        ? nodes
+        : [...nodes].sort(
+            (a, b) =>
+              Number(a.source.value !== specifier) -
+              Number(b.source.value !== specifier),
+          )
+
+    /**
+     * Splits imports that resolve to the same path into the modules the
+     * whitelist keeps apart. The specifiers are placed in whitelist order, each
+     * joining the first module it isn't kept apart from, so the result doesn't
+     * depend on the order of the imports in the file.
+     */
+    const splitWhitelisted = (
+      imported: Map<string, TSESTree.ImportDeclaration[]>,
+    ) => {
+      if (!whitelist) {
+        return imported
+      }
+      const result: Array<[string, TSESTree.ImportDeclaration[]]> = []
+      for (const [resolvedPath, nodes] of imported) {
+        const specifiers = [...new Set(nodes.map(node => node.source.value))]
+          .map(specifier => ({
+            specifier,
+            rank: getWhitelistRank(specifier),
+          }))
+          .sort((a, b) =>
+            a.rank === b.rank
+              ? a.specifier.localeCompare(b.specifier)
+              : a.rank - b.rank,
+          )
+        const modules: string[][] = []
+        for (const { specifier } of specifiers) {
+          const module = modules.find(members =>
+            members.every(member => !areDifferentModules(member, specifier)),
+          )
+          if (module) {
+            module.push(specifier)
+          } else {
+            modules.push([specifier])
+          }
+        }
+        if (modules.length === 1) {
+          result.push([resolvedPath, listedFirst(nodes, modules[0][0])])
+          continue
+        }
+        for (const members of modules) {
+          result.push([
+            members[0],
+            listedFirst(
+              nodes.filter(node => members.includes(node.source.value)),
+              members[0],
+            ),
+          ])
+        }
+      }
+      return result
+    }
+
+    const resolvedPaths = new Map<string, string>()
+    const resolveCached = (sourcePath: string) => {
+      let resolvedPath = resolvedPaths.get(sourcePath)
+      if (resolvedPath === undefined) {
+        resolvedPath = resolver(sourcePath)
+        resolvedPaths.set(sourcePath, resolvedPath)
+      }
+      return resolvedPath
+    }
 
     const moduleMaps = new Map<TSESTree.Node, Map<string, ModuleMap>>()
 
@@ -703,7 +856,7 @@ export default createRule<[Options?], MessageId>({
     return {
       ImportDeclaration(n) {
         // resolved path will cover aliased duplicates
-        const resolvedPath = resolver(n.source.value)
+        const resolvedPath = resolveCached(n.source.value)
         const importMap = getImportMap(n)
 
         if (importMap.has(resolvedPath)) {
@@ -716,11 +869,11 @@ export default createRule<[Options?], MessageId>({
       'Program:exit'() {
         for (const parentMaps of moduleMaps.values()) {
           for (const map of parentMaps.values()) {
-            checkImports(map.imported, context)
-            checkImports(map.nsImported, context)
-            checkImports(map.defaultTypesImported, context)
-            checkImports(map.namespaceTypesImported, context)
-            checkImports(map.namedTypesImported, context)
+            checkImports(splitWhitelisted(map.imported), context)
+            checkImports(splitWhitelisted(map.nsImported), context)
+            checkImports(splitWhitelisted(map.defaultTypesImported), context)
+            checkImports(splitWhitelisted(map.namespaceTypesImported), context)
+            checkImports(splitWhitelisted(map.namedTypesImported), context)
           }
         }
       },

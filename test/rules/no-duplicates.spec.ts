@@ -30,8 +30,72 @@ function createDuplicatedError(
   }
 }
 
+const sharedDeclarationPath = path.resolve(
+  'test/fixtures/node_modules/svelte/types/index.d.ts',
+)
+
+const sharedDeclarationSettings = {
+  'import-x/resolver-next': [
+    {
+      name: 'shared-declaration-resolver',
+      interfaceVersion: 3,
+      resolve(modulePath: string) {
+        return /^(svelte|@scope\/pkg)(\/|$)/.test(modulePath)
+          ? { found: true, path: sharedDeclarationPath }
+          : { found: false }
+      },
+    },
+  ],
+}
+
+const sharedDeclarationCollisionSettings = {
+  'import-x/resolver-next': [
+    {
+      name: 'shared-declaration-collision-resolver',
+      interfaceVersion: 3,
+      resolve(modulePath: string) {
+        if (modulePath === './a') {
+          return { found: true, path: '/app/a' }
+        }
+        return /^(\/app\/a|pkg\/b)$/.test(modulePath)
+          ? { found: true, path: sharedDeclarationPath }
+          : { found: false }
+      },
+    },
+  ],
+}
+
 ruleTester.run('no-duplicates', rule, {
   valid: [
+    // #505: entry points of a whitelisted package are different modules
+    tValid({
+      code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'; import { scale } from 'svelte/transition'",
+      options: [
+        { whitelist: [['svelte', 'svelte/easing', 'svelte/transition']] },
+      ],
+      settings: sharedDeclarationSettings,
+    }),
+    tValid({
+      code: "import { a } from '@scope/pkg/a'; import { b } from '@scope/pkg/b'",
+      options: [{ whitelist: [['svelte'], ['@scope/pkg/a', '@scope/pkg/b']] }],
+      settings: sharedDeclarationSettings,
+    }),
+    tValid({
+      code: "import { a } from 'svelte/easing?raw'; import { b } from 'svelte/motion?raw'",
+      options: [{ whitelist: [['svelte/easing?raw', 'svelte/motion?raw']] }],
+      settings: sharedDeclarationSettings,
+    }),
+    tValid({
+      code: "import a from 'svelte/easing?raw'; import b from 'svelte/easing?url'",
+      options: [{ whitelist: [['svelte/easing?raw', 'svelte/easing?url']] }],
+      settings: sharedDeclarationSettings,
+    }),
+    tValid({
+      code: "import { a } from 'svelte/easing?a'; import { b } from 'svelte/easing?b'",
+      options: [{ whitelist: [['svelte/easing']], considerQueryString: true }],
+      settings: sharedDeclarationSettings,
+    }),
+
     tValid({
       code: 'import "./malformed.js"',
       languageOptions: { parser: require(parsers.ESPREE) },
@@ -71,6 +135,137 @@ ruleTester.run('no-duplicates', rule, {
     }),
   ],
   invalid: [
+    // #505: without the whitelist these share a resolved path, so they are duplicates
+    tInvalid({
+      code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'",
+      output: "import { onMount, quintOut } from 'svelte'; ",
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+
+    // #505: the same entry point of a whitelisted package is still a duplicate
+    tInvalid({
+      code: "import { quintOut } from 'svelte/easing'; import { onMount } from 'svelte'; import { linear } from 'svelte/easing?a'",
+      output:
+        "import { quintOut, linear } from 'svelte/easing'; import { onMount } from 'svelte'; ",
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError('svelte/easing'),
+        createDuplicatedError('svelte/easing'),
+      ],
+    }),
+    tInvalid({
+      code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'; import { linear } from 'svelte/easing'",
+      output:
+        "import { onMount } from 'svelte'; import { quintOut, linear } from 'svelte/easing'; ",
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError('svelte/easing'),
+        createDuplicatedError('svelte/easing'),
+      ],
+    }),
+
+    // #505: an entry point that isn't listed is compared by resolved path
+    tInvalid({
+      code: "import { onMount } from 'svelte'; import { writable } from 'svelte/store'",
+      output: "import { onMount, writable } from 'svelte'; ",
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+    tInvalid({
+      code: "import { writable } from 'svelte/store'; import { onMount } from 'svelte'",
+      output: " import { onMount, writable } from 'svelte'",
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+
+    // #505: an unlisted entry point joins the same module whatever the import order
+    ...[
+      [
+        "import { onMount } from 'svelte'; import { writable } from 'svelte/store'; import { quintOut } from 'svelte/easing'",
+        "import { onMount, writable } from 'svelte';  import { quintOut } from 'svelte/easing'",
+      ],
+      [
+        "import { quintOut } from 'svelte/easing'; import { writable } from 'svelte/store'; import { onMount } from 'svelte'",
+        "import { quintOut } from 'svelte/easing';  import { onMount, writable } from 'svelte'",
+      ],
+    ].map(([code, output]) =>
+      tInvalid({
+        code,
+        output,
+        options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+        settings: sharedDeclarationSettings,
+        errors: [
+          createDuplicatedError('svelte'),
+          createDuplicatedError('svelte'),
+        ],
+      }),
+    ),
+
+    // #505: no autofix that would run 'svelte/store' after an import in between
+    tInvalid({
+      code: "import { writable } from 'svelte/store'; import { x } from './foo'; import { onMount } from 'svelte'",
+      output: null,
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+
+    // #505: only specifiers in the same group are kept apart
+    tInvalid({
+      code: "import { onMount } from 'svelte'; import { a } from '@scope/pkg/a'",
+      output: "import { onMount, a } from 'svelte'; ",
+      options: [
+        {
+          whitelist: [
+            ['svelte', 'svelte/easing'],
+            ['@scope/pkg/a', '@scope/pkg/b'],
+          ],
+        },
+      ],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
+
+    // a split group key may collide with another resolved path
+    tInvalid({
+      code: [
+        "import { a1 } from '/app/a'",
+        "import { a2 } from '/app/a'",
+        "import { b } from 'pkg/b'",
+        "import { c } from './a'",
+      ].join('\n'),
+      output: [
+        "import { a1, a2 } from '/app/a'",
+        "import { b } from 'pkg/b'",
+        "import { c } from './a'",
+      ].join('\n'),
+      options: [{ whitelist: [['/app/a', 'pkg/b']] }],
+      settings: sharedDeclarationCollisionSettings,
+      errors: [
+        createDuplicatedError('/app/a'),
+        createDuplicatedError('/app/a'),
+      ],
+    }),
     tInvalid({
       code: "import { x } from './foo'; import { y } from './foo'",
       output: "import { x, y } from './foo'; ",
@@ -1646,6 +1841,50 @@ describe('TypeScript', () => {
                 line: 8,
                 column: 20,
               },
+            ],
+          }),
+          // #505: mixed-type fix does not redirect imports to a different entry point
+          tInvalid({
+            code: "import { type A } from 'svelte'; import type { B } from 'svelte/store'",
+            ...parserConfig,
+            options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+            settings: {
+              ...parserConfig.settings,
+              ...sharedDeclarationSettings,
+            },
+            output: null,
+            errors: [
+              createDuplicatedError(sharedDeclarationPath),
+              createDuplicatedError(sharedDeclarationPath),
+            ],
+          }),
+          tInvalid({
+            code: "import type { B } from 'svelte/store'; import { type A } from 'svelte'",
+            ...parserConfig,
+            options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+            settings: {
+              ...parserConfig.settings,
+              ...sharedDeclarationSettings,
+            },
+            output: null,
+            errors: [
+              createDuplicatedError(sharedDeclarationPath),
+              createDuplicatedError(sharedDeclarationPath),
+            ],
+          }),
+          tInvalid({
+            code: "import { type A } from 'svelte'; import type { X } from 'svelte'; import type { B } from 'svelte/store'; import type { C } from 'svelte/easing'",
+            ...parserConfig,
+            options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+            settings: {
+              ...parserConfig.settings,
+              ...sharedDeclarationSettings,
+            },
+            output: null,
+            errors: [
+              createDuplicatedError('svelte'),
+              createDuplicatedError('svelte'),
+              createDuplicatedError('svelte'),
             ],
           }),
         ]),
