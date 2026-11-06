@@ -105,8 +105,8 @@ function checkImportForRelativePackage(
       node,
       messageId: canFix ? 'noAllowed' : 'noAllowedNoFix',
       data: {
-        properImport: normalizedProperImport,
         importPath,
+        ...(canFix && { properImport: normalizedProperImport }),
       },
       ...(canFix && {
         fix: fixer =>
