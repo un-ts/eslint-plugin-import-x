@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
@@ -57,19 +56,6 @@ function checkImportForRelativePackage(
     contextPkg.pkg &&
     importPkg.pkg.name !== contextPkg.pkg.name
   ) {
-    // Keep the import's own path below the package root, so a directory or an
-    // extensionless import keeps pointing at the same module. A resolver may
-    // follow symlinks, so use that path only when it still points into the
-    // resolved package; otherwise fall back to the resolved file.
-    const importTarget = path.resolve(path.dirname(resolvedContext), importPath)
-    const targetPkg = findNamedPackage(importTarget)
-    const targetPkgRoot =
-      targetPkg.pkg && targetPkg.path ? path.dirname(targetPkg.path) : undefined
-    const isSamePackage =
-      targetPkgRoot != null &&
-      targetPkg.pkg?.name === importPkg.pkg.name &&
-      fs.realpathSync(targetPkgRoot) ===
-        fs.realpathSync(path.dirname(importPkg.path))
     const resolvedSuffix = path.relative(
       path.dirname(importPkg.path),
       resolvedImport,
@@ -77,16 +63,22 @@ function checkImportForRelativePackage(
     const { dir, name } = path.parse(resolvedSuffix)
     const moduleName = dtsRe.test(resolvedSuffix) ? name.slice(0, -2) : name
     const importExtension = path.extname(importPath)
-    const importSuffix = importExtension
-      ? path.format({ dir, name: moduleName, ext: importExtension })
-      : path.join(dir, moduleName)
-    const properImport =
-      isSamePackage && targetPkgRoot
-        ? path.join(
-            importPkg.pkg.name,
-            path.relative(targetPkgRoot, importTarget),
-          )
-        : path.join(importPkg.pkg.name, importSuffix)
+    let importSuffix: string
+    if (importExtension) {
+      importSuffix = path.format({
+        dir,
+        name: moduleName,
+        ext: importExtension,
+      })
+    } else {
+      // A directory import resolves to its index file; an explicit `index`
+      // import is already a file and keeps that segment.
+      importSuffix =
+        moduleName === 'index' && path.basename(importPath) !== 'index'
+          ? dir
+          : path.join(dir, moduleName)
+    }
+    const properImport = path.join(importPkg.pkg.name, importSuffix)
     const normalizedProperImport = toPosixPath(properImport)
     let resolvedProperImport: string | null | undefined
     try {
