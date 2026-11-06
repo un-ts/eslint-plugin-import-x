@@ -410,6 +410,36 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
+    ...[false, true].map(fix =>
+      tInvalid({
+        name: `keeps the index path when shortening it resolves elsewhere (fix: ${fix})`,
+        code: 'import a from "./index-conflict/dir/index.js"',
+        options: ['never', { fix }],
+        errors: [
+          {
+            messageId: 'unexpected',
+            data: {
+              extension: 'js',
+              importPath: './index-conflict/dir/index.js',
+            },
+            suggestions: fix
+              ? undefined
+              : [
+                  {
+                    messageId: 'removeUnexpected',
+                    data: {
+                      extension: 'js',
+                      importPath: './index-conflict/dir/index.js',
+                      fixedImportPath: './index-conflict/dir/index',
+                    },
+                    output: 'import a from "./index-conflict/dir/index"',
+                  },
+                ],
+          },
+        ],
+        output: fix ? 'import a from "./index-conflict/dir/index"' : null,
+      }),
+    ),
     tInvalid({
       code: 'import dot from "./file.with.dot"',
       options: ['always'],

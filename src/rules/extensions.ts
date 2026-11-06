@@ -614,8 +614,13 @@ export default createRule<Options, MessageId>({
         ) {
           const fixedPathname = importPath.slice(0, -(extension.length + 1))
           const isIndex = fixedPathname.endsWith('/index')
+          const indexDirectoryPathname = isIndex
+            ? fixedPathname.slice(0, -6)
+            : fixedPathname
+          const canShortenIndex =
+            isIndex && resolve(indexDirectoryPathname, context) === resolvedPath
           const fixedImportPath = stringifyPath({
-            pathname: isIndex ? fixedPathname.slice(0, -6) : fixedPathname,
+            pathname: canShortenIndex ? indexDirectoryPathname : fixedPathname,
             query,
             hash,
           })
@@ -648,7 +653,7 @@ export default createRule<Options, MessageId>({
               : {
                   suggest: [
                     commonSuggestion,
-                    isIndex && {
+                    canShortenIndex && {
                       ...commonSuggestion,
                       fix(fixer: TSESLint.RuleFixer) {
                         return fixer.replaceText(
