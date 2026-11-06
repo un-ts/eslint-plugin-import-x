@@ -81,6 +81,11 @@ export default createRule<[Options?], MessageId>({
             const afterDefault = sourceCode.text
               .slice(node.range[1], comma.range[0])
               .trimEnd()
+            // a `//` comment there has to end before `from`
+            const beforeFrom =
+              sourceCode.getCommentsBefore(comma).at(-1)?.type === 'Line'
+                ? '\n'
+                : ' '
             const remainingText = sourceCode.text.slice(
               fromToken.range[0],
               node.parent.range[1],
@@ -88,7 +93,7 @@ export default createRule<[Options?], MessageId>({
             return fixer.replaceText(
               node.parent,
               [
-                `${importStringPrefix} * as ${localName}${afterDefault} ${remainingText}`,
+                `${importStringPrefix} * as ${localName}${afterDefault}${beforeFrom}${remainingText}`,
                 `${importStringPrefix} ${specifiers}${remainingText}`,
               ].join('\n'),
             )
