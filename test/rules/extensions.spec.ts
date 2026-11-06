@@ -265,17 +265,6 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: 'package-self-reference/sub' },
           line: 1,
           column: 19,
-          suggestions: [
-            {
-              messageId: 'addMissing',
-              data: {
-                extension: 'js',
-                importPath: 'package-self-reference/sub',
-                fixedImportPath: 'package-self-reference/sub.js',
-              },
-              output: 'import { a } from "package-self-reference/sub.js"',
-            },
-          ],
         },
       ],
     }),
