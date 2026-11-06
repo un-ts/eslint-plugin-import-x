@@ -2487,13 +2487,27 @@ ruleTester.run('order', rule, {
         createOrderError(['`./foo` import', 'after', 'import of `helmet`']),
       ],
     }),
-    // imports on one line share the whitespace between them
+    // imports on one line share the whitespace and comments between them, so they move one at a time
     tInvalid({
       code: `import a from '../a';\nimport b from 'b'; import c from './c';\nimport d from '../d';\nimport e from '../e';\n`,
-      output: `import b from 'b';\nimport a from '../a';\nimport d from '../d';\nimport e from '../e';\n import c from './c';\n`,
+      output: [
+        `import b from 'b'; \nimport a from '../a';\nimport c from './c';\nimport d from '../d';\nimport e from '../e';\n`,
+        `import b from 'b'; \nimport a from '../a';\nimport d from '../d';\nimport e from '../e';\nimport c from './c';\n`,
+      ],
       errors: [
         createOrderError(['`../a` import', 'after', 'import of `b`']),
         createOrderError(['`./c` import', 'after', 'import of `../e`']),
+      ],
+    }),
+    tInvalid({
+      code: `import z from 'z'; /* c */ import t from './t';\nimport fs from 'fs';\nimport b from 'b';\nimport a from 'a';\n`,
+      output: [
+        `import t from './t';\nimport fs from 'fs';\nimport z from 'z'; /* c */ \nimport b from 'b';\nimport a from 'a';\n`,
+        `import fs from 'fs';\nimport z from 'z'; /* c */ \nimport b from 'b';\nimport a from 'a';\nimport t from './t';\n`,
+      ],
+      errors: [
+        createOrderError(['`z` import', 'after', 'import of `fs`']),
+        createOrderError(['`./t` import', 'after', 'import of `a`']),
       ],
     }),
     // the last line of a file can have no line break to put an import after

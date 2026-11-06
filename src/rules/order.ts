@@ -482,9 +482,13 @@ function makeMoveAllFix(
   let cursor = rangeStart
   let code = ''
   for (const edit of edits) {
+    // Imports on one line share the whitespace and comments between them, and
+    // both copies would keep them, so each of those imports moves on its own
+    if (edit.start < cursor) {
+      return null
+    }
     code += text.slice(cursor, edit.start) + edit.code
-    // Imports on one line share the whitespace between them
-    cursor = Math.max(cursor, edit.end)
+    cursor = edit.end
   }
   code += text.slice(cursor, rangeEnd)
 
