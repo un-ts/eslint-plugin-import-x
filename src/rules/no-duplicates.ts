@@ -83,6 +83,16 @@ function getFix(
 
   const first = nodes[0]
 
+  // With a whitelist, the fix can merge into an import that isn't the first
+  // one. Removing the earlier imports would then run the module after any
+  // import in between, so leave that to the user.
+  if (
+    context.options[0]?.whitelist &&
+    movesPastOtherImports(nodes, sourceCode)
+  ) {
+    return null
+  }
+
   // Adjusting the first import might make it multiline, which could break
   // `eslint-disable-next-line` comments and similar, so bail if the first
   // import has comments. Also, if the first import is `import * as ns from
@@ -533,6 +543,22 @@ function getDefaultImportName(node: TSESTree.ImportDeclaration) {
 }
 
 // Checks whether `node` has a namespace import.
+function movesPastOtherImports(
+  nodes: TSESTree.ImportDeclaration[],
+  sourceCode: TSESLint.SourceCode,
+) {
+  const start = Math.min(...nodes.map(node => node.range[0]))
+  const end = nodes[0].range[0]
+  return sourceCode.ast.body.some(
+    statement =>
+      'source' in statement &&
+      statement.source != null &&
+      !nodes.includes(statement as TSESTree.ImportDeclaration) &&
+      statement.range[0] > start &&
+      statement.range[0] < end,
+  )
+}
+
 function hasNamespace(node: TSESTree.ImportDeclaration) {
   return node.specifiers.some(
     specifier => specifier.type === 'ImportNamespaceSpecifier',

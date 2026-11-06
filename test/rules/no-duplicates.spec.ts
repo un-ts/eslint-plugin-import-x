@@ -175,7 +175,9 @@ ruleTester.run('no-duplicates', rule, {
       ],
     }),
 
-    // #505: an unlisted entry point joins the same module whatever the import order
+    // #505: an unlisted entry point joins the same module whatever the import order.
+    // Merging 'svelte/store' into the later 'svelte' would run it after
+    // 'svelte/easing', so the second case has no autofix.
     ...[
       [
         "import { onMount } from 'svelte'; import { writable } from 'svelte/store'; import { quintOut } from 'svelte/easing'",
@@ -183,7 +185,7 @@ ruleTester.run('no-duplicates', rule, {
       ],
       [
         "import { quintOut } from 'svelte/easing'; import { writable } from 'svelte/store'; import { onMount } from 'svelte'",
-        "import { quintOut } from 'svelte/easing';  import { onMount, writable } from 'svelte'",
+        null,
       ],
     ].map(([code, output]) =>
       tInvalid({
@@ -197,6 +199,18 @@ ruleTester.run('no-duplicates', rule, {
         ],
       }),
     ),
+
+    // #505: no autofix that would run 'svelte/store' after an import in between
+    tInvalid({
+      code: "import { writable } from 'svelte/store'; import { x } from './foo'; import { onMount } from 'svelte'",
+      output: null,
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
 
     // #505: only specifiers in the same group are kept apart
     tInvalid({
