@@ -39,6 +39,7 @@ function symlinkFixture(relativePath = '') {
 for (const [file, content] of [
   ['repo/packages/foo/package.json', '{ "name": "foo" }'],
   ['repo/packages/foo/index.js', ''],
+  ['repo/packages/foo/src/deep/index.js', ''],
   ['store/shared/package.json', '{ "name": "shared" }'],
   ['store/shared/lib/util.js', ''],
   ['store/bootstrap/package.json', '{ "name": "bootstrap" }'],
@@ -229,6 +230,22 @@ ruleTester.run('no-relative-packages', rule, {
         {
           ...createNotFoundError(
             './node_modules/bootstrap/dist/css/bootstrap.css',
+            path.normalize('bootstrap/dist/css/bootstrap.css'),
+          ),
+          line: 1,
+          column: 8,
+        },
+      ],
+      output: 'import "bootstrap/dist/css/bootstrap.css"',
+    }),
+    tInvalid({
+      code: 'import "../../node_modules/bootstrap/dist/css/bootstrap.css"',
+      filename: symlinkFixture('repo/packages/foo/src/deep/index.js'),
+      settings: { 'import-x/resolver-next': [createNodeResolver()] },
+      errors: [
+        {
+          ...createNotFoundError(
+            '../../node_modules/bootstrap/dist/css/bootstrap.css',
             path.normalize('bootstrap/dist/css/bootstrap.css'),
           ),
           line: 1,
