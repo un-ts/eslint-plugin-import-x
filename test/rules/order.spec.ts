@@ -1655,18 +1655,11 @@ ruleTester.run('order', rule, {
     var async = require('async');
     var fs = require('fs');
   `,
-      output: [
-        `
-    var async = require('async');
-    var sibling = require('./sibling');
-    var fs = require('fs');
-  `,
-        `
+      output: `
     var fs = require('fs');
     var async = require('async');
     var sibling = require('./sibling');
   `,
-      ],
       errors: [
         createOrderError(['`async` import', 'before', 'import of `./sibling`']),
         createOrderError(['`fs` import', 'before', 'import of `./sibling`']),
@@ -2387,6 +2380,147 @@ ruleTester.run('order', rule, {
         createOrderError(['`./local2` import', 'after', 'import of `global4`']),
       ],
     }),
+    // all imports of a block move in one pass, ESLint stops after 10 passes (#324)
+    tInvalid({
+      code: `${[
+        ...Array.from({ length: 11 }, (_, i) => `import s${i} from './s${i}';`),
+        ...Array.from({ length: 12 }, (_, i) => `import p${i} from 'p${i}';`),
+      ].join('\n')}\n`,
+      output: `${[
+        ...Array.from({ length: 12 }, (_, i) => `import p${i} from 'p${i}';`),
+        ...Array.from(
+          { length: 11 },
+          (_, i) => `import s${10 - i} from './s${10 - i}';`,
+        ),
+      ].join('\n')}\n`,
+      errors: Array.from({ length: 11 }, () => ({
+        messageId: 'order' as const,
+      })),
+    }),
+    tInvalid({
+      code: `
+        import c from './c';
+        import z from 'z';
+        import b from './b';
+        import y from 'y';
+        import a from './a';
+        import x from 'x';
+      `,
+      output: `
+        import x from 'x';
+        import y from 'y';
+        import z from 'z';
+        import a from './a';
+        import b from './b';
+        import c from './c';
+      `,
+      options: [{ alphabetize: { order: 'asc' } }],
+      errors: [
+        { messageId: 'order' },
+        { messageId: 'order' },
+        { messageId: 'order' },
+        { messageId: 'order' },
+        { messageId: 'order' },
+      ],
+    }),
+    // what can't be moved stays, the rest of the block is still fixed
+    tInvalid({
+      code: `
+        import a from 'a';
+        import s from './s';
+        import b from 'b';
+        foo();
+        import r from './r';
+        import c from 'c';
+      `,
+      output: `
+        import a from 'a';
+        import b from 'b';
+        import s from './s';
+        foo();
+        import r from './r';
+        import c from 'c';
+      `,
+      errors: [
+        createOrderError(['`b` import', 'before', 'import of `./s`']),
+        createOrderError(['`c` import', 'before', 'import of `./s`']),
+      ],
+    }),
+    // an import with a disabled report stays, in the fix of any other report too
+    tInvalid({
+      code: `
+        // eslint-disable-next-line
+        import { env } from './env';
+        import { foo } from './foo';
+        import express from 'express';
+        import cors from 'cors';
+        import helmet from 'helmet';
+      `,
+      output: `
+        // eslint-disable-next-line
+        import { env } from './env';
+        import express from 'express';
+        import cors from 'cors';
+        import helmet from 'helmet';
+        import { foo } from './foo';
+      `,
+      errors: [
+        createOrderError(['`./foo` import', 'after', 'import of `helmet`']),
+      ],
+    }),
+    tInvalid({
+      code: `
+        import { env } from './env'; // eslint-disable-line -- has to run first
+        import { foo } from './foo';
+        import express from 'express';
+        import cors from 'cors';
+        import helmet from 'helmet';
+      `,
+      output: `
+        import { env } from './env'; // eslint-disable-line -- has to run first
+        import express from 'express';
+        import cors from 'cors';
+        import helmet from 'helmet';
+        import { foo } from './foo';
+      `,
+      errors: [
+        createOrderError(['`./foo` import', 'after', 'import of `helmet`']),
+      ],
+    }),
+    // imports on one line share the whitespace and comments between them, so they move one at a time
+    tInvalid({
+      code: `import a from '../a';\nimport b from 'b'; import c from './c';\nimport d from '../d';\nimport e from '../e';\n`,
+      output: [
+        `import b from 'b'; \nimport a from '../a';\nimport c from './c';\nimport d from '../d';\nimport e from '../e';\n`,
+        `import b from 'b'; \nimport a from '../a';\nimport d from '../d';\nimport e from '../e';\nimport c from './c';\n`,
+      ],
+      errors: [
+        createOrderError(['`../a` import', 'after', 'import of `b`']),
+        createOrderError(['`./c` import', 'after', 'import of `../e`']),
+      ],
+    }),
+    tInvalid({
+      code: `import z from 'z'; /* c */ import t from './t';\nimport fs from 'fs';\nimport b from 'b';\nimport a from 'a';\n`,
+      output: [
+        `import t from './t';\nimport fs from 'fs';\nimport z from 'z'; /* c */ \nimport b from 'b';\nimport a from 'a';\n`,
+        `import fs from 'fs';\nimport z from 'z'; /* c */ \nimport b from 'b';\nimport a from 'a';\nimport t from './t';\n`,
+      ],
+      errors: [
+        createOrderError(['`z` import', 'after', 'import of `fs`']),
+        createOrderError(['`./t` import', 'after', 'import of `a`']),
+      ],
+    }),
+    // the last line of a file can have no line break to put an import after
+    tInvalid({
+      code: `import z from './z'\nimport a from 'a'\nimport b from 'b'`,
+      output: `import a from 'a'\nimport b from 'b'\nimport z from './z'\n`,
+      errors: [createOrderError(['`./z` import', 'after', 'import of `b`'])],
+    }),
+    tInvalid({
+      code: `import z from './z';\nimport a from 'a';\nimport b from 'b'; // last`,
+      output: `import a from 'a';\nimport b from 'b'; // last\nimport z from './z';\n`,
+      errors: [createOrderError(['`./z` import', 'after', 'import of `b`'])],
+    }),
     // reorder fix cannot cross non import on moving above when indexes are 2 and 10
     tInvalid({
       code: `
@@ -3012,20 +3146,12 @@ ruleTester.run('order', rule, {
           const blah = require('./blah');
           import { hello } from './hello';
         `,
-      output: [
-        `
-          import { int } from './int';
-          const { cello } = require('./cello');
-          const blah = require('./blah');
-          import { hello } from './hello';
-        `,
-        `
+      output: `
           import { int } from './int';
           import { hello } from './hello';
           const { cello } = require('./cello');
           const blah = require('./blah');
         `,
-      ],
       errors: [
         createOrderError(['`./int` import', 'before', 'import of `./cello`']),
         createOrderError(['`./hello` import', 'before', 'import of `./cello`']),
@@ -5676,17 +5802,7 @@ describe('TypeScript', () => {
         import { controller } from '../../../../path/path/path/controller';
         import { component } from '../../../../path/path/path/component';
       `,
-        output: [
-          `
-        import { helpers } from 'path/path/path/helpers';
-        import { cfg } from 'path/path/path/src/Cfg';
-        import { l10n } from 'path/src/l10n';
-        import { tip } from 'path/path/tip';
-
-        import { component } from '../../../../path/path/path/component';
-        import { controller } from '../../../../path/path/path/controller';
-      `,
-          `
+        output: `
         import { helpers } from 'path/path/path/helpers';
         import { cfg } from 'path/path/path/src/Cfg';
         import { tip } from 'path/path/tip';
@@ -5695,7 +5811,6 @@ describe('TypeScript', () => {
         import { component } from '../../../../path/path/path/component';
         import { controller } from '../../../../path/path/path/controller';
       `,
-        ],
         languageOptions: { parser: require(parsers.ESPREE) },
         options: [
           {
