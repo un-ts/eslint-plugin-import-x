@@ -666,10 +666,15 @@ export default createRule<[Options?], MessageId>({
       group => new Set(group),
     )
 
-    // only specifiers listed in the same group are known to be different modules
+    // only specifiers listed in the same group are known to be different modules,
+    // and two queries on one entry point only when both are listed with the query
     const areDifferentModules = (a: string, b: string) =>
-      a.split('?')[0] !== b.split('?')[0] &&
-      whitelist!.some(group => isListed(group, a) && isListed(group, b))
+      a !== b &&
+      whitelist!.some(group =>
+        a.split('?')[0] === b.split('?')[0]
+          ? group.has(a) && group.has(b)
+          : isListed(group, a) && isListed(group, b),
+      )
 
     const getImportKey = (
       sourcePath: string,
