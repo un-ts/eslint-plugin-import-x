@@ -32,14 +32,13 @@ function isListed(group: Set<string>, sourcePath: string) {
 }
 
 function checkImports(
-  imported: Map<string, TSESTree.ImportDeclaration[]>,
+  imported: Iterable<[string, TSESTree.ImportDeclaration[]]>,
   context: RuleContext<MessageId, [Options?]>,
 ) {
-  // eslint-disable-next-line unicorn/no-array-for-each -- Map.forEach is faster than Map.entries
-  imported.forEach((nodes, module) => {
+  for (const [module, nodes] of imported) {
     if (nodes.length <= 1) {
       // not enough imports, definitely not duplicates
-      return
+      continue
     }
 
     for (let i = 0, len = nodes.length; i < len; i++) {
@@ -54,7 +53,7 @@ function checkImports(
         fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
       })
     }
-  })
+  }
 }
 
 function getFix(
@@ -751,7 +750,7 @@ export default createRule<[Options?], MessageId>({
       if (!whitelist) {
         return imported
       }
-      const result = new Map<string, TSESTree.ImportDeclaration[]>()
+      const result: Array<[string, TSESTree.ImportDeclaration[]]> = []
       for (const [resolvedPath, nodes] of imported) {
         const specifiers = [...new Set(nodes.map(node => node.source.value))]
           .map(specifier => ({
@@ -775,17 +774,17 @@ export default createRule<[Options?], MessageId>({
           }
         }
         if (modules.length === 1) {
-          result.set(resolvedPath, listedFirst(nodes, modules[0][0]))
+          result.push([resolvedPath, listedFirst(nodes, modules[0][0])])
           continue
         }
         for (const members of modules) {
-          result.set(
+          result.push([
             members[0],
             listedFirst(
               nodes.filter(node => members.includes(node.source.value)),
               members[0],
             ),
-          )
+          ])
         }
       }
       return result

@@ -48,6 +48,23 @@ const sharedDeclarationSettings = {
   ],
 }
 
+const sharedDeclarationCollisionSettings = {
+  'import-x/resolver-next': [
+    {
+      name: 'shared-declaration-collision-resolver',
+      interfaceVersion: 3,
+      resolve(modulePath: string) {
+        if (modulePath === './a') {
+          return { found: true, path: '/app/a' }
+        }
+        return /^(\/app\/a|pkg\/b)$/.test(modulePath)
+          ? { found: true, path: sharedDeclarationPath }
+          : { found: false }
+      },
+    },
+  ],
+}
+
 ruleTester.run('no-duplicates', rule, {
   valid: [
     // #505: entry points of a whitelisted package are different modules
@@ -229,6 +246,26 @@ ruleTester.run('no-duplicates', rule, {
       ],
     }),
 
+    // a split group key may collide with another resolved path
+    tInvalid({
+      code: [
+        "import { a1 } from '/app/a'",
+        "import { a2 } from '/app/a'",
+        "import { b } from 'pkg/b'",
+        "import { c } from './a'",
+      ].join('\n'),
+      output: [
+        "import { a1, a2 } from '/app/a'",
+        "import { b } from 'pkg/b'",
+        "import { c } from './a'",
+      ].join('\n'),
+      options: [{ whitelist: [['/app/a', 'pkg/b']] }],
+      settings: sharedDeclarationCollisionSettings,
+      errors: [
+        createDuplicatedError('/app/a'),
+        createDuplicatedError('/app/a'),
+      ],
+    }),
     tInvalid({
       code: "import { x } from './foo'; import { y } from './foo'",
       output: "import { x, y } from './foo'; ",
