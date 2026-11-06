@@ -62,16 +62,6 @@ function getFix(
   sourceCode: TSESLint.SourceCode,
   context: RuleContext<MessageId, [Options?]>,
 ): TSESLint.ReportFixFunction | null {
-  // With a whitelist, the specifier is the entry point. Moving specifiers
-  // between imports with different source values could redirect them to another
-  // entry point, so report the duplicates but leave the fix to the user.
-  if (
-    context.options[0]?.whitelist &&
-    nodes.some(node => node.source.value !== nodes[0].source.value)
-  ) {
-    return null
-  }
-
   // Without `prefer-inline`, `import type {a}` and `import {type b, c}` share a
   // group. Keep the types in `import type` instead of writing inline types.
   if (
@@ -79,6 +69,15 @@ function getFix(
     nodes.some(node => node.importKind === 'type') &&
     nodes.some(node => node.importKind !== 'type')
   ) {
+    // With a whitelist, the specifier is the entry point. Moving type imports
+    // between imports with different source values could redirect them to another
+    // entry point, so report the duplicates but leave the fix to the user.
+    if (
+      context.options[0]?.whitelist &&
+      nodes.some(node => node.source.value !== nodes[0].source.value)
+    ) {
+      return null
+    }
     return getTypeImportFix(nodes, sourceCode)
   }
 
