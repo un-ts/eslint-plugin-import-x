@@ -3,6 +3,6 @@
   "type": "module",
   "exports": {
     ".": "./dist/index.js",
-    "./sub": "./dist/sub.js"
+    "./sub": "./dist/index.js"
   }
 }
