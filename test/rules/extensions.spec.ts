@@ -138,6 +138,14 @@ ruleTester.run('extensions', rule, {
       filename: testFilePath('./package-self-reference/src/main.js'),
     }),
 
+    // an exports map that points a subpath at dist/index.js must not be
+    // rewritten to <subpath>/index.js
+    tValid({
+      code: 'import { exported } from "exports-index/sub"',
+      options: ['always', { ignorePackages: false }],
+      filename: testFilePath('./bar.js'),
+    }),
+
     tValid({
       code: 'import exceljs from "exceljs"',
       options: ['always', { js: 'never', jsx: 'never' }],

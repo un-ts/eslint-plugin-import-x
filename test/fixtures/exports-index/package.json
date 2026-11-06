@@ -1,0 +1,8 @@
+{
+  "name": "exports-index",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./sub": "./dist/index.js"
+  }
+}
