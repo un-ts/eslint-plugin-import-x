@@ -1160,6 +1160,248 @@ ruleTester.run('no-rename-default', rule, {
   invalid: [],
 })
 
+// IMPORT + REQUIRE module name aliases
+// markdown-it-anchor
+// @org/abc
+// package/xyz
+ruleTester.run('no-rename-default', rule, {
+  valid: [
+    tValid({
+      code: `import markdownItAnchor from 'markdown-it-anchor'`,
+    }),
+    tValid({
+      code: `import markdown_it_anchor from 'markdown-it-anchor'`,
+    }),
+    tValid({
+      code: `import { default as markdownItAnchor } from 'markdown-it-anchor'`,
+    }),
+    tValid({
+      code: `import abc from '@org/abc'`,
+    }),
+    tValid({
+      code: `import xyz from 'package/xyz'`,
+    }),
+    tValid({
+      code: `import abc from '@org/abc/index'`,
+    }),
+    tValid({
+      code: `import abc from '@org/abc/index.js'`,
+    }),
+    tValid({
+      code: `import xyz from 'package/xyz/index'`,
+    }),
+    tValid({
+      code: `import somePackage from 'somepackage'`,
+    }),
+    tValid({
+      code: `const markdownItAnchor = require('markdown-it-anchor')`,
+      options: [{ commonjs: true }],
+    }),
+  ],
+  invalid: [
+    tInvalid({
+      code: `import anchorPlugin from 'markdown-it-anchor'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'anchorPlugin',
+            suggestion: "import _default from 'markdown-it-anchor'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import other from '@org/abc'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'other',
+            suggestion: "import _default from '@org/abc'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import other from 'package/xyz'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'xyz.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'other',
+            suggestion: "import _default from 'package/xyz'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import index from '@org/abc/index'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'index',
+            suggestion: "import _default from '@org/abc/index'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import index from '@org/abc/index.js'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'index',
+            suggestion: "import _default from '@org/abc/index.js'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import index from 'package/xyz/index'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'index',
+            suggestion: "import _default from 'package/xyz/index'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import markdownitanchor from 'markdown-it-anchor'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'markdownitanchor',
+            suggestion: "import _default from 'markdown-it-anchor'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import mark_down__it__anchor from 'markdown-it-anchor'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'mark_down__it__anchor',
+            suggestion: "import _default from 'markdown-it-anchor'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+  ],
+})
+
+// IMPORT + REQUIRE { whitelist }
+// default-declaration.js
+// index-declaration.js
+ruleTester.run('no-rename-default', rule, {
+  valid: [
+    tValid({
+      code: `import anchor from './no-rename-default/default-declaration'`,
+      options: [{ whitelist: ['./no-rename-default/default-declaration'] }],
+    }),
+    tValid({
+      code: `import anchor from './no-rename-default/index-declaration'`,
+      options: [{ whitelist: ['./no-rename-default/index-declaration'] }],
+    }),
+    tValid({
+      code: `import { default as anchor } from './no-rename-default/default-declaration'`,
+      options: [{ whitelist: ['./no-rename-default/default-declaration'] }],
+    }),
+    tValid({
+      code: `const anchor = require('./no-rename-default/default-declaration')`,
+      options: [
+        {
+          commonjs: true,
+          whitelist: ['./no-rename-default/default-declaration'],
+        },
+      ],
+    }),
+  ],
+  invalid: [
+    tInvalid({
+      code: `import anchor from './no-rename-default/default-declaration'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'default-declaration.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'anchor',
+            suggestion:
+              "import _default from './no-rename-default/default-declaration'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import anchor from './no-rename-default/default-declaration'`,
+      options: [{ whitelist: ['./no-rename-default'] }],
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'default-declaration.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'anchor',
+            suggestion:
+              "import _default from './no-rename-default/default-declaration'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import anchor from './no-rename-default/index-declaration'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index-declaration.js',
+            defaultExportName: 'index',
+            requiresOrImports: 'imports',
+            importName: 'anchor',
+            suggestion:
+              "import index from './no-rename-default/index-declaration'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+  ],
+})
+
 describe('TypeScript', function () {
   ruleTester.run('no-rename-default', rule, {
     valid: [

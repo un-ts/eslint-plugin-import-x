@@ -13,8 +13,92 @@ import { createRule, getValue } from '../utils/index.js'
 import type { ModuleOptions } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
+/**
+ * Splits an identifier or module name into lower-cased word tokens.
+ *
+ * @param name - The identifier or module name to split.
+ * @returns The lower-cased word tokens.
+ */
+function toIdentifierTokens(name: string) {
+  return name
+    .replaceAll(/([\da-z])([A-Z])/g, '$1 $2')
+    .replaceAll(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .split(/[^\dA-Za-z]+/)
+    .filter(Boolean)
+    .map(token => token.toLowerCase())
+}
+
+/**
+ * Removes a module file extension from a subpath segment.
+ *
+ * @param name - The subpath segment.
+ * @returns The segment without its extension.
+ */
+function stripModuleSuffix(name: string) {
+  return name.replace(/\.d\.[cm]?ts$/, '').replace(/\.[^./]+$/, '')
+}
+
+/**
+ * Gets the meaningful name of a bare module specifier: the package name for a
+ * package root, otherwise the final subpath segment, ignoring an `index`
+ * segment or a file extension.
+ *
+ * @param sourcePath - The module specifier as written.
+ * @returns The module name, if the specifier is bare.
+ */
+function getModuleName(sourcePath: string) {
+  const [specifier] = sourcePath.split(/[?#]/)
+  if (!specifier || specifier.startsWith('.') || path.isAbsolute(specifier)) {
+    return
+  }
+  const parts = specifier.split('/')
+  const packagePartCount = specifier.startsWith('@') ? 2 : 1
+  const packageName = parts[packagePartCount - 1]
+  if (!packageName) {
+    return
+  }
+  const subpath = parts.slice(packagePartCount)
+  if (subpath.length === 0) {
+    return packageName
+  }
+  let name = stripModuleSuffix(subpath.at(-1)!)
+  if (name === 'index' && subpath.length > 1) {
+    name = stripModuleSuffix(subpath.at(-2)!)
+  }
+  return !name || name === 'index' ? packageName : name
+}
+
+/**
+ * Whether a local name is a word-sequence spelling of a bare module name.
+ *
+ * @param sourcePath - The module specifier as written.
+ * @param localName - The imported local binding name.
+ * @returns Whether the local name matches the module's name.
+ */
+function isModuleName(sourcePath: string, localName: string) {
+  const moduleName = getModuleName(sourcePath)
+  if (!moduleName) {
+    return false
+  }
+  const moduleTokens = toIdentifierTokens(moduleName)
+  const localTokens = toIdentifierTokens(localName)
+  if (
+    moduleTokens.length === localTokens.length &&
+    moduleTokens.every((token, index) => token === localTokens[index])
+  ) {
+    return true
+  }
+  // A package without separators can still be camel-cased in the local name:
+  // `somepackage` -> `somePackage`.
+  return (
+    moduleTokens.length === 1 &&
+    moduleName.toLowerCase() === localName.toLowerCase()
+  )
+}
+
 export type Options = ModuleOptions & {
   preventRenamingBindings?: boolean
+  whitelist?: string[]
 }
 
 export type MessageId = 'renameDefault'
@@ -39,6 +123,13 @@ export default createRule<[Options?], MessageId>({
             default: true,
             type: 'boolean',
           },
+          whitelist: {
+            type: 'array',
+            uniqueItems: true,
+            items: {
+              type: 'string',
+            },
+          },
         },
         additionalProperties: false,
       },
@@ -50,8 +141,12 @@ export default createRule<[Options?], MessageId>({
   },
   defaultOptions: [],
   create(context) {
-    const { commonjs = false, preventRenamingBindings = true } =
-      context.options[0] || {}
+    const {
+      commonjs = false,
+      preventRenamingBindings = true,
+      whitelist,
+    } = context.options[0] || {}
+    const whitelistSet = whitelist ? new Set(whitelist) : undefined
 
     function getDefaultExportName(moduleInfo: ModuleInfo) {
       const sourceName = getDefaultExportSourceName(moduleInfo)
@@ -88,6 +183,11 @@ export default createRule<[Options?], MessageId>({
     function handleImport(
       node: TSESTree.ImportDefaultSpecifier | TSESTree.ImportSpecifier,
     ) {
+      const importTarget = node.parent.source?.value
+      if (!importTarget || whitelistSet?.has(importTarget)) {
+        return
+      }
+
       const moduleInfo = getModuleInfo(node.parent.source)
       if (moduleInfo == null) {
         return
@@ -98,13 +198,15 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
-      const importTarget = node.parent.source?.value
       const importBasename = path.basename(moduleInfo.path)
 
       if (node.type === 'ImportDefaultSpecifier') {
         const importName = node.local.name
 
-        if (importName === defaultExportName) {
+        if (
+          importName === defaultExportName ||
+          isModuleName(importTarget, importName)
+        ) {
           return
         }
 
@@ -133,7 +235,10 @@ export default createRule<[Options?], MessageId>({
 
       const actualImportedName = node.local.name
 
-      if (actualImportedName === defaultExportName) {
+      if (
+        actualImportedName === defaultExportName ||
+        isModuleName(importTarget, actualImportedName)
+      ) {
         return
       }
 
@@ -183,13 +288,17 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
+      const requireTarget = source.value
+      if (whitelistSet?.has(requireTarget)) {
+        return
+      }
+
       const moduleInfo = getModuleInfo(source)
       if (moduleInfo == null) {
         return
       }
 
       const defaultExportName = getDefaultExportName(moduleInfo)
-      const requireTarget = source.value
       const requireBasename = path.basename(moduleInfo.path)
 
       let requireName
@@ -205,7 +314,10 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
-      if (requireName === defaultExportName) {
+      if (
+        requireName === defaultExportName ||
+        isModuleName(requireTarget, requireName)
+      ) {
         return
       }
 
