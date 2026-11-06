@@ -1160,6 +1160,48 @@ ruleTester.run('no-rename-default', rule, {
   invalid: [],
 })
 
+// IMPORT + REQUIRE module name aliases
+// markdown-it-anchor
+// @org/abc
+// package/xyz
+ruleTester.run('no-rename-default', rule, {
+  valid: [
+    tValid({
+      code: `import markdownItAnchor from 'markdown-it-anchor'`,
+    }),
+    tValid({
+      code: `import markdown_it_anchor from 'markdown-it-anchor'`,
+    }),
+    tValid({
+      code: `import abc from '@org/abc'`,
+    }),
+    tValid({
+      code: `import xyz from 'package/xyz'`,
+    }),
+    tValid({
+      code: `const markdownItAnchor = require('markdown-it-anchor')`,
+      options: [{ commonjs: true }],
+    }),
+  ],
+  invalid: [
+    tInvalid({
+      code: `import anchorPlugin from 'markdown-it-anchor'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'anchorPlugin',
+            suggestion: "import _default from 'markdown-it-anchor'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+  ],
+})
+
 // IMPORT + REQUIRE { whitelist }
 // default-declaration.js
 // index-declaration.js

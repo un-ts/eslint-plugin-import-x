@@ -30,6 +30,19 @@ import getUsers from './api/get-users.js'
 import findUsers from './get-users'
 ```
 
+## Module name aliases
+
+For bare module specifiers, the local name can also match the package name or the final path segment, ignoring case and separators. This keeps mangled default exports usable without disabling the rule for the whole module:
+
+```js
+import markdownItAnchor from 'markdown-it-anchor'
+import markdown_it_anchor from 'markdown-it-anchor'
+import abc from '@org/abc'
+import xyz from 'package/xyz'
+```
+
+All of the above are valid. `import anchorPlugin from 'markdown-it-anchor'` is still reported.
+
 ## Options
 
 ### `whitelist`

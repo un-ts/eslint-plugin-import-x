@@ -13,6 +13,21 @@ import { createRule, getValue } from '../utils/index.js'
 import type { ModuleOptions } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
+function toIdentifierKey(name: string) {
+  return name.replaceAll(/[^\dA-Za-z]/g, '').toLowerCase()
+}
+
+function getModuleIdentifier(sourcePath: string) {
+  const [specifier] = sourcePath.split(/[?#]/)
+  if (!specifier || specifier.startsWith('.') || path.isAbsolute(specifier)) {
+    return
+  }
+  const parts = specifier.split('/')
+  const name =
+    specifier.startsWith('@') && parts.length === 2 ? parts[1] : parts.at(-1)
+  return name ? toIdentifierKey(name) : undefined
+}
+
 export type Options = ModuleOptions & {
   preventRenamingBindings?: boolean
   whitelist?: string[]
@@ -64,6 +79,13 @@ export default createRule<[Options?], MessageId>({
       whitelist,
     } = context.options[0] || {}
     const whitelistSet = whitelist ? new Set(whitelist) : undefined
+    const isModuleName = (sourcePath: string, localName: string) => {
+      const moduleIdentifier = getModuleIdentifier(sourcePath)
+      return (
+        moduleIdentifier !== undefined &&
+        moduleIdentifier === toIdentifierKey(localName)
+      )
+    }
 
     function getDefaultExportName(moduleInfo: ModuleInfo) {
       const sourceName = getDefaultExportSourceName(moduleInfo)
@@ -120,7 +142,10 @@ export default createRule<[Options?], MessageId>({
       if (node.type === 'ImportDefaultSpecifier') {
         const importName = node.local.name
 
-        if (importName === defaultExportName) {
+        if (
+          importName === defaultExportName ||
+          isModuleName(importTarget, importName)
+        ) {
           return
         }
 
@@ -149,7 +174,10 @@ export default createRule<[Options?], MessageId>({
 
       const actualImportedName = node.local.name
 
-      if (actualImportedName === defaultExportName) {
+      if (
+        actualImportedName === defaultExportName ||
+        isModuleName(importTarget, actualImportedName)
+      ) {
         return
       }
 
@@ -225,7 +253,10 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
-      if (requireName === defaultExportName) {
+      if (
+        requireName === defaultExportName ||
+        isModuleName(requireTarget, requireName)
+      ) {
         return
       }
 
