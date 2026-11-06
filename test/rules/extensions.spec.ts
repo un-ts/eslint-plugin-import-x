@@ -1891,47 +1891,49 @@ describe('TypeScript', () => {
         output: 'import foo from "./typescript-default.js";',
       }),
 
-      tInvalid({
-        // the extensionless import resolves to conflict.ts, while the js candidate is a different file
-        name: 'extensions should not infer a candidate that resolves to a different file',
-        code: 'import foo from "./extensions-inference/conflict";',
-        filename: testFilePath('./foo.ts'),
-        settings: {
-          'import-x/resolver-next': [
+      ...[false, true].map(fix =>
+        tInvalid({
+          // the extensionless import resolves to conflict.ts, while the js candidate is a different file
+          name: `extensions should not infer a candidate that resolves to a different file (fix: ${fix})`,
+          code: 'import foo from "./extensions-inference/conflict";',
+          filename: testFilePath('./foo.ts'),
+          settings: {
+            'import-x/resolver-next': [
+              {
+                name: 'conflict-resolver',
+                interfaceVersion: 3,
+                resolve(modulePath: string) {
+                  if (modulePath === './extensions-inference/conflict') {
+                    return {
+                      found: true,
+                      path: testFilePath('extensions-inference/conflict.ts'),
+                    }
+                  }
+                  if (modulePath === './extensions-inference/conflict.js') {
+                    return {
+                      found: true,
+                      path: testFilePath('extensions-inference/conflict.js'),
+                    }
+                  }
+                  return { found: false }
+                },
+              },
+            ],
+          },
+          options: ['always', { pattern: { js: 'always' }, fix }],
+          errors: [
             {
-              name: 'conflict-resolver',
-              interfaceVersion: 3,
-              resolve(modulePath: string) {
-                if (modulePath === './extensions-inference/conflict') {
-                  return {
-                    found: true,
-                    path: testFilePath('extensions-inference/conflict.ts'),
-                  }
-                }
-                if (modulePath === './extensions-inference/conflict.js') {
-                  return {
-                    found: true,
-                    path: testFilePath('extensions-inference/conflict.js'),
-                  }
-                }
-                return { found: false }
+              messageId: 'missingKnown',
+              data: {
+                extension: 'ts',
+                importPath: './extensions-inference/conflict',
               },
             },
           ],
-        },
-        options: ['always', { pattern: { js: 'always' }, fix: true }],
-        errors: [
-          {
-            messageId: 'missingKnown',
-            data: {
-              extension: 'ts',
-              importPath: './extensions-inference/conflict',
-            },
-          },
-        ],
-        // the resolver cannot resolve the .ts rewrite, so no fix is offered
-        output: null,
-      }),
+          // the resolver cannot resolve the .ts rewrite, so no fix is offered
+          output: null,
+        }),
+      ),
 
       tInvalid({
         name: 'extensions should not fix an ambiguous resolved extension',
