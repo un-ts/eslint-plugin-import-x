@@ -520,31 +520,34 @@ export default createRule<Options, MessageId>({
               extensionForbidden,
             )
           ) {
+            const appendedPathname = appendExtension(importPath, extension)
+            const indexPathname = `${
+              importPath.endsWith('/') ? importPath.slice(0, -1) : importPath
+            }/index.${extension}`
             // `foo` resolving to `foo/index.js` is a directory import, while
-            // `foo.js` wins over `foo/index.js` when both exist
+            // `foo.js` wins over `foo/index.js` when both exist. The directory
+            // name also identifies the index file when a resolver cannot
+            // re-resolve a rewritten specifier.
             const isDirectoryImport =
               !!resolvedPath &&
               path.basename(resolvedPath, `.${extension}`) === 'index' &&
-              path.basename(importPath) !== 'index' &&
-              resolve(`${importPath}/index.${extension}`, context) ===
-                resolvedPath
-            const fixedPathname =
-              /([\\/]|[\\/]?\.?\.)$/.test(importPath) || isDirectoryImport
-                ? `${
-                    importPath.endsWith('/')
-                      ? importPath.slice(0, -1)
-                      : importPath
-                  }/index.${extension}`
-                : appendExtension(importPath, extension)
+              ((importPath.startsWith('.') &&
+                path.basename(importPath) ===
+                  path.basename(path.dirname(resolvedPath))) ||
+                resolve(indexPathname, context) === resolvedPath)
+            const fixedPathname = isDirectoryImport
+              ? indexPathname
+              : appendedPathname
             // An exports map can point `pkg/sub` at `dist/index.js`, and the
             // appended `.js` may not be exported at all; only a path that
-            // resolves back to the original file may be offered as a fix
-            // Only the directory-index rewrite and the exports subpath need
-            // the round-trip check; resolvers that cannot re-resolve a
-            // rewritten specifier would otherwise lose valid .ts fixes
+            // resolves back to the original file may be offered as a fix.
+            // Relative paths can be fixed from the resolved file even when the
+            // resolver cannot resolve the rewritten specifier.
             const fixedImportPath =
               extension &&
-              (!isDirectoryImport ||
+              (!resolvedPath ||
+                isDirectoryImport ||
+                importPath.startsWith('.') ||
                 resolve(fixedPathname, context) === resolvedPath)
                 ? stringifyPath({ pathname: fixedPathname, query, hash })
                 : ''
