@@ -227,6 +227,76 @@ function appendExtension(importPath: string, extension: string) {
 }
 
 /**
+ * Computes the import path a fix should use for a missing extension.
+ *
+ * `foo` resolving to `foo/index.js` is a directory import, while `foo.js`
+ * wins over `foo/index.js` when both exist. A rewrite is only offered when it
+ * resolves back to the original file, or when it is a trusted relative
+ * shortcut and the resolver cannot resolve it.
+ *
+ * @param importPath - The import path as written.
+ * @param extension - The missing extension without a leading dot.
+ * @param resolvedPath - The result of resolving the import path.
+ * @param context - The rule context, used to verify rewritten paths.
+ * @returns The pathname to use in a fix or suggestion, or an empty string.
+ */
+function computeFixedPathname(
+  importPath: string,
+  extension: string,
+  resolvedPath: string | null | undefined,
+  context: RuleContext,
+) {
+  if (!extension) {
+    return ''
+  }
+  if (!resolvedPath) {
+    return appendExtension(importPath, extension)
+  }
+
+  const isRelativeImport = importPath.startsWith('.')
+  const resolvedToIndex =
+    path.basename(resolvedPath, `.${extension}`) === 'index'
+  // The directory name also identifies the index file when a resolver cannot
+  // re-resolve the rewritten specifier.
+  const indexPathname = resolvedToIndex
+    ? `${
+        importPath.endsWith('/') ? importPath.slice(0, -1) : importPath
+      }/index.${extension}`
+    : ''
+  const indexPathResolved = resolvedToIndex
+    ? resolve(indexPathname, context)
+    : undefined
+  const isDirectoryImport =
+    resolvedToIndex &&
+    ((isRelativeImport &&
+      path.basename(importPath) ===
+        path.basename(path.dirname(resolvedPath))) ||
+      indexPathResolved === resolvedPath)
+  const fixedPathname = isDirectoryImport
+    ? indexPathname
+    : appendExtension(importPath, extension)
+  const fixedResolvedPath = isDirectoryImport
+    ? indexPathResolved
+    : resolve(fixedPathname, context)
+
+  if (fixedResolvedPath === resolvedPath) {
+    return fixedPathname
+  }
+  // An exports map can point `pkg/sub` at `dist/index.js`, and a rewrite may
+  // resolve to a different file or not at all. Accept a trusted shortcut when
+  // the resolver cannot resolve the rewritten specifier.
+  if (
+    !fixedResolvedPath &&
+    (isDirectoryImport ||
+      (isRelativeImport &&
+        path.basename(fixedPathname) === path.basename(resolvedPath)))
+  ) {
+    return fixedPathname
+  }
+  return ''
+}
+
+/**
  * Whether the resolved file is the import path with another extension, e.g.
  * `./foo.js` resolved to `foo.ts` (a resolver extension alias).
  *
@@ -520,48 +590,15 @@ export default createRule<Options, MessageId>({
               extensionForbidden,
             )
           ) {
-            const isRelativeImport = importPath.startsWith('.')
-            const isIndexFile =
-              !!resolvedPath &&
-              path.basename(resolvedPath, `.${extension}`) === 'index'
-            // `foo` resolving to `foo/index.js` is a directory import, while
-            // `foo.js` wins over `foo/index.js` when both exist. The directory
-            // name also identifies the index file when a resolver cannot
-            // re-resolve a rewritten specifier.
-            const indexPathname = isIndexFile
-              ? `${
-                  importPath.endsWith('/')
-                    ? importPath.slice(0, -1)
-                    : importPath
-                }/index.${extension}`
+            const fixedPathname = computeFixedPathname(
+              importPath,
+              extension,
+              resolvedPath,
+              context,
+            )
+            const fixedImportPath = fixedPathname
+              ? stringifyPath({ pathname: fixedPathname, query, hash })
               : ''
-            const isDirectoryImport =
-              isIndexFile &&
-              ((isRelativeImport &&
-                path.basename(importPath) ===
-                  path.basename(path.dirname(resolvedPath!))) ||
-                resolve(indexPathname, context) === resolvedPath)
-            const fixedPathname = isDirectoryImport
-              ? indexPathname
-              : appendExtension(importPath, extension)
-            // An exports map can point `pkg/sub` at `dist/index.js`, and a
-            // rewrite may resolve to a different file or not at all. Accept a
-            // rewrite that resolves to the original file, or a directory or
-            // basename shortcut when the resolver cannot resolve it.
-            const fixedResolvedPath = resolvedPath
-              ? resolve(fixedPathname, context)
-              : undefined
-            const fixedImportPath =
-              extension &&
-              (!resolvedPath ||
-                fixedResolvedPath === resolvedPath ||
-                (!fixedResolvedPath &&
-                  (isDirectoryImport ||
-                    (isRelativeImport &&
-                      path.basename(fixedPathname) ===
-                        path.basename(resolvedPath)))))
-                ? stringifyPath({ pathname: fixedPathname, query, hash })
-                : ''
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
                 return fixer.replaceText(
@@ -577,8 +614,7 @@ export default createRule<Options, MessageId>({
                 extension,
                 importPath: importPathWithQueryString,
               },
-              ...(extension &&
-                fixedImportPath &&
+              ...(fixedImportPath &&
                 (props.fix
                   ? fixOrSuggest
                   : {
