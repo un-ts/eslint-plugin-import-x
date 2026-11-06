@@ -29,3 +29,20 @@ import getUsers from './api/get-users.js'
 // Check if you meant to write `import getUsers from './api/get-users'` instead.
 import findUsers from './get-users'
 ```
+
+## Options
+
+### `whitelist`
+
+The `whitelist` option is an optional string array of module specifiers to ignore. This is useful for packages that mangle default export names in their published files. The specifier must match the string written in the import or `require` exactly.
+
+```js
+"import-x/no-rename-default": ["warn", {"whitelist": ["typescript-eslint", "eslint-plugin-jsdoc"]}]
+```
+
+Given those options, these imports are not reported:
+
+```js
+import tsEslint from 'typescript-eslint'
+import jsdoc from 'eslint-plugin-jsdoc'
+```

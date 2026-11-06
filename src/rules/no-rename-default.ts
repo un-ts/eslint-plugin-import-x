@@ -15,6 +15,7 @@ import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
 export type Options = ModuleOptions & {
   preventRenamingBindings?: boolean
+  whitelist?: string[]
 }
 
 export type MessageId = 'renameDefault'
@@ -39,6 +40,13 @@ export default createRule<[Options?], MessageId>({
             default: true,
             type: 'boolean',
           },
+          whitelist: {
+            type: 'array',
+            uniqueItems: true,
+            items: {
+              type: 'string',
+            },
+          },
         },
         additionalProperties: false,
       },
@@ -50,8 +58,12 @@ export default createRule<[Options?], MessageId>({
   },
   defaultOptions: [],
   create(context) {
-    const { commonjs = false, preventRenamingBindings = true } =
-      context.options[0] || {}
+    const {
+      commonjs = false,
+      preventRenamingBindings = true,
+      whitelist,
+    } = context.options[0] || {}
+    const whitelistSet = whitelist ? new Set(whitelist) : undefined
 
     function getDefaultExportName(moduleInfo: ModuleInfo) {
       const sourceName = getDefaultExportSourceName(moduleInfo)
@@ -88,6 +100,11 @@ export default createRule<[Options?], MessageId>({
     function handleImport(
       node: TSESTree.ImportDefaultSpecifier | TSESTree.ImportSpecifier,
     ) {
+      const importTarget = node.parent.source?.value
+      if (!importTarget || whitelistSet?.has(importTarget)) {
+        return
+      }
+
       const moduleInfo = getModuleInfo(node.parent.source)
       if (moduleInfo == null) {
         return
@@ -98,18 +115,6 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
-      // Some packages have a default export that is meant to be renamed. For example,
-      // "typescript-eslint" has a default export of "_default" and "eslint-plugin-jsdoc" has a
-      // default export of "index".
-      const defaultExportNameTrimmed = defaultExportName.replace(/^_+/, '') // Trim leading underscores.
-      if (
-        defaultExportNameTrimmed === 'default' ||
-        defaultExportNameTrimmed === 'index'
-      ) {
-        return
-      }
-
-      const importTarget = node.parent.source?.value
       const importBasename = path.basename(moduleInfo.path)
 
       if (node.type === 'ImportDefaultSpecifier') {
@@ -194,13 +199,17 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
+      const requireTarget = source.value
+      if (whitelistSet?.has(requireTarget)) {
+        return
+      }
+
       const moduleInfo = getModuleInfo(source)
       if (moduleInfo == null) {
         return
       }
 
       const defaultExportName = getDefaultExportName(moduleInfo)
-      const requireTarget = source.value
       const requireBasename = path.basename(moduleInfo.path)
 
       let requireName

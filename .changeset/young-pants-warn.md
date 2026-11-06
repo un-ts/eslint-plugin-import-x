@@ -1,5 +1,5 @@
 ---
-"eslint-plugin-import-x": patch
+"eslint-plugin-import-x": minor
 ---
 
-fix false positive for no-rename-default
+feat(no-rename-default): add a `whitelist` option for modules that mangle their default export names
