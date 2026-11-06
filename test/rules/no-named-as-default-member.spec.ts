@@ -55,10 +55,38 @@ ruleTester.run('no-named-as-default-member', rule, {
       languageOptions: { parserOptions: { tsconfigRootDir: testFilePath('') } },
     }),
 
+    // https://github.com/un-ts/eslint-plugin-import-x/issues/312
+    tValid({
+      code: 'import foo from "./typescript-default-named-type"; const a = foo.Foo; const { Foo } = foo;',
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+    }),
+
     ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [
+    // the name is also a value
+    tInvalid({
+      code: 'import foo from "./typescript-default-named-type"; const a = foo.Bar;',
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+      errors: [
+        createMemberError(
+          {
+            objectName: 'foo',
+            propName: 'Bar',
+            sourcePath: './typescript-default-named-type',
+          },
+          'MemberExpression',
+        ),
+      ],
+    }),
+
     tInvalid({
       code: 'import bar from "./bar"; const foo = bar.foo;',
       errors: [

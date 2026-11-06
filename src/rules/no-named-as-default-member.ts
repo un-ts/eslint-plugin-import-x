@@ -2,7 +2,7 @@
 
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { hasExplicitExport, ModuleInfo } from '../core/index.js'
+import { getExportKind, hasExplicitExport, ModuleInfo } from '../core/index.js'
 import { importDeclaration, createRule } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
@@ -104,6 +104,10 @@ export default createRule<[], MessageId>({
               continue
             }
             if (!hasExplicitExport(fileImport.moduleInfo, propName)) {
+              continue
+            }
+            // an exported type can't be what a value member access was meant to be
+            if (getExportKind(fileImport.moduleInfo, propName) === 'type') {
               continue
             }
 

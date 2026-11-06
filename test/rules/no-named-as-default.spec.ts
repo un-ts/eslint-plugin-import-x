@@ -110,10 +110,48 @@ ruleTester.run('no-named-as-default', rule, {
       languageOptions: { parserOptions: { tsconfigRootDir: testFilePath('') } },
     }),
 
+    // https://github.com/un-ts/eslint-plugin-import-x/issues/128
+    // https://github.com/un-ts/eslint-plugin-import-x/issues/312
+    tValid({
+      code: `import Foo from "./typescript-default-named-type"`,
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+    }),
+
     ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [
+    // the name is also a value
+    tInvalid({
+      code: `import Bar from "./typescript-default-named-type"`,
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+      errors: [createDefaultError('Bar', 'ImportDefaultSpecifier')],
+    }),
+    // the default brings a type of its own, which a missed `{ Foo }` would use
+    tInvalid({
+      code: `import Foo from "./typescript-default-class-named-type"`,
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+      errors: [createDefaultError('Foo', 'ImportDefaultSpecifier')],
+    }),
+    // a type import of the default can only be a missed `{ Foo }`
+    tInvalid({
+      code: `import type Foo from "./typescript-default-named-type"`,
+      settings: {
+        'import-x/parsers': { [parsers.TS]: ['.ts'] },
+        'import-x/resolver': { 'eslint-import-resolver-typescript': true },
+      },
+      errors: [createDefaultError('Foo', 'ImportDefaultSpecifier')],
+    }),
+
     tInvalid({
       code: 'import foo from "./bar";',
       errors: [createDefaultError('foo', 'ImportDefaultSpecifier')],
