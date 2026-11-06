@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import type { TSESTree } from '@typescript-eslint/utils'
@@ -55,20 +56,32 @@ function checkImportForRelativePackage(
   ) {
     // Keep the import's own path below the package root, so a directory or an
     // extensionless import keeps pointing at the same module. A resolver may
-    // follow symlinks, so look that root up from the import's own path as well,
-    // unless the import is a file symlink that leads into another package
+    // follow symlinks, so use that path only when it still points into the
+    // resolved package; otherwise fall back to the resolved file.
     const importTarget = path.resolve(path.dirname(resolvedContext), importPath)
     const targetPkg = findNamedPackage(importTarget)
+    const targetPkgRoot =
+      targetPkg.pkg && targetPkg.path ? path.dirname(targetPkg.path) : undefined
+    const isSamePackage =
+      targetPkgRoot != null &&
+      targetPkg.pkg?.name === importPkg.pkg.name &&
+      fs.realpathSync(targetPkgRoot) ===
+        fs.realpathSync(path.dirname(importPkg.path))
+    const resolvedSuffix = path.relative(
+      path.dirname(importPkg.path),
+      resolvedImport,
+    )
+    const { dir, name } = path.parse(resolvedSuffix)
+    const importSuffix = path.extname(importPath)
+      ? resolvedSuffix
+      : path.join(dir, name)
     const properImport =
-      targetPkg.pkg && targetPkg.pkg.name === importPkg.pkg.name
+      isSamePackage && targetPkgRoot
         ? path.join(
             importPkg.pkg.name,
-            path.relative(path.dirname(targetPkg.path), importTarget),
+            path.relative(targetPkgRoot, importTarget),
           )
-        : path.join(
-            importPkg.pkg.name,
-            path.relative(path.dirname(importPkg.path), resolvedImport),
-          )
+        : path.join(importPkg.pkg.name, importSuffix)
     context.report({
       node,
       messageId: 'noAllowed',

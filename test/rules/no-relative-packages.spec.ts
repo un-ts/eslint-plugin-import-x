@@ -43,6 +43,9 @@ for (const [file, content] of [
   ['store/shared/lib/util.js', ''],
   ['store/bootstrap/package.json', '{ "name": "bootstrap" }'],
   ['store/bootstrap/dist/css/bootstrap.css', ''],
+  ['store/same-name/package.json', '{ "name": "same-name" }'],
+  ['store/same-name/lib/index.js', ''],
+  ['repo/packages/same-name/package.json', '{ "name": "same-name" }'],
 ]) {
   fs.mkdirSync(path.dirname(symlinkFixture(file)), { recursive: true })
   fs.writeFileSync(symlinkFixture(file), content)
@@ -58,6 +61,11 @@ fs.symlinkSync(
   symlinkFixture('repo/packages/foo/node_modules/bootstrap'),
   'junction',
 )
+fs.symlinkSync(
+  symlinkFixture('store/same-name'),
+  symlinkFixture('repo/packages/foo/node_modules/same-name'),
+  'junction',
+)
 
 // A file symlink can need extra privileges on Windows
 let hasFileSymlink = true
@@ -65,6 +73,11 @@ try {
   fs.symlinkSync(
     symlinkFixture('store/shared/lib/util.js'),
     symlinkFixture('repo/packages/foo/linked.js'),
+    'file',
+  )
+  fs.symlinkSync(
+    symlinkFixture('store/same-name/lib/index.js'),
+    symlinkFixture('repo/packages/same-name/index.js'),
     'file',
   )
 } catch {
@@ -241,6 +254,38 @@ ruleTester.run('no-relative-packages', rule, {
               },
             ],
             output: 'import util from "shared/lib/util.js"',
+          }),
+          tInvalid({
+            code: 'import util from "./linked"',
+            filename: symlinkFixture('repo/packages/foo/index.js'),
+            settings: { 'import-x/resolver-next': [createNodeResolver()] },
+            errors: [
+              {
+                ...createNotFoundError(
+                  './linked',
+                  path.normalize('shared/lib/util'),
+                ),
+                line: 1,
+                column: 18,
+              },
+            ],
+            output: 'import util from "shared/lib/util"',
+          }),
+          tInvalid({
+            code: 'import same from "../same-name/index.js"',
+            filename: symlinkFixture('repo/packages/foo/index.js'),
+            settings: { 'import-x/resolver-next': [createNodeResolver()] },
+            errors: [
+              {
+                ...createNotFoundError(
+                  '../same-name/index.js',
+                  path.normalize('same-name/lib/index.js'),
+                ),
+                line: 1,
+                column: 18,
+              },
+            ],
+            output: 'import same from "same-name/lib/index.js"',
           }),
         ]
       : []),
