@@ -8,6 +8,7 @@ import {
   createRule,
   moduleVisitor,
   makeOptionsSchema,
+  relative,
   resolve,
   readPkgUp,
 } from '../utils/index.js'
@@ -25,7 +26,9 @@ function findNamedPackage(filePath: string) {
   return found
 }
 
-type MessageId = 'noAllowed'
+type MessageId = 'noAllowed' | 'noAllowedNoFix'
+
+const dtsRe = /\.d\.[cm]?ts$/
 
 const potentialViolationTypes = new Set(['parent', 'index', 'sibling'])
 
@@ -53,23 +56,62 @@ function checkImportForRelativePackage(
     contextPkg.pkg &&
     importPkg.pkg.name !== contextPkg.pkg.name
   ) {
-    const importBaseName = path.basename(importPath)
-    const importRoot = path.dirname(importPkg.path)
-    const properPath = path.relative(importRoot, resolvedImport)
-    const properImport = path.join(
-      importPkg.pkg.name,
-      path.dirname(properPath),
-      importBaseName === path.basename(importRoot) ? '' : importBaseName,
+    const resolvedSuffix = path.relative(
+      path.dirname(importPkg.path),
+      resolvedImport,
     )
+    const { dir, name } = path.parse(resolvedSuffix)
+    const moduleName = dtsRe.test(resolvedSuffix) ? name.slice(0, -2) : name
+    const importExtension = path.extname(importPath)
+    let importSuffix: string
+    if (importExtension) {
+      importSuffix = path.format({
+        dir,
+        name: moduleName,
+        ext: importExtension,
+      })
+    } else {
+      // A directory import resolves to its index file; an explicit `index`
+      // import is already a file and keeps that segment.
+      importSuffix =
+        moduleName === 'index' && path.basename(importPath) !== 'index'
+          ? dir
+          : path.join(dir, moduleName)
+    }
+    const resolvesToImport = (candidate: string) => {
+      try {
+        return (
+          relative(
+            toPosixPath(candidate),
+            resolvedContext,
+            context.settings,
+            context,
+          ) === resolvedImport
+        )
+      } catch {
+        return false
+      }
+    }
+    const packageRootImport = importPkg.pkg.name
+    const packageRootResolves = resolvesToImport(packageRootImport)
+    const resolvedPackageImport = path.join(importPkg.pkg.name, importSuffix)
+    const canFix =
+      packageRootResolves || resolvesToImport(resolvedPackageImport)
+    const properImport = packageRootResolves
+      ? packageRootImport
+      : resolvedPackageImport
+    const normalizedProperImport = toPosixPath(properImport)
     context.report({
       node,
-      messageId: 'noAllowed',
+      messageId: canFix ? 'noAllowed' : 'noAllowedNoFix',
       data: {
-        properImport,
         importPath,
+        ...(canFix && { properImport: normalizedProperImport }),
       },
-      fix: fixer =>
-        fixer.replaceText(node, JSON.stringify(toPosixPath(properImport))),
+      ...(canFix && {
+        fix: fixer =>
+          fixer.replaceText(node, JSON.stringify(normalizedProperImport)),
+      }),
     })
   }
 }
@@ -87,6 +129,8 @@ export default createRule<[ModuleOptions?], MessageId>({
     messages: {
       noAllowed:
         'Relative import from another package is not allowed. Use `{{properImport}}` instead of `{{importPath}}`',
+      noAllowedNoFix:
+        'Relative import from another package is not allowed. No safe package import could be determined for "{{importPath}}".',
     },
   },
   defaultOptions: [],
