@@ -1850,6 +1850,45 @@ describe('TypeScript', () => {
               createDuplicatedError('svelte'),
             ],
           }),
+          // #505: prefer-inline + whitelist must not redirect imports to a different entry point
+          tInvalid({
+            code: "import { type A } from 'svelte'; import type { B } from 'svelte/store'",
+            ...parserConfig,
+            options: [
+              {
+                whitelist: [['svelte', 'svelte/easing']],
+                'prefer-inline': true,
+              },
+            ],
+            settings: {
+              ...parserConfig.settings,
+              ...sharedDeclarationSettings,
+            },
+            output: null,
+            errors: [
+              createDuplicatedError(sharedDeclarationPath),
+              createDuplicatedError(sharedDeclarationPath),
+            ],
+          }),
+          tInvalid({
+            code: "import type { B } from 'svelte/store'; import { type A } from 'svelte'",
+            ...parserConfig,
+            options: [
+              {
+                whitelist: [['svelte', 'svelte/easing']],
+                'prefer-inline': true,
+              },
+            ],
+            settings: {
+              ...parserConfig.settings,
+              ...sharedDeclarationSettings,
+            },
+            output: null,
+            errors: [
+              createDuplicatedError(sharedDeclarationPath),
+              createDuplicatedError(sharedDeclarationPath),
+            ],
+          }),
         ]),
   ]
 
