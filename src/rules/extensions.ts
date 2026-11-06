@@ -525,8 +525,7 @@ export default createRule<Options, MessageId>({
             const fixedPathname =
               /([\\/]|[\\/]?\.?\.)$/.test(importPath) ||
               (!!resolvedPath &&
-                path.basename(resolvedPath, `.${extension}`) === 'index' &&
-                path.basename(importPath) !== 'index')
+                path.basename(resolvedPath, `.${extension}`) === 'index')
                 ? `${
                     importPath.endsWith('/')
                       ? importPath.slice(0, -1)
