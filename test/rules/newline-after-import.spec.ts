@@ -556,22 +556,22 @@ ruleTester.run('newline-after-import', rule, {
   invalid: [
     {
       code: `import a from 'a' // trailing\nfoo()`,
-      output: `import a from 'a' // trailing\n\nfoo()`,
+      output: `import a from 'a'\n // trailing\nfoo()`,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' /** @ts-ignore */\nfoo()`,
-      output: null,
+      output: `import a from 'a'\n /** @ts-ignore */\nfoo()`,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' /// @ts-ignore\nfoo()`,
-      output: null,
+      output: `import a from 'a'\n /// @ts-ignore\nfoo()`,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' /* one */ /* two */\nfoo()`,
-      output: `import a from 'a' /* one */ /* two */\n\nfoo()`,
+      output: `import a from 'a'\n /* one */ /* two */\nfoo()`,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
@@ -582,7 +582,7 @@ ruleTester.run('newline-after-import', rule, {
     },
     {
       code: `const a = require('a') // trailing\nfoo()`,
-      output: `const a = require('a') // trailing\n\nfoo()`,
+      output: `const a = require('a')\n // trailing\nfoo()`,
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
@@ -609,23 +609,23 @@ ruleTester.run('newline-after-import', rule, {
     {
       // do not move a line-scoped directive away from its target
       code: "import a from 'a' // @ts-ignore\nfoo()",
-      output: null,
+      output: "import a from 'a'\n // @ts-ignore\nfoo()",
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: "const a = require('a') // @ts-ignore\nfoo()",
-      output: null,
+      output: "const a = require('a')\n // @ts-ignore\nfoo()",
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
       // a directive earlier in the trailing comment chain also withholds the fix
       code: "import a from 'a' /* @ts-ignore */ /* plain */\nfoo()",
-      output: null,
+      output: "import a from 'a'\n /* @ts-ignore */ /* plain */\nfoo()",
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: "const a = require('a') /* @ts-ignore */ /* plain */\nfoo()",
-      output: null,
+      output: "const a = require('a')\n /* @ts-ignore */ /* plain */\nfoo()",
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {

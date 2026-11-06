@@ -6,7 +6,7 @@ import debug from 'debug'
 import {
   isStaticRequire,
   createRule,
-  isLineScopedDirective,
+  getTrailingComments,
 } from '../utils/index.js'
 
 const log = debug('eslint-plugin-import-x:rules:newline-after-import')
@@ -160,7 +160,11 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
+              : getFixer(
+                  node,
+                  EXPECTED_LINE_DIFFERENCE - lineDifference,
+                  false,
+                ),
         })
       }
     }
@@ -194,64 +198,36 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
+              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference, true),
         })
       }
     }
 
-    /**
-     * The comments that start on the statement's final line, including
-     * comments chained onto the line where a previous one ends.
-     */
-    function getTrailingComments(node: TSESTree.Node) {
-      const comments: TSESTree.Comment[] = []
-      let last: TSESTree.Node | TSESTree.Token = node
-      let next = context.sourceCode.getTokenAfter(node, {
-        includeComments: true,
-      })
-      while (
-        next &&
-        (next.type === 'Line' || next.type === 'Block') &&
-        next.loc.start.line === last.loc.end.line
-      ) {
-        comments.push(next)
-        last = next
-        next = context.sourceCode.getTokenAfter(next, { includeComments: true })
-      }
-      return comments
-    }
-
-    /** The last token on the statement's final line, or the statement itself. */
-    function getLastTokenOnEndLine(node: TSESTree.Node) {
-      return getTrailingComments(node).at(-1) ?? node
-    }
-
     /** The line where the statement and its trailing comments end. */
     function getEndLine(node: TSESTree.Node) {
-      return getLastTokenOnEndLine(node).loc.end.line
+      const comments = getTrailingComments(context.sourceCode, node)
+      return comments.at(-1)?.loc.end.line ?? node.loc.end.line
     }
 
     /**
-     * Whether any of the statement's trailing comments is a line-scoped
-     * directive, which the fix would retarget.
+     * Adds the missing blank lines right after the statement for a single-line
+     * trailing comment (so a line-scoped directive moves below the blank and
+     * keeps its target), or after a multi-line trailing comment.
      */
-    function hasLineScopedDirective(node: TSESTree.Node) {
-      return getTrailingComments(node).some(isLineScopedDirective)
-    }
-
-    /**
-     * Adds the missing blank lines after the statement's trailing comments,
-     * unless that would retarget a line-scoped directive.
-     */
-    function getFixer(node: TSESTree.Node, count: number) {
+    function getFixer(
+      node: TSESTree.Node,
+      count: number,
+      afterComments: boolean,
+    ) {
       return (fixer: TSESLint.RuleFixer) => {
-        if (hasLineScopedDirective(node)) {
-          return null
-        }
-        return fixer.insertTextAfter(
-          getLastTokenOnEndLine(node),
-          '\n'.repeat(count),
-        )
+        const comments = getTrailingComments(context.sourceCode, node)
+        const lastComment = comments.at(-1)
+        const target =
+          lastComment &&
+          (afterComments || lastComment.loc.end.line > node.loc.end.line)
+            ? lastComment
+            : node
+        return fixer.insertTextAfter(target, '\n'.repeat(count))
       }
     }
 

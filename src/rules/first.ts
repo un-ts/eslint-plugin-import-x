@@ -1,7 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 
 import type { RuleContext } from '../types.js'
-import { createRule } from '../utils/index.js'
+import { createRule, getTrailingComments } from '../utils/index.js'
 
 function getImportValue(node: TSESTree.ProgramStatement) {
   return node.type === 'ImportDeclaration'
@@ -137,18 +137,12 @@ export default createRule<[Options?], MessageId>({
         }
 
         const sortNodes = errorInfos.slice(0, lastSortNodesIndex + 1)
-        // A next-line suppression above a moved import would be left behind,
-        // so the whole group is left without an autofix.
         // A comment on a moved import would be left behind, so the whole
         // group is left without an autofix; the rule still reports.
         const canFix = !sortNodes.some(
           ({ node: sortNode }) =>
             sourceCode.getCommentsBefore(sortNode).length > 0 ||
-            sourceCode
-              .getCommentsAfter(sortNode)
-              .some(
-                comment => comment.loc.start.line === sortNode.loc.end.line,
-              ),
+            getTrailingComments(sourceCode, sortNode).length > 0,
         )
 
         for (const [index, { node }] of errorInfos.entries()) {
