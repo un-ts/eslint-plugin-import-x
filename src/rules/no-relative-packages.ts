@@ -9,6 +9,7 @@ import {
   createRule,
   moduleVisitor,
   makeOptionsSchema,
+  relative,
   resolve,
   readPkgUp,
 } from '../utils/index.js'
@@ -86,18 +87,29 @@ function checkImportForRelativePackage(
             path.relative(targetPkgRoot, importTarget),
           )
         : path.join(importPkg.pkg.name, importSuffix)
-    const canFix =
-      isSamePackage || resolve(properImport, context) === resolvedImport
+    const normalizedProperImport = toPosixPath(properImport)
+    let resolvedProperImport: string | null | undefined
+    try {
+      resolvedProperImport = relative(
+        normalizedProperImport,
+        resolvedContext,
+        context.settings,
+        context,
+      )
+    } catch {
+      resolvedProperImport = undefined
+    }
+    const canFix = resolvedProperImport === resolvedImport
     context.report({
       node,
       messageId: canFix ? 'noAllowed' : 'noAllowedNoFix',
       data: {
-        properImport,
+        properImport: normalizedProperImport,
         importPath,
       },
       ...(canFix && {
         fix: fixer =>
-          fixer.replaceText(node, JSON.stringify(toPosixPath(properImport))),
+          fixer.replaceText(node, JSON.stringify(normalizedProperImport)),
       }),
     })
   }

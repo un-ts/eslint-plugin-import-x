@@ -15,6 +15,18 @@ const ruleTester = new TSESLintRuleTester()
 
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
 
+const fixtureResolverSettings = {
+  'import-x/resolver-next': [
+    createNodeResolver({
+      alias: {
+        'package-named': [testFilePath('package-named')],
+        '@scope/package-named': [testFilePath('package-scoped')],
+        'eslint-plugin-import-x': [path.resolve('.')],
+      },
+    }),
+  ],
+}
+
 const tsSymlinkResolvers = [
   createNodeResolver({
     extensions: ['.ts', '.js'],
@@ -75,36 +87,43 @@ for (const [file, content] of [
   fs.writeFileSync(symlinkFixture(file), content)
 }
 fs.mkdirSync(symlinkFixture('repo/packages/foo/node_modules'))
-fs.symlinkSync(
-  symlinkFixture('store/shared'),
-  symlinkFixture('repo/packages/shared'),
-  'junction',
-)
-fs.symlinkSync(
-  symlinkFixture('store/bootstrap'),
-  symlinkFixture('repo/packages/foo/node_modules/bootstrap'),
-  'junction',
-)
-fs.symlinkSync(
-  symlinkFixture('store/same-name'),
-  symlinkFixture('repo/packages/foo/node_modules/same-name'),
-  'junction',
-)
-fs.symlinkSync(
-  symlinkFixture('store/shared'),
-  symlinkFixture('repo/packages/foo/node_modules/shared'),
-  'junction',
-)
-fs.symlinkSync(
-  symlinkFixture('store/ts-shared'),
-  symlinkFixture('repo/packages/foo/node_modules/ts-shared'),
-  'junction',
-)
-fs.symlinkSync(
-  symlinkFixture('store/mixed-shared-js'),
-  symlinkFixture('repo/packages/foo/node_modules/mixed-shared'),
-  'junction',
-)
+
+// Directory junctions are not available in every environment
+let hasDirSymlink = true
+try {
+  fs.symlinkSync(
+    symlinkFixture('store/shared'),
+    symlinkFixture('repo/packages/shared'),
+    'junction',
+  )
+  fs.symlinkSync(
+    symlinkFixture('store/bootstrap'),
+    symlinkFixture('repo/packages/foo/node_modules/bootstrap'),
+    'junction',
+  )
+  fs.symlinkSync(
+    symlinkFixture('store/same-name'),
+    symlinkFixture('repo/packages/foo/node_modules/same-name'),
+    'junction',
+  )
+  fs.symlinkSync(
+    symlinkFixture('store/shared'),
+    symlinkFixture('repo/packages/foo/node_modules/shared'),
+    'junction',
+  )
+  fs.symlinkSync(
+    symlinkFixture('store/ts-shared'),
+    symlinkFixture('repo/packages/foo/node_modules/ts-shared'),
+    'junction',
+  )
+  fs.symlinkSync(
+    symlinkFixture('store/mixed-shared-js'),
+    symlinkFixture('repo/packages/foo/node_modules/mixed-shared'),
+    'junction',
+  )
+} catch {
+  hasDirSymlink = false
+}
 
 // A file symlink can need extra privileges on Windows
 let hasFileSymlink = true
@@ -178,6 +197,7 @@ ruleTester.run('no-relative-packages', rule, {
     tInvalid({
       code: 'import foo from "./package-named"',
       filename: testFilePath('./bar.js'),
+      settings: fixtureResolverSettings,
       errors: [
         {
           ...createNotFoundError('./package-named', 'package-named'),
@@ -190,6 +210,7 @@ ruleTester.run('no-relative-packages', rule, {
     tInvalid({
       code: 'import foo from "../package-named"',
       filename: testFilePath('./package/index.js'),
+      settings: fixtureResolverSettings,
       errors: [
         {
           ...createNotFoundError('../package-named', 'package-named'),
@@ -202,11 +223,12 @@ ruleTester.run('no-relative-packages', rule, {
     tInvalid({
       code: 'import foo from "../package-named/package-named"',
       filename: testFilePath('./package/index.js'),
+      settings: fixtureResolverSettings,
       errors: [
         {
           ...createNotFoundError(
             '../package-named/package-named',
-            path.normalize('package-named/package-named'),
+            'package-named/package-named',
           ),
           line: 1,
           column: 17,
@@ -217,12 +239,10 @@ ruleTester.run('no-relative-packages', rule, {
     tInvalid({
       code: 'import foo from "../package-named/sub"',
       filename: testFilePath('./package/index.js'),
+      settings: fixtureResolverSettings,
       errors: [
         {
-          ...createNotFoundError(
-            '../package-named/sub',
-            path.normalize('package-named/sub'),
-          ),
+          ...createNotFoundError('../package-named/sub', 'package-named/sub'),
           line: 1,
           column: 17,
         },
@@ -232,12 +252,10 @@ ruleTester.run('no-relative-packages', rule, {
     tInvalid({
       code: 'import foo from "../package-scoped"',
       filename: testFilePath('./package/index.js'),
+      settings: fixtureResolverSettings,
       errors: [
         {
-          ...createNotFoundError(
-            '../package-scoped',
-            path.normalize('@scope/package-named'),
-          ),
+          ...createNotFoundError('../package-scoped', '@scope/package-named'),
           line: 1,
           column: 17,
         },
@@ -247,11 +265,12 @@ ruleTester.run('no-relative-packages', rule, {
     tInvalid({
       code: 'import bar from "../bar"',
       filename: testFilePath('./package-named/index.js'),
+      settings: fixtureResolverSettings,
       errors: [
         {
           ...createNotFoundError(
             '../bar',
-            path.normalize('eslint-plugin-import-x/test/fixtures/bar'),
+            'eslint-plugin-import-x/test/fixtures/bar',
           ),
           line: 1,
           column: 17,
@@ -259,55 +278,56 @@ ruleTester.run('no-relative-packages', rule, {
       ],
       output: `import bar from "eslint-plugin-import-x/test/fixtures/bar"`,
     }),
-    tInvalid({
-      code: 'import util from "../shared/lib/util"',
-      filename: symlinkFixture('repo/packages/foo/index.js'),
-      settings: { 'import-x/resolver-next': [createNodeResolver()] },
-      errors: [
-        {
-          ...createNotFoundError(
-            '../shared/lib/util',
-            path.normalize('shared/lib/util'),
-          ),
-          line: 1,
-          column: 18,
-        },
-      ],
-      output: 'import util from "shared/lib/util"',
-    }),
-    tInvalid({
-      code: 'import "./node_modules/bootstrap/dist/css/bootstrap.css"',
-      filename: symlinkFixture('repo/packages/foo/index.js'),
-      settings: { 'import-x/resolver-next': [createNodeResolver()] },
-      errors: [
-        {
-          ...createNotFoundError(
-            './node_modules/bootstrap/dist/css/bootstrap.css',
-            path.normalize('bootstrap/dist/css/bootstrap.css'),
-          ),
-          line: 1,
-          column: 8,
-        },
-      ],
-      output: 'import "bootstrap/dist/css/bootstrap.css"',
-    }),
-    tInvalid({
-      code: 'import "../../node_modules/bootstrap/dist/css/bootstrap.css"',
-      filename: symlinkFixture('repo/packages/foo/src/deep/index.js'),
-      settings: { 'import-x/resolver-next': [createNodeResolver()] },
-      errors: [
-        {
-          ...createNotFoundError(
-            '../../node_modules/bootstrap/dist/css/bootstrap.css',
-            path.normalize('bootstrap/dist/css/bootstrap.css'),
-          ),
-          line: 1,
-          column: 8,
-        },
-      ],
-      output: 'import "bootstrap/dist/css/bootstrap.css"',
-    }),
-    ...(hasFileSymlink
+    ...(hasDirSymlink
+      ? [
+          tInvalid({
+            code: 'import util from "../shared/lib/util"',
+            filename: symlinkFixture('repo/packages/foo/index.js'),
+            settings: { 'import-x/resolver-next': [createNodeResolver()] },
+            errors: [
+              {
+                ...createNotFoundError('../shared/lib/util', 'shared/lib/util'),
+                line: 1,
+                column: 18,
+              },
+            ],
+            output: 'import util from "shared/lib/util"',
+          }),
+          tInvalid({
+            code: 'import "./node_modules/bootstrap/dist/css/bootstrap.css"',
+            filename: symlinkFixture('repo/packages/foo/index.js'),
+            settings: { 'import-x/resolver-next': [createNodeResolver()] },
+            errors: [
+              {
+                ...createNotFoundError(
+                  './node_modules/bootstrap/dist/css/bootstrap.css',
+                  'bootstrap/dist/css/bootstrap.css',
+                ),
+                line: 1,
+                column: 8,
+              },
+            ],
+            output: 'import "bootstrap/dist/css/bootstrap.css"',
+          }),
+          tInvalid({
+            code: 'import "../../node_modules/bootstrap/dist/css/bootstrap.css"',
+            filename: symlinkFixture('repo/packages/foo/src/deep/index.js'),
+            settings: { 'import-x/resolver-next': [createNodeResolver()] },
+            errors: [
+              {
+                ...createNotFoundError(
+                  '../../node_modules/bootstrap/dist/css/bootstrap.css',
+                  'bootstrap/dist/css/bootstrap.css',
+                ),
+                line: 1,
+                column: 8,
+              },
+            ],
+            output: 'import "bootstrap/dist/css/bootstrap.css"',
+          }),
+        ]
+      : []),
+    ...(hasDirSymlink && hasFileSymlink
       ? [
           tInvalid({
             code: 'import util from "./linked.js"',
@@ -315,10 +335,7 @@ ruleTester.run('no-relative-packages', rule, {
             settings: { 'import-x/resolver-next': [createNodeResolver()] },
             errors: [
               {
-                ...createNotFoundError(
-                  './linked.js',
-                  path.normalize('shared/lib/util.js'),
-                ),
+                ...createNotFoundError('./linked.js', 'shared/lib/util.js'),
                 line: 1,
                 column: 18,
               },
@@ -333,7 +350,7 @@ ruleTester.run('no-relative-packages', rule, {
               {
                 ...createNotFoundError(
                   './linked-ts.js',
-                  path.normalize('ts-shared/lib/util.js'),
+                  'ts-shared/lib/util.js',
                 ),
                 line: 1,
                 column: 18,
@@ -363,7 +380,7 @@ ruleTester.run('no-relative-packages', rule, {
               {
                 ...createNotFoundError(
                   './linked-dts.js',
-                  path.normalize('shared/lib/types.js'),
+                  'shared/lib/types.js',
                 ),
                 line: 1,
                 column: 18,
@@ -377,10 +394,7 @@ ruleTester.run('no-relative-packages', rule, {
             settings: { 'import-x/resolver-next': dtsSymlinkResolvers },
             errors: [
               {
-                ...createNotFoundError(
-                  './linked-dts',
-                  path.normalize('shared/lib/types'),
-                ),
+                ...createNotFoundError('./linked-dts', 'shared/lib/types'),
                 line: 1,
                 column: 18,
               },
@@ -393,10 +407,7 @@ ruleTester.run('no-relative-packages', rule, {
             settings: { 'import-x/resolver-next': [createNodeResolver()] },
             errors: [
               {
-                ...createNotFoundError(
-                  './linked',
-                  path.normalize('shared/lib/util'),
-                ),
+                ...createNotFoundError('./linked', 'shared/lib/util'),
                 line: 1,
                 column: 18,
               },
@@ -411,7 +422,7 @@ ruleTester.run('no-relative-packages', rule, {
               {
                 ...createNotFoundError(
                   '../same-name/index.js',
-                  path.normalize('same-name/lib/index.js'),
+                  'same-name/lib/index.js',
                 ),
                 line: 1,
                 column: 18,
