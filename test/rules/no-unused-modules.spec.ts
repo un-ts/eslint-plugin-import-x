@@ -14,6 +14,7 @@ import { RuleTester as ESLint9_FlatRuleTester } from 'eslint9'
 
 import {
   createRuleTestCaseFunctions,
+  hidePackageJsonFiles,
   testFilePath,
   parsers,
   isESLint9,
@@ -1364,6 +1365,21 @@ function createUnusedError(
           errors: [createUnusedError('privatePkg')],
         }),
       ],
+    })
+  })
+
+  describe('do not crash with no package.json above the file', () => {
+    hidePackageJsonFiles()
+
+    ruleTester.run('no-unused-modules', rule, {
+      valid: [
+        tValid({
+          code: 'export const foo = "foo"',
+          filename: path.resolve('/no-package-json-here/foo.js'),
+          options: unusedExportsOptions,
+        }),
+      ],
+      invalid: [],
     })
   })
 

@@ -1,6 +1,12 @@
 import { isBuiltin } from 'node:module'
+import path from 'node:path'
 
-import { FIXTURES_PATH, testContext, testFilePath } from '../utils.js'
+import {
+  FIXTURES_PATH,
+  hidePackageJsonFiles,
+  testContext,
+  testFilePath,
+} from '../utils.js'
 
 import {
   importType,
@@ -8,6 +14,40 @@ import {
   isScoped,
   isAbsolute,
 } from 'eslint-plugin-import-x/utils'
+
+describe('importType(name) with no package.json above the file', () => {
+  const root = path.resolve('/no-package-json-here')
+  const resolved: Record<string, string> = {
+    pkg: path.resolve(root, 'node_modules/pkg/index.js'),
+    '@/alias': path.resolve(root, 'src/alias.js'),
+    outside: path.resolve(root, '../outside/index.js'),
+  }
+  const context = {
+    ...testContext({
+      'import-x/resolver-next': [
+        {
+          interfaceVersion: 3,
+          name: 'stub',
+          resolve: (source: string) => ({
+            found: true,
+            path: resolved[source],
+          }),
+        },
+      ],
+    }),
+    // the root of the package is taken from here
+    cwd: root,
+    physicalFilename: path.resolve(root, 'src/foo.js'),
+  }
+
+  hidePackageJsonFiles()
+
+  it('should not throw, and use the cwd as the root of the package', () => {
+    expect(importType('pkg', context)).toBe('external')
+    expect(importType('outside', context)).toBe('external')
+    expect(importType('@/alias', context)).toBe('internal')
+  })
+})
 
 describe('importType(name)', () => {
   const context = testContext()

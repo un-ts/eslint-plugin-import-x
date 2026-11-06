@@ -401,7 +401,12 @@ const newDefaultImportExists = (specifiers: TSESTree.Node[]) =>
 
 const fileIsInPkg = (file: string) => {
   const { pkg, path: pkgPath } = readPkgUp({ cwd: file })
-  const basePath = path.dirname(pkgPath!)
+
+  if (!pkg) {
+    return false
+  }
+
+  const basePath = path.dirname(pkgPath)
 
   const checkPkgFieldString = (pkgField: string) => {
     if (path.join(basePath, pkgField) === file) {
@@ -431,10 +436,6 @@ const fileIsInPkg = (file: string) => {
     if (typeof pkgField === 'object') {
       return checkPkgFieldObject(pkgField)
     }
-  }
-
-  if (!pkg) {
-    return false
   }
 
   if (pkg.private === true) {

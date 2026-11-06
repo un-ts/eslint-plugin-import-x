@@ -5,7 +5,12 @@ import { fileURLToPath } from 'node:url'
 
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils.js'
+import {
+  parsers,
+  createRuleTestCaseFunctions,
+  hidePackageJsonFiles,
+  testFilePath,
+} from '../utils.js'
 
 import type { CjsRequire } from 'eslint-plugin-import-x'
 import typescriptConfig from 'eslint-plugin-import-x/config/flat/typescript'
@@ -71,6 +76,23 @@ const packageDirBundledDepsRaceCondition = testFilePath(
   'bundled-dependencies/race-condition',
 )
 const emptyPackageDir = testFilePath('empty-folder')
+
+const noPackageJsonTestCase = {
+  code: 'import "foo"',
+  filename: path.resolve('/no-package-json-here/bar.js'),
+  settings: {
+    'import-x/resolver-next': [
+      {
+        interfaceVersion: 3,
+        name: 'stub',
+        resolve: () => ({
+          found: true,
+          path: path.resolve('/node_modules/foo/index.js'),
+        }),
+      },
+    ],
+  },
+}
 
 ruleTester.run('no-extraneous-dependencies', rule, {
   valid: [
@@ -679,6 +701,21 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       ],
     }),
   ],
+})
+
+describe('no package.json above the file', () => {
+  hidePackageJsonFiles()
+
+  ruleTester.run('no-extraneous-dependencies', rule, {
+    valid: [tValid(noPackageJsonTestCase)],
+    invalid: [
+      tInvalid({
+        ...noPackageJsonTestCase,
+        options: [{ packageDir: packageDirWithEmpty }],
+        errors: [{ messageId: 'missing', data: { packageName: 'foo' } }],
+      }),
+    ],
+  })
 })
 
 describe('TypeScript', () => {

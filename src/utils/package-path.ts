@@ -2,15 +2,17 @@ import path from 'node:path'
 
 import type { RuleContext } from '../types.js'
 
-import { pkgUp } from './pkg-up.js'
+import { pkgDir } from './pkg-dir.js'
 import { readPkgUp } from './read-pkg-up.js'
 
 export function getContextPackagePath(context: RuleContext) {
-  return getFilePackagePath(context.physicalFilename)
+  // With no package.json above the file, the directory ESLint runs in stands in
+  // for the root of the package, as it does when loading a legacy resolver.
+  return getFilePackagePath(context.physicalFilename) ?? context.cwd
 }
 
 export function getFilePackagePath(filename: string) {
-  return path.dirname(pkgUp({ cwd: filename })!)
+  return pkgDir(filename)
 }
 
 export function getFilePackageName(filename: string): string | null {
