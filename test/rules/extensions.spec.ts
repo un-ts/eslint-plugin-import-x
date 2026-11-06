@@ -242,6 +242,65 @@ ruleTester.run('extensions', rule, {
         })
       }),
     ),
+    ...[false, true].map(fix =>
+      tInvalid({
+        name: `rejects shortcuts that resolve to a different file (fix: ${fix})`,
+        code: [
+          'import conflict from "./extensions-inference/conflict";',
+          'import directory from "./test-module";',
+        ].join('\n'),
+        options: ['always', { fix }],
+        settings: {
+          'import-x/resolver-next': [
+            {
+              name: 'conflicting-rewrite-resolver',
+              interfaceVersion: 3,
+              resolve(modulePath: string) {
+                if (modulePath === './extensions-inference/conflict') {
+                  return {
+                    found: true,
+                    path: testFilePath('extensions-inference/conflict.ts'),
+                  }
+                }
+                if (modulePath === './extensions-inference/conflict.ts') {
+                  return {
+                    found: true,
+                    path: testFilePath('extensions-inference/conflict.js'),
+                  }
+                }
+                if (modulePath === './test-module') {
+                  return {
+                    found: true,
+                    path: testFilePath('test-module/index.ts'),
+                  }
+                }
+                if (modulePath === './test-module/index.ts') {
+                  return {
+                    found: true,
+                    path: testFilePath('test-module/index.js'),
+                  }
+                }
+                return { found: false }
+              },
+            },
+          ],
+        },
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: {
+              extension: 'ts',
+              importPath: './extensions-inference/conflict',
+            },
+          },
+          {
+            messageId: 'missingKnown',
+            data: { extension: 'ts', importPath: './test-module' },
+          },
+        ],
+        output: null,
+      }),
+    ),
     // `always` requires an extension on the subpath, but neither
     // `exports-index/sub.js` nor `exports-index/sub/index.js` is exported, so
     // report without offering a fix
