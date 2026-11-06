@@ -175,9 +175,7 @@ ruleTester.run('no-duplicates', rule, {
       ],
     }),
 
-    // #505: an unlisted entry point joins the same module whatever the import order.
-    // Merging 'svelte/store' into the later 'svelte' would run it after
-    // 'svelte/easing', so the second case has no autofix.
+    // #505: an unlisted entry point joins the same module whatever the import order
     ...[
       [
         "import { onMount } from 'svelte'; import { writable } from 'svelte/store'; import { quintOut } from 'svelte/easing'",
@@ -185,7 +183,7 @@ ruleTester.run('no-duplicates', rule, {
       ],
       [
         "import { quintOut } from 'svelte/easing'; import { writable } from 'svelte/store'; import { onMount } from 'svelte'",
-        null,
+        "import { quintOut } from 'svelte/easing';  import { onMount, writable } from 'svelte'",
       ],
     ].map(([code, output]) =>
       tInvalid({
