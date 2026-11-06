@@ -86,7 +86,11 @@ export default createRule<[Options?], MessageId>({
 
                 // Pass 1: Collect variable names that are already in scope for each reference we want
                 // to transform, so that we can be sure that we choose non-conflicting import names
-                const importNameConflicts: Record<string, Set<string>> = {}
+                // No prototype: exports may be named like its members, e.g. `_.toString`
+                const importNameConflicts: Record<
+                  string,
+                  Set<string>
+                > = Object.create(null)
                 for (const identifier of namespaceIdentifiers) {
                   const parent = identifier.parent
                   if (parent && parent.type === 'MemberExpression') {
@@ -278,7 +282,7 @@ function generateLocalNames(
   outerNames: Set<string>,
   namespaceName: string,
 ) {
-  const localNames: Record<string, string> = {}
+  const localNames: Record<string, string> = Object.create(null)
   // Names chosen for earlier imports are taken too, or two imports would
   // declare the same local name
   const usedNames = new Set(outerNames)
