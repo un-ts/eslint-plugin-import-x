@@ -520,30 +520,28 @@ export default createRule<Options, MessageId>({
               extensionForbidden,
             )
           ) {
-            const fixedImportPath = extension
-              ? stringifyPath({
-                  pathname:
-                    // `foo` resolving to `foo/index.js` is a directory import,
-                    // while `foo.js` wins over `foo/index.js` when both exist
-                    /([\\/]|[\\/]?\.?\.)$/.test(importPath) ||
-                    (!!resolvedPath &&
-                      path.basename(resolvedPath, `.${extension}`) ===
-                        'index' &&
-                      path.basename(importPath) !== 'index' &&
-                      // An exports map can point `pkg/sub` at `dist/index.js`;
-                      // only a path that resolves back is a directory import
-                      resolve(`${importPath}/index.${extension}`, context) ===
-                        resolvedPath)
-                      ? `${
-                          importPath.endsWith('/')
-                            ? importPath.slice(0, -1)
-                            : importPath
-                        }/index.${extension}`
-                      : appendExtension(importPath, extension),
-                  query,
-                  hash,
-                })
-              : ''
+            // `foo` resolving to `foo/index.js` is a directory import, while
+            // `foo.js` wins over `foo/index.js` when both exist
+            const fixedPathname =
+              /([\\/]|[\\/]?\.?\.)$/.test(importPath) ||
+              (!!resolvedPath &&
+                path.basename(resolvedPath, `.${extension}`) === 'index' &&
+                path.basename(importPath) !== 'index')
+                ? `${
+                    importPath.endsWith('/')
+                      ? importPath.slice(0, -1)
+                      : importPath
+                  }/index.${extension}`
+                : appendExtension(importPath, extension)
+            // An exports map can point `pkg/sub` at `dist/index.js`, and the
+            // appended `.js` may not be exported at all; only a path that
+            // resolves back to the original file may be offered as a fix
+            const fixedImportPath =
+              extension &&
+              (!resolvedPath ||
+                resolve(fixedPathname, context) === resolvedPath)
+                ? stringifyPath({ pathname: fixedPathname, query, hash })
+                : ''
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
                 return fixer.replaceText(
