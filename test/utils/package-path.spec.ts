@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import { hidePackageJsonFiles, testFilePath } from '../utils.js'
 
 import type { RuleContext } from 'eslint-plugin-import-x'
@@ -12,13 +14,15 @@ const context = (physicalFilename: string, cwd: string) =>
 describe('package path', () => {
   describe('with a package.json above the file', () => {
     it('returns the package dir for the file', () => {
-      expect(getFilePackagePath(testFilePath('foo.ts'))).toBe(process.cwd())
+      expect(getFilePackagePath(testFilePath('foo.ts'))).toBe(
+        path.dirname(testFilePath('foo.ts')),
+      )
     })
 
     it('returns the package dir for the context', () => {
       expect(
         getContextPackagePath(context(testFilePath('foo.ts'), '/elsewhere')),
-      ).toBe(process.cwd())
+      ).toBe(path.dirname(testFilePath('foo.ts')))
     })
   })
 
