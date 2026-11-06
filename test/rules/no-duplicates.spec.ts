@@ -1761,6 +1761,21 @@ describe('TypeScript', () => {
               },
             ],
           }),
+          // #505: mixed-type fix does not redirect imports to a different entry point
+          tInvalid({
+            code: "import { type A } from 'svelte'; import type { B } from 'svelte/store'",
+            ...parserConfig,
+            options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+            settings: {
+              ...parserConfig.settings,
+              ...sharedDeclarationSettings,
+            },
+            output: null,
+            errors: [
+              createDuplicatedError(sharedDeclarationPath),
+              createDuplicatedError(sharedDeclarationPath),
+            ],
+          }),
         ]),
   ]
 

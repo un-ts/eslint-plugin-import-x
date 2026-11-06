@@ -342,6 +342,13 @@ function getTypeImportFix(
 ): TSESLint.ReportFixFunction | null {
   const first = nodes.find(node => node.importKind === 'type')!
 
+  // If the first `import type` has a different specifier than the first
+  // (canonical) node, merging would redirect imports to a different entry
+  // point. Report the duplicate but leave the fix to the user.
+  if (first.source.value !== nodes[0].source.value) {
+    return null
+  }
+
   // Leave it to the user to handle comments, also inside the `{...}` part
   // since the specifiers are rewritten here.
   const hasComments = (node: TSESTree.ImportDeclaration) =>
