@@ -1179,6 +1179,9 @@ ruleTester.run('no-rename-default', rule, {
       code: `import xyz from 'package/xyz'`,
     }),
     tValid({
+      code: `import somePackage from 'somepackage'`,
+    }),
+    tValid({
       code: `const markdownItAnchor = require('markdown-it-anchor')`,
       options: [{ commonjs: true }],
     }),
@@ -1193,6 +1196,36 @@ ruleTester.run('no-rename-default', rule, {
             defaultExportName: '_default',
             requiresOrImports: 'imports',
             importName: 'anchorPlugin',
+            suggestion: "import _default from 'markdown-it-anchor'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import markdownitanchor from 'markdown-it-anchor'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'markdownitanchor',
+            suggestion: "import _default from 'markdown-it-anchor'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import mark_down__it__anchor from 'markdown-it-anchor'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'mark_down__it__anchor',
             suggestion: "import _default from 'markdown-it-anchor'",
           },
           'ImportDefaultSpecifier',

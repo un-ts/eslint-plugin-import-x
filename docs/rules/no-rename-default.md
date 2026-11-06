@@ -32,16 +32,18 @@ import findUsers from './get-users'
 
 ## Module name aliases
 
-For bare module specifiers, the local name can also match the package name or the final path segment, ignoring case and separators. This keeps mangled default exports usable without disabling the rule for the whole module:
+For bare module specifiers, the local name can also match the package name or the final path segment as the same word sequence. This accepts case variants and camelCase, PascalCase, or snake_case spelling:
 
 ```js
 import markdownItAnchor from 'markdown-it-anchor'
 import markdown_it_anchor from 'markdown-it-anchor'
+import MarkdownItAnchor from 'markdown-it-anchor'
 import abc from '@org/abc'
 import xyz from 'package/xyz'
+import somePackage from 'somepackage'
 ```
 
-All of the above are valid. `import anchorPlugin from 'markdown-it-anchor'` is still reported.
+All of the above are valid. Names that concatenate the words without boundaries, such as `markdownitanchor`, or regroup them, such as `mark_down__it__anchor`, are still reported. The single-word package case is different: `somepackage` may be written as `somePackage`.
 
 ## Options
 

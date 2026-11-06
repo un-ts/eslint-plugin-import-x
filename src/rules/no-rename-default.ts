@@ -13,19 +13,45 @@ import { createRule, getValue } from '../utils/index.js'
 import type { ModuleOptions } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
-function toIdentifierKey(name: string) {
-  return name.replaceAll(/[^\dA-Za-z]/g, '').toLowerCase()
+function toIdentifierTokens(name: string) {
+  return name
+    .replaceAll(/([\da-z])([A-Z])/g, '$1 $2')
+    .replaceAll(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .split(/[^\dA-Za-z]+/)
+    .filter(Boolean)
+    .map(token => token.toLowerCase())
 }
 
-function getModuleIdentifier(sourcePath: string) {
+function getModuleName(sourcePath: string) {
   const [specifier] = sourcePath.split(/[?#]/)
   if (!specifier || specifier.startsWith('.') || path.isAbsolute(specifier)) {
     return
   }
   const parts = specifier.split('/')
-  const name =
-    specifier.startsWith('@') && parts.length === 2 ? parts[1] : parts.at(-1)
-  return name ? toIdentifierKey(name) : undefined
+  return specifier.startsWith('@') && parts.length === 2
+    ? parts[1]
+    : parts.at(-1)
+}
+
+function isModuleName(sourcePath: string, localName: string) {
+  const moduleName = getModuleName(sourcePath)
+  if (!moduleName) {
+    return false
+  }
+  const moduleTokens = toIdentifierTokens(moduleName)
+  const localTokens = toIdentifierTokens(localName)
+  if (
+    moduleTokens.length === localTokens.length &&
+    moduleTokens.every((token, index) => token === localTokens[index])
+  ) {
+    return true
+  }
+  // A package without separators can still be camel-cased in the local name:
+  // `somepackage` -> `somePackage`.
+  return (
+    moduleTokens.length === 1 &&
+    moduleName.toLowerCase() === localName.toLowerCase()
+  )
 }
 
 export type Options = ModuleOptions & {
@@ -79,14 +105,6 @@ export default createRule<[Options?], MessageId>({
       whitelist,
     } = context.options[0] || {}
     const whitelistSet = whitelist ? new Set(whitelist) : undefined
-    const isModuleName = (sourcePath: string, localName: string) => {
-      const moduleIdentifier = getModuleIdentifier(sourcePath)
-      return (
-        moduleIdentifier !== undefined &&
-        moduleIdentifier === toIdentifierKey(localName)
-      )
-    }
-
     function getDefaultExportName(moduleInfo: ModuleInfo) {
       const sourceName = getDefaultExportSourceName(moduleInfo)
       if (sourceName == null) {
