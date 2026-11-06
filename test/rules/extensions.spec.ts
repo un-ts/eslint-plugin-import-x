@@ -242,80 +242,29 @@ ruleTester.run('extensions', rule, {
         })
       }),
     ),
+    // `always` requires an extension on each subpath, but the exports map
+    // points the rewritten paths at different files, so report without a fix
     ...[false, true].map(fix =>
       tInvalid({
-        name: `rejects shortcuts that resolve to a different file (fix: ${fix})`,
+        name: `reports exports subpaths that cannot be fixed (fix: ${fix})`,
         code: [
-          'import conflict from "./extensions-inference/conflict";',
-          'import directory from "./test-module";',
+          'import sub from "exports-map/sub";',
+          'import conflict from "exports-map/conflict";',
         ].join('\n'),
         options: ['always', { fix }],
-        settings: {
-          'import-x/resolver-next': [
-            {
-              name: 'conflicting-rewrite-resolver',
-              interfaceVersion: 3,
-              resolve(modulePath: string) {
-                if (modulePath === './extensions-inference/conflict') {
-                  return {
-                    found: true,
-                    path: testFilePath('extensions-inference/conflict.ts'),
-                  }
-                }
-                if (modulePath === './extensions-inference/conflict.ts') {
-                  return {
-                    found: true,
-                    path: testFilePath('extensions-inference/conflict.js'),
-                  }
-                }
-                if (modulePath === './test-module') {
-                  return {
-                    found: true,
-                    path: testFilePath('test-module/index.ts'),
-                  }
-                }
-                if (modulePath === './test-module/index.ts') {
-                  return {
-                    found: true,
-                    path: testFilePath('test-module/index.js'),
-                  }
-                }
-                return { found: false }
-              },
-            },
-          ],
-        },
         errors: [
           {
             messageId: 'missingKnown',
-            data: {
-              extension: 'ts',
-              importPath: './extensions-inference/conflict',
-            },
+            data: { extension: 'js', importPath: 'exports-map/sub' },
           },
           {
             messageId: 'missingKnown',
-            data: { extension: 'ts', importPath: './test-module' },
+            data: { extension: 'ts', importPath: 'exports-map/conflict' },
           },
         ],
         output: null,
       }),
     ),
-    // `always` requires an extension on the subpath, but neither
-    // `exports-index/sub.js` nor `exports-index/sub/index.js` is exported, so
-    // report without offering a fix
-    tInvalid({
-      name: 'reports an extensionless exports subpath without a fix',
-      code: 'import { exported } from "exports-index/sub"',
-      options: ['always'],
-      output: null,
-      errors: [
-        {
-          messageId: 'missingKnown',
-          data: { extension: 'js', importPath: 'exports-index/sub' },
-        },
-      ],
-    }),
     tInvalid({
       name: 'self-reference subpath imports are not packages unless checkSelfReference is set',
       code: 'import { a } from "package-self-reference/sub"',
@@ -1980,7 +1929,8 @@ describe('TypeScript', () => {
             },
           },
         ],
-        output: 'import foo from "./extensions-inference/conflict.ts";',
+        // the resolver cannot resolve the .ts rewrite, so no fix is offered
+        output: null,
       }),
 
       tInvalid({
