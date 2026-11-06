@@ -20,5 +20,9 @@
     "eslint": "2.x",
     "glob": "1.0.0"
   },
-  "dummy": true
+  "dummy": true,
+  "exports": {
+    ".": "./index.js",
+    "./sub": "./dist-import/index.js"
+  }
 }

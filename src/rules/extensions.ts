@@ -525,7 +525,11 @@ export default createRule<Options, MessageId>({
             const isDirectoryImport =
               !!resolvedPath &&
               path.basename(resolvedPath, `.${extension}`) === 'index' &&
-              path.basename(importPath) !== 'index'
+              path.basename(importPath) !== 'index' &&
+              // An exports map can point `pkg/sub` at `dist/index.js`; only a
+              // path that resolves back to the same file is a directory import
+              resolve(`${importPath}/index.${extension}`, context) ===
+                resolvedPath
             const fixedImportPath = extension
               ? stringifyPath({
                   pathname:
