@@ -59,26 +59,41 @@ export default createRule<[Options?], MessageId>({
             specifier: defaultSpecifier,
           },
           fix(fixer) {
-            const importDeclarationText = context.sourceCode.getText(
-              node.parent,
-            )
             const localName = node.local.name
             if (!hasOtherSpecifiers) {
               return fixer.replaceText(node, `* as ${localName}`)
             }
             const isTypeImport = node.parent.importKind === 'type'
             const importStringPrefix = `import${isTypeImport ? ' type' : ''}`
-            // remove the default specifier and prepend the namespace import specifier
-            const rightBraceIndex = importDeclarationText.indexOf('}') + 1
-            const specifiers = importDeclarationText.slice(
-              importDeclarationText.indexOf('{'),
-              rightBraceIndex,
+            // remove the default specifier and prepend the namespace import specifier.
+            // The other specifiers are either `{ ... }` or `* as name`, so take
+            // everything between the comma after the default and `from`. The text
+            // before `from` is kept as written, so a `//` comment there still ends
+            // before `from`.
+            const { sourceCode } = context
+            const comma = sourceCode.getTokenAfter(node)!
+            const fromToken = sourceCode.getTokenBefore(node.parent.source)!
+            const specifiers = sourceCode.text
+              .slice(comma.range[1], fromToken.range[0])
+              .trimStart()
+            // keep anything between the default specifier and the comma, such as
+            // a comment, with the new namespace import
+            const afterDefault = sourceCode.text
+              .slice(node.range[1], comma.range[0])
+              .trimEnd()
+            // a `//` comment there has to end before `from`
+            const beforeFrom =
+              sourceCode.getCommentsBefore(comma).at(-1)?.type === 'Line'
+                ? '\n'
+                : ' '
+            const remainingText = sourceCode.text.slice(
+              fromToken.range[0],
+              node.parent.range[1],
             )
-            const remainingText = importDeclarationText.slice(rightBraceIndex)
             return fixer.replaceText(
               node.parent,
               [
-                `${importStringPrefix} * as ${localName} ${remainingText.trimStart()}`,
+                `${importStringPrefix} * as ${localName}${afterDefault}${beforeFrom}${remainingText}`,
                 `${importStringPrefix} ${specifiers}${remainingText}`,
               ].join('\n'),
             )
