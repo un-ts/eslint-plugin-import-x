@@ -40,7 +40,8 @@ export default createRule<[ModuleOptions?], MessageId>({
             path.dirname(context.physicalFilename),
             source.value,
           )
-          if (!relativePath.startsWith('.')) {
+          // `.config/x` would be a package name, so only `..` paths are left as is
+          if (relativePath !== '..' && !relativePath.startsWith('../')) {
             relativePath = `./${relativePath}`
           }
           return fixer.replaceText(source, JSON.stringify(relativePath))

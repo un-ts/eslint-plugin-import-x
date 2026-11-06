@@ -94,6 +94,24 @@ ruleTester.run('no-absolute-path', rule, {
       output: 'import f from "../../some/path"',
     }),
     tInvalid({
+      code: `import f from "/foo/bar/.config/baz.js"`,
+      filename: '/foo/bar/index.js',
+      errors: [ABSOLUTE_ERROR],
+      output: 'import f from "./.config/baz.js"',
+    }),
+    tInvalid({
+      code: `import f from "/foo/bar/..baz/qux.js"`,
+      filename: '/foo/bar/index.js',
+      errors: [ABSOLUTE_ERROR],
+      output: 'import f from "./..baz/qux.js"',
+    }),
+    tInvalid({
+      code: `import f from "/foo/.cache"`,
+      filename: '/foo/bar/index.js',
+      errors: [ABSOLUTE_ERROR],
+      output: 'import f from "../.cache"',
+    }),
+    tInvalid({
       code: `var f = require("/foo")`,
       filename: '/foo/bar/index.js',
       errors: [ABSOLUTE_ERROR],
