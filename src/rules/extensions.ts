@@ -227,6 +227,51 @@ function appendExtension(importPath: string, extension: string) {
 }
 
 /**
+ * Computes the import path a fix should use for a missing extension.
+ *
+ * `foo` resolving to `foo/index.js` is a directory import, while `foo.js`
+ * wins over `foo/index.js` when both exist. For a resolved import, a rewrite
+ * is only offered when it resolves back to the original file.
+ *
+ * @param importPath - The import path as written.
+ * @param extension - The missing extension without a leading dot.
+ * @param resolvedPath - The result of resolving the import path.
+ * @param context - The rule context, used to verify rewritten paths.
+ * @returns The pathname to use in a fix or suggestion, or an empty string.
+ */
+function computeFixedPathname(
+  importPath: string,
+  extension: string,
+  resolvedPath: string | null | undefined,
+  context: RuleContext,
+) {
+  if (!extension) {
+    return ''
+  }
+  if (!resolvedPath) {
+    return appendExtension(importPath, extension)
+  }
+
+  const indexPathname =
+    path.basename(resolvedPath, `.${extension}`) === 'index'
+      ? `${
+          importPath.endsWith('/') ? importPath.slice(0, -1) : importPath
+        }/index.${extension}`
+      : ''
+  if (indexPathname && resolve(indexPathname, context) === resolvedPath) {
+    return indexPathname
+  }
+
+  const appendedPathname = appendExtension(importPath, extension)
+  // An exports map can point `pkg/sub` at `dist/index.js`, and a rewrite may
+  // resolve elsewhere or not at all. Only offer a rewrite that resolves to the
+  // original file.
+  return resolve(appendedPathname, context) === resolvedPath
+    ? appendedPathname
+    : ''
+}
+
+/**
  * Whether the resolved file is the import path with another extension, e.g.
  * `./foo.js` resolved to `foo.ts` (a resolver extension alias).
  *
@@ -520,12 +565,14 @@ export default createRule<Options, MessageId>({
               extensionForbidden,
             )
           ) {
-            const fixedImportPath = extension
-              ? stringifyPath({
-                  pathname: appendExtension(importPath, extension),
-                  query,
-                  hash,
-                })
+            const fixedPathname = computeFixedPathname(
+              importPath,
+              extension,
+              resolvedPath,
+              context,
+            )
+            const fixedImportPath = fixedPathname
+              ? stringifyPath({ pathname: fixedPathname, query, hash })
               : ''
             const fixOrSuggest = {
               fix(fixer: TSESLint.RuleFixer) {
@@ -542,7 +589,7 @@ export default createRule<Options, MessageId>({
                 extension,
                 importPath: importPathWithQueryString,
               },
-              ...(extension &&
+              ...(fixedImportPath &&
                 (props.fix
                   ? fixOrSuggest
                   : {
@@ -567,8 +614,13 @@ export default createRule<Options, MessageId>({
         ) {
           const fixedPathname = importPath.slice(0, -(extension.length + 1))
           const isIndex = fixedPathname.endsWith('/index')
+          const indexDirectoryPathname = isIndex
+            ? fixedPathname.slice(0, -6)
+            : fixedPathname
+          const canShortenIndex =
+            isIndex && resolve(indexDirectoryPathname, context) === resolvedPath
           const fixedImportPath = stringifyPath({
-            pathname: isIndex ? fixedPathname.slice(0, -6) : fixedPathname,
+            pathname: canShortenIndex ? indexDirectoryPathname : fixedPathname,
             query,
             hash,
           })
@@ -601,7 +653,7 @@ export default createRule<Options, MessageId>({
               : {
                   suggest: [
                     commonSuggestion,
-                    isIndex && {
+                    canShortenIndex && {
                       ...commonSuggestion,
                       fix(fixer: TSESLint.RuleFixer) {
                         return fixer.replaceText(

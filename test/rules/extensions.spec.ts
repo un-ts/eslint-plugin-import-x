@@ -2,6 +2,7 @@ import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester
 
 import { createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 
+import { createNodeResolver } from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/extensions'
 
 const ruleTester = new TSESLintRuleTester()
@@ -16,6 +17,29 @@ const ruleTesterWithTypeScriptImports = new TSESLintRuleTester({
 })
 
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+const conflictResolverSettings = {
+  'import-x/resolver-next': [
+    {
+      name: 'conflict-resolver',
+      interfaceVersion: 3 as const,
+      resolve(modulePath: string) {
+        if (modulePath === './extensions-inference/conflict') {
+          return {
+            found: true,
+            path: testFilePath('extensions-inference/conflict.ts'),
+          }
+        }
+        if (modulePath === './extensions-inference/conflict.js') {
+          return {
+            found: true,
+            path: testFilePath('extensions-inference/conflict.js'),
+          }
+        }
+        return { found: false }
+      },
+    },
+  ],
+}
 
 ruleTester.run('extensions', rule, {
   valid: [
@@ -204,6 +228,66 @@ ruleTester.run('extensions', rule, {
   ],
 
   invalid: [
+    ...[false, true].flatMap(fix =>
+      [
+        ['./test-module', './test-module/index.js'],
+        ['@/renamed', '@/renamed/index.js'],
+        ['./test-module/index', './test-module/index.js'],
+        ['./test-module/index?query', './test-module/index.js?query'],
+        ['./directory-index/index', './directory-index/index/index.js'],
+      ].map(([importPath, fixedImportPath]) => {
+        const output = `import foo from "${fixedImportPath}";`
+        return tInvalid({
+          name: `fixes resolved imports: ${importPath} (fix: ${fix})`,
+          code: `import foo from "${importPath}";`,
+          options: ['always', { fix }],
+          settings: {
+            'import-x/resolver-next': createNodeResolver({
+              alias: { '@/renamed': [testFilePath('./test-module')] },
+            }),
+          },
+          errors: [
+            {
+              messageId: 'missingKnown',
+              data: { extension: 'js', importPath },
+              suggestions: fix
+                ? undefined
+                : [
+                    {
+                      messageId: 'addMissing',
+                      data: { extension: 'js', importPath, fixedImportPath },
+                      output,
+                    },
+                  ],
+            },
+          ],
+          output: fix ? output : null,
+        })
+      }),
+    ),
+    // `always` requires an extension on each subpath, but the exports map
+    // points the rewritten paths at different files, so report without a fix
+    ...[false, true].map(fix =>
+      tInvalid({
+        name: `reports exports subpaths that cannot be fixed (fix: ${fix})`,
+        code: [
+          'import sub from "exports-map/sub";',
+          'import conflict from "exports-map/conflict";',
+        ].join('\n'),
+        options: ['always', { fix }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: { extension: 'js', importPath: 'exports-map/sub' },
+          },
+          {
+            messageId: 'missingKnown',
+            data: { extension: 'ts', importPath: 'exports-map/conflict' },
+          },
+        ],
+        output: null,
+      }),
+    ),
     tInvalid({
       name: 'self-reference subpath imports are not packages unless checkSelfReference is set',
       code: 'import { a } from "package-self-reference/sub"',
@@ -215,17 +299,6 @@ ruleTester.run('extensions', rule, {
           data: { extension: 'js', importPath: 'package-self-reference/sub' },
           line: 1,
           column: 19,
-          suggestions: [
-            {
-              messageId: 'addMissing',
-              data: {
-                extension: 'js',
-                importPath: 'package-self-reference/sub',
-                fixedImportPath: 'package-self-reference/sub.js',
-              },
-              output: 'import { a } from "package-self-reference/sub.js"',
-            },
-          ],
         },
       ],
     }),
@@ -337,6 +410,36 @@ ruleTester.run('extensions', rule, {
         },
       ],
     }),
+    ...[false, true].map(fix =>
+      tInvalid({
+        name: `keeps the index path when shortening it resolves elsewhere (fix: ${fix})`,
+        code: 'import a from "./index-conflict/dir/index.js"',
+        options: ['never', { fix }],
+        errors: [
+          {
+            messageId: 'unexpected',
+            data: {
+              extension: 'js',
+              importPath: './index-conflict/dir/index.js',
+            },
+            suggestions: fix
+              ? undefined
+              : [
+                  {
+                    messageId: 'removeUnexpected',
+                    data: {
+                      extension: 'js',
+                      importPath: './index-conflict/dir/index.js',
+                      fixedImportPath: './index-conflict/dir/index',
+                    },
+                    output: 'import a from "./index-conflict/dir/index"',
+                  },
+                ],
+          },
+        ],
+        output: fix ? 'import a from "./index-conflict/dir/index"' : null,
+      }),
+    ),
     tInvalid({
       code: 'import dot from "./file.with.dot"',
       options: ['always'],
@@ -1841,46 +1944,27 @@ describe('TypeScript', () => {
         output: 'import foo from "./typescript-default.js";',
       }),
 
-      tInvalid({
-        // the extensionless import resolves to conflict.ts, while the js candidate is a different file
-        name: 'extensions should not infer a candidate that resolves to a different file',
-        code: 'import foo from "./extensions-inference/conflict";',
-        filename: testFilePath('./foo.ts'),
-        settings: {
-          'import-x/resolver-next': [
+      ...[false, true].map(fix =>
+        tInvalid({
+          // the extensionless import resolves to conflict.ts, while the js candidate is a different file
+          name: `extensions should not infer a candidate that resolves to a different file (fix: ${fix})`,
+          code: 'import foo from "./extensions-inference/conflict";',
+          filename: testFilePath('./foo.ts'),
+          settings: conflictResolverSettings,
+          options: ['always', { pattern: { js: 'always' }, fix }],
+          errors: [
             {
-              name: 'conflict-resolver',
-              interfaceVersion: 3,
-              resolve(modulePath: string) {
-                if (modulePath === './extensions-inference/conflict') {
-                  return {
-                    found: true,
-                    path: testFilePath('extensions-inference/conflict.ts'),
-                  }
-                }
-                if (modulePath === './extensions-inference/conflict.js') {
-                  return {
-                    found: true,
-                    path: testFilePath('extensions-inference/conflict.js'),
-                  }
-                }
-                return { found: false }
+              messageId: 'missingKnown',
+              data: {
+                extension: 'ts',
+                importPath: './extensions-inference/conflict',
               },
             },
           ],
-        },
-        options: ['always', { pattern: { js: 'always' }, fix: true }],
-        errors: [
-          {
-            messageId: 'missingKnown',
-            data: {
-              extension: 'ts',
-              importPath: './extensions-inference/conflict',
-            },
-          },
-        ],
-        output: 'import foo from "./extensions-inference/conflict.ts";',
-      }),
+          // the resolver cannot resolve the .ts rewrite, so no fix is offered
+          output: null,
+        }),
+      ),
 
       tInvalid({
         name: 'extensions should not fix an ambiguous resolved extension',
