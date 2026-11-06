@@ -164,6 +164,16 @@ ruleTester.run('no-duplicates', rule, {
         createDuplicatedError(sharedDeclarationPath),
       ],
     }),
+    tInvalid({
+      code: "import { writable } from 'svelte/store'; import { onMount } from 'svelte'",
+      output: " import { onMount, writable } from 'svelte'",
+      options: [{ whitelist: [['svelte', 'svelte/easing']] }],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
+      ],
+    }),
 
     // #505: an unlisted entry point joins the same module whatever the import order
     ...[

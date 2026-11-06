@@ -685,29 +685,95 @@ export default createRule<[Options?], MessageId>({
           : isListed(group, a) && isListed(group, b),
       )
 
-    const getImportKey = (
-      sourcePath: string,
-      importMap: Map<string, TSESTree.ImportDeclaration[]>,
-    ) => {
-      // resolved path will cover aliased duplicates
-      const resolvedPath = resolver(sourcePath)
-
-      if (!whitelist) {
-        return resolvedPath
-      }
-
-      for (const [key, nodes] of importMap) {
-        if (
-          resolver(nodes[0].source.value) === resolvedPath &&
-          !nodes.some(node =>
-            areDifferentModules(node.source.value, sourcePath),
-          )
-        ) {
-          return key
+    // where a specifier first appears in the whitelist, unlisted ones last
+    const getWhitelistRank = (specifier: string) => {
+      let rank = 0
+      for (const group of whitelist!) {
+        for (const entry of group) {
+          if (entry === specifier || entry === specifier.split('?')[0]) {
+            return rank
+          }
+          rank++
         }
       }
+      return Infinity
+    }
 
-      return importMap.has(resolvedPath) ? sourcePath : resolvedPath
+    /**
+     * Splits imports that resolve to the same path into the modules the
+     * whitelist keeps apart. The specifiers are placed in whitelist order, each
+     * joining the first module it isn't kept apart from, so the result doesn't
+     * depend on the order of the imports in the file.
+     */
+    const splitWhitelisted = (
+      imported: Map<string, TSESTree.ImportDeclaration[]>,
+    ) => {
+      if (!whitelist) {
+        return imported
+      }
+      const result = new Map<string, TSESTree.ImportDeclaration[]>()
+      for (const [resolvedPath, nodes] of imported) {
+        const specifiers = [...new Set(nodes.map(node => node.source.value))]
+          .map(specifier => ({
+            specifier,
+            rank: getWhitelistRank(specifier),
+          }))
+          .sort((a, b) =>
+            a.rank === b.rank
+              ? a.specifier.localeCompare(b.specifier)
+              : a.rank - b.rank,
+          )
+        const modules: string[][] = []
+        for (const { specifier } of specifiers) {
+          const module = modules.find(members =>
+            members.every(member => !areDifferentModules(member, specifier)),
+          )
+          if (module) {
+            module.push(specifier)
+          } else {
+            modules.push([specifier])
+          }
+        }
+        if (modules.length === 1) {
+          // fix into the specifier the whitelist names, not an unlisted one
+          const [target] = modules[0]
+          result.set(
+            resolvedPath,
+            getWhitelistRank(target) === Infinity
+              ? nodes
+              : [...nodes].sort(
+                  (a, b) =>
+                    Number(a.source.value !== target) -
+                    Number(b.source.value !== target),
+                ),
+          )
+          continue
+        }
+        for (const members of modules) {
+          // fix into the specifier the whitelist names, not an unlisted one
+          result.set(
+            members[0],
+            nodes
+              .filter(node => members.includes(node.source.value))
+              .sort(
+                (a, b) =>
+                  Number(a.source.value !== members[0]) -
+                  Number(b.source.value !== members[0]),
+              ),
+          )
+        }
+      }
+      return result
+    }
+
+    const resolvedPaths = new Map<string, string>()
+    const resolveCached = (sourcePath: string) => {
+      let resolvedPath = resolvedPaths.get(sourcePath)
+      if (resolvedPath === undefined) {
+        resolvedPath = resolver(sourcePath)
+        resolvedPaths.set(sourcePath, resolvedPath)
+      }
+      return resolvedPath
     }
 
     const moduleMaps = new Map<TSESTree.Node, Map<string, ModuleMap>>()
@@ -765,24 +831,25 @@ export default createRule<[Options?], MessageId>({
 
     return {
       ImportDeclaration(n) {
+        // resolved path will cover aliased duplicates
+        const resolvedPath = resolveCached(n.source.value)
         const importMap = getImportMap(n)
-        const key = getImportKey(n.source.value, importMap)
 
-        if (importMap.has(key)) {
-          importMap.get(key)!.push(n)
+        if (importMap.has(resolvedPath)) {
+          importMap.get(resolvedPath)!.push(n)
         } else {
-          importMap.set(key, [n])
+          importMap.set(resolvedPath, [n])
         }
       },
 
       'Program:exit'() {
         for (const parentMaps of moduleMaps.values()) {
           for (const map of parentMaps.values()) {
-            checkImports(map.imported, context)
-            checkImports(map.nsImported, context)
-            checkImports(map.defaultTypesImported, context)
-            checkImports(map.namespaceTypesImported, context)
-            checkImports(map.namedTypesImported, context)
+            checkImports(splitWhitelisted(map.imported), context)
+            checkImports(splitWhitelisted(map.nsImported), context)
+            checkImports(splitWhitelisted(map.defaultTypesImported), context)
+            checkImports(splitWhitelisted(map.namespaceTypesImported), context)
+            checkImports(splitWhitelisted(map.namedTypesImported), context)
           }
         }
       },
