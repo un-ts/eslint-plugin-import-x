@@ -1179,6 +1179,9 @@ ruleTester.run('no-rename-default', rule, {
       code: `import xyz from 'package/xyz'`,
     }),
     tValid({
+      code: `import index from '@org/abc/index'`,
+    }),
+    tValid({
       code: `import somePackage from 'somepackage'`,
     }),
     tValid({
@@ -1197,6 +1200,51 @@ ruleTester.run('no-rename-default', rule, {
             requiresOrImports: 'imports',
             importName: 'anchorPlugin',
             suggestion: "import _default from 'markdown-it-anchor'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import other from '@org/abc'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'other',
+            suggestion: "import _default from '@org/abc'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import other from 'package/xyz'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'xyz.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'other',
+            suggestion: "import _default from 'package/xyz'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      code: `import abc from '@org/abc/index'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'index.js',
+            defaultExportName: '_default',
+            requiresOrImports: 'imports',
+            importName: 'abc',
+            suggestion: "import _default from '@org/abc/index'",
           },
           'ImportDefaultSpecifier',
         ),

@@ -13,6 +13,12 @@ import { createRule, getValue } from '../utils/index.js'
 import type { ModuleOptions } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
+/**
+ * Splits an identifier or module name into lower-cased word tokens.
+ *
+ * @param name - The identifier or module name to split.
+ * @returns The lower-cased word tokens.
+ */
 function toIdentifierTokens(name: string) {
   return name
     .replaceAll(/([\da-z])([A-Z])/g, '$1 $2')
@@ -22,6 +28,12 @@ function toIdentifierTokens(name: string) {
     .map(token => token.toLowerCase())
 }
 
+/**
+ * Gets the package name or final path segment of a bare module specifier.
+ *
+ * @param sourcePath - The module specifier as written.
+ * @returns The package name or final path segment, if the specifier is bare.
+ */
 function getModuleName(sourcePath: string) {
   const [specifier] = sourcePath.split(/[?#]/)
   if (!specifier || specifier.startsWith('.') || path.isAbsolute(specifier)) {
@@ -33,6 +45,13 @@ function getModuleName(sourcePath: string) {
     : parts.at(-1)
 }
 
+/**
+ * Whether a local name is a word-sequence spelling of a bare module name.
+ *
+ * @param sourcePath - The module specifier as written.
+ * @param localName - The imported local binding name.
+ * @returns Whether the local name matches the module's name.
+ */
 function isModuleName(sourcePath: string, localName: string) {
   const moduleName = getModuleName(sourcePath)
   if (!moduleName) {
