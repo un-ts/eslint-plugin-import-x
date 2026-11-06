@@ -139,11 +139,15 @@ export default createRule<[Options?], MessageId>({
         const sortNodes = errorInfos.slice(0, lastSortNodesIndex + 1)
         // A comment on a moved import would be left behind, so the whole
         // group is left without an autofix; the rule still reports.
-        const canFix = !sortNodes.some(
-          ({ node: sortNode }) =>
-            sourceCode.getCommentsBefore(sortNode).length > 0 ||
-            getTrailingComments(sourceCode, sortNode).length > 0,
-        )
+        const insertTarget = lastLegalImp ?? lastDirective
+        const canFix =
+          (!insertTarget ||
+            getTrailingComments(sourceCode, insertTarget).length === 0) &&
+          !sortNodes.some(
+            ({ node: sortNode }) =>
+              sourceCode.getCommentsBefore(sortNode).length > 0 ||
+              getTrailingComments(sourceCode, sortNode).length > 0,
+          )
 
         for (const [index, { node }] of errorInfos.entries()) {
           let fix: TSESLint.ReportFixFunction | undefined

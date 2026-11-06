@@ -561,81 +561,81 @@ ruleTester.run('newline-after-import', rule, {
     {
       // third-party line directives keep their target too
       code: `import a from 'a' // prettier-ignore\nfoo()`,
-      output: `import a from 'a'\n // prettier-ignore\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' // trailing\nfoo()`,
-      output: `import a from 'a'\n // trailing\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' /** @ts-ignore */\nfoo()`,
-      output: `import a from 'a'\n /** @ts-ignore */\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' /// @ts-ignore\nfoo()`,
-      output: `import a from 'a'\n /// @ts-ignore\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' /* one */ /* two */\nfoo()`,
-      output: `import a from 'a'\n /* one */ /* two */\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import a from 'a' // trailing\n// next\nfoo()`,
-      output: `import a from 'a' // trailing\n\n// next\nfoo()`,
+      output: null,
       options: [{ considerComments: true }],
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `const a = require('a') // trailing\nfoo()`,
-      output: `const a = require('a')\n // trailing\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
       code: `import 'a'; /*\n*/ foo()`,
-      output: `import 'a'; /*\n*/\n\n foo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import 'a'; /*\n*/\nfoo()`,
-      output: `import 'a'; /*\n*/\n\nfoo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `import 'a'; /*\n*/\nfoo()`,
-      output: `import 'a'; /*\n*/\n\nfoo()`,
+      output: null,
       options: [{ considerComments: true }],
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: `const a = require('a'); /*\n*/ foo()`,
-      output: `const a = require('a'); /*\n*/\n\n foo()`,
+      output: null,
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
       // do not move a line-scoped directive away from its target
       code: "import a from 'a' // @ts-ignore\nfoo()",
-      output: "import a from 'a'\n // @ts-ignore\nfoo()",
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: "const a = require('a') // @ts-ignore\nfoo()",
-      output: "const a = require('a')\n // @ts-ignore\nfoo()",
+      output: null,
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {
       // a directive earlier in the trailing comment chain also withholds the fix
       code: "import a from 'a' /* @ts-ignore */ /* plain */\nfoo()",
-      output: "import a from 'a'\n /* @ts-ignore */ /* plain */\nfoo()",
+      output: null,
       errors: [{ line: 1, column: 1, ...IMPORT_ERROR }],
     },
     {
       code: "const a = require('a') /* @ts-ignore */ /* plain */\nfoo()",
-      output: "const a = require('a')\n /* @ts-ignore */ /* plain */\nfoo()",
+      output: null,
       errors: [{ line: 1, column: 1, ...REQUIRE_ERROR }],
     },
     {

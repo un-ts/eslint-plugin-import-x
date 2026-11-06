@@ -76,31 +76,28 @@ ruleTester.run('first', rule, {
       output: "'use client'\nimport { y } from 'bar'\nfoo();",
     }),
     tInvalid({
-      // a trailing comment moves below the moved import but stays above its target
+      // the directive line has a trailing comment, so the fix is withheld
       code: "'use client'; // trailing comment\nfoo();\nimport { x } from 'foo'",
       errors: [{ messageId: 'order' }],
-      output:
-        "'use client';\nimport { x } from 'foo'\n // trailing comment\nfoo();",
+      output: null,
     }),
     tInvalid({
-      // third-party line directives keep their target too
+      // third-party line directives keep their target by withholding the fix
       code: "'use client'; // prettier-ignore\nfoo();\nimport { x } from 'foo'",
       errors: [{ messageId: 'order' }],
-      output:
-        "'use client';\nimport { x } from 'foo'\n // prettier-ignore\nfoo();",
+      output: null,
     }),
     tInvalid({
-      // a next-line directive on the directive's line must keep its target
+      // a next-line directive on the directive's line keeps its target the same way
       code: "'use client'; // @ts-ignore\nfoo();\nimport { x } from 'foo'",
       errors: [{ messageId: 'order' }],
-      output: "'use client';\nimport { x } from 'foo'\n // @ts-ignore\nfoo();",
+      output: null,
     }),
     tInvalid({
       // a decorated next-line directive keeps its target too
       code: "'use client'; /** @ts-ignore */\nfoo();\nimport { x } from 'foo'",
       errors: [{ messageId: 'order' }],
-      output:
-        "'use client';\nimport { x } from 'foo'\n /** @ts-ignore */\nfoo();",
+      output: null,
     }),
     tInvalid({
       // do not move an import out of its next-line suppression
