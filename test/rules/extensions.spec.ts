@@ -17,6 +17,29 @@ const ruleTesterWithTypeScriptImports = new TSESLintRuleTester({
 })
 
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+const conflictResolverSettings = {
+  'import-x/resolver-next': [
+    {
+      name: 'conflict-resolver',
+      interfaceVersion: 3 as const,
+      resolve(modulePath: string) {
+        if (modulePath === './extensions-inference/conflict') {
+          return {
+            found: true,
+            path: testFilePath('extensions-inference/conflict.ts'),
+          }
+        }
+        if (modulePath === './extensions-inference/conflict.js') {
+          return {
+            found: true,
+            path: testFilePath('extensions-inference/conflict.js'),
+          }
+        }
+        return { found: false }
+      },
+    },
+  ],
+}
 
 ruleTester.run('extensions', rule, {
   valid: [
@@ -1897,29 +1920,7 @@ describe('TypeScript', () => {
           name: `extensions should not infer a candidate that resolves to a different file (fix: ${fix})`,
           code: 'import foo from "./extensions-inference/conflict";',
           filename: testFilePath('./foo.ts'),
-          settings: {
-            'import-x/resolver-next': [
-              {
-                name: 'conflict-resolver',
-                interfaceVersion: 3,
-                resolve(modulePath: string) {
-                  if (modulePath === './extensions-inference/conflict') {
-                    return {
-                      found: true,
-                      path: testFilePath('extensions-inference/conflict.ts'),
-                    }
-                  }
-                  if (modulePath === './extensions-inference/conflict.js') {
-                    return {
-                      found: true,
-                      path: testFilePath('extensions-inference/conflict.js'),
-                    }
-                  }
-                  return { found: false }
-                },
-              },
-            ],
-          },
+          settings: conflictResolverSettings,
           options: ['always', { pattern: { js: 'always' }, fix }],
           errors: [
             {
