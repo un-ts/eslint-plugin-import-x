@@ -230,8 +230,8 @@ function appendExtension(importPath: string, extension: string) {
  * Computes the import path a fix should use for a missing extension.
  *
  * `foo` resolving to `foo/index.js` is a directory import, while `foo.js`
- * wins over `foo/index.js` when both exist. A rewrite is only offered when it
- * resolves back to the original file.
+ * wins over `foo/index.js` when both exist. For a resolved import, a rewrite
+ * is only offered when it resolves back to the original file.
  *
  * @param importPath - The import path as written.
  * @param extension - The missing extension without a leading dot.
