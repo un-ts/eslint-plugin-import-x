@@ -546,14 +546,16 @@ export default createRule<Options, MessageId>({
               : appendExtension(importPath, extension)
             // An exports map can point `pkg/sub` at `dist/index.js`, and the
             // appended `.js` may not be exported at all. Bare specifiers must
-            // resolve back to the original file; relative paths can still be
-            // fixed from the resolved file when the resolver cannot resolve
-            // the rewritten specifier.
+            // resolve back to the original file. For relative paths, a matching
+            // basename is enough when the resolver cannot resolve the rewritten
+            // specifier.
             const fixedImportPath =
               extension &&
               (!resolvedPath ||
                 isDirectoryImport ||
-                isRelativeImport ||
+                (isRelativeImport &&
+                  path.basename(fixedPathname) ===
+                    path.basename(resolvedPath)) ||
                 resolve(fixedPathname, context) === resolvedPath)
                 ? stringifyPath({ pathname: fixedPathname, query, hash })
                 : ''
