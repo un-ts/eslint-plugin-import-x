@@ -396,12 +396,108 @@ function makeImportDescription(node: ImportEntry) {
   return 'import'
 }
 
+function isSameImport(first: ImportEntry, second: ImportEntry) {
+  return (
+    first.displayName === second.displayName &&
+    makeImportDescription(first) === makeImportDescription(second)
+  )
+}
+
+// A rule can't see which of its reports get disabled, and a fix shared by them
+// would also move the imports they were disabled for.
+function mayDisableRule({ id, sourceCode }: RuleContext) {
+  return sourceCode.getAllComments().some(({ value }) => {
+    const directive = /^eslint-disable(?:(?:-next)?-line)?(?:\s+(.*))?$/su.exec(
+      value.split(/\s-{2,}\s/u, 1)[0].trim(),
+    )
+    return directive && (!directive[1] || directive[1].includes(id))
+  })
+}
+
+// The range of every fix starts at the import it moves past, so the fixes of one
+// block overlap. ESLint applies one per pass and stops after 10 passes, then the
+// block stays half sorted until the next run. So all reports of a block share one
+// fix that moves all of its imports at once, unless they can be disabled.
+function makeMoveAllFix(
+  context: RuleContext,
+  moves: Array<{ target: ImportEntryWithRank; imp: ImportEntryWithRank }>,
+  order: 'before' | 'after',
+  isExports: boolean,
+): TSESLint.RuleFix | null {
+  const { sourceCode } = context
+  const { text } = sourceCode
+  const insertions = new Map<number, ImportEntryWithRank[]>()
+  const removals: Array<[number, number]> = []
+
+  for (const { target, imp } of moves) {
+    const targetRoot = findRootNode(target.node)
+    const impRoot = findRootNode(imp.node)
+    if (
+      !isSameImport(target, imp) &&
+      (isExports || canReorderItems(targetRoot, impRoot))
+    ) {
+      const at =
+        order === 'before'
+          ? findStartOfLineWithComments(sourceCode, targetRoot)
+          : findEndOfLineWithComments(sourceCode, targetRoot)
+      insertions.set(at, [...(insertions.get(at) ?? []), imp])
+      removals.push([
+        findStartOfLineWithComments(sourceCode, impRoot),
+        findEndOfLineWithComments(sourceCode, impRoot),
+      ])
+    }
+  }
+
+  if (removals.length === 0) {
+    return null
+  }
+
+  const edits = [
+    ...[...insertions].map(([at, imps]) => ({
+      start: at,
+      end: at,
+      code:
+        // The last line of a file can have no line break to put an import after
+        (at > 0 && text[at - 1] !== '\n' && order === 'after' ? '\n' : '') +
+        imps
+          // Ranks are negated when moving down, see `makeOutOfOrderReport`
+          .sort((a, b) =>
+            order === 'before' ? a.rank - b.rank : b.rank - a.rank,
+          )
+          .map(imp => {
+            const root = findRootNode(imp.node)
+            const code = text.slice(
+              findStartOfLineWithComments(sourceCode, root),
+              findEndOfLineWithComments(sourceCode, root),
+            )
+            return code.endsWith('\n') ? code : `${code}\n`
+          })
+          .join(''),
+    })),
+    ...removals.map(([start, end]) => ({ start, end, code: '' })),
+  ].sort((a, b) => a.start - b.start || a.end - b.end)
+
+  const rangeStart = edits[0].start
+  const rangeEnd = Math.max(...edits.map(edit => edit.end))
+  let cursor = rangeStart
+  let code = ''
+  for (const edit of edits) {
+    code += text.slice(cursor, edit.start) + edit.code
+    // Imports on one line share the whitespace between them
+    cursor = Math.max(cursor, edit.end)
+  }
+  code += text.slice(cursor, rangeEnd)
+
+  return { range: [rangeStart, rangeEnd], text: code }
+}
+
 function fixOutOfOrder(
   context: RuleContext,
   firstNode: ImportEntry,
   secondNode: ImportEntry,
   order: 'before' | 'after',
   category: Category,
+  makeFix: () => TSESLint.RuleFix | null,
 ) {
   const isNamed = category === categories.named
   const isExports = category === categories.exports
@@ -442,10 +538,7 @@ function fixOutOfOrder(
   const secondDesc = makeImportDescription(secondNode)
 
   // FIXME: find out why this happens, upstream doesn't have this check
-  if (
-    firstNode.displayName === secondNode.displayName &&
-    firstDesc === secondDesc
-  ) {
+  if (isSameImport(firstNode, secondNode)) {
     log(
       firstNode.displayName,
       firstNode.node.loc,
@@ -504,38 +597,11 @@ function fixOutOfOrder(
     }
   } else {
     const canFix = isExports || canReorderItems(firstRoot, secondRoot)
-    let newCode = sourceCode.text.slice(secondRootStart, secondRootEnd)
-
-    if (newCode[newCode.length - 1] !== '\n') {
-      newCode = `${newCode}\n`
-    }
-
-    if (order === 'before') {
-      context.report({
-        node: secondNode.node,
-        ...messageOptions,
-        fix: canFix
-          ? fixer =>
-              fixer.replaceTextRange(
-                [firstRootStart, secondRootEnd],
-                newCode +
-                  sourceCode.text.slice(firstRootStart, secondRootStart),
-              )
-          : null,
-      })
-    } else if (order === 'after') {
-      context.report({
-        node: secondNode.node,
-        ...messageOptions,
-        fix: canFix
-          ? fixer =>
-              fixer.replaceTextRange(
-                [secondRootStart, firstRootEnd],
-                sourceCode.text.slice(secondRootEnd, firstRootEnd) + newCode,
-              )
-          : null,
-      })
-    }
+    context.report({
+      node: secondNode.node,
+      ...messageOptions,
+      fix: canFix ? makeFix : null,
+    })
   }
 }
 
@@ -546,13 +612,23 @@ function reportOutOfOrder(
   order: 'before' | 'after',
   category: Category,
 ) {
-  for (const imp of outOfOrder) {
+  const moves = outOfOrder.map(imp => ({
+    target: imported.find(importedItem => importedItem.rank > imp.rank)!,
+    imp,
+  }))
+  const isExports = category === categories.exports
+  const moveAllFix =
+    category === categories.named || mayDisableRule(context)
+      ? null
+      : makeMoveAllFix(context, moves, order, isExports)
+  for (const move of moves) {
     fixOutOfOrder(
       context,
-      imported.find(importedItem => importedItem.rank > imp.rank)!,
-      imp,
+      move.target,
+      move.imp,
       order,
       category,
+      () => moveAllFix ?? makeMoveAllFix(context, [move], order, isExports),
     )
   }
 }
