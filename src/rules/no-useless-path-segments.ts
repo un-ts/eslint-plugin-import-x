@@ -103,11 +103,14 @@ export default createRule<[Options?], MessageId>({
       )
 
       // Only relative imports are relevant for this rule, except for a useless
-      // index in an aliased import of a local file (e.g. `@/foo/index.js`)
+      // index in an aliased import of a local file (e.g. `@/foo/index.js`).
+      // Node subpath imports (`#app/pages/index`) are excluded: ESM rejects
+      // bare directory paths like `#app/pages` even when a resolver accepts them.
       if (!importPath.startsWith('.')) {
         if (
           options.noUselessIndex &&
           regexUnnecessaryIndex.test(importPath) &&
+          !importPath.startsWith('#') &&
           importType(importPath, context) === 'internal'
         ) {
           const resolvedPath = resolve(importPath, context)
