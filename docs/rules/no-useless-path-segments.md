@@ -74,6 +74,12 @@ import './pages/index' // should be "./pages" (auto-fixable)
 import './pages/index.js' // should be "./pages" (auto-fixable)
 ```
 
+The option also checks aliased imports (for example `@/pages/index` with a `@` path alias) when they resolve to a file inside the project. These are only reported when the shorter path resolves to the same file:
+
+```js
+import '@/pages/index' // should be "@/pages" (auto-fixable)
+```
+
 Note: `noUselessIndex` only avoids ambiguous imports for `.js` files if you haven't specified other resolved file extensions. See [Settings: import-x/extensions](https://github.com/import-js/eslint-plugin-import#importextensions) for details.
 
 ### commonjs

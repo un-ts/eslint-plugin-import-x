@@ -8,6 +8,7 @@ import {
   moduleVisitor,
   resolve,
   getFileExtensions,
+  importType,
 } from '../utils/index.js'
 
 /**
@@ -96,8 +97,34 @@ export default createRule<[Options?], MessageId>({
         })
       }
 
-      // Only relative imports are relevant for this rule --> Skip checking
+      const fileExtensions = getFileExtensions(context.settings)
+      const regexUnnecessaryIndex = new RegExp(
+        `.*\\/index(\\${[...fileExtensions].join('|\\')})?$`,
+      )
+
+      // Only relative imports are relevant for this rule, except for a useless
+      // index in an aliased import of a local file (e.g. `@/foo/index.js`)
       if (!importPath.startsWith('.')) {
+        if (
+          options.noUselessIndex &&
+          regexUnnecessaryIndex.test(importPath) &&
+          importType(importPath, context) === 'internal'
+        ) {
+          const resolvedPath = resolve(importPath, context)
+          const parentDirectory = path.posix.dirname(importPath)
+
+          // Only propose a path that the resolver maps to the same file
+          if (resolvedPath && parentDirectory !== '.') {
+            for (const proposedPath of [
+              parentDirectory,
+              `${parentDirectory}/`,
+            ]) {
+              if (resolve(proposedPath, context) === resolvedPath) {
+                return reportWithProposedPath(proposedPath)
+              }
+            }
+          }
+        }
         return
       }
 
@@ -108,11 +135,6 @@ export default createRule<[Options?], MessageId>({
       if (normedPath !== importPath && resolvedPath === resolvedNormedPath) {
         return reportWithProposedPath(normedPath)
       }
-
-      const fileExtensions = getFileExtensions(context.settings)
-      const regexUnnecessaryIndex = new RegExp(
-        `.*\\/index(\\${[...fileExtensions].join('|\\')})?$`,
-      )
 
       // Check if path contains unnecessary index (including a configured extension)
       if (options.noUselessIndex && regexUnnecessaryIndex.test(importPath)) {

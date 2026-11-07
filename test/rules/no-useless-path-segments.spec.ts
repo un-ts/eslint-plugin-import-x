@@ -1,13 +1,27 @@
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 
-import { parsers, createRuleTestCaseFunctions } from '../utils.js'
+import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 
-import { cjsRequire as require } from 'eslint-plugin-import-x'
+import {
+  cjsRequire as require,
+  createNodeResolver,
+} from 'eslint-plugin-import-x'
 import rule from 'eslint-plugin-import-x/rules/no-useless-path-segments'
 
 const ruleTester = new TSESLintRuleTester()
 
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>()
+
+const aliasSettings = {
+  'import-x/resolver-next': [
+    createNodeResolver({
+      alias: {
+        '@': [testFilePath('.')],
+        '~a': [testFilePath('node_modules/a')],
+      },
+    }),
+  ],
+}
 
 function runResolverTests(resolver: 'node' | 'webpack') {
   ruleTester.run(`no-useless-path-segments (${resolver})`, rule, {
@@ -54,6 +68,37 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         code: 'import "./importType"',
         options: [{ noUselessIndex: true }],
       }), // ./importType.js does not exist
+
+      // aliased imports + noUselessIndex
+      tValid({
+        code: 'import "@/importType"',
+        options: [{ noUselessIndex: true }],
+        settings: aliasSettings,
+      }),
+      tValid({
+        code: 'import "@/importType/index"',
+        settings: aliasSettings,
+      }), // noUselessIndex is false by default
+      tValid({
+        code: 'import "@/bar/index.js"',
+        options: [{ noUselessIndex: true }],
+        settings: aliasSettings,
+      }), // `@/bar` resolves to ./bar.js instead
+      tValid({
+        code: 'import "@/missing/index"',
+        options: [{ noUselessIndex: true }],
+        settings: aliasSettings,
+      }), // does not resolve
+      tValid({
+        code: 'import "a/index"',
+        options: [{ noUselessIndex: true }],
+        settings: aliasSettings,
+      }), // external package
+      tValid({
+        code: 'import "~a/index"',
+        options: [{ noUselessIndex: true }],
+        settings: aliasSettings,
+      }), // alias to an external package
 
       tValid({
         code: 'import(".")',
@@ -444,6 +489,38 @@ function runResolverTests(resolver: 'node' | 'webpack') {
             },
           },
         ], // ./importPath.js does not exist
+      }),
+
+      // aliased imports + noUselessIndex
+      tInvalid({
+        code: 'import "@/importType/index"',
+        output: 'import "@/importType"',
+        options: [{ noUselessIndex: true }],
+        settings: aliasSettings,
+        errors: [
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '@/importType/index',
+              proposedPath: '@/importType',
+            },
+          },
+        ],
+      }),
+      tInvalid({
+        code: 'import "@/importType/index.js"',
+        output: 'import "@/importType"',
+        options: [{ noUselessIndex: true }],
+        settings: aliasSettings,
+        errors: [
+          {
+            messageId: 'useless',
+            data: {
+              importPath: '@/importType/index.js',
+              proposedPath: '@/importType',
+            },
+          },
+        ],
       }),
       tInvalid({
         code: 'import "./index"',
