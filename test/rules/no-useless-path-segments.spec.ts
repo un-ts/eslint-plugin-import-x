@@ -109,6 +109,14 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         options: [{ noUselessIndex: true }],
         settings: aliasSettings,
       }), // Node subpath import -- not touched (ESM rejects bare directory paths)
+      tValid({
+        code: 'import "~a/sub/index"',
+        options: [{ noUselessIndex: true }],
+        settings: {
+          ...aliasSettings,
+          'import-x/internal-regex': '^~a',
+        },
+      }), // internal-regex matches alias but alias points into node_modules -- don't report
 
       tValid({
         code: 'import(".")',

@@ -118,8 +118,15 @@ export default createRule<[Options?], MessageId>({
 
           // Only propose a path that the resolver maps to the same file, and
           // never a bare alias root like `@`, which the build config may not
-          // support even if the resolver does (`@/*` without `@` in tsconfig)
-          if (resolvedPath && parentDirectory.includes('/')) {
+          // support even if the resolver does (`@/*` without `@` in tsconfig).
+          // Skip when the resolved path is inside node_modules: internal-regex
+          // can make importType return 'internal' for a node_modules alias, but
+          // we must not auto-fix external package imports.
+          if (
+            resolvedPath &&
+            parentDirectory.includes('/') &&
+            !resolvedPath.includes(`${path.sep}node_modules${path.sep}`)
+          ) {
             for (const proposedPath of [
               parentDirectory,
               `${parentDirectory}/`,
