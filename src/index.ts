@@ -58,6 +58,7 @@ import noNamedDefault from './rules/no-named-default.js'
 import noNamedExport from './rules/no-named-export.js'
 import noNamespace from './rules/no-namespace.js'
 import noNodejsModules from './rules/no-nodejs-modules.js'
+import noOwnExports from './rules/no-own-exports.js'
 import noRelativePackages from './rules/no-relative-packages.js'
 import noRelativeParentImports from './rules/no-relative-parent-imports.js'
 import noRenameDefault from './rules/no-rename-default.js'
@@ -88,6 +89,7 @@ const rules = {
   'no-restricted-paths': noRestrictedPaths,
   'no-internal-modules': noInternalModules,
   'group-exports': groupExports,
+  'no-own-exports': noOwnExports,
   'no-relative-packages': noRelativePackages,
   'no-relative-parent-imports': noRelativeParentImports,
   'consistent-type-specifier-style': consistentTypeSpecifierStyle,

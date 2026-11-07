@@ -297,6 +297,7 @@ settings:
 | [no-cycle](docs/rules/no-cycle.md)                                     | Forbid a module from importing a module with a dependency path back to itself.       |             |     |       |     |     |     |
 | [no-dynamic-require](docs/rules/no-dynamic-require.md)                 | Forbid `require()` calls with expressions.                                           |             |     |       |     |     |     |
 | [no-internal-modules](docs/rules/no-internal-modules.md)               | Forbid importing the submodules of other modules.                                    |             |     |       |     |     |     |
+| [no-own-exports](docs/rules/no-own-exports.md)                         | Forbid a package from importing itself through its own `exports` map.                |             |     |       |     |     |     |
 | [no-relative-packages](docs/rules/no-relative-packages.md)             | Forbid importing packages through relative paths.                                    |             |     |       | 🔧  |     |     |
 | [no-relative-parent-imports](docs/rules/no-relative-parent-imports.md) | Forbid importing modules from parent directories.                                    |             |     |       |     |     |     |
 | [no-restricted-paths](docs/rules/no-restricted-paths.md)               | Enforce which files can be imported in a given folder.                               |             |     |       |     |     |     |
