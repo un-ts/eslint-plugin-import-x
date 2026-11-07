@@ -113,8 +113,10 @@ export default createRule<[Options?], MessageId>({
           const resolvedPath = resolve(importPath, context)
           const parentDirectory = path.posix.dirname(importPath)
 
-          // Only propose a path that the resolver maps to the same file
-          if (resolvedPath && parentDirectory !== '.') {
+          // Only propose a path that the resolver maps to the same file, and
+          // never a bare alias root like `@`, which the build config may not
+          // support even if the resolver does (`@/*` without `@` in tsconfig)
+          if (resolvedPath && parentDirectory.includes('/')) {
             for (const proposedPath of [
               parentDirectory,
               `${parentDirectory}/`,

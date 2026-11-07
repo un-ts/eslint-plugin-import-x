@@ -90,6 +90,11 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         settings: aliasSettings,
       }), // does not resolve
       tValid({
+        code: 'import "@/index"',
+        options: [{ noUselessIndex: true }],
+        settings: aliasSettings,
+      }), // would leave only the alias root `@`
+      tValid({
         code: 'import "a/index"',
         options: [{ noUselessIndex: true }],
         settings: aliasSettings,
