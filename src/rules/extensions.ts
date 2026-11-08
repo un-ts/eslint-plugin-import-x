@@ -540,18 +540,28 @@ export default createRule<Options, MessageId>({
           if (resolvedToDts && !extension && isPackage) {
             return
           }
-          // The extension of an unresolved import cannot be read from the
-          // file system: probe the extensions the rule explicitly requires.
-          const inference = inferExtension(
-            extension,
-            resolvedPath,
-            Object.keys(props.pattern).filter(candidate =>
-              isUseOfExtensionRequired(candidate, !overrideAction && isPackage),
-            ),
-            importPath,
-            candidate =>
-              resolve(appendExtension(importPath, candidate), context),
-          )
+          // Probe the extensions the rule explicitly requires: an unresolved
+          // import has no extension to read, and a resolved one may also be
+          // reachable through a required alias (`.js` for a `.ts` file).
+          // A resolved extension the config forbids, explicitly or through the
+          // default, wins over that alias. An empty extension means unresolved,
+          // which must still be probed.
+          const inference =
+            extension && isUseOfExtensionForbidden(extension)
+              ? { extension, ambiguous: false }
+              : inferExtension(
+                  extension,
+                  resolvedPath,
+                  Object.keys(props.pattern).filter(candidate =>
+                    isUseOfExtensionRequired(
+                      candidate,
+                      !overrideAction && isPackage,
+                    ),
+                  ),
+                  importPath,
+                  candidate =>
+                    resolve(appendExtension(importPath, candidate), context),
+                )
           extension = inference.extension
           const extensionRequired = isUseOfExtensionRequired(
             extension,
