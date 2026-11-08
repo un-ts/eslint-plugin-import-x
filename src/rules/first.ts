@@ -20,6 +20,19 @@ function isPossibleDirective(node: TSESTree.ProgramStatement) {
   )
 }
 
+// `@dec() export class A {}` starts at `export`, after its decorators
+function getStartWithDecorators(node: TSESTree.ProgramStatement) {
+  const declaration =
+    (node.type === 'ExportNamedDeclaration' ||
+      node.type === 'ExportDefaultDeclaration') &&
+    node.declaration
+  const decorators =
+    declaration && 'decorators' in declaration ? declaration.decorators : []
+  return decorators.length > 0
+    ? Math.min(node.range[0], decorators[0].range[0])
+    : node.range[0]
+}
+
 export type Options = 'absolute-first' | 'disable-absolute-first'
 
 export type MessageId = 'absolute' | 'order'
@@ -167,26 +180,37 @@ export default createRule<[Options?], MessageId>({
                     removeFixers[removeFixers.length - 1].range[1],
                   ] as const
 
-                  let insertSourceCode = sortNodes
-                    .map(({ range }) => {
-                      const nodeSourceCode = originSourceCode.slice(...range)
-                      if (/\S/.test(nodeSourceCode[0])) {
-                        return `\n${nodeSourceCode}`
-                      }
-                      return nodeSourceCode
-                    })
-                    .join('')
-
-                  let replaceSourceCode = ''
-
                   // Directives such as `'use client'` only work at the very top,
                   // so imports moved up go after them
                   const insertAfterNode = lastLegalImp ?? lastDirective
 
+                  // Without a semicolon only a line break ends an import, so one
+                  // moved from the line of another statement starts a new line
+                  // unless the code it now follows ends with `;`
+                  let insertSourceCode = ''
+                  for (const { range } of sortNodes) {
+                    const nodeSourceCode = originSourceCode.slice(...range)
+                    const previous =
+                      insertSourceCode ||
+                      (insertAfterNode
+                        ? sourceCode.getText(insertAfterNode)
+                        : ';')
+                    insertSourceCode +=
+                      /^\s*\n/.test(nodeSourceCode) ||
+                      (/^\s/.test(nodeSourceCode) && previous.endsWith(';'))
+                        ? nodeSourceCode
+                        : `\n${nodeSourceCode.trimStart()}`
+                  }
+
+                  let replaceSourceCode = ''
+
                   if (!insertAfterNode) {
-                    insertSourceCode =
-                      insertSourceCode.trim() +
-                      insertSourceCode.match(/^(\s+)/)![0]
+                    const separator = insertSourceCode.match(/^(\s+)/)![0]
+                    insertSourceCode = insertSourceCode.trim()
+                    insertSourceCode +=
+                      separator.includes('\n') || insertSourceCode.endsWith(';')
+                        ? separator
+                        : '\n'
                   }
 
                   // When inserting after a directive with no trailing newline, add one
@@ -214,7 +238,10 @@ export default createRule<[Options?], MessageId>({
                           ? `${insertSourceCode}\n`
                           : insertSourceCode,
                       )
-                    : fixer.insertTextBefore(body[0], insertSourceCode)
+                    : fixer.insertTextBeforeRange(
+                        [getStartWithDecorators(body[0]), body[0].range[1]],
+                        insertSourceCode,
+                      )
 
                   const fixers = [insertFixer, ...removeFixers]
                   for (const [i, computedFixer] of fixers.entries()) {

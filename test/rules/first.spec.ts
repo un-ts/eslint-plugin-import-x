@@ -172,6 +172,33 @@ ruleTester.run('first', rule, {
       errors: [{ messageId: 'order' }],
       output: "import a from 'b'\nif (true) { console.log(1) }",
     }),
+    // The range of `export` starts after the decorators of its class
+    tInvalid({
+      code: "@Dec()\nexport class A {}\nimport a from 'a'\n",
+      errors: [{ messageId: 'order' }],
+      output: "import a from 'a'\n@Dec()\nexport class A {}\n",
+    }),
+    tInvalid({
+      code: "@Dec()\nexport default class A {}\nimport a from 'a'\n",
+      errors: [{ messageId: 'order' }],
+      output: "import a from 'a'\n@Dec()\nexport default class A {}\n",
+    }),
+    // Without a semicolon only a line break ends an import
+    tInvalid({
+      code: "foo(); import a from 'a'\n",
+      errors: [{ messageId: 'order' }],
+      output: "import a from 'a'\nfoo();\n",
+    }),
+    tInvalid({
+      code: "import b from 'b'\nfoo(); import a from 'a';\n",
+      errors: [{ messageId: 'order' }],
+      output: "import b from 'b'\nimport a from 'a';\nfoo();\n",
+    }),
+    tInvalid({
+      code: "foo(); import a from 'a'\nbar(); import b from 'b'\n",
+      errors: [{ messageId: 'order' }, { messageId: 'order' }],
+      output: "import a from 'a'\nimport b from 'b'\nfoo();\nbar();\n",
+    }),
   ],
 })
 
