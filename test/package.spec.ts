@@ -31,6 +31,24 @@ describe('package', () => {
     expect(module).toBeDefined()
   })
 
+  it('does not import optional peer dependencies at runtime', async () => {
+    // `@typescript-eslint/utils` is an optional peer, so only type imports
+    // from it may reach the published build
+    const files = await fs.readdir(pkg, { recursive: true })
+    const offenders: string[] = []
+    for (const f of files.filter(isSourceFile)) {
+      const content = await fs.readFile(path.resolve(pkg, f), 'utf8')
+      if (
+        /^(?:import|export)\s+(?!type\b)(?:[\w$*\s,]*\{[^}]*\}|[\w$*\s,]+?)\s*from\s+['"]@typescript-eslint\/utils['"]/m.test(
+          content,
+        )
+      ) {
+        offenders.push(f)
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
   it('has every rule', async () => {
     const files = await fs.readdir(path.resolve(pkg, 'rules'))
     for (const f of files.filter(isSourceFile)) {
