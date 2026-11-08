@@ -65,6 +65,59 @@ function hasExportTarget(target: unknown): boolean {
   )
 }
 
+// `exports` as a map keyed by subpath: a string, an array or an object of
+// conditions is shorthand for `{ ".": exports }`
+function toExportsMap(
+  exports: NonNullable<PackageJson['exports']>,
+): Record<string, unknown> {
+  return typeof exports === 'string' ||
+    Array.isArray(exports) ||
+    !Object.keys(exports).some(key => key.startsWith('.'))
+    ? { '.': exports }
+    : exports
+}
+
+// Whether `key`, a pattern key with a single `*`, matches `subpath`
+function matchesPatternKey(key: string, subpath: string) {
+  const starIndex = key.indexOf('*')
+  if (starIndex === -1 || starIndex !== key.lastIndexOf('*')) {
+    return false
+  }
+  const patternBase = key.slice(0, starIndex)
+  const patternTrailer = key.slice(starIndex + 1)
+  return (
+    subpath.startsWith(patternBase) &&
+    subpath !== patternBase &&
+    (!patternTrailer ||
+      (subpath.endsWith(patternTrailer) && subpath.length >= key.length))
+  )
+}
+
+// Node.js `PATTERN_KEY_COMPARE`: the pattern key with the longer part before
+// `*` is more specific, then the longer key
+function isMoreSpecificPatternKey(key: string, otherKey: string) {
+  const baseLength = key.indexOf('*')
+  const otherBaseLength = otherKey.indexOf('*')
+  return (
+    baseLength > otherBaseLength ||
+    (baseLength === otherBaseLength && key.length > otherKey.length)
+  )
+}
+
+// The most specific `*` pattern key of `exportsMap` that matches `subpath`
+function findPatternKey(exportsMap: Record<string, unknown>, subpath: string) {
+  let bestKey: string | undefined
+  for (const key of Object.keys(exportsMap)) {
+    if (
+      matchesPatternKey(key, subpath) &&
+      (!bestKey || isMoreSpecificPatternKey(key, bestKey))
+    ) {
+      bestKey = key
+    }
+  }
+  return bestKey
+}
+
 /**
  * Whether `exports` exposes `subpath` (`.` or `./name`), following the key
  * matching of Node.js `PACKAGE_EXPORTS_RESOLVE`: an exact key first, then the
@@ -74,51 +127,53 @@ function isExported(
   exports: NonNullable<PackageJson['exports']>,
   subpath: string,
 ) {
-  const exportsMap: Record<string, unknown> =
-    typeof exports === 'string' ||
-    Array.isArray(exports) ||
-    !Object.keys(exports).some(key => key.startsWith('.'))
-      ? { '.': exports }
-      : exports
+  const exportsMap = toExportsMap(exports)
 
   if (!subpath.includes('*') && Object.hasOwn(exportsMap, subpath)) {
     return hasExportTarget(exportsMap[subpath])
   }
 
-  let bestKey: string | undefined
-  for (const key of Object.keys(exportsMap)) {
-    const starIndex = key.indexOf('*')
-    if (starIndex === -1 || starIndex !== key.lastIndexOf('*')) {
-      continue
-    }
-    const patternBase = key.slice(0, starIndex)
-    const patternTrailer = key.slice(starIndex + 1)
-    if (
-      subpath.startsWith(patternBase) &&
-      subpath !== patternBase &&
-      (!patternTrailer ||
-        (subpath.endsWith(patternTrailer) && subpath.length >= key.length)) &&
-      (!bestKey ||
-        patternBase.length > bestKey.indexOf('*') ||
-        (patternBase.length === bestKey.indexOf('*') &&
-          key.length > bestKey.length))
-    ) {
-      bestKey = key
-    }
-  }
-
-  if (bestKey == null) {
+  const patternKey = findPatternKey(exportsMap, subpath)
+  if (patternKey == null) {
     return false
   }
 
   // Node.js rejects the specifier when the part matched by `*` has an invalid
   // segment, whichever target it would replace `*` in
-  const starIndex = bestKey.indexOf('*')
-  const trailerLength = bestKey.length - starIndex - 1
+  const starIndex = patternKey.indexOf('*')
+  const trailerLength = patternKey.length - starIndex - 1
   const patternMatch = subpath.slice(starIndex, subpath.length - trailerLength)
   return (
-    !hasInvalidSegment(patternMatch) && hasExportTarget(exportsMap[bestKey])
+    !hasInvalidSegment(patternMatch) && hasExportTarget(exportsMap[patternKey])
   )
+}
+
+// The `exports` subpath (`.` or `./name`) through which `importPath` would
+// reference `packageName` itself, or `undefined` when it names another package
+function getSelfReferenceSubpath(importPath: string, packageName: string) {
+  if (importPath !== packageName && !importPath.startsWith(`${packageName}/`)) {
+    return
+  }
+  return `.${importPath.slice(packageName.length)}`
+}
+
+// Whether `importPath` resolves to something other than `packageName` itself:
+// a resolver alias can point the package's own name elsewhere, and a built-in
+// module (`null`) takes precedence over a self-reference
+function resolvesElsewhere(
+  importPath: string,
+  packageName: string,
+  context: RuleContext,
+) {
+  const resolved = resolve(importPath, context)
+  if (resolved === null) {
+    return true
+  }
+  if (!resolved) {
+    return false
+  }
+  const realPackageName = getFilePackageName(resolved)
+  return !!realPackageName && realPackageName !== packageName
 }
 
 export default createRule<[Options?], MessageId>({
@@ -171,16 +226,9 @@ export default createRule<[Options?], MessageId>({
       (source, node) => {
         const importPath = source.value
 
-        if (
-          importPath !== packageName &&
-          !importPath.startsWith(`${packageName}/`)
-        ) {
-          return
-        }
-
         // Node.js only resolves a self-reference to a path `exports` exposes
-        const subpath = `.${importPath.slice(packageName.length)}`
-        if (!isExported(exports, subpath)) {
+        const subpath = getSelfReferenceSubpath(importPath, packageName)
+        if (subpath == null || !isExported(exports, subpath)) {
           return
         }
 
@@ -188,17 +236,8 @@ export default createRule<[Options?], MessageId>({
           return
         }
 
-        // A resolver alias can point the package's own name elsewhere, and a
-        // built-in module (`null`) takes precedence over a self-reference
-        const resolved = resolve(importPath, context)
-        if (resolved === null) {
+        if (resolvesElsewhere(importPath, packageName, context)) {
           return
-        }
-        if (resolved) {
-          const realPackageName = getFilePackageName(resolved)
-          if (realPackageName && realPackageName !== packageName) {
-            return
-          }
         }
 
         context.report({
