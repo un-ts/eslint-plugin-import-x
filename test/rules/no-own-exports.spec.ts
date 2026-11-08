@@ -47,6 +47,19 @@ ruleTester.run('no-own-exports', rule, {
       filename,
     }),
     tValid({ code: 'import foo from "@no-own-exports/package/"', filename }),
+    // Node.js ignores a key ending in `/` (a removed folder mapping)
+    tValid({
+      code: 'import foo from "@no-own-exports/package/folder/"',
+      filename,
+    }),
+    // Node.js rejects `exports` mixing subpath and condition keys
+    ...['no-own-exports-mixed-keys', 'no-own-exports-mixed-keys/utils'].map(
+      importPath =>
+        tValid({
+          code: `import pkg from "${importPath}"`,
+          filename: testFilePath('no-own-exports/mixed-keys/index.js'),
+        }),
+    ),
     tValid({
       code: 'import foo from "@no-own-exports/package/features/internal/foo"',
       filename,

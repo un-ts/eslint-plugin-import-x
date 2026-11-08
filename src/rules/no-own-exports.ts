@@ -66,15 +66,21 @@ function hasExportTarget(target: unknown): boolean {
 }
 
 // `exports` as a map keyed by subpath: a string, an array or an object of
-// conditions is shorthand for `{ ".": exports }`
+// conditions is shorthand for `{ ".": exports }`. `undefined` when the object
+// mixes subpath keys (starting with `.`) and condition keys, which Node.js
+// rejects with `ERR_INVALID_PACKAGE_CONFIG`.
 function toExportsMap(
   exports: NonNullable<PackageJson['exports']>,
-): Record<string, unknown> {
-  return typeof exports === 'string' ||
-    Array.isArray(exports) ||
-    !Object.keys(exports).some(key => key.startsWith('.'))
-    ? { '.': exports }
-    : exports
+): Record<string, unknown> | undefined {
+  if (typeof exports === 'string' || Array.isArray(exports)) {
+    return { '.': exports }
+  }
+  const keys = Object.keys(exports)
+  const subpathKeyCount = keys.filter(key => key.startsWith('.')).length
+  if (subpathKeyCount === 0) {
+    return { '.': exports }
+  }
+  return subpathKeyCount === keys.length ? exports : undefined
 }
 
 // Whether `key`, a pattern key with a single `*`, matches `subpath`
@@ -118,6 +124,17 @@ function findPatternKey(exportsMap: Record<string, unknown>, subpath: string) {
   return bestKey
 }
 
+// Whether `subpath` is matched exactly by a key of `exportsMap`. Node.js skips
+// exact matching for a subpath with `*` or ending in `/`, so a key ending in
+// `/` (a removed folder mapping) exposes nothing.
+function hasExactKey(exportsMap: Record<string, unknown>, subpath: string) {
+  return (
+    !subpath.includes('*') &&
+    !subpath.endsWith('/') &&
+    Object.hasOwn(exportsMap, subpath)
+  )
+}
+
 /**
  * Whether `exports` exposes `subpath` (`.` or `./name`), following the key
  * matching of Node.js `PACKAGE_EXPORTS_RESOLVE`: an exact key first, then the
@@ -128,8 +145,11 @@ function isExported(
   subpath: string,
 ) {
   const exportsMap = toExportsMap(exports)
+  if (!exportsMap) {
+    return false
+  }
 
-  if (!subpath.includes('*') && Object.hasOwn(exportsMap, subpath)) {
+  if (hasExactKey(exportsMap, subpath)) {
     return hasExportTarget(exportsMap[subpath])
   }
 

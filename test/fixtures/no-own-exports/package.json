@@ -5,6 +5,7 @@
     ".": "./index.js",
     "./sub": "./src/sub.js",
     "./features/*": "./src/features/*.js",
-    "./features/internal/*": null
+    "./features/internal/*": null,
+    "./folder/": "./src/sub.js"
   }
 }
