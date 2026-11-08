@@ -1,0 +1,21 @@
+{
+  "name": "no-own-exports-invalid-targets",
+  "description": "Package whose exports map paths to targets Node.js rejects",
+  "exports": {
+    ".": "index.js",
+    "./parent": "./../outside.js",
+    "./nested-parent": "./src/../index.js",
+    "./current": "./src/./index.js",
+    "./encoded": "./%2E%2e/outside.js",
+    "./node-modules": "./node_modules/dep/index.js",
+    "./absolute": "/index.js",
+    "./conditional": {
+      "import": "../outside.js",
+      "default": null
+    },
+    "./fallback": [
+      "../outside.js",
+      "./index.js"
+    ]
+  }
+}

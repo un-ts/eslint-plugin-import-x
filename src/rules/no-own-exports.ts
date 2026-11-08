@@ -31,11 +31,29 @@ function isFileAllowed(allowInFiles: string[], context: RuleContext) {
   )
 }
 
+const INVALID_SEGMENTS = new Set(['.', '..', 'node_modules'])
+
+// Whether a target or `*` substitution has a segment Node.js rejects: `.`,
+// `..` or `node_modules`, in any case and percent-encoded or not, with both
+// `/` and `\` as separators.
+function hasInvalidSegment(value: string) {
+  return value.split(/[/\\]/).some(segment => {
+    let decoded = segment
+    try {
+      decoded = decodeURIComponent(segment)
+    } catch {
+      // a malformed escape is not one of the invalid segments
+    }
+    return INVALID_SEGMENTS.has(decoded.toLowerCase())
+  })
+}
+
 // Whether a target, possibly nested in conditions or fallback arrays, maps to
 // a file under at least one set of conditions; `null` excludes the subpath.
+// A string target must start with `./` and stay inside the package.
 function hasExportTarget(target: unknown): boolean {
   if (typeof target === 'string') {
-    return true
+    return target.startsWith('./') && !hasInvalidSegment(target.slice(2))
   }
   if (Array.isArray(target)) {
     return target.some(hasExportTarget)
@@ -89,7 +107,18 @@ function isExported(
     }
   }
 
-  return bestKey != null && hasExportTarget(exportsMap[bestKey])
+  if (bestKey == null) {
+    return false
+  }
+
+  // Node.js rejects the specifier when the part matched by `*` has an invalid
+  // segment, whichever target it would replace `*` in
+  const starIndex = bestKey.indexOf('*')
+  const trailerLength = bestKey.length - starIndex - 1
+  const patternMatch = subpath.slice(starIndex, subpath.length - trailerLength)
+  return (
+    !hasInvalidSegment(patternMatch) && hasExportTarget(exportsMap[bestKey])
+  )
 }
 
 export default createRule<[Options?], MessageId>({

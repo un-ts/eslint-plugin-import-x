@@ -59,6 +59,37 @@ ruleTester.run('no-own-exports', rule, {
       code: 'import sub from "no-own-exports-conditional/sub"',
       filename: testFilePath('no-own-exports/conditional/index.js'),
     }),
+    // Node.js rejects a target that does not start with `./` or that has a
+    // `.`, `..` or `node_modules` segment
+    ...[
+      'no-own-exports-invalid-targets',
+      'no-own-exports-invalid-targets/parent',
+      'no-own-exports-invalid-targets/nested-parent',
+      'no-own-exports-invalid-targets/current',
+      'no-own-exports-invalid-targets/encoded',
+      'no-own-exports-invalid-targets/node-modules',
+      'no-own-exports-invalid-targets/absolute',
+      'no-own-exports-invalid-targets/conditional',
+    ].map(importPath =>
+      tValid({
+        code: `import pkg from "${importPath}"`,
+        filename: testFilePath('no-own-exports/invalid-targets/index.js'),
+      }),
+    ),
+    // ...and a `*` substitution with such a segment
+    ...[
+      '@no-own-exports/package/features/../sub',
+      '@no-own-exports/package/features/a/./b',
+      '@no-own-exports/package/features/%2e%2E/sub',
+      '@no-own-exports/package/features/node_modules/dep',
+      '@no-own-exports/package/features/NODE_MODULES/dep',
+      String.raw`@no-own-exports/package/features/a\..\b`,
+    ].map(importPath =>
+      tValid({
+        code: `import foo from ${JSON.stringify(importPath)}`,
+        filename,
+      }),
+    ),
     // A built-in module takes precedence over a self-reference
     tValid({
       code: 'import events from "events"',
@@ -133,6 +164,25 @@ ruleTester.run('no-own-exports', rule, {
       code: 'import feature from "@no-own-exports/package/features/foo"',
       filename,
       errors: [ownExportsError('@no-own-exports/package/features/foo')],
+    }),
+    tInvalid({
+      code: 'import feature from "@no-own-exports/package/features/a/b.c"',
+      filename,
+      errors: [ownExportsError('@no-own-exports/package/features/a/b.c')],
+    }),
+    // A fallback array skips an invalid target, as Node.js does
+    tInvalid({
+      code: 'import pkg from "no-own-exports-invalid-targets/fallback"',
+      filename: testFilePath('no-own-exports/invalid-targets/index.js'),
+      errors: [
+        {
+          messageId: 'ownExports',
+          data: {
+            importPath: 'no-own-exports-invalid-targets/fallback',
+            packageName: 'no-own-exports-invalid-targets',
+          },
+        },
+      ],
     }),
     tInvalid({
       code: 'import utils from "no-own-exports-subpath-only/utils"',
