@@ -1,5 +1,6 @@
-import type { TSESTree } from '@typescript-eslint/utils'
-import { TSESLint } from '@typescript-eslint/utils'
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
+import type { AST } from 'eslint'
+import { SourceCode } from 'eslint'
 import { getTsconfigWithContext } from 'eslint-import-context'
 
 import type {
@@ -220,16 +221,15 @@ export function analyzeAstModule(
   /** For `getCommentsBefore` in doc capture — built only if a doc is read. */
   const getSource = lazy(
     () =>
-      new TSESLint.SourceCode({
+      // ESLint's own class: `@typescript-eslint/utils` is an optional peer,
+      // and its `TSESLint.SourceCode` is an empty subclass of this one
+      new SourceCode({
         text: content,
         // parse() forces comments/tokens/loc/range onto the parser options
         // when `needDocs`, so the AST carries what SourceCode requires at
         // runtime — which is exactly when this is reachable
-        ast: ast as TSESLint.SourceCode.Program,
-        parserServices: null,
-        scopeManager: null,
-        visitorKeys: null,
-      }),
+        ast: ast as unknown as AST.Program,
+      }) as unknown as TSESLint.SourceCode,
   )
 
   const walk: Walk = {
