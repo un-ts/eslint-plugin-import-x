@@ -183,6 +183,11 @@ ruleTester.run('first', rule, {
       errors: [{ messageId: 'order' }],
       output: "import a from 'a'\n@Dec()\nexport default class A {}\n",
     }),
+    tInvalid({
+      code: "@Dec()\nclass A {}\nimport a from 'a'\n",
+      errors: [{ messageId: 'order' }],
+      output: "import a from 'a'\n@Dec()\nclass A {}\n",
+    }),
     // Without a semicolon only a line break ends an import
     tInvalid({
       code: "foo(); import a from 'a'\n",
@@ -198,6 +203,16 @@ ruleTester.run('first', rule, {
       code: "foo(); import a from 'a'\nbar(); import b from 'b'\n",
       errors: [{ messageId: 'order' }, { messageId: 'order' }],
       output: "import a from 'a'\nimport b from 'b'\nfoo();\nbar();\n",
+    }),
+    tInvalid({
+      code: "import b from 'b'; foo()\nbar()\nimport a from 'a'\n",
+      errors: [{ messageId: 'order' }],
+      output: "import b from 'b';\nimport a from 'a'\n foo()\nbar()\n",
+    }),
+    tInvalid({
+      code: "import b from 'b'; foo(); import a from 'a'\n",
+      errors: [{ messageId: 'order' }],
+      output: "import b from 'b'; import a from 'a'\n foo();\n",
     }),
   ],
 })

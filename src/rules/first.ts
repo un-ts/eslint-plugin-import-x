@@ -231,7 +231,8 @@ export default createRule<[Options?], MessageId>({
                   const insertFixer = insertAfterNode
                     ? fixer.insertTextAfter(
                         insertAfterNode,
-                        insertingAfterDirective &&
+                        (insertingAfterDirective ||
+                          !insertSourceCode.endsWith(';')) &&
                           !/^[^\S\n]*\n/.test(
                             originSourceCode.slice(insertAfterNode.range[1]),
                           )
