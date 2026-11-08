@@ -1,12 +1,13 @@
 import * as tsParser from '@typescript-eslint/parser'
-import { Linter } from 'eslint'
+import { TSESLint } from '@typescript-eslint/utils'
+import type { TSESTree } from '@typescript-eslint/utils'
 
 import { getTrailingComments } from 'eslint-plugin-import-x/utils'
 
 const collect = (code: string) => {
   let result: string[] = []
   // ESLint 8 defaults to eslintrc mode, which ignores the flat config below
-  const linter = new Linter({ configType: 'flat' })
+  const linter = new TSESLint.Linter({ configType: 'flat' })
   linter.verify(
     code,
     [
@@ -16,8 +17,8 @@ const collect = (code: string) => {
           t: {
             rules: {
               r: {
-                create: context => ({
-                  Program: node => {
+                create: (context: TSESLint.RuleContext<string, []>) => ({
+                  Program: (node: TSESTree.Program) => {
                     result = getTrailingComments(
                       context.sourceCode,
                       node.body[0],

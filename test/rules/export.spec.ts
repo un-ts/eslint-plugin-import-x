@@ -1451,7 +1451,18 @@ describe('TypeScript', () => {
               export type T = Inner.Item
             }
           `,
-        errors: 2,
+        errors: [
+          {
+            messageId: 'multiNamed',
+            data: { name: 'A' },
+            line: 5,
+          },
+          {
+            messageId: 'multiNamed',
+            data: { name: 'A' },
+            line: 6,
+          },
+        ],
         ...parserConfig,
       }),
       // Babel marks an exported import alias with `isExport` rather than
@@ -1469,7 +1480,18 @@ describe('TypeScript', () => {
           `,
         filename: testFilePath('typescript.ts'),
         languageOptions: { parser: cjsRequire(parsers.BABEL) },
-        errors: 2,
+        errors: [
+          {
+            messageId: 'multiNamed',
+            data: { name: 'A' },
+            line: 5,
+          },
+          {
+            messageId: 'multiNamed',
+            data: { name: 'A' },
+            line: 6,
+          },
+        ],
       }),
 
       // Exports in ambient modules
