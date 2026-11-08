@@ -229,9 +229,6 @@ export function analyzeAstModule(
         // when `needDocs`, so the AST carries what SourceCode requires at
         // runtime — which is exactly when this is reachable
         ast: ast as unknown as AST.Program,
-        parserServices: null,
-        scopeManager: null,
-        visitorKeys: null,
       }) as unknown as TSESLint.SourceCode,
   )
 
