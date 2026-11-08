@@ -36,6 +36,39 @@ ruleTester.run('no-own-exports', rule, {
       code: 'import pkg from "no-own-exports-without-exports"',
       filename: testFilePath('no-own-exports/no-exports/index.js'),
     }),
+    // `exports: null` disables self-references like a missing field does
+    tValid({
+      code: 'import pkg from "no-own-exports-null-exports"',
+      filename: testFilePath('no-own-exports/null-exports/index.js'),
+    }),
+    // Only paths that `exports` exposes can be imported by package name
+    tValid({
+      code: 'import foo from "@no-own-exports/package/src/foo.js"',
+      filename,
+    }),
+    tValid({ code: 'import foo from "@no-own-exports/package/"', filename }),
+    tValid({
+      code: 'import foo from "@no-own-exports/package/features/internal/foo"',
+      filename,
+    }),
+    tValid({
+      code: 'import pkg from "no-own-exports-subpath-only"',
+      filename: testFilePath('no-own-exports/subpath-only/index.js'),
+    }),
+    tValid({
+      code: 'import sub from "no-own-exports-conditional/sub"',
+      filename: testFilePath('no-own-exports/conditional/index.js'),
+    }),
+    // A built-in module takes precedence over a self-reference
+    tValid({
+      code: 'import events from "events"',
+      filename: testFilePath('no-own-exports/builtin-name/index.js'),
+    }),
+    tValid({
+      code: 'import pkg from "@no-own-exports/package"',
+      filename,
+      settings: { 'import-x/core-modules': ['@no-own-exports/package'] },
+    }),
     tValid({
       code: 'import pkg from "@no-own-exports/package"',
       filename: testFilePath('no-own-exports/test/foo.spec.js'),
@@ -95,6 +128,37 @@ ruleTester.run('no-own-exports', rule, {
       code: 'const pkg = require("@no-own-exports/package")',
       filename,
       errors: [ownExportsError('@no-own-exports/package')],
+    }),
+    tInvalid({
+      code: 'import feature from "@no-own-exports/package/features/foo"',
+      filename,
+      errors: [ownExportsError('@no-own-exports/package/features/foo')],
+    }),
+    tInvalid({
+      code: 'import utils from "no-own-exports-subpath-only/utils"',
+      filename: testFilePath('no-own-exports/subpath-only/index.js'),
+      errors: [
+        {
+          messageId: 'ownExports',
+          data: {
+            importPath: 'no-own-exports-subpath-only/utils',
+            packageName: 'no-own-exports-subpath-only',
+          },
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'const pkg = require("no-own-exports-conditional")',
+      filename: testFilePath('no-own-exports/conditional/index.js'),
+      errors: [
+        {
+          messageId: 'ownExports',
+          data: {
+            importPath: 'no-own-exports-conditional',
+            packageName: 'no-own-exports-conditional',
+          },
+        },
+      ],
     }),
     tInvalid({
       code: 'import "@no-own-exports/package"',
