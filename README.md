@@ -484,11 +484,14 @@ You may set the following settings in your `.eslintrc`:
 A list of file extensions that will be parsed as modules and inspected for
 `export`s.
 
-This defaults to `['.js']`, unless you are using the `react` shared config,
-in which case it is specified as `['.js', '.jsx']`. Despite the default,
-if you are using TypeScript (without the `plugin:import-x/typescript` config
-described above) you must specify the new extensions (`.ts`, and also `.tsx`
-if using React).
+This defaults to `['.js', '.mjs', '.cjs']`, unless you are using the `react`
+shared config, in which case it is specified as `['.js', '.jsx', '.mjs', '.cjs']`
+(`['.js', '.jsx']` for the legacy `plugin:import-x/react` config).
+
+Every extension listed in [`import-x/parsers`](#import-xparsers) is also added
+to this list automatically. If you are using TypeScript (without the
+`plugin:import-x/typescript` config described above) you must specify the new extensions
+(`.ts`, and also `.tsx` if using React), either here or in `import-x/parsers`.
 
 ```js
 "settings": {
@@ -598,6 +601,9 @@ settings:
 In this case, [`@typescript-eslint/parser`](https://www.npmjs.com/package/@typescript-eslint/parser)
 must be installed and require-able from the running `eslint` module's location
 (i.e., install it as a peer of ESLint).
+
+The extensions listed here are also added to [`import-x/extensions`](#import-xextensions),
+so you do not need to repeat them there.
 
 This is currently only tested with `@typescript-eslint/parser` (and its predecessor,
 `typescript-eslint-parser`) but should theoretically work with any moderately
