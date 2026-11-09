@@ -50,7 +50,7 @@ import foo from './foo'
 // assuming 'node_modules' are ignored (true by default)
 import someModule from 'some-module'
 
-// CommonJS modules are not analyzed, so they are never reported
+// CommonJS-only modules are not analyzed, so they are not reported
 import baz from './baz'
 ```
 
@@ -65,8 +65,10 @@ import bar from './bar' // no default export found in ./bar
 If you are modifying the exported namespace of any module at runtime, you will
 likely see false positives with this rule.
 
-CommonJS modules (`module.exports = ...`, `exports.foo = ...`) are not
-unambiguously ES modules, so a `default` import of them is never reported.
+CommonJS-only modules (`module.exports = ...`, `exports.foo = ...`) are not
+analyzed, so a `default` import of them is not reported. A module that also has
+`import` or `import()` is analyzed as an ES module, and is reported when it has
+no `default` export.
 
 ## Further Reading
 
