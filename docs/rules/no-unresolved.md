@@ -108,7 +108,7 @@ import Foo from `./../fOo/bar/file.js` // reported
 
 #### `includeTypes`
 
-Type-only imports and exports are not checked by default. Set `includeTypes` to `true` to resolve them too, so a typo in `import type` is reported without running `tsc`:
+`import type` and `export type` declarations are not checked by default, inline `import { type Foo }` always is. Set `includeTypes` to `true` to resolve the declarations too, so a typo in `import type` is reported without running `tsc`:
 
 ```ts
 /*eslint import-x/no-unresolved: [2, { includeTypes: true }]*/
