@@ -491,13 +491,19 @@ shared config, in which case it is specified as `['.js', '.jsx', '.mjs', '.cjs']
 Every extension listed in [`import-x/parsers`](#import-xparsers) is also added
 to this list automatically. If you are using TypeScript (without the
 `plugin:import-x/typescript` config described above) you must specify the new extensions
-(`.ts`, and also `.tsx` if using React), either here or in `import-x/parsers`.
+(`.ts`, `.mts` and `.cts` as needed, and also `.tsx` if your project uses `.tsx`
+files), either here or in `import-x/parsers`.
+
+An explicit list replaces the default, so include `.mjs` and `.cjs` if you still
+want them:
 
 ```js
 "settings": {
   "import-x/extensions": [
     ".js",
-    ".jsx"
+    ".jsx",
+    ".mjs",
+    ".cjs"
   ]
 }
 ```
