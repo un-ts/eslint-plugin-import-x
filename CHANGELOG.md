@@ -1,5 +1,15 @@
 # eslint-plugin-import-x
 
+## 4.18.1
+
+### Patch Changes
+
+- [#599](https://github.com/un-ts/eslint-plugin-import-x/pull/599) [`d9c8a4e`](https://github.com/un-ts/eslint-plugin-import-x/commit/d9c8a4efc64ba719b0698fef7fd867bcc434c0e6) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - fix(core): don't load the optional `@typescript-eslint/utils` peer at runtime, so the plugin loads again without it
+
+- [#604](https://github.com/un-ts/eslint-plugin-import-x/pull/604) [`28779e0`](https://github.com/un-ts/eslint-plugin-import-x/commit/28779e094ccbcb634f7ef0ac8e892fce07817eff) Thanks [@gilbarbara](https://github.com/gilbarbara)! - fix(extensions): stop requiring a `js` alias on extensionless imports that resolve to a file whose extension is `never`, such as `.ts` with `{ js: 'always', ts: 'never' }`.
+
+- [#600](https://github.com/un-ts/eslint-plugin-import-x/pull/600) [`6172d1d`](https://github.com/un-ts/eslint-plugin-import-x/commit/6172d1dc68d7e31f184d208ea40e24c5b9f661e1) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(first): the autofix puts imports above the decorators of `@dec() export class` and on their own line when they have no semicolon, it could leave code that doesn't parse in both cases
+
 ## 4.18.0
 
 ### Minor Changes
