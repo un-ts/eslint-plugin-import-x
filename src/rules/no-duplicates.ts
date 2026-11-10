@@ -21,19 +21,27 @@ const isTypeScriptVersionSupportPreferInline = lazy(() => {
 
 export interface Options {
   considerQueryString?: boolean
+  considerReexports?: boolean
   'prefer-inline'?: boolean
   whitelist?: string[][]
 }
 
 export type MessageId = 'duplicate'
 
+type Reexport = TSESTree.ExportNamedDeclaration & {
+  source: TSESTree.StringLiteral
+}
+
+type ImportOrReexport = TSESTree.ImportDeclaration | Reexport
+
 function isListed(group: Set<string>, sourcePath: string) {
   return group.has(sourcePath) || group.has(sourcePath.split('?')[0])
 }
 
-function checkImports(
-  imported: Iterable<[string, TSESTree.ImportDeclaration[]]>,
+function checkImports<T extends ImportOrReexport>(
+  imported: Iterable<[string, T[]]>,
   context: RuleContext<MessageId, [Options?]>,
+  reexports = false,
 ) {
   for (const [module, nodes] of imported) {
     if (nodes.length <= 1) {
@@ -50,7 +58,20 @@ function checkImports(
           module,
         },
         // Attach the autofix (if any) to the first import only
-        fix: i === 0 ? getFix(nodes, context.sourceCode, context) : null,
+        fix:
+          i === 0
+            ? reexports
+              ? getReexportsFix(
+                  nodes as Reexport[],
+                  context.sourceCode,
+                  context,
+                )
+              : getFix(
+                  nodes as TSESTree.ImportDeclaration[],
+                  context.sourceCode,
+                  context,
+                )
+            : null,
       })
     }
   }
@@ -351,6 +372,89 @@ function getFix(
   }
 }
 
+// Merge `export {b} from './foo'` into the first re-export of the group, so
+// `export {a} from './foo'` becomes `export {a, b} from './foo'`.
+function getReexportsFix(
+  nodes: Reexport[],
+  sourceCode: TSESLint.SourceCode,
+  context: RuleContext<MessageId, [Options?]>,
+): TSESLint.ReportFixFunction | null {
+  const first = nodes[0]
+
+  // Merging into another re-export would run the modules in a different order
+  if (
+    context.options[0]?.whitelist &&
+    movesPastOtherImports(nodes, sourceCode)
+  ) {
+    return null
+  }
+
+  // Leave it to the user to handle comments, like for imports
+  if (hasProblematicComments(first, sourceCode)) {
+    return null
+  }
+
+  const rest = nodes
+    .slice(1)
+    .filter(
+      node =>
+        !hasProblematicComments(node, sourceCode) &&
+        sourceCode.getCommentsInside(node).length === 0,
+    )
+
+  if (rest.length === 0) {
+    return null
+  }
+
+  const existing = new Set(
+    first.specifiers.map(specifier =>
+      normalizeSpecifier(sourceCode.getText(specifier)),
+    ),
+  )
+  const added: string[] = []
+
+  for (const node of rest) {
+    for (const specifier of node.specifiers) {
+      const text = sourceCode.getText(specifier)
+      const normalized = normalizeSpecifier(text)
+      if (!existing.has(normalized)) {
+        existing.add(normalized)
+        added.push(text)
+      }
+    }
+  }
+
+  return (fixer: TSESLint.RuleFixer) => {
+    const closeBrace = sourceCode
+      .getTokens(first)
+      .find(token => isSpecifierBrace(first, token, '}'))!
+    const tokenBefore = sourceCode.getTokenBefore(closeBrace)!
+    const fixes = []
+
+    if (added.length > 0) {
+      fixes.push(
+        fixer.insertTextAfter(
+          tokenBefore,
+          isPunctuator(tokenBefore, ',')
+            ? ` ${added.join(', ')},`
+            : `, ${added.join(', ')}`,
+        ),
+      )
+    }
+
+    for (const node of rest) {
+      fixes.push(fixer.remove(node))
+
+      const charAfterRange = [node.range[1], node.range[1] + 1] as const
+      if (sourceCode.text.slice(...charAfterRange) === '\n') {
+        fixes.push(fixer.removeRange(charAfterRange))
+      }
+    }
+
+    return fixes
+  }
+}
+
 // Move `b` of `import {type b, c} from './foo'` into the first `import type` of
 // the group and leave `c` where it is. The next fix pass merges the value
 // imports that are left like any other duplicates.
@@ -504,7 +608,7 @@ function isPunctuator(node: TSESTree.Token, value: '{' | '}' | ',') {
 
 // The braces of `import {...}`, not the ones of `with {...}` after the source.
 function isSpecifierBrace(
-  node: TSESTree.ImportDeclaration,
+  node: ImportOrReexport,
   token: TSESTree.Token,
   value: '{' | '}',
 ) {
@@ -514,7 +618,7 @@ function isSpecifierBrace(
 // Imports of one path with different attributes can load different modules, so
 // only imports with equal attributes are duplicates. The order of the attributes
 // doesn't matter. Legacy parsers only set `assertions`.
-function getAttributesKey(node: TSESTree.ImportDeclaration) {
+function getAttributesKey(node: ImportOrReexport) {
   return (node.attributes ?? node.assertions ?? [])
     .map(({ key, value }) =>
       JSON.stringify([
@@ -543,7 +647,7 @@ function getDefaultImportName(node: TSESTree.ImportDeclaration) {
 
 // Returns true if the fix would move imports[0] past another import statement.
 function movesPastOtherImports(
-  nodes: TSESTree.ImportDeclaration[],
+  nodes: ImportOrReexport[],
   sourceCode: TSESLint.SourceCode,
 ) {
   const start = Math.min(...nodes.map(node => node.range[0]))
@@ -552,7 +656,7 @@ function movesPastOtherImports(
     statement =>
       'source' in statement &&
       statement.source != null &&
-      !nodes.includes(statement as TSESTree.ImportDeclaration) &&
+      !nodes.includes(statement as ImportOrReexport) &&
       statement.range[0] > start &&
       statement.range[0] < end,
   )
@@ -573,7 +677,7 @@ function hasSpecifiers(node: TSESTree.ImportDeclaration) {
 // It's not obvious what the user wants to do with comments associated with
 // duplicate imports, so skip imports with comments when autofixing.
 function hasProblematicComments(
-  node: TSESTree.ImportDeclaration,
+  node: ImportOrReexport,
   sourceCode: TSESLint.SourceCode,
 ) {
   return (
@@ -586,7 +690,7 @@ function hasProblematicComments(
 // Checks whether `node` has a comment (that ends) on the previous line or on
 // the same line as `node` (starts).
 function hasCommentBefore(
-  node: TSESTree.ImportDeclaration,
+  node: ImportOrReexport,
   sourceCode: TSESLint.SourceCode,
 ) {
   return sourceCode
@@ -597,7 +701,7 @@ function hasCommentBefore(
 // Checks whether `node` has a comment (that starts) on the same line as `node`
 // (ends).
 function hasCommentAfter(
-  node: TSESTree.ImportDeclaration,
+  node: ImportOrReexport,
   sourceCode: TSESLint.SourceCode,
 ) {
   return sourceCode
@@ -608,7 +712,7 @@ function hasCommentAfter(
 // Checks whether `node` has any comments _inside,_ except inside the `{...}`
 // part (if any).
 function hasCommentInsideNonSpecifiers(
-  node: TSESTree.ImportDeclaration,
+  node: ImportOrReexport,
   sourceCode: TSESLint.SourceCode,
 ) {
   const tokens = sourceCode.getTokens(node)
@@ -639,6 +743,8 @@ export interface ModuleMap {
   defaultTypesImported: Map<string, TSESTree.ImportDeclaration[]>
   namespaceTypesImported: Map<string, TSESTree.ImportDeclaration[]>
   namedTypesImported: Map<string, TSESTree.ImportDeclaration[]>
+  reexported: Map<string, Reexport[]>
+  typeReexported: Map<string, Reexport[]>
 }
 
 export default createRule<[Options?], MessageId>({
@@ -656,6 +762,9 @@ export default createRule<[Options?], MessageId>({
         type: 'object',
         properties: {
           considerQueryString: {
+            type: 'boolean',
+          },
+          considerReexports: {
             type: 'boolean',
           },
           'prefer-inline': {
@@ -682,6 +791,7 @@ export default createRule<[Options?], MessageId>({
   defaultOptions: [],
   create(context) {
     const preferInline = context.options[0]?.['prefer-inline']
+    const considerReexports = context.options[0]?.considerReexports
 
     // Prepare the resolver from options.
     const considerQueryStringOption = context.options[0]?.considerQueryString
@@ -726,8 +836,8 @@ export default createRule<[Options?], MessageId>({
     }
 
     // fix into the specifier the whitelist names, not an unlisted one
-    const listedFirst = (
-      nodes: TSESTree.ImportDeclaration[],
+    const listedFirst = <T extends ImportOrReexport>(
+      nodes: T[],
       specifier: string,
     ) =>
       getWhitelistRank(specifier) === Infinity
@@ -744,13 +854,13 @@ export default createRule<[Options?], MessageId>({
      * joining the first module it isn't kept apart from, so the result doesn't
      * depend on the order of the imports in the file.
      */
-    const splitWhitelisted = (
-      imported: Map<string, TSESTree.ImportDeclaration[]>,
+    const splitWhitelisted = <T extends ImportOrReexport>(
+      imported: Map<string, T[]>,
     ) => {
       if (!whitelist) {
         return imported
       }
-      const result: Array<[string, TSESTree.ImportDeclaration[]]> = []
+      const result: Array<[string, T[]]> = []
       for (const [resolvedPath, nodes] of imported) {
         const specifiers = [...new Set(nodes.map(node => node.source.value))]
           .map(specifier => ({
@@ -802,7 +912,7 @@ export default createRule<[Options?], MessageId>({
 
     const moduleMaps = new Map<TSESTree.Node, Map<string, ModuleMap>>()
 
-    function getImportMap(n: TSESTree.ImportDeclaration) {
+    function getModuleMap(n: ImportOrReexport) {
       const parent = n.parent!
       const attributesKey = getAttributesKey(n)
       let parentMaps = moduleMaps.get(parent)
@@ -818,9 +928,16 @@ export default createRule<[Options?], MessageId>({
           defaultTypesImported: new Map(),
           namespaceTypesImported: new Map(),
           namedTypesImported: new Map(),
+          reexported: new Map(),
+          typeReexported: new Map(),
         }
         parentMaps.set(attributesKey, map)
       }
+      return map
+    }
+
+    function getImportMap(n: TSESTree.ImportDeclaration) {
+      const map = getModuleMap(n)
 
       if (n.importKind === 'type') {
         if (
@@ -866,6 +983,26 @@ export default createRule<[Options?], MessageId>({
         }
       },
 
+      ExportNamedDeclaration(n) {
+        if (
+          !considerReexports ||
+          n.source == null ||
+          n.specifiers.length === 0
+        ) {
+          return
+        }
+        const node = n as Reexport
+        const map = getModuleMap(node)
+        const reexported =
+          node.exportKind === 'type' ? map.typeReexported : map.reexported
+        const resolvedPath = resolveCached(node.source.value)
+        if (reexported.has(resolvedPath)) {
+          reexported.get(resolvedPath)!.push(node)
+        } else {
+          reexported.set(resolvedPath, [node])
+        }
+      },
+
       'Program:exit'() {
         for (const parentMaps of moduleMaps.values()) {
           for (const map of parentMaps.values()) {
@@ -874,6 +1011,8 @@ export default createRule<[Options?], MessageId>({
             checkImports(splitWhitelisted(map.defaultTypesImported), context)
             checkImports(splitWhitelisted(map.namespaceTypesImported), context)
             checkImports(splitWhitelisted(map.namedTypesImported), context)
+            checkImports(splitWhitelisted(map.reexported), context, true)
+            checkImports(splitWhitelisted(map.typeReexported), context, true)
           }
         }
       },

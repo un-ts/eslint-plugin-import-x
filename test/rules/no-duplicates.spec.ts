@@ -133,6 +133,36 @@ ruleTester.run('no-duplicates', rule, {
     tValid({
       code: "import {y} from './foo'; import * as ns from './foo'",
     }),
+
+    // re-exports are not checked without considerReexports
+    tValid({
+      code: "export { a } from './foo'; export { b } from './foo'",
+    }),
+    tValid({
+      code: "export { a } from './foo'; export { b } from './foo'",
+      options: [{ considerReexports: false }],
+    }),
+    tValid({
+      code: "export * from './foo'; export * as ns from './foo'; export { a } from './foo'",
+      options: [{ considerReexports: true }],
+    }),
+    tValid({
+      code: "export { a } from './foo'; export type { B } from './foo'",
+      options: [{ considerReexports: true }],
+    }),
+    tValid({
+      code: "export { a } from './foo'; export { b } from './bar'; export { c }",
+      options: [{ considerReexports: true }],
+    }),
+    tValid({
+      code: "export { a } from './foo?a'; export { b } from './foo?b'",
+      options: [{ considerReexports: true, considerQueryString: true }],
+      settings: { 'import-x/resolver': 'webpack' },
+    }),
+    tValid({
+      code: "export { a } from './data' with { type: 'json' }; export { b } from './data'",
+      options: [{ considerReexports: true }],
+    }),
   ],
   invalid: [
     // #505: without the whitelist these share a resolved path, so they are duplicates
@@ -807,6 +837,82 @@ export default TestComponent;
         },
       ],
       ...jsxConfig,
+    }),
+    tInvalid({
+      code: "export { foo } from './foo'\nexport { bar } from './foo'\n",
+      output: "export { foo, bar } from './foo'\n",
+      options: [{ considerReexports: true }],
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+    tInvalid({
+      code: "export { a as b } from './foo'; export { c as d, e } from './foo'",
+      output: "export { a as b, c as d, e } from './foo'; ",
+      options: [{ considerReexports: true }],
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+    tInvalid({
+      code: "export { a } from './foo'; export { a, b } from './foo'",
+      output: "export { a, b } from './foo'; ",
+      options: [{ considerReexports: true }],
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+    tInvalid({
+      code: "export {\n  a,\n} from './foo'; export { b } from './foo'",
+      output: "export {\n  a, b,\n} from './foo'; ",
+      options: [{ considerReexports: true }],
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+    // types are kept apart from values
+    tInvalid({
+      code: "export { a } from './foo'; export type { B } from './foo'; export { c } from './foo'; export type { D } from './foo'",
+      output: [
+        "export { a, c } from './foo'; export type { B } from './foo';  export type { D } from './foo'",
+        "export { a, c } from './foo'; export type { B, D } from './foo';  ",
+      ],
+      options: [{ considerReexports: true }],
+      errors: [
+        createDuplicatedError('./foo'),
+        createDuplicatedError('./foo'),
+        createDuplicatedError('./foo'),
+        createDuplicatedError('./foo'),
+      ],
+    }),
+    tInvalid({
+      code: "export { a } from './attrs' with { type: 'json' }; export { b } from './attrs' with { type: 'json' }",
+      output: "export { a, b } from './attrs' with { type: 'json' }; ",
+      options: [{ considerReexports: true }],
+      errors: [
+        createDuplicatedError('./attrs'),
+        createDuplicatedError('./attrs'),
+      ],
+    }),
+    tInvalid({
+      code: "export { a } from './foo?x'; export { b } from './foo?x'",
+      output: "export { a, b } from './foo?x'; ",
+      options: [{ considerReexports: true, considerQueryString: true }],
+      errors: [
+        createDuplicatedError('./foo?x'),
+        createDuplicatedError('./foo?x'),
+      ],
+    }),
+    // the fix is withheld when comments would be lost
+    tInvalid({
+      code: "// keep\nexport { a } from './foo'\nexport { b } from './foo'",
+      output: null,
+      options: [{ considerReexports: true }],
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+    tInvalid({
+      code: "export { a } from './foo'\nexport { b } from './foo' // keep",
+      output: null,
+      options: [{ considerReexports: true }],
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+    tInvalid({
+      code: "export { a } from './foo'; export { /* keep */ b } from './foo'",
+      output: null,
+      options: [{ considerReexports: true }],
+      errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
   ],
 })
