@@ -170,8 +170,30 @@ const COMMON_TESTS: RuleRunTests<typeof rule> = {
       code: "import { type Foo, type Bar, Baz, Bam } from 'Foo';",
       options: ['prefer-inline'],
     }),
+    // aliases
+    tValid({
+      code: "import type { Foo } from 'Foo';",
+      options: ['top-level'],
+    }),
+    tValid({
+      code: "import { type Foo } from 'Foo';",
+      options: ['inline'],
+    }),
   ],
   invalid: [
+    // aliases
+    {
+      code: "import { type Foo } from 'Foo';",
+      output: "import type {Foo} from 'Foo';",
+      options: ['top-level'],
+      errors: [{ messageId: 'topLevel', data: { kind: 'type' } }],
+    },
+    {
+      code: "import type { Foo, Bar } from 'Foo';",
+      output: "import  { type Foo, type Bar } from 'Foo';",
+      options: ['inline'],
+      errors: [{ messageId: 'inline', data: { kind: 'type' } }],
+    },
     //
     // prefer-top-level
     //

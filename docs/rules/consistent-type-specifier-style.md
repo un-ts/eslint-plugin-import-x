@@ -35,9 +35,9 @@ This rule includes a fixer that will automatically convert your specifiers to th
 
 The rule accepts a single string option which may be one of:
 
-- `'prefer-top-level'` - enforces that named type-only specifiers only ever written as part of a top-level, type-only import; and never with an inline marker.
+- `'prefer-top-level'` (alias: `'top-level'`) - enforces that named type-only specifiers only ever written as part of a top-level, type-only import; and never with an inline marker.
 - `'prefer-top-level-if-only-type-imports'` - enforces that named type-only specifiers use a top-level, type-only import when all named imports are types; if some are values, inline markers are allowed. This is useful when you generally prefer inline but use TypeScript `verbatimModuleSyntax` and want all-type imports omitted by bundlers.
-- `'prefer-inline'` - enforces that named type-only specifiers are only ever written with an inline marker; and never as part of a top-level, type-only import.
+- `'prefer-inline'` (alias: `'inline'`) - enforces that named type-only specifiers are only ever written with an inline marker; and never as part of a top-level, type-only import.
 
 By default the rule will use the `prefer-top-level` option.
 

@@ -53,9 +53,11 @@ function hasResolutionModeAttribute(node: TSESTree.ImportDeclaration) {
 }
 
 export type Options =
+  | 'inline'
   | 'prefer-inline'
   | 'prefer-top-level'
   | 'prefer-top-level-if-only-type-imports'
+  | 'top-level'
 
 type MessageId = 'inline' | 'topLevel' | 'topLevelIfOnlyType'
 
@@ -76,6 +78,8 @@ export default createRule<[Options?], MessageId>({
           'prefer-top-level',
           'prefer-inline',
           'prefer-top-level-if-only-type-imports',
+          'top-level',
+          'inline',
         ],
         default: 'prefer-top-level',
       },
@@ -95,7 +99,10 @@ export default createRule<[Options?], MessageId>({
     const onlyTypeImports =
       context.options[0] === 'prefer-top-level-if-only-type-imports'
 
-    if (context.options[0] === 'prefer-inline') {
+    if (
+      context.options[0] === 'prefer-inline' ||
+      context.options[0] === 'inline'
+    ) {
       return {
         ImportDeclaration(node) {
           if (node.importKind === 'value' || node.importKind == null) {
