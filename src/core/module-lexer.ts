@@ -78,8 +78,8 @@ export interface LexedEsModule {
    * assignments as call arguments (`withHoc(Foo = 1)`), ASI-continued
    * default expressions, a curried call whose inner call does not start with
    * a name (`connect(() => x)(Comp)`), parenthesized names followed by more
-   * arguments (`withHoc((Foo), b)`), further arguments containing
-   * strings, templates or `/`, and names written with escape sequences.
+   * arguments (`withHoc((Foo), b)`), expressions containing templates or `/`,
+   * and names written with escape sequences.
    */
   defaultExportSourceName?: DefaultExportSourceName
 }
@@ -294,6 +294,12 @@ function hasUnlexableExportHead(content: string) {
 }
 
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
+/**
+ * Quoted string literals — masked before scanning, so that brackets, commas,
+ * parentheses and `/` inside them are not mistaken for structure or for a
+ * regex. Escaped quotes (`\\.`) are part of the literal.
+ */
+const STRING_LITERAL_PATTERN = /'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"/g
 /** A call head, member callees included: `withHoc(`, `React.memo(`. */
 const CALL_HEAD_PATTERN = new RegExp(
   String.raw`^${IDENTIFIER}(?:\s*\.\s*${IDENTIFIER})*\s*\(\s*`,
@@ -353,9 +359,9 @@ function isExpressionEnd(rest: string) {
 
 /**
  * `text` starts at the `,` after a call's first argument: skip the remaining
- * arguments and return the text from the call's closing `)`. Gives up on
- * strings, templates and `/` (regex or division), whose contents can't be
- * balanced without a tokenizer.
+ * arguments and return the text from the call's closing `)`. String literals
+ * are already masked. Gives up on templates and `/` (regex or division), whose
+ * contents can't be balanced without a tokenizer.
  */
 function skipToCallClose(text: string): string | undefined {
   let depth = 0
@@ -376,8 +382,76 @@ function skipToCallClose(text: string): string | undefined {
         depth--
         break
       }
-      case "'":
-      case '"':
+      // template literals (their `${}` parts are full expressions) and `/`
+      // (either a regex or a division) can't be balanced without a tokenizer
+      case '`':
+      case '/': {
+        return
+      }
+    }
+  }
+}
+
+/**
+ * Blank out quoted string literals, keeping the length so offsets survive.
+ * Their contents are never structure — brackets, commas, parentheses and `/`
+ * inside one mean nothing — and `//` or `/*` inside one is not a comment, so
+ * this has to run before `stripComments`.
+ */
+function maskStringLiterals(text: string) {
+  return text.replaceAll(STRING_LITERAL_PATTERN, literal =>
+    '0'.repeat(literal.length),
+  )
+}
+
+/**
+ * `text` starts right after the assignment target, wrapped by `count`
+ * parentheses: skip the right-hand side and return the text past their closing
+ * `)`. A `,` at depth 0 means a sequence expression, so the assignment is not
+ * the whole default.
+ *
+ * Expects string literals already masked by `maskStringLiterals`. Templates and
+ * `/` are rejected *during* the scan — never up front, since `text` runs on
+ * into the rest of the source slice and a later statement must not affect this
+ * verdict.
+ */
+function skipToWrapperClose(text: string, count: number): string | undefined {
+  let depth = 0
+  for (let i = 0; i < text.length; i++) {
+    switch (text[i]) {
+      case '(':
+      case '[':
+      case '{': {
+        depth++
+        break
+      }
+      case ')':
+      case ']':
+      case '}': {
+        if (depth > 0) {
+          depth--
+          break
+        }
+        // the right-hand side ends here: the remaining wrappers must close
+        // right after it, or the assignment is not the whole default
+        let rest = text.slice(i + 1)
+        for (let left = count - 1; left > 0; left--) {
+          rest = rest.trimStart()
+          if (!rest.startsWith(')')) {
+            return
+          }
+          rest = rest.slice(1)
+        }
+        return rest
+      }
+      case ',': {
+        if (depth === 0) {
+          return
+        }
+        break
+      }
+      // template literals (their `${}` parts are full expressions) and `/`
+      // (either a regex or a division) can't be balanced without a tokenizer
       case '`':
       case '/': {
         return
@@ -466,6 +540,17 @@ function deriveDefaultExportSourceName(
         return
       }
       rest = close
+    }
+    // `export default (Foo = ...)`: the assignment sits inside the parentheses,
+    // so the `opened === 0` branch above never sees it — prettier formats such
+    // defaults this way since v3.9. Only bare parentheses may wrap it: in
+    // `withHoc(Foo = 1)` the assignment is a call argument, and a call result
+    // has no name on the AST route either.
+    if (!sawCall && /^=(?![=>])/.test(rest)) {
+      const afterClose = skipToWrapperClose(rest, opened)
+      return afterClose !== undefined && isExpressionEnd(afterClose.trimStart())
+        ? { name, isBoundName: true, isIdentifier: false }
+        : undefined
     }
     for (; opened > 0; opened--) {
       if (!rest.startsWith(')')) {
@@ -702,7 +787,11 @@ export function lexModule(
       if (exp.localName == null) {
         // an expression default: only the statement text can name it
         const derived = deriveDefaultExportSourceName(
-          stripComments(content.slice(exp.exportStart, exp.exportStart + 512)),
+          stripComments(
+            maskStringLiterals(
+              content.slice(exp.exportStart, exp.exportStart + 512),
+            ),
+          ),
         )
         if (derived) {
           const { name, isBoundName, isIdentifier } = derived

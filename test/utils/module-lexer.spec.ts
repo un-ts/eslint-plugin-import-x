@@ -198,6 +198,7 @@ export default b
       ['withHoc(hoc2(Foo))', 'Foo'],
       ['withHoc(Foo, bar)', 'Foo'],
       ['withHoc(Foo, { a: [1] })', 'Foo'],
+      ["withHoc(Foo, 'x')", 'Foo'],
       ['(withHoc(Foo))', 'Foo'],
       ['withHoc((Foo))', 'Foo'],
       ['connect(mapState)(Comp)', 'Comp'],
@@ -219,7 +220,7 @@ export default b
       // documented fail-open corners: the AST names these, the lexer gives up
       ['connect(() => x)(Comp)', undefined],
       ['withHoc((Foo), b)', undefined],
-      ["withHoc(Foo, 'x')", undefined],
+      ['withHoc(Foo, `x`)', undefined],
       [String.raw`Foo\u0041`, undefined],
     ]
     for (const [expression, expected] of cases) {
@@ -512,6 +513,48 @@ describe('core lexer fast path for external modules', () => {
       ],
       ['const foo = 1; export default foo', { name: 'foo', isBoundName: true }],
       ['export default Foo = 1', { name: 'Foo', isBoundName: true }],
+      // prettier wraps such assignments in parentheses since v3.9
+      ['export default (Foo = 1)', { name: 'Foo', isBoundName: true }],
+      ['export default ((Foo = 1))', { name: 'Foo', isBoundName: true }],
+      ['export default (Foo = (1))', { name: 'Foo', isBoundName: true }],
+      [
+        'export default (Foo = Math.max(1, 2))',
+        { name: 'Foo', isBoundName: true },
+      ],
+      ['export default (Foo = [1])', { name: 'Foo', isBoundName: true }],
+      ['export default (Foo = { a: 1 })', { name: 'Foo', isBoundName: true }],
+      // string literals are masked, so their contents never count as structure
+      ['export default (Foo = "bar")', { name: 'Foo', isBoundName: true }],
+      ['export default (Foo = ")(,")', { name: 'Foo', isBoundName: true }],
+      [
+        String.raw`export default (Foo = 'ba\'r')`,
+        { name: 'Foo', isBoundName: true },
+      ],
+      // a `/` inside a string is not a regex, and one in a later statement
+      // must not affect this default
+      ['export default (Foo = "a/b")', { name: 'Foo', isBoundName: true }],
+      // ... and `//` or `/*` inside one is not a comment
+      [
+        'export default (Foo = "https://host")',
+        { name: 'Foo', isBoundName: true },
+      ],
+      [
+        'export default (Foo = "/* not a comment */")',
+        { name: 'Foo', isBoundName: true },
+      ],
+      [
+        'export default (Foo = 1)\nconst ratio = a / b',
+        { name: 'Foo', isBoundName: true },
+      ],
+      // wrapped, but the assignment is not the whole default expression
+      ['export default (Foo = 1) + 1', undefined],
+      ['export default ((Foo = 1) + 1)', undefined],
+      ['export default (Foo = 1, bar)', undefined],
+      ['export default (Foo = "bar") + 1', undefined],
+      // templates and `/` can't be balanced without a tokenizer
+      ['export default (Foo = `bar`)', undefined],
+      ['export default (Foo = a / b)', undefined],
+      ['export default withHoc(Foo = 1)', undefined],
       [
         'const F = 1; export default withHoc(F)',
         { name: 'F', isBoundName: true },
