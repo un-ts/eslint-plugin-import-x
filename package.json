@@ -54,8 +54,9 @@
     "lint:docs": "yarn update:eslint-docs --check",
     "lint:es": "eslint . --cache",
     "lint:tsc": "tsc -p tsconfig.base.json --noEmit",
+    "prepack": "clean-pkg-json",
     "prepare": "patch-package && simple-git-hooks && yarn-berry-deduplicate || exit 0",
-    "release": "clean-pkg-json && changeset publish",
+    "release": "changeset publish",
     "test": "node --experimental-vm-modules --no-warnings=ESLintRCWarning node_modules/jest/bin/jest.js",
     "test-compiled": "yarn build && TEST_COMPILED=1 yarn test",
     "update:eslint-docs": "eslint-doc-generator",
@@ -173,6 +174,9 @@
     "minimatch@npm:10.0.1": "^11.0.1",
     "minimatch@npm:^10.2.1": "^11.0.1",
     "prettier": "^3.5.3"
+  },
+  "publishConfig": {
+    "provenance": true
   },
   "eslintIgnore": [
     ".yarn",
