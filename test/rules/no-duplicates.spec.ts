@@ -134,6 +134,18 @@ ruleTester.run('no-duplicates', rule, {
       code: "import {y} from './foo'; import * as ns from './foo'",
     }),
 
+    // Babel's default and namespace re-exports are left alone
+    ...[
+      "export { a } from './foo'; export bar from './foo'",
+      "export bar from './foo'; export { a } from './foo'",
+      "export bar, * as names from './foo'; export { a } from './foo'",
+    ].map(code =>
+      tValid({
+        code,
+        options: [{ considerReexports: true }],
+        languageOptions: { parser: require(parsers.BABEL) },
+      }),
+    ),
     // whitelisted entry points are different modules for re-exports too
     tValid({
       code: "export { onMount } from 'svelte'; export { quintOut } from 'svelte/easing'",

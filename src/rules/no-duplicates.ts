@@ -987,7 +987,12 @@ export default createRule<[Options?], MessageId>({
         if (
           !considerReexports ||
           n.source == null ||
-          n.specifiers.length === 0
+          n.specifiers.length === 0 ||
+          // Babel's `export v from` and `export v, * as ns from` can't be
+          // merged into braces
+          n.specifiers.some(
+            specifier => (specifier.type as string) !== 'ExportSpecifier',
+          )
         ) {
           return
         }
