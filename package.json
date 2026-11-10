@@ -8,7 +8,7 @@
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "funding": "https://opencollective.com/eslint-plugin-import-x",
   "license": "MIT",
-  "packageManager": "yarn@4.9.2",
+  "packageManager": "yarn@4.10.3",
   "engines": {
     "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
   },
@@ -174,9 +174,6 @@
     "minimatch@npm:10.0.1": "^11.0.1",
     "minimatch@npm:^10.2.1": "^11.0.1",
     "prettier": "^3.5.3"
-  },
-  "publishConfig": {
-    "provenance": true
   },
   "eslintIgnore": [
     ".yarn",
