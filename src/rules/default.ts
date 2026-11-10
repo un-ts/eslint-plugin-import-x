@@ -1,6 +1,6 @@
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { ModuleInfo } from '../core/index.js'
+import { getModuleFormat, mayBeCommonJS, ModuleInfo } from '../core/index.js'
 import { createRule } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
@@ -43,7 +43,13 @@ export default createRule<[], MessageId>({
 
       if (imports.parseError) {
         reportModuleParseErrors(context, imports, node)
-      } else if (imports.getExport('default') === undefined) {
+      } else if (
+        !(
+          getModuleFormat(imports) === 'ambiguous' &&
+          mayBeCommonJS(imports, context.settings)
+        ) &&
+        imports.getExport('default') === undefined
+      ) {
         context.report({
           node: defaultSpecifier,
           messageId: 'noDefaultExport',

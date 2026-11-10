@@ -66,9 +66,12 @@ If you are modifying the exported namespace of any module at runtime, you will
 likely see false positives with this rule.
 
 CommonJS-only modules (`module.exports = ...`, `exports.foo = ...`) are not
-analyzed, so a `default` import of them is not reported. A module that also has
-`import` or `import()` is analyzed as an ES module, and is reported when it has
-no `default` export.
+analyzed, so a `default` import of them is not reported. A file with only
+dynamic `import()` calls is ambiguous: it is not analyzed when it may be
+CommonJS (`.cjs`, `.cts`, or another extension outside a package with
+`"type": "module"`), but is analyzed as an ES module when it is `.mjs`, `.mts`,
+or under `"type": "module"`. A module with a static `import` or `export` is analyzed as an ES module,
+and is reported when it has no `default` export.
 
 ## Further Reading
 

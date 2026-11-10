@@ -131,10 +131,58 @@ ruleTester.run('default', rule, {
       },
     }),
 
+    tValid({ code: 'import foo from "./dynamic-import-cjs-exports"' }),
+    tValid({ code: 'import foo from "./dynamic-import-in-commonjs"' }),
+    tValid({ code: 'import foo from "./dynamic-import-only"' }),
+    tValid({ code: 'import foo from "./dynamic-import-cjs-ext.cjs"' }),
+    tValid({ code: 'import foo from "./dynamic-import-cjs-ext-exports.cjs"' }),
+    tValid({
+      code: 'export foo from "./dynamic-import-cjs-exports"',
+      languageOptions: { parser: require(parsers.BABEL) },
+    }),
+    tValid({
+      code: 'import foo from "./dynamic-import-cjs-exports"',
+      settings: { 'import-x/parsers': { [parsers.BABEL]: ['.js'] } },
+    }),
+
     ...(SYNTAX_VALID_CASES as RuleRunTests<typeof rule>['valid']),
   ],
 
   invalid: [
+    tInvalid({
+      code: 'import foo from "./malformed.js"',
+      languageOptions: { parser: require(parsers.ESPREE) },
+      errors: [
+        {
+          // @ts-expect-error testing parsing error
+          message:
+            "Parse errors in imported module './malformed.js': 'return' outside of function (1:1)",
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'import foo from "./dynamic-import-esm-ext.mjs"',
+      errors: [{ messageId: 'noDefaultExport' }],
+    }),
+    tInvalid({
+      code: 'import foo from "./dynamic-import-esm-pkg/only.js"',
+      errors: [{ messageId: 'noDefaultExport' }],
+    }),
+    tInvalid({
+      code: 'export foo from "./dynamic-import-esm-no-default"',
+      languageOptions: { parser: require(parsers.BABEL) },
+      errors: [{ messageId: 'noDefaultExport' }],
+    }),
+    tInvalid({
+      code: 'import foo from "./dynamic-import-esm-no-default"',
+      errors: [{ messageId: 'noDefaultExport' }],
+    }),
+    tInvalid({
+      code: 'import foo from "./dynamic-import-esm-no-default"',
+      settings: { 'import-x/parsers': { [parsers.BABEL]: ['.js'] } },
+      errors: [{ messageId: 'noDefaultExport' }],
+    }),
+
     // tInvalid({
     //   code: "import Foo from './jsx/FooES7.js';",
     //   errors: [

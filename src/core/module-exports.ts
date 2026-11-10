@@ -1,3 +1,9 @@
+import path from 'node:path'
+
+import type { PluginSettings } from '../types.js'
+import { ModuleCache } from '../utils/module-cache.js'
+import { readPkgUp } from '../utils/read-pkg-up.js'
+
 import type { DefaultExportSourceName } from './ast-module.js'
 import type {
   ExportKind,
@@ -36,6 +42,35 @@ export function getModuleFormat(
   moduleInfo: ModuleInfo,
 ): 'ambiguous' | 'Module' {
   return moduleInfo.format
+}
+
+const esmPackageCache = new ModuleCache()
+
+function isInEsmPackage(filepath: string, settings: PluginSettings) {
+  const cacheSettings = ModuleCache.getSettings(settings)
+  const key = `type-module:${path.dirname(filepath)}`
+  let result = esmPackageCache.get<boolean>(key, cacheSettings)
+  if (result === undefined) {
+    result = readPkgUp({ cwd: filepath }).pkg?.type === 'module'
+    esmPackageCache.set(key, result)
+  }
+  return result
+}
+
+/**
+ * Whether the module's file may be CommonJS at runtime: `.cjs` and `.cts`
+ * always, `.mjs` and `.mts` never, anything else unless the nearest
+ * `package.json` has `"type": "module"`.
+ */
+export function mayBeCommonJS(
+  moduleInfo: ModuleInfo,
+  settings: PluginSettings,
+): boolean {
+  const filepath = moduleInfo.path
+  if (/\.c[jt]s$/.test(filepath)) {
+    return true
+  }
+  return !/\.m[jt]s$/.test(filepath) && !isInEsmPackage(filepath, settings)
 }
 
 /** Whether the module has a default export (including re-exported ones). */

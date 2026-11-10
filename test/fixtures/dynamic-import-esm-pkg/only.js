@@ -1,0 +1,1 @@
+void import('./bar.js')
