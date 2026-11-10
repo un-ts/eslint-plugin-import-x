@@ -123,11 +123,23 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         settings: {
           'import-x/resolver-next': [
             createNodeResolver({
-              alias: { '@scope/lib': [testFilePath('.')] },
+              alias: { '@scope/importType': [testFilePath('importType')] },
             }),
           ],
         },
-      }), // scoped alias root -- @scope/lib may not be resolvable without an explicit mapping
+      }), // scoped alias root -- @scope/importType may not be resolvable without an explicit mapping
+      tValid({
+        code: 'import "app/importType/index"',
+        options: [{ noUselessIndex: true }],
+        settings: {
+          'import-x/internal-regex': '^app/',
+          'import-x/resolver-next': [
+            createNodeResolver({
+              alias: { 'app/importType': [testFilePath('importType')] },
+            }),
+          ],
+        },
+      }), // unscoped alias root -- a wildcard `app/importType/*` mapping does not cover `app/importType`
 
       tValid({
         code: 'import(".")',
@@ -551,6 +563,28 @@ function runResolverTests(resolver: 'node' | 'webpack') {
           },
         ],
       }),
+      tInvalid({
+        code: 'import "app/fixtures/importType/index"',
+        output: 'import "app/fixtures/importType"',
+        options: [{ noUselessIndex: true }],
+        settings: {
+          'import-x/internal-regex': '^app/',
+          'import-x/resolver-next': [
+            createNodeResolver({
+              alias: { 'app/fixtures': [testFilePath('.')] },
+            }),
+          ],
+        },
+        errors: [
+          {
+            messageId: 'useless',
+            data: {
+              importPath: 'app/fixtures/importType/index',
+              proposedPath: 'app/fixtures/importType',
+            },
+          },
+        ],
+      }), // the alias root `app/fixtures` sits above the shortened path
       tInvalid({
         code: 'import "./index"',
         output: 'import "."',

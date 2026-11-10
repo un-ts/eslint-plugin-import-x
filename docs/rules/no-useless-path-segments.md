@@ -74,7 +74,7 @@ import './pages/index' // should be "./pages" (auto-fixable)
 import './pages/index.js' // should be "./pages" (auto-fixable)
 ```
 
-The option also checks aliased imports (for example `@/pages/index` with a `@` path alias) when they resolve to a file inside the project. These are only reported when the shorter path resolves to the same file and keeps more than the alias itself (`@/index` is not changed to `@`). Scoped alias roots such as `@scope/lib/index` are never shortened to `@scope/lib`: a wildcard mapping `@scope/lib/*` does not guarantee that the bare root is a valid import path.
+The option also checks aliased imports (for example `@/pages/index` with a `@` path alias) when they resolve to a file inside the project. These are only reported when the shorter path resolves to the same file and keeps more than the alias itself (`@/index` is not changed to `@`). An import is never shortened to an alias root either, such as `app/components/index` to `app/components` with an `app/components` alias: a wildcard mapping `app/components/*` does not guarantee that the bare root is a valid import path. The shorter path is only used when a sibling file of the target directory resolves through the same prefix, which shows the alias root sits higher up.
 
 ```js
 import '@/pages/index' // should be "@/pages" (auto-fixable)
