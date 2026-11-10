@@ -160,9 +160,7 @@ function mayReachUnresolvedStar(
 
 function makeMessage(
   last:
-    | TSESTree.Identifier
-    | TSESTree.PrivateIdentifier
-    | TSESTree.JSXIdentifier,
+    TSESTree.Identifier | TSESTree.PrivateIdentifier | TSESTree.JSXIdentifier,
   namepath: string[],
   node: TSESTree.Node = last,
 ) {

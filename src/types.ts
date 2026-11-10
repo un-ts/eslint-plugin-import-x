@@ -71,19 +71,19 @@ export interface ParseError extends Error {
   column: number
 }
 
-export interface CustomESTreeNode<Type extends string>
-  extends Omit<TSESTree.BaseNode, 'type'> {
+export interface CustomESTreeNode<Type extends string> extends Omit<
+  TSESTree.BaseNode,
+  'type'
+> {
   type: Type
 }
 
 /** Legacy `@babel/eslint-parser` node for `export bar from './x'`. */
-export interface ExportDefaultSpecifier
-  extends CustomESTreeNode<'ExportDefaultSpecifier'> {
+export interface ExportDefaultSpecifier extends CustomESTreeNode<'ExportDefaultSpecifier'> {
   exported: TSESTree.Identifier
 }
 
-export interface ExportNamespaceSpecifier
-  extends CustomESTreeNode<'ExportNamespaceSpecifier'> {
+export interface ExportNamespaceSpecifier extends CustomESTreeNode<'ExportNamespaceSpecifier'> {
   exported: TSESTree.Identifier
 }
 
@@ -97,10 +97,7 @@ export interface PathGroup {
 export type ExportAndImportKind = 'value' | 'type'
 
 export type NewLinesOptions =
-  | 'always'
-  | 'always-and-inside-groups'
-  | 'ignore'
-  | 'never'
+  'always' | 'always-and-inside-groups' | 'ignore' | 'never'
 
 export type NamedTypes = 'mixed' | 'types-first' | 'types-last'
 
@@ -122,12 +119,7 @@ export interface AlphabetizeOptions {
 export type ImportEntryType = 'import:object' | 'import' | 'require' | 'export'
 
 export type LiteralNodeValue =
-  | string
-  | number
-  | bigint
-  | boolean
-  | RegExp
-  | null
+  string | number | bigint | boolean | RegExp | null
 
 export interface ImportEntry {
   type: ImportEntryType
@@ -169,8 +161,9 @@ export interface CjsRequire extends NodeJS.Require {
 export type SetValue<T extends Set<unknown>> =
   T extends Set<infer U> ? U : never
 
-export interface NormalizedCacheSettings
-  extends NonNullable<ImportSettings['cache']> {
+export interface NormalizedCacheSettings extends NonNullable<
+  ImportSettings['cache']
+> {
   lifetime: number
 }
 

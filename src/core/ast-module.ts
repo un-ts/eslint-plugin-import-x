@@ -356,9 +356,7 @@ function handleExportAll(walk: Walk, n: TSESTree.ExportAllDeclaration) {
  * nodes at runtime — widened once here so the switch discriminates properly.
  */
 type MaybeLegacyExportSpecifier =
-  | TSESTree.ExportSpecifier
-  | ExportDefaultSpecifier
-  | ExportNamespaceSpecifier
+  TSESTree.ExportSpecifier | ExportDefaultSpecifier | ExportNamespaceSpecifier
 
 /** `export const/function/class …` / `export { a as b } [from './x']` */
 function handleExportNamed(walk: Walk, n: TSESTree.ExportNamedDeclaration) {

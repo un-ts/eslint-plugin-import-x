@@ -64,9 +64,7 @@ If `allowPrimitiveModules` option is set to `true`, the following is valid:
 
 module.exports = 'foo'
 module.exports = function rule(context) {
-  return {
-    /* ... */
-  }
+  return {/* ... */}
 }
 ```
 

@@ -6056,7 +6056,7 @@ __metadata:
     npm-run-all2: "npm:^8.0.4"
     path-serializer: "npm:^0.5.0"
     premove: "npm:^4.0.0"
-    prettier: "npm:^3.6.1"
+    prettier: "npm:^3.9.10"
     redux: "npm:^5.0.1"
     semver: "npm:^7.7.2"
     simple-git-hooks: "npm:^2.13.0"
@@ -10401,12 +10401,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.5.3":
-  version: 3.6.1
-  resolution: "prettier@npm:3.6.1"
+"prettier@npm:>=3.0.0-alpha.3, prettier@npm:^3.6.1, prettier@npm:^3.9.10":
+  version: 3.9.10
+  resolution: "prettier@npm:3.9.10"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10c0/cf54254b9ddf1a8dff12f84bf0089e6aef3eeb9d0ce9d0344e39549ddc4f5c290fc5060d7d5a597848b9617e53e05b33a4118e37cd560f9e132ecc19c211300a
+  checksum: 10c0/0b3531593aa6fb36ac6baf629cb058bda472c59a6938774f931fe55283a07c62e6f56e621b043a82d8a3e21fc284c08c34f9e539fc70072635f79b7bae1a1067
   languageName: node
   linkType: hard
 

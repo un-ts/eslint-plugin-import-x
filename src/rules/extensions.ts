@@ -116,11 +116,7 @@ export interface NormalizedOptions {
 }
 
 export type MessageId =
-  | 'missing'
-  | 'missingKnown'
-  | 'unexpected'
-  | 'addMissing'
-  | 'removeUnexpected'
+  'missing' | 'missingKnown' | 'unexpected' | 'addMissing' | 'removeUnexpected'
 
 function buildProperties(context: RuleContext<MessageId, Options>) {
   const result: Required<NormalizedOptions> = {
