@@ -83,9 +83,8 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
 
   it('passes with custom `parseForESLint` parser', async () => {
     jest.resetModules()
-    const { parse: freshNewParse } = await import(
-      'eslint-plugin-import-x/utils'
-    )
+    const { parse: freshNewParse } =
+      await import('eslint-plugin-import-x/utils')
     expect(freshNewParse).not.toBe(parse)
 
     const { setParseForESLint, setParse } = __importDefault(
@@ -138,9 +137,8 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
 
   it('takes the alternate parser specified in settings', async () => {
     jest.resetModules()
-    const { parse: freshNewParse } = await import(
-      'eslint-plugin-import-x/utils'
-    )
+    const { parse: freshNewParse } =
+      await import('eslint-plugin-import-x/utils')
     expect(freshNewParse).not.toBe(parse)
     const { setParse } = __importDefault(
       await import('./parse-stub-parser.cjs'),
@@ -312,9 +310,8 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
 
   it('prefers parsers specified in the settings over languageOptions.parser', async () => {
     jest.resetModules()
-    const { parse: freshNewParse } = await import(
-      'eslint-plugin-import-x/utils'
-    )
+    const { parse: freshNewParse } =
+      await import('eslint-plugin-import-x/utils')
     expect(freshNewParse).not.toBe(parse)
     const parseSpy = jest.fn()
 

@@ -110,9 +110,7 @@ function isTypeOnlyNamespace(node: TSESTree.TSModuleDeclaration): boolean {
   // parser always gives the block directly. Babel's shape is outside the
   // TSESTree types, hence the cast.
   const body = node.body as
-    | TSESTree.TSModuleBlock
-    | TSESTree.TSModuleDeclaration
-    | undefined
+    TSESTree.TSModuleBlock | TSESTree.TSModuleDeclaration | undefined
   if (body == null) {
     return false
   }
