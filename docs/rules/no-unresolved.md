@@ -106,6 +106,16 @@ import Foo from `d:/fOo/bar/file.js` // reported, d:/foo/bar/file.js
 import Foo from `./../fOo/bar/file.js` // reported
 ```
 
+#### `includeTypes`
+
+`import type` and `export type` declarations are not checked by default, inline `import { type Foo }` always is. Set `includeTypes` to `true` to resolve the declarations too, so a typo in `import type` is reported without running `tsc`:
+
+```ts
+/*eslint import-x/no-unresolved: [2, { includeTypes: true }]*/
+import type { Foo } from './does-not-exist' // reported
+export type { Bar } from './does-not-exist' // reported
+```
+
 ## When Not To Use It
 
 If you're using a module bundler other than Node or Webpack, you may end up with a lot of false positive reports of missing dependencies.

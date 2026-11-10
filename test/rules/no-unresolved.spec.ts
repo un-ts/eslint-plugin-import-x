@@ -574,4 +574,25 @@ describe('TypeScript', () => {
       }),
     ],
   })
+
+  ruleTester.run('no-unresolved (includeTypes)', rule, {
+    valid: [
+      tValid({
+        code: 'import type { Foo } from "./bar";',
+        options: [{ includeTypes: true }],
+      }),
+    ],
+    invalid: [
+      tInvalid({
+        code: 'import type { JSONSchema7Type } from "@types/json-schema";',
+        options: [{ includeTypes: true }],
+        errors: [createError('unresolved', '@types/json-schema')],
+      }),
+      tInvalid({
+        code: 'export type { JSONSchema7Type } from "@types/json-schema";',
+        options: [{ includeTypes: true }],
+        errors: [createError('unresolved', '@types/json-schema')],
+      }),
+    ],
+  })
 })

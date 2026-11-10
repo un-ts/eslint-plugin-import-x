@@ -14,6 +14,7 @@ import {
 export type Options = ModuleOptions & {
   caseSensitive?: boolean
   caseSensitiveStrict?: boolean
+  includeTypes?: boolean
 }
 
 export type MessageId = 'unresolved' | 'casingMismatch'
@@ -31,6 +32,7 @@ export default createRule<[Options?], MessageId>({
       makeOptionsSchema({
         caseSensitive: { type: 'boolean', default: true },
         caseSensitiveStrict: { type: 'boolean' },
+        includeTypes: { type: 'boolean' },
       }),
     ],
     messages: {
@@ -44,10 +46,10 @@ export default createRule<[Options?], MessageId>({
     const options = context.options[0] || {}
 
     return moduleVisitor(function checkSourceValue(source, node) {
-      // ignore type-only imports and exports
       if (
-        ('importKind' in node && node.importKind === 'type') ||
-        ('exportKind' in node && node.exportKind === 'type')
+        !options.includeTypes &&
+        (('importKind' in node && node.importKind === 'type') ||
+          ('exportKind' in node && node.exportKind === 'type'))
       ) {
         return
       }
