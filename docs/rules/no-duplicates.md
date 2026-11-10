@@ -116,6 +116,33 @@ import { onMount } from 'svelte'
 import { writable } from 'svelte/store'
 ```
 
+### Re-exports
+
+By default only imports are checked. With `considerReexports`, named re-exports from the same module are checked too, and fixed into one statement. `export * from` and `export * as ns from` are skipped, a repeated `export * from` is reported by [`import-x/export`](./export.md).
+
+Config:
+
+```json
+"import-x/no-duplicates": ["error", {"considerReexports": true}]
+```
+
+❌ Invalid with the option above
+
+```js
+export { foo } from './foo'
+export { bar as baz } from './foo'
+```
+
+✅ Valid with the option above
+
+```js
+export { foo, bar as baz } from './foo'
+// `export type` is a separate group, like `import type`
+export type { Foo } from './foo'
+```
+
+`considerQueryString`, `whitelist` and import attributes work the same as for imports. The fix is skipped when it would drop a comment.
+
 ### Inline Type imports
 
 TypeScript 4.5 introduced a new [feature](https://devblogs.microsoft.com/typescript/announcing-typescript-4-5/#type-on-import-names) that allows mixing of named value and type imports. In order to support fixing to an inline type import when duplicate imports are detected, `prefer-inline` can be set to true.
