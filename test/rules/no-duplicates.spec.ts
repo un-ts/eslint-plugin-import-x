@@ -134,6 +134,14 @@ ruleTester.run('no-duplicates', rule, {
       code: "import {y} from './foo'; import * as ns from './foo'",
     }),
 
+    // whitelisted entry points are different modules for re-exports too
+    tValid({
+      code: "export { onMount } from 'svelte'; export { quintOut } from 'svelte/easing'",
+      options: [
+        { considerReexports: true, whitelist: [['svelte', 'svelte/easing']] },
+      ],
+      settings: sharedDeclarationSettings,
+    }),
     // re-exports are not checked without considerReexports
     tValid({
       code: "export { a } from './foo'; export { b } from './foo'",
@@ -893,6 +901,19 @@ export default TestComponent;
       errors: [
         createDuplicatedError('./foo?x'),
         createDuplicatedError('./foo?x'),
+      ],
+    }),
+    // no autofix that would run 'svelte/store' after a re-export in between
+    tInvalid({
+      code: "export { writable } from 'svelte/store'; export { x } from './foo'; export { onMount } from 'svelte'",
+      output: null,
+      options: [
+        { considerReexports: true, whitelist: [['svelte', 'svelte/easing']] },
+      ],
+      settings: sharedDeclarationSettings,
+      errors: [
+        createDuplicatedError(sharedDeclarationPath),
+        createDuplicatedError(sharedDeclarationPath),
       ],
     }),
     // the fix is withheld when comments would be lost
