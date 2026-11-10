@@ -130,9 +130,9 @@ This rule accepts an options object with the following properties, shared with o
 The rule checks the resolved path of an import, so a specifier that does not start with `../` is still reported when it resolves to a file in a parent directory. This is the case for [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) and path aliases:
 
 ```js
-/** In my-project/lib/a.js, where "#src/*" maps to "./src/*" */
+/** In my-project/lib/a.js, where "#root/*" maps to "./*" */
 
-import main from '#src/main.js' // reported, resolves to a parent directory
+import main from '#root/main.js' // reported, resolves to my-project/main.js
 ```
 
 Use `ignore` to skip such specifiers:
