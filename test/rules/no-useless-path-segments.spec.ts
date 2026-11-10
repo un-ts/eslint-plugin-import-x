@@ -117,6 +117,17 @@ function runResolverTests(resolver: 'node' | 'webpack') {
           'import-x/internal-regex': '^~a',
         },
       }), // internal-regex matches alias but alias points into node_modules -- don't report
+      tValid({
+        code: 'import "@scope/lib/index"',
+        options: [{ noUselessIndex: true }],
+        settings: {
+          'import-x/resolver-next': [
+            createNodeResolver({
+              alias: { '@scope/lib': [testFilePath('.')] },
+            }),
+          ],
+        },
+      }), // scoped alias root -- @scope/lib may not be resolvable without an explicit mapping
 
       tValid({
         code: 'import(".")',

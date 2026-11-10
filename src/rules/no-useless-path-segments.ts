@@ -119,12 +119,16 @@ export default createRule<[Options?], MessageId>({
           // Only propose a path that the resolver maps to the same file, and
           // never a bare alias root like `@`, which the build config may not
           // support even if the resolver does (`@/*` without `@` in tsconfig).
+          // Also skip scoped alias roots like `@scope/lib`: a wildcard mapping
+          // `@scope/lib/*` does not imply that the bare `@scope/lib` is valid.
           // Skip when the resolved path is inside node_modules: internal-regex
           // can make importType return 'internal' for a node_modules alias, but
           // we must not auto-fix external package imports.
+          const isScopedAliasRoot = /^@[^/]+\/[^/]+$/.test(parentDirectory)
           if (
             resolvedPath &&
             parentDirectory.includes('/') &&
+            !isScopedAliasRoot &&
             !resolvedPath.includes(`${path.sep}node_modules${path.sep}`)
           ) {
             for (const proposedPath of [
