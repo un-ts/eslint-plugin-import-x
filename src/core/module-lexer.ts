@@ -543,9 +543,10 @@ function deriveDefaultExportSourceName(
     }
     // `export default (Foo = ...)`: the assignment sits inside the parentheses,
     // so the `opened === 0` branch above never sees it — prettier formats such
-    // defaults this way since v3.9. Only bare parentheses may wrap it: in
-    // `withHoc(Foo = 1)` the assignment is a call argument, and a call result
-    // has no name on the AST route either.
+    // defaults this way since v3.9. Only bare parentheses are handled here: an
+    // assignment as the first call argument (`withHoc(Foo = 1)`) is one of the
+    // fail-open corners documented on `LexedEsModule` — the AST route names it
+    // through `arguments[0]`, this lexer gives up.
     if (!sawCall && /^=(?![=>])/.test(rest)) {
       const afterClose = skipToWrapperClose(rest, opened)
       return afterClose !== undefined && isExpressionEnd(afterClose.trimStart())
