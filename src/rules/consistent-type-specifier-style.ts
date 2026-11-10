@@ -52,9 +52,12 @@ function hasResolutionModeAttribute(node: TSESTree.ImportDeclaration) {
   )
 }
 
-export type Options = 'prefer-inline' | 'prefer-top-level'
+export type Options =
+  | 'prefer-inline'
+  | 'prefer-top-level'
+  | 'prefer-top-level-if-only-type-imports'
 
-type MessageId = 'inline' | 'topLevel'
+type MessageId = 'inline' | 'topLevel' | 'topLevelIfOnlyType'
 
 export default createRule<[Options?], MessageId>({
   name: 'consistent-type-specifier-style',
@@ -69,7 +72,11 @@ export default createRule<[Options?], MessageId>({
     schema: [
       {
         type: 'string',
-        enum: ['prefer-top-level', 'prefer-inline'],
+        enum: [
+          'prefer-top-level',
+          'prefer-inline',
+          'prefer-top-level-if-only-type-imports',
+        ],
         default: 'prefer-top-level',
       },
     ],
@@ -78,11 +85,15 @@ export default createRule<[Options?], MessageId>({
         'Prefer using inline {{kind}} specifiers instead of a top-level {{kind}}-only import.',
       topLevel:
         'Prefer using a top-level {{kind}}-only import instead of inline {{kind}} specifiers.',
+      topLevelIfOnlyType:
+        'Prefer using a top-level {{kind}}-only import instead of inline {{kind}} specifiers when there are only type imports.',
     },
   },
   defaultOptions: [],
   create(context) {
     const { sourceCode } = context
+    const onlyTypeImports =
+      context.options[0] === 'prefer-top-level-if-only-type-imports'
 
     if (context.options[0] === 'prefer-inline') {
       return {
@@ -129,7 +140,7 @@ export default createRule<[Options?], MessageId>({
       }
     }
 
-    // prefer-top-level
+    // prefer-top-level or prefer-top-level-if-only-type-imports
     return {
       ImportDeclaration(node) {
         if (
@@ -205,7 +216,7 @@ export default createRule<[Options?], MessageId>({
 
           context.report({
             node,
-            messageId: 'topLevel',
+            messageId: onlyTypeImports ? 'topLevelIfOnlyType' : 'topLevel',
             data: {
               kind: kind.join('/'),
             },
@@ -213,7 +224,7 @@ export default createRule<[Options?], MessageId>({
               return fixer.replaceText(node, newImports)
             },
           })
-        } else {
+        } else if (!onlyTypeImports) {
           // remove specific specifiers and insert new imports for them
           for (const specifier of [...typeSpecifiers, ...typeofSpecifiers]) {
             context.report({

@@ -60,6 +60,70 @@ const COMMON_TESTS: RuleRunTests<typeof rule> = {
     }),
 
     //
+    // prefer-top-level-if-only-type-imports
+    //
+    tValid({
+      code: "import Foo from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import type Foo from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import { Foo } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import { Foo as Bar } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import type { Foo } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import * as Foo from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import {} from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import type {} from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import type { Foo as Bar } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import type { Foo, Bar, Baz, Bam } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import { Foo, type Bar } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import { type Foo, Bar } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import Foo, { type Bar } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+    tValid({
+      code: "import Foo, { type Bar, Baz } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    }),
+
+    //
     // prefer-inline
     //
     tValid({
@@ -191,6 +255,46 @@ import {
     },
 
     //
+    // prefer-top-level-if-only-type-imports
+    //
+    {
+      code: "import { type Foo } from 'Foo';",
+      output: "import type {Foo} from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+      errors: [
+        {
+          messageId: 'topLevelIfOnlyType',
+          data: { kind: 'type' },
+          type: AST_NODE_TYPES.ImportDeclaration,
+        },
+      ],
+    },
+    {
+      code: "import { type Foo as Bar } from 'Foo';",
+      output: "import type {Foo as Bar} from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+      errors: [
+        {
+          messageId: 'topLevelIfOnlyType',
+          data: { kind: 'type' },
+          type: AST_NODE_TYPES.ImportDeclaration,
+        },
+      ],
+    },
+    {
+      code: "import { type Foo, type Bar } from 'Foo';",
+      output: "import type {Foo, Bar} from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+      errors: [
+        {
+          messageId: 'topLevelIfOnlyType',
+          data: { kind: 'type' },
+          type: AST_NODE_TYPES.ImportDeclaration,
+        },
+      ],
+    },
+
+    //
     // prefer-inline
     //
     {
@@ -231,8 +335,23 @@ const TS_ONLY: RuleRunTests<typeof rule> = {
       code: "import type {Foo} from 'some-package' with {'resolution-mode': 'import'};",
       options: ['prefer-top-level'],
     }),
+    {
+      code: 'import { Foo, type "a-b" as AB } from \'Foo\';',
+      options: ['prefer-top-level-if-only-type-imports'],
+    },
   ],
   invalid: [
+    {
+      code: `import { type "a-b" as AB } from 'Foo';`,
+      output: `import type {"a-b" as AB} from 'Foo';`,
+      options: ['prefer-top-level-if-only-type-imports'],
+      errors: [
+        {
+          messageId: 'topLevelIfOnlyType',
+          type: AST_NODE_TYPES.ImportDeclaration,
+        },
+      ],
+    },
     // string specifier names (arbitrary module namespace identifiers)
     {
       code: `import { type "a-b" as AB } from 'Foo';`,
@@ -271,6 +390,26 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
     {
       code: "import typeof { Foo, Bar, Baz, Bam } from 'Foo';",
       options: ['prefer-top-level'],
+    },
+
+    //
+    // prefer-top-level-if-only-type-imports
+    //
+    {
+      code: "import typeof Foo from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    },
+    {
+      code: "import typeof { Foo, Bar, Baz, Bam } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    },
+    {
+      code: "import { Foo, typeof Bar } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+    },
+    {
+      code: "import Foo, { typeof Bar } from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
     },
 
     //
@@ -387,6 +526,46 @@ const FLOW_ONLY: RuleRunTests<typeof rule> = {
         "import Foo, {  Baz } from 'Foo';\nimport typeof {Bar} from 'Foo';",
       options: ['prefer-top-level'],
       errors: [{ messageId: 'topLevel', type: AST_NODE_TYPES.ImportSpecifier }],
+    },
+
+    //
+    // prefer-top-level-if-only-type-imports
+    //
+    {
+      code: "import { typeof Foo } from 'Foo';",
+      output: "import typeof {Foo} from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+      errors: [
+        {
+          messageId: 'topLevelIfOnlyType',
+          data: { kind: 'typeof' },
+          type: AST_NODE_TYPES.ImportDeclaration,
+        },
+      ],
+    },
+    {
+      code: "import { typeof Foo, typeof Bar } from 'Foo';",
+      output: "import typeof {Foo, Bar} from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+      errors: [
+        {
+          messageId: 'topLevelIfOnlyType',
+          data: { kind: 'typeof' },
+          type: AST_NODE_TYPES.ImportDeclaration,
+        },
+      ],
+    },
+    {
+      code: "import { type Foo, typeof Bar } from 'Foo';",
+      output: "import type {Foo} from 'Foo';\nimport typeof {Bar} from 'Foo';",
+      options: ['prefer-top-level-if-only-type-imports'],
+      errors: [
+        {
+          messageId: 'topLevelIfOnlyType',
+          data: { kind: 'type/typeof' },
+          type: AST_NODE_TYPES.ImportDeclaration,
+        },
+      ],
     },
 
     //
