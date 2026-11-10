@@ -133,7 +133,19 @@ export default createRule<[Options?], MessageId>({
         nextNode = nextNode.decorators[0]
       }
 
-      const lineDifference = nextNode.loc.start.line - getEndLine(node)
+      // Without semicolons a statement may start with `;`, which the parser
+      // attaches to the previous statement.
+      const lastToken = context.sourceCode.getLastToken(node)!
+      const tokenBefore = context.sourceCode.getTokenBefore(lastToken)
+      const end =
+        lastToken.value === ';' &&
+        lastToken.loc.start.line === nextNode.loc.start.line &&
+        tokenBefore &&
+        tokenBefore.loc.end.line < lastToken.loc.start.line
+          ? tokenBefore
+          : node
+
+      const lineDifference = nextNode.loc.start.line - getEndLine(end)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
 
       if (
@@ -142,13 +154,13 @@ export default createRule<[Options?], MessageId>({
       ) {
         let column = node.loc.start.column
 
-        if (node.loc.start.line !== node.loc.end.line) {
+        if (node.loc.start.line !== end.loc.end.line) {
           column = 0
         }
 
         context.report({
           loc: {
-            line: node.loc.end.line,
+            line: end.loc.end.line,
             column,
           },
           messageId: 'newline',
@@ -160,7 +172,7 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
+              : getFixer(end, EXPECTED_LINE_DIFFERENCE - lineDifference),
         })
       }
     }
@@ -200,7 +212,7 @@ export default createRule<[Options?], MessageId>({
     }
 
     /** The line where the statement and its trailing comments end. */
-    function getEndLine(node: TSESTree.Node) {
+    function getEndLine(node: TSESTree.Node | TSESTree.Token) {
       const comments = getTrailingComments(context.sourceCode, node)
       return comments.at(-1)?.loc.end.line ?? node.loc.end.line
     }
@@ -209,7 +221,7 @@ export default createRule<[Options?], MessageId>({
      * Adds the missing blank lines right after the statement, unless it has a
      * trailing comment.
      */
-    function getFixer(node: TSESTree.Node, count: number) {
+    function getFixer(node: TSESTree.Node | TSESTree.Token, count: number) {
       return (fixer: TSESLint.RuleFixer) => {
         // A trailing comment may belong to this line (eslint-disable-line),
         // the next line (prettier-ignore, ts-ignore) or be a third-party
