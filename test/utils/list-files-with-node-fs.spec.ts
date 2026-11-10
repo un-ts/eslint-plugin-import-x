@@ -41,9 +41,12 @@ const lint = (options: Record<string, unknown>) => {
   write('lib/main.js', "import { used } from './used.js'\nused\n")
   const filename = path.join(root, 'lib/used.js')
   const cwd = process.cwd()
+  // ESLint 8.56 has no `shouldUseFlatConfig` and only reads this variable
+  const { ESLINT_USE_FLAT_CONFIG } = process.env
+  process.env.ESLINT_USE_FLAT_CONFIG = 'true'
   process.chdir(root)
   try {
-    return new Linter({ cwd: root }).verify(
+    return new Linter({ cwd: root, configType: 'flat' }).verify(
       fs.readFileSync(filename, 'utf8'),
       [
         {
@@ -64,6 +67,11 @@ const lint = (options: Record<string, unknown>) => {
     )
   } finally {
     process.chdir(cwd)
+    if (ESLINT_USE_FLAT_CONFIG === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = ESLINT_USE_FLAT_CONFIG
+    }
   }
 }
 

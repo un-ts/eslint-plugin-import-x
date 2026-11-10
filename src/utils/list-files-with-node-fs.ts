@@ -50,7 +50,9 @@ export function listFilesWithNodeFs(src: string[], extensions: string[]) {
   const exts = extensions.map(ext => (ext.startsWith('.') ? ext : `.${ext}`))
   const results: string[] = []
 
-  for (const pattern of src) {
+  for (const entry of src) {
+    // on Windows `\` is a path separator, not a glob escape
+    const pattern = path.sep === '\\' ? entry.replaceAll('\\', '/') : entry
     if (isGlob(pattern)) {
       for (const expanded of braceExpand(pattern)) {
         // minimatch only understands `/`
