@@ -1,7 +1,7 @@
 // @ts-check
 
 import { cjsRequire } from '@pkgr/core'
-import { config, configs } from 'typescript-eslint'
+import { configs } from 'typescript-eslint'
 import js from '@eslint/js'
 import eslintPlugin from 'eslint-plugin-eslint-plugin'
 import { flatConfigs } from 'eslint-plugin-import-x'
@@ -13,12 +13,13 @@ import yml from 'eslint-plugin-yml'
 import prettier from 'eslint-plugin-prettier/recommended'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import globals from 'globals'
+import { defineConfig } from 'eslint/config'
 
 const { version } = cjsRequire('eslint/package.json')
 
 const noEslintrc = +version.split('.')[0] > 8
 
-export default config(
+export default defineConfig(
   {
     ignores: [
       '.yarn',
@@ -33,6 +34,7 @@ export default config(
   configs.recommended,
   flatConfigs.recommended,
   flatConfigs.typescript,
+  // @ts-expect-error -- bad typings
   json.configs.recommended,
   mdx.configs.flat,
   mdx.configs.flatCodeBlocks,
