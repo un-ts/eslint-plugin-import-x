@@ -43,10 +43,8 @@ jobs:
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          commit: 'chore: release eslint-plugin-import-x'
-          title: 'chore: release eslint-plugin-import-x'
-          publish: yarn release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: release eslint-plugin-import-x'
+          pr-title: 'chore: release eslint-plugin-import-x'
+          publish-script: yarn release

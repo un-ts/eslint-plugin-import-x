@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-import-x",
-  "version": "4.18.0",
+  "version": "4.18.1",
   "type": "module",
   "description": "Import with sanity.",
   "repository": "https://github.com/un-ts/eslint-plugin-import-x",
@@ -8,7 +8,7 @@
   "author": "JounQin <admin@1stg.me> (https://www.1stG.me)",
   "funding": "https://opencollective.com/eslint-plugin-import-x",
   "license": "MIT",
-  "packageManager": "yarn@4.9.2",
+  "packageManager": "yarn@4.10.3",
   "engines": {
     "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
   },
@@ -53,9 +53,10 @@
     "lint": "run-p 'lint:*'",
     "lint:docs": "yarn update:eslint-docs --check",
     "lint:es": "eslint . --cache",
-    "lint:tsc": "tsc -p tsconfig.lib.json --noEmit",
+    "lint:tsc": "tsc -p tsconfig.base.json --noEmit",
+    "prepack": "clean-pkg-json",
     "prepare": "patch-package && simple-git-hooks && yarn-berry-deduplicate || exit 0",
-    "release": "clean-pkg-json && changeset publish",
+    "release": "changeset publish",
     "test": "node --experimental-vm-modules --no-warnings=ESLintRCWarning node_modules/jest/bin/jest.js",
     "test-compiled": "yarn build && TEST_COMPILED=1 yarn test",
     "update:eslint-docs": "eslint-doc-generator",
@@ -85,7 +86,7 @@
     "minimatch": "^9.0.3 || ^10.1.2 || ^11.0.1",
     "semver": "^7.7.2",
     "stable-hash-x": "^0.2.0",
-    "unrs-resolver": "^1.9.2"
+    "unrs-resolver": "^1.13.0"
   },
   "devDependencies": {
     "@1stg/commitlint-config": "^5.1.0",
@@ -104,8 +105,8 @@
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
     "@babel/register": "^7.27.1",
-    "@changesets/changelog-github": "^0.5.1",
-    "@changesets/cli": "^2.29.5",
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
     "@commitlint/cli": "^19.8.1",
     "@eslint/import-test-order-redirect-scoped": "link:./test/fixtures/order-redirect-scoped",
     "@eslint/js": "^9.29.0",

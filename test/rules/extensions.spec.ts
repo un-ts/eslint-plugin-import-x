@@ -1583,6 +1583,23 @@ describe('TypeScript', () => {
         }),
       ]),
 
+      // an extensionless import that resolves to a `ts` file marked `never` is
+      // valid, even though a `.js` alias of it also resolves
+      tValid({
+        code: 'import foo from "./typescript-default";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['ignorePackages', { js: 'always', ts: 'never' }],
+      }),
+
+      // same, when `never` for `ts` comes from the default
+      tValid({
+        code: 'import foo from "./typescript-default";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: ['never', { js: 'always' }],
+      }),
+
       // type-only imports and exports keep the `.js` specifier (NodeNext style)
       // when checkTypeImports is off
       tValid({

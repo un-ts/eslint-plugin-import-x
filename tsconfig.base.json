@@ -2,6 +2,7 @@
   "extends": "@1stg/tsconfig/node16",
   "compilerOptions": {
     "lib": ["ES2022"],
+    "verbatimModuleSyntax": false,
     "rootDir": ".",
     "paths": {
       "eslint-plugin-import-x": ["./src/index.ts"],

@@ -49,22 +49,26 @@ import foo from './foo'
 
 // assuming 'node_modules' are ignored (true by default)
 import someModule from 'some-module'
+
+// CommonJS-only modules are not analyzed, so they are not reported
+import baz from './baz'
 ```
 
 ...and the following cases are reported:
 
 ```js
 import bar from './bar' // no default export found in ./bar
-import baz from './baz' // no default export found in ./baz
 ```
 
 ## When Not To Use It
 
-If you are using CommonJS and/or modifying the exported namespace of any module at
-runtime, you will likely see false positives with this rule.
+If you are modifying the exported namespace of any module at runtime, you will
+likely see false positives with this rule.
 
-This rule currently does not interpret `module.exports = ...` as a `default` export,
-either, so such a situation will be reported in the importing module.
+CommonJS-only modules (`module.exports = ...`, `exports.foo = ...`) are not
+analyzed, so a `default` import of them is not reported. A module that also has
+`import` or `import()` is analyzed as an ES module, and is reported when it has
+no `default` export.
 
 ## Further Reading
 
