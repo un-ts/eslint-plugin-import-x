@@ -125,6 +125,10 @@ This rule accepts an options object with the following properties, shared with o
 - `esmodule` (default: `true`): check ES module `import` and `export` declarations
 - `ignore`: an array of `RegExp` or `RegExp` pattern strings, matched against the import specifier; matching imports are not checked
 
+It also accepts this rule-specific option:
+
+- `maxLevels` (default: `0`): the number of parent directories an import may go up
+
 ### `ignore`
 
 The rule checks the resolved path of an import, so a specifier that does not start with `../` is still reported when it resolves to a file in a parent directory of the same package. This is the case for [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) and path aliases:
@@ -148,3 +152,17 @@ Use `ignore` to skip such specifiers:
 ```
 
 With this configuration `#src/main.js` is allowed, while `../main` is still reported.
+
+### `maxLevels`
+
+The number of parent directories an import may go up, counted on the resolved path relative to the importing file. Defaults to `0`, so every import from a parent directory is reported.
+
+```json
+{
+  "rules": {
+    "import-x/no-relative-parent-imports": ["error", { "maxLevels": 1 }]
+  }
+}
+```
+
+With this configuration `import bar from '../main'` in `my-project/lib/a.js` is allowed, while an import that goes up two directories, such as `../../config`, is still reported.
