@@ -190,6 +190,7 @@ export interface PackageJson {
    * `null` disables self-references, like a missing field does.
    */
   exports?: Record<string, unknown> | string | string[] | null
+  imports?: Record<string, unknown>
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
   optionalDependencies?: Record<string, string>

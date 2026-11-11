@@ -125,6 +125,10 @@ This rule accepts an options object with the following properties, shared with o
 - `esmodule` (default: `true`): check ES module `import` and `export` declarations
 - `ignore`: an array of `RegExp` or `RegExp` pattern strings, matched against the import specifier; matching imports are not checked
 
+It also accepts this rule-specific option:
+
+- `ignorePrivateImports` (default: `false`): do not check [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) declared in the `imports` field of the closest `package.json`
+
 ### `ignore`
 
 The rule checks the resolved path of an import, so a specifier that does not start with `../` is still reported when it resolves to a file in a parent directory of the same package. This is the case for [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) and path aliases:
@@ -148,3 +152,20 @@ Use `ignore` to skip such specifiers:
 ```
 
 With this configuration `#src/main.js` is allowed, while `../main` is still reported.
+
+### `ignorePrivateImports`
+
+`"ignore": ["^#"]` skips every specifier starting with `#`, including path aliases from `tsconfig.json`. To skip only the subpath imports declared in the `imports` field of the closest `package.json`, enable `ignorePrivateImports`:
+
+```json
+{
+  "rules": {
+    "import-x/no-relative-parent-imports": [
+      "error",
+      { "ignorePrivateImports": true }
+    ]
+  }
+}
+```
+
+With this configuration and `"imports": { "#root/*": "./*" }` in `my-project/package.json`, `#root/main.js` is allowed, while a `tsconfig.json` path alias such as `#src/main.js` and `../main` are still reported.

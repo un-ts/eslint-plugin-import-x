@@ -1,0 +1,7 @@
+{
+  "name": "private-imports",
+  "imports": {
+    "#root/*": "./*",
+    "#main": "./main.js"
+  }
+}
