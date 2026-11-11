@@ -105,9 +105,16 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         settings: aliasSettings,
       }), // alias to an external package
       tValid({
-        code: 'import "#app/pages/index"',
+        code: 'import "#app/importType/index"',
         options: [{ noUselessIndex: true }],
-        settings: aliasSettings,
+        settings: {
+          'import-x/internal-regex': '^#app/',
+          'import-x/resolver-next': [
+            createNodeResolver({
+              alias: { '#app': [testFilePath('.')] },
+            }),
+          ],
+        },
       }), // Node subpath import -- not touched (ESM rejects bare directory paths)
       tValid({
         code: 'import "~a/sub/index"',
