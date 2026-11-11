@@ -116,6 +116,27 @@ describe('listFilesWithNodeFs', () => {
     ).toEqual(['src/a.js', 'src/deep/d.js'])
   })
 
+  it('takes existing paths literally, also inside braces', () => {
+    write('lib/[x].js')
+    expect(
+      rel(listFilesWithNodeFs([path.join(root, 'lib/[x].js')], ['.js'])),
+    ).toEqual(['lib/[x].js'])
+    expect(
+      rel(
+        listFilesWithNodeFs([path.join(root, '{src/a.js,dist/g.js}')], ['.js']),
+      ),
+    ).toEqual(['dist/g.js', 'src/a.js'])
+  })
+
+  it('throws for entries that match nothing', () => {
+    expect(() =>
+      listFilesWithNodeFs([path.join(root, 'missing')], ['.js']),
+    ).toThrow(/No files matching the pattern ".*missing" were found/)
+    expect(() =>
+      listFilesWithNodeFs([path.join(root, 'src/*.md')], ['.js']),
+    ).toThrow('No files matching the pattern')
+  })
+
   describe('listFiles', () => {
     const exts = ['.js']
     const env = process.env.ESLINT_USE_FLAT_CONFIG

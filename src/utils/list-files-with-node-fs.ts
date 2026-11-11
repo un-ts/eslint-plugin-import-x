@@ -43,8 +43,59 @@ function walkDirectory(
 }
 
 /**
+ * Adds a literal file, or the files of a literal directory. Returns `false`
+ * when nothing exists at the path.
+ */
+function addLiteralPath(resolved: string, exts: string[], results: string[]) {
+  let stat: fs.Stats
+  try {
+    stat = fs.statSync(resolved)
+  } catch {
+    return false
+  }
+  if (stat.isDirectory()) {
+    walkDirectory(resolved, exts, results, true)
+  } else if (stat.isFile() && exts.includes(path.extname(resolved))) {
+    results.push(resolved)
+  }
+  return true
+}
+
+/** Adds the files matching a glob. Returns whether any file matched. */
+function addGlobMatches(pattern: string, exts: string[], results: string[]) {
+  // minimatch only understands `/`
+  const mm = new Minimatch(path.resolve(pattern).replaceAll('\\', '/'), {
+    dot: true,
+    matchBase: true,
+  })
+  const segments = mm.set[0] || []
+  const baseParts: string[] = []
+  while (
+    baseParts.length < segments.length &&
+    typeof segments[baseParts.length] === 'string'
+  ) {
+    baseParts.push(segments[baseParts.length] as string)
+  }
+  const base = baseParts.join('/') || '/'
+  const globPart = segments.slice(baseParts.length)
+  // `src/*.js` stays in `src/`, `src/**/*.js` recurses
+  const recursive = globPart.length > 1 || globPart.includes(GLOBSTAR)
+  let matched = false
+  for (const file of walkDirectory(base, exts, [], recursive)) {
+    // eslint-disable-next-line unicorn/prefer-regexp-test -- `Minimatch#match` is not `String#match`
+    if (mm.match(file.replaceAll('\\', '/'))) {
+      results.push(file)
+      matched = true
+    }
+  }
+  return matched
+}
+
+/**
  * List files without ESLint's `FileEnumerator`, which is removed in ESLint 10
  * and needs an eslintrc in ESLint 9. Skips `node_modules` and dot entries.
+ * Like `FileEnumerator`, an existing path is taken literally before it is
+ * treated as a glob, and an entry that matches nothing throws.
  */
 export function listFilesWithNodeFs(src: string[], extensions: string[]) {
   const exts = extensions.map(ext => (ext.startsWith('.') ? ext : `.${ext}`))
@@ -53,45 +104,19 @@ export function listFilesWithNodeFs(src: string[], extensions: string[]) {
   for (const entry of src) {
     // on Windows `\` is a path separator, not a glob escape
     const pattern = path.sep === '\\' ? entry.replaceAll('\\', '/') : entry
-    if (isGlob(pattern)) {
+    let found = addLiteralPath(path.resolve(pattern), exts, results)
+    if (!found && isGlob(pattern)) {
       for (const expanded of braceExpand(pattern)) {
-        // minimatch only understands `/`
-        const mm = new Minimatch(path.resolve(expanded).replaceAll('\\', '/'), {
-          dot: true,
-          matchBase: true,
-        })
-        const segments = mm.set[0] || []
-        const baseParts: string[] = []
-        while (
-          baseParts.length < segments.length &&
-          typeof segments[baseParts.length] === 'string'
+        if (
+          addLiteralPath(path.resolve(expanded), exts, results) ||
+          addGlobMatches(expanded, exts, results)
         ) {
-          baseParts.push(segments[baseParts.length] as string)
-        }
-        const base = baseParts.join('/') || '/'
-        const globPart = segments.slice(baseParts.length)
-        // `src/*.js` stays in `src/`, `src/**/*.js` recurses
-        const recursive = globPart.length > 1 || globPart.includes(GLOBSTAR)
-        for (const file of walkDirectory(base, exts, [], recursive)) {
-          // eslint-disable-next-line unicorn/prefer-regexp-test -- `Minimatch#match` is not `String#match`
-          if (mm.match(file.replaceAll('\\', '/'))) {
-            results.push(file)
-          }
+          found = true
         }
       }
-      continue
     }
-
-    const resolved = path.resolve(pattern)
-    try {
-      const stat = fs.statSync(resolved)
-      if (stat.isDirectory()) {
-        walkDirectory(resolved, exts, results, true)
-      } else if (stat.isFile() && exts.includes(path.extname(resolved))) {
-        results.push(resolved)
-      }
-    } catch {
-      // missing path
+    if (!found) {
+      throw new Error(`No files matching the pattern "${entry}" were found.`)
     }
   }
 
