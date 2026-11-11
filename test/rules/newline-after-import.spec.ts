@@ -593,6 +593,18 @@ ruleTester.run('newline-after-import', rule, {
       errors: [{ ...createImportError(2), line: 1, column: 1 }],
     },
     {
+      code: `import foo from 'foo'\n// comment\n;(() => {})()`,
+      output: `import foo from 'foo'\n\n// comment\n;(() => {})()`,
+      options: [{ considerComments: true }],
+      errors: [{ ...IMPORT_ERROR, line: 1, column: 1 }],
+    },
+    {
+      code: `const foo = require('foo')\n// comment\n;(() => {})()`,
+      output: `const foo = require('foo')\n\n// comment\n;(() => {})()`,
+      options: [{ considerComments: true }],
+      errors: [{ ...REQUIRE_ERROR, line: 1, column: 1 }],
+    },
+    {
       // third-party line directives keep their target too
       code: `import a from 'a' // prettier-ignore\nfoo()`,
       output: null,

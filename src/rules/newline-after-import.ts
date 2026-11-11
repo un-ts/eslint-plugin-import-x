@@ -120,6 +120,7 @@ export default createRule<[Options?], MessageId>({
 
     function checkForNewLine(
       node: TSESTree.Statement,
+      end: TSESTree.Node | TSESTree.Token,
       nextNode: TSESTree.Node,
       type: 'import' | 'require',
     ) {
@@ -132,18 +133,6 @@ export default createRule<[Options?], MessageId>({
       } else if (isClassWithDecorator(nextNode)) {
         nextNode = nextNode.decorators[0]
       }
-
-      // Without semicolons a statement may start with `;`, which the parser
-      // attaches to the previous statement.
-      const lastToken = context.sourceCode.getLastToken(node)!
-      const tokenBefore = context.sourceCode.getTokenBefore(lastToken)
-      const end =
-        lastToken.value === ';' &&
-        lastToken.loc.start.line === nextNode.loc.start.line &&
-        tokenBefore &&
-        tokenBefore.loc.end.line < lastToken.loc.start.line
-          ? tokenBefore
-          : node
 
       const lineDifference = nextNode.loc.start.line - getEndLine(end)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
@@ -179,22 +168,23 @@ export default createRule<[Options?], MessageId>({
 
     function commentAfterImport(
       node: TSESTree.Node,
+      end: TSESTree.Node | TSESTree.Token,
       nextComment: TSESTree.Comment,
       type: 'import' | 'require',
     ) {
-      const lineDifference = nextComment.loc.start.line - getEndLine(node)
+      const lineDifference = nextComment.loc.start.line - getEndLine(end)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
 
       if (lineDifference < EXPECTED_LINE_DIFFERENCE) {
         let column = node.loc.start.column
 
-        if (node.loc.start.line !== node.loc.end.line) {
+        if (node.loc.start.line !== end.loc.end.line) {
           column = 0
         }
 
         context.report({
           loc: {
-            line: node.loc.end.line,
+            line: end.loc.end.line,
             column,
           },
           messageId: 'newline',
@@ -206,9 +196,24 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
+              : getFixer(end, EXPECTED_LINE_DIFFERENCE - lineDifference),
         })
       }
+    }
+
+    /**
+     * Without semicolons a statement may start with `;`, which the parser
+     * attaches to the previous statement, so that one ends before the `;`.
+     */
+    function getStatementEnd(node: TSESTree.Node, nextNode: TSESTree.Node) {
+      const lastToken = context.sourceCode.getLastToken(node)!
+      const tokenBefore = context.sourceCode.getTokenBefore(lastToken)
+      return lastToken.value === ';' &&
+        lastToken.loc.start.line === nextNode.loc.start.line &&
+        tokenBefore &&
+        tokenBefore.loc.end.line < lastToken.loc.start.line
+        ? tokenBefore
+        : node
     }
 
     /** The line where the statement and its trailing comments end. */
@@ -254,7 +259,8 @@ export default createRule<[Options?], MessageId>({
 
       const nodePosition = root.body.indexOf(node)
       const nextNode = root.body[nodePosition + 1]
-      const endLine = getEndLine(node)
+      const end = nextNode ? getStatementEnd(node, nextNode) : node
+      const endLine = getEndLine(end)
 
       let nextComment: TSESTree.Comment | undefined
 
@@ -287,9 +293,9 @@ export default createRule<[Options?], MessageId>({
       }
 
       if (nextComment) {
-        commentAfterImport(node, nextComment, 'import')
+        commentAfterImport(node, end, nextComment, 'import')
       } else if (nextNode) {
-        checkForNewLine(node, nextNode, 'import')
+        checkForNewLine(node, end, nextNode, 'import')
       }
     }
 
@@ -329,16 +335,14 @@ export default createRule<[Options?], MessageId>({
             (!nextRequireCall ||
               !containsNodeOrEqual(nextStatement, nextRequireCall))
           ) {
+            const end = getStatementEnd(statementWithRequireCall, nextStatement)
             let nextComment
             if (
               'comments' in statementWithRequireCall.parent &&
               statementWithRequireCall.parent.comments !== undefined &&
               options.considerComments
             ) {
-              const endLine = Math.max(
-                node.loc.end.line,
-                getEndLine(statementWithRequireCall),
-              )
+              const endLine = Math.max(node.loc.end.line, getEndLine(end))
               nextComment = statementWithRequireCall.parent.comments.find(
                 o =>
                   o.loc.start.line > endLine &&
@@ -350,12 +354,14 @@ export default createRule<[Options?], MessageId>({
             if (nextComment && nextComment !== undefined) {
               commentAfterImport(
                 statementWithRequireCall,
+                end,
                 nextComment,
                 'require',
               )
             } else {
               checkForNewLine(
                 statementWithRequireCall,
+                end,
                 nextStatement,
                 'require',
               )
