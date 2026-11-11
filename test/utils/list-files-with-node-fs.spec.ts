@@ -128,12 +128,22 @@ describe('listFilesWithNodeFs', () => {
     ).toEqual(['dist/g.js', 'src/a.js'])
   })
 
+  it('matches files through globs that minimatch makes literal', () => {
+    expect(
+      rel(listFilesWithNodeFs([path.join(root, 'src/[a].js')], ['.js'])),
+    ).toEqual(['src/a.js'])
+  })
+
   it('throws for entries that match nothing', () => {
     expect(() =>
       listFilesWithNodeFs([path.join(root, 'missing')], ['.js']),
     ).toThrow(/No files matching the pattern ".*missing" were found/)
     expect(() =>
       listFilesWithNodeFs([path.join(root, 'src/*.md')], ['.js']),
+    ).toThrow('No files matching the pattern')
+    fs.mkdirSync(path.join(root, 'empty'))
+    expect(() =>
+      listFilesWithNodeFs([path.join(root, 'empty')], ['.js']),
     ).toThrow('No files matching the pattern')
   })
 

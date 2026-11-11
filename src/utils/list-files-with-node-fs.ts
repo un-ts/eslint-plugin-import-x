@@ -44,7 +44,7 @@ function walkDirectory(
 
 /**
  * Adds a literal file, or the files of a literal directory. Returns `false`
- * when nothing exists at the path.
+ * when nothing exists at the path or the directory has no matching files.
  */
 function addLiteralPath(resolved: string, exts: string[], results: string[]) {
   let stat: fs.Stats
@@ -54,8 +54,11 @@ function addLiteralPath(resolved: string, exts: string[], results: string[]) {
     return false
   }
   if (stat.isDirectory()) {
+    const before = results.length
     walkDirectory(resolved, exts, results, true)
-  } else if (stat.isFile() && exts.includes(path.extname(resolved))) {
+    return results.length > before
+  }
+  if (stat.isFile() && exts.includes(path.extname(resolved))) {
     results.push(resolved)
   }
   return true
@@ -70,8 +73,9 @@ function addGlobMatches(pattern: string, exts: string[], results: string[]) {
   })
   const segments = mm.set[0] || []
   const baseParts: string[] = []
+  // the last segment names files, even when minimatch made it literal (`[a].js`)
   while (
-    baseParts.length < segments.length &&
+    baseParts.length < segments.length - 1 &&
     typeof segments[baseParts.length] === 'string'
   ) {
     baseParts.push(segments[baseParts.length] as string)
