@@ -430,6 +430,14 @@ ruleTester.run('no-unresolved ignore list', rule, {
       code: 'import "./test.png"',
       options: [{ ignore: [/\.(png|gif)$/] }],
     }),
+    tValid({
+      code: 'import "./test.png"; import "./other.png"',
+      options: [{ ignore: [/\.png$/g] }],
+    }),
+    tValid({
+      code: 'import "./test.png"; import "./other.png"',
+      options: [{ ignore: [/^\.\//y] }],
+    }),
   ],
 
   invalid: [
