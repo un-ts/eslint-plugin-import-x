@@ -5,9 +5,20 @@ import { parsers, createRuleTestCaseFunctions, testFilePath } from '../utils.js'
 import type { GetRuleModuleMessageIds } from '../utils.js'
 
 import { cjsRequire } from 'eslint-plugin-import-x'
+import { createNodeResolver } from 'eslint-plugin-import-x/node-resolver'
 import rule from 'eslint-plugin-import-x/rules/no-relative-parent-imports'
 
 const ruleTester = new TSESLintRuleTester()
+
+const subpathImportSettings = {
+  'import-x/resolver-next': [
+    createNodeResolver({
+      alias: {
+        '#plugin': [testFilePath('./internal-modules/plugins/plugin.js')],
+      },
+    }),
+  ],
+}
 
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>({
   filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
@@ -74,9 +85,25 @@ ruleTester.run('no-relative-parent-imports', rule, {
       code: 'import foo from "../../api/service"',
       options: [{ maxLevels: 2 }],
     }),
+    tValid({
+      code: 'import foo from "#plugin"',
+      options: [{ ignore: ['^#'] }],
+      settings: subpathImportSettings,
+    }),
   ],
 
   invalid: [
+    tInvalid({
+      code: 'import foo from "#plugin"',
+      settings: subpathImportSettings,
+      errors: [createNoAllowedError('index.js', '#plugin')],
+    }),
+    tInvalid({
+      code: 'import foo from "../plugin.js"',
+      options: [{ ignore: ['^#'] }],
+      settings: subpathImportSettings,
+      errors: [createNoAllowedError('index.js', '../plugin.js')],
+    }),
     tInvalid({
       code: 'import foo from "../plugin.js"',
       errors: [

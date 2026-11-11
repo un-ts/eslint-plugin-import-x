@@ -42,8 +42,8 @@ export function moduleVisitor(visitor: Visitor, options?: ModuleOptions) {
       return
     }
 
-    // handle ignore
-    if (ignoreRegExps.some(re => re.test(String(source.value)))) {
+    // handle ignore, `search` starts at 0 every time, unlike `test` with `g` or `y` flags
+    if (ignoreRegExps.some(re => String(source.value).search(re) !== -1)) {
       return
     }
 
