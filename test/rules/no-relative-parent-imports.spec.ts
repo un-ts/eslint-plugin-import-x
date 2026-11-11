@@ -80,6 +80,18 @@ ruleTester.run('no-relative-parent-imports', rule, {
       code: 'import("@scope/package")',
     }),
     tValid({
+      code: 'import foo from "../plugin.js"',
+      options: [{ maxLevels: 1 }],
+    }),
+    tValid({
+      code: 'require("../plugin.js")',
+      options: [{ commonjs: true, maxLevels: 1 }],
+    }),
+    tValid({
+      code: 'import foo from "../../api/service"',
+      options: [{ maxLevels: 2 }],
+    }),
+    tValid({
       code: 'import foo from "#plugin"',
       options: [{ ignore: ['^#'] }],
       settings: subpathImportSettings,
@@ -189,6 +201,11 @@ ruleTester.run('no-relative-parent-imports', rule, {
           column: 8,
         },
       ],
+    }),
+    tInvalid({
+      code: 'import foo from "../../api/service"',
+      options: [{ maxLevels: 1 }],
+      errors: [createNoAllowedError('index.js', '../../api/service')],
     }),
   ],
 })

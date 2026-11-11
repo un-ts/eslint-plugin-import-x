@@ -13,6 +13,7 @@ import {
 type MessageId = 'noAllowed'
 
 export interface Options extends ModuleOptions {
+  maxLevels?: number
   ignorePrivateImports?: boolean
 }
 
@@ -26,6 +27,7 @@ export default createRule<[Options?], MessageId>({
     },
     schema: [
       makeOptionsSchema({
+        maxLevels: { type: 'integer', minimum: 0 },
         ignorePrivateImports: { type: 'boolean' },
       }),
     ],
@@ -41,6 +43,8 @@ export default createRule<[Options?], MessageId>({
     if (filename === '<text>') {
       return {}
     } // can't check a non-file
+
+    const maxLevels = context.options[0]?.maxLevels ?? 0
 
     const ignorePrivateImports = context.options[0]?.ignorePrivateImports
 
@@ -77,7 +81,10 @@ export default createRule<[Options?], MessageId>({
 
       const relDepPath = path.relative(path.dirname(filename), absDepPath)
 
-      if (importType(relDepPath, context) === 'parent') {
+      if (
+        importType(relDepPath, context) === 'parent' &&
+        countParentLevels(relDepPath) > maxLevels
+      ) {
         context.report({
           node: sourceNode,
           messageId: 'noAllowed',
@@ -90,6 +97,15 @@ export default createRule<[Options?], MessageId>({
     }, context.options[0])
   },
 })
+
+function countParentLevels(relativePath: string) {
+  const segments = relativePath.split(path.sep)
+  let levels = 0
+  while (segments[levels] === '..') {
+    levels++
+  }
+  return levels
+}
 
 // Same matching as Node's `imports` lookup: an exact key, or a key with a
 // single `*` wildcard
