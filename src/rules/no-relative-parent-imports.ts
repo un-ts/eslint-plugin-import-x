@@ -6,6 +6,7 @@ import {
   createRule,
   moduleVisitor,
   makeOptionsSchema,
+  readPkgUp,
   resolve,
 } from '../utils/index.js'
 
@@ -13,6 +14,7 @@ type MessageId = 'noAllowed'
 
 export interface Options extends ModuleOptions {
   maxLevels?: number
+  ignorePrivateImports?: boolean
 }
 
 export default createRule<[Options?], MessageId>({
@@ -26,6 +28,7 @@ export default createRule<[Options?], MessageId>({
     schema: [
       makeOptionsSchema({
         maxLevels: { type: 'integer', minimum: 0 },
+        ignorePrivateImports: { type: 'boolean' },
       }),
     ],
     messages: {
@@ -43,8 +46,26 @@ export default createRule<[Options?], MessageId>({
 
     const maxLevels = context.options[0]?.maxLevels ?? 0
 
+    const ignorePrivateImports = context.options[0]?.ignorePrivateImports
+
+    let privateImportKeys: string[] | undefined
+
+    function isPrivateImport(specifier: string) {
+      if (!specifier.startsWith('#')) {
+        return false
+      }
+      privateImportKeys ??= Object.keys(
+        readPkgUp({ cwd: filename }).pkg?.imports ?? {},
+      )
+      return privateImportKeys.some(key => matchesImportsKey(specifier, key))
+    }
+
     return moduleVisitor(sourceNode => {
       const depPath = sourceNode.value
+
+      if (ignorePrivateImports && isPrivateImport(depPath)) {
+        return
+      }
 
       if (importType(depPath, context) === 'external') {
         // ignore packages
@@ -84,4 +105,21 @@ function countParentLevels(relativePath: string) {
     levels++
   }
   return levels
+}
+
+// Same matching as Node's `imports` lookup: an exact key, or a key with a
+// single `*` wildcard
+function matchesImportsKey(specifier: string, key: string) {
+  const star = key.indexOf('*')
+  if (star === -1) {
+    return specifier === key
+  }
+  const base = key.slice(0, star)
+  const trailer = key.slice(star + 1)
+  return (
+    specifier.startsWith(base) &&
+    specifier !== base &&
+    (trailer === '' ||
+      (specifier.endsWith(trailer) && specifier.length >= key.length))
+  )
 }

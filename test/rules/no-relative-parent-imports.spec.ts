@@ -20,6 +20,12 @@ const subpathImportSettings = {
   ],
 }
 
+const privateImportsFile = testFilePath('./private-imports/nested/a.js')
+
+const privateImportsSettings = {
+  'import-x/resolver-next': [createNodeResolver()],
+}
+
 const { tValid, tInvalid } = createRuleTestCaseFunctions<typeof rule>({
   filename: testFilePath('./internal-modules/plugins/plugin2/index.js'),
   languageOptions: { parser: cjsRequire(parsers.BABEL) },
@@ -90,11 +96,42 @@ ruleTester.run('no-relative-parent-imports', rule, {
       options: [{ ignore: ['^#'] }],
       settings: subpathImportSettings,
     }),
+    tValid({
+      code: 'import main from "#root/main.js"',
+      filename: privateImportsFile,
+      options: [{ ignorePrivateImports: true }],
+      settings: privateImportsSettings,
+    }),
+    tValid({
+      code: 'import main from "#main"',
+      filename: privateImportsFile,
+      options: [{ ignorePrivateImports: true }],
+      settings: privateImportsSettings,
+    }),
   ],
 
   invalid: [
     tInvalid({
       code: 'import foo from "#plugin"',
+      settings: subpathImportSettings,
+      errors: [createNoAllowedError('index.js', '#plugin')],
+    }),
+    tInvalid({
+      code: 'import main from "#root/main.js"',
+      filename: privateImportsFile,
+      settings: privateImportsSettings,
+      errors: [createNoAllowedError('a.js', '#root/main.js')],
+    }),
+    tInvalid({
+      code: 'import main from "../main.js"',
+      filename: privateImportsFile,
+      options: [{ ignorePrivateImports: true }],
+      settings: privateImportsSettings,
+      errors: [createNoAllowedError('a.js', '../main.js')],
+    }),
+    tInvalid({
+      code: 'import foo from "#plugin"',
+      options: [{ ignorePrivateImports: true }],
       settings: subpathImportSettings,
       errors: [createNoAllowedError('index.js', '#plugin')],
     }),
