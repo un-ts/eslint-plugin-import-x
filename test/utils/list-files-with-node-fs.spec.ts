@@ -145,6 +145,10 @@ describe('listFilesWithNodeFs', () => {
     expect(() =>
       listFilesWithNodeFs([path.join(root, 'empty')], ['.js']),
     ).toThrow('No files matching the pattern')
+    fs.mkdirSync(path.join(root, '{src,dist}'))
+    expect(() =>
+      listFilesWithNodeFs([path.join(root, '{src,dist}')], ['.js']),
+    ).toThrow('No files matching the pattern')
   })
 
   describe('listFiles', () => {

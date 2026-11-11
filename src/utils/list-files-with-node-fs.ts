@@ -43,15 +43,15 @@ function walkDirectory(
 }
 
 /**
- * Adds a literal file, or the files of a literal directory. Returns `false`
- * when nothing exists at the path or the directory has no matching files.
+ * Adds a literal file, or the files of a literal directory. Returns whether
+ * anything was found, or `undefined` when nothing exists at the path.
  */
 function addLiteralPath(resolved: string, exts: string[], results: string[]) {
   let stat: fs.Stats
   try {
     stat = fs.statSync(resolved)
   } catch {
-    return false
+    return
   }
   if (stat.isDirectory()) {
     const before = results.length
@@ -109,10 +109,10 @@ export function listFilesWithNodeFs(src: string[], extensions: string[]) {
     // on Windows `\` is a path separator, not a glob escape
     const pattern = path.sep === '\\' ? entry.replaceAll('\\', '/') : entry
     let found = addLiteralPath(path.resolve(pattern), exts, results)
-    if (!found && isGlob(pattern)) {
+    if (found === undefined && isGlob(pattern)) {
       for (const expanded of braceExpand(pattern)) {
         if (
-          addLiteralPath(path.resolve(expanded), exts, results) ||
+          addLiteralPath(path.resolve(expanded), exts, results) ??
           addGlobMatches(expanded, exts, results)
         ) {
           found = true
