@@ -115,3 +115,19 @@ import a from './lib/a' // Import child file using relative path
 
 import b from './b' // Import sibling file using relative path
 ```
+
+## Options
+
+### `maxLevels`
+
+The number of parent directories an import may go up, counted on the resolved path relative to the importing file. Defaults to `0`, so every import from a parent directory is reported.
+
+```json
+{
+  "rules": {
+    "import-x/no-relative-parent-imports": ["error", { "maxLevels": 1 }]
+  }
+}
+```
+
+With this configuration `import bar from '../main'` in `my-project/lib/a.js` is allowed, while an import that goes up two directories, such as `../../config`, is still reported.

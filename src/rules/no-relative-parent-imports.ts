@@ -11,7 +11,11 @@ import {
 
 type MessageId = 'noAllowed'
 
-export default createRule<[ModuleOptions?], MessageId>({
+export interface Options extends ModuleOptions {
+  maxLevels?: number
+}
+
+export default createRule<[Options?], MessageId>({
   name: 'no-relative-parent-imports',
   meta: {
     type: 'suggestion',
@@ -19,7 +23,11 @@ export default createRule<[ModuleOptions?], MessageId>({
       category: 'Static analysis',
       description: 'Forbid importing modules from parent directories.',
     },
-    schema: [makeOptionsSchema()],
+    schema: [
+      makeOptionsSchema({
+        maxLevels: { type: 'integer', minimum: 0 },
+      }),
+    ],
     messages: {
       noAllowed:
         "Relative imports from parent directories are not allowed. Please either pass what you're importing through at runtime (dependency injection), move `{{filename}}` to same directory as `{{depPath}}` or consider making `{{depPath}}` a package.",
@@ -32,6 +40,8 @@ export default createRule<[ModuleOptions?], MessageId>({
     if (filename === '<text>') {
       return {}
     } // can't check a non-file
+
+    const maxLevels = context.options[0]?.maxLevels ?? 0
 
     return moduleVisitor(sourceNode => {
       const depPath = sourceNode.value
@@ -50,7 +60,10 @@ export default createRule<[ModuleOptions?], MessageId>({
 
       const relDepPath = path.relative(path.dirname(filename), absDepPath)
 
-      if (importType(relDepPath, context) === 'parent') {
+      if (
+        importType(relDepPath, context) === 'parent' &&
+        countParentLevels(relDepPath) > maxLevels
+      ) {
         context.report({
           node: sourceNode,
           messageId: 'noAllowed',
@@ -63,3 +76,12 @@ export default createRule<[ModuleOptions?], MessageId>({
     }, context.options[0])
   },
 })
+
+function countParentLevels(relativePath: string) {
+  const segments = relativePath.split(path.sep)
+  let levels = 0
+  while (segments[levels] === '..') {
+    levels++
+  }
+  return levels
+}
