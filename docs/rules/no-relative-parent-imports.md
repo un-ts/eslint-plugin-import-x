@@ -115,3 +115,36 @@ import a from './lib/a' // Import child file using relative path
 
 import b from './b' // Import sibling file using relative path
 ```
+
+## Options
+
+This rule accepts an options object with the following properties, shared with other rules that visit module specifiers:
+
+- `commonjs` (default: `false`): also check `require` calls
+- `amd` (default: `false`): also check AMD `require` and `define` calls
+- `esmodule` (default: `true`): check ES module `import` and `export` declarations
+- `ignore`: an array of `RegExp` or `RegExp` pattern strings, matched against the import specifier; matching imports are not checked
+
+### `ignore`
+
+The rule checks the resolved path of an import, so a specifier that does not start with `../` is still reported when it resolves to a file in a parent directory of the same package. This is the case for [subpath imports](https://nodejs.org/api/packages.html#subpath-imports) and path aliases:
+
+```js
+/** In my-project/lib/a.js, where "#root/*" maps to "./*" */
+
+import main from '#root/main.js' // reported, resolves to my-project/main.js
+```
+
+An alias that resolves outside the package is treated as external and is not checked.
+
+Use `ignore` to skip such specifiers:
+
+```json
+{
+  "rules": {
+    "import-x/no-relative-parent-imports": ["error", { "ignore": ["^#"] }]
+  }
+}
+```
+
+With this configuration `#src/main.js` is allowed, while `../main` is still reported.
