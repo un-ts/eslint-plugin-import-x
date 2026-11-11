@@ -250,6 +250,15 @@ ruleTester.run('named', rule, {
     }),
 
     tValid({
+      code: 'import { p } from "./dynamic-import-cjs-exports"',
+      settings: { 'import-x/parsers': { [parsers.BABEL]: ['.js'] } },
+    }),
+
+    tValid({
+      code: 'import { p } from "./dynamic-import-cjs-exports"',
+    }),
+
+    tValid({
       code: 'import { "foo" as foo } from "./bar"',
       languageOptions: {
         parser: require(parsers.ESPREE),

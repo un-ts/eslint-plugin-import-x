@@ -182,6 +182,7 @@ export interface PackageJson {
   name?: string
   version?: string
   private?: boolean
+  type?: string
   main?: string
   bin?: string | Record<string, string>
   browser?: string | Record<string, string | false>
