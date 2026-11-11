@@ -182,11 +182,23 @@ export default createRule<[Options?], MessageId>({
       const hasValidExceptions = zoneExcept.every(it => isGlob(it))
 
       if (hasValidExceptions) {
-        const exceptionsMm = zoneExcept.map(
-          except => new Minimatch(except, { windowsPathsNoEscape: true }),
-        )
+        const exceptionMatchers = zoneExcept.map(except => {
+          let pattern = except
+          let negate = false
+          while (pattern.startsWith('!')) {
+            negate = !negate
+            pattern = pattern.slice(1)
+          }
+          // match the pattern as written, and resolved against `basePath` like
+          // `target` and `from`
+          const mms = [pattern, path.resolve(basePath, pattern)].map(
+            it => new Minimatch(it, { windowsPathsNoEscape: true }),
+          )
+          return (absoluteImportPath: string) =>
+            mms.some(mm => mm.match(absoluteImportPath)) !== negate
+        })
         isPathException = (absoluteImportPath: string) =>
-          exceptionsMm.some(mm => mm.match(absoluteImportPath))
+          exceptionMatchers.some(match => match(absoluteImportPath))
       }
 
       const reportInvalidException = reportInvalidExceptionGlob

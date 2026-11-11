@@ -149,7 +149,72 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
     }),
+    // glob `except` patterns are resolved against `basePath`, like `from`
+    tValid({
+      code: 'import A from "../two/a.js"',
+      filename: testFilePath('./restricted-paths/server/one/a.js'),
+      options: [
+        {
+          zones: [
+            {
+              target: '**/*',
+              from: './test/fixtures/restricted-paths/server/**/*',
+              except: ['./test/fixtures/restricted-paths/server/two/**'],
+            },
+          ],
+        },
+      ],
+    }),
+    tValid({
+      code: 'import A from "../two/a.js"',
+      filename: testFilePath('./restricted-paths/server/one/a.js'),
+      options: [
+        {
+          basePath: testFilePath('./restricted-paths'),
+          zones: [
+            {
+              target: 'server/one/**',
+              from: 'server/**/*',
+              except: ['server/two/**'],
+            },
+          ],
+        },
+      ],
+    }),
 
+    // ...and still match as written, e.g. when `from` is outside `basePath`
+    tValid({
+      code: 'import A from "../server/two/a.js"',
+      filename: testFilePath('./restricted-paths/client/a.js'),
+      options: [
+        {
+          basePath: testFilePath('./restricted-paths/client'),
+          zones: [
+            {
+              target: '**/*',
+              from: '../server/**/*',
+              except: ['**/two/**'],
+            },
+          ],
+        },
+      ],
+    }),
+    // negated glob exceptions
+    tValid({
+      code: 'import A from "../two/a.js"',
+      filename: testFilePath('./restricted-paths/server/one/a.js'),
+      options: [
+        {
+          zones: [
+            {
+              target: '**/*',
+              from: './test/fixtures/restricted-paths/server/**/*',
+              except: ['!**/three/**'],
+            },
+          ],
+        },
+      ],
+    }),
     // support of arrays for from and target
     // array with single element
     tValid({
@@ -538,6 +603,73 @@ ruleTester.run('no-restricted-paths', rule, {
         },
       ],
       errors: [{ messageId: 'glob', line: 1, column: 15 }],
+    }),
+    tInvalid({
+      code: 'import A from "../three/a.js"',
+      filename: testFilePath('./restricted-paths/server/one/a.js'),
+      options: [
+        {
+          zones: [
+            {
+              target: '**/*',
+              from: './test/fixtures/restricted-paths/server/**/*',
+              except: ['./test/fixtures/restricted-paths/server/two/**'],
+            },
+          ],
+        },
+      ],
+      errors: [
+        {
+          ...createZoneError('../three/a.js'),
+          line: 1,
+          column: 15,
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'import A from "../three/a.js"',
+      filename: testFilePath('./restricted-paths/server/one/a.js'),
+      options: [
+        {
+          zones: [
+            {
+              target: '**/*',
+              from: './test/fixtures/restricted-paths/server/**/*',
+              except: ['!**/three/**'],
+            },
+          ],
+        },
+      ],
+      errors: [
+        {
+          ...createZoneError('../three/a.js'),
+          line: 1,
+          column: 15,
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'import A from "../three/a.js"',
+      filename: testFilePath('./restricted-paths/server/one/a.js'),
+      options: [
+        {
+          basePath: testFilePath('./restricted-paths'),
+          zones: [
+            {
+              target: 'server/one/**',
+              from: 'server/**/*',
+              except: ['server/two/**'],
+            },
+          ],
+        },
+      ],
+      errors: [
+        {
+          ...createZoneError('../three/a.js'),
+          line: 1,
+          column: 15,
+        },
+      ],
     }),
 
     // support of arrays for from and target
