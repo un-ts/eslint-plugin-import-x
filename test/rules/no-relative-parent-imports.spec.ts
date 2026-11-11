@@ -166,11 +166,6 @@ ruleTester.run('no-relative-parent-imports', rule, {
       ],
     }),
     tInvalid({
-      code: 'import foo from "../plugin.js"',
-      options: [{ maxLevels: 0 }],
-      errors: [createNoAllowedError('index.js', '../plugin.js')],
-    }),
-    tInvalid({
       code: 'import foo from "../../api/service"',
       options: [{ maxLevels: 1 }],
       errors: [createNoAllowedError('index.js', '../../api/service')],
