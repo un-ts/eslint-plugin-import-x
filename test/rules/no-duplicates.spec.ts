@@ -107,6 +107,10 @@ ruleTester.run('no-duplicates', rule, {
       settings: bundledDeclarationSettings,
     }),
     tValid({
+      code: "import { c } from 'inline/odd'; import { d } from 'inline/odd2'",
+      settings: bundledDeclarationSettings,
+    }),
+    tValid({
       code: "import { a } from 'bundled?raw'; import { b } from 'bundled/sub?raw'",
       options: [{ considerQueryString: true }],
       settings: bundledDeclarationSettings,

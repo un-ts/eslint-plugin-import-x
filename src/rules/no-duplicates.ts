@@ -5,7 +5,7 @@ import * as semver from 'semver'
 
 import { cjsRequire } from '../require.js'
 import type { PackageJson, RuleContext } from '../types.js'
-import { createRule, lazy, resolve } from '../utils/index.js'
+import { createRule, lazy, parse, resolve } from '../utils/index.js'
 
 // a user might set prefer-inline but not have a supporting TypeScript version.  Flow does not support inline types so this should fail in that case as well.
 // pre-calculate if the TypeScript version is supported
@@ -41,9 +41,6 @@ function isListed(group: Set<string>, sourcePath: string) {
 }
 
 const DECLARATION_FILE_PATTERN = /\.d\.[cm]?ts$/
-// not anchored to the line start: a comment may come first on the same line.
-// A match inside a comment only marks a specifier as its own module
-const DECLARE_MODULE_PATTERN = /\bdeclare\s+module\s+(['"])([^'"\n]+)\1/g
 
 const declaredModulesCache = new Map<
   string,
@@ -55,18 +52,24 @@ const declaredModulesCache = new Map<
  * blocks. Bundlers like dts-buddy put every entry point of a package into one
  * such file, as svelte does in `svelte/types/index.d.ts`.
  */
-function getDeclaredModules(filePath: string) {
+function getDeclaredModules(filePath: string, context: RuleContext) {
   try {
     const { mtimeMs } = fs.statSync(filePath)
     let cached = declaredModulesCache.get(filePath)
     if (cached?.mtimeMs !== mtimeMs) {
-      const content = fs.readFileSync(filePath, 'utf8')
-      cached = {
-        mtimeMs,
-        modules: new Set(
-          Array.from(content.matchAll(DECLARE_MODULE_PATTERN), m => m[2]),
-        ),
+      const { ast } = parse(
+        filePath,
+        fs.readFileSync(filePath, 'utf8'),
+        context,
+        false,
+      )
+      const modules = new Set<string>()
+      for (const node of ast.body) {
+        if (node.type === 'TSModuleDeclaration' && node.id.type === 'Literal') {
+          modules.add(node.id.value)
+        }
       }
+      cached = { mtimeMs, modules }
       declaredModulesCache.set(filePath, cached)
     }
     return cached.modules
@@ -84,6 +87,7 @@ const getSpecifier = (node: ImportOrReexport) => node.source.value.split('?')[0]
  */
 function splitDeclaredModules<T extends ImportOrReexport>(
   imported: Map<string, T[]>,
+  context: RuleContext,
 ) {
   const result: Array<[string, T[]]> = []
   for (const [key, nodes] of imported) {
@@ -92,7 +96,7 @@ function splitDeclaredModules<T extends ImportOrReexport>(
     const declared =
       DECLARATION_FILE_PATTERN.test(resolvedPath) &&
       new Set(nodes.map(getSpecifier)).size > 1
-        ? getDeclaredModules(resolvedPath)
+        ? getDeclaredModules(resolvedPath, context)
         : undefined
     if (!declared?.size) {
       result.push([key, nodes])
@@ -979,7 +983,7 @@ export default createRule<[Options?], MessageId>({
 
     const splitModules = <T extends ImportOrReexport>(
       imported: Map<string, T[]>,
-    ) => splitWhitelisted(splitDeclaredModules(imported))
+    ) => splitWhitelisted(splitDeclaredModules(imported, context))
 
     const resolvedPaths = new Map<string, string>()
     const resolveCached = (sourcePath: string) => {
