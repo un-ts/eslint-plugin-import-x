@@ -190,9 +190,10 @@ export default createRule<[Options?], MessageId>({
             pattern = pattern.slice(1)
           }
           // match the pattern as written, and resolved against `basePath` like
-          // `target` and `from`
+          // `target` and `from`. `dot` lets `**` cross dot directories in the
+          // absolute path (e.g. a project checked out under `~/.cache`)
           const mms = [pattern, path.resolve(basePath, pattern)].map(
-            it => new Minimatch(it, { windowsPathsNoEscape: true }),
+            it => new Minimatch(it, { dot: true, windowsPathsNoEscape: true }),
           )
           return (absoluteImportPath: string) =>
             mms.some(mm => mm.match(absoluteImportPath)) !== negate
