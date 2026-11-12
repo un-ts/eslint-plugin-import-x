@@ -579,6 +579,16 @@ describe('core lexer fast path for external modules', () => {
       ['export default withHoc(Foo, "\\\n)")', undefined],
       // the 512-character slice can cut a long literal in half
       [`export default (Foo = "${'x'.repeat(520)}", Bar)`, undefined],
+      // ... but an unbalanced literal in a *later* statement must not matter:
+      // each scanner only judges what it actually reaches
+      [
+        'export default withHoc(Foo, 1);\nconst message = "\\\ncontinued"',
+        { name: 'Foo', isBoundName: true },
+      ],
+      [
+        'export default (Foo = 1);\nconst message = "\\\ncontinued"',
+        { name: 'Foo', isBoundName: true },
+      ],
     ]
     for (const [source, expected] of cases) {
       const result = lexModule(source, 'test.js') as LexedEsModule
