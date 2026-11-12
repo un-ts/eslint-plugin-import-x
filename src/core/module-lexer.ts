@@ -305,12 +305,6 @@ const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
  */
 const STRING_OR_COMMENT_PATTERN =
   /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|\/\*[\s\S]*?\*\/|\/\/.*$/gm
-/**
- * Any quote left after masking means a literal the pass could not balance — a
- * line continuation inside it, or a slice that cut it in half. Nothing after
- * such a point can be trusted, so callers give up.
- */
-const UNMASKED_QUOTE_PATTERN = /['"]/
 /** A call head, member callees included: `withHoc(`, `React.memo(`. */
 const CALL_HEAD_PATTERN = new RegExp(
   String.raw`^${IDENTIFIER}(?:\s*\.\s*${IDENTIFIER})*\s*\(\s*`,
@@ -371,13 +365,11 @@ function isExpressionEnd(rest: string) {
 /**
  * `text` starts at the `,` after a call's first argument: skip the remaining
  * arguments and return the text from the call's closing `)`. String literals
- * are already masked. Gives up on templates and `/` (regex or division), whose
- * contents can't be balanced without a tokenizer.
+ * are already masked. Gives up on templates, `/` (regex or division) and any
+ * quote the masking pass could not balance, whose contents can't be read
+ * without a tokenizer.
  */
 function skipToCallClose(text: string): string | undefined {
-  if (UNMASKED_QUOTE_PATTERN.test(text)) {
-    return
-  }
   let depth = 0
   for (let i = 0; i < text.length; i++) {
     switch (text[i]) {
@@ -396,10 +388,14 @@ function skipToCallClose(text: string): string | undefined {
         depth--
         break
       }
-      // template literals (their `${}` parts are full expressions) and `/`
-      // (either a regex or a division) can't be balanced without a tokenizer
+      // template literals (their `${}` parts are full expressions), `/`
+      // (either a regex or a division) and literals the masking pass could not
+      // balance — a line continuation, or a slice that cut one in half — can't
+      // be read without a tokenizer
       case '`':
-      case '/': {
+      case '/':
+      case "'":
+      case '"': {
         return
       }
     }
@@ -425,14 +421,12 @@ function maskStringsAndStripComments(text: string) {
  * the whole default.
  *
  * Expects string literals and comments already blanked by
- * `maskStringsAndStripComments`. Templates and `/` are rejected *during* the
- * scan — never up front, since `text` runs on into the rest of the source slice
- * and a later statement must not affect this verdict.
+ * `maskStringsAndStripComments`. Templates, `/` and literals the masking pass
+ * could not balance are rejected *during* the scan — never up front, since
+ * `text` runs on into the rest of the source slice and a later statement must
+ * not affect this verdict.
  */
 function skipToWrapperClose(text: string, count: number): string | undefined {
-  if (UNMASKED_QUOTE_PATTERN.test(text)) {
-    return
-  }
   let depth = 0
   for (let i = 0; i < text.length; i++) {
     switch (text[i]) {
@@ -467,10 +461,13 @@ function skipToWrapperClose(text: string, count: number): string | undefined {
         }
         break
       }
-      // template literals (their `${}` parts are full expressions) and `/`
-      // (either a regex or a division) can't be balanced without a tokenizer
+      // template literals (their `${}` parts are full expressions), `/`
+      // (either a regex or a division) and literals the masking pass could not
+      // balance can't be read without a tokenizer
       case '`':
-      case '/': {
+      case '/':
+      case "'":
+      case '"': {
         return
       }
     }
