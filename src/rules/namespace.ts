@@ -111,7 +111,7 @@ const jsdocTypeNames = new WeakMap<ModuleInfo, Set<string> | null>()
 /**
  * The types a non-TypeScript module declares with JSDoc `@typedef` and `@callback`,
  * or `null` when its types may also come from elsewhere: a package's own
- * declaration files or `@types`, a declaration file next to it, `export *`.
+ * declaration files or `@types`, `export *`.
  */
 function getJsdocTypeNames(namespace: ModuleInfo) {
   let names = jsdocTypeNames.get(namespace)
@@ -127,11 +127,9 @@ function readJsdocTypeNames({
   starExports,
   context,
 }: ModuleInfo) {
-  const base = filePath.slice(0, -path.extname(filePath).length)
   if (
     starExports.length > 0 ||
-    filePath.split(path.sep).includes('node_modules') ||
-    ['.d.ts', '.d.mts', '.d.cts'].some(ext => fs.existsSync(base + ext))
+    filePath.split(path.sep).includes('node_modules')
   ) {
     return null
   }

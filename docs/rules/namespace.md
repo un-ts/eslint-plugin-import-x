@@ -14,7 +14,7 @@ Reports on assignment to a member of an imported namespace.
 
 In TypeScript, a name exported only as a type (`export type Foo`, `export interface Foo`, `export type { Foo }`, `export type * from`) is not on the namespace object at runtime, so accessing it as a value (`ns.Foo`) is reported as well. Using it as a type (`let x: ns.Foo`) is fine.
 
-A heritage clause (`interface X extends ns.Foo`, `class Y implements ns.Foo`) must name an export or, for a non-TypeScript module (JavaScript, or `.mdx` and the like with their configured parser), a JSDoc `@typedef` or `@callback` of that module. Such modules whose types may come from elsewhere are not checked there: packages, modules with a declaration file next to them, and modules with `export *`.
+A heritage clause (`interface X extends ns.Foo`, `class Y implements ns.Foo`) must name an export or, for a non-TypeScript module (JavaScript, or `.mdx` and the like with their configured parser), a JSDoc `@typedef` or `@callback` of that module. Such modules whose types may come from elsewhere are not checked there: packages and modules with `export *`. A declaration file next to a module is up to the resolver: the TypeScript resolver already picks it over the JavaScript file.
 
 Note: for packages, the plugin will find exported names
 from [`jsnext:main`], if present in `package.json`.
