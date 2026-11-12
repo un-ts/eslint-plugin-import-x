@@ -218,15 +218,15 @@ function checkDependencyDeclaration(
   return packageHierarchy.reduce(
     (result, ancestorName) => ({
       isInDeps:
-        result.isInDeps || deps.dependencies[ancestorName] !== undefined,
+        result.isInDeps || Object.hasOwn(deps.dependencies, ancestorName),
       isInDevDeps:
-        result.isInDevDeps || deps.devDependencies[ancestorName] !== undefined,
+        result.isInDevDeps || Object.hasOwn(deps.devDependencies, ancestorName),
       isInOptDeps:
         result.isInOptDeps ||
-        deps.optionalDependencies[ancestorName] !== undefined,
+        Object.hasOwn(deps.optionalDependencies, ancestorName),
       isInPeerDeps:
         result.isInPeerDeps ||
-        deps.peerDependencies[ancestorName] !== undefined,
+        Object.hasOwn(deps.peerDependencies, ancestorName),
       isInBundledDeps:
         result.isInBundledDeps ||
         deps.bundledDependencies.includes(ancestorName),

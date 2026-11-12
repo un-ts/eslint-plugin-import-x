@@ -488,6 +488,20 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
       ],
     }),
+    // #158: an inherited property is not a declaration
+    tInvalid({
+      code: 'import "not-a-dependency"',
+      filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirMonoRepoRoot,
+          transitiveDependencies: { constructor: ['not-a-dependency'] },
+        },
+      ],
+      errors: [
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
+      ],
+    }),
     // #158: a metapackage in devDependencies provides dev dependencies
     tInvalid({
       code: 'import "not-a-dependency"',
