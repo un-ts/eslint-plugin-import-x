@@ -1,6 +1,10 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
 import type { TSESTree, TSESLint } from '@typescript-eslint/utils'
 
 import { getExportKind, ModuleInfo } from '../core/index.js'
+import { parseComments } from '../core/module-doc.js'
 import {
   importDeclaration,
   createRule,
@@ -100,6 +104,44 @@ function hasValueExport(namespace: ModuleInfo, name: string) {
 }
 
 const TYPESCRIPT_FILE = /\.[cm]?tsx?$/
+const JAVASCRIPT_EXTENSION = /\.[cm]?jsx?$/
+
+const jsdocTypeNames = new WeakMap<ModuleInfo, Set<string> | null>()
+
+/**
+ * The types a JavaScript module declares with JSDoc `@typedef` and `@callback`,
+ * or `null` when its types may also come from elsewhere: a package's own
+ * declaration files or `@types`, a declaration file next to it, `export *`.
+ */
+function getJsdocTypeNames(namespace: ModuleInfo) {
+  let names = jsdocTypeNames.get(namespace)
+  if (names === undefined) {
+    names = readJsdocTypeNames(namespace)
+    jsdocTypeNames.set(namespace, names)
+  }
+  return names
+}
+
+function readJsdocTypeNames({ path: filePath, starExports }: ModuleInfo) {
+  const base = filePath.replace(JAVASCRIPT_EXTENSION, '')
+  if (
+    starExports.length > 0 ||
+    filePath.split(path.sep).includes('node_modules') ||
+    ['.d.ts', '.d.mts', '.d.cts'].some(ext => fs.existsSync(base + ext))
+  ) {
+    return null
+  }
+  try {
+    return new Set(
+      parseComments(fs.readFileSync(filePath, 'utf8'))
+        .flatMap(block => block.tags)
+        .filter(tag => tag.tag === 'typedef' || tag.tag === 'callback')
+        .map(tag => tag.name),
+    )
+  } catch {
+    return null
+  }
+}
 
 /**
  * Whether a member expression is a heritage clause (`class X implements ns.I`,
@@ -318,9 +360,10 @@ export default createRule<[Options], MessageId>({
 
           if (
             !(typePosition
-              ? // types in a JavaScript module (JSDoc `@typedef`) aren't visible here
-                !TYPESCRIPT_FILE.test(namespace.path) ||
-                namespace.hasExport(deref.property.name)
+              ? namespace.hasExport(deref.property.name) ||
+                (!TYPESCRIPT_FILE.test(namespace.path) &&
+                  (getJsdocTypeNames(namespace)?.has(deref.property.name) ??
+                    true))
               : hasValueExport(namespace, deref.property.name))
           ) {
             context.report(makeMessage(deref.property, namepath))

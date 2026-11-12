@@ -120,6 +120,12 @@ export const parseComment = (comment: string): commentParser.Block => {
   }
 }
 
+/** Every JSDoc block in `source`. */
+export const parseComments = (source: string) => {
+  parseComment_ ??= cjsRequire<typeof commentParser>('comment-parser').parse
+  return parseComment_(source)
+}
+
 /** Parse JSDoc from leading comments */
 function captureJsDoc(comments: TSESTree.Comment[]) {
   for (let i = comments.length - 1; i >= 0; i--) {
