@@ -295,11 +295,16 @@ function hasUnlexableExportHead(content: string) {
 
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
 /**
- * Quoted string literals — masked before scanning, so that brackets, commas,
- * parentheses and `/` inside them are not mistaken for structure or for a
- * regex. Escaped quotes (`\\.`) are part of the literal.
+ * Quoted string literals and comments, matched in a single pass so that neither
+ * can be mistaken for the other: an apostrophe inside a comment must not open a
+ * string (it would pair with a quote in a *later* statement and swallow the
+ * name), and `//` or `/*` inside a string must not open a comment. Strings are
+ * blanked with `0`, comments with a single space — that keeps the two tokens
+ * apart without keeping their contents. A string never spans lines, hence the
+ * `\n` exclusions.
  */
-const STRING_LITERAL_PATTERN = /'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"/g
+const STRING_OR_COMMENT_PATTERN =
+  /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|\/\*[\s\S]*?\*\/|\/\/.*$/gm
 /** A call head, member callees included: `withHoc(`, `React.memo(`. */
 const CALL_HEAD_PATTERN = new RegExp(
   String.raw`^${IDENTIFIER}(?:\s*\.\s*${IDENTIFIER})*\s*\(\s*`,
@@ -393,15 +398,15 @@ function skipToCallClose(text: string): string | undefined {
 }
 
 /**
- * Blank out quoted string literals, keeping the length so offsets survive.
- * Their contents are never structure — brackets, commas, parentheses and `/`
- * inside one mean nothing — and `//` or `/*` inside one is not a comment, so
- * this has to run before `stripComments`.
+ * Blank out quoted string literals and comments in one pass, keeping the length
+ * of strings so offsets survive, and trimming the leading whitespace.
  */
-function maskStringLiterals(text: string) {
-  return text.replaceAll(STRING_LITERAL_PATTERN, literal =>
-    '0'.repeat(literal.length),
-  )
+function maskStringsAndStripComments(text: string) {
+  return text
+    .replaceAll(STRING_OR_COMMENT_PATTERN, match =>
+      match[0] === '/' ? ' ' : '0'.repeat(match.length),
+    )
+    .trimStart()
 }
 
 /**
@@ -410,10 +415,10 @@ function maskStringLiterals(text: string) {
  * `)`. A `,` at depth 0 means a sequence expression, so the assignment is not
  * the whole default.
  *
- * Expects string literals already masked by `maskStringLiterals`. Templates and
- * `/` are rejected *during* the scan — never up front, since `text` runs on
- * into the rest of the source slice and a later statement must not affect this
- * verdict.
+ * Expects string literals and comments already blanked by
+ * `maskStringsAndStripComments`. Templates and `/` are rejected *during* the
+ * scan — never up front, since `text` runs on into the rest of the source slice
+ * and a later statement must not affect this verdict.
  */
 function skipToWrapperClose(text: string, count: number): string | undefined {
   let depth = 0
@@ -788,10 +793,8 @@ export function lexModule(
       if (exp.localName == null) {
         // an expression default: only the statement text can name it
         const derived = deriveDefaultExportSourceName(
-          stripComments(
-            maskStringLiterals(
-              content.slice(exp.exportStart, exp.exportStart + 512),
-            ),
+          maskStringsAndStripComments(
+            content.slice(exp.exportStart, exp.exportStart + 512),
           ),
         )
         if (derived) {
