@@ -10,3 +10,9 @@ export const value = 1
 /** @typedef {number} InlineTypedef */ export const inline = 2
 
 export const text = '/** @typedef {number} InString */'
+
+export const opener = `/*`
+
+/** @typedef {number} AfterTemplate */
+
+export const template = `/** @typedef {number} InTemplate */`

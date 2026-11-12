@@ -303,7 +303,7 @@ const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
  * apart without keeping their contents. A string never spans lines, hence the
  * `\n` exclusions.
  */
-export const STRING_OR_COMMENT_PATTERN =
+const STRING_OR_COMMENT_PATTERN =
   /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|\/\*[\s\S]*?\*\/|\/\/.*$/gm
 /** A call head, member callees included: `withHoc(`, `React.memo(`. */
 const CALL_HEAD_PATTERN = new RegExp(

@@ -644,7 +644,7 @@ describe('TypeScript type-only exports', () => {
         settings,
       }),
       tValid({
-        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.InlineTypedef {}',
+        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.InlineTypedef {}; interface Y extends ns.AfterTemplate {}',
         settings,
       }),
       // #592: types of a package may come from its declaration files or `@types`
@@ -670,6 +670,22 @@ describe('TypeScript type-only exports', () => {
         code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.InString {}',
         settings,
         errors: [createNotFoundInNamespaceError('InString', 'ns')],
+      }),
+      tInvalid({
+        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.InTemplate {}',
+        settings,
+        errors: [createNotFoundInNamespaceError('InTemplate', 'ns')],
+      }),
+      tInvalid({
+        code: 'import * as ns from "./jsdoc-typedefs.mdx"; interface X extends ns.Props {}; interface Y extends ns.Missing {}',
+        settings: {
+          ...settings,
+          'import-x/parsers': {
+            ...settings['import-x/parsers'],
+            'eslint-mdx': ['.mdx'],
+          },
+        },
+        errors: [createNotFoundInNamespaceError('Missing', 'ns')],
       }),
       tInvalid({
         code: 'import { b } from "./deep/a"; interface X extends b.T {}',

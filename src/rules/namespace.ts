@@ -5,12 +5,12 @@ import type { TSESTree, TSESLint } from '@typescript-eslint/utils'
 
 import { getExportKind, ModuleInfo } from '../core/index.js'
 import { parseComment } from '../core/module-doc.js'
-import { STRING_OR_COMMENT_PATTERN } from '../core/module-lexer.js'
 import {
   importDeclaration,
   createRule,
   declaredScope,
   getValue,
+  parse,
 } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
@@ -105,12 +105,11 @@ function hasValueExport(namespace: ModuleInfo, name: string) {
 }
 
 const TYPESCRIPT_FILE = /\.[cm]?tsx?$/
-const JAVASCRIPT_EXTENSION = /\.[cm]?jsx?$/
 
 const jsdocTypeNames = new WeakMap<ModuleInfo, Set<string> | null>()
 
 /**
- * The types a JavaScript module declares with JSDoc `@typedef` and `@callback`,
+ * The types a non-TypeScript module declares with JSDoc `@typedef` and `@callback`,
  * or `null` when its types may also come from elsewhere: a package's own
  * declaration files or `@types`, a declaration file next to it, `export *`.
  */
@@ -123,8 +122,12 @@ function getJsdocTypeNames(namespace: ModuleInfo) {
   return names
 }
 
-function readJsdocTypeNames({ path: filePath, starExports }: ModuleInfo) {
-  const base = filePath.replace(JAVASCRIPT_EXTENSION, '')
+function readJsdocTypeNames({
+  path: filePath,
+  starExports,
+  context,
+}: ModuleInfo) {
+  const base = filePath.slice(0, -path.extname(filePath).length)
   if (
     starExports.length > 0 ||
     filePath.split(path.sep).includes('node_modules') ||
@@ -133,13 +136,20 @@ function readJsdocTypeNames({ path: filePath, starExports }: ModuleInfo) {
     return null
   }
   try {
-    return new Set(
-      [...fs.readFileSync(filePath, 'utf8').matchAll(STRING_OR_COMMENT_PATTERN)]
-        .filter(([match]) => match.startsWith('/**') && match !== '/**/')
-        .flatMap(([match]) => parseComment(match.slice(2, -2)).tags)
-        .filter(tag => tag.tag === 'typedef' || tag.tag === 'callback')
-        .map(tag => tag.name),
-    )
+    const { comments } = parse(
+      filePath,
+      fs.readFileSync(filePath, 'utf8'),
+      context,
+    ).ast
+    return comments
+      ? new Set(
+          comments
+            .filter(c => c.type === 'Block' && c.value.startsWith('*'))
+            .flatMap(c => parseComment(c.value).tags)
+            .filter(tag => tag.tag === 'typedef' || tag.tag === 'callback')
+            .map(tag => tag.name),
+        )
+      : null
   } catch {
     return null
   }
