@@ -643,6 +643,10 @@ describe('TypeScript type-only exports', () => {
         code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.MyTypedef {}; class Y implements ns.MyCallback { value = 1 }',
         settings,
       }),
+      tValid({
+        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.InlineTypedef {}',
+        settings,
+      }),
       // #592: types of a package may come from its declaration files or `@types`
       tValid({
         code: 'import * as ns from "es6-module"; interface X extends ns.Missing {}',
@@ -661,6 +665,11 @@ describe('TypeScript type-only exports', () => {
         code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.Missing {}',
         settings,
         errors: [createNotFoundInNamespaceError('Missing', 'ns')],
+      }),
+      tInvalid({
+        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.InString {}',
+        settings,
+        errors: [createNotFoundInNamespaceError('InString', 'ns')],
       }),
       tInvalid({
         code: 'import { b } from "./deep/a"; interface X extends b.T {}',

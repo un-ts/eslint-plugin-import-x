@@ -4,7 +4,8 @@ import path from 'node:path'
 import type { TSESTree, TSESLint } from '@typescript-eslint/utils'
 
 import { getExportKind, ModuleInfo } from '../core/index.js'
-import { parseComments } from '../core/module-doc.js'
+import { parseComment } from '../core/module-doc.js'
+import { STRING_OR_COMMENT_PATTERN } from '../core/module-lexer.js'
 import {
   importDeclaration,
   createRule,
@@ -133,8 +134,9 @@ function readJsdocTypeNames({ path: filePath, starExports }: ModuleInfo) {
   }
   try {
     return new Set(
-      parseComments(fs.readFileSync(filePath, 'utf8'))
-        .flatMap(block => block.tags)
+      [...fs.readFileSync(filePath, 'utf8').matchAll(STRING_OR_COMMENT_PATTERN)]
+        .filter(([match]) => match.startsWith('/**') && match !== '/**/')
+        .flatMap(([match]) => parseComment(match.slice(2, -2)).tags)
         .filter(tag => tag.tag === 'typedef' || tag.tag === 'callback')
         .map(tag => tag.name),
     )
