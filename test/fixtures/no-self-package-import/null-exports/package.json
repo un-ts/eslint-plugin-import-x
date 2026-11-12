@@ -1,5 +1,5 @@
 {
-  "name": "no-own-exports-null-exports",
+  "name": "no-self-package-import-null-exports",
   "description": "Package with `exports: null`, so it cannot import itself",
   "main": "index.js",
   "exports": null

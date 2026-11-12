@@ -17,7 +17,7 @@ export interface Options {
   ignoreTypeImports?: boolean
 }
 
-export type MessageId = 'ownExports'
+export type MessageId = 'selfPackageImport'
 
 function isFileAllowed(allowInFiles: string[], context: RuleContext) {
   const filename = context.physicalFilename
@@ -202,7 +202,7 @@ function resolvesElsewhere(
 }
 
 export default createRule<[Options?], MessageId>({
-  name: 'no-own-exports',
+  name: 'no-self-package-import',
   meta: {
     type: 'suggestion',
     docs: {
@@ -225,7 +225,7 @@ export default createRule<[Options?], MessageId>({
       },
     ],
     messages: {
-      ownExports:
+      selfPackageImport:
         "'{{importPath}}' imports '{{packageName}}' through its own exports. Use a relative import instead.",
     },
   },
@@ -267,7 +267,7 @@ export default createRule<[Options?], MessageId>({
 
         context.report({
           node: source,
-          messageId: 'ownExports',
+          messageId: 'selfPackageImport',
           data: { importPath, packageName },
         })
       },

@@ -1,5 +1,5 @@
 {
-  "name": "no-own-exports-subpath-only",
+  "name": "no-self-package-import-subpath-only",
   "description": "Package that exports a subpath but not its root",
   "exports": {
     "./utils": "./utils.js"

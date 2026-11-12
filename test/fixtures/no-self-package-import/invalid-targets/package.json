@@ -1,5 +1,5 @@
 {
-  "name": "no-own-exports-invalid-targets",
+  "name": "no-self-package-import-invalid-targets",
   "description": "Package whose exports map paths to targets Node.js rejects",
   "exports": {
     ".": "index.js",

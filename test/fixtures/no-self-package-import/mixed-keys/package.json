@@ -1,5 +1,5 @@
 {
-  "name": "no-own-exports-mixed-keys",
+  "name": "no-self-package-import-mixed-keys",
   "description": "Package whose exports mix subpath and condition keys, which Node.js rejects",
   "exports": {
     ".": "./index.js",

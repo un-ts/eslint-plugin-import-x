@@ -1,4 +1,4 @@
-# import-x/no-own-exports
+# import-x/no-self-package-import
 
 <!-- end auto-generated rule header -->
 
@@ -55,7 +55,7 @@ This rule does not report packages without `exports` (or with `exports: null`), 
 This rule has the following options, with these defaults:
 
 ```js
-"import-x/no-own-exports": ["error", {
+"import-x/no-self-package-import": ["error", {
   "allowInFiles": [],
   "ignoreTypeImports": false,
 }]
@@ -66,7 +66,7 @@ This rule has the following options, with these defaults:
 An array of globs. Files matching any of them may import their own package, for example tests that exercise the package entry point as consumers would:
 
 ```js
-"import-x/no-own-exports": ["error", { "allowInFiles": ["**/test/**", "**/*.spec.js"] }]
+"import-x/no-self-package-import": ["error", { "allowInFiles": ["**/test/**", "**/*.spec.js"] }]
 ```
 
 ### `ignoreTypeImports`

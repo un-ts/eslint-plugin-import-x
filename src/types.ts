@@ -187,7 +187,7 @@ export interface PackageJson {
   browser?: string | Record<string, string | false>
   /**
    * Only checked for a usable exports map by `no-extraneous-dependencies`
-   * and `no-own-exports`:
+   * and `no-self-package-import`:
    * `null` disables self-references, like a missing field does.
    */
   exports?: Record<string, unknown> | string | string[] | null
