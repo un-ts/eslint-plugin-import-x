@@ -4,6 +4,7 @@ import type { ModuleOptions } from '../utils/index.js'
 import {
   importType,
   createRule,
+  getContextFilenameFor,
   moduleVisitor,
   makeOptionsSchema,
   readPkgUp,
@@ -79,7 +80,10 @@ export default createRule<[Options?], MessageId>({
         return
       }
 
-      const relDepPath = path.relative(path.dirname(filename), absDepPath)
+      const relDepPath = path.relative(
+        path.dirname(getContextFilenameFor(context, absDepPath)),
+        absDepPath,
+      )
 
       if (
         importType(relDepPath, context) === 'parent' &&

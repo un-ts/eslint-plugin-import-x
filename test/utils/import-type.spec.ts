@@ -1,4 +1,6 @@
+import fs from 'node:fs'
 import { isBuiltin } from 'node:module'
+import os from 'node:os'
 import path from 'node:path'
 
 import {
@@ -399,6 +401,74 @@ describe('importType(name)', () => {
     expect(isScoped('@/abc/def')).toBe(false)
     expect(isScoped('@a/abc')).toBe(true)
     expect(isScoped('@a/abc/def')).toBe(true)
+  })
+})
+
+describe('importType with the linted file behind a symlink', () => {
+  const tmpDir = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), 'import-type-'),
+  )
+  const realDir = path.join(tmpDir, 'real')
+  const linkDir = path.join(tmpDir, 'link')
+  const shadowDir = path.join(tmpDir, 'shadow')
+
+  const contextResolvingTo = (resolvedPath: string, rootDir = linkDir) => ({
+    ...testContext({
+      'import-x/resolver-next': [
+        {
+          interfaceVersion: 3,
+          name: 'test',
+          resolve: () => ({ found: true, path: resolvedPath }),
+        },
+      ],
+    }),
+    physicalFilename: path.join(rootDir, 'src/index.js'),
+  })
+
+  beforeAll(() => {
+    fs.mkdirSync(path.join(realDir, 'src'), { recursive: true })
+    fs.writeFileSync(path.join(realDir, 'package.json'), '{}')
+    fs.symlinkSync(realDir, linkDir, 'junction')
+    fs.mkdirSync(path.join(shadowDir, 'src'), { recursive: true })
+    fs.symlinkSync(
+      path.join(realDir, 'package.json'),
+      path.join(shadowDir, 'package.json'),
+      'file',
+    )
+  })
+
+  afterAll(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true })
+  })
+
+  it("should return 'internal' for an alias resolved to the real path", () => {
+    const context = contextResolvingTo(path.join(realDir, 'src/foo.js'))
+    expect(importType('@/foo', context)).toBe('internal')
+  })
+
+  it("should return 'internal' for an alias resolved through the symlink", () => {
+    const context = contextResolvingTo(path.join(linkDir, 'src/foo.js'))
+    expect(importType('@/foo', context)).toBe('internal')
+  })
+
+  it("should return 'external' for a package in the real node_modules", () => {
+    const context = contextResolvingTo(
+      path.join(realDir, 'node_modules/foo/index.js'),
+    )
+    expect(importType('foo', context)).toBe('external')
+  })
+
+  it("should return 'external' for a path outside of the package", () => {
+    const context = contextResolvingTo(path.join(tmpDir, 'other/index.js'))
+    expect(importType('@/foo', context)).toBe('external')
+  })
+
+  it("should return 'internal' when only package.json is a symlink", () => {
+    const context = contextResolvingTo(
+      path.join(realDir, 'src/foo.js'),
+      shadowDir,
+    )
+    expect(importType('@/foo', context)).toBe('internal')
   })
 })
 
