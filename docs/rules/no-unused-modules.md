@@ -8,8 +8,8 @@ Reports:
 - individual exports not being statically `import`ed or `require`ed from other modules in the same project
 - dynamic imports are supported if argument is a literal string
 
-> [!IMPORTANT]
-> This rule is only compatible with legacy configs. If you make use of the new flat config, either do not enable this rule, or provide a legacy eslintrc config (even empty) at the same time together for this rule to be functional.
+> [!NOTE]
+> Files are enumerated with ESLint's `FileEnumerator` when it is available. With flat config and no eslintrc, and on ESLint 10 where `FileEnumerator` is removed, files are listed from the file system instead: `node_modules` and dot directories are skipped, and flat config `ignores` are not applied, so narrow `src` and `ignoreExports` instead.
 
 ## Rule Details
 

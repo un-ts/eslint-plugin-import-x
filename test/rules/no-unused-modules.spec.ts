@@ -1,7 +1,4 @@
-import { execSync } from 'node:child_process'
-import type { ChildProcess } from 'node:child_process'
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 
 import { jest } from '@jest/globals'
@@ -17,7 +14,6 @@ import {
   hidePackageJsonFiles,
   testFilePath,
   parsers,
-  isESLint9,
   isESLint10,
 } from '../utils.js'
 import type { GetRuleModuleOptions, GetRuleModuleMessageIds } from '../utils.js'
@@ -1944,40 +1940,4 @@ function createUnusedError(
       })
     })
   }
-
-  // no-unused-module doesn't work on ESLint 10, the error we are testing are specific to ESLint 9
-  ;(isESLint9 ? describe : describe.skip)('with eslint 9 only', () => {
-    it('provides meaningful error when eslintrc is not present', () => {
-      // Create temp directory outside of project root
-      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'import-x-test-'))
-
-      // Copy example project to temp directory
-      // eslint-disable-next-line n/no-unsupported-features/node-builtins -- false positive
-      fs.cpSync(testFilePath('eslint-v9'), tempDir, {
-        recursive: true,
-      })
-
-      let errorMessage = ''
-
-      // We run `test-compiled` first, so that the plugin is already built
-      // But don't forget to run `yarn build` first if you're developing the rule or test case
-
-      // Install the plugin and run the lint command in the temp directory
-      try {
-        execSync(`npm install -D ${process.cwd()} && npm run lint`, {
-          cwd: tempDir,
-        })
-      } catch (error) {
-        errorMessage = (error as ChildProcess).stderr!.toString()
-      }
-
-      // Verify that the error message is as expected
-      expect(errorMessage).toContain(
-        'the import-x/no-unused-modules rule requires an .eslintrc file (even empty)',
-      )
-
-      // Cleanup
-      fs.rmSync(tempDir, { recursive: true, force: true })
-    }, 100_000)
-  })
 })

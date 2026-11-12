@@ -22,17 +22,6 @@ function isESLint9UnsupportedApi(
   )
 }
 
-function ensureESLint9UnsupportedApi(
-  input: unknown,
-): typeof ESLint9UnsupportedApi {
-  if (!isESLint9UnsupportedApi(input)) {
-    throw new TypeError(
-      'ESLint 10 and later versions remove the FileEnumerator API, which is required by the "no-unused-modules" rule.',
-    )
-  }
-  return input
-}
-
 import {
   getOwnExportNames,
   getReexports,
@@ -49,67 +38,19 @@ import {
   visit,
   getValue,
 } from '../utils/index.js'
+import { listFiles } from '../utils/list-files-with-node-fs.js'
 
 function listFilesUsingFileEnumerator(
   src: string[],
   extensions: FileExtension[],
-) {
-  const { FileEnumerator, shouldUseFlatConfig } =
-    ensureESLint9UnsupportedApi(eslintUnsupportedApi)
-
-  // We need to know whether this is being run with flat config in order to
-  // determine how to report errors if FileEnumerator throws due to a lack of eslintrc.
-
-  const { ESLINT_USE_FLAT_CONFIG } = process.env
-
-  // This condition is sufficient to test in v8, since the environment variable is necessary to turn on flat config
-  let isUsingFlatConfig: boolean
-
-  // In the case of using v9, we can check the `shouldUseFlatConfig` function
-  // If this function is present, then we assume it's v9
-  try {
-    isUsingFlatConfig =
-      // This allows us to avoid accessing the removed APIs as long as the function is not invoked.
-      // @ts-expect-error -- only exists in ESLint 9, and we only try to ensure this function exists
-      shouldUseFlatConfig && ESLINT_USE_FLAT_CONFIG !== 'false'
-  } catch {
-    // We don't want to throw here, since we only want to init the
-    // boolean if the function is available.
-    isUsingFlatConfig =
-      !!ESLINT_USE_FLAT_CONFIG && ESLINT_USE_FLAT_CONFIG !== 'false'
-  }
-
-  const enumerator = new FileEnumerator({
+): string[] {
+  // ESLint 10 removes `FileEnumerator`
+  const unsupportedApi: unknown = eslintUnsupportedApi
+  return listFiles(
+    src,
     extensions,
-  })
-
-  try {
-    return Array.from(
-      enumerator.iterateFiles(src),
-      ({ filePath, ignored }) => ({ filename: filePath, ignored }),
-    )
-  } catch (error) {
-    // If we're using flat config, and FileEnumerator throws due to a lack of eslintrc,
-    // then we want to throw an error so that the user knows about this rule's reliance on
-    // the legacy config.
-    if (
-      isUsingFlatConfig &&
-      (error as Error).message.includes('No ESLint configuration found')
-    ) {
-      throw new Error(`
-Due to the exclusion of certain internal ESLint APIs when using flat config,
-the import-x/no-unused-modules rule requires an .eslintrc file (even empty) to know which
-files to ignore (even when using flat config).
-The .eslintrc file only needs to contain "ignorePatterns", or can be empty if
-you do not want to ignore any files.
-
-See https://github.com/import-js/eslint-plugin-import/issues/3079
-for additional context.
-`)
-    }
-    // If this isn't the case, then we'll just let the error bubble up
-    throw error
-  }
+    isESLint9UnsupportedApi(unsupportedApi) ? unsupportedApi : undefined,
+  )
 }
 
 const DEFAULT = 'default'
@@ -232,19 +173,16 @@ const resolveFiles = (
   const srcFileList = listFilesUsingFileEnumerator(src, extensions)
 
   // prepare list of ignored files
-  const ignoredFilesList = listFilesUsingFileEnumerator(
+  for (const filename of listFilesUsingFileEnumerator(
     ignoreExports,
     extensions,
-  )
-  for (const { filename } of ignoredFilesList) ignoredFiles.add(filename)
+  )) {
+    ignoredFiles.add(filename)
+  }
 
   // prepare list of source files, don't consider files from node_modules
 
-  return new Set(
-    srcFileList.flatMap(({ filename }) =>
-      isNodeModule(filename) ? [] : filename,
-    ),
-  )
+  return new Set(srcFileList.filter(filename => !isNodeModule(filename)))
 }
 
 /**
@@ -463,12 +401,11 @@ export interface Options {
   missingExports?: boolean
   unusedExports?: boolean
   ignoreUnusedTypeExports?: boolean
+  /** @deprecated no longer has any effect */
   suppressMissingFileEnumeratorAPIWarning?: boolean
 }
 
 type MessageId = 'notFound' | 'unused'
-
-let eslint10WarningEmitted = false
 
 const SHARED_OPTIONS_SCHEMA_PROPERTIES = {
   src: {
@@ -503,8 +440,7 @@ const SHARED_OPTIONS_SCHEMA_PROPERTIES = {
     type: 'boolean',
   },
   suppressMissingFileEnumeratorAPIWarning: {
-    description:
-      'ESLint 10 and later versions remove the FileEnumerator API, which is required by the "no-unused-modules" rule. Therefore a warning message will be logged before an alternative is implemented. You can suppress the warning with this option',
+    description: 'deprecated, no longer has any effect',
     type: 'boolean',
   },
 } satisfies JSONSchema.JSONSchema4ObjectSchema['properties']
@@ -555,21 +491,7 @@ export default createRule<Options[], MessageId>({
       missingExports,
       unusedExports,
       ignoreUnusedTypeExports,
-      suppressMissingFileEnumeratorAPIWarning,
     } = context.options[0] || {}
-
-    // ESLint 10 removes shouldUseFlatConfig and FileEnumerator
-    if (!isESLint9UnsupportedApi(eslintUnsupportedApi)) {
-      if (!suppressMissingFileEnumeratorAPIWarning && !eslint10WarningEmitted) {
-        eslint10WarningEmitted = true
-
-        console.warn(`
-ESLint removes the FileEnumerator API since ESLint 10, which is required by the "no-unused-modules" rule. Therefore, the "no-unused-modules" rule is no-op for now before we can implement an alternative.
-In the meantime, if you want to keep this rule enabled, you can suppress this warning with the "suppressMissingFileEnumeratorAPIWarning" rule option: \`import-x/no-unused-modules: ['error', { suppressMissingFileEnumeratorAPIWarning: true }]\`
-`)
-      }
-      return {}
-    }
 
     if (unusedExports) {
       doPreparation(src, ignoreExports, context)
