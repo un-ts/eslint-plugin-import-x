@@ -569,6 +569,36 @@ describe('core lexer fast path for external modules', () => {
       expect(result.defaultExportSourceName).toEqual(expected)
     }
   })
+
+  it('reads comments and strings in one pass', () => {
+    // A comment may hold an apostrophe: if strings were masked first, that `'`
+    // would pair with the one in the *next* statement and hide the name.
+    const cases: Array<[string, unknown]> = [
+      [
+        "export default connect(a)(/* don't */ Comp)\nimport x from 'y'",
+        { name: 'Comp', isBoundName: true },
+      ],
+      [
+        `export default connect(a)(/* a "b */ Comp)\nimport x from 'y'`,
+        { name: 'Comp', isBoundName: true },
+      ],
+      [
+        "export default (Foo = '//')\nimport x from 'y'",
+        { name: 'Foo', isBoundName: true },
+      ],
+      [
+        `export default (Foo = '/* x')\nimport x from 'y'`,
+        { name: 'Foo', isBoundName: true },
+      ],
+    ]
+    for (const [source, expected] of cases) {
+      const result = lexModule(source, 'test.js') as LexedEsModule
+      expect([source, result.defaultExportSourceName]).toEqual([
+        source,
+        expected,
+      ])
+    }
+  })
 })
 
 describe('ModuleInfo tier-2 escalation for lexed modules', () => {
