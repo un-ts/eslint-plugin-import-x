@@ -305,6 +305,12 @@ const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
  */
 const STRING_OR_COMMENT_PATTERN =
   /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|\/\*[\s\S]*?\*\/|\/\/.*$/gm
+/**
+ * Any quote left after masking means a literal the pass could not balance — a
+ * line continuation inside it, or a slice that cut it in half. Nothing after
+ * such a point can be trusted, so callers give up.
+ */
+const UNMASKED_QUOTE_PATTERN = /['"]/
 /** A call head, member callees included: `withHoc(`, `React.memo(`. */
 const CALL_HEAD_PATTERN = new RegExp(
   String.raw`^${IDENTIFIER}(?:\s*\.\s*${IDENTIFIER})*\s*\(\s*`,
@@ -369,6 +375,9 @@ function isExpressionEnd(rest: string) {
  * contents can't be balanced without a tokenizer.
  */
 function skipToCallClose(text: string): string | undefined {
+  if (UNMASKED_QUOTE_PATTERN.test(text)) {
+    return
+  }
   let depth = 0
   for (let i = 0; i < text.length; i++) {
     switch (text[i]) {
@@ -421,6 +430,9 @@ function maskStringsAndStripComments(text: string) {
  * and a later statement must not affect this verdict.
  */
 function skipToWrapperClose(text: string, count: number): string | undefined {
+  if (UNMASKED_QUOTE_PATTERN.test(text)) {
+    return
+  }
   let depth = 0
   for (let i = 0; i < text.length; i++) {
     switch (text[i]) {
