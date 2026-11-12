@@ -570,6 +570,25 @@ describe('core lexer fast path for external modules', () => {
     }
   })
 
+  it('gives up on literals it cannot balance', () => {
+    // a line continuation keeps the literal open across the break, so the `)`
+    // inside it is not a wrapper close
+    const cases: Array<[string, unknown]> = [
+      ['export default (Foo = "\\\n)", Bar)', undefined],
+      ['export default (Foo = "\\\n)")', undefined],
+      ['export default withHoc(Foo, "\\\n)")', undefined],
+      // the 512-character slice can cut a long literal in half
+      [`export default (Foo = "${'x'.repeat(520)}", Bar)`, undefined],
+    ]
+    for (const [source, expected] of cases) {
+      const result = lexModule(source, 'test.js') as LexedEsModule
+      expect([source, result.defaultExportSourceName]).toEqual([
+        source,
+        expected,
+      ])
+    }
+  })
+
   it('reads comments and strings in one pass', () => {
     // A comment may hold an apostrophe: if strings were masked first, that `'`
     // would pair with the one in the *next* statement and hide the name.
