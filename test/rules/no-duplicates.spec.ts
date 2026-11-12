@@ -52,6 +52,9 @@ const sharedDeclarationSettings = {
 const bundledDeclarationPath = path.resolve(
   'test/fixtures/bundled-declarations/index.d.ts',
 )
+const inlineDeclarationPath = path.resolve(
+  'test/fixtures/bundled-declarations/inline.d.ts',
+)
 
 const bundledDeclarationSettings = {
   'import-x/resolver-next': [
@@ -59,8 +62,11 @@ const bundledDeclarationSettings = {
       name: 'bundled-declaration-resolver',
       interfaceVersion: 3,
       resolve(modulePath: string) {
-        return /^bundled(\/|$)/.test(modulePath)
-          ? { found: true, path: bundledDeclarationPath }
+        if (/^bundled(\/|$)/.test(modulePath)) {
+          return { found: true, path: bundledDeclarationPath }
+        }
+        return /^inline(\/|$)/.test(modulePath)
+          ? { found: true, path: inlineDeclarationPath }
           : { found: false }
       },
     },
@@ -94,6 +100,10 @@ ruleTester.run('no-duplicates', rule, {
     }),
     tValid({
       code: "import type { a } from 'bundled'; import type { b } from 'bundled/sub'",
+      settings: bundledDeclarationSettings,
+    }),
+    tValid({
+      code: "import { a } from 'inline'; import { b } from 'inline/sub'",
       settings: bundledDeclarationSettings,
     }),
     tValid({

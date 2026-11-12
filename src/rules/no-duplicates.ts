@@ -41,7 +41,9 @@ function isListed(group: Set<string>, sourcePath: string) {
 }
 
 const DECLARATION_FILE_PATTERN = /\.d\.[cm]?ts$/
-const DECLARE_MODULE_PATTERN = /^\s*declare\s+module\s+(['"])(.+?)\1/gm
+// not anchored to the line start: a comment may come first on the same line.
+// A match inside a comment only marks a specifier as its own module
+const DECLARE_MODULE_PATTERN = /\bdeclare\s+module\s+(['"])([^'"\n]+)\1/g
 
 const declaredModulesCache = new Map<
   string,
