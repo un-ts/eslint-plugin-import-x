@@ -120,6 +120,7 @@ export default createRule<[Options?], MessageId>({
 
     function checkForNewLine(
       node: TSESTree.Statement,
+      end: TSESTree.Node | TSESTree.Token,
       nextNode: TSESTree.Node,
       type: 'import' | 'require',
     ) {
@@ -133,7 +134,7 @@ export default createRule<[Options?], MessageId>({
         nextNode = nextNode.decorators[0]
       }
 
-      const lineDifference = nextNode.loc.start.line - getEndLine(node)
+      const lineDifference = nextNode.loc.start.line - getEndLine(end)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
 
       if (
@@ -142,13 +143,13 @@ export default createRule<[Options?], MessageId>({
       ) {
         let column = node.loc.start.column
 
-        if (node.loc.start.line !== node.loc.end.line) {
+        if (node.loc.start.line !== end.loc.end.line) {
           column = 0
         }
 
         context.report({
           loc: {
-            line: node.loc.end.line,
+            line: end.loc.end.line,
             column,
           },
           messageId: 'newline',
@@ -160,29 +161,30 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
+              : getFixer(end, EXPECTED_LINE_DIFFERENCE - lineDifference),
         })
       }
     }
 
     function commentAfterImport(
       node: TSESTree.Node,
+      end: TSESTree.Node | TSESTree.Token,
       nextComment: TSESTree.Comment,
       type: 'import' | 'require',
     ) {
-      const lineDifference = nextComment.loc.start.line - getEndLine(node)
+      const lineDifference = nextComment.loc.start.line - getEndLine(end)
       const EXPECTED_LINE_DIFFERENCE = options.count + 1
 
       if (lineDifference < EXPECTED_LINE_DIFFERENCE) {
         let column = node.loc.start.column
 
-        if (node.loc.start.line !== node.loc.end.line) {
+        if (node.loc.start.line !== end.loc.end.line) {
           column = 0
         }
 
         context.report({
           loc: {
-            line: node.loc.end.line,
+            line: end.loc.end.line,
             column,
           },
           messageId: 'newline',
@@ -194,13 +196,28 @@ export default createRule<[Options?], MessageId>({
           fix:
             options.exactCount && EXPECTED_LINE_DIFFERENCE < lineDifference
               ? undefined
-              : getFixer(node, EXPECTED_LINE_DIFFERENCE - lineDifference),
+              : getFixer(end, EXPECTED_LINE_DIFFERENCE - lineDifference),
         })
       }
     }
 
+    /**
+     * Without semicolons a statement may start with `;`, which the parser
+     * attaches to the previous statement, so that one ends before the `;`.
+     */
+    function getStatementEnd(node: TSESTree.Node, nextNode: TSESTree.Node) {
+      const lastToken = context.sourceCode.getLastToken(node)!
+      const tokenBefore = context.sourceCode.getTokenBefore(lastToken)
+      return lastToken.value === ';' &&
+        lastToken.loc.start.line === nextNode.loc.start.line &&
+        tokenBefore &&
+        tokenBefore.loc.end.line < lastToken.loc.start.line
+        ? tokenBefore
+        : node
+    }
+
     /** The line where the statement and its trailing comments end. */
-    function getEndLine(node: TSESTree.Node) {
+    function getEndLine(node: TSESTree.Node | TSESTree.Token) {
       const comments = getTrailingComments(context.sourceCode, node)
       return comments.at(-1)?.loc.end.line ?? node.loc.end.line
     }
@@ -209,7 +226,7 @@ export default createRule<[Options?], MessageId>({
      * Adds the missing blank lines right after the statement, unless it has a
      * trailing comment.
      */
-    function getFixer(node: TSESTree.Node, count: number) {
+    function getFixer(node: TSESTree.Node | TSESTree.Token, count: number) {
       return (fixer: TSESLint.RuleFixer) => {
         // A trailing comment may belong to this line (eslint-disable-line),
         // the next line (prettier-ignore, ts-ignore) or be a third-party
@@ -242,7 +259,8 @@ export default createRule<[Options?], MessageId>({
 
       const nodePosition = root.body.indexOf(node)
       const nextNode = root.body[nodePosition + 1]
-      const endLine = getEndLine(node)
+      const end = nextNode ? getStatementEnd(node, nextNode) : node
+      const endLine = getEndLine(end)
 
       let nextComment: TSESTree.Comment | undefined
 
@@ -275,9 +293,9 @@ export default createRule<[Options?], MessageId>({
       }
 
       if (nextComment) {
-        commentAfterImport(node, nextComment, 'import')
+        commentAfterImport(node, end, nextComment, 'import')
       } else if (nextNode) {
-        checkForNewLine(node, nextNode, 'import')
+        checkForNewLine(node, end, nextNode, 'import')
       }
     }
 
@@ -317,16 +335,14 @@ export default createRule<[Options?], MessageId>({
             (!nextRequireCall ||
               !containsNodeOrEqual(nextStatement, nextRequireCall))
           ) {
+            const end = getStatementEnd(statementWithRequireCall, nextStatement)
             let nextComment
             if (
               'comments' in statementWithRequireCall.parent &&
               statementWithRequireCall.parent.comments !== undefined &&
               options.considerComments
             ) {
-              const endLine = Math.max(
-                node.loc.end.line,
-                getEndLine(statementWithRequireCall),
-              )
+              const endLine = Math.max(node.loc.end.line, getEndLine(end))
               nextComment = statementWithRequireCall.parent.comments.find(
                 o =>
                   o.loc.start.line > endLine &&
@@ -338,12 +354,14 @@ export default createRule<[Options?], MessageId>({
             if (nextComment && nextComment !== undefined) {
               commentAfterImport(
                 statementWithRequireCall,
+                end,
                 nextComment,
                 'require',
               )
             } else {
               checkForNewLine(
                 statementWithRequireCall,
+                end,
                 nextStatement,
                 'require',
               )

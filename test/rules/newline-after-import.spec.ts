@@ -38,6 +38,13 @@ const REQUIRE_ERROR = createRequireError(1)
 
 ruleTester.run('newline-after-import', rule, {
   valid: [
+    `import foo from 'foo'\n\n;(() => {})()`,
+    `import foo from 'foo'\n\n;[foo].forEach(String)`,
+    `const foo = require('foo')\n\n;(() => {})()`,
+    {
+      code: `import foo from 'foo'\n\n\n;(() => {})()`,
+      options: [{ count: 2, exactCount: true }],
+    },
     {
       // the directive applies to the import line itself, so the rule is off
       code: `import a from 'a' // eslint-disable-line\nfoo()`,
@@ -558,6 +565,45 @@ ruleTester.run('newline-after-import', rule, {
   ],
 
   invalid: [
+    {
+      code: `import foo from 'foo'\n;(() => {})()`,
+      output: `import foo from 'foo'\n\n;(() => {})()`,
+      errors: [{ ...IMPORT_ERROR, line: 1, column: 1 }],
+    },
+    {
+      code: `import {\n  foo,\n} from 'foo'\n;(() => {})()`,
+      output: `import {\n  foo,\n} from 'foo'\n\n;(() => {})()`,
+      errors: [{ ...IMPORT_ERROR, line: 3, column: 1 }],
+    },
+    {
+      code: `const foo = require('foo')\n;(() => {})()`,
+      output: `const foo = require('foo')\n\n;(() => {})()`,
+      errors: [{ ...REQUIRE_ERROR, line: 1, column: 1 }],
+    },
+    {
+      code: `import foo from 'foo'\n\n;(() => {})()`,
+      output: `import foo from 'foo'\n\n\n;(() => {})()`,
+      options: [{ count: 2 }],
+      errors: [{ ...createImportError(2), line: 1, column: 1 }],
+    },
+    {
+      code: `import foo from 'foo'\n;(() => {})()`,
+      output: `import foo from 'foo'\n\n\n;(() => {})()`,
+      options: [{ count: 2 }],
+      errors: [{ ...createImportError(2), line: 1, column: 1 }],
+    },
+    {
+      code: `import foo from 'foo'\n// comment\n;(() => {})()`,
+      output: `import foo from 'foo'\n\n// comment\n;(() => {})()`,
+      options: [{ considerComments: true }],
+      errors: [{ ...IMPORT_ERROR, line: 1, column: 1 }],
+    },
+    {
+      code: `const foo = require('foo')\n// comment\n;(() => {})()`,
+      output: `const foo = require('foo')\n\n// comment\n;(() => {})()`,
+      options: [{ considerComments: true }],
+      errors: [{ ...REQUIRE_ERROR, line: 1, column: 1 }],
+    },
     {
       // third-party line directives keep their target too
       code: `import a from 'a' // prettier-ignore\nfoo()`,

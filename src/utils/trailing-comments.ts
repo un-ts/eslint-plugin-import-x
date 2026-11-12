@@ -6,7 +6,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
  */
 export function getTrailingComments(
   sourceCode: TSESLint.SourceCode,
-  node: TSESTree.Node,
+  node: TSESTree.Node | TSESTree.Token,
 ) {
   const comments: TSESTree.Comment[] = []
   let last: TSESTree.Node | TSESTree.Token = node
