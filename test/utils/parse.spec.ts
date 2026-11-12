@@ -14,7 +14,7 @@ import type {
   PluginSettings,
   RuleContext,
 } from 'eslint-plugin-import-x'
-import { parse } from 'eslint-plugin-import-x/utils'
+import { hasAlternateParser, parse } from 'eslint-plugin-import-x/utils'
 
 const parseStubParser = __importDefault(parseStubParser_).default
 
@@ -382,5 +382,81 @@ describe('parse(content, { settings, ecmaFeatures })', () => {
         },
       } as RuleContext),
     ).not.toThrow()
+  })
+})
+
+const contextWith = (
+  parsersNext: unknown,
+  extra: Record<string, unknown> = {},
+) =>
+  ({
+    settings: { 'import-x/parsers-next': parsersNext, ...extra },
+    parserPath: null,
+    languageOptions: {
+      parser: {
+        parse() {
+          throw new Error('languageOptions.parser should not be used')
+        },
+      },
+    },
+  }) as unknown as ChildContext
+
+describe('settings["import-x/parsers-next"]', () => {
+  const filepath = testFilePath('jsx.js')
+  const content = 'export const a = 1'
+  const ast = { type: 'Program', body: [] }
+
+  it('uses the parser instance mapped to the file extension', () => {
+    const parse_ = jest.fn(() => ast)
+    expect(
+      parse(filepath, content, contextWith({ '.js': { parse: parse_ } })).ast,
+    ).toBe(ast)
+    expect(parse_).toHaveBeenCalledTimes(1)
+  })
+
+  it('accepts extensions without a leading dot', () => {
+    const parse_ = jest.fn(() => ast)
+    parse(filepath, content, contextWith({ js: { parse: parse_ } }))
+    expect(parse_).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls back to the next parser of an array', () => {
+    const failing = jest.fn(() => {
+      throw new Error('cannot parse')
+    })
+    const parse_ = jest.fn(() => ast)
+    expect(
+      parse(
+        filepath,
+        content,
+        contextWith({
+          '.js': [{ parseForESLint: failing }, { parse: parse_ }],
+        }),
+      ).ast,
+    ).toBe(ast)
+    expect(failing).toHaveBeenCalledTimes(1)
+    expect(parse_).toHaveBeenCalledTimes(1)
+  })
+
+  it('takes precedence over import-x/parsers', () => {
+    const parse_ = jest.fn(() => ast)
+    parse(
+      filepath,
+      content,
+      contextWith(
+        { '.js': { parse: parse_ } },
+        { 'import-x/parsers': { 'not-a-parser': ['.js'] } },
+      ),
+    )
+    expect(parse_).toHaveBeenCalledTimes(1)
+  })
+
+  it('is reported by hasAlternateParser', () => {
+    expect(
+      hasAlternateParser(filepath, contextWith({ js: { parse() {} } })),
+    ).toBe(true)
+    expect(
+      hasAlternateParser(filepath, contextWith({ '.ts': { parse() {} } })),
+    ).toBe(false)
   })
 })

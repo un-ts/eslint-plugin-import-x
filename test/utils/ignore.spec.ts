@@ -86,6 +86,17 @@ describe('ignore', () => {
       expect(fileExtensions).toContain('.jsx')
     })
 
+    it('adds the extensions of "import-x/parsers-next", with or without a leading dot', () => {
+      const settings = {
+        'import-x/parsers-next': { '.vue': { parse() {} }, svelte: [] },
+      } as PluginSettings
+
+      const fileExtensions = getFileExtensions(settings)
+
+      expect(fileExtensions).toContain('.vue')
+      expect(fileExtensions).toContain('.svelte')
+    })
+
     it('returns a set with the file extensions configured in "import-x/extension" and "import-x/parsers"', () => {
       const settings: PluginSettings = {
         'import-x/parsers': {
