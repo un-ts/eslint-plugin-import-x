@@ -113,9 +113,10 @@ function getNextParsers(path: string, context: ChildContext | RuleContext) {
   for (const key in parsers) {
     if (normalizeExtension(key) === extension) {
       const parser = parsers[key]
-      return (
+      const list = (
         Array.isArray(parser) ? parser : [parser]
       ) as readonly ParserModule[]
+      return list.length > 0 ? list : undefined
     }
   }
 }

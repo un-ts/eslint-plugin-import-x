@@ -451,6 +451,18 @@ describe('settings["import-x/parsers-next"]', () => {
     expect(parse_).toHaveBeenCalledTimes(1)
   })
 
+  it('treats an empty array as no parser', () => {
+    const parse_ = jest.fn(() => ast)
+    const context = {
+      settings: { 'import-x/parsers-next': { '.js': [] } },
+      parserPath: null,
+      languageOptions: { parser: { parse: parse_ } },
+    } as unknown as ChildContext
+    expect(parse(filepath, content, context).ast).toBe(ast)
+    expect(parse_).toHaveBeenCalledTimes(1)
+    expect(hasAlternateParser(filepath, context)).toBe(false)
+  })
+
   it('is reported by hasAlternateParser', () => {
     expect(
       hasAlternateParser(filepath, contextWith({ js: { parse() {} } })),
