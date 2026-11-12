@@ -85,35 +85,35 @@ import * from './mod.js?minify'
 
 ### Whitelist
 
-This rule compares imports by the path they resolve to. A package can declare the types of several entry points in one file, as `svelte` and `svelte/easing` do, so with a TypeScript resolver they look like the same module. Merging them would break the code.
+This rule compares imports by the path they resolve to. A package can declare the types of several entry points in one file, so with a TypeScript resolver they look like the same module. Merging them would break the code. When that file declares each entry point in its own `declare module` block, as `svelte/types/index.d.ts` does for `svelte`, `svelte/easing` and the rest, the entry points are told apart by their specifiers. For other packages, use the `whitelist` option.
 
 The `whitelist` option is an optional array of groups, each listing the exact specifiers of entry points that are different modules. Specifiers in the same group are never duplicates of each other, unless they are the same specifier:
 
 ```js
-"import-x/no-duplicates": ["error", {"whitelist": [["svelte", "svelte/easing", "svelte/transition"]]}]
+"import-x/no-duplicates": ["error", {"whitelist": [["ui-kit", "ui-kit/easing", "ui-kit/transition"]]}]
 ```
 
 ✅ Valid with the option above
 
 ```js
-import { onMount } from 'svelte'
-import { quintOut } from 'svelte/easing'
-import { scale } from 'svelte/transition'
+import { onMount } from 'ui-kit'
+import { quintOut } from 'ui-kit/easing'
+import { scale } from 'ui-kit/transition'
 ```
 
 ❌ Invalid with the option above
 
 ```js
-import { quintOut } from 'svelte/easing'
-import { linear } from 'svelte/easing'
+import { quintOut } from 'ui-kit/easing'
+import { linear } from 'ui-kit/easing'
 ```
 
 Specifiers must match exactly, there are no wildcards. Everything else is still compared by resolved path, so an entry point that isn't listed, or that is only listed in another group, is a duplicate of the others:
 
 ```js
-// "svelte/store" is not listed, so it is reported along with "svelte"
-import { onMount } from 'svelte'
-import { writable } from 'svelte/store'
+// "ui-kit/store" is not listed, so it is reported along with "ui-kit"
+import { onMount } from 'ui-kit'
+import { writable } from 'ui-kit/store'
 ```
 
 ### Re-exports

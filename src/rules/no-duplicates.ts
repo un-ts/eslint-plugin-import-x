@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils'
 import * as semver from 'semver'
 
@@ -36,6 +38,79 @@ type ImportOrReexport = TSESTree.ImportDeclaration | Reexport
 
 function isListed(group: Set<string>, sourcePath: string) {
   return group.has(sourcePath) || group.has(sourcePath.split('?')[0])
+}
+
+const DECLARATION_FILE_PATTERN = /\.d\.[cm]?ts$/
+const DECLARE_MODULE_PATTERN = /^\s*declare\s+module\s+(['"])(.+?)\1/gm
+
+const declaredModulesCache = new Map<
+  string,
+  { mtimeMs: number; modules: Set<string> }
+>()
+
+/**
+ * The module names a declaration file declares with `declare module '...'`
+ * blocks. Bundlers like dts-buddy put every entry point of a package into one
+ * such file, as svelte does in `svelte/types/index.d.ts`.
+ */
+function getDeclaredModules(filePath: string) {
+  try {
+    const { mtimeMs } = fs.statSync(filePath)
+    let cached = declaredModulesCache.get(filePath)
+    if (cached?.mtimeMs !== mtimeMs) {
+      const content = fs.readFileSync(filePath, 'utf8')
+      cached = {
+        mtimeMs,
+        modules: new Set(
+          Array.from(content.matchAll(DECLARE_MODULE_PATTERN), m => m[2]),
+        ),
+      }
+      declaredModulesCache.set(filePath, cached)
+    }
+    return cached.modules
+  } catch {
+    return
+  }
+}
+
+const getSpecifier = (node: ImportOrReexport) => node.source.value.split('?')[0]
+
+/**
+ * Splits imports that resolve to one declaration file into the entry points it
+ * declares with `declare module`: `svelte` and `svelte/transition` share
+ * `svelte/types/index.d.ts`, but they are different modules.
+ */
+function splitDeclaredModules<T extends ImportOrReexport>(
+  imported: Map<string, T[]>,
+) {
+  const result: Array<[string, T[]]> = []
+  for (const [key, nodes] of imported) {
+    // `considerQueryString` appends the query to the resolved path
+    const resolvedPath = key.split('?')[0]
+    const declared =
+      DECLARATION_FILE_PATTERN.test(resolvedPath) &&
+      new Set(nodes.map(getSpecifier)).size > 1
+        ? getDeclaredModules(resolvedPath)
+        : undefined
+    if (!declared?.size) {
+      result.push([key, nodes])
+      continue
+    }
+    const query = key.slice(resolvedPath.length)
+    const modules = new Map<string, T[]>()
+    for (const node of nodes) {
+      const specifier = getSpecifier(node)
+      const moduleKey = declared.has(specifier) ? specifier + query : key
+      const members = modules.get(moduleKey)
+      if (members) {
+        members.push(node)
+      } else {
+        modules.set(moduleKey, [node])
+      }
+    }
+    result.push(...modules)
+  }
+  return result
 }
 
 function checkImports<T extends ImportOrReexport>(
@@ -855,7 +930,7 @@ export default createRule<[Options?], MessageId>({
      * depend on the order of the imports in the file.
      */
     const splitWhitelisted = <T extends ImportOrReexport>(
-      imported: Map<string, T[]>,
+      imported: Iterable<[string, T[]]>,
     ) => {
       if (!whitelist) {
         return imported
@@ -899,6 +974,10 @@ export default createRule<[Options?], MessageId>({
       }
       return result
     }
+
+    const splitModules = <T extends ImportOrReexport>(
+      imported: Map<string, T[]>,
+    ) => splitWhitelisted(splitDeclaredModules(imported))
 
     const resolvedPaths = new Map<string, string>()
     const resolveCached = (sourcePath: string) => {
@@ -1011,13 +1090,13 @@ export default createRule<[Options?], MessageId>({
       'Program:exit'() {
         for (const parentMaps of moduleMaps.values()) {
           for (const map of parentMaps.values()) {
-            checkImports(splitWhitelisted(map.imported), context)
-            checkImports(splitWhitelisted(map.nsImported), context)
-            checkImports(splitWhitelisted(map.defaultTypesImported), context)
-            checkImports(splitWhitelisted(map.namespaceTypesImported), context)
-            checkImports(splitWhitelisted(map.namedTypesImported), context)
-            checkImports(splitWhitelisted(map.reexported), context, true)
-            checkImports(splitWhitelisted(map.typeReexported), context, true)
+            checkImports(splitModules(map.imported), context)
+            checkImports(splitModules(map.nsImported), context)
+            checkImports(splitModules(map.defaultTypesImported), context)
+            checkImports(splitModules(map.namespaceTypesImported), context)
+            checkImports(splitModules(map.namedTypesImported), context)
+            checkImports(splitModules(map.reexported), context, true)
+            checkImports(splitModules(map.typeReexported), context, true)
           }
         }
       },

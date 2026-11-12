@@ -48,6 +48,25 @@ const sharedDeclarationSettings = {
   ],
 }
 
+// one declaration file with a `declare module` block per entry point, like svelte
+const bundledDeclarationPath = path.resolve(
+  'test/fixtures/bundled-declarations/index.d.ts',
+)
+
+const bundledDeclarationSettings = {
+  'import-x/resolver-next': [
+    {
+      name: 'bundled-declaration-resolver',
+      interfaceVersion: 3,
+      resolve(modulePath: string) {
+        return /^bundled(\/|$)/.test(modulePath)
+          ? { found: true, path: bundledDeclarationPath }
+          : { found: false }
+      },
+    },
+  ],
+}
+
 const sharedDeclarationCollisionSettings = {
   'import-x/resolver-next': [
     {
@@ -67,6 +86,22 @@ const sharedDeclarationCollisionSettings = {
 
 ruleTester.run('no-duplicates', rule, {
   valid: [
+    // #308: entry points declared with `declare module` in one shared
+    // declaration file are different modules
+    tValid({
+      code: "import { a } from 'bundled'; import { b } from 'bundled/sub'",
+      settings: bundledDeclarationSettings,
+    }),
+    tValid({
+      code: "import type { a } from 'bundled'; import type { b } from 'bundled/sub'",
+      settings: bundledDeclarationSettings,
+    }),
+    tValid({
+      code: "import { a } from 'bundled?raw'; import { b } from 'bundled/sub?raw'",
+      options: [{ considerQueryString: true }],
+      settings: bundledDeclarationSettings,
+    }),
+
     // #505: entry points of a whitelisted package are different modules
     tValid({
       code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'; import { scale } from 'svelte/transition'",
@@ -185,6 +220,28 @@ ruleTester.run('no-duplicates', rule, {
     }),
   ],
   invalid: [
+    // #308: the same declared entry point is still a duplicate
+    tInvalid({
+      code: "import { a } from 'bundled'; import { b } from 'bundled/sub'; import { c } from 'bundled'",
+      output:
+        "import { a, c } from 'bundled'; import { b } from 'bundled/sub'; ",
+      settings: bundledDeclarationSettings,
+      errors: [
+        createDuplicatedError('bundled'),
+        createDuplicatedError('bundled'),
+      ],
+    }),
+    tInvalid({
+      code: "import { b } from 'bundled/sub'; import { a } from 'bundled'; import { c } from 'bundled/sub?raw'",
+      output:
+        "import { b, c } from 'bundled/sub'; import { a } from 'bundled'; ",
+      settings: bundledDeclarationSettings,
+      errors: [
+        createDuplicatedError('bundled/sub'),
+        createDuplicatedError('bundled/sub'),
+      ],
+    }),
+
     // #505: without the whitelist these share a resolved path, so they are duplicates
     tInvalid({
       code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'",
