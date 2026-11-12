@@ -13,6 +13,8 @@
       "import": "../outside.js",
       "default": null
     },
+    "./root-directory": "./",
+    "./directory": "./src/",
     "./fallback": [
       "../outside.js",
       "./index.js"

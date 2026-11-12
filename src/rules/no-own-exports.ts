@@ -50,10 +50,15 @@ function hasInvalidSegment(value: string) {
 
 // Whether a target, possibly nested in conditions or fallback arrays, maps to
 // a file under at least one set of conditions; `null` excludes the subpath.
-// A string target must start with `./` and stay inside the package.
+// A string target must start with `./`, stay inside the package and not end in
+// `/`: a directory target cannot be loaded (`ERR_UNSUPPORTED_DIR_IMPORT`).
 function hasExportTarget(target: unknown): boolean {
   if (typeof target === 'string') {
-    return target.startsWith('./') && !hasInvalidSegment(target.slice(2))
+    return (
+      target.startsWith('./') &&
+      !target.endsWith('/') &&
+      !hasInvalidSegment(target.slice(2))
+    )
   }
   if (Array.isArray(target)) {
     return target.some(hasExportTarget)

@@ -68,6 +68,11 @@ ruleTester.run('no-own-exports', rule, {
       code: 'import pkg from "no-own-exports-subpath-only"',
       filename: testFilePath('no-own-exports/subpath-only/index.js'),
     }),
+    // A string `exports` only exposes the package root
+    tValid({
+      code: 'import sub from "no-own-exports-string-exports/index.js"',
+      filename: testFilePath('no-own-exports/string-exports/index.js'),
+    }),
     tValid({
       code: 'import sub from "no-own-exports-conditional/sub"',
       filename: testFilePath('no-own-exports/conditional/index.js'),
@@ -83,6 +88,9 @@ ruleTester.run('no-own-exports', rule, {
       'no-own-exports-invalid-targets/node-modules',
       'no-own-exports-invalid-targets/absolute',
       'no-own-exports-invalid-targets/conditional',
+      // a directory target cannot be loaded
+      'no-own-exports-invalid-targets/root-directory',
+      'no-own-exports-invalid-targets/directory',
     ].map(importPath =>
       tValid({
         code: `import pkg from "${importPath}"`,
@@ -206,6 +214,19 @@ ruleTester.run('no-own-exports', rule, {
           data: {
             importPath: 'no-own-exports-subpath-only/utils',
             packageName: 'no-own-exports-subpath-only',
+          },
+        },
+      ],
+    }),
+    tInvalid({
+      code: 'import pkg from "no-own-exports-string-exports"',
+      filename: testFilePath('no-own-exports/string-exports/index.js'),
+      errors: [
+        {
+          messageId: 'ownExports',
+          data: {
+            importPath: 'no-own-exports-string-exports',
+            packageName: 'no-own-exports-string-exports',
           },
         },
       ],
