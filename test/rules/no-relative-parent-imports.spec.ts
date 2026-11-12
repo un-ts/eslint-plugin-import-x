@@ -180,6 +180,14 @@ ruleTester.run('no-relative-parent-imports', rule, {
       errors: [createNoAllowedError('index.js', '../lib/foo.js')],
     }),
     tInvalid({
+      code: 'import foo from "../../../src/lib/foo.js"',
+      ...resolvingTo(
+        path.join(sharedDir, 'src/lib/foo.js'),
+        path.join(sharedDir, 'apps/x/src/index.js'),
+      ),
+      errors: [createNoAllowedError('index.js', '../../../src/lib/foo.js')],
+    }),
+    tInvalid({
       code: 'import foo from "#plugin"',
       settings: subpathImportSettings,
       errors: [createNoAllowedError('index.js', '#plugin')],
