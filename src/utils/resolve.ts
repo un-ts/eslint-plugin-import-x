@@ -170,8 +170,8 @@ function isValidNewResolver(resolver: unknown): resolver is NewResolver {
 
 // Memoize resolver instances by their option signature.
 //
-// `createNodeResolver` constructs a fresh `unrs-resolver` `ResolverFactory` on
-// every call. `unrs-resolver` is a Rust binding that allocates native memory
+// `createNodeResolver` constructs a fresh `oxc-resolver` `ResolverFactory` on
+// every call. `oxc-resolver` is a Rust binding that allocates native memory
 // not visible to V8's heap limits, so creating one per import resolution
 // causes RSS to grow without bound over a lint run and eventually OOMs the
 // worker — observed on a large lerna monorepo where a single ESLint worker
@@ -196,7 +196,7 @@ function getCachedNodeResolver(opts: Parameters<typeof createNodeResolver>[0]) {
 }
 
 /**
- * Clear all memoized `unrs-resolver` instances and their internal FS caches.
+ * Clear all memoized `oxc-resolver` instances and their internal FS caches.
  *
  * This is primarily useful in tests where files are created, renamed, or
  * deleted between resolve calls. In production lint runs files don't change
