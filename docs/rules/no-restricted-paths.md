@@ -24,7 +24,7 @@ Each zone consists of the `target` paths, a `from` paths, and an optional `excep
   - an array of multiple directory string path
   - an array of multiple glob patterns
 - `except` may be defined for a zone, allowing exception paths that would otherwise violate the related `from`. Note that it does not alter the behaviour of `target` in any way.
-  - in case `from` contains only glob patterns, `except` must be an array of glob patterns as well
+  - in case `from` contains only glob patterns, `except` must be an array of glob patterns as well. They are matched both as written and resolved against `basePath`, the same way as `target` and `from`
   - in case `from` contains only directory path, `except` is relative to `from` and cannot backtrack to a parent directory
 - `message` - will be displayed in case of the rule violation.
 
