@@ -1,0 +1,5 @@
+{
+  "name": "events",
+  "description": "Package named after a Node.js built-in, which takes precedence over a self-reference",
+  "exports": "./index.js"
+}
