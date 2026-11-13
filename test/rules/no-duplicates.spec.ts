@@ -1,5 +1,7 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
+import { jest } from '@jest/globals'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import { TSESLint } from '@typescript-eslint/utils'
@@ -2139,4 +2141,48 @@ describe('TypeScript', () => {
     )
     expect(output).toBe("import  {type x,type y, z} from './foo'; ")
   })
+})
+
+it('does not read a declaration file whose imports the whitelist splits', () => {
+  const declarationPath = path.resolve(
+    'test/fixtures/bundled-declarations/whitelisted.d.ts',
+  )
+  const readFileSync = jest.spyOn(fs, 'readFileSync')
+  try {
+    const linter = new TSESLint.Linter({ configType: 'flat' })
+    const messages = linter.verify(
+      "import { a } from 'whitelisted'; import { b } from 'whitelisted/sub'; import { c } from 'whitelisted'",
+      [
+        {
+          plugins: { 'import-x': { rules: { 'no-duplicates': rule } } },
+          rules: {
+            'import-x/no-duplicates': [
+              'error',
+              { whitelist: [['whitelisted', 'whitelisted/sub']] },
+            ],
+          },
+          settings: {
+            'import-x/resolver-next': [
+              {
+                name: 'whitelisted-declaration-resolver',
+                interfaceVersion: 3,
+                resolve: (modulePath: string) =>
+                  /^whitelisted(\/|$)/.test(modulePath)
+                    ? { found: true, path: declarationPath }
+                    : { found: false },
+              },
+            ],
+          },
+        },
+      ],
+      { filename: 'foo.js' },
+    )
+    expect(messages.map(({ message }) => message)).toEqual([
+      "'whitelisted' imported multiple times.",
+      "'whitelisted' imported multiple times.",
+    ])
+    expect(readFileSync).not.toHaveBeenCalledWith(declarationPath, 'utf8')
+  } finally {
+    readFileSync.mockRestore()
+  }
 })

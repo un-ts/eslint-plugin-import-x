@@ -83,11 +83,13 @@ const getSpecifier = (node: ImportOrReexport) => node.source.value.split('?')[0]
 /**
  * Splits imports that resolve to one declaration file into the entry points it
  * declares with `declare module`: `svelte` and `svelte/transition` share
- * `svelte/types/index.d.ts`, but they are different modules.
+ * `svelte/types/index.d.ts`, but they are different modules. A file isn't
+ * read when the whitelist already keeps all of its specifiers apart.
  */
 function splitDeclaredModules<T extends ImportOrReexport>(
   imported: Map<string, T[]>,
   context: RuleContext,
+  isSplitByWhitelist: (specifiers: string[]) => boolean,
 ) {
   const result: Array<[string, T[]]> = []
   for (const [key, nodes] of imported) {
@@ -95,7 +97,8 @@ function splitDeclaredModules<T extends ImportOrReexport>(
     const resolvedPath = key.split('?')[0]
     const declared =
       DECLARATION_FILE_PATTERN.test(resolvedPath) &&
-      new Set(nodes.map(getSpecifier)).size > 1
+      new Set(nodes.map(getSpecifier)).size > 1 &&
+      !isSplitByWhitelist([...new Set(nodes.map(node => node.source.value))])
         ? getDeclaredModules(resolvedPath, context)
         : undefined
     if (!declared?.size) {
@@ -902,6 +905,12 @@ export default createRule<[Options?], MessageId>({
           : isListed(group, a) && isListed(group, b),
       )
 
+    const isSplitByWhitelist = (specifiers: string[]) =>
+      !!whitelist &&
+      specifiers.every((a, i) =>
+        specifiers.slice(i + 1).every(b => areDifferentModules(a, b)),
+      )
+
     // where a specifier first appears in the whitelist, unlisted ones last
     const getWhitelistRank = (specifier: string) => {
       let rank = 0
@@ -983,7 +992,10 @@ export default createRule<[Options?], MessageId>({
 
     const splitModules = <T extends ImportOrReexport>(
       imported: Map<string, T[]>,
-    ) => splitWhitelisted(splitDeclaredModules(imported, context))
+    ) =>
+      splitWhitelisted(
+        splitDeclaredModules(imported, context, isSplitByWhitelist),
+      )
 
     const resolvedPaths = new Map<string, string>()
     const resolveCached = (sourcePath: string) => {
