@@ -1,0 +1,5 @@
+{
+  "name": "no-self-package-import-string-exports",
+  "description": "Package whose exports is a string, shorthand for its root",
+  "exports": "./index.js"
+}
