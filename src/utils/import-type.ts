@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import type { LiteralNodeValue, PluginSettings, RuleContext } from '../types.js'
 
-import { getContextPackagePath } from './package-path.js'
+import { getContextPackagePathFor } from './package-path.js'
 import { resolve } from './resolve.js'
 
 /**
@@ -237,7 +237,7 @@ function isExternalPath(
   }
 
   const { settings } = context
-  const packagePath = getContextPackagePath(context)
+  const packagePath = getContextPackagePathFor(context, filepath)
 
   if (path.relative(packagePath, filepath).startsWith('..')) {
     return true
@@ -269,7 +269,7 @@ function isInternalPath(
   if (!filepath) {
     return false
   }
-  const packagePath = getContextPackagePath(context)
+  const packagePath = getContextPackagePathFor(context, filepath)
   return !path.relative(packagePath, filepath).startsWith('../')
 }
 
