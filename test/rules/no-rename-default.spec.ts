@@ -45,6 +45,13 @@ ruleTester.run('no-rename-default', rule, {
     tValid({ code: `import _ from './no-rename-default/binary-in'` }),
     // an arrow function's parameter is not the default's name
     tValid({ code: `import _ from './no-rename-default/paren-arrow'` }),
+    // an assignment names the default only when it *is* the whole expression —
+    // parentheses must not turn a sequence, a binary or a call argument into one
+    tValid({
+      code: `import _ from './no-rename-default/paren-assign-continued'`,
+    }),
+    tValid({ code: `import _ from './no-rename-default/paren-sequence'` }),
+    tValid({ code: `import _ from './no-rename-default/call-assign'` }),
   ],
   invalid: [],
 })
@@ -91,6 +98,8 @@ ruleTester.run('no-rename-default', rule, {
 // assign-generator.js
 // assign-generator-named.js
 // curried-hoc.js
+// `assign-*.js` are parenthesized by prettier (`export default (fn = ...)`),
+// so they also cover the wrapped-assignment form.
 ruleTester.run('no-rename-default', rule, {
   valid: [
     `import arrow from './no-rename-default/assign-arrow'`,
@@ -191,6 +200,23 @@ ruleTester.run('no-rename-default', rule, {
             requiresOrImports: 'imports',
             importName: 'myFn',
             suggestion: "import fn from './no-rename-default/assign-fn-named'",
+          },
+          'ImportDefaultSpecifier',
+        ),
+      ],
+    }),
+    tInvalid({
+      // the quoted `//` must survive comment stripping
+      code: `import myFn from './no-rename-default/assign-string-url'`,
+      errors: [
+        createRenameDefaultError(
+          {
+            importBasename: 'assign-string-url.js',
+            defaultExportName: 'fn',
+            requiresOrImports: 'imports',
+            importName: 'myFn',
+            suggestion:
+              "import fn from './no-rename-default/assign-string-url'",
           },
           'ImportDefaultSpecifier',
         ),

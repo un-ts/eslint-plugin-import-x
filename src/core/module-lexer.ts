@@ -78,8 +78,8 @@ export interface LexedEsModule {
    * assignments as call arguments (`withHoc(Foo = 1)`), ASI-continued
    * default expressions, a curried call whose inner call does not start with
    * a name (`connect(() => x)(Comp)`), parenthesized names followed by more
-   * arguments (`withHoc((Foo), b)`), further arguments containing
-   * strings, templates or `/`, and names written with escape sequences.
+   * arguments (`withHoc((Foo), b)`), expressions containing templates or `/`,
+   * and names written with escape sequences.
    */
   defaultExportSourceName?: DefaultExportSourceName
 }
@@ -294,6 +294,17 @@ function hasUnlexableExportHead(content: string) {
 }
 
 const EXPORT_DEFAULT_PATTERN = /^export\s+default\s+/
+/**
+ * Quoted string literals and comments, matched in a single pass so that neither
+ * can be mistaken for the other: an apostrophe inside a comment must not open a
+ * string (it would pair with a quote in a *later* statement and swallow the
+ * name), and `//` or `/*` inside a string must not open a comment. Strings are
+ * blanked with `0`, comments with a single space — that keeps the two tokens
+ * apart without keeping their contents. A string never spans lines, hence the
+ * `\n` exclusions.
+ */
+const STRING_OR_COMMENT_PATTERN =
+  /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|\/\*[\s\S]*?\*\/|\/\/.*$/gm
 /** A call head, member callees included: `withHoc(`, `React.memo(`. */
 const CALL_HEAD_PATTERN = new RegExp(
   String.raw`^${IDENTIFIER}(?:\s*\.\s*${IDENTIFIER})*\s*\(\s*`,
@@ -353,9 +364,10 @@ function isExpressionEnd(rest: string) {
 
 /**
  * `text` starts at the `,` after a call's first argument: skip the remaining
- * arguments and return the text from the call's closing `)`. Gives up on
- * strings, templates and `/` (regex or division), whose contents can't be
- * balanced without a tokenizer.
+ * arguments and return the text from the call's closing `)`. String literals
+ * are already masked. Gives up on templates, `/` (regex or division) and any
+ * quote the masking pass could not balance, whose contents can't be read
+ * without a tokenizer.
  */
 function skipToCallClose(text: string): string | undefined {
   let depth = 0
@@ -376,10 +388,86 @@ function skipToCallClose(text: string): string | undefined {
         depth--
         break
       }
-      case "'":
-      case '"':
+      // template literals (their `${}` parts are full expressions), `/`
+      // (either a regex or a division) and literals the masking pass could not
+      // balance — a line continuation, or a slice that cut one in half — can't
+      // be read without a tokenizer
       case '`':
-      case '/': {
+      case '/':
+      case "'":
+      case '"': {
+        return
+      }
+    }
+  }
+}
+
+/**
+ * Blank out quoted string literals and comments in one pass, keeping the length
+ * of strings so offsets survive, and trimming the leading whitespace.
+ */
+function maskStringsAndStripComments(text: string) {
+  return text
+    .replaceAll(STRING_OR_COMMENT_PATTERN, match =>
+      match[0] === '/' ? ' ' : '0'.repeat(match.length),
+    )
+    .trimStart()
+}
+
+/**
+ * `text` starts right after the assignment target, wrapped by `count`
+ * parentheses: skip the right-hand side and return the text past their closing
+ * `)`. A `,` at depth 0 means a sequence expression, so the assignment is not
+ * the whole default.
+ *
+ * Expects string literals and comments already blanked by
+ * `maskStringsAndStripComments`. Templates, `/` and literals the masking pass
+ * could not balance are rejected *during* the scan — never up front, since
+ * `text` runs on into the rest of the source slice and a later statement must
+ * not affect this verdict.
+ */
+function skipToWrapperClose(text: string, count: number): string | undefined {
+  let depth = 0
+  for (let i = 0; i < text.length; i++) {
+    switch (text[i]) {
+      case '(':
+      case '[':
+      case '{': {
+        depth++
+        break
+      }
+      case ')':
+      case ']':
+      case '}': {
+        if (depth > 0) {
+          depth--
+          break
+        }
+        // the right-hand side ends here: the remaining wrappers must close
+        // right after it, or the assignment is not the whole default
+        let rest = text.slice(i + 1)
+        for (let left = count - 1; left > 0; left--) {
+          rest = rest.trimStart()
+          if (!rest.startsWith(')')) {
+            return
+          }
+          rest = rest.slice(1)
+        }
+        return rest
+      }
+      case ',': {
+        if (depth === 0) {
+          return
+        }
+        break
+      }
+      // template literals (their `${}` parts are full expressions), `/`
+      // (either a regex or a division) and literals the masking pass could not
+      // balance can't be read without a tokenizer
+      case '`':
+      case '/':
+      case "'":
+      case '"': {
         return
       }
     }
@@ -466,6 +554,18 @@ function deriveDefaultExportSourceName(
         return
       }
       rest = close
+    }
+    // `export default (Foo = ...)`: the assignment sits inside the parentheses,
+    // so the `opened === 0` branch above never sees it — prettier formats such
+    // defaults this way since v3.9. Only bare parentheses are handled here: an
+    // assignment as the first call argument (`withHoc(Foo = 1)`) is one of the
+    // fail-open corners documented on `LexedEsModule` — the AST route names it
+    // through `arguments[0]`, this lexer gives up.
+    if (!sawCall && /^=(?![=>])/.test(rest)) {
+      const afterClose = skipToWrapperClose(rest, opened)
+      return afterClose !== undefined && isExpressionEnd(afterClose.trimStart())
+        ? { name, isBoundName: true, isIdentifier: false }
+        : undefined
     }
     for (; opened > 0; opened--) {
       if (!rest.startsWith(')')) {
@@ -702,7 +802,9 @@ export function lexModule(
       if (exp.localName == null) {
         // an expression default: only the statement text can name it
         const derived = deriveDefaultExportSourceName(
-          stripComments(content.slice(exp.exportStart, exp.exportStart + 512)),
+          maskStringsAndStripComments(
+            content.slice(exp.exportStart, exp.exportStart + 512),
+          ),
         )
         if (derived) {
           const { name, isBoundName, isIdentifier } = derived

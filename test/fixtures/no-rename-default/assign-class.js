@@ -1,1 +1,1 @@
-export default User = class {}
+export default (User = class {})

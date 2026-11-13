@@ -62,8 +62,8 @@ Given:
 ---
 settings:
   import-x/ignore:
-    - node_modules  # included by default, but replaced if explicitly configured
-    - *.coffee$     # can't parse CoffeeScript (unless a custom polyglot parser was configured)
+    - node_modules # included by default, but replaced if explicitly configured
+    - *.coffee$ # can't parse CoffeeScript (unless a custom polyglot parser was configured)
 ```
 
 and
