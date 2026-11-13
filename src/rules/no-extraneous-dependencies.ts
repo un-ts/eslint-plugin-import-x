@@ -218,15 +218,15 @@ function checkDependencyDeclaration(
   return packageHierarchy.reduce(
     (result, ancestorName) => ({
       isInDeps:
-        result.isInDeps || deps.dependencies[ancestorName] !== undefined,
+        result.isInDeps || Object.hasOwn(deps.dependencies, ancestorName),
       isInDevDeps:
-        result.isInDevDeps || deps.devDependencies[ancestorName] !== undefined,
+        result.isInDevDeps || Object.hasOwn(deps.devDependencies, ancestorName),
       isInOptDeps:
         result.isInOptDeps ||
-        deps.optionalDependencies[ancestorName] !== undefined,
+        Object.hasOwn(deps.optionalDependencies, ancestorName),
       isInPeerDeps:
         result.isInPeerDeps ||
-        deps.peerDependencies[ancestorName] !== undefined,
+        Object.hasOwn(deps.peerDependencies, ancestorName),
       isInBundledDeps:
         result.isInBundledDeps ||
         deps.bundledDependencies.includes(ancestorName),
@@ -253,6 +253,19 @@ function runtimePackageNameFromTypesPackageName(packageName: string) {
     : innerPackageName
 }
 
+function isAllowed(
+  declarationStatus: DepDeclaration,
+  depsOptions: DepsOptions,
+) {
+  return (
+    declarationStatus.isInDeps ||
+    (depsOptions.allowDevDeps && declarationStatus.isInDevDeps) ||
+    (depsOptions.allowPeerDeps && declarationStatus.isInPeerDeps) ||
+    (depsOptions.allowOptDeps && declarationStatus.isInOptDeps) ||
+    (depsOptions.allowBundledDeps && declarationStatus.isInBundledDeps)
+  )
+}
+
 function reportIfMissing(
   context: RuleContext<MessageId>,
   deps: PackageDeps,
@@ -261,6 +274,7 @@ function reportIfMissing(
   name: string,
   whitelist: Set<string> | undefined,
   selfPackage: PackageIdentity | undefined,
+  providers: Map<string, string[]>,
 ) {
   const isTypeImport = isTypeOnlyImportOrExport(node)
 
@@ -312,13 +326,7 @@ function reportIfMissing(
 
   let declarationStatus = checkDependencyDeclaration(deps, importPackageName)
 
-  if (
-    declarationStatus.isInDeps ||
-    (depsOptions.allowDevDeps && declarationStatus.isInDevDeps) ||
-    (depsOptions.allowPeerDeps && declarationStatus.isInPeerDeps) ||
-    (depsOptions.allowOptDeps && declarationStatus.isInOptDeps) ||
-    (depsOptions.allowBundledDeps && declarationStatus.isInBundledDeps)
-  ) {
+  if (isAllowed(declarationStatus, depsOptions)) {
     return
   }
 
@@ -336,13 +344,7 @@ function reportIfMissing(
       declarationStatus,
     )
 
-    if (
-      declarationStatus.isInDeps ||
-      (depsOptions.allowDevDeps && declarationStatus.isInDevDeps) ||
-      (depsOptions.allowPeerDeps && declarationStatus.isInPeerDeps) ||
-      (depsOptions.allowOptDeps && declarationStatus.isInOptDeps) ||
-      (depsOptions.allowBundledDeps && declarationStatus.isInBundledDeps)
-    ) {
+    if (isAllowed(declarationStatus, depsOptions)) {
       return
     }
   }
@@ -360,6 +362,21 @@ function reportIfMissing(
   // What matters is the runtime package, not an alias that resolved to its types
   if (runtimePackageName) {
     declarationStatus = checkDependencyDeclaration(deps, runtimePackageName)
+  }
+
+  // a package that a declared metapackage provides is declared the same way
+  const metapackages = providers.get(packageName)
+  if (metapackages) {
+    for (const metapackage of metapackages) {
+      declarationStatus = checkDependencyDeclaration(
+        deps,
+        metapackage,
+        declarationStatus,
+      )
+    }
+    if (isAllowed(declarationStatus, depsOptions)) {
+      return
+    }
   }
 
   if (declarationStatus.isInDevDeps && !depsOptions.allowDevDeps) {
@@ -422,6 +439,7 @@ export interface Options {
   includeInternal?: boolean
   includeTypes?: boolean
   whitelist?: string[]
+  transitiveDependencies?: Record<string, string[]>
 }
 
 export type MessageId =
@@ -452,6 +470,13 @@ export default createRule<[Options?], MessageId>({
           includeInternal: { type: ['boolean'] },
           includeTypes: { type: ['boolean'] },
           whitelist: { type: ['array'] },
+          transitiveDependencies: {
+            type: 'object',
+            additionalProperties: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
         },
         additionalProperties: false,
       },
@@ -479,6 +504,19 @@ export default createRule<[Options?], MessageId>({
       getDependencies(context, closestPackageJsonPath, options.packageDir) ||
       extractDepFields({})
     const selfPackage = getSelfPackage(closestPackageJsonPath)
+
+    // the metapackages that provide each package
+    const providers = new Map<string, string[]>()
+    for (const [provider, packages] of Object.entries(
+      options.transitiveDependencies ?? {},
+    )) {
+      for (const packageName of packages) {
+        providers.set(packageName, [
+          ...(providers.get(packageName) ?? []),
+          provider,
+        ])
+      }
+    }
 
     const depsOptions = {
       allowDevDeps: testConfig(options.devDependencies, context) !== false,
@@ -510,6 +548,7 @@ export default createRule<[Options?], MessageId>({
             source.value,
             options.whitelist ? new Set(options.whitelist) : undefined,
             selfPackage,
+            providers,
           )
         },
         { commonjs: true },

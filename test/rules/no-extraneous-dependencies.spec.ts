@@ -308,6 +308,27 @@ ruleTester.run('no-extraneous-dependencies', rule, {
         { packageDir: packageDirMonoRepoRoot, whitelist: ['not-a-dependency'] },
       ],
     }),
+    // #158: a package that a declared metapackage provides
+    tValid({
+      code: 'import "not-a-dependency"',
+      filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirMonoRepoRoot,
+          transitiveDependencies: { 'right-pad': ['not-a-dependency'] },
+        },
+      ],
+    }),
+    tValid({
+      code: 'import "not-a-dependency"',
+      filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirMonoRepoRoot,
+          transitiveDependencies: { 'left-pad': ['not-a-dependency'] },
+        },
+      ],
+    }),
     tValid({
       code: 'import "package-named-exports"',
       filename: testFilePath('package-named-exports/index.js'),
@@ -451,6 +472,49 @@ ruleTester.run('no-extraneous-dependencies', rule, {
       options: [{ packageDir: packageDirMonoRepoRoot }],
       errors: [
         { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
+      ],
+    }),
+    // #158: only a metapackage that is declared provides its packages
+    tInvalid({
+      code: 'import "not-a-dependency"',
+      filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirMonoRepoRoot,
+          transitiveDependencies: { 'missing-meta': ['not-a-dependency'] },
+        },
+      ],
+      errors: [
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
+      ],
+    }),
+    // #158: an inherited property is not a declaration
+    tInvalid({
+      code: 'import "not-a-dependency"',
+      filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirMonoRepoRoot,
+          transitiveDependencies: { constructor: ['not-a-dependency'] },
+        },
+      ],
+      errors: [
+        { messageId: 'missing', data: { packageName: 'not-a-dependency' } },
+      ],
+    }),
+    // #158: a metapackage in devDependencies provides dev dependencies
+    tInvalid({
+      code: 'import "not-a-dependency"',
+      filename: path.join(packageDirMonoRepoRoot, 'foo.js'),
+      options: [
+        {
+          packageDir: packageDirMonoRepoRoot,
+          devDependencies: false,
+          transitiveDependencies: { 'left-pad': ['not-a-dependency'] },
+        },
+      ],
+      errors: [
+        { messageId: 'devDep', data: { packageName: 'not-a-dependency' } },
       ],
     }),
     tInvalid({
