@@ -63,11 +63,15 @@
     "watch": "yarn test --watch"
   },
   "peerDependencies": {
+    "@typescript-eslint/parser": "*",
     "@typescript-eslint/utils": "^8.56.0",
     "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0",
     "eslint-import-resolver-node": "*"
   },
   "peerDependenciesMeta": {
+    "@typescript-eslint/parser": {
+      "optional": true
+    },
     "@typescript-eslint/utils": {
       "optional": true
     },
