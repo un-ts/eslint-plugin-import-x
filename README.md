@@ -628,18 +628,19 @@ with `wontfix`.
 A map from file extensions to parser instances, for flat configs. Unlike
 [`import-x/parsers`](#import-xparsers), the parser is passed in rather than
 required by name, so it does not need to be resolvable from the project (with
-pnpm or Yarn PnP, a parser that another plugin brings in is often not). It takes
-precedence over `import-x/parsers` for the same extension.
+pnpm or Yarn PnP, a parser that another package brings in is often not, like
+`@typescript-eslint/parser` under `typescript-eslint`). It takes precedence over
+`import-x/parsers` for the same extension.
 
 ```js
-import tsParser from '@typescript-eslint/parser'
+import tseslint from 'typescript-eslint'
 import vueParser from 'vue-eslint-parser'
 
 export default [
   {
     settings: {
       'import-x/parsers-next': {
-        '.ts': tsParser,
+        '.ts': tseslint.parser,
         '.vue': vueParser,
       },
     },
