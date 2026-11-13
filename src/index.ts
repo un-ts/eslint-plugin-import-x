@@ -63,6 +63,7 @@ import noRelativeParentImports from './rules/no-relative-parent-imports.js'
 import noRenameDefault from './rules/no-rename-default.js'
 import noRestrictedPaths from './rules/no-restricted-paths.js'
 import noSelfImport from './rules/no-self-import.js'
+import noSelfPackageImport from './rules/no-self-package-import.js'
 import noUnassignedImport from './rules/no-unassigned-import.js'
 import noUnresolved from './rules/no-unresolved.js'
 import noUnusedModules from './rules/no-unused-modules.js'
@@ -93,6 +94,7 @@ const rules = {
   'consistent-type-specifier-style': consistentTypeSpecifierStyle,
 
   'no-self-import': noSelfImport,
+  'no-self-package-import': noSelfPackageImport,
   'no-cycle': noCycle,
   'no-named-default': noNamedDefault,
   'no-named-as-default': noNamedAsDefault,

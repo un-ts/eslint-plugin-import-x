@@ -1,0 +1,5 @@
+{
+  "name": "no-self-package-import-without-exports",
+  "description": "Package without exports, so it cannot import itself",
+  "main": "index.js"
+}
