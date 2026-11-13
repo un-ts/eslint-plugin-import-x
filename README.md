@@ -302,6 +302,7 @@ settings:
 | [no-relative-parent-imports](docs/rules/no-relative-parent-imports.md) | Forbid importing modules from parent directories.                                    |             |     |       |     |     |     |
 | [no-restricted-paths](docs/rules/no-restricted-paths.md)               | Enforce which files can be imported in a given folder.                               |             |     |       |     |     |     |
 | [no-self-import](docs/rules/no-self-import.md)                         | Forbid a module from importing itself.                                               |             |     |       |     |     |     |
+| [no-self-package-import](docs/rules/no-self-package-import.md)         | Forbid a package from importing itself through its own `exports` map.                |             |     |       |     |     |     |
 | [no-unresolved](docs/rules/no-unresolved.md)                           | Ensure imports point to a file/module that can be resolved.                          | ❗ ❗ ☑️ ☑️ |     |       |     |     |     |
 | [no-useless-path-segments](docs/rules/no-useless-path-segments.md)     | Forbid unnecessary path segments in import and require statements.                   |             |     |       | 🔧  |     |     |
 | [no-webpack-loader-syntax](docs/rules/no-webpack-loader-syntax.md)     | Forbid webpack loader syntax in imports.                                             |             |     |       |     |     |     |

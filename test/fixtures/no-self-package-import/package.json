@@ -1,0 +1,11 @@
+{
+  "name": "@no-self-package-import/package",
+  "description": "Package that can import itself through its exports",
+  "exports": {
+    ".": "./index.js",
+    "./sub": "./src/sub.js",
+    "./features/*": "./src/features/*.js",
+    "./features/internal/*": null,
+    "./folder/": "./src/sub.js"
+  }
+}

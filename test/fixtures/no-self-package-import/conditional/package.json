@@ -1,0 +1,8 @@
+{
+  "name": "no-self-package-import-conditional",
+  "description": "Package whose exports only map its root, by condition",
+  "exports": {
+    "import": "./index.js",
+    "require": null
+  }
+}
