@@ -74,6 +74,14 @@ import './pages/index' // should be "./pages" (auto-fixable)
 import './pages/index.js' // should be "./pages" (auto-fixable)
 ```
 
+The option also checks aliased imports (for example `@/pages/index` with a `@` path alias) when they resolve to a file inside the project. These are only reported when the shorter path resolves to the same file and keeps more than the alias itself (`@/index` is not changed to `@`). An import is never shortened to an alias root either, such as `app/components/index` to `app/components` with an `app/components` alias: a wildcard mapping `app/components/*` does not guarantee that the bare root is a valid import path. The shorter path is only used when a sibling file of the target directory resolves through the same prefix, which shows the alias root sits higher up.
+
+```js
+import '@/pages/index' // should be "@/pages" (auto-fixable)
+```
+
+These checks use the resolver configured in `import-x/resolver-next`, not the TypeScript compiler or your bundler. If the resolver accepts a path that another tool does not, the fix can produce an import that only that tool rejects. For example, a TypeScript `paths` entry `"app/fixtures/importType/*"` maps `app/fixtures/importType/index` but not the bare `app/fixtures/importType`. Keep the resolver settings in line with your `tsconfig.json` (for example with `eslint-import-resolver-typescript`), or turn `noUselessIndex` off if they differ. Node subpath imports (`#app/pages/index`) are not checked, because ESM does not accept a bare directory path there.
+
 Note: `noUselessIndex` only avoids ambiguous imports for `.js` files if you haven't specified other resolved file extensions. See [Settings: import-x/extensions](https://github.com/import-js/eslint-plugin-import#importextensions) for details.
 
 ### commonjs

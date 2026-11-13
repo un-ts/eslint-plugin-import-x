@@ -1,5 +1,6 @@
 /** Ensures that there are no useless path segments */
 
+import fs from 'node:fs'
 import path from 'node:path'
 
 import type { ModuleOptions } from '../utils/index.js'
@@ -8,6 +9,7 @@ import {
   moduleVisitor,
   resolve,
   getFileExtensions,
+  importType,
 } from '../utils/index.js'
 
 /**
@@ -96,8 +98,79 @@ export default createRule<[Options?], MessageId>({
         })
       }
 
-      // Only relative imports are relevant for this rule --> Skip checking
+      const fileExtensions = getFileExtensions(context.settings)
+      const regexUnnecessaryIndex = new RegExp(
+        `.*\\/index(\\${[...fileExtensions].join('|\\')})?$`,
+      )
+
+      /**
+       * Whether `importDir` (e.g. `@/pages`, resolving to
+       * `<root>/pages/index.js`) is below its alias root rather than being the
+       * alias root itself. It is when a sibling file of the target directory
+       * resolves through the same prefix (`@/bar.js` -> `<root>/bar.js`), which
+       * an alias root of exactly `app/components` would not allow.
+       */
+      function isBelowAliasRoot(importDir: string, resolvedPath: string) {
+        const targetDir = path.dirname(resolvedPath)
+        if (path.basename(targetDir) !== path.posix.basename(importDir)) {
+          return false
+        }
+        const outerDir = path.dirname(targetDir)
+        const prefix = path.posix.dirname(importDir)
+        let entries: fs.Dirent[]
+        try {
+          entries = fs.readdirSync(outerDir, { withFileTypes: true })
+        } catch {
+          return false
+        }
+        return entries.some(
+          entry =>
+            entry.isFile() &&
+            resolve(`${prefix}/${entry.name}`, context) ===
+              path.join(outerDir, entry.name),
+        )
+      }
+
+      // Only relative imports are relevant for this rule, except for a useless
+      // index in an aliased import of a local file (e.g. `@/foo/index.js`).
+      // Node subpath imports (`#app/pages/index`) are excluded: ESM rejects
+      // bare directory paths like `#app/pages` even when a resolver accepts them.
       if (!importPath.startsWith('.')) {
+        if (
+          options.noUselessIndex &&
+          regexUnnecessaryIndex.test(importPath) &&
+          !importPath.startsWith('#') &&
+          importType(importPath, context) === 'internal'
+        ) {
+          const resolvedPath = resolve(importPath, context)
+          const parentDirectory = path.posix.dirname(importPath)
+
+          // Only propose a path that the resolver maps to the same file, and
+          // never a bare alias root like `@`, which the build config may not
+          // support even if the resolver does (`@/*` without `@` in tsconfig).
+          // The same goes for any alias root, such as `app/components` or
+          // `@scope/lib`: a wildcard mapping `app/components/*` does not imply
+          // that the bare `app/components` is valid, so `isBelowAliasRoot`
+          // checks that the alias root sits above the proposed path.
+          // Skip when the resolved path is inside node_modules: internal-regex
+          // can make importType return 'internal' for a node_modules alias, but
+          // we must not auto-fix external package imports.
+          if (
+            resolvedPath &&
+            parentDirectory.includes('/') &&
+            !resolvedPath.includes(`${path.sep}node_modules${path.sep}`) &&
+            isBelowAliasRoot(parentDirectory, resolvedPath)
+          ) {
+            for (const proposedPath of [
+              parentDirectory,
+              `${parentDirectory}/`,
+            ]) {
+              if (resolve(proposedPath, context) === resolvedPath) {
+                return reportWithProposedPath(proposedPath)
+              }
+            }
+          }
+        }
         return
       }
 
@@ -108,11 +181,6 @@ export default createRule<[Options?], MessageId>({
       if (normedPath !== importPath && resolvedPath === resolvedNormedPath) {
         return reportWithProposedPath(normedPath)
       }
-
-      const fileExtensions = getFileExtensions(context.settings)
-      const regexUnnecessaryIndex = new RegExp(
-        `.*\\/index(\\${[...fileExtensions].join('|\\')})?$`,
-      )
 
       // Check if path contains unnecessary index (including a configured extension)
       if (options.noUselessIndex && regexUnnecessaryIndex.test(importPath)) {
