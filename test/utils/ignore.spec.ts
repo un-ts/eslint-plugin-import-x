@@ -88,7 +88,9 @@ describe('ignore', () => {
 
     it('adds the extensions of "import-x/parsers-next", with or without a leading dot', () => {
       const settings = {
-        'import-x/parsers-next': { '.vue': { parse() {} }, svelte: [] },
+        'import-x/parsers-next': [
+          { parser: { parse() {} }, extensions: ['.vue', 'svelte'] },
+        ],
       } as PluginSettings
 
       const fileExtensions = getFileExtensions(settings)

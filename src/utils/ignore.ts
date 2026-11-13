@@ -44,8 +44,10 @@ export function getFileExtensions(settings: PluginSettings) {
     }
   }
 
-  for (const extension in getParsersNext(settings)) {
-    exts.add(normalizeExtension(extension))
+  for (const { extensions } of getParsersNext(settings)) {
+    for (const extension of extensions) {
+      exts.add(normalizeExtension(extension))
+    }
   }
 
   return exts

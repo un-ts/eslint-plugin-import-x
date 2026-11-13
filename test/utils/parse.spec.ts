@@ -406,21 +406,31 @@ describe('settings["import-x/parsers-next"]', () => {
   const content = 'export const a = 1'
   const ast = { type: 'Program', body: [] }
 
-  it('uses the parser instance mapped to the file extension', () => {
+  it('uses the parser instance listed for the file extension', () => {
     const parse_ = jest.fn(() => ast)
     expect(
-      parse(filepath, content, contextWith({ '.js': { parse: parse_ } })).ast,
+      parse(
+        filepath,
+        content,
+        contextWith([
+          { parser: { parse: parse_ }, extensions: ['.ts', '.js'] },
+        ]),
+      ).ast,
     ).toBe(ast)
     expect(parse_).toHaveBeenCalledTimes(1)
   })
 
   it('accepts extensions without a leading dot', () => {
     const parse_ = jest.fn(() => ast)
-    parse(filepath, content, contextWith({ js: { parse: parse_ } }))
+    parse(
+      filepath,
+      content,
+      contextWith([{ parser: { parse: parse_ }, extensions: ['js'] }]),
+    )
     expect(parse_).toHaveBeenCalledTimes(1)
   })
 
-  it('falls back to the next parser of an array', () => {
+  it('falls back to the next entry for the same extension', () => {
     const failing = jest.fn(() => {
       throw new Error('cannot parse')
     })
@@ -429,9 +439,11 @@ describe('settings["import-x/parsers-next"]', () => {
       parse(
         filepath,
         content,
-        contextWith({
-          '.js': [{ parseForESLint: failing }, { parse: parse_ }],
-        }),
+        contextWith([
+          { parser: { parseForESLint: failing }, extensions: ['.js'] },
+          { parser: { parse() {} }, extensions: ['.ts'] },
+          { parser: { parse: parse_ }, extensions: ['.js'] },
+        ]),
       ).ast,
     ).toBe(ast)
     expect(failing).toHaveBeenCalledTimes(1)
@@ -443,18 +455,19 @@ describe('settings["import-x/parsers-next"]', () => {
     parse(
       filepath,
       content,
-      contextWith(
-        { '.js': { parse: parse_ } },
-        { 'import-x/parsers': { 'not-a-parser': ['.js'] } },
-      ),
+      contextWith([{ parser: { parse: parse_ }, extensions: ['.js'] }], {
+        'import-x/parsers': { 'not-a-parser': ['.js'] },
+      }),
     )
     expect(parse_).toHaveBeenCalledTimes(1)
   })
 
-  it('treats an empty array as no parser', () => {
+  it('treats an entry without extensions as no parser', () => {
     const parse_ = jest.fn(() => ast)
     const context = {
-      settings: { 'import-x/parsers-next': { '.js': [] } },
+      settings: {
+        'import-x/parsers-next': [{ parser: { parse() {} }, extensions: [] }],
+      },
       parserPath: null,
       languageOptions: { parser: { parse: parse_ } },
     } as unknown as ChildContext
@@ -465,10 +478,16 @@ describe('settings["import-x/parsers-next"]', () => {
 
   it('is reported by hasAlternateParser', () => {
     expect(
-      hasAlternateParser(filepath, contextWith({ js: { parse() {} } })),
+      hasAlternateParser(
+        filepath,
+        contextWith([{ parser: { parse() {} }, extensions: ['js'] }]),
+      ),
     ).toBe(true)
     expect(
-      hasAlternateParser(filepath, contextWith({ '.ts': { parse() {} } })),
+      hasAlternateParser(
+        filepath,
+        contextWith([{ parser: { parse() {} }, extensions: ['.ts'] }]),
+      ),
     ).toBe(false)
   })
 })

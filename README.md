@@ -625,12 +625,12 @@ with `wontfix`.
 
 ### `import-x/parsers-next`
 
-A map from file extensions to parser instances, for flat configs. Unlike
-[`import-x/parsers`](#import-xparsers), the parser is passed in rather than
-required by name, so it does not need to be resolvable from the project (with
-pnpm or Yarn PnP, a parser that another package brings in is often not, like
-`@typescript-eslint/parser` under `typescript-eslint`). It takes precedence over
-`import-x/parsers` for the same extension.
+A list of parser instances and the file extensions each one parses, for flat
+configs. Unlike [`import-x/parsers`](#import-xparsers), the parser is passed in
+rather than required by name, so it does not need to be resolvable from the
+project (with pnpm or Yarn PnP, a parser that another package brings in is often
+not, like `@typescript-eslint/parser` under `typescript-eslint`). It takes
+precedence over `import-x/parsers` for the same extension.
 
 ```js
 import tseslint from 'typescript-eslint'
@@ -639,17 +639,20 @@ import vueParser from 'vue-eslint-parser'
 export default [
   {
     settings: {
-      'import-x/parsers-next': {
-        '.ts': tseslint.parser,
-        '.vue': vueParser,
-      },
+      'import-x/parsers-next': [
+        {
+          parser: tseslint.parser,
+          extensions: ['.ts', '.tsx', '.mts', '.cts'],
+        },
+        { parser: vueParser, extensions: ['.vue'] },
+      ],
     },
   },
 ]
 ```
 
-The leading dot of an extension is optional. A value can also be an array of
-parsers, tried in order: the first one that parses the file is used.
+The leading dot of an extension is optional. When more than one entry lists an
+extension, they are tried in order: the first one that parses the file is used.
 
 ### `import-x/resolver` and `import-x/resolver-next`
 

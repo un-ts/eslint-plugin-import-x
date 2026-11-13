@@ -75,27 +75,24 @@ function transformHashbang(text: string) {
   return text.replace(/^#!([^\r\n]+)/u, (_, captured) => `//${captured}`)
 }
 
-/**
- * @param needDocs Whether the caller will read doc comments. Comments and
- *   tokens are needed only for that (`ast.comments`, and `SourceCode` refuses
- *   to construct without `ast.tokens`), and asking for them is not free —
- *   espree spends roughly a third of its time building them. Parsers that
- *   always produce them (`@typescript-eslint/parser`) are unaffected either
- *   way.
- */
 type ParserModule = TSESLint.Parser.ParserModule
 
 /**
- * `settings['import-x/parsers-next']`: parser instances keyed by file
- * extension, with or without the leading dot. An array lists fallbacks, tried
- * in order until one parses.
+ * An entry of `settings['import-x/parsers-next']`: a parser instance and the
+ * file extensions it parses, with or without the leading dot. Entries that
+ * list the same extension are tried in order until one parses.
  */
-export type ParsersNext = Record<string, ParserModule | readonly ParserModule[]>
+export interface ParserNext {
+  parser: ParserModule
+  extensions: readonly string[]
+}
 
 export function getParsersNext(settings: PluginSettings) {
-  return (settings as { 'import-x/parsers-next'?: ParsersNext })[
-    'import-x/parsers-next'
-  ]
+  return (
+    (settings as { 'import-x/parsers-next'?: readonly ParserNext[] })[
+      'import-x/parsers-next'
+    ] ?? []
+  )
 }
 
 export function normalizeExtension(extension: string) {
@@ -105,20 +102,13 @@ export function normalizeExtension(extension: string) {
 }
 
 function getNextParsers(path: string, context: ChildContext | RuleContext) {
-  const parsers = getParsersNext(context.settings)
-  if (parsers == null) {
-    return
-  }
   const extension = nodePath.extname(path)
-  for (const key in parsers) {
-    if (normalizeExtension(key) === extension) {
-      const parser = parsers[key]
-      const list = (
-        Array.isArray(parser) ? parser : [parser]
-      ) as readonly ParserModule[]
-      return list.length > 0 ? list : undefined
-    }
-  }
+  const parsers = getParsersNext(context.settings)
+    .filter(({ extensions }) =>
+      extensions.some(ext => normalizeExtension(ext) === extension),
+    )
+    .map(({ parser }) => parser)
+  return parsers.length > 0 ? parsers : undefined
 }
 
 /**
@@ -162,6 +152,14 @@ function tryParse(
   }
 }
 
+/**
+ * @param needDocs Whether the caller will read doc comments. Comments and
+ *   tokens are needed only for that (`ast.comments`, and `SourceCode` refuses
+ *   to construct without `ast.tokens`), and asking for them is not free —
+ *   espree spends roughly a third of its time building them. Parsers that
+ *   always produce them (`@typescript-eslint/parser`) are unaffected either
+ *   way.
+ */
 export function parse(
   path: string,
   content: string,
