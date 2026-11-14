@@ -1,3 +1,5 @@
+import * as tsParser from '@typescript-eslint/parser'
+
 import { testContext } from '../utils.js'
 
 import type { PluginSettings } from 'eslint-plugin-import-x'
@@ -84,6 +86,19 @@ describe('ignore', () => {
 
       expect(fileExtensions).toContain('.js')
       expect(fileExtensions).toContain('.jsx')
+    })
+
+    it('adds the extensions of "import-x/parsers-next", with or without a leading dot', () => {
+      const settings: PluginSettings = {
+        'import-x/parsers-next': [
+          { parser: tsParser, extensions: ['.vue', 'svelte'] },
+        ],
+      }
+
+      const fileExtensions = getFileExtensions(settings)
+
+      expect(fileExtensions).toContain('.vue')
+      expect(fileExtensions).toContain('.svelte')
     })
 
     it('returns a set with the file extensions configured in "import-x/extension" and "import-x/parsers"', () => {

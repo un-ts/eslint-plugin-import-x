@@ -45,6 +45,7 @@ It started as a fork of [`eslint-plugin-import`] using [`get-tsconfig`] to repla
   - [`import-x/core-modules`](#import-xcore-modules)
   - [`import-x/external-module-folders`](#import-xexternal-module-folders)
   - [`import-x/parsers`](#import-xparsers)
+  - [`import-x/parsers-next`](#import-xparsers-next)
   - [`import-x/resolver` and `import-x/resolver-next`](#import-xresolver-and-import-xresolver-next)
   - [`import-x/cache`](#import-xcache)
   - [`import-x/internal-regex`](#import-xinternal-regex)
@@ -489,8 +490,9 @@ This defaults to `['.js', '.mjs', '.cjs']`, unless you are using the `react`
 shared config, in which case it is specified as `['.js', '.jsx', '.mjs', '.cjs']`
 (`['.js', '.jsx']` for the legacy `plugin:import-x/react` config).
 
-Every extension listed in [`import-x/parsers`](#import-xparsers) is also added
-to this list automatically. If you are using TypeScript (without the
+Every extension listed in [`import-x/parsers`](#import-xparsers) or
+[`import-x/parsers-next`](#import-xparsers-next) is also added to this list
+automatically. If you are using TypeScript (without the
 `plugin:import-x/typescript` config described above) you must specify the new extensions
 (`.ts`, `.mts` and `.cts` as needed, and also `.tsx` if your project uses `.tsx`
 files), either here or in `import-x/parsers`.
@@ -620,6 +622,37 @@ It's difficult to say how well various plugin features will be supported, too,
 depending on how far down the rabbit hole goes. Submit an issue if you find strange
 behavior beyond here, but steel your heart against the likely outcome of closing
 with `wontfix`.
+
+### `import-x/parsers-next`
+
+A list of parser instances and the file extensions each one parses, for flat
+configs. Unlike [`import-x/parsers`](#import-xparsers), the parser is passed in
+rather than required by name, so it does not need to be resolvable from the
+project (with pnpm or Yarn PnP, a parser that another package brings in is often
+not, like `@typescript-eslint/parser` under `typescript-eslint`). It takes
+precedence over `import-x/parsers` for the same extension.
+
+```js
+import tseslint from 'typescript-eslint'
+import vueParser from 'vue-eslint-parser'
+
+export default [
+  {
+    settings: {
+      'import-x/parsers-next': [
+        {
+          parser: tseslint.parser,
+          extensions: ['.ts', '.tsx', '.mts', '.cts'],
+        },
+        { parser: vueParser, extensions: ['.vue'] },
+      ],
+    },
+  },
+]
+```
+
+The leading dot of an extension is optional. When more than one entry lists an
+extension, they are tried in order: the first one that parses the file is used.
 
 ### `import-x/resolver` and `import-x/resolver-next`
 

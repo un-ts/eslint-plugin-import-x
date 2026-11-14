@@ -18,7 +18,7 @@ import type { ChildContext, ParseError, RuleContext } from '../types.js'
 import type { ModuleSurface } from '../utils/barrel-file.js'
 import { childContext } from '../utils/child-context.js'
 import { hasValidExtension, ignore } from '../utils/ignore.js'
-import { getAlternateParserPath, stripUnicodeBOM } from '../utils/parse.js'
+import { hasAlternateParser, stripUnicodeBOM } from '../utils/parse.js'
 import { relative, resolve } from '../utils/resolve.js'
 import { isMaybeUnambiguousModule } from '../utils/unambiguous.js'
 
@@ -50,7 +50,7 @@ function isLexableModule(filepath: string, context: ChildContext) {
     // ask `parse` itself what it would pick, rather than re-reading the
     // setting: this gate exists to predict that answer, so a second copy of
     // the lookup drifting would silently lex the very files it must not
-    getAlternateParserPath(filepath, context) === undefined
+    !hasAlternateParser(filepath, context)
   )
 }
 

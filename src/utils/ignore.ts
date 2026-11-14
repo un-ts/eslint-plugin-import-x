@@ -9,6 +9,8 @@ import type {
   RuleContext,
 } from '../types.js'
 
+import { getParsersNext, normalizeExtension } from './parse.js'
+
 const log = debug('eslint-plugin-import-x:utils:ignore')
 
 // one-shot memoized
@@ -39,6 +41,12 @@ export function getFileExtensions(settings: PluginSettings) {
         throw new TypeError(`"settings" for ${parser} must be an array`)
       }
       for (const ext of parserSettings) exts.add(ext)
+    }
+  }
+
+  for (const { extensions } of getParsersNext(settings)) {
+    for (const extension of extensions) {
+      exts.add(normalizeExtension(extension))
     }
   }
 

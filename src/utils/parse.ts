@@ -8,6 +8,7 @@ import type {
   ChildContext,
   FileExtension,
   ParseError,
+  PluginSettings,
   RuleContext,
 } from '../types.js'
 
@@ -74,6 +75,61 @@ function transformHashbang(text: string) {
   return text.replace(/^#!([^\r\n]+)/u, (_, captured) => `//${captured}`)
 }
 
+type ParserModule = TSESLint.Parser.ParserModule
+
+export function getParsersNext(settings: PluginSettings) {
+  return settings['import-x/parsers-next'] ?? []
+}
+
+export function normalizeExtension(extension: string) {
+  return (
+    extension.startsWith('.') ? extension : `.${extension}`
+  ) as FileExtension
+}
+
+function getNextParsers(path: string, context: ChildContext | RuleContext) {
+  const extension = nodePath.extname(path)
+  const parsers = getParsersNext(context.settings)
+    .filter(({ extensions }) =>
+      extensions.some(ext => normalizeExtension(ext) === extension),
+    )
+    .map(({ parser }) => parser)
+  return parsers.length > 0 ? parsers : undefined
+}
+
+/**
+ * Whether the file gets a parser from `import-x/parsers-next` or
+ * `import-x/parsers` instead of the configured ESLint parser.
+ */
+export function hasAlternateParser(
+  path: string,
+  context: ChildContext | RuleContext,
+) {
+  return (
+    getNextParsers(path, context) !== undefined ||
+    getAlternateParserPath(path, context) !== undefined
+  )
+}
+
+/** A fallback parser: `undefined` when it throws or returns no AST. */
+function tryParse(
+  parser: ParserModule,
+  content: string,
+  parserOptions: TSESLint.ParserOptions,
+) {
+  try {
+    const parsed =
+      'parseForESLint' in parser
+        ? parser.parseForESLint(content, parserOptions)
+        : { ast: parser.parse(content, parserOptions) }
+    if (parsed?.ast && typeof parsed.ast === 'object') {
+      return makeParseReturn(parsed.ast, keysFromParser(parser, parser, parsed))
+    }
+  } catch {
+    // try the next one
+  }
+}
+
 /**
  * @param needDocs Whether the caller will read doc comments. Comments and
  *   tokens are needed only for that (`ast.comments`, and `SourceCode` refuses
@@ -96,7 +152,10 @@ export function parse(
   let parserOptions =
     context.languageOptions?.parserOptions || context.parserOptions
 
-  const parserOrPath = getParserOrPath(path, context)
+  const nextParsers = getNextParsers(path, context)
+  const parserOrPath = nextParsers
+    ? nextParsers.at(-1)
+    : getParserOrPath(path, context)
 
   if (!parserOrPath) {
     throw new Error('parserPath or languageOptions.parser is required!')
@@ -141,6 +200,13 @@ export function parse(
   // replicate bom strip and hashbang transform of ESLint
   // https://github.com/eslint/eslint/blob/b93af98b3c417225a027cabc964c38e779adb945/lib/linter/linter.js#L779
   content = transformHashbang(stripUnicodeBOM(String(content)))
+
+  for (const fallback of nextParsers?.slice(0, -1) ?? []) {
+    const result = tryParse(fallback, content, parserOptions)
+    if (result) {
+      return result
+    }
+  }
 
   if (
     'parseForESLint' in parser &&
