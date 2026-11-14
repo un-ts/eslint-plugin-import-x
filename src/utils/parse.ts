@@ -118,20 +118,12 @@ function tryParse(
   parserOptions: TSESLint.ParserOptions,
 ) {
   try {
-    if (
-      'parseForESLint' in parser &&
-      typeof parser.parseForESLint === 'function'
-    ) {
-      const parsed = parser.parseForESLint(content, parserOptions)
-      return parsed?.ast && typeof parsed.ast === 'object'
-        ? makeParseReturn(parsed.ast, keysFromParser(parser, parser, parsed))
-        : undefined
-    }
-    if ('parse' in parser) {
-      const ast = parser.parse(content, parserOptions)
-      return ast && typeof ast === 'object'
-        ? makeParseReturn(ast, keysFromParser(parser, parser))
-        : undefined
+    const parsed =
+      'parseForESLint' in parser
+        ? parser.parseForESLint(content, parserOptions)
+        : { ast: parser.parse(content, parserOptions) }
+    if (parsed?.ast && typeof parsed.ast === 'object') {
+      return makeParseReturn(parsed.ast, keysFromParser(parser, parser, parsed))
     }
   } catch {
     // try the next one
