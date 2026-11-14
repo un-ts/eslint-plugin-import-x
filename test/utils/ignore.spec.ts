@@ -1,3 +1,5 @@
+import * as tsParser from '@typescript-eslint/parser'
+
 import { testContext } from '../utils.js'
 
 import type { PluginSettings } from 'eslint-plugin-import-x'
@@ -87,11 +89,11 @@ describe('ignore', () => {
     })
 
     it('adds the extensions of "import-x/parsers-next", with or without a leading dot', () => {
-      const settings = {
+      const settings: PluginSettings = {
         'import-x/parsers-next': [
-          { parser: { parse() {} }, extensions: ['.vue', 'svelte'] },
+          { parser: tsParser, extensions: ['.vue', 'svelte'] },
         ],
-      } as PluginSettings
+      }
 
       const fileExtensions = getFileExtensions(settings)
 

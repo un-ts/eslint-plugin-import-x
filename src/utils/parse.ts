@@ -77,22 +77,8 @@ function transformHashbang(text: string) {
 
 type ParserModule = TSESLint.Parser.ParserModule
 
-/**
- * An entry of `settings['import-x/parsers-next']`: a parser instance and the
- * file extensions it parses, with or without the leading dot. Entries that
- * list the same extension are tried in order until one parses.
- */
-export interface ParserNext {
-  parser: ParserModule
-  extensions: readonly string[]
-}
-
 export function getParsersNext(settings: PluginSettings) {
-  return (
-    (settings as { 'import-x/parsers-next'?: readonly ParserNext[] })[
-      'import-x/parsers-next'
-    ] ?? []
-  )
+  return settings['import-x/parsers-next'] ?? []
 }
 
 export function normalizeExtension(extension: string) {
