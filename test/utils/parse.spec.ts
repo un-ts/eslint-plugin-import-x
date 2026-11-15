@@ -450,6 +450,24 @@ describe('settings["import-x/parsers-next"]', () => {
     expect(parse_).toHaveBeenCalledTimes(1)
   })
 
+  it('uses parse of a fallback whose parseForESLint is not a function', () => {
+    const parse_ = jest.fn(() => ast)
+    expect(
+      parse(
+        filepath,
+        content,
+        contextWith([
+          {
+            parser: { parseForESLint: undefined, parse: parse_ },
+            extensions: ['.js'],
+          },
+          { parser: { parse() {} }, extensions: ['.js'] },
+        ]),
+      ).ast,
+    ).toBe(ast)
+    expect(parse_).toHaveBeenCalledTimes(1)
+  })
+
   it('takes precedence over import-x/parsers', () => {
     const parse_ = jest.fn(() => ast)
     parse(

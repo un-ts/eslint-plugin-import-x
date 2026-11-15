@@ -119,9 +119,11 @@ function tryParse(
 ) {
   try {
     const parsed =
-      'parseForESLint' in parser
+      'parseForESLint' in parser && typeof parser.parseForESLint === 'function'
         ? parser.parseForESLint(content, parserOptions)
-        : { ast: parser.parse(content, parserOptions) }
+        : 'parse' in parser
+          ? { ast: parser.parse(content, parserOptions) }
+          : undefined
     if (parsed?.ast && typeof parsed.ast === 'object') {
       return makeParseReturn(parsed.ast, keysFromParser(parser, parser, parsed))
     }
