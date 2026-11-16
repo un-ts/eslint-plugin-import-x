@@ -3,7 +3,7 @@ import type { Linter } from 'eslint'
 import type {
   ImportSettings,
   PluginName,
-  PluginSettings,
+  PluginSettings as ContextPluginSettings,
 } from 'eslint-import-context'
 import type { MinimatchOptions } from 'minimatch'
 
@@ -42,7 +42,6 @@ export type {
   ResolvedResult,
   ImportSettings,
   WithPluginName,
-  PluginSettings,
   RuleContext,
   ChildContext,
 } from 'eslint-import-context'
@@ -50,6 +49,20 @@ export type {
 export type ImportType = ImportType_ | 'object' | 'type'
 
 export type Arrayable<T> = T | readonly T[]
+
+/**
+ * An entry of `settings['import-x/parsers-next']`: a parser instance and the
+ * file extensions it parses, with or without the leading dot. Entries that
+ * list the same extension are tried in order until one parses.
+ */
+export interface ParserNext {
+  parser: TSESLint.Parser.ParserModule
+  extensions: readonly string[]
+}
+
+export type PluginSettings = ContextPluginSettings & {
+  'import-x/parsers-next'?: readonly ParserNext[]
+}
 
 export interface PluginConfig extends Linter.LegacyConfig {
   plugins?: [PluginName]
