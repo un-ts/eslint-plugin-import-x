@@ -1,5 +1,7 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
+import { jest } from '@jest/globals'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import { TSESLint } from '@typescript-eslint/utils'
@@ -48,6 +50,31 @@ const sharedDeclarationSettings = {
   ],
 }
 
+// one declaration file with a `declare module` block per entry point, like svelte
+const bundledDeclarationPath = path.resolve(
+  'test/fixtures/bundled-declarations/index.d.ts',
+)
+const inlineDeclarationPath = path.resolve(
+  'test/fixtures/bundled-declarations/inline.d.ts',
+)
+
+const bundledDeclarationSettings = {
+  'import-x/resolver-next': [
+    {
+      name: 'bundled-declaration-resolver',
+      interfaceVersion: 3,
+      resolve(modulePath: string) {
+        if (/^bundled(\/|$)/.test(modulePath)) {
+          return { found: true, path: bundledDeclarationPath }
+        }
+        return /^inline(\/|$)/.test(modulePath)
+          ? { found: true, path: inlineDeclarationPath }
+          : { found: false }
+      },
+    },
+  ],
+}
+
 const sharedDeclarationCollisionSettings = {
   'import-x/resolver-next': [
     {
@@ -67,6 +94,30 @@ const sharedDeclarationCollisionSettings = {
 
 ruleTester.run('no-duplicates', rule, {
   valid: [
+    // #308: entry points declared with `declare module` in one shared
+    // declaration file are different modules
+    tValid({
+      code: "import { a } from 'bundled'; import { b } from 'bundled/sub'",
+      settings: bundledDeclarationSettings,
+    }),
+    tValid({
+      code: "import type { a } from 'bundled'; import type { b } from 'bundled/sub'",
+      settings: bundledDeclarationSettings,
+    }),
+    tValid({
+      code: "import { a } from 'inline'; import { b } from 'inline/sub'",
+      settings: bundledDeclarationSettings,
+    }),
+    tValid({
+      code: "import { c } from 'inline/odd'; import { d } from 'inline/odd2'",
+      settings: bundledDeclarationSettings,
+    }),
+    tValid({
+      code: "import { a } from 'bundled?raw'; import { b } from 'bundled/sub?raw'",
+      options: [{ considerQueryString: true }],
+      settings: bundledDeclarationSettings,
+    }),
+
     // #505: entry points of a whitelisted package are different modules
     tValid({
       code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'; import { scale } from 'svelte/transition'",
@@ -185,6 +236,28 @@ ruleTester.run('no-duplicates', rule, {
     }),
   ],
   invalid: [
+    // #308: the same declared entry point is still a duplicate
+    tInvalid({
+      code: "import { a } from 'bundled'; import { b } from 'bundled/sub'; import { c } from 'bundled'",
+      output:
+        "import { a, c } from 'bundled'; import { b } from 'bundled/sub'; ",
+      settings: bundledDeclarationSettings,
+      errors: [
+        createDuplicatedError('bundled'),
+        createDuplicatedError('bundled'),
+      ],
+    }),
+    tInvalid({
+      code: "import { b } from 'bundled/sub'; import { a } from 'bundled'; import { c } from 'bundled/sub?raw'",
+      output:
+        "import { b, c } from 'bundled/sub'; import { a } from 'bundled'; ",
+      settings: bundledDeclarationSettings,
+      errors: [
+        createDuplicatedError('bundled/sub'),
+        createDuplicatedError('bundled/sub'),
+      ],
+    }),
+
     // #505: without the whitelist these share a resolved path, so they are duplicates
     tInvalid({
       code: "import { onMount } from 'svelte'; import { quintOut } from 'svelte/easing'",
@@ -2068,4 +2141,48 @@ describe('TypeScript', () => {
     )
     expect(output).toBe("import  {type x,type y, z} from './foo'; ")
   })
+})
+
+it('does not read a declaration file whose imports the whitelist splits', () => {
+  const declarationPath = path.resolve(
+    'test/fixtures/bundled-declarations/whitelisted.d.ts',
+  )
+  const readFileSync = jest.spyOn(fs, 'readFileSync')
+  try {
+    const linter = new TSESLint.Linter({ configType: 'flat' })
+    const messages = linter.verify(
+      "import { a } from 'whitelisted'; import { b } from 'whitelisted/sub'; import { c } from 'whitelisted'",
+      [
+        {
+          plugins: { 'import-x': { rules: { 'no-duplicates': rule } } },
+          rules: {
+            'import-x/no-duplicates': [
+              'error',
+              { whitelist: [['whitelisted', 'whitelisted/sub']] },
+            ],
+          },
+          settings: {
+            'import-x/resolver-next': [
+              {
+                name: 'whitelisted-declaration-resolver',
+                interfaceVersion: 3,
+                resolve: (modulePath: string) =>
+                  /^whitelisted(\/|$)/.test(modulePath)
+                    ? { found: true, path: declarationPath }
+                    : { found: false },
+              },
+            ],
+          },
+        },
+      ],
+      { filename: 'foo.js' },
+    )
+    expect(messages.map(({ message }) => message)).toEqual([
+      "'whitelisted' imported multiple times.",
+      "'whitelisted' imported multiple times.",
+    ])
+    expect(readFileSync).not.toHaveBeenCalledWith(declarationPath, 'utf8')
+  } finally {
+    readFileSync.mockRestore()
+  }
 })
