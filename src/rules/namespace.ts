@@ -1,11 +1,16 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
 import type { TSESTree, TSESLint } from '@typescript-eslint/utils'
 
 import { getExportKind, ModuleInfo } from '../core/index.js'
+import { parseComment } from '../core/module-doc.js'
 import {
   importDeclaration,
   createRule,
   declaredScope,
   getValue,
+  parse,
 } from '../utils/index.js'
 import { reportModuleParseErrors } from '../utils/report-module-parse-errors.js'
 
@@ -100,6 +105,53 @@ function hasValueExport(namespace: ModuleInfo, name: string) {
 }
 
 const TYPESCRIPT_FILE = /\.[cm]?tsx?$/
+
+const jsdocTypeNames = new WeakMap<ModuleInfo, Set<string> | null>()
+
+/**
+ * The types a non-TypeScript module declares with JSDoc `@typedef` and `@callback`,
+ * or `null` when its types may also come from elsewhere: a package's own
+ * declaration files or `@types`, `export *`.
+ */
+function getJsdocTypeNames(namespace: ModuleInfo) {
+  let names = jsdocTypeNames.get(namespace)
+  if (names === undefined) {
+    names = readJsdocTypeNames(namespace)
+    jsdocTypeNames.set(namespace, names)
+  }
+  return names
+}
+
+function readJsdocTypeNames({
+  path: filePath,
+  starExports,
+  context,
+}: ModuleInfo) {
+  if (
+    starExports.length > 0 ||
+    filePath.split(path.sep).includes('node_modules')
+  ) {
+    return null
+  }
+  try {
+    const { comments } = parse(
+      filePath,
+      fs.readFileSync(filePath, 'utf8'),
+      context,
+    ).ast
+    return comments
+      ? new Set(
+          comments
+            .filter(c => c.type === 'Block' && c.value.startsWith('*'))
+            .flatMap(c => parseComment(c.value).tags)
+            .filter(tag => tag.tag === 'typedef' || tag.tag === 'callback')
+            .map(tag => tag.name),
+        )
+      : null
+  } catch {
+    return null
+  }
+}
 
 /**
  * Whether a member expression is a heritage clause (`class X implements ns.I`,
@@ -318,9 +370,10 @@ export default createRule<[Options], MessageId>({
 
           if (
             !(typePosition
-              ? // types in a JavaScript module (JSDoc `@typedef`) aren't visible here
-                !TYPESCRIPT_FILE.test(namespace.path) ||
-                namespace.hasExport(deref.property.name)
+              ? namespace.hasExport(deref.property.name) ||
+                (!TYPESCRIPT_FILE.test(namespace.path) &&
+                  (getJsdocTypeNames(namespace)?.has(deref.property.name) ??
+                    true))
               : hasValueExport(namespace, deref.property.name))
           ) {
             context.report(makeMessage(deref.property, namepath))

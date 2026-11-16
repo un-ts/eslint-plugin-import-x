@@ -638,13 +638,18 @@ describe('TypeScript type-only exports', () => {
         code: 'import * as ns from "./export-type-star/mixed"; interface X extends ns.I {}; class Y implements ns.I { value = 1 }',
         settings,
       }),
-      // a JavaScript module has no types to check a heritage clause against
+      // #592: a JavaScript module declares types with JSDoc
       tValid({
-        code: 'import * as ns from "./named-exports"; interface X extends ns.T {}; class Y implements ns.T { value = 1 }',
+        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.MyTypedef {}; class Y implements ns.MyCallback { value = 1 }',
         settings,
       }),
       tValid({
-        code: 'import { b } from "./deep/a"; interface X extends b.T {}',
+        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.InlineTypedef {}; interface Y extends ns.AfterTemplate {}',
+        settings,
+      }),
+      // #592: types of a package may come from its declaration files or `@types`
+      tValid({
+        code: 'import * as ns from "es6-module"; interface X extends ns.Missing {}',
         settings,
       }),
       // value member used in a decorator is fine
@@ -655,6 +660,46 @@ describe('TypeScript type-only exports', () => {
       }),
     ],
     invalid: [
+      // #592: a heritage clause naming nothing in a JavaScript module
+      tInvalid({
+        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.Missing {}',
+        settings,
+        errors: [createNotFoundInNamespaceError('Missing', 'ns')],
+      }),
+      tInvalid({
+        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.InString {}',
+        settings,
+        errors: [createNotFoundInNamespaceError('InString', 'ns')],
+      }),
+      tInvalid({
+        code: 'import * as ns from "./jsdoc-typedefs"; interface X extends ns.InTemplate {}',
+        settings,
+        errors: [createNotFoundInNamespaceError('InTemplate', 'ns')],
+      }),
+      tInvalid({
+        code: 'import * as ns from "./jsdoc-typedefs.mdx"; interface X extends ns.Props {}; interface Y extends ns.Missing {}',
+        settings: {
+          ...settings,
+          'import-x/parsers': {
+            ...settings['import-x/parsers'],
+            'eslint-mdx': ['.mdx'],
+          },
+        },
+        errors: [createNotFoundInNamespaceError('Missing', 'ns')],
+      }),
+      tInvalid({
+        code: 'import { b } from "./deep/a"; interface X extends b.T {}',
+        settings,
+        errors: [createNotFoundInNamespaceError('T', 'b')],
+      }),
+      tInvalid({
+        code: 'import * as ns from "./named-exports"; interface X extends ns.T {}; class Y implements ns.T { value = 1 }',
+        settings,
+        errors: [
+          createNotFoundInNamespaceError('T', 'ns'),
+          createNotFoundInNamespaceError('T', 'ns'),
+        ],
+      }),
       // a TypeScript module reached through a JavaScript one is still checked
       tInvalid({
         code: 'import * as barrel from "./export-type-star/js-barrel"; interface X extends barrel.types.Missing {}',
