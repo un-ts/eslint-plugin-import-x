@@ -2,9 +2,16 @@ import * as tsParser from '@typescript-eslint/parser'
 import { TSESLint } from '@typescript-eslint/utils'
 import type { TSESTree } from '@typescript-eslint/utils'
 
-import { getTrailingComments } from 'eslint-plugin-import-x/utils'
+import {
+  getLeadingComments,
+  getTrailingComments,
+} from 'eslint-plugin-import-x/utils'
 
-const collect = (code: string) => {
+const collect = (
+  code: string,
+  get: typeof getTrailingComments = getTrailingComments,
+  index = 0,
+) => {
   let result: string[] = []
   // ESLint 8 defaults to eslintrc mode, which ignores the flat config below
   const linter = new TSESLint.Linter({ configType: 'flat' })
@@ -19,10 +26,9 @@ const collect = (code: string) => {
               r: {
                 create: (context: TSESLint.RuleContext<string, []>) => ({
                   Program: (node: TSESTree.Program) => {
-                    result = getTrailingComments(
-                      context.sourceCode,
-                      node.body[0],
-                    ).map(comment => comment.value)
+                    result = get(context.sourceCode, node.body[index]).map(
+                      comment => comment.value,
+                    )
                   },
                 }),
               },
@@ -51,5 +57,25 @@ describe(getTrailingComments, () => {
     expect(collect("import a from 'a'\n// c\nimport b from 'b'")).toHaveLength(
       0,
     )
+  })
+})
+
+const leading = (code: string) => collect(code, getLeadingComments, 1)
+
+describe(getLeadingComments, () => {
+  it('collects the comment lines directly above the node, in order', () => {
+    expect(
+      leading("import a from 'a'\n// c\n/* d */\nimport b from 'b'"),
+    ).toEqual([' c', ' d '])
+  })
+
+  it('stops at a blank line or a comment that ends another line', () => {
+    expect(
+      leading("import a from 'a'\n// c\n\nimport b from 'b'"),
+    ).toHaveLength(0)
+    expect(leading("import a from 'a' // c\nimport b from 'b'")).toHaveLength(0)
+    expect(
+      leading("import a from 'a' /* c\n */\n// d\nimport b from 'b'"),
+    ).toEqual([' d'])
   })
 })

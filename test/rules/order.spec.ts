@@ -1434,7 +1434,43 @@ ruleTester.run('order', rule, {
         createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
-    // a plain comment above an import, or one ending another line, stays put
+    // any comment block directly above an import moves with it
+    tInvalid({
+      code: `
+        import async from 'async';
+        // type-coverage:ignore-next-line
+        /* the file system */
+        import fs from 'fs';
+      `,
+      output: `
+        // type-coverage:ignore-next-line
+        /* the file system */
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // a comment separated by a blank line stays put
+    tInvalid({
+      code: `
+        import async from 'async';
+        // section
+
+        import fs from 'fs';
+      `,
+      output: `
+        import fs from 'fs';
+        import async from 'async';
+        // section
+
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // a comment ending another line stays with that line
     tInvalid({
       code: `
         import async from 'async';

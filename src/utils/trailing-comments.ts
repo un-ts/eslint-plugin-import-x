@@ -22,3 +22,30 @@ export function getTrailingComments(
   }
   return comments
 }
+
+/**
+ * The comments on the lines right above the node, each alone on its line, with
+ * no blank line between them and the node, in source order.
+ */
+export function getLeadingComments(
+  sourceCode: TSESLint.SourceCode,
+  node: TSESTree.Node | TSESTree.Token,
+) {
+  const comments: TSESTree.Comment[] = []
+  let below: TSESTree.Node | TSESTree.Token = node
+  let prev = sourceCode.getTokenBefore(node, { includeComments: true })
+  while (
+    prev &&
+    (prev.type === 'Line' || prev.type === 'Block') &&
+    prev.loc.end.line === below.loc.start.line - 1
+  ) {
+    const before = sourceCode.getTokenBefore(prev, { includeComments: true })
+    if (before && before.loc.end.line === prev.loc.start.line) {
+      break
+    }
+    comments.unshift(prev)
+    below = prev
+    prev = before
+  }
+  return comments
+}
