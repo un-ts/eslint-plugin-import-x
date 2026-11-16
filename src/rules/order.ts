@@ -195,6 +195,39 @@ function commentOnSameLineAs(node: TSESTree.Node) {
     token.loc.end.line === node.loc.end.line
 }
 
+// Comments that act on the line below them. They belong to the import they sit
+// above, so it takes them along when it moves.
+const NEXT_LINE_DIRECTIVE =
+  /^(?:@ts-(?:expect-error|ignore)|eslint-disable-next-line|prettier-ignore|biome-ignore|oxlint-disable-next-line|deno-lint-ignore)(?![\w-])/u
+
+/**
+ * The next-line directives on the lines right above the node, each alone on its
+ * line, closest last.
+ */
+function getNextLineDirectivesBefore(
+  sourceCode: TSESLint.SourceCode,
+  node: TSESTree.Node | TSESTree.Token,
+) {
+  const directives: TSESTree.Comment[] = []
+  let below = node
+  let comment = sourceCode.getTokenBefore(node, { includeComments: true })
+  while (
+    comment &&
+    (comment.type === 'Line' || comment.type === 'Block') &&
+    comment.loc.end.line === below.loc.start.line - 1 &&
+    NEXT_LINE_DIRECTIVE.test(comment.value.replace(/^[\s*]+/u, ''))
+  ) {
+    const before = sourceCode.getTokenBefore(comment, { includeComments: true })
+    if (before && before.loc.end.line === comment.loc.start.line) {
+      break
+    }
+    directives.unshift(comment)
+    below = comment
+    comment = before
+  }
+  return directives
+}
+
 function findStartOfLineWithComments(
   sourceCode: TSESLint.SourceCode,
   node: TSESTree.Node,
@@ -204,8 +237,10 @@ function findStartOfLineWithComments(
     node,
     commentOnSameLineAs(node),
   )
-  const startOfTokens =
-    tokensToEndOfLine.length > 0 ? tokensToEndOfLine[0].range[0] : node.range[0]
+  const firstOnLine = tokensToEndOfLine[0] ?? node
+  const startOfTokens = (
+    getNextLineDirectivesBefore(sourceCode, firstOnLine)[0] ?? firstOnLine
+  ).range[0]
   let result = startOfTokens
   for (let i = startOfTokens - 1; i > 0; i--) {
     if (sourceCode.text[i] !== ' ' && sourceCode.text[i] !== '\t') {

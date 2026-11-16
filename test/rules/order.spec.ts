@@ -1399,6 +1399,61 @@ ruleTester.run('order', rule, {
     }),
   ],
   invalid: [
+    // next-line directives move with the import they sit above
+    tInvalid({
+      code: `
+        import async from 'async';
+        // @ts-expect-error no types for fs here
+        import fs from 'fs';
+      `,
+      output: `
+        // @ts-expect-error no types for fs here
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    tInvalid({
+      code: `
+        // @ts-ignore
+        import async from 'async';
+        /* prettier-ignore */
+        // biome-ignore lint/style/noNamespaceImport: reason
+        import fs from 'fs';
+      `,
+      output: `
+        /* prettier-ignore */
+        // biome-ignore lint/style/noNamespaceImport: reason
+        import fs from 'fs';
+        // @ts-ignore
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // a plain comment above an import, or one ending another line, stays put
+    tInvalid({
+      code: `
+        import async from 'async';
+        // the file system
+        import fs from 'fs';
+        import path from 'path'; // @ts-ignore
+        import a from 'a';
+      `,
+      output: `
+        // the file system
+        import fs from 'fs';
+        import path from 'path'; // @ts-ignore
+        import async from 'async';
+        import a from 'a';
+      `,
+      errors: [
+        createOrderError(['`async` import', 'after', 'import of `path`']),
+      ],
+    }),
     // builtin before external module (require)
     tInvalid({
       code: `
