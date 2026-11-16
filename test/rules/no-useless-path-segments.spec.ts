@@ -130,11 +130,11 @@ function runResolverTests(resolver: 'node' | 'webpack') {
         settings: {
           'import-x/resolver-next': [
             createNodeResolver({
-              alias: { '@scope/importType': [testFilePath('importType')] },
+              alias: { '@scope/lib': [testFilePath('importType')] },
             }),
           ],
         },
-      }), // scoped alias root -- @scope/importType may not be resolvable without an explicit mapping
+      }), // scoped alias root -- @scope/lib/* does not guarantee a bare @scope/lib mapping
       tValid({
         code: 'import "app/importType/index"',
         options: [{ noUselessIndex: true }],
