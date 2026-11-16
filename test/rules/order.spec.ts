@@ -1434,6 +1434,22 @@ ruleTester.run('order', rule, {
         createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
+    // a file-top pragma stays when the import below it is moved
+    tInvalid({
+      code: `
+        // @ts-nocheck
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        // @ts-nocheck
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
     // any comment block directly above an import moves with it
     tInvalid({
       code: `

@@ -69,6 +69,19 @@ describe(getLeadingComments, () => {
     ).toEqual([' c', ' d '])
   })
 
+  it('does not collect a @ts-nocheck or @ts-check at the start of the file', () => {
+    expect(
+      collect("// @ts-nocheck\nimport b from 'b'", getLeadingComments, 0),
+    ).toHaveLength(0)
+    expect(
+      collect("// @ts-check\nimport b from 'b'", getLeadingComments, 0),
+    ).toHaveLength(0)
+    // next-line directives (like @ts-expect-error) should still be collected
+    expect(
+      collect("// @ts-expect-error\nimport b from 'b'", getLeadingComments, 0),
+    ).toHaveLength(1)
+  })
+
   it('stops at a blank line or a comment that ends another line', () => {
     expect(
       leading("import a from 'a'\n// c\n\nimport b from 'b'"),
