@@ -79,6 +79,14 @@ The `whitelist` option is an optional string array to specify the names of packa
 
 When an import resolves to a DefinitelyTyped package, the rule reports the runtime package (`qs` for `@types/qs`, `@babel/core` for `@types/babel__core`), and either name in `whitelist` ignores it. A type-only import checked with `includeTypes` needs only the `@types/*` package.
 
+#### `transitiveDependencies`
+
+The `transitiveDependencies` option maps a metapackage to the packages it brings in. When the metapackage is declared in `package.json`, imports of those packages are treated as declared in the same field, so a metapackage in `devDependencies` provides dev dependencies. Unlike `whitelist`, the packages are only allowed while the metapackage is declared.
+
+```js
+"import-x/no-extraneous-dependencies": ["error", {"transitiveDependencies": {"foo-metapackage": ["foo-1", "foo-2", "foo-3"]}}]
+```
+
 ## Rule Details
 
 Given the following `package.json`:
