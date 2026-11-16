@@ -108,14 +108,14 @@ describe(getLeadingComments, () => {
     expect(
       collect("// @Ts-Check\nimport b from 'b'", getLeadingComments, 0),
     ).toHaveLength(0)
-    // a comment that starts with @ts-nocheck but has extra text is not a pragma
+    // TypeScript allows explanatory text after the pragma name; treat it as file-level too
     expect(
       collect(
         "// @ts-nocheck see issue #123\nimport b from 'b'",
         getLeadingComments,
         0,
       ),
-    ).toHaveLength(1)
+    ).toHaveLength(0)
   })
 
   it('stops at a blank line or a comment that ends another line', () => {

@@ -48,7 +48,7 @@ export function getLeadingComments(
     // so treat the pragma as file-level unless actual code precedes it.
     const beforeIsCode =
       before !== null && before.type !== 'Line' && before.type !== 'Block'
-    if (!beforeIsCode && /^\s*@ts-(no)?check\s*$/i.test(prev.value)) {
+    if (!beforeIsCode && /^\s*@ts-(no)?check(\s|$)/i.test(prev.value)) {
       break
     }
     comments.unshift(prev)
