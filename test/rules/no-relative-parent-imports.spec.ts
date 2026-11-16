@@ -1,3 +1,7 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 
@@ -38,8 +42,67 @@ function createNoAllowedError(
   return { messageId: 'noAllowed', data: { filename, depPath } }
 }
 
+const tmpDir = fs.mkdtempSync(
+  path.join(fs.realpathSync(os.tmpdir()), 'no-relative-parent-imports-'),
+)
+const realDir = path.join(tmpDir, 'real')
+const linkDir = path.join(tmpDir, 'link')
+
+fs.mkdirSync(path.join(realDir, 'src'), { recursive: true })
+fs.writeFileSync(path.join(realDir, 'package.json'), '{}')
+fs.symlinkSync(realDir, linkDir, 'junction')
+
+const sharedDir = path.join(tmpDir, 'shared')
+
+fs.mkdirSync(path.join(sharedDir, 'apps/x/src'), { recursive: true })
+fs.writeFileSync(path.join(sharedDir, 'package.json'), '{}')
+fs.symlinkSync(
+  path.join(sharedDir, 'package.json'),
+  path.join(sharedDir, 'apps/x/package.json'),
+  'file',
+)
+
+afterAll(() => {
+  fs.rmSync(tmpDir, { recursive: true, force: true })
+})
+
+const resolvingTo = (
+  resolvedPath: string,
+  filename = path.join(linkDir, 'src/index.js'),
+) => ({
+  filename,
+  settings: {
+    'import-x/resolver-next': [
+      {
+        interfaceVersion: 3,
+        name: 'test',
+        resolve: () => ({ found: true, path: resolvedPath }),
+      },
+    ],
+  },
+})
+
 ruleTester.run('no-relative-parent-imports', rule, {
   valid: [
+    tValid({
+      code: 'import foo from "./lib/foo.js"',
+      ...resolvingTo(path.join(realDir, 'src/lib/foo.js')),
+    }),
+    tValid({
+      code: 'import foo from "@/lib/foo.js"',
+      ...resolvingTo(path.join(realDir, 'src/lib/foo.js')),
+    }),
+    tValid({
+      code: 'import foo from "./lib/foo.js"',
+      ...resolvingTo(path.join(linkDir, 'src/lib/foo.js')),
+    }),
+    tValid({
+      code: 'import foo from "./foo.js"',
+      ...resolvingTo(
+        path.join(sharedDir, 'apps/x/src/foo.js'),
+        path.join(sharedDir, 'apps/x/src/index.js'),
+      ),
+    }),
     tValid({
       code: 'import foo from "./internal.js"',
     }),
@@ -111,6 +174,19 @@ ruleTester.run('no-relative-parent-imports', rule, {
   ],
 
   invalid: [
+    tInvalid({
+      code: 'import foo from "../lib/foo.js"',
+      ...resolvingTo(path.join(realDir, 'lib/foo.js')),
+      errors: [createNoAllowedError('index.js', '../lib/foo.js')],
+    }),
+    tInvalid({
+      code: 'import foo from "../../../src/lib/foo.js"',
+      ...resolvingTo(
+        path.join(sharedDir, 'src/lib/foo.js'),
+        path.join(sharedDir, 'apps/x/src/index.js'),
+      ),
+      errors: [createNoAllowedError('index.js', '../../../src/lib/foo.js')],
+    }),
     tInvalid({
       code: 'import foo from "#plugin"',
       settings: subpathImportSettings,
