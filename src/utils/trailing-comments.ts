@@ -43,9 +43,12 @@ export function getLeadingComments(
     if (before && before.loc.end.line === prev.loc.start.line) {
       break
     }
-    // @ts-nocheck and @ts-check are TypeScript file-level pragmas; they must
-    // appear before any code and must not move with an import below them.
-    if (!before && /^\s*@ts-(no)?check\b/.test(prev.value)) {
+    // @ts-nocheck and @ts-check are TypeScript file-level pragmas. They stay
+    // effective even when preceded by other comments (e.g. a license header),
+    // so treat the pragma as file-level unless actual code precedes it.
+    const beforeIsCode =
+      before !== null && before.type !== 'Line' && before.type !== 'Block'
+    if (!beforeIsCode && /^\s*@ts-(no)?check\s*$/i.test(prev.value)) {
       break
     }
     comments.unshift(prev)

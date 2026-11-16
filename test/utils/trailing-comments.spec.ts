@@ -82,6 +82,42 @@ describe(getLeadingComments, () => {
     ).toHaveLength(1)
   })
 
+  it('does not collect @ts-nocheck when preceded only by other comments', () => {
+    // license comment before the pragma: pragma is still file-level
+    expect(
+      collect(
+        "// Copyright 2024\n// @ts-nocheck\nimport b from 'b'",
+        getLeadingComments,
+        0,
+      ),
+    ).toHaveLength(0)
+    // block comment license header
+    expect(
+      collect(
+        "/* license */\n// @ts-check\nimport b from 'b'",
+        getLeadingComments,
+        0,
+      ),
+    ).toHaveLength(0)
+  })
+
+  it('recognizes @ts-nocheck and @ts-check case-insensitively', () => {
+    expect(
+      collect("// @TS-NOCHECK\nimport b from 'b'", getLeadingComments, 0),
+    ).toHaveLength(0)
+    expect(
+      collect("// @Ts-Check\nimport b from 'b'", getLeadingComments, 0),
+    ).toHaveLength(0)
+    // a comment that starts with @ts-nocheck but has extra text is not a pragma
+    expect(
+      collect(
+        "// @ts-nocheck see issue #123\nimport b from 'b'",
+        getLeadingComments,
+        0,
+      ),
+    ).toHaveLength(1)
+  })
+
   it('stops at a blank line or a comment that ends another line', () => {
     expect(
       leading("import a from 'a'\n// c\n\nimport b from 'b'"),

@@ -1450,6 +1450,40 @@ ruleTester.run('order', rule, {
         createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
+    // pragma stays when preceded only by other comments (license header)
+    tInvalid({
+      code: `
+        // Copyright 2024
+        // @ts-nocheck
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        // Copyright 2024
+        // @ts-nocheck
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // uppercase pragma variant is also recognized as file-level
+    tInvalid({
+      code: `
+        // @TS-NOCHECK
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        // @TS-NOCHECK
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
     // any comment block directly above an import moves with it
     tInvalid({
       code: `
