@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import type { JSONSchema, TSESLint } from '@typescript-eslint/utils'
@@ -322,7 +323,13 @@ function inferExtension(
     }
     // A resolved import must keep resolving to the same file.
     if (resolvedPath) {
-      return candidateResolved === resolvedPath
+      return (
+        candidateResolved === resolvedPath &&
+        // the TypeScript resolver maps script extensions to a declaration file,
+        // so for one only a runtime file next to it makes the candidate real
+        (!dtsRe.test(resolvedPath) ||
+          fs.existsSync(resolvedPath.replace(dtsRe, `.${candidate}`)))
+      )
     }
     return (
       path.basename(candidateResolved).endsWith(`.${candidate}`) ||

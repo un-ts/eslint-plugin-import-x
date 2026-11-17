@@ -1646,6 +1646,16 @@ describe('TypeScript', () => {
         },
       }),
 
+      // an extensionless import of a declaration file with no runtime file
+      // next to it: the TypeScript resolver also maps a `.jsx` specifier to
+      // the `.d.ts`, but that does not make `jsx` its extension (#636)
+      tValid({
+        code: 'import { Foo } from "./extensions-inference/types";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: [{ js: 'never', jsx: 'always', json: 'always' }],
+      }),
+
       // pathGroupOverrides: no patterns match good bespoke specifiers
       tValid({
         code: `
@@ -1743,6 +1753,32 @@ describe('TypeScript', () => {
           },
         ],
         options: ['always', { checkTypeImports: true }],
+      }),
+
+      // a declaration file with its runtime file next to it still gets the
+      // runtime extension
+      tInvalid({
+        code: 'import { foo } from "./dist-import/index";',
+        filename: testFilePath('./foo.ts'),
+        settings: { 'import-x/resolver': { typescript: true } },
+        options: [{ js: 'always' }],
+        errors: [
+          {
+            messageId: 'missingKnown',
+            data: { extension: 'js', importPath: './dist-import/index' },
+            suggestions: [
+              {
+                messageId: 'addMissing',
+                data: {
+                  extension: 'js',
+                  importPath: './dist-import/index',
+                  fixedImportPath: './dist-import/index.js',
+                },
+                output: 'import { foo } from "./dist-import/index.js";',
+              },
+            ],
+          },
+        ],
       }),
 
       // pathGroupOverrides: an enforce pattern matches bad bespoke specifiers
