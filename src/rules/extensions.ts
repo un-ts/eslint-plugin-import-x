@@ -325,10 +325,7 @@ function inferExtension(
     if (resolvedPath) {
       return (
         candidateResolved === resolvedPath &&
-        // the TypeScript resolver maps script extensions to a declaration file,
-        // so for one only a runtime file next to it makes the candidate real
-        (!dtsRe.test(resolvedPath) ||
-          fs.existsSync(resolvedPath.replace(dtsRe, `.${candidate}`)))
+        hasRuntimeFile(resolvedPath, candidate)
       )
     }
     return (
@@ -342,6 +339,18 @@ function inferExtension(
   return resolvedCandidates.length > 1
     ? { extension: '', ambiguous: true }
     : { extension: resolvedCandidates[0] || extension, ambiguous: false }
+}
+
+/**
+ * Whether a candidate extension has a real file behind it. The TypeScript
+ * resolver maps script extensions to a declaration file, so for one only a
+ * runtime file next to it counts.
+ */
+function hasRuntimeFile(resolvedPath: string, candidate: string) {
+  return (
+    !dtsRe.test(resolvedPath) ||
+    fs.existsSync(resolvedPath.replace(dtsRe, `.${candidate}`))
+  )
 }
 
 /**
