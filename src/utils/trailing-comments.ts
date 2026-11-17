@@ -46,9 +46,15 @@ export function getLeadingComments(
     // @ts-nocheck and @ts-check are TypeScript file-level pragmas. They stay
     // effective even when preceded by other comments (e.g. a license header),
     // so treat the pragma as file-level unless actual code precedes it.
+    // TypeScript also accepts the triple-slash form (`/// @ts-nocheck`), whose
+    // comment value starts with the third slash.
     const beforeIsCode =
       before !== null && before.type !== 'Line' && before.type !== 'Block'
-    if (!beforeIsCode && /^\s*@ts-(no)?check(\s|$)/i.test(prev.value)) {
+    const pragma =
+      prev.type === 'Line'
+        ? /^\/?\s*@ts-(no)?check(\s|$)/i
+        : /^\s*@ts-(no)?check(\s|$)/i
+    if (!beforeIsCode && pragma.test(prev.value)) {
       break
     }
     comments.unshift(prev)

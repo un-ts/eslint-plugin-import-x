@@ -118,6 +118,15 @@ describe(getLeadingComments, () => {
     ).toHaveLength(0)
   })
 
+  it('recognizes the triple-slash form of @ts-nocheck and @ts-check', () => {
+    expect(
+      collect("/// @ts-nocheck\nimport b from 'b'", getLeadingComments, 0),
+    ).toHaveLength(0)
+    expect(
+      collect("/// @ts-check\nimport b from 'b'", getLeadingComments, 0),
+    ).toHaveLength(0)
+  })
+
   it('stops at a blank line or a comment that ends another line', () => {
     expect(
       leading("import a from 'a'\n// c\n\nimport b from 'b'"),
