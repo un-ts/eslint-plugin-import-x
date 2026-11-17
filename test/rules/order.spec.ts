@@ -1516,6 +1516,38 @@ ruleTester.run('order', rule, {
         createOrderError(['`fs` import', 'before', 'import of `async`']),
       ],
     }),
+    // a pragma with a colon-separated explanation stays at the top
+    tInvalid({
+      code: `
+        // @ts-nocheck: generated file
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        // @ts-nocheck: generated file
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // a pragma after code is not moved to the top, where it would take effect
+    tInvalid({
+      code: `
+        import async from 'async';
+        // @ts-nocheck
+        import fs from 'fs';
+      `,
+      output: `
+        import fs from 'fs';
+        import async from 'async';
+        // @ts-nocheck
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
     // any comment block directly above an import moves with it
     tInvalid({
       code: `

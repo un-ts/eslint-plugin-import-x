@@ -118,6 +118,28 @@ describe(getLeadingComments, () => {
     ).toHaveLength(0)
   })
 
+  it('recognizes a pragma with a colon before its explanation', () => {
+    expect(
+      collect(
+        "// @ts-nocheck: legacy\nimport b from 'b'",
+        getLeadingComments,
+        0,
+      ),
+    ).toHaveLength(0)
+    expect(
+      collect("/// @ts-check:strict\nimport b from 'b'", getLeadingComments, 0),
+    ).toHaveLength(0)
+  })
+
+  it('does not collect a pragma that follows code', () => {
+    expect(
+      leading("import a from 'a'\n// @ts-nocheck\nimport b from 'b'"),
+    ).toHaveLength(0)
+    expect(
+      leading("import a from 'a'\n// c\n// @ts-check\nimport b from 'b'"),
+    ).toHaveLength(0)
+  })
+
   it('recognizes the triple-slash form of @ts-nocheck and @ts-check', () => {
     expect(
       collect("/// @ts-nocheck\nimport b from 'b'", getLeadingComments, 0),
