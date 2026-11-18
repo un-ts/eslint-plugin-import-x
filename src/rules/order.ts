@@ -207,7 +207,7 @@ function findStartOfLineWithComments(
   const startOfTokens =
     tokensToEndOfLine.length > 0 ? tokensToEndOfLine[0].range[0] : node.range[0]
   let result = startOfTokens
-  for (let i = startOfTokens - 1; i > 0; i--) {
+  for (let i = startOfTokens - 1; i >= 0; i--) {
     if (sourceCode.text[i] !== ' ' && sourceCode.text[i] !== '\t') {
       break
     }
@@ -418,6 +418,62 @@ function mayDisableRule({ id, sourceCode }: RuleContext) {
 // block overlap. ESLint applies one per pass and stops after 10 passes, then the
 // block stays half sorted until the next run. So all reports of a block share one
 // fix that moves all of its imports at once, unless they can be disabled.
+/** Whether only spaces and tabs come before `index` on its line. */
+function startsLine(text: string, index: number) {
+  return /^[\t ]*$/.test(
+    text.slice(text.lastIndexOf('\n', index - 1) + 1, index),
+  )
+}
+
+/** The spaces and tabs that start the line `index` is on. */
+function lineIndentation(text: string, index: number) {
+  return /^[\t ]*/.exec(text.slice(text.lastIndexOf('\n', index - 1) + 1))![0]
+}
+
+/**
+ * Where imports moved in front of `root` go: the start of its line, or, when
+ * other code comes before it on that line, `root` itself.
+ */
+function findInsertionStart(
+  sourceCode: TSESLint.SourceCode,
+  root: TSESTree.Node,
+) {
+  const start = findStartOfLineWithComments(sourceCode, root)
+  if (startsLine(sourceCode.text, start)) {
+    return start
+  }
+  const rest = sourceCode.text.slice(start)
+  return start + rest.length - rest.trimStart().length
+}
+
+/**
+ * The text an import takes along when it moves, and the range it leaves.
+ *
+ * An import that follows other code on its line leaves the line break to that
+ * code, and moves with the line's indentation instead of the space before it.
+ */
+function findMovedImportRange(
+  sourceCode: TSESLint.SourceCode,
+  root: TSESTree.Node,
+) {
+  const { text } = sourceCode
+  const start = findStartOfLineWithComments(sourceCode, root)
+  let end = findEndOfLineWithComments(sourceCode, root)
+  if (startsLine(text, start)) {
+    return { start, end, code: text.slice(start, end) }
+  }
+  const lineBreak = /\r?\n$/.exec(text.slice(start, end))?.[0] ?? ''
+  end -= lineBreak.length
+  return {
+    start,
+    end,
+    code:
+      lineIndentation(text, start) +
+      text.slice(start, end).trimStart() +
+      lineBreak,
+  }
+}
+
 function makeMoveAllFix(
   context: RuleContext,
   moves: Array<{ target: ImportEntryWithRank; imp: ImportEntryWithRank }>,
@@ -438,13 +494,11 @@ function makeMoveAllFix(
     ) {
       const at =
         order === 'before'
-          ? findStartOfLineWithComments(sourceCode, targetRoot)
+          ? findInsertionStart(sourceCode, targetRoot)
           : findEndOfLineWithComments(sourceCode, targetRoot)
       insertions.set(at, [...(insertions.get(at) ?? []), imp])
-      removals.push([
-        findStartOfLineWithComments(sourceCode, impRoot),
-        findEndOfLineWithComments(sourceCode, impRoot),
-      ])
+      const { start, end } = findMovedImportRange(sourceCode, impRoot)
+      removals.push([start, end])
     }
   }
 
@@ -465,14 +519,23 @@ function makeMoveAllFix(
             order === 'before' ? a.rank - b.rank : b.rank - a.rank,
           )
           .map(imp => {
-            const root = findRootNode(imp.node)
-            const code = text.slice(
-              findStartOfLineWithComments(sourceCode, root),
-              findEndOfLineWithComments(sourceCode, root),
+            const { code } = findMovedImportRange(
+              sourceCode,
+              findRootNode(imp.node),
             )
-            return code.endsWith('\n') ? code : `${code}\n`
+            const line = code.endsWith('\n') ? code : `${code}\n`
+            // In front of an import that follows other code on its line, the
+            // moved import ends that line, so it takes no indentation along
+            return startsLine(text, at) || order === 'after'
+              ? line
+              : line.trimStart()
           })
-          .join(''),
+          .join('') +
+        // ...and the import it moved in front of goes on at the next line's
+        // indentation
+        (order === 'before' && !startsLine(text, at)
+          ? lineIndentation(text, at)
+          : ''),
     })),
     ...removals.map(([start, end]) => ({ start, end, code: '' })),
   ].sort((a, b) => a.start - b.start || a.end - b.end)
