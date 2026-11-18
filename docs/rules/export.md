@@ -51,6 +51,24 @@ A type-only export such as `export type { Foo }` still conflicts with a value
 exported by name as `Foo`, such as `export const Foo` or
 `export { Foo } from './foo'`.
 
+Declarations of one namespace merge, so the members they export are checked
+together, while interfaces of one name merge into one and do not conflict:
+
+```ts
+export namespace Foo {
+  export type X = string
+  export interface Y {
+    a: string
+  }
+}
+export namespace Foo {
+  export type X = number // reported
+  export interface Y {
+    b: string
+  }
+}
+```
+
 ## Further Reading
 
 - Lee Byron's [ES7] export proposal

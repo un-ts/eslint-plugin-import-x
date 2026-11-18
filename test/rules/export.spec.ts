@@ -1006,6 +1006,34 @@ describe('TypeScript', () => {
         `,
         ...parserConfig,
       }),
+      // declarations of one namespace merge: members differ, or share a name
+      // across the type and value spaces, or are not exported
+      tValid({
+        code: `
+          export namespace Foo { export const a = 1 }
+          export namespace Foo { export const b = 2 }
+          export namespace Foo { export type X = string }
+          export namespace Foo { export const X = 1 }
+          export namespace Foo { const local = 1 }
+          export namespace Foo { const local = 2 }
+          export namespace Bar { export const a = 1 }
+        `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+          export namespace Foo { export interface X { a: string } }
+          export namespace Foo { export interface X { b: string } }
+        `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+          export interface X { a: string }
+          export interface X { b: string }
+        `,
+        ...parserConfig,
+      }),
 
       tValid({
         code: `
@@ -1297,6 +1325,54 @@ describe('TypeScript', () => {
           },
         ],
         ...parserConfig,
+      }),
+      // declarations of one namespace merge, so their members collide
+      tInvalid({
+        code: `
+          export namespace Foo { export type X = string }
+          export namespace Foo { export type X = number }
+          export namespace Bar { export const x = 1 }
+          export namespace Bar { export const x = 2 }
+          export namespace Baz { export type X = string }
+          export namespace Baz { export interface X {} }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 3 },
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 4 },
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 5 },
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 6 },
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 7 },
+        ],
+        ...parserConfig,
+      }),
+      tInvalid({
+        code: `
+          export namespace A.B { export const x = 1 }
+          export namespace A { export namespace B { export const x = 2 } }
+          declare module 'foo' { export const y: number }
+          declare module 'foo' { export const y: string }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 3 },
+          { messageId: 'multiNamed', data: { name: 'y' }, line: 4 },
+          { messageId: 'multiNamed', data: { name: 'y' }, line: 5 },
+        ],
+        ...parserConfig,
+      }),
+      // the same through Babel's nested representation of a dotted namespace
+      tInvalid({
+        code: `
+          export namespace A.B { export const x = 1 }
+          export namespace A { export namespace B { export const x = 2 } }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 3 },
+        ],
+        filename: testFilePath('typescript.ts'),
+        languageOptions: { parser: cjsRequire(parsers.BABEL) },
       }),
 
       tInvalid({

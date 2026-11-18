@@ -83,6 +83,23 @@ function removeTypescriptFunctionOverloads(nodes: Set<TSESTree.Node>) {
 }
 
 /**
+ * Keep one of the interfaces of a name, as their declarations merge:
+ *
+ * ```ts
+ * export interface Foo { a: string }
+ * export interface Foo { b: string }
+ * ```
+ */
+function removeMergedInterfaces(nodes: Set<TSESTree.Node>) {
+  const interfaces = [...nodes].filter(
+    node => declarationType(node) === AST_NODE_TYPES.TSInterfaceDeclaration,
+  )
+  for (const node of interfaces.slice(1)) {
+    nodes.delete(node)
+  }
+}
+
+/**
  * An export written out in this scope, other than an overload signature
  * (overload-only declarations may coexist with a type-only alias).
  */
@@ -211,6 +228,45 @@ function shouldSkipTypescriptNamespace(
   )
 }
 
+function namespaceName(
+  id: TSESTree.EntityName | TSESTree.StringLiteral,
+): string {
+  switch (id.type) {
+    case AST_NODE_TYPES.Identifier: {
+      return id.name
+    }
+    case AST_NODE_TYPES.Literal: {
+      return JSON.stringify(id.value)
+    }
+    case AST_NODE_TYPES.TSQualifiedName: {
+      return `${namespaceName(id.left)}/${id.right.name}`
+    }
+    // `this` is an entity name only in type queries, never in a namespace name
+    default: {
+      return 'this'
+    }
+  }
+}
+
+/**
+ * Declarations of one namespace in one scope merge, so the members they export
+ * share a key: the path of namespace names from the module root, the same for
+ * `namespace A.B {}` and `namespace A { export namespace B {} }`.
+ */
+function namespaceKey(node: TSESTree.TSModuleDeclaration): string {
+  let container = node.parent
+  if (container.type === AST_NODE_TYPES.ExportNamedDeclaration) {
+    container = container.parent
+  }
+  const scope =
+    container.type === AST_NODE_TYPES.TSModuleDeclaration
+      ? namespaceKey(container)
+      : container.type === AST_NODE_TYPES.TSModuleBlock
+        ? namespaceKey(container.parent as TSESTree.TSModuleDeclaration)
+        : rootProgram
+  return `${scope}/${namespaceName(node.id)}`
+}
+
 export type MessageId = 'noNamed' | 'multiDefault' | 'multiNamed'
 
 export default createRule<[], MessageId>({
@@ -231,15 +287,11 @@ export default createRule<[], MessageId>({
   },
   defaultOptions: [],
   create(context) {
-    const namespace = new Map<
-      'root' | TSESTree.TSModuleDeclaration,
-      Map<string, NamedExports>
-    >([[rootProgram, new Map()]])
+    const namespace = new Map<string, Map<string, NamedExports>>([
+      [rootProgram, new Map()],
+    ])
 
-    function getNamed(
-      name: string,
-      parent: TSESTree.TSModuleDeclaration | 'root',
-    ) {
+    function getNamed(name: string, parent: string) {
       if (!namespace.has(parent)) {
         namespace.set(parent, new Map())
       }
@@ -259,7 +311,7 @@ export default createRule<[], MessageId>({
     function addNamed(
       name: string,
       node: TSESTree.Node,
-      parent: TSESTree.TSModuleDeclaration | 'root',
+      parent: string,
       isType?: boolean,
     ) {
       getNamed(name, parent)[isType ? 'type' : 'value'].add(node)
@@ -291,7 +343,7 @@ export default createRule<[], MessageId>({
 
     function getParent(node: TSESTree.Node) {
       if (node.parent?.type === 'TSModuleBlock') {
-        return node.parent.parent as TSESTree.TSModuleDeclaration
+        return namespaceKey(node.parent.parent as TSESTree.TSModuleDeclaration)
       }
 
       // just in case somehow a non-ts namespace export declaration isn't directly
@@ -438,6 +490,7 @@ export default createRule<[], MessageId>({
               }
 
               removeTypescriptFunctionOverloads(nodes)
+              removeMergedInterfaces(nodes)
 
               if (nodes.size <= 1) {
                 continue
