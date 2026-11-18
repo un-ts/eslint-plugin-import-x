@@ -184,16 +184,21 @@ function isTypescriptNamespaceMerging(nodes: Set<TSESTree.Node>) {
   const noNamespaceNodes = [...nodes].filter(
     node => node.parent!.type !== 'TSModuleDeclaration',
   )
+  const implementations = noNamespaceNodes.filter(
+    node => node.parent!.type === 'FunctionDeclaration',
+  ).length
 
   return (
     types.has('TSModuleDeclaration') &&
     (types.size === 1 ||
       // Merging with functions
-      (types.size === 2 &&
-        (types.has('FunctionDeclaration') || types.has('TSDeclareFunction'))) ||
-      (types.size === 3 &&
-        types.has('FunctionDeclaration') &&
-        types.has('TSDeclareFunction')) ||
+      (implementations <= 1 &&
+        ((types.size === 2 &&
+          (types.has('FunctionDeclaration') ||
+            types.has('TSDeclareFunction'))) ||
+          (types.size === 3 &&
+            types.has('FunctionDeclaration') &&
+            types.has('TSDeclareFunction')))) ||
       // Merging with classes or enums
       (types.size === 2 &&
         (types.has('ClassDeclaration') || types.has('TSEnumDeclaration')) &&
@@ -255,16 +260,24 @@ function namespaceName(
  */
 function namespaceKey(node: TSESTree.TSModuleDeclaration): string {
   let container = node.parent
+  let exported = false
   if (container.type === AST_NODE_TYPES.ExportNamedDeclaration) {
     container = container.parent
+    exported = true
   }
-  const scope =
-    container.type === AST_NODE_TYPES.TSModuleDeclaration
-      ? namespaceKey(container)
-      : container.type === AST_NODE_TYPES.TSModuleBlock
-        ? namespaceKey(container.parent as TSESTree.TSModuleDeclaration)
-        : rootProgram
-  return `${scope}/${namespaceName(node.id)}`
+  let scope = rootProgram
+  if (container.type === AST_NODE_TYPES.TSModuleDeclaration) {
+    scope = namespaceKey(container)
+  } else if (container.type === AST_NODE_TYPES.TSModuleBlock) {
+    scope = namespaceKey(container.parent as TSESTree.TSModuleDeclaration)
+    // an unexported child is local to its block, it does not merge across blocks
+    if (!exported) {
+      scope += `#${container.range[0]}`
+    }
+  }
+  const name =
+    node.kind === 'global' ? 'declare global' : namespaceName(node.id)
+  return `${scope}/${name}`
 }
 
 export type MessageId = 'noNamed' | 'multiDefault' | 'multiNamed'
@@ -385,9 +398,12 @@ export default createRule<[], MessageId>({
           node.declaration.kind === 'type'
 
         if ('id' in node.declaration && node.declaration.id != null) {
-          const id = node.declaration.id as TSESTree.Identifier
+          const { id } = node.declaration
           addNamed(
-            id.name,
+            // `namespace B.C {}` declares `B` in this scope
+            id.type === AST_NODE_TYPES.TSQualifiedName
+              ? namespaceName(id).split('/')[0]
+              : (id as TSESTree.Identifier).name,
             id,
             parent,
             declarationKind(node.declaration) === 'type' || isTypeVariableDecl,

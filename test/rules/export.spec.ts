@@ -1034,6 +1034,22 @@ describe('TypeScript', () => {
         `,
         ...parserConfig,
       }),
+      // an unexported child namespace is local to its block
+      tValid({
+        code: `
+          export namespace A { namespace B { export const x = 1 } }
+          export namespace A { namespace B { export const x = 2 } }
+        `,
+        ...parserConfig,
+      }),
+      // a global augmentation is not a namespace named `global`
+      tValid({
+        code: `
+          export namespace global { export type X = string }
+          declare global { export type X = number }
+        `,
+        ...parserConfig,
+      }),
 
       tValid({
         code: `
@@ -1358,6 +1374,31 @@ describe('TypeScript', () => {
           { messageId: 'multiNamed', data: { name: 'x' }, line: 3 },
           { messageId: 'multiNamed', data: { name: 'y' }, line: 4 },
           { messageId: 'multiNamed', data: { name: 'y' }, line: 5 },
+        ],
+        ...parserConfig,
+      }),
+      // a dotted namespace declares its first name in the enclosing scope
+      tInvalid({
+        code: `
+          export namespace A { export namespace B.C { export const x = 1 } }
+          export namespace A { export const B = 1 }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'B' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'B' }, line: 3 },
+        ],
+        ...parserConfig,
+      }),
+      // a namespace merges with one function implementation, not with two
+      tInvalid({
+        code: `
+          export function f() {}
+          export function f() {}
+          export namespace f { export const x = 1 }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'f' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'f' }, line: 3 },
         ],
         ...parserConfig,
       }),
