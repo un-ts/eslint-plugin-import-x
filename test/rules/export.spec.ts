@@ -1389,6 +1389,18 @@ describe('TypeScript', () => {
         ],
         ...parserConfig,
       }),
+      // global augmentations share the global scope wherever they are nested
+      tInvalid({
+        code: `
+          declare module 'a' { global { export type X = string } }
+          declare module 'b' { global { export type X = number } }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 3 },
+        ],
+        ...parserConfig,
+      }),
       // a namespace merges with one function implementation, not with two
       tInvalid({
         code: `

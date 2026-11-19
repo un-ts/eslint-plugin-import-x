@@ -259,6 +259,10 @@ function namespaceName(
  * `namespace A.B {}` and `namespace A { export namespace B {} }`.
  */
 function namespaceKey(node: TSESTree.TSModuleDeclaration): string {
+  // every global augmentation adds to the one global scope, wherever it sits
+  if (node.kind === 'global') {
+    return 'declare global'
+  }
   let container = node.parent
   let exported = false
   if (container.type === AST_NODE_TYPES.ExportNamedDeclaration) {
@@ -275,9 +279,7 @@ function namespaceKey(node: TSESTree.TSModuleDeclaration): string {
       scope += `#${container.range[0]}`
     }
   }
-  const name =
-    node.kind === 'global' ? 'declare global' : namespaceName(node.id)
-  return `${scope}/${name}`
+  return `${scope}/${namespaceName(node.id)}`
 }
 
 export type MessageId = 'noNamed' | 'multiDefault' | 'multiNamed'
