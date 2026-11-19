@@ -41,8 +41,21 @@ function getImportText(
     // keep the quotes of a string name, e.g. `"a-b" as AB`
     return `${sourceCode.getText(s.imported)} as ${s.local.name}`
   })
+  const attributes = getAttributesText(node, sourceCode)
   // insert a fresh top-level import
-  return `import ${kind} {${names.join(', ')}} from ${sourceString};`
+  return `import ${kind} {${names.join(', ')}} from ${sourceString}${attributes};`
+}
+
+// keep the import attributes, e.g. ` with { type: 'json' }`
+function getAttributesText(
+  node: TSESTree.ImportDeclaration,
+  sourceCode: Readonly<TSESLint.SourceCode>,
+) {
+  let lastToken = sourceCode.getLastToken(node)!
+  if (lastToken.value === ';') {
+    lastToken = sourceCode.getTokenBefore(lastToken)!
+  }
+  return sourceCode.text.slice(node.source.range[1], lastToken.range[1])
 }
 
 // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-3.html#stable-support-resolution-mode-in-import-types

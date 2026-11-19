@@ -363,6 +363,30 @@ const TS_ONLY: RuleRunTests<typeof rule> = {
     },
   ],
   invalid: [
+    // keep import attributes
+    {
+      code: "import { type Foo } from './foo.json' with { type: 'json' };",
+      output: "import type {Foo} from './foo.json' with { type: 'json' };",
+      options: ['prefer-top-level'],
+      errors: [
+        {
+          messageId: 'topLevel',
+          type: AST_NODE_TYPES.ImportDeclaration,
+        },
+      ],
+    },
+    {
+      code: "import Foo, { type Bar } from './foo.json' with { type: 'json' };",
+      output: `import Foo from './foo.json' with { type: 'json' };
+import type {Bar} from './foo.json' with { type: 'json' };`,
+      options: ['prefer-top-level'],
+      errors: [
+        {
+          messageId: 'topLevel',
+          type: AST_NODE_TYPES.ImportSpecifier,
+        },
+      ],
+    },
     {
       code: `import { type "a-b" as AB } from 'Foo';`,
       output: `import type {"a-b" as AB} from 'Foo';`,
