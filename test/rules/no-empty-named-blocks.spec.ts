@@ -91,8 +91,29 @@ ruleTester.run('no-empty-named-blocks', rule, {
         import { DESCRIPTORS2 } from '../helpers/constants';
       `,
     }),
+    // import attributes are not a named import block
+    tValid({ code: `import 'mod' with {};` }),
+    tValid({ code: `import Default from 'mod' with {};` }),
+    tValid({ code: `import * as Namespace from 'mod' with {};` }),
   ],
   invalid: [
+    tInvalid({
+      code: `import Default, {} from 'mod' with { type: 'json' };`,
+      output: `import Default from 'mod' with { type: 'json' };`,
+      errors: [{ messageId: 'emptyNamed' }],
+    }),
+    tInvalid({
+      code: `import {} from 'mod' with {};`,
+      errors: [
+        {
+          messageId: 'emptyNamed',
+          suggestions: [
+            { messageId: 'unused', output: '' },
+            { messageId: 'emptyImport', output: `import 'mod' with {};` },
+          ],
+        },
+      ],
+    }),
     tInvalid({
       code: `import Default, {} from 'mod';`,
       output: `import Default from 'mod';`,
