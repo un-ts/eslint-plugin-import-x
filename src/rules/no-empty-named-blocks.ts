@@ -54,8 +54,12 @@ export default createRule({
           node =>
             [
               node,
+              // only look before the source, an import attributes block
+              // (`with {}`) after it is not a named import block
               program.tokens!.filter(
-                x => x.range[0] >= node.range[0] && x.range[1] <= node.range[1],
+                x =>
+                  x.range[0] >= node.range[0] &&
+                  x.range[1] <= node.source.range[0],
               ),
             ] as const,
         )
