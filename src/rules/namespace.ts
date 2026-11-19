@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import type { TSESTree, TSESLint } from '@typescript-eslint/utils'
 
-import { getExportKind, ModuleInfo } from '../core/index.js'
+import { mayExposeValue, ModuleInfo } from '../core/index.js'
 import { parseComment } from '../core/module-doc.js'
 import {
   importDeclaration,
@@ -89,19 +89,10 @@ function processBodyStatement(
  * Whether `name` exists on the namespace object at runtime. A name exported
  * only as a type (`export type Foo`, `export type { Foo }`,
  * `export type * from`) is erased, so accessing it is as wrong as accessing a
- * missing name. Fails open when the kind cannot be determined.
+ * missing name.
  */
 function hasValueExport(namespace: ModuleInfo, name: string) {
-  if (!namespace.hasExport(name)) {
-    return false
-  }
-  const kind = getExportKind(namespace, name)
-  return (
-    kind === null ||
-    kind === 'value' ||
-    kind === 'both' ||
-    mayReachUnresolvedStar(namespace, name)
-  )
+  return namespace.hasExport(name) && mayExposeValue(namespace, name)
 }
 
 const TYPESCRIPT_FILE = /\.[cm]?tsx?$/
@@ -175,39 +166,6 @@ function inTypePosition(node: TSESTree.Node) {
     parent?.type === 'TSClassImplements' ||
     parent?.type === 'TSInterfaceHeritage'
   )
-}
-
-/**
- * Whether an `export *` that could not be resolved may still provide `name`.
- * `getExportKind` skips such paths, so a type found through another path
- * would hide a value the unresolved one might export.
- */
-function mayReachUnresolvedStar(
-  moduleInfo: ModuleInfo,
-  name: string,
-  seen = new Set<string>(),
-): boolean {
-  if (
-    name === 'default' ||
-    seen.has(moduleInfo.path) ||
-    // an explicit export shadows every `export *`
-    moduleInfo.ownExports.has(name) ||
-    moduleInfo.reexports.has(name)
-  ) {
-    return false
-  }
-  seen.add(moduleInfo.path)
-  for (const star of moduleInfo.starExports) {
-    // `export type *` lets no value through
-    if (star.typeOnly) {
-      continue
-    }
-    const target = star.resolveTarget()
-    if (target == null || mayReachUnresolvedStar(target, name, seen)) {
-      return true
-    }
-  }
-  return false
 }
 
 function makeMessage(

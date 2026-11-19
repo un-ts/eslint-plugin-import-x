@@ -11,6 +11,7 @@ import {
   getExportKind,
   getExportNames,
   getModuleDoc,
+  mayExposeValue,
   ModuleInfo,
   resolveDeepExport,
 } from 'eslint-plugin-import-x/core/index'
@@ -709,6 +710,31 @@ describe('ModuleInfo', () => {
         context,
       )!
       expect(getExportKind(moduleInfo, 'missing')).toBe('both')
+    })
+
+    it.each([
+      ['unresolved-star', 'missing', true],
+      ['unresolved-star', 'default', false],
+      ['unresolved-type-star', 'missing', false],
+      ['shadowed-star', 'missing', false],
+      ['star-cycle-a', 'missing', true],
+      ['mixed', 'foo', true],
+      ['mixed', 'T', false],
+      ['broken', 'missing', true],
+    ])('answers whether %s may expose %s as a value', (source, name, value) => {
+      const moduleInfo = ModuleInfo.get(
+        `./export-type-star/${source}`,
+        context,
+      )!
+      expect(mayExposeValue(moduleInfo, name)).toBe(value)
+    })
+
+    it('keeps the kind of a name an unresolved `export *` may provide', () => {
+      const moduleInfo = ModuleInfo.get(
+        './export-type-star/unresolved-star',
+        context,
+      )!
+      expect(getExportKind(moduleInfo, 'missing')).toBe('type')
     })
 
     it('reads import-equals bindings, not expression names', () => {
