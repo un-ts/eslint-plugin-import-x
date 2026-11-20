@@ -42,6 +42,14 @@ The motivation is that this is likely a result of two developers importing diffe
 names from the same module at different times (and potentially largely different
 locations in the file.) This rule brings both (or n-many) to attention.
 
+The fix does not merge an import into a side-effect import such as `import './setup'`. [`import-x/order`](./order.md) keeps side-effect imports where they are, but it could move the merged import, so `./setup` would run later. These duplicates are reported, but left to you:
+
+```js
+import './setup'
+import { readFileSync } from 'node:fs'
+import { stop } from './setup'
+```
+
 ### Import Attributes
 
 Imports of one path with different [import attributes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import/with) can load different modules, so they are not duplicates. Imports with the same attributes are, whatever the order of the attributes:
