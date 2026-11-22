@@ -22,6 +22,10 @@ export default createRule({
 
     return {
       ExportAllDeclaration(node) {
+        if (node.exported && getValue(node.exported) === 'default') {
+          return
+        }
+
         context.report({ node, messageId: 'noAllowed' })
       },
 

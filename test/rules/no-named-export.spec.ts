@@ -35,6 +35,16 @@ ruleTester.run('no-named-export', rule, {
       code: 'let foo; export { foo as default }',
     }),
     tValid({
+      code: `export * as default from './foo';`,
+    }),
+    tValid({
+      code: `export * as "default" from './foo';`,
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
+    }),
+    tValid({
       code: 'export default from "foo.js"',
       languageOptions: { parser: require(parsers.BABEL) },
     }),
@@ -115,6 +125,15 @@ ruleTester.run('no-named-export', rule, {
     }),
     tInvalid({
       code: `export * from './foo';`,
+      errors: [
+        {
+          messageId: 'noAllowed',
+          type: AST_NODE_TYPES.ExportAllDeclaration,
+        },
+      ],
+    }),
+    tInvalid({
+      code: `export * as foo from './foo';`,
       errors: [
         {
           messageId: 'noAllowed',

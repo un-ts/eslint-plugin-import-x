@@ -80,6 +80,9 @@ ruleTester.run('no-default-export', rule, {
       code: `export * from './foo';`,
     }),
     tValid({
+      code: `export * as foo from './foo';`,
+    }),
+    tValid({
       code: `export const { foo } = { foo: "bar" };`,
     }),
     tValid({
@@ -201,6 +204,30 @@ ruleTester.run('no-default-export', rule, {
       errors: [
         {
           type: 'ExportNamedDeclaration' as AST_NODE_TYPES,
+          messageId: 'preferNamed',
+        },
+      ],
+    }),
+    tInvalid({
+      code: `export * as default from './foo';`,
+      errors: [
+        {
+          type: 'ExportAllDeclaration' as AST_NODE_TYPES,
+          messageId: 'preferNamed',
+          line: 1,
+          column: 8,
+        },
+      ],
+    }),
+    tInvalid({
+      code: `export * as "default" from './foo';`,
+      languageOptions: {
+        parser: require(parsers.ESPREE),
+        parserOptions: { ecmaVersion: 2022 },
+      },
+      errors: [
+        {
+          type: 'ExportAllDeclaration' as AST_NODE_TYPES,
           messageId: 'preferNamed',
         },
       ],
