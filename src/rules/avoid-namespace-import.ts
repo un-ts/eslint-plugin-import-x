@@ -17,7 +17,6 @@ export default createRule<[Options?], MessageId>({
     docs: {
       description: 'Forbid namespace imports.',
       category: 'Performance',
-      recommended: true,
     },
     schema: [
       {

@@ -161,7 +161,6 @@ export default createRule<[Options?], MessageId>({
     docs: {
       category: 'Performance',
       description: 'Forbid importing barrel files.',
-      recommended: true,
     },
     schema: [
       {

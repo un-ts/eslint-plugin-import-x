@@ -30,7 +30,6 @@ export default createRule<[], MessageId>({
     docs: {
       category: 'Static analysis',
       description: 'Forbid a module from importing itself.',
-      recommended: true,
     },
     schema: [],
     messages: {
