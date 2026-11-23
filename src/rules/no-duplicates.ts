@@ -228,6 +228,17 @@ function getFix(
     node => !hasProblematicComments(node, sourceCode) && !hasNamespace(node),
   )
 
+  // `order` leaves a side-effect import like `import './foo'` where it is.
+  // Merging `import {x} from './foo'` into it gives it specifiers, so `order`
+  // could then move it and run './foo' later. Report, but leave the fix to the
+  // user.
+  if (
+    first.specifiers.length === 0 &&
+    restWithoutCommentsAndNamespaces.some(node => node.specifiers.length > 0)
+  ) {
+    return null
+  }
+
   const restWithoutCommentsAndNamespacesHasSpecifiers =
     restWithoutCommentsAndNamespaces.map(hasSpecifiers)
 

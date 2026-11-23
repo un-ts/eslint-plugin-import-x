@@ -595,25 +595,25 @@ ruleTester.run('no-duplicates', rule, {
 
     tInvalid({
       code: "import { } from './foo'; import {x} from './foo'",
-      output: "import {x } from './foo'; ",
+      output: null,
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
     tInvalid({
       code: "import './foo'; import {x} from './foo'",
-      output: "import {x} from './foo'; ",
+      output: null,
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
     tInvalid({
       code: "import'./foo'; import {x} from './foo'",
-      output: "import {x} from'./foo'; ",
+      output: null,
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
     tInvalid({
       code: "import './foo'; import { /*x*/} from './foo'; import {//y\n} from './foo'; import {z} from './foo'",
-      output: "import { /*x*///y\nz} from './foo';   ",
+      output: null,
       errors: [
         createDuplicatedError('./foo'),
         createDuplicatedError('./foo'),
@@ -624,14 +624,35 @@ ruleTester.run('no-duplicates', rule, {
 
     tInvalid({
       code: "import './foo'; import def, {x} from './foo'",
-      output: "import def, {x} from './foo'; ",
+      output: null,
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
     }),
 
     tInvalid({
       code: "import './foo'; import def from './foo'",
-      output: "import def from './foo'; ",
+      output: null,
       errors: [createDuplicatedError('./foo'), createDuplicatedError('./foo')],
+    }),
+
+    // #642: `order` leaves side-effect imports in place, but would move the
+    // merged import, so './setup' would no longer run first
+    tInvalid({
+      code: "import './setup'; import { readFileSync } from 'node:fs'; import { stop } from './setup'",
+      output: null,
+      errors: [
+        createDuplicatedError('./setup'),
+        createDuplicatedError('./setup'),
+      ],
+    }),
+
+    tInvalid({
+      code: "import { stop } from './setup'; import { readFileSync } from 'node:fs'; import './setup'",
+      output:
+        "import { stop } from './setup'; import { readFileSync } from 'node:fs'; ",
+      errors: [
+        createDuplicatedError('./setup'),
+        createDuplicatedError('./setup'),
+      ],
     }),
 
     tInvalid({
@@ -1643,7 +1664,7 @@ describe('TypeScript', () => {
           tInvalid({
             code: "import './foo.json' with { type: 'json' }; import { y } from './foo.json' with { type: 'json' }",
             ...parserConfig,
-            output: "import { y } from './foo.json' with { type: 'json' }; ",
+            output: null,
             errors: [
               {
                 ...createDuplicatedError('./foo.json'),
@@ -1694,7 +1715,7 @@ describe('TypeScript', () => {
           tInvalid({
             code: "import './foo.json' with { type: 'json' }; import x from './foo.json' with { type: 'json' }",
             ...parserConfig,
-            output: "import x from './foo.json' with { type: 'json' }; ",
+            output: null,
             errors: [
               {
                 ...createDuplicatedError('./foo.json'),
