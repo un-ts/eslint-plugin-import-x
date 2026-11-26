@@ -84,6 +84,19 @@ ruleTester.run('exports-last', rule, {
         export * from './foo'
       `,
     }),
+    // TypeScript exports
+    tValid({
+      code: `
+        export declare function foo(): void
+        export as namespace Foo
+      `,
+    }),
+    tValid({
+      code: `
+        declare function foo(): void
+        export = foo
+      `,
+    }),
   ],
   invalid: [
     // Default export before variable declaration
@@ -125,6 +138,21 @@ ruleTester.run('exports-last', rule, {
         createInvalidCaseError('ExportDefaultDeclaration'),
         createInvalidCaseError('ExportNamedDeclaration'),
       ],
+    }),
+    // TypeScript exports before a non-export statement
+    tInvalid({
+      code: `
+        export as namespace Foo
+        declare function foo(): void
+      `,
+      errors: [createInvalidCaseError('TSNamespaceExportDeclaration')],
+    }),
+    tInvalid({
+      code: `
+        export = foo
+        declare function foo(): void
+      `,
+      errors: [createInvalidCaseError('TSExportAssignment')],
     }),
   ],
 })
