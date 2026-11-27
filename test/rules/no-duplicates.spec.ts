@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { jest } from '@jest/globals'
+import tsEslintPlugin from '@typescript-eslint/eslint-plugin'
 import { RuleTester as TSESLintRuleTester } from '@typescript-eslint/rule-tester'
 import type { TestCaseError as TSESLintTestCaseError } from '@typescript-eslint/rule-tester'
 import { TSESLint } from '@typescript-eslint/utils'
@@ -2161,6 +2162,36 @@ describe('TypeScript', () => {
       { filename: 'foo.ts' },
     )
     expect(output).toBe("import  {type x,type y, z} from './foo'; ")
+  })
+
+  it('keeps merged values value imports with consistent-type-imports', () => {
+    const linter = new TSESLint.Linter({ configType: 'flat' })
+    const { output } = linter.verifyAndFix(
+      "import {A} from './foo';\nimport {b} from './foo';\nexport const a: A = b;\n",
+      [
+        {
+          files: ['**/*.ts'],
+          languageOptions: { parser: require(parsers.TS) },
+          plugins: {
+            '@typescript-eslint': {
+              rules: {
+                'consistent-type-imports':
+                  tsEslintPlugin.rules['consistent-type-imports'],
+              },
+            },
+            'import-x': { rules: { 'no-duplicates': rule } },
+          },
+          rules: {
+            '@typescript-eslint/consistent-type-imports': 'error',
+            'import-x/no-duplicates': 'error',
+          },
+        },
+      ],
+      { filename: 'foo.ts' },
+    )
+    expect(output).toBe(
+      "import type {A} from './foo';\nimport {b} from './foo';\nexport const a: A = b;\n",
+    )
   })
 })
 

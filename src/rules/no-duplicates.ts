@@ -355,7 +355,10 @@ function getFix(
       ['', !firstHasTrailingComma && !firstIsEmpty, firstExistingIdentifiers],
     )
 
-    const fixes = []
+    // Keep the start of the first import in the fix range, so another fix (like
+    // `consistent-type-imports` making it `import type`) cannot change what it
+    // imports in the same pass.
+    const fixes = [fixer.replaceText(firstToken, firstToken.value)]
 
     if (shouldAddSpecifiers && preferInline && first.importKind === 'type') {
       // `import type {a} from './foo'` → `import {type a} from './foo'`
