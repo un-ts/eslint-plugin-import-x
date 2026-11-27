@@ -34,6 +34,17 @@ export default createRule({
         })
       },
 
+      ExportAllDeclaration(node) {
+        if (node.exported && getValue(node.exported) === 'default') {
+          const { loc } = sourceCode.getFirstTokens(node)[1] || {}
+          context.report({
+            node,
+            messageId: 'preferNamed',
+            loc,
+          })
+        }
+      },
+
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers.filter(
           specifier => getValue(specifier.exported) === 'default',
