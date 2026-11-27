@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import type { JSONSchema, TSESLint } from '@typescript-eslint/utils'
@@ -322,7 +323,10 @@ function inferExtension(
     }
     // A resolved import must keep resolving to the same file.
     if (resolvedPath) {
-      return candidateResolved === resolvedPath
+      return (
+        candidateResolved === resolvedPath &&
+        hasRuntimeFile(resolvedPath, candidate)
+      )
     }
     return (
       path.basename(candidateResolved).endsWith(`.${candidate}`) ||
@@ -335,6 +339,18 @@ function inferExtension(
   return resolvedCandidates.length > 1
     ? { extension: '', ambiguous: true }
     : { extension: resolvedCandidates[0] || extension, ambiguous: false }
+}
+
+/**
+ * Whether a candidate extension has a real file behind it. The TypeScript
+ * resolver maps script extensions to a declaration file, so for one only a
+ * runtime file next to it counts.
+ */
+function hasRuntimeFile(resolvedPath: string, candidate: string) {
+  return (
+    !dtsRe.test(resolvedPath) ||
+    fs.existsSync(resolvedPath.replace(dtsRe, `.${candidate}`))
+  )
 }
 
 /**
