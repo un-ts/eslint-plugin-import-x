@@ -1006,6 +1006,50 @@ describe('TypeScript', () => {
         `,
         ...parserConfig,
       }),
+      // declarations of one namespace merge: members differ, or share a name
+      // across the type and value spaces, or are not exported
+      tValid({
+        code: `
+          export namespace Foo { export const a = 1 }
+          export namespace Foo { export const b = 2 }
+          export namespace Foo { export type X = string }
+          export namespace Foo { export const X = 1 }
+          export namespace Foo { const local = 1 }
+          export namespace Foo { const local = 2 }
+          export namespace Bar { export const a = 1 }
+        `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+          export namespace Foo { export interface X { a: string } }
+          export namespace Foo { export interface X { b: string } }
+        `,
+        ...parserConfig,
+      }),
+      tValid({
+        code: `
+          export interface X { a: string }
+          export interface X { b: string }
+        `,
+        ...parserConfig,
+      }),
+      // an unexported child namespace is local to its block
+      tValid({
+        code: `
+          export namespace A { namespace B { export const x = 1 } }
+          export namespace A { namespace B { export const x = 2 } }
+        `,
+        ...parserConfig,
+      }),
+      // a global augmentation is not a namespace named `global`
+      tValid({
+        code: `
+          export namespace global { export type X = string }
+          declare global { export type X = number }
+        `,
+        ...parserConfig,
+      }),
 
       tValid({
         code: `
@@ -1297,6 +1341,91 @@ describe('TypeScript', () => {
           },
         ],
         ...parserConfig,
+      }),
+      // declarations of one namespace merge, so their members collide
+      tInvalid({
+        code: `
+          export namespace Foo { export type X = string }
+          export namespace Foo { export type X = number }
+          export namespace Bar { export const x = 1 }
+          export namespace Bar { export const x = 2 }
+          export namespace Baz { export type X = string }
+          export namespace Baz { export interface X {} }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 3 },
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 4 },
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 5 },
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 6 },
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 7 },
+        ],
+        ...parserConfig,
+      }),
+      tInvalid({
+        code: `
+          export namespace A.B { export const x = 1 }
+          export namespace A { export namespace B { export const x = 2 } }
+          declare module 'foo' { export const y: number }
+          declare module 'foo' { export const y: string }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 3 },
+          { messageId: 'multiNamed', data: { name: 'y' }, line: 4 },
+          { messageId: 'multiNamed', data: { name: 'y' }, line: 5 },
+        ],
+        ...parserConfig,
+      }),
+      // a dotted namespace declares its first name in the enclosing scope
+      tInvalid({
+        code: `
+          export namespace A { export namespace B.C { export const x = 1 } }
+          export namespace A { export const B = 1 }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'B' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'B' }, line: 3 },
+        ],
+        ...parserConfig,
+      }),
+      // global augmentations share the global scope wherever they are nested
+      tInvalid({
+        code: `
+          declare module 'a' { global { export type X = string } }
+          declare module 'b' { global { export type X = number } }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'X' }, line: 3 },
+        ],
+        ...parserConfig,
+      }),
+      // a namespace merges with one function implementation, not with two
+      tInvalid({
+        code: `
+          export function f() {}
+          export function f() {}
+          export namespace f { export const x = 1 }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'f' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'f' }, line: 3 },
+        ],
+        ...parserConfig,
+      }),
+      // the same through Babel's nested representation of a dotted namespace
+      tInvalid({
+        code: `
+          export namespace A.B { export const x = 1 }
+          export namespace A { export namespace B { export const x = 2 } }
+        `,
+        errors: [
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 2 },
+          { messageId: 'multiNamed', data: { name: 'x' }, line: 3 },
+        ],
+        filename: testFilePath('typescript.ts'),
+        languageOptions: { parser: cjsRequire(parsers.BABEL) },
       }),
 
       tInvalid({
