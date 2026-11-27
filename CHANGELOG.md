@@ -1,5 +1,59 @@
 # eslint-plugin-import-x
 
+## 4.19.0
+
+### Minor Changes
+
+- [#617](https://github.com/un-ts/eslint-plugin-import-x/pull/617) [`b9754a9`](https://github.com/un-ts/eslint-plugin-import-x/commit/b9754a9e261b38b116d68833dd1457ffa547d9f3) Thanks [@thekhegay](https://github.com/thekhegay)! - feat(consistent-type-specifier-style): add `prefer-top-level-if-only-type-imports` option
+
+- [#632](https://github.com/un-ts/eslint-plugin-import-x/pull/632) [`42224c2`](https://github.com/un-ts/eslint-plugin-import-x/commit/42224c27891e9943bfb6a88f366165a5b173b42c) Thanks [@thekhegay](https://github.com/thekhegay)! - feat(namespace): check heritage clauses against JSDoc `@typedef` and `@callback` names of local non-TypeScript modules
+
+- [#616](https://github.com/un-ts/eslint-plugin-import-x/pull/616) [`3b37ef7`](https://github.com/un-ts/eslint-plugin-import-x/commit/3b37ef77d3ecf4629c8e80ba98407a4419d51abe) Thanks [@thekhegay](https://github.com/thekhegay)! - feat(no-duplicates): add `considerReexports` option to report and merge repeated named re-exports from the same module
+
+- [#628](https://github.com/un-ts/eslint-plugin-import-x/pull/628) [`5d7dc58`](https://github.com/un-ts/eslint-plugin-import-x/commit/5d7dc5865eca657230026aaa1bc1e0427a9ef130) Thanks [@thekhegay](https://github.com/thekhegay)! - feat(no-extraneous-dependencies): add `transitiveDependencies` option to allow packages that a declared metapackage brings in
+
+- [#623](https://github.com/un-ts/eslint-plugin-import-x/pull/623) [`6fd3ccb`](https://github.com/un-ts/eslint-plugin-import-x/commit/6fd3ccbebe9d08d0f7b9015ad3dff806ae4ac42f) Thanks [@thekhegay](https://github.com/thekhegay)! - feat(no-relative-parent-imports): add `maxLevels` option to allow imports up to a number of parent directories
+
+- [#625](https://github.com/un-ts/eslint-plugin-import-x/pull/625) [`3bc592e`](https://github.com/un-ts/eslint-plugin-import-x/commit/3bc592ef9b5e9cc453bc3dc977974271d8ba39f0) Thanks [@thekhegay](https://github.com/thekhegay)! - feat(no-relative-parent-imports): add `ignorePrivateImports` option to skip subpath imports declared in `package.json` `imports`
+
+- [#597](https://github.com/un-ts/eslint-plugin-import-x/pull/597) [`0ec4d59`](https://github.com/un-ts/eslint-plugin-import-x/commit/0ec4d599faf20ec09a3071232fac275360db9dcb) Thanks [@RClaudiuM](https://github.com/RClaudiuM)! - feat: add `no-self-package-import` rule to forbid a package from importing itself through its own `exports` map
+
+- [#610](https://github.com/un-ts/eslint-plugin-import-x/pull/610) [`efd9228`](https://github.com/un-ts/eslint-plugin-import-x/commit/efd9228ac38b821cd01c0d91a8a6c886f331e6ef) Thanks [@thekhegay](https://github.com/thekhegay)! - feat(no-unresolved): add `includeTypes` option to check type-only imports and exports
+
+- [#619](https://github.com/un-ts/eslint-plugin-import-x/pull/619) [`ad03322`](https://github.com/un-ts/eslint-plugin-import-x/commit/ad03322564e44f9aea4946c2a834b8ccd1d8ec4d) Thanks [@thekhegay](https://github.com/thekhegay)! - feat(no-unused-modules): list files without `FileEnumerator`, so the rule works with flat config without an eslintrc and on ESLint 10. Note: on ESLint 10 the rule was a no-op before and now reports, and `suppressMissingFileEnumeratorAPIWarning` is deprecated and has no effect
+
+- [#629](https://github.com/un-ts/eslint-plugin-import-x/pull/629) [`54f117b`](https://github.com/un-ts/eslint-plugin-import-x/commit/54f117ba6a1beac29aa1e03ae2f4ca60be851dbf) Thanks [@thekhegay](https://github.com/thekhegay)! - feat: add `import-x/parsers-next` setting that lists parser instances with the file extensions they parse, entries for the same extension are tried in order as fallbacks
+
+- [#596](https://github.com/un-ts/eslint-plugin-import-x/pull/596) [`9afcfd9`](https://github.com/un-ts/eslint-plugin-import-x/commit/9afcfd9f17461524dfca536fa5597fc349731072) Thanks [@SwastikTripathi](https://github.com/SwastikTripathi)! - feat(no-useless-path-segments): report a useless `/index` in aliased imports of local files when `noUselessIndex` is enabled
+
+- [#620](https://github.com/un-ts/eslint-plugin-import-x/pull/620) [`57f0024`](https://github.com/un-ts/eslint-plugin-import-x/commit/57f0024245c664b0f2d50c197146386809e9e3c2) Thanks [@thekhegay](https://github.com/thekhegay)! - consistent-type-specifier-style: add `top-level` and `inline` option aliases for `prefer-top-level` and `prefer-inline`
+
+- [#634](https://github.com/un-ts/eslint-plugin-import-x/pull/634) [`5996d63`](https://github.com/un-ts/eslint-plugin-import-x/commit/5996d6322b87d53e6774c2149076af96844d51f5) Thanks [@SchroederSteffen](https://github.com/SchroederSteffen)! - feat(deps): add `@typescript-eslint/parser` as optional peer dependency
+
+### Patch Changes
+
+- [#613](https://github.com/un-ts/eslint-plugin-import-x/pull/613) [`66d3ca6`](https://github.com/un-ts/eslint-plugin-import-x/commit/66d3ca6e0363d604d9c5c9065dadcedaaac70e5f) Thanks [@JounQin](https://github.com/JounQin)! - chore: bump `unrs-resolver` to `v1.13.0`
+
+- [#618](https://github.com/un-ts/eslint-plugin-import-x/pull/618) [`23b3214`](https://github.com/un-ts/eslint-plugin-import-x/commit/23b321437c0bb6ccb900cf7fde125005e1d70fee) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(default): do not report default imports of files that only use dynamic `import()` and may be CommonJS, keep reporting `.mjs`, `.mts` and `type: module` files
+
+- [#651](https://github.com/un-ts/eslint-plugin-import-x/pull/651) [`d2641e8`](https://github.com/un-ts/eslint-plugin-import-x/commit/d2641e8ea4f20e6baca079beeb9e2d9fce627973) Thanks [@bardrop](https://github.com/bardrop)! - fix(exports-last): treat TypeScript `export =` and `export as namespace` as exports
+
+- [#614](https://github.com/un-ts/eslint-plugin-import-x/pull/614) [`80cea17`](https://github.com/un-ts/eslint-plugin-import-x/commit/80cea171ed04b6c3fdea68ef2547671236241d11) Thanks [@JounQin](https://github.com/JounQin)! - fix(no-rename-default): derive the default export name from a parenthesized assignment, e.g. `export default (Foo = function () {})`, which is how prettier v3.9 formats such defaults
+
+- [#631](https://github.com/un-ts/eslint-plugin-import-x/pull/631) [`b2e6f08`](https://github.com/un-ts/eslint-plugin-import-x/commit/b2e6f0869050d2d873a80aa3f9bbc59698f832cf) Thanks [@thekhegay](https://github.com/thekhegay)! - fix: classify a resolved path correctly when the linted file is reached through a symlink
+
+- [#624](https://github.com/un-ts/eslint-plugin-import-x/pull/624) [`0398562`](https://github.com/un-ts/eslint-plugin-import-x/commit/039856216302c8937649860fc87de30c68e47c95) Thanks [@thekhegay](https://github.com/thekhegay)! - fix: match `ignore` patterns with `g` or `y` flags against every import, not only every other one
+
+- [#622](https://github.com/un-ts/eslint-plugin-import-x/pull/622) [`110a135`](https://github.com/un-ts/eslint-plugin-import-x/commit/110a1357f9597e4a929ec96f11ede0ab5692a303) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(newline-after-import): count empty lines before a statement's leading `;` in semicolon-free code
+
+- [#627](https://github.com/un-ts/eslint-plugin-import-x/pull/627) [`9257464`](https://github.com/un-ts/eslint-plugin-import-x/commit/9257464f993b4abda94081be09baad5ed38ac8c9) Thanks [@thekhegay](https://github.com/thekhegay)! - fix(no-duplicates): treat entry points that share one declaration file but have their own `declare module` blocks, like `svelte` and `svelte/transition`, as different modules
+
+- [#647](https://github.com/un-ts/eslint-plugin-import-x/pull/647) [`deebda9`](https://github.com/un-ts/eslint-plugin-import-x/commit/deebda9125910daf970e241fa4199b3fec644897) Thanks [@bardrop](https://github.com/bardrop)! - fix(no-duplicates): don't merge a later import into a side-effect import like `import './setup'`, since `order` could then move it and run the module later
+
+- [#626](https://github.com/un-ts/eslint-plugin-import-x/pull/626) [`1a70ac8`](https://github.com/un-ts/eslint-plugin-import-x/commit/1a70ac849d43532f2cebd9ee8658d9f2bc876105) Thanks [@bardrop](https://github.com/bardrop)! - fix(no-restricted-paths): resolve glob `except` patterns against `basePath`, like `target` and `from`
+
+- [#650](https://github.com/un-ts/eslint-plugin-import-x/pull/650) [`8188e1e`](https://github.com/un-ts/eslint-plugin-import-x/commit/8188e1ebbfd1d97ded9323228b9a3a47b1ff4833) Thanks [@thekhegay](https://github.com/thekhegay)! - fix: drop `docs.recommended` from rules that are not in the `recommended` config
+
 ## 4.18.1
 
 ### Patch Changes
