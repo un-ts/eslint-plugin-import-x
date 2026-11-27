@@ -21,7 +21,6 @@ export default createRule<[Options?], MessageId>({
     docs: {
       description: 'Forbid authoring of barrel files.',
       category: 'Performance',
-      recommended: true,
     },
     schema: [
       {

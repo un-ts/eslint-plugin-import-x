@@ -9,7 +9,6 @@ export default createRule<[], MessageId>({
     docs: {
       description: 'Forbid re-exporting * from a module.',
       category: 'Performance',
-      recommended: true,
     },
     schema: [],
     messages: {

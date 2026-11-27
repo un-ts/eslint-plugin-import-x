@@ -55,7 +55,6 @@ export default createRule<[Options?], MessageId>({
     docs: {
       category: 'Module systems',
       description: 'Forbid import statements with CommonJS module.exports.',
-      recommended: true,
     },
     fixable: 'code',
     schema: [
