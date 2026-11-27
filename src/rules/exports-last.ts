@@ -17,7 +17,10 @@ function isNonExportStatement({ type }: TSESTree.Node) {
   return (
     type !== 'ExportDefaultDeclaration' &&
     type !== 'ExportNamedDeclaration' &&
-    type !== 'ExportAllDeclaration'
+    type !== 'ExportAllDeclaration' &&
+    // TypeScript `export = foo` and `export as namespace Foo`
+    type !== 'TSExportAssignment' &&
+    type !== 'TSNamespaceExportDeclaration'
   )
 }
 
