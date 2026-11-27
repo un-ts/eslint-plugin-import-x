@@ -18,6 +18,7 @@ import type {
   RuleContext,
 } from '../types.js'
 import {
+  getLeadingComments,
   getValue,
   importType,
   isStaticRequire,
@@ -204,8 +205,10 @@ function findStartOfLineWithComments(
     node,
     commentOnSameLineAs(node),
   )
-  const startOfTokens =
-    tokensToEndOfLine.length > 0 ? tokensToEndOfLine[0].range[0] : node.range[0]
+  const firstOnLine = tokensToEndOfLine[0] ?? node
+  const startOfTokens = (
+    getLeadingComments(sourceCode, firstOnLine)[0] ?? firstOnLine
+  ).range[0]
   let result = startOfTokens
   for (let i = startOfTokens - 1; i > 0; i--) {
     if (sourceCode.text[i] !== ' ' && sourceCode.text[i] !== '\t') {

@@ -1399,6 +1399,211 @@ ruleTester.run('order', rule, {
     }),
   ],
   invalid: [
+    // next-line directives move with the import they sit above
+    tInvalid({
+      code: `
+        import async from 'async';
+        // @ts-expect-error no types for fs here
+        import fs from 'fs';
+      `,
+      output: `
+        // @ts-expect-error no types for fs here
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    tInvalid({
+      code: `
+        // @ts-ignore
+        import async from 'async';
+        /* prettier-ignore */
+        // biome-ignore lint/style/noNamespaceImport: reason
+        import fs from 'fs';
+      `,
+      output: `
+        /* prettier-ignore */
+        // biome-ignore lint/style/noNamespaceImport: reason
+        import fs from 'fs';
+        // @ts-ignore
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // a file-top pragma stays when the import below it is moved
+    tInvalid({
+      code: `
+        // @ts-nocheck
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        // @ts-nocheck
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // pragma stays when preceded only by other comments (license header)
+    tInvalid({
+      code: `
+        // Copyright 2024
+        // @ts-nocheck
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        // Copyright 2024
+        // @ts-nocheck
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // uppercase pragma variant is also recognized as file-level
+    tInvalid({
+      code: `
+        // @TS-NOCHECK
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        // @TS-NOCHECK
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // pragma with explanatory text is still file-level (TypeScript allows it)
+    tInvalid({
+      code: `
+        // @ts-nocheck see issue #123
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        // @ts-nocheck see issue #123
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // triple-slash pragma is file-level too
+    tInvalid({
+      code: `
+        /// @ts-nocheck
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        /// @ts-nocheck
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // a pragma with a colon-separated explanation stays at the top
+    tInvalid({
+      code: `
+        // @ts-nocheck: generated file
+        import async from 'async';
+        import fs from 'fs';
+      `,
+      output: `
+        // @ts-nocheck: generated file
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // a pragma after code is not moved to the top, where it would take effect
+    tInvalid({
+      code: `
+        import async from 'async';
+        // @ts-nocheck
+        import fs from 'fs';
+      `,
+      output: `
+        import fs from 'fs';
+        import async from 'async';
+        // @ts-nocheck
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // any comment block directly above an import moves with it
+    tInvalid({
+      code: `
+        import async from 'async';
+        // type-coverage:ignore-next-line
+        /* the file system */
+        import fs from 'fs';
+      `,
+      output: `
+        // type-coverage:ignore-next-line
+        /* the file system */
+        import fs from 'fs';
+        import async from 'async';
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // a comment separated by a blank line stays put
+    tInvalid({
+      code: `
+        import async from 'async';
+        // section
+
+        import fs from 'fs';
+      `,
+      output: `
+        import fs from 'fs';
+        import async from 'async';
+        // section
+
+      `,
+      errors: [
+        createOrderError(['`fs` import', 'before', 'import of `async`']),
+      ],
+    }),
+    // a comment ending another line stays with that line
+    tInvalid({
+      code: `
+        import async from 'async';
+        // the file system
+        import fs from 'fs';
+        import path from 'path'; // @ts-ignore
+        import a from 'a';
+      `,
+      output: `
+        // the file system
+        import fs from 'fs';
+        import path from 'path'; // @ts-ignore
+        import async from 'async';
+        import a from 'a';
+      `,
+      errors: [
+        createOrderError(['`async` import', 'after', 'import of `path`']),
+      ],
+    }),
     // builtin before external module (require)
     tInvalid({
       code: `
