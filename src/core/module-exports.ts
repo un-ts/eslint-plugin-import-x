@@ -13,6 +13,7 @@ import type {
 import {
   collectExportNames,
   deepResolveExport,
+  mayReachUnresolvedStar,
   resolveExportKind,
 } from './resolve-exports.js'
 
@@ -186,6 +187,22 @@ export function getExportKind(
   const kind = resolveExportKind(moduleInfo, name, typeOnly)
   perModule.set(key, kind)
   return kind
+}
+
+/**
+ * Whether an exported name may exist at runtime: its kind has a value side or
+ * cannot be determined, or an `export *` that cannot be analyzed may provide
+ * a value of that name. Fails open where {@link getExportKind} answers only
+ * for the paths it can resolve.
+ */
+export function mayExposeValue(moduleInfo: ModuleInfo, name: string): boolean {
+  const kind = getExportKind(moduleInfo, name)
+  return (
+    kind === null ||
+    kind === 'value' ||
+    kind === 'both' ||
+    mayReachUnresolvedStar(moduleInfo, name)
+  )
 }
 
 /** Names exported by this module's own code; see {@link hasOwnExport}. */

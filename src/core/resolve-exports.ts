@@ -304,3 +304,36 @@ function mergeKinds(
   const resolvedA = a ?? 'value'
   return resolvedA === (b ?? 'value') ? resolvedA : 'both'
 }
+
+/**
+ * Whether an `export *` whose target cannot be analyzed may provide `name`.
+ * {@link resolveExportKind} skips such targets, so a type found through another
+ * path would hide a value the unresolved one might export.
+ */
+export function mayReachUnresolvedStar(
+  moduleInfo: ModuleInfo,
+  name: string,
+  seen = new Set<string>(),
+): boolean {
+  if (
+    name === 'default' ||
+    seen.has(moduleInfo.path) ||
+    // an explicit export shadows every `export *`
+    moduleInfo.ownExports.has(name) ||
+    moduleInfo.reexports.has(name)
+  ) {
+    return false
+  }
+  seen.add(moduleInfo.path)
+  for (const star of moduleInfo.starExports) {
+    // `export type *` lets no value through
+    if (star.typeOnly) {
+      continue
+    }
+    const target = star.resolveTarget()
+    if (target == null || mayReachUnresolvedStar(target, name, seen)) {
+      return true
+    }
+  }
+  return false
+}
