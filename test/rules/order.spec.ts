@@ -1522,7 +1522,7 @@ ruleTester.run('order', rule, {
           comment1 */  var fs = require('fs');` +
         ' ' +
         `
-  var async = require('async'); /* multiline2
+          var async = require('async'); /* multiline2
           comment2 *//* multiline3
           comment3 */
       `,
@@ -2509,6 +2509,22 @@ ruleTester.run('order', rule, {
         createOrderError(['`z` import', 'after', 'import of `fs`']),
         createOrderError(['`./t` import', 'after', 'import of `a`']),
       ],
+    }),
+    // an import that follows another on its line leaves the line break to it
+    tInvalid({
+      code: `import b from './b'; import fs from 'fs';\n`,
+      output: `import fs from 'fs';\nimport b from './b';\n`,
+      errors: [createOrderError(['`fs` import', 'before', 'import of `./b`'])],
+    }),
+    tInvalid({
+      code: `import b from './b'\nimport c from './c'; import fs from 'fs'\nfoo()\n`,
+      output: `import fs from 'fs'\nimport b from './b'\nimport c from './c';\nfoo()\n`,
+      errors: [createOrderError(['`fs` import', 'before', 'import of `./b`'])],
+    }),
+    tInvalid({
+      code: `  import 'x'; import b from './b'; import fs from 'fs';\r\n  foo()\r\n`,
+      output: `  import 'x'; import fs from 'fs';\r\n  import b from './b';\r\n  foo()\r\n`,
+      errors: [createOrderError(['`fs` import', 'before', 'import of `./b`'])],
     }),
     // the last line of a file can have no line break to put an import after
     tInvalid({
